@@ -1,7 +1,7 @@
-using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Playhub.Services;
+using Playhub.Shared;
 
 namespace GamingMode.Services;
 
@@ -29,10 +29,9 @@ internal sealed class PlayhubUpdateNotice
     { try { return await check().ConfigureAwait(false); } catch { return null; } }
     internal static void Map(WebApplication app, XboxShellBroker auth)
     {
-        var version = Assembly.GetExecutingAssembly().GetName().Version;
-        string current = version is null ? "" : $"{version.Major}.{version.Minor}.{version.Build}";
+        string current = EternalRelease.Version;
         var service = new PlayhubUpdateService();
-        var notice = new PlayhubUpdateNotice(() => service.CheckAsync("LoZazaMastro/Playhub", current), () => Environment.TickCount64);
+        var notice = new PlayhubUpdateNotice(() => service.CheckAsync(EternalRelease.UpdateRepository, current), () => Environment.TickCount64);
         app.MapPost("/playhub/update", (Func<HttpContext, Task<IResult>>)(async context =>
         {
             if (!auth.IsAuthorized(context.Connection.RemoteIpAddress, context.Request.Headers["X-Playhub-Shell-Token"].ToString()))
