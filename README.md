@@ -1,3 +1,5 @@
+> **Eternal Core fork.** This repository is Eternal Core, a fork of Playhub v3.0.0 by Andrea Sgarro (LoZazaMastro), MIT-licensed. Fork releases are named Mark I, Mark II, … and are published on this fork's Releases page. See [docs/eternal/README.md](docs/eternal/README.md). The original Playhub README follows unchanged.
+
 <div align="center">
 
 <img src="docs/images/readme-logo-card.png?v=300-readme-current" width="260" alt="Playhub" />
