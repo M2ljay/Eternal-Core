@@ -1,0 +1,99 @@
+# Eternal Core: builds Playhub-Setup.exe on Windows.
+# - Every push to main or a mark-* branch, and manual runs: build and upload the installer as a workflow artifact.
+# - Pushing a tag vX.Y.Z: the same, then create a DRAFT GitHub release with the installer attached.
+#   Nothing reaches installed copies until you publish the draft (the updater reads releases/latest, which
+#   ignores drafts and prereleases).
+# Forks have Actions disabled by default: enable them under the repository's Actions tab first.
+name: Eternal Core installer
+
+on:
+  push:
+    branches: [main, 'mark-*']
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: eternal-installer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      # The release packager verifies SHA-256 pins of bundled text files (Decky manifest, svcl readme, ...)
+      # that were taken from CRLF working copies. A checkout with LF endings fails those checks.
+      - name: Use Windows line endings
+        run: git config --global core.autocrlf true
+
+      # The repository is ~2.8 GB, mostly assets/on-this-day (served from GitHub raw, not built in).
+      - name: Check out sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            Source
+            catalog
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read release identity
+        id: release
+        shell: pwsh
+        run: |
+          $source = Get-Content -Raw Source/Shared/EternalRelease.cs
+          $version = [regex]::Match($source, 'const string Version = "([0-9]+\.[0-9]+\.[0-9]+)";').Groups[1].Value
+          $mark = [regex]::Match($source, 'const string MarkName = "([^"]+)";').Groups[1].Value
+          if (!$version -or !$mark) { throw 'Could not read Source/Shared/EternalRelease.cs.' }
+          if ('${{ github.ref_type }}' -eq 'tag' -and '${{ github.ref_name }}' -cne "v$version") {
+            throw "Tag ${{ github.ref_name }} does not match EternalRelease.Version $version (expected v$version)."
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "mark=$mark" >> $env:GITHUB_OUTPUT
+          Write-Host "Eternal Core $mark ($version)"
+
+      # build-plugin.bat skips its own unpinned `npm install` when these shims already exist.
+      - name: Install Decky plugin dependencies (lockfile)
+        working-directory: Source/GamingModeDeckyPlugin
+        run: |
+          npm install -g pnpm@9
+          pnpm install --frozen-lockfile
+
+      - name: Release identity and update tests
+        working-directory: Source/EternalRelease.Tests
+        run: dotnet run -c Release
+
+      - name: Build installer
+        shell: pwsh
+        run: ./Source/PlayhubSetup/build-update-preview.ps1
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Eternal-Core-${{ steps.release.outputs.version }}-installer
+          path: |
+            Source/PlayhubSetup/Output/Playhub-Setup.exe
+            Source/PlayhubSetup/Output/Playhub-Setup.exe.sha256
+          if-no-files-found: error
+
+      - name: Create draft release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          gh release create '${{ github.ref_name }}' `
+            Source/PlayhubSetup/Output/Playhub-Setup.exe `
+            Source/PlayhubSetup/Output/Playhub-Setup.exe.sha256 `
+            --draft `
+            --title 'Eternal Core ${{ steps.release.outputs.mark }} (${{ steps.release.outputs.version }})' `
+            --notes 'Eternal Core ${{ steps.release.outputs.mark }}, a fork of Playhub 3.0.0 by Andrea Sgarro (MIT).'
