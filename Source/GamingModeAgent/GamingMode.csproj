@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <Import Project="..\EternalRelease.props" />
   <PropertyGroup>
     <AssemblyName>GamingMode</AssemblyName>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>

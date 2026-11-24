@@ -1,0 +1,15 @@
+<Project>
+  <!-- Eternal Core: version comes from Shared/EternalRelease.cs (single source of truth). -->
+  <PropertyGroup>
+    <EternalReleaseSource>$(MSBuildThisFileDirectory)Shared/EternalRelease.cs</EternalReleaseSource>
+    <EternalVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(EternalReleaseSource)')), 'const string Version = "([0-9]+\.[0-9]+\.[0-9]+)";').Groups[1].Value)</EternalVersion>
+    <Version>$(EternalVersion)</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(EternalReleaseSource)" Link="Shared/EternalRelease.cs" />
+  </ItemGroup>
+  <Target Name="EternalValidateVersion" BeforeTargets="BeforeBuild">
+    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(EternalVersion)', '^[0-9]+\.[0-9]+\.[0-9]+$'))"
+           Text="Could not read 'const string Version' from $(EternalReleaseSource)." />
+  </Target>
+</Project>

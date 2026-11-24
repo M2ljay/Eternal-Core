@@ -109,7 +109,7 @@ public partial class MainWindow : Window
 
     private void ApplyLanguage()
     {
-        VersionText.Text = Loc.T("Version") + " " + Installer.AppVersion;
+        VersionText.Text = Loc.T("Version") + " " + global::Playhub.Shared.EternalRelease.DisplayVersion;
 
         AgreeTitle.Text = Loc.T("AgreeTitle");
         AgreeSubtitle.Text = Loc.T("AgreeSubtitle");
