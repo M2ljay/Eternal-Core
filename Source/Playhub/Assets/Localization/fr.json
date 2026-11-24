@@ -1449,5 +1449,14 @@
   "StoreLibrary.WindowsManaged": "Installation gérée par Microsoft Store",
   "StoreLibrary.WindowsManagedHelp": "Microsoft Store gère l’installation et le dossier de destination. Playhub confirme la fin grâce au package installé dans Windows.",
   "StoreLibrary.WindowsManagedRequested": "Installation demandée. Microsoft Store gère ce téléchargement.",
-  "StoreLibrary.Tagline": "Connectez vos services et retrouvez vos jeux dans votre bibliothèque Steam."
+  "StoreLibrary.Tagline": "Connectez vos services et retrouvez vos jeux dans votre bibliothèque Steam.",
+  "Protezione anti-cheat": "Protection anti-triche",
+  "Alcuni anti-cheat bloccano i giochi quando Gaming Mode interviene su tastiera, finestre o processi.": "Certains anti-triches bloquent les jeux quand le Mode Gaming agit sur le clavier, les fenêtres ou les processus.",
+  "Modalità sicura anti-cheat": "Mode sûr anti-triche",
+  "Mentre è aperto un gioco con anti-cheat, Gaming Mode sospende tasti del volume, finestre senza bordi, cursore nascosto e gestione energetica del gioco. Riprendono quando chiudi il gioco.": "Tant qu'un jeu avec anti-triche est ouvert, le Mode Gaming met en pause les touches de volume, les fenêtres sans bordures, le masquage du curseur et la gestion d'énergie du jeu. Tout reprend quand tu fermes le jeu.",
+  "Tratta ogni gioco come protetto": "Traiter chaque jeu comme protégé",
+  "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "Met en pause les mêmes fonctions pour n'importe quel jeu, même si aucun anti-triche n'est reconnu.",
+  "Un eseguibile per riga, ad esempio cod.exe": "Un exécutable par ligne, par exemple cod.exe",
+  "Giochi sempre protetti": "Jeux toujours protégés",
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Le journal du Mode Gaming (%APPDATA%\\GamingMode\\agent.log) indique quand la protection s'active et pourquoi."
 }

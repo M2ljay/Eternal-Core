@@ -199,3 +199,46 @@ hand. The `mark-i` branch adds `.github/workflows/eternal-release.yml` (windows-
   dependencies (`StoreLibraryUpdate`, `BundledPlayhubMaintenance`, `ShellIdentity`, `GamingModeAgentUpdate`, …) that
   the test project does not link. Upstream's release script runs it, so upstream either built it in a different
   state or the script was not re-run before 3.0.0.
+
+## 4. Mark II changes
+
+### Upstream #25: anti-cheat safe mode
+
+Code: `GamingModeAgent/GamingMode.Services/AntiCheatProtection.cs` (catalogue, policy, folder probe, orchestrator;
+pure, tested by `Source/AntiCheatProtection.Tests` on Linux and in CI) and `AntiCheatProtection.Windows.cs` (the
+passive observer and the 750 ms loop). Wiring: `AgentHost.cs` creates the monitor before the boot mode is applied,
+so an already-running protected game is seen before Gaming Mode's services start. Each paused service keeps a "wanted"
+flag, so `ModeManager` can still start and stop it during a pause and the pause wins until release.
+
+| Feature | Pause | Resume |
+| ------- | ----- | ------ |
+| `qos` | `GameExecutionQosController.StopAsync()` (the owner process restores the default and closes its handle); the endpoint and controller refuse new leases | nothing; the plugin renews leases as before |
+| `window` | `GamingWindowFocusService` stops completely (no restyle, no forced foreground, no post-game watcher, which holds a process handle); its arm/QAM entry points refuse | restarts; brings Big Picture to the front once if only the desktop is |
+| `volume` | `UnhookWindowsHookEx` (the volume watcher keeps running; it does not touch games) | the hook is reinstalled |
+| `cursor` | the worker stops and `SPI_SETCURSORS` restores the cursors | restarts |
+
+**The exact Ricochet trigger is still unverified.** Activision publishes no list of what Ricochet reacts to. The
+reporter's evidence (it works after leaving Gaming Mode, in the same session) points at these four Gaming-only
+features, but not at which one. The Ricochet service names (`atvi-randgrid_sr`, `atvi-randgrid_msstore`) and
+`randgrid.sys` in the *Call of Duty HQ* folder come from third-party troubleshooting guides
+(timesaver.gg, ugetfix.com), not from Activision.
+
+**How to bisect on the PC.** The agent reads a config-only list, `antiCheatPausedFeatures`, in the `gaming` section
+of `%APPDATA%\GamingMode\config.json` (Playhub keeps it when it rewrites the file). Empty or absent pauses all four.
+
+1. Confirm the fix: Playhub's defaults (safe mode on), launch Call of Duty from Big Picture. Check `agent.log` for the
+   "engaged" line and which signal matched.
+2. Narrow it: set `"antiCheatPausedFeatures": ["volume"]`, wait a few seconds for the agent to reload it (the log
+   prints the new settings), and launch the game again. Repeat with `["window"]`, `["cursor"]`, `["qos"]`.
+   The feature(s) whose pause alone lets the game start are the trigger. If none does alone, try pairs.
+3. Cross-check without the safe mode: turn it off and turn the matching feature off by hand where a toggle exists
+   (*Nascondi il cursore*; *Finestre senza bordi* stops only the restyling, not the foreground handling). The volume
+   hook and the QoS endpoint (which opens the game process before it looks at the profile) have no toggle, so step 2
+   is the only clean test for them.
+4. Report the result; the pause list can then shrink so the other features keep working in protected games.
+
+If no subset helps, the trigger is outside these four. Candidates not paused today: Gaming Mode's Winlogon shell
+replacement (`ShellTools.SetGamingShell`, test by switching to Gaming in-session from a Desktop boot), the live
+performance HUD (PresentMon/ETW), per-game audio volume (`GameAudioVolumeService`), the native Steam overlay
+brokers and Launch Curtain cover, the QAM focus guard, and `OverlayWindowTools.IsSteamForeground()`, which reads the
+foreground process's identity (`NativeForegroundProcessIdentity`) and so may briefly query the game process.

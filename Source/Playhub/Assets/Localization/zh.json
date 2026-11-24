@@ -1427,5 +1427,14 @@
   "StoreLibrary.WindowsManaged": "由 Microsoft Store 管理安装",
   "StoreLibrary.WindowsManagedHelp": "Microsoft Store 管理安装和目标文件夹。Playhub 通过 Windows 中已安装的软件包确认完成。",
   "StoreLibrary.WindowsManagedRequested": "已请求安装。Microsoft Store 管理此下载。",
-  "StoreLibrary.Tagline": "连接你的服务，将游戏汇入 Steam 游戏库。"
+  "StoreLibrary.Tagline": "连接你的服务，将游戏汇入 Steam 游戏库。",
+  "Protezione anti-cheat": "反作弊保护",
+  "Alcuni anti-cheat bloccano i giochi quando Gaming Mode interviene su tastiera, finestre o processi.": "当 Gaming Mode 干预键盘、窗口或进程时，部分反作弊会阻止游戏运行。",
+  "Modalità sicura anti-cheat": "反作弊安全模式",
+  "Mentre è aperto un gioco con anti-cheat, Gaming Mode sospende tasti del volume, finestre senza bordi, cursore nascosto e gestione energetica del gioco. Riprendono quando chiudi il gioco.": "当带有反作弊的游戏打开时，Gaming Mode 会暂停音量键、无边框窗口、光标隐藏和游戏电源管理。关闭游戏后自动恢复。",
+  "Tratta ogni gioco come protetto": "将所有游戏视为受保护",
+  "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "对任何游戏都暂停这些功能，即使未识别到反作弊。",
+  "Un eseguibile per riga, ad esempio cod.exe": "每行一个可执行文件，例如 cod.exe",
+  "Giochi sempre protetti": "始终受保护的游戏",
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Gaming Mode 日志（%APPDATA%\\GamingMode\\agent.log）会记录保护何时启用以及原因。"
 }

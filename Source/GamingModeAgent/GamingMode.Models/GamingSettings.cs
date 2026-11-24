@@ -42,6 +42,23 @@ public sealed class GamingSettings
 
 	public bool BorderlessFullscreenWindowsInGamingMode { get; set; } = true;
 
+	// ---------- ANTI-CHEAT SAFE MODE (Eternal Core) ----------
+	//
+	// While a game protected by a kernel anti-cheat runs, Gaming Mode pauses the
+	// volume-key hook, borderless/foreground handling, cursor auto-hide and game
+	// power QoS. See AntiCheatProtection.cs. Defaults must match the app's
+	// Playhub/Models/GamingModeConfig.cs.
+	public bool AntiCheatSafeModeEnabled { get; set; } = true;
+
+	public bool AntiCheatTreatEveryGameAsProtected { get; set; }
+
+	// Executable names ("cod.exe") always treated as protected.
+	public List<string> AntiCheatProtectedExecutables { get; set; } = new List<string>();
+
+	// Config-only, for bisecting which feature an anti-cheat reacts to: "qos",
+	// "window", "volume", "cursor". Null or empty pauses all four.
+	public List<string>? AntiCheatPausedFeatures { get; set; }
+
 	public List<GamingStartupApp> CustomStartupApps { get; set; } = new List<GamingStartupApp>();
 
 	// ---------- PLAYHUB DASHBOARD ----------

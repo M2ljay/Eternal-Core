@@ -172,7 +172,91 @@ public sealed class GamingWindowFocusService : IDisposable
 		_postGameReturn = new(logger);
 	}
 
+	// Anti-cheat safe mode stops this whole service while a protected game runs:
+	// no borderless restyling, no forced foreground, no post-game watcher holding
+	// a handle on the game. Start/Stop keep recording what Gaming Mode wants.
+	private readonly object _pauseSync = new object();
+
+	private bool _wanted;
+
+	private bool _wantedBorderless = true;
+
+	private volatile bool _antiCheatPaused;
+
+	internal bool AntiCheatPaused => _antiCheatPaused;
+
 	public void Start(bool applyBorderlessFullscreen = true)
+	{
+		lock (_pauseSync)
+		{
+			_wanted = true;
+			_wantedBorderless = applyBorderlessFullscreen;
+			if (_antiCheatPaused)
+			{
+				_logger.Info("Gaming window focus service stays off while anti-cheat safe mode is engaged.");
+				return;
+			}
+			StartWorker(applyBorderlessFullscreen);
+		}
+	}
+
+	public void Stop()
+	{
+		lock (_pauseSync)
+		{
+			_wanted = false;
+			StopWorker();
+		}
+	}
+
+	internal void SetAntiCheatPaused(bool paused)
+	{
+		lock (_pauseSync)
+		{
+			if (_antiCheatPaused == paused) return;
+			_antiCheatPaused = paused;
+			if (!_wanted) return;
+			if (paused)
+			{
+				StopWorker();
+				_logger.Info("Borderless and foreground handling paused for anti-cheat safe mode.");
+			}
+			else
+			{
+				StartWorker(_wantedBorderless);
+				ReturnToBigPictureAfterProtectedGame();
+			}
+		}
+	}
+
+	// The post-game watcher was off while the protected game ran, so nothing
+	// brought Big Picture back when it closed. Do it once, and only when the
+	// desktop or nothing is in front: never pull Steam over another open window.
+	private void ReturnToBigPictureAfterProtectedGame()
+	{
+		try
+		{
+			if (IsLaunchCurtainOnScreen || OverlayWindowTools.IsSteamForeground()) return;
+			nint foreground = GetForegroundWindow();
+			if (foreground != 0 && OverlayWindowTools.IsPresentGameSurface(foreground) && !IsDesktopWindow(foreground)) return;
+			bool returned = OverlayWindowTools.ActivateSteam();
+			_logger.Info(returned ? "Big Picture brought back after the protected game closed."
+				: "Big Picture could not be brought back after the protected game closed.");
+		}
+		catch (Exception exception)
+		{
+			_logger.Error("Could not return to Big Picture after the protected game closed.", exception);
+		}
+	}
+
+	private static bool IsDesktopWindow(nint window)
+	{
+		StringBuilder className = new(64);
+		GetClassName(window, className, className.Capacity);
+		return className.ToString() is "Progman" or "WorkerW" or "Shell_TrayWnd";
+	}
+
+	private void StartWorker(bool applyBorderlessFullscreen)
 	{
 		lock (_sync)
 		{
@@ -189,7 +273,7 @@ public sealed class GamingWindowFocusService : IDisposable
 		}
 	}
 
-	public void Stop()
+	private void StopWorker()
 	{
 		CancellationTokenSource cancellation;
 		Task worker;
@@ -350,7 +434,7 @@ public sealed class GamingWindowFocusService : IDisposable
 	public bool TryGetQamGameProcess(nint window, out uint processId)
 	{
 		processId = 0;
-		return _gameWindows.TryGetValue(window, out uint tracked) && TryGetWindowProcess(window, out processId, out _)
+		return !_antiCheatPaused && _gameWindows.TryGetValue(window, out uint tracked) && TryGetWindowProcess(window, out processId, out _)
 			&& processId == tracked && IsWindowVisible(window) && !IsCloaked(window);
 	}
 
@@ -367,7 +451,7 @@ public sealed class GamingWindowFocusService : IDisposable
 	{
 		int epoch = Volatile.Read(ref _returnArmEpoch);
 		bool ServiceCurrent() => !cancellation.IsCancellationRequested && !_launchCurtainPriorityActive && !_modeTransitioning
-			&& Volatile.Read(ref _returnArmEpoch) == epoch;
+			&& !_antiCheatPaused && Volatile.Read(ref _returnArmEpoch) == epoch;
 		if (appId == 0 || !ServiceCurrent()) return false;
 		// Preserve the existing Steam/packaged fast path. Only its refusal may
 		// borrow an authenticated canonical Win32 launch outside this service lock.
@@ -406,7 +490,7 @@ public sealed class GamingWindowFocusService : IDisposable
 
 	public bool ArmBigPictureReturn(uint appId, uint expectedUwpPid = 0)
 	{
-		if (appId == 0 || _launchCurtainPriorityActive) return false;
+		if (appId == 0 || _launchCurtainPriorityActive || _antiCheatPaused) return false;
 		nint window = GetForegroundWindow();
 		if (!OverlayWindowTools.IsPresentGameSurface(window)) return false;
 		lock (_sync)

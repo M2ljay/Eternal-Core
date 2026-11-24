@@ -50,4 +50,31 @@ Check(LocalizationService.Format("it", "Fixture.Count", 48) == "Totale 48" &&
 Check(LocalizationService.Translate("en", "Fixture.UnmappedResource") == "Fixture.UnmappedResource" &&
     LocalizationService.Translate("it", null) == "" && LocalizationService.Translate("en", " ") == " ",
     "Unknown, null and blank translations retain their documented fallback");
+// Eternal Core Mark II: anti-cheat safe mode and Dashboard controller-chord strings
+// (MainWindow.xaml.cs) must exist in every language, or they fall back to Italian.
+string[] eternalMarkII =
+{
+    "Protezione anti-cheat",
+    "Alcuni anti-cheat bloccano i giochi quando Gaming Mode interviene su tastiera, finestre o processi.",
+    "Modalit\u00e0 sicura anti-cheat",
+    "Mentre \u00e8 aperto un gioco con anti-cheat, Gaming Mode sospende tasti del volume, finestre senza bordi, cursore nascosto e gestione energetica del gioco. Riprendono quando chiudi il gioco.",
+    "Tratta ogni gioco come protetto",
+    "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.",
+    "Un eseguibile per riga, ad esempio cod.exe",
+    "Giochi sempre protetti",
+    "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perch\u00e9."
+};
+foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
+{
+    foreach (var key in eternalMarkII)
+    {
+        var translated = LocalizationService.Translate(language.Key, key);
+        if (string.IsNullOrWhiteSpace(translated) || translated == key)
+            throw new Exception($"Mark II string is not translated: {language.Key}/{key}");
+        if (!Tokens(translated).SequenceEqual(Tokens(key)))
+            throw new Exception($"Mark II string format token mismatch: {language.Key}/{key}");
+    }
+    Check(true, $"{language.Key}: {eternalMarkII.Length} Mark II strings translate");
+}
+Check(eternalMarkII.All(key => LocalizationService.Translate("it", key) == key), "Mark II Italian source strings render as written");
 Console.WriteLine($"{passed} PC and generic localization checks passed.");

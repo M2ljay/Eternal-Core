@@ -73,6 +73,16 @@ jobs:
         working-directory: Source/EternalRelease.Tests
         run: dotnet run -c Release
 
+      # Mark II: anti-cheat safe mode detection and pause/resume orchestration (pure logic).
+      - name: Anti-cheat safe mode tests
+        working-directory: Source/AntiCheatProtection.Tests
+        run: dotnet run -c Release
+
+      # Every UI string must resolve in every language the app ships (missing ones fall back to Italian).
+      - name: Localization resource tests
+        working-directory: Source/LocalizationResource.Tests
+        run: dotnet run -c Release
+
       - name: Build installer
         shell: pwsh
         run: ./Source/PlayhubSetup/build-update-preview.ps1

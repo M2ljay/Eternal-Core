@@ -29,7 +29,8 @@ The single source of truth is `Source/Shared/EternalRelease.cs` (`Version`, `Mar
 `Source/EternalRelease.props` copies the version into the app, setup and agent builds. To cut the next Mark, change
 those two constants and nothing else.
 
-The About card and the setup window show `Mark I (3.1.0)`. Windows "Installed apps" shows `3.1.0`.
+The About card and the setup window show the Mark and version, for example `Mark II (3.2.0)`. Windows "Installed apps"
+shows `3.2.0`.
 
 ## How updates flow
 
@@ -66,7 +67,7 @@ git push origin v3.1.0
 Requires the .NET 8 SDK, Node 22, PowerShell 7, and Git with `core.autocrlf=true` (the default in Git for Windows).
 
 ```powershell
-git clone --branch mark-i https://github.com/M2ljay/Eternal-Core
+git clone --branch mark-ii https://github.com/M2ljay/Eternal-Core
 cd Eternal-Core\Source\GamingModeDeckyPlugin
 npm install -g pnpm@9; pnpm install --frozen-lockfile
 cd ..\EternalRelease.Tests; dotnet run -c Release
@@ -79,6 +80,73 @@ pwsh -File Source\PlayhubSetup\build-update-preview.ps1
 
 The app, setup and agent target Windows and need NuGet packages, so they only build on Windows or in CI. The
 portable test projects run on Linux; see `CLAUDE.md` at the repo root.
+
+## Mark II (3.2.0)
+
+### Anti-cheat safe mode (upstream #25)
+
+Some kernel anti-cheats (Ricochet for Call of Duty was the report) refuse to start a game while Gaming Mode is active.
+Gaming Mode does not stop services or kill Explorer, but four of its Gaming-only features touch games or global input:
+
+| Feature (config key)                    | What it does to the game or the system                                     |
+| --------------------------------------- | -------------------------------------------------------------------------- |
+| volume-key hook (`volume`)              | a global low-level keyboard hook (`WH_KEYBOARD_LL`) for the volume keys     |
+| borderless/foreground handling (`window`) | restyles game windows to borderless, forces them to the foreground, and watches the game process to bring Big Picture back afterwards |
+| cursor auto-hide (`cursor`)             | replaces the system cursors with a blank one                               |
+| game power QoS (`qos`)                  | opens a handle on the game process to set its power throttling            |
+
+**What it does.** While a protected game runs, the Gaming Mode agent pauses all four: it removes the keyboard hook,
+leaves game windows alone, restores the system cursors and closes or refuses any handle on the game. When the game
+exits (after about two seconds without any protection signal) they resume, and Big Picture is brought back to the
+front if nothing else is open. It works in both modes; in Desktop Mode the features are already off.
+
+**How a protected game is detected.** Passively: the agent never opens, injects into, enumerates the modules of, or
+reads the memory of a game process. Every ~0.75 s it checks, in order:
+
+1. Anti-cheat services reported as running by the Windows service control manager (read-only queries):
+   `EasyAntiCheat`, `EasyAntiCheat_EOS`, `BEService`, `BEDaisy`, `vgc`, `vgk`, `FACEIT`, `FACEITService`,
+   `EAAntiCheatService`, `atvi-randgrid_sr`, `atvi-randgrid_msstore` (Ricochet), `mhyprot2`, `mhyprot3`, `npggsvc`,
+   `GameGuard`, `xhunter1`. Only services that start on demand count: a service set to start with Windows (boot,
+   system or automatic, such as Riot's `vgk` driver) runs whether or not you play, so the log notes it once and it is
+   not used.
+2. Your **Always protected games** list, matched against running process names.
+3. Anti-cheat files in the running game's folder: `EasyAntiCheat`, `EasyAntiCheat_EOS_Setup.exe`,
+   `start_protected_game.exe`, `BattlEye`, `BEService*.exe`, `randgrid.sys` (Ricochet), `EAAntiCheat.*.exe`,
+   `GameGuard`, `XIGNCODE`. The folder comes from Steam's running game (`RunningAppID` and its appmanifest), or from
+   the image path of a process that owns a visible game-sized window (read by process ID with
+   `NtQuerySystemInformation`, without opening the process). The agent lists the executable's folder and up to three
+   parents, and stops at library folders such as `steamapps\common` so a neighbouring game never matches.
+4. **Treat every game as protected** (off by default): any running Steam game or game-like window.
+
+Settings (Playhub > Gaming Mode > *Protezione anti-cheat* / *Anti-cheat protection*):
+
+- **Anti-cheat safe mode**: master switch, on by default.
+- **Treat every game as protected**: off by default.
+- **Always protected games**: one executable per line.
+
+**How to add a game.** Find the game's executable (in Steam: *Manage > Browse local files*, or in Task Manager's
+*Details* tab while it runs) and type its file name, for example `cod.exe`, on its own line under
+*Always protected games*. The name is enough; a full path also works. Case and the `.exe` suffix do not matter.
+
+**Which game triggered it.** The agent log, `%APPDATA%\GamingMode\agent.log`, has one line per change:
+
+```
+Anti-cheat safe mode engaged: anti-cheat service atvi-randgrid_sr (Ricochet (Call of Duty)) is running. Pausing: game power QoS, borderless/foreground handling, volume-key hook, cursor auto-hide.
+Anti-cheat safe mode still engaged: cod.exe is on the "always protected" list.
+Anti-cheat safe mode released: no protected game is detected any more (it was engaged because ...). Resuming: ...
+```
+
+**Limits.**
+
+- Protection starts when the first signal appears. Steam sets `RunningAppID` as it launches a game, and on-demand
+  anti-cheat services start with the game's launcher, so this is normally before the anti-cheat inspects the system,
+  but it is a race measured in fractions of a second. For a game that still fails, add its executable to the list, or
+  turn on *Treat every game as protected*.
+- An anti-cheat driver that stays loaded after its game exits (mhyprot is known for this) keeps protection on until
+  it unloads or Windows restarts. The log says which service it is.
+- Other agent features that observe games are not paused: the live performance HUD (PresentMon, which uses ETW),
+  per-game audio volume, Steam overlay brokers, Launch Curtain and the QAM focus guard. See
+  [ARCHITECTURE-NOTES.md §4](ARCHITECTURE-NOTES.md#4-mark-ii-changes).
 
 ## Status of the Mark I branch (as built in a Linux sandbox, 2026-11-24)
 
@@ -105,3 +173,6 @@ portable test projects run on Linux; see `CLAUDE.md` at the repo root.
 4. **Branding:** the app name, AppUserModelID (`LoZazaMastro.Playhub`), publisher string and install folder are
    unchanged on purpose. Renaming them later needs a migration plan (shortcuts, uninstall key, plugin author check).
 5. **Release tests:** upstream's `PlayhubUpdate.Tests` is broken at v3.0.0. Fix it, or rely on `EternalRelease.Tests`?
+6. **Ricochet's exact trigger** is unknown. Once it is bisected on the PC
+   ([ARCHITECTURE-NOTES.md §4](ARCHITECTURE-NOTES.md#4-mark-ii-changes)), should the pause list shrink to the
+   features that matter, so volume keys and the cursor keep working in protected games?

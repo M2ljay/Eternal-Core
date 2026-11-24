@@ -1432,5 +1432,14 @@
   "StoreLibrary.WindowsManaged": "Microsoft Store द्वारा प्रबंधित स्थापना",
   "StoreLibrary.WindowsManagedHelp": "Microsoft Store स्थापना और गंतव्य फ़ोल्डर का प्रबंधन करता है। Playhub Windows में स्थापित पैकेज से पूर्ण होने की पुष्टि करता है।",
   "StoreLibrary.WindowsManagedRequested": "स्थापना का अनुरोध किया गया। Microsoft Store इस डाउनलोड का प्रबंधन करता है।",
-  "StoreLibrary.Tagline": "अपनी सेवाएँ जोड़ें और अपने गेम Steam लाइब्रेरी में लाएँ।"
+  "StoreLibrary.Tagline": "अपनी सेवाएँ जोड़ें और अपने गेम Steam लाइब्रेरी में लाएँ।",
+  "Protezione anti-cheat": "एंटी-चीट सुरक्षा",
+  "Alcuni anti-cheat bloccano i giochi quando Gaming Mode interviene su tastiera, finestre o processi.": "जब Gaming Mode कीबोर्ड, विंडो या प्रोसेस पर काम करता है, तो कुछ एंटी-चीट गेम को रोक देते हैं।",
+  "Modalità sicura anti-cheat": "एंटी-चीट सुरक्षित मोड",
+  "Mentre è aperto un gioco con anti-cheat, Gaming Mode sospende tasti del volume, finestre senza bordi, cursore nascosto e gestione energetica del gioco. Riprendono quando chiudi il gioco.": "जब तक एंटी-चीट वाला गेम खुला है, Gaming Mode वॉल्यूम कुंजियाँ, बॉर्डरलेस विंडो, कर्सर छिपाना और गेम का पावर मैनेजमेंट रोक देता है। गेम बंद करते ही सब फिर से चालू हो जाता है।",
+  "Tratta ogni gioco come protetto": "हर गेम को सुरक्षित मानें",
+  "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "कोई एंटी-चीट पहचाना न जाए तब भी, किसी भी गेम के लिए वही सुविधाएँ रोक देता है।",
+  "Un eseguibile per riga, ad esempio cod.exe": "हर पंक्ति में एक executable, जैसे cod.exe",
+  "Giochi sempre protetti": "हमेशा सुरक्षित गेम",
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Gaming Mode लॉग (%APPDATA%\\GamingMode\\agent.log) बताता है कि सुरक्षा कब और क्यों चालू हुई।"
 }

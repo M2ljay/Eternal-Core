@@ -1452,5 +1452,14 @@
   "StoreLibrary.WindowsManaged": "Встановленням керує Microsoft Store",
   "StoreLibrary.WindowsManagedHelp": "Microsoft Store керує встановленням і цільовою папкою. Playhub підтверджує завершення за встановленим пакетом Windows.",
   "StoreLibrary.WindowsManagedRequested": "Встановлення запитано. Цим завантаженням керує Microsoft Store.",
-  "StoreLibrary.Tagline": "Підключіть свої сервіси та додайте ігри до бібліотеки Steam."
+  "StoreLibrary.Tagline": "Підключіть свої сервіси та додайте ігри до бібліотеки Steam.",
+  "Protezione anti-cheat": "Захист від античитів",
+  "Alcuni anti-cheat bloccano i giochi quando Gaming Mode interviene su tastiera, finestre o processi.": "Деякі античити блокують ігри, коли Gaming Mode втручається в клавіатуру, вікна чи процеси.",
+  "Modalità sicura anti-cheat": "Безпечний режим для античитів",
+  "Mentre è aperto un gioco con anti-cheat, Gaming Mode sospende tasti del volume, finestre senza bordi, cursore nascosto e gestione energetica del gioco. Riprendono quando chiudi il gioco.": "Поки відкрита гра з античитом, Gaming Mode призупиняє клавіші гучності, вікна без рамок, приховування курсора та керування живленням гри. Усе відновиться, коли закриєш гру.",
+  "Tratta ogni gioco come protetto": "Вважати кожну гру захищеною",
+  "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "Призупиняє ті самі функції для будь-якої гри, навіть якщо античит не розпізнано.",
+  "Un eseguibile per riga, ad esempio cod.exe": "Один виконуваний файл на рядок, наприклад cod.exe",
+  "Giochi sempre protetti": "Завжди захищені ігри",
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Журнал Gaming Mode (%APPDATA%\\GamingMode\\agent.log) показує, коли вмикається захист і чому."
 }

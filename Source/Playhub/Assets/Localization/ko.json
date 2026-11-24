@@ -1434,5 +1434,14 @@
   "StoreLibrary.WindowsManaged": "Microsoft Store에서 설치 관리",
   "StoreLibrary.WindowsManagedHelp": "Microsoft Store에서 설치와 대상 폴더를 관리합니다. Playhub는 Windows에 설치된 패키지로 완료를 확인합니다.",
   "StoreLibrary.WindowsManagedRequested": "설치를 요청했습니다. Microsoft Store에서 이 다운로드를 관리합니다.",
-  "StoreLibrary.Tagline": "서비스를 연결하고 Steam 라이브러리에 게임을 모아 보세요."
+  "StoreLibrary.Tagline": "서비스를 연결하고 Steam 라이브러리에 게임을 모아 보세요.",
+  "Protezione anti-cheat": "안티치트 보호",
+  "Alcuni anti-cheat bloccano i giochi quando Gaming Mode interviene su tastiera, finestre o processi.": "Gaming Mode가 키보드, 창 또는 프로세스에 개입하면 일부 안티치트가 게임을 차단합니다.",
+  "Modalità sicura anti-cheat": "안티치트 안전 모드",
+  "Mentre è aperto un gioco con anti-cheat, Gaming Mode sospende tasti del volume, finestre senza bordi, cursore nascosto e gestione energetica del gioco. Riprendono quando chiudi il gioco.": "안티치트가 있는 게임이 열려 있는 동안 Gaming Mode는 볼륨 키, 테두리 없는 창, 커서 숨기기, 게임 전원 관리를 일시 중지합니다. 게임을 닫으면 다시 시작됩니다.",
+  "Tratta ogni gioco come protetto": "모든 게임을 보호 대상으로 취급",
+  "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "안티치트가 인식되지 않아도 모든 게임에서 같은 기능을 일시 중지합니다.",
+  "Un eseguibile per riga, ad esempio cod.exe": "한 줄에 실행 파일 하나, 예: cod.exe",
+  "Giochi sempre protetti": "항상 보호할 게임",
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Gaming Mode 로그(%APPDATA%\\GamingMode\\agent.log)에 보호가 켜진 시점과 이유가 기록됩니다."
 }

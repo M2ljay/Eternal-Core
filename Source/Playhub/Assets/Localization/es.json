@@ -1448,5 +1448,14 @@
   "StoreLibrary.WindowsManaged": "Instalación gestionada por Microsoft Store",
   "StoreLibrary.WindowsManagedHelp": "Microsoft Store gestiona la instalación y la carpeta de destino. Playhub confirma la finalización mediante el paquete instalado en Windows.",
   "StoreLibrary.WindowsManagedRequested": "Instalación solicitada. Microsoft Store gestiona esta descarga.",
-  "StoreLibrary.Tagline": "Conecta tus servicios y lleva tus juegos a tu biblioteca de Steam."
+  "StoreLibrary.Tagline": "Conecta tus servicios y lleva tus juegos a tu biblioteca de Steam.",
+  "Protezione anti-cheat": "Protección antitrampas",
+  "Alcuni anti-cheat bloccano i giochi quando Gaming Mode interviene su tastiera, finestre o processi.": "Algunos antitrampas bloquean los juegos cuando el Modo Gaming actúa sobre el teclado, las ventanas o los procesos.",
+  "Modalità sicura anti-cheat": "Modo seguro antitrampas",
+  "Mentre è aperto un gioco con anti-cheat, Gaming Mode sospende tasti del volume, finestre senza bordi, cursore nascosto e gestione energetica del gioco. Riprendono quando chiudi il gioco.": "Mientras haya abierto un juego con antitrampas, el Modo Gaming pausa las teclas de volumen, las ventanas sin bordes, la ocultación del cursor y la gestión de energía del juego. Se reanudan al cerrar el juego.",
+  "Tratta ogni gioco come protetto": "Tratar todos los juegos como protegidos",
+  "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "Pausa las mismas funciones con cualquier juego, aunque no se reconozca ningún antitrampas.",
+  "Un eseguibile per riga, ad esempio cod.exe": "Un ejecutable por línea, por ejemplo cod.exe",
+  "Giochi sempre protetti": "Juegos siempre protegidos",
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "El registro del Modo Gaming (%APPDATA%\\GamingMode\\agent.log) indica cuándo se activa la protección y por qué."
 }

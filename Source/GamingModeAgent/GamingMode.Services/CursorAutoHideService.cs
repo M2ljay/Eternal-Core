@@ -63,7 +63,60 @@ public sealed class CursorAutoHideService : IDisposable
 		_logger = logger;
 	}
 
+	// Anti-cheat safe mode stops the worker and restores the system cursors.
+	// Start/Stop keep recording what Gaming Mode wants for when it resumes.
+	private readonly object _pauseSync = new object();
+
+	private bool _wanted;
+
+	private int _wantedHideAfterMs = 2200;
+
+	private bool _antiCheatPaused;
+
 	public void Start(int hideAfterMs)
+	{
+		lock (_pauseSync)
+		{
+			_wanted = true;
+			_wantedHideAfterMs = hideAfterMs;
+			if (_antiCheatPaused)
+			{
+				_logger.Info("Mouse cursor auto-hide stays off while anti-cheat safe mode is engaged.");
+				return;
+			}
+			StartWorker(hideAfterMs);
+		}
+	}
+
+	public void Stop()
+	{
+		lock (_pauseSync)
+		{
+			_wanted = false;
+			StopWorker();
+		}
+	}
+
+	internal void SetAntiCheatPaused(bool paused)
+	{
+		lock (_pauseSync)
+		{
+			if (_antiCheatPaused == paused) return;
+			_antiCheatPaused = paused;
+			if (!_wanted) return;
+			if (paused)
+			{
+				StopWorker();
+				_logger.Info("Mouse cursor auto-hide paused and system cursors restored for anti-cheat safe mode.");
+			}
+			else
+			{
+				StartWorker(_wantedHideAfterMs);
+			}
+		}
+	}
+
+	private void StartWorker(int hideAfterMs)
 	{
 		lock (_sync)
 		{
@@ -77,7 +130,7 @@ public sealed class CursorAutoHideService : IDisposable
 		}
 	}
 
-	public void Stop()
+	private void StopWorker()
 	{
 		CancellationTokenSource cancellation;
 		Task worker;

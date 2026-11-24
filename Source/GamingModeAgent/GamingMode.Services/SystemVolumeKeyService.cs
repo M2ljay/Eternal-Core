@@ -332,7 +332,63 @@ public sealed class SystemVolumeKeyService : IDisposable
 		_logger = logger;
 	}
 
+	// Anti-cheat safe mode removes only the global keyboard hook. Start/Stop keep
+	// recording what Gaming Mode wants, so the hook comes back when the protected
+	// game exits, and only if Gaming Mode still wants it.
+	private readonly object _pauseSync = new object();
+
+	private bool _wanted;
+
+	private bool _antiCheatPaused;
+
 	public void Start()
+	{
+		lock (_pauseSync)
+		{
+			_wanted = true;
+			lock (_sync)
+			{
+				StartVolumeWatcher();
+			}
+			if (_antiCheatPaused)
+			{
+				_logger.Info("System volume key hook stays off while anti-cheat safe mode is engaged.");
+				return;
+			}
+			StartHook();
+		}
+	}
+
+	public void Stop()
+	{
+		lock (_pauseSync)
+		{
+			_wanted = false;
+			StopVolumeWatcher();
+			StopHook();
+		}
+	}
+
+	internal void SetAntiCheatPaused(bool paused)
+	{
+		lock (_pauseSync)
+		{
+			if (_antiCheatPaused == paused) return;
+			_antiCheatPaused = paused;
+			if (!_wanted) return;
+			if (paused)
+			{
+				StopHook();
+				_logger.Info("System volume key hook removed for anti-cheat safe mode.");
+			}
+			else
+			{
+				StartHook();
+			}
+		}
+	}
+
+	private void StartHook()
 	{
 		lock (_sync)
 		{
@@ -348,7 +404,6 @@ public sealed class SystemVolumeKeyService : IDisposable
 				Name = "Gaming Mode Volume Keys"
 			};
 			_thread.Start();
-			StartVolumeWatcher();
 		}
 		if (_ready.Wait(TimeSpan.FromSeconds(2.0)) && Running)
 		{
@@ -356,9 +411,8 @@ public sealed class SystemVolumeKeyService : IDisposable
 		}
 	}
 
-	public void Stop()
+	private void StopHook()
 	{
-		StopVolumeWatcher();
 		Thread thread;
 		uint threadId;
 		lock (_sync)

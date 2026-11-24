@@ -160,6 +160,18 @@ public static class AgentHost
 				using SystemVolumeKeyService volumeKeys = new SystemVolumeKeyService(logger);
 				using OverlayQuickSettingsClient quickSettings = new OverlayQuickSettingsClient();
 				ModeManager manager = new ModeManager(paths, store, processTools, shellTools, cursorAutoHide, windowFocus, volumeKeys, logger);
+				// Anti-cheat safe mode (upstream #25): pause the features that touch games
+				// or global input while a kernel-anti-cheat game runs. Started before the
+				// boot mode is applied, so an already-running protected game is seen first.
+				Func<Task>? stopGameQos = null;
+				using AntiCheatProtectionMonitor antiCheat = new AntiCheatProtectionMonitor(store, logger, modeConfig.Gaming.SteamPath, new IAntiCheatPausable[]
+				{
+					new AntiCheatPausable("qos", "game power QoS", () => stopGameQos?.Invoke().GetAwaiter().GetResult(), () => { }),
+					new AntiCheatPausable("window", "borderless/foreground handling", () => windowFocus.SetAntiCheatPaused(true), () => windowFocus.SetAntiCheatPaused(false)),
+					new AntiCheatPausable("volume", "volume-key hook", () => volumeKeys.SetAntiCheatPaused(true), () => volumeKeys.SetAntiCheatPaused(false)),
+					new AntiCheatPausable("cursor", "cursor auto-hide", () => cursorAutoHide.SetAntiCheatPaused(true), () => cursorAutoHide.SetAntiCheatPaused(false)),
+				});
+				antiCheat.Start();
 				using SteamTaskbarFullscreenService steamTaskbar = new(logger, modeConfig.Gaming.SteamPath);
 				manager.ModeTransitionStarted += steamTaskbar.ModeChanging;
 				manager.ModeTransitionCompleted += steamTaskbar.ModeCompleted;
@@ -332,7 +344,8 @@ public static class AgentHost
                 SpatialAudioService.Map(app, xboxShell, Path.Combine(AppContext.BaseDirectory, "Assets", "SpatialAudio", "Svcl"));
 				int gamingSessionEnabled = store.LoadState().CurrentMode == ModeKind.Gaming ? 1 : 0;
 				bool GamingSessionEnabled() => Volatile.Read(ref gamingSessionEnabled) != 0 && !app.Lifetime.ApplicationStopping.IsCancellationRequested;
-				using var gameQos = new GameExecutionQosController(GamingSessionEnabled);
+				using var gameQos = new GameExecutionQosController(() => GamingSessionEnabled() && !antiCheat.Pauses("qos"));
+				stopGameQos = () => gameQos.StopAsync();
 				using var downloadPower = new SteamDownloadPowerLease(() => GamingSessionEnabled() &&
 					SteamInstallationPath.FindRoot(modeConfig.Gaming.SteamPath) is { } steamRoot &&
 					SteamInstallationPath.ReadVerifiedClientBirth(steamRoot) is { } clientBirth &&
@@ -382,6 +395,8 @@ public static class AgentHost
 				{
 					if (!xboxShell.IsAuthorized(context.Connection.RemoteIpAddress, context.Request.Headers["X-Playhub-Shell-Token"].ToString())) return Results.StatusCode(401);
 					if (!uint.TryParse(context.Request.Query["appId"], out uint appId) || appId == 0) return Results.StatusCode(400);
+					// Never open the game process while a protected game runs.
+					if (antiCheat.Pauses("qos")) return Results.Json(new { status = "TargetUnavailable" });
 					if (!GamingSessionEnabled() || !windowFocus.TryGetQamSource(out _, out uint gamePid))
 						return Results.Json(new { status = "TargetUnavailable" });
 					GameExecutionQosTarget target;

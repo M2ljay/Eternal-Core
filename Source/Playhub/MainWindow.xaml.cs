@@ -248,6 +248,7 @@ public sealed partial class MainWindow : Window
     private NumberBox _splashMinBox = new();
     private NumberBox _splashMaxBox = new();
     private NumberBox _apiPortBox = new();
+    private TextBox _antiCheatExecutablesBox = new();
     private sealed record ComboOption(string Key, string LabelKey);
 
     private sealed class TutorialVideoSession
@@ -2282,6 +2283,7 @@ public sealed partial class MainWindow : Window
 
         panel.Children.Add(startCard);
         panel.Children.Add(CardsRow(screenCard, inputCard));
+        panel.Children.Add(BuildAntiCheatCard());
 
         // ---------- Splash logo with live preview ----------
         _splashLogoCombo = ChoiceCombo(SplashLogoOptions);
@@ -7126,6 +7128,7 @@ by Valve.";
         _gamingConfig.Gaming.SunshinePath = EmptyToNull(_sunshinePathBox.Text);
         _gamingConfig.Gaming.DelaySteamAfterDeckyMs = (int)_delaySteamBox.Value;
         _gamingConfig.Gaming.AutoHideMouseCursorAfterMs = (int)_mouseDelayBox.Value;
+        _gamingConfig.Gaming.AntiCheatProtectedExecutables = ParseExecutableList(_antiCheatExecutablesBox.Text);
         _gamingConfig.Safety.ApiPort = (int)_apiPortBox.Value;
         _gamingConfig.Gaming.Splash.LogoPath = ResolveSplashLogo();
         _gamingConfig.Gaming.Splash.AnimationEnabled = _gamingToggles["splashAnimation"].IsOn;
@@ -7160,7 +7163,7 @@ by Valve.";
         {
             toggle.Toggled += (_, _) => AutoSaveGaming();
         }
-        foreach (var box in new[] { _steamPathBox, _steamArgsBox, _deckyPathBox, _sunshinePathBox, _splashLogoBox })
+        foreach (var box in new[] { _steamPathBox, _steamArgsBox, _deckyPathBox, _sunshinePathBox, _splashLogoBox, _antiCheatExecutablesBox })
         {
             box.LostFocus += (_, _) => AutoSaveGaming();
         }
@@ -8226,6 +8229,7 @@ by Valve.";
         _sunshinePathBox.Text = _gamingConfig.Gaming.SunshinePath ?? "";
         _delaySteamBox.Value = _gamingConfig.Gaming.DelaySteamAfterDeckyMs;
         _mouseDelayBox.Value = _gamingConfig.Gaming.AutoHideMouseCursorAfterMs;
+        _antiCheatExecutablesBox.Text = string.Join("\r\n", _gamingConfig.Gaming.AntiCheatProtectedExecutables ?? new List<string>());
         _apiPortBox.Value = _gamingConfig.Safety.ApiPort;
         _splashLogoBox.Text = _gamingConfig.Gaming.Splash.LogoPath ?? "";
         SelectComboKey(_splashLogoCombo, SplashLogoSelection.FromSavedPath(_gamingConfig.Gaming.Splash.LogoPath,
@@ -8402,6 +8406,8 @@ by Valve.";
         SetToggle("sunshineCompatibility", _gamingConfig.Gaming.EnsureSunshineCompatibilityInGamingMode);
         SetToggle("hideMouse", _gamingConfig.Gaming.AutoHideMouseCursorInGamingMode);
         SetToggle("borderless", _gamingConfig.Gaming.BorderlessFullscreenWindowsInGamingMode);
+        SetToggle("antiCheatSafe", _gamingConfig.Gaming.AntiCheatSafeModeEnabled);
+        SetToggle("antiCheatEveryGame", _gamingConfig.Gaming.AntiCheatTreatEveryGameAsProtected);
         SetToggle("remoteApi", _gamingConfig.Safety.AllowRemoteApi);
         SetToggle("restartWithoutPrompt", _gamingConfig.Safety.RestartWithoutPrompt);
     }
@@ -8425,9 +8431,52 @@ by Valve.";
         _gamingConfig.Gaming.EnsureSunshineCompatibilityInGamingMode = GetToggle("sunshineCompatibility");
         _gamingConfig.Gaming.AutoHideMouseCursorInGamingMode = GetToggle("hideMouse");
         _gamingConfig.Gaming.BorderlessFullscreenWindowsInGamingMode = GetToggle("borderless");
+        _gamingConfig.Gaming.AntiCheatSafeModeEnabled = GetToggle("antiCheatSafe");
+        _gamingConfig.Gaming.AntiCheatTreatEveryGameAsProtected = GetToggle("antiCheatEveryGame");
         _gamingConfig.Gaming.DashboardEnabled = true;
         _gamingConfig.Safety.AllowRemoteApi = GetToggle("remoteApi");
         _gamingConfig.Safety.RestartWithoutPrompt = true;
+    }
+
+    // ---------- Anti-cheat safe mode (Eternal Core, upstream #25) ----------
+    // The agent pauses the volume-key hook, borderless/foreground handling,
+    // cursor auto-hide and game power QoS while a kernel-anti-cheat game runs
+    // (GamingModeAgent/GamingMode.Services/AntiCheatProtection*.cs).
+    private FluentCard BuildAntiCheatCard()
+    {
+        var card = Card();
+        card.Children.Add(IconHeader(((char)0xEA18).ToString(), "Protezione anti-cheat",
+            "Alcuni anti-cheat bloccano i giochi quando Gaming Mode interviene su tastiera, finestre o processi."));
+        AddExplainedToggle(card, "Modalità sicura anti-cheat",
+            "Mentre è aperto un gioco con anti-cheat, Gaming Mode sospende tasti del volume, finestre senza bordi, cursore nascosto e gestione energetica del gioco. Riprendono quando chiudi il gioco.",
+            "antiCheatSafe");
+        AddExplainedToggle(card, "Tratta ogni gioco come protetto",
+            "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.",
+            "antiCheatEveryGame");
+        _antiCheatExecutablesBox = TextBox("Un eseguibile per riga, ad esempio cod.exe");
+        _antiCheatExecutablesBox.AcceptsReturn = true;
+        _antiCheatExecutablesBox.TextWrapping = TextWrapping.Wrap;
+        _antiCheatExecutablesBox.MinHeight = 76;
+        card.Children.Add(Labeled("Giochi sempre protetti", _antiCheatExecutablesBox));
+        card.Children.Add(Body("Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché."));
+        return card;
+    }
+
+    // One executable per line; commas and semicolons also separate. Same rule as
+    // the agent's AntiCheatProtectionPolicy.ParseExecutableList.
+    private static List<string> ParseExecutableList(string? text)
+    {
+        var result = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var part in (text ?? "").Split(new[] { '\r', '\n', ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var entry = part.Trim().Trim('"', '\'').Trim();
+            var name = Path.GetFileName(entry.Replace('/', '\\'));
+            if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) name = name[..^4];
+            if (name.Trim().Length == 0 || !seen.Add(name.Trim())) continue;
+            result.Add(entry);
+        }
+        return result;
     }
 
     private void SetToggle(string key, bool value)

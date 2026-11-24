@@ -1431,5 +1431,14 @@
   "StoreLibrary.WindowsManaged": "Microsoft Store がインストールを管理",
   "StoreLibrary.WindowsManagedHelp": "Microsoft Store がインストールと保存先を管理します。Playhub は Windows にインストールされたパッケージで完了を確認します。",
   "StoreLibrary.WindowsManagedRequested": "インストールを要求しました。Microsoft Store がダウンロードを管理します。",
-  "StoreLibrary.Tagline": "各サービスに接続して、ゲームを Steam ライブラリにまとめましょう。"
+  "StoreLibrary.Tagline": "各サービスに接続して、ゲームを Steam ライブラリにまとめましょう。",
+  "Protezione anti-cheat": "アンチチート保護",
+  "Alcuni anti-cheat bloccano i giochi quando Gaming Mode interviene su tastiera, finestre o processi.": "Gaming Mode がキーボード、ウィンドウ、プロセスに介入すると、ゲームをブロックするアンチチートがあります。",
+  "Modalità sicura anti-cheat": "アンチチート セーフモード",
+  "Mentre è aperto un gioco con anti-cheat, Gaming Mode sospende tasti del volume, finestre senza bordi, cursore nascosto e gestione energetica del gioco. Riprendono quando chiudi il gioco.": "アンチチート付きのゲームを開いている間、Gaming Mode は音量キー、ボーダーレスウィンドウ、カーソルの非表示、ゲームの電源管理を一時停止します。ゲームを閉じると再開します。",
+  "Tratta ogni gioco come protetto": "すべてのゲームを保護対象として扱う",
+  "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "アンチチートが認識されなくても、どのゲームでも同じ機能を一時停止します。",
+  "Un eseguibile per riga, ad esempio cod.exe": "1 行に 1 つの実行ファイル（例: cod.exe）",
+  "Giochi sempre protetti": "常に保護するゲーム",
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Gaming Mode のログ（%APPDATA%\\GamingMode\\agent.log）に、保護が有効になった時刻と理由が記録されます。"
 }

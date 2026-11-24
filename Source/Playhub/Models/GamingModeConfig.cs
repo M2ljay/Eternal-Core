@@ -53,6 +53,11 @@ public sealed class GamingOptions
     public bool AutoHideMouseCursorInGamingMode { get; set; } = true;
     public int AutoHideMouseCursorAfterMs { get; set; } = 500;
     public bool BorderlessFullscreenWindowsInGamingMode { get; set; } = true;
+    // Anti-cheat safe mode (Eternal Core). Defaults must match the agent's
+    // GamingMode.Models/GamingSettings.cs.
+    public bool AntiCheatSafeModeEnabled { get; set; } = true;
+    public bool AntiCheatTreatEveryGameAsProtected { get; set; }
+    public List<string> AntiCheatProtectedExecutables { get; set; } = new();
     // Keep the previous preference when rewriting existing settings files.
     public bool EnableXboxGameBar { get; set; }
     public bool DashboardEnabled { get; set; } = true;
