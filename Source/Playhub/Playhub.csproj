@@ -83,7 +83,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <!-- Keep unpublished fixes until their matching release archives are public. -->
-    <Content Include="Plugins\Artwork\*Installer*.zip;Plugins\Metadata\*Installer*.zip;Plugins\Launch Curtain\*Installer*.zip;Plugins\Weather\*Installer*.zip;Plugins\CSS Loader\*.zip">
+    <Content Include="Plugins\Metadata\*Installer*.zip;Plugins\Launch Curtain\*Installer*.zip;Plugins\Weather\*Installer*.zip;Plugins\CSS Loader\*.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
