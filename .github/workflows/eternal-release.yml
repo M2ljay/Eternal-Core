@@ -1,6 +1,7 @@
 # Eternal Core: builds Playhub-Setup.exe on Windows.
 # - Every push to main or a mark-* branch, and manual runs: build and upload the installer as a workflow artifact.
-# - Pushing a tag vX.Y.Z: the same, then create a DRAFT GitHub release with the installer attached.
+# - Pushing a tag vX.Y.Z or a mark-* branch: the same, then create or refresh a DRAFT GitHub release
+#   v<EternalRelease.Version> with the installer attached (a published release is never changed).
 #   Nothing reaches installed copies until you publish the draft (the updater reads releases/latest, which
 #   ignores drafts and prereleases).
 # Forks have Actions disabled by default: enable them under the repository's Actions tab first.
@@ -85,15 +86,25 @@ jobs:
             Source/PlayhubSetup/Output/Playhub-Setup.exe.sha256
           if-no-files-found: error
 
-      - name: Create draft release
-        if: github.ref_type == 'tag'
+      # A tag push or any push to a mark-* branch leaves a DRAFT release for this version. Drafts create
+      # their tag only when published, so a branch push can prepare a release without pushing a tag.
+      # A release that is already published is never touched.
+      - name: Create or refresh draft release
+        if: github.ref_type == 'tag' || startsWith(github.ref_name, 'mark-')
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          gh release create '${{ github.ref_name }}' `
-            Source/PlayhubSetup/Output/Playhub-Setup.exe `
-            Source/PlayhubSetup/Output/Playhub-Setup.exe.sha256 `
-            --draft `
-            --title 'Eternal Core ${{ steps.release.outputs.mark }} (${{ steps.release.outputs.version }})' `
-            --notes 'Eternal Core ${{ steps.release.outputs.mark }}, a fork of Playhub 3.0.0 by Andrea Sgarro (MIT).'
+          $tag = 'v${{ steps.release.outputs.version }}'
+          $assets = @('Source/PlayhubSetup/Output/Playhub-Setup.exe', 'Source/PlayhubSetup/Output/Playhub-Setup.exe.sha256')
+          $isDraft = gh release view $tag --json isDraft --jq .isDraft 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag @assets --draft --target '${{ github.sha }}' `
+              --title 'Eternal Core ${{ steps.release.outputs.mark }} (${{ steps.release.outputs.version }})' `
+              --notes 'Eternal Core ${{ steps.release.outputs.mark }}, a fork of Playhub 3.0.0 by Andrea Sgarro (MIT).'
+          } elseif ($isDraft -eq 'true') {
+            gh release upload $tag @assets --clobber
+            gh release edit $tag --target '${{ github.sha }}'
+          } else {
+            Write-Host "$tag is already published; leaving it alone."
+          }
