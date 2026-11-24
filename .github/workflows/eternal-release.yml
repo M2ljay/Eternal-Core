@@ -83,6 +83,11 @@ jobs:
         working-directory: Source/LocalizationResource.Tests
         run: dotnet run -c Release
 
+      # Upstream #22: Big Picture's Home/QAM must answer again after a non-Steam game exits.
+      - name: Big Picture menu regression tests (Decky plugin)
+        working-directory: Source/GamingModeDeckyPlugin
+        run: node --test tests/steamOwnedLaunchDispatcher.test.mjs tests/controlledQamIntegration.test.mjs
+
       - name: Build installer
         shell: pwsh
         run: ./Source/PlayhubSetup/build-update-preview.ps1

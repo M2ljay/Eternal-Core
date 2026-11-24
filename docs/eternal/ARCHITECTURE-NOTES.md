@@ -202,6 +202,24 @@ hand. The `mark-i` branch adds `.github/workflows/eternal-release.yml` (windows-
 
 ## 4. Mark II changes
 
+### Upstream #22: Home/QAM swallowed after a non-Steam game
+
+`GamingModeDeckyPlugin/src/controlledQamIntegration.ts` replaces Big Picture's `OnHomeButtonPressed` and
+`OnQuickAccessButtonPressed` and asks `steamOwnedLaunchDispatcher.ts` whether an owned (Playhub-wrapped) game should get
+the press. A non-Steam `RunGame` recorded a launch hint that only the next `RunGame` cleared. After the game exited,
+`activeCandidate()` stayed true, `signal()` returned `true` (swallow) and started an owned-route lookup for a game
+that no longer existed; the original handler ran only if the agent proved Steam's UI was focused. Launching a native
+Steam game cleared the hint, which matches the report exactly.
+
+The hint deliberately outlives Steam's UI view of the game: Epic-protocol and other wrapped launches can leave
+`MainRunningAppID` at 0 while the game runs, so "nothing running in the UI" is not proof of exit. The fix retires the
+hint only on Steam's own `GameSessions.RegisterForAppLifetimeNotifications` stop event for the hinted shortcut, and
+only after a start event for it was seen since the launch (a late stop from an earlier session cannot retire a new
+hint). Every owned route requires Playhub's wrapper process to be alive, and Steam reports the shortcut stopped only
+when that wrapper is gone, so no owned route can exist afterwards. With no hint and nothing running, the existing code
+path hands the press to Steam's original handler. Tests: `tests/steamOwnedLaunchDispatcher.test.mjs` and
+`tests/controlledQamIntegration.test.mjs` (the last block of each).
+
 ### Upstream #25: anti-cheat safe mode
 
 Code: `GamingModeAgent/GamingMode.Services/AntiCheatProtection.cs` (catalogue, policy, folder probe, orchestrator;

@@ -148,6 +148,12 @@ Anti-cheat safe mode released: no protected game is detected any more (it was en
   per-game audio volume, Steam overlay brokers, Launch Curtain and the QAM focus guard. See
   [ARCHITECTURE-NOTES.md §4](ARCHITECTURE-NOTES.md#4-mark-ii-changes).
 
+### Big Picture menu after a non-Steam game (upstream #22)
+
+After a non-Steam game exited, Ctrl+1, Ctrl+2 and the Steam menu button stopped opening Big Picture's menus until a
+Steam game was launched. Playhub's own Decky plugin kept treating the exited game as running. It now forgets the game
+when Steam reports that it stopped, and the press reaches Big Picture again.
+
 ### Dashboard from the controller (upstream #10)
 
 Playhub never reads controllers: Steam owns them, and an earlier attempt to read them directly broke Steam Input. The
