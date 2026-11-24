@@ -1440,5 +1440,15 @@
   "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "アンチチートが認識されなくても、どのゲームでも同じ機能を一時停止します。",
   "Un eseguibile per riga, ad esempio cod.exe": "1 行に 1 つの実行ファイル（例: cod.exe）",
   "Giochi sempre protetti": "常に保護するゲーム",
-  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Gaming Mode のログ（%APPDATA%\\GamingMode\\agent.log）に、保護が有効になった時刻と理由が記録されます。"
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Gaming Mode のログ（%APPDATA%\\GamingMode\\agent.log）に、保護が有効になった時刻と理由が記録されます。",
+  "Apri la Dashboard con il controller": "コントローラーで Dashboard を開く",
+  "Playhub non legge il controller: lo gestisce Steam. Assegna in Steam un accordo del tasto Guida alla scorciatoia da tastiera della Dashboard.": "Playhub はコントローラーを読み取りません。管理するのは Steam です。Steam でガイドボタンのコードを Dashboard のキーボードショートカットに割り当ててください。",
+  "1. Apri gli accordi del tasto Guida con il pulsante qui sotto, oppure in Steam: Impostazioni > Controller > Layout accordi del tasto Guida > Modifica.": "1. 下のボタンでガイドボタンのコードを開くか、Steam で 設定 > コントローラー > ガイドボタンのコード配置 > 編集 を開きます。",
+  "2. Scegli un tasto libero, ad esempio Y, e assegnagli il tasto P della tastiera.": "2. 空いているボタン（例: Y）を選び、キーボードの P キーを割り当てます。",
+  "3. Nelle opzioni di quel comando aggiungi Ctrl sinistro e Alt sinistro come comandi extra, così un'unica pressione invia Ctrl + Alt + P.": "3. そのコマンドのオプションで左 Ctrl と左 Alt を追加コマンドとして加えると、1 回押すだけで Ctrl + Alt + P が送られます。",
+  "4. Tieni premuto il tasto Guida e premi Y: la Dashboard si apre, anche durante il gioco.": "4. ガイドボタンを押したまま Y を押すと、ゲーム中でも Dashboard が開きます。",
+  "Apri gli accordi del tasto Guida in Steam": "Steam でガイドボタンのコードを開く",
+  "Steam non ha aperto gli accordi del tasto Guida. Seguili da Impostazioni > Controller.": "Steam でガイドボタンのコードを開けませんでした。設定 > コントローラー から手順に従ってください。",
+  "Scorciatoia attuale: {0}": "現在のショートカット: {0}",
+  "La scorciatoia da tastiera della Dashboard è disattivata.": "Dashboard のキーボードショートカットはオフです。"
 }

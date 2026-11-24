@@ -1461,5 +1461,15 @@
   "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "Призупиняє ті самі функції для будь-якої гри, навіть якщо античит не розпізнано.",
   "Un eseguibile per riga, ad esempio cod.exe": "Один виконуваний файл на рядок, наприклад cod.exe",
   "Giochi sempre protetti": "Завжди захищені ігри",
-  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Журнал Gaming Mode (%APPDATA%\\GamingMode\\agent.log) показує, коли вмикається захист і чому."
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Журнал Gaming Mode (%APPDATA%\\GamingMode\\agent.log) показує, коли вмикається захист і чому.",
+  "Apri la Dashboard con il controller": "Відкривай Dashboard з геймпада",
+  "Playhub non legge il controller: lo gestisce Steam. Assegna in Steam un accordo del tasto Guida alla scorciatoia da tastiera della Dashboard.": "Playhub не зчитує геймпад: ним керує Steam. У Steam признач акорд кнопки Guide на клавіатурне скорочення Dashboard.",
+  "1. Apri gli accordi del tasto Guida con il pulsante qui sotto, oppure in Steam: Impostazioni > Controller > Layout accordi del tasto Guida > Modifica.": "1. Відкрий акорди кнопки Guide кнопкою нижче або в Steam: Налаштування > Контролер > Розкладка акордів кнопки Guide > Змінити.",
+  "2. Scegli un tasto libero, ad esempio Y, e assegnagli il tasto P della tastiera.": "2. Обери вільну кнопку, наприклад Y, і признач їй клавішу P.",
+  "3. Nelle opzioni di quel comando aggiungi Ctrl sinistro e Alt sinistro come comandi extra, così un'unica pressione invia Ctrl + Alt + P.": "3. У параметрах цієї команди додай лівий Ctrl і лівий Alt як додаткові команди, щоб одне натискання надсилало Ctrl + Alt + P.",
+  "4. Tieni premuto il tasto Guida e premi Y: la Dashboard si apre, anche durante il gioco.": "4. Утримуй кнопку Guide і натисни Y: Dashboard відкриється навіть під час гри.",
+  "Apri gli accordi del tasto Guida in Steam": "Відкрити акорди кнопки Guide у Steam",
+  "Steam non ha aperto gli accordi del tasto Guida. Seguili da Impostazioni > Controller.": "Steam не відкрив акорди кнопки Guide. Виконай кроки через Налаштування > Контролер.",
+  "Scorciatoia attuale: {0}": "Поточне скорочення: {0}",
+  "La scorciatoia da tastiera della Dashboard è disattivata.": "Клавіатурне скорочення Dashboard вимкнено."
 }

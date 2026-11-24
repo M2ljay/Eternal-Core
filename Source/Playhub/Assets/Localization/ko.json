@@ -1443,5 +1443,15 @@
   "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "안티치트가 인식되지 않아도 모든 게임에서 같은 기능을 일시 중지합니다.",
   "Un eseguibile per riga, ad esempio cod.exe": "한 줄에 실행 파일 하나, 예: cod.exe",
   "Giochi sempre protetti": "항상 보호할 게임",
-  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Gaming Mode 로그(%APPDATA%\\GamingMode\\agent.log)에 보호가 켜진 시점과 이유가 기록됩니다."
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Gaming Mode 로그(%APPDATA%\\GamingMode\\agent.log)에 보호가 켜진 시점과 이유가 기록됩니다.",
+  "Apri la Dashboard con il controller": "컨트롤러로 Dashboard 열기",
+  "Playhub non legge il controller: lo gestisce Steam. Assegna in Steam un accordo del tasto Guida alla scorciatoia da tastiera della Dashboard.": "Playhub는 컨트롤러를 읽지 않습니다. 컨트롤러는 Steam이 관리합니다. Steam에서 가이드 버튼 코드를 Dashboard 키보드 단축키에 할당하세요.",
+  "1. Apri gli accordi del tasto Guida con il pulsante qui sotto, oppure in Steam: Impostazioni > Controller > Layout accordi del tasto Guida > Modifica.": "1. 아래 버튼으로 가이드 버튼 코드를 열거나, Steam에서 설정 > 컨트롤러 > 가이드 버튼 코드 레이아웃 > 편집으로 이동하세요.",
+  "2. Scegli un tasto libero, ad esempio Y, e assegnagli il tasto P della tastiera.": "2. 비어 있는 버튼(예: Y)을 고르고 키보드 P 키를 할당하세요.",
+  "3. Nelle opzioni di quel comando aggiungi Ctrl sinistro e Alt sinistro come comandi extra, così un'unica pressione invia Ctrl + Alt + P.": "3. 그 명령의 옵션에서 왼쪽 Ctrl과 왼쪽 Alt를 추가 명령으로 넣으면 한 번만 눌러도 Ctrl + Alt + P가 전송됩니다.",
+  "4. Tieni premuto il tasto Guida e premi Y: la Dashboard si apre, anche durante il gioco.": "4. 가이드 버튼을 누른 채 Y를 누르면 게임 중에도 Dashboard가 열립니다.",
+  "Apri gli accordi del tasto Guida in Steam": "Steam에서 가이드 버튼 코드 열기",
+  "Steam non ha aperto gli accordi del tasto Guida. Seguili da Impostazioni > Controller.": "Steam이 가이드 버튼 코드를 열지 못했습니다. 설정 > 컨트롤러에서 단계를 따라 주세요.",
+  "Scorciatoia attuale: {0}": "현재 단축키: {0}",
+  "La scorciatoia da tastiera della Dashboard è disattivata.": "Dashboard 키보드 단축키가 꺼져 있습니다."
 }

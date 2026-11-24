@@ -62,7 +62,17 @@ string[] eternalMarkII =
     "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.",
     "Un eseguibile per riga, ad esempio cod.exe",
     "Giochi sempre protetti",
-    "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perch\u00e9."
+    "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perch\u00e9.",
+    "Apri la Dashboard con il controller",
+    "Playhub non legge il controller: lo gestisce Steam. Assegna in Steam un accordo del tasto Guida alla scorciatoia da tastiera della Dashboard.",
+    "1. Apri gli accordi del tasto Guida con il pulsante qui sotto, oppure in Steam: Impostazioni > Controller > Layout accordi del tasto Guida > Modifica.",
+    "2. Scegli un tasto libero, ad esempio Y, e assegnagli il tasto P della tastiera.",
+    "3. Nelle opzioni di quel comando aggiungi Ctrl sinistro e Alt sinistro come comandi extra, cos\u00ec un'unica pressione invia Ctrl + Alt + P.",
+    "4. Tieni premuto il tasto Guida e premi Y: la Dashboard si apre, anche durante il gioco.",
+    "Apri gli accordi del tasto Guida in Steam",
+    "Steam non ha aperto gli accordi del tasto Guida. Seguili da Impostazioni > Controller.",
+    "Scorciatoia attuale: {0}",
+    "La scorciatoia da tastiera della Dashboard \u00e8 disattivata."
 };
 foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
 {
@@ -74,7 +84,9 @@ foreach (var language in LocalizationService.Languages.Where(language => languag
         if (!Tokens(translated).SequenceEqual(Tokens(key)))
             throw new Exception($"Mark II string format token mismatch: {language.Key}/{key}");
     }
-    Check(true, $"{language.Key}: {eternalMarkII.Length} Mark II strings translate");
+    var shortcut = LocalizationService.Translate(language.Key, "Scorciatoia attuale: Ctrl+Alt+P");
+    Check(shortcut.Contains("Ctrl+Alt+P") && !shortcut.StartsWith("Scorciatoia", StringComparison.Ordinal),
+        $"{language.Key}: {eternalMarkII.Length} Mark II strings translate, and the formatted shortcut line too");
 }
 Check(eternalMarkII.All(key => LocalizationService.Translate("it", key) == key), "Mark II Italian source strings render as written");
 Console.WriteLine($"{passed} PC and generic localization checks passed.");

@@ -242,3 +242,17 @@ replacement (`ShellTools.SetGamingShell`, test by switching to Gaming in-session
 performance HUD (PresentMon/ETW), per-game audio volume (`GameAudioVolumeService`), the native Steam overlay
 brokers and Launch Curtain cover, the QAM focus guard, and `OverlayWindowTools.IsSteamForeground()`, which reads the
 foreground process's identity (`NativeForegroundProcessIdentity`) and so may briefly query the game process.
+
+### Upstream #10: Dashboard from the controller
+
+Upstream's rule stays: the agent never reads controllers (`DashboardShortcutService.cs` explains the SDL/HIDAPI
+conflict with Steam Input). The Gaming Mode page's Dashboard card has a guide to bind a Steam Guide-button chord to
+the existing keyboard shortcut (`DashboardHotkey`, default `Ctrl+Alt+P`, read from the agent-only fields that the app
+keeps in `GamingOptions.Extra`), and a button for `steam://controllerconfig/443510`. Valve's protocol page documents
+`steam://controllerconfig/<id>`; 443510 is the chord-configuration app the plugin already reads
+(`onboardingNative.tsx`). That the pair opens the chord editor is unverified on a PC; the steps cover it either way.
+
+Follow-up, not built: the Decky plugin already receives `SteamClient.Input.RegisterForControllerInputMessages` while
+Big Picture is foreground (`navigationHaptics.ts`). It could open the Dashboard on a chord there without touching the
+controller itself, but only while Steam's UI is focused, and it must not consume input Steam Input also maps.
+

@@ -148,6 +148,16 @@ Anti-cheat safe mode released: no protected game is detected any more (it was en
   per-game audio volume, Steam overlay brokers, Launch Curtain and the QAM focus guard. See
   [ARCHITECTURE-NOTES.md §4](ARCHITECTURE-NOTES.md#4-mark-ii-changes).
 
+### Dashboard from the controller (upstream #10)
+
+Playhub never reads controllers: Steam owns them, and an earlier attempt to read them directly broke Steam Input. The
+Dashboard card in Playhub > Gaming Mode now has *Apri la Dashboard con il controller* (*Open the Dashboard with your
+controller*): it shows the current keyboard shortcut (Ctrl+Alt+P unless changed), explains how to bind a Steam
+Guide-button chord (for example Guide + Y) to that shortcut, and has a button that opens Steam's chord configurator
+(`steam://controllerconfig/443510`). Valve documents `steam://controllerconfig/<app id>`, and 443510 is the app ID
+Steam uses for the chord layout, but that this pair opens the chord editor is not yet verified on a PC. If Steam does
+not open it, follow *Settings > Controller > Guide Button Chord Layout > Edit* by hand.
+
 ## Status of the Mark I branch (as built in a Linux sandbox, 2026-11-24)
 
 - **Not built here:** the app, setup and agent. NuGet and Microsoft download hosts were blocked in that sandbox. No
@@ -176,3 +186,5 @@ Anti-cheat safe mode released: no protected game is detected any more (it was en
 6. **Ricochet's exact trigger** is unknown. Once it is bisected on the PC
    ([ARCHITECTURE-NOTES.md §4](ARCHITECTURE-NOTES.md#4-mark-ii-changes)), should the pause list shrink to the
    features that matter, so volume keys and the cursor keep working in protected games?
+7. **Controller chord inside Big Picture:** the Decky plugin could also listen for a chord while Big Picture itself
+   is focused. Worth building as a follow-up?

@@ -249,6 +249,7 @@ public sealed partial class MainWindow : Window
     private NumberBox _splashMaxBox = new();
     private NumberBox _apiPortBox = new();
     private TextBox _antiCheatExecutablesBox = new();
+    private TextBlock _dashboardHotkeyText = new();
     private sealed record ComboOption(string Key, string LabelKey);
 
     private sealed class TutorialVideoSession
@@ -2121,6 +2122,7 @@ public sealed partial class MainWindow : Window
         dashboardText.Children.Add(IconHeader(((char)0xE80F).ToString(), "Playhub Dashboard",
             "Passa fra giochi e app, controlla il PC e raggiungi gli strumenti essenziali senza lasciare il controller."));
         dashboardText.Children.Add(Body("Aprila con Ctrl + Alt + P per passare tra le finestre, gestire le app preferite e controllare prestazioni e processi. Puoi anche chiudere un'app bloccata senza tornare al desktop."));
+        dashboardText.Children.Add(BuildDashboardControllerChordGuide());
 
         const double dashboardIllustrationWidth = 292;
         var dashboardIllustration = BuildDashboardIllustration();
@@ -8230,6 +8232,7 @@ by Valve.";
         _delaySteamBox.Value = _gamingConfig.Gaming.DelaySteamAfterDeckyMs;
         _mouseDelayBox.Value = _gamingConfig.Gaming.AutoHideMouseCursorAfterMs;
         _antiCheatExecutablesBox.Text = string.Join("\r\n", _gamingConfig.Gaming.AntiCheatProtectedExecutables ?? new List<string>());
+        UpdateDashboardHotkeyText();
         _apiPortBox.Value = _gamingConfig.Safety.ApiPort;
         _splashLogoBox.Text = _gamingConfig.Gaming.Splash.LogoPath ?? "";
         SelectComboKey(_splashLogoCombo, SplashLogoSelection.FromSavedPath(_gamingConfig.Gaming.Splash.LogoPath,
@@ -8477,6 +8480,57 @@ by Valve.";
             result.Add(entry);
         }
         return result;
+    }
+
+    // ---------- Dashboard from the controller (Eternal Core, upstream #10) ----------
+    // The agent never reads controllers (DashboardShortcutService.cs): Steam owns
+    // them. A Steam guide-button chord that sends the Dashboard's keyboard shortcut
+    // opens it from the controller, in game and in Big Picture.
+    private const string GuideChordConfiguratorUri = "steam://controllerconfig/443510";
+
+    private FrameworkElement BuildDashboardControllerChordGuide()
+    {
+        var content = new StackPanel { Spacing = 10 };
+        content.Children.Add(Body("Playhub non legge il controller: lo gestisce Steam. Assegna in Steam un accordo del tasto Guida alla scorciatoia da tastiera della Dashboard."));
+        _dashboardHotkeyText = new TextBlock { TextWrapping = TextWrapping.Wrap, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold };
+        content.Children.Add(_dashboardHotkeyText);
+        content.Children.Add(Body("1. Apri gli accordi del tasto Guida con il pulsante qui sotto, oppure in Steam: Impostazioni > Controller > Layout accordi del tasto Guida > Modifica."));
+        content.Children.Add(Body("2. Scegli un tasto libero, ad esempio Y, e assegnagli il tasto P della tastiera."));
+        content.Children.Add(Body("3. Nelle opzioni di quel comando aggiungi Ctrl sinistro e Alt sinistro come comandi extra, così un'unica pressione invia Ctrl + Alt + P."));
+        content.Children.Add(Body("4. Tieni premuto il tasto Guida e premi Y: la Dashboard si apre, anche durante il gioco."));
+        content.Children.Add(ActionRow(Button("Apri gli accordi del tasto Guida in Steam", async () =>
+        {
+            if (!await Windows.System.Launcher.LaunchUriAsync(new Uri(GuideChordConfiguratorUri)))
+                SetStatus(T("Steam non ha aperto gli accordi del tasto Guida. Seguili da Impostazioni > Controller."), InfoBarSeverity.Warning);
+        })));
+        UpdateDashboardHotkeyText();
+        return new Expander
+        {
+            Header = "Apri la Dashboard con il controller",
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            Content = content
+        };
+    }
+
+    private void UpdateDashboardHotkeyText()
+    {
+        var enabled = ReadGamingExtra("dashboardKeyboardShortcutEnabled") is not { ValueKind: JsonValueKind.False };
+        var hotkey = ReadGamingExtra("dashboardHotkey") is { ValueKind: JsonValueKind.String } value
+            && !string.IsNullOrWhiteSpace(value.GetString()) ? value.GetString()!.Trim() : "Ctrl+Alt+P";
+        _dashboardHotkeyText.Text = enabled
+            ? string.Format(T("Scorciatoia attuale: {0}"), hotkey)
+            : T("La scorciatoia da tastiera della Dashboard è disattivata.");
+    }
+
+    // Agent-only settings travel in GamingOptions.Extra with the agent's camelCase names.
+    private JsonElement? ReadGamingExtra(string name)
+    {
+        var extra = _gamingConfig?.Gaming?.Extra;
+        if (extra is null) return null;
+        foreach (var pair in extra)
+            if (string.Equals(pair.Key, name, StringComparison.OrdinalIgnoreCase)) return pair.Value;
+        return null;
     }
 
     private void SetToggle(string key, bool value)

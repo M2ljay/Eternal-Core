@@ -1436,5 +1436,15 @@
   "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "Pausiert dieselben Funktionen bei jedem Spiel, auch wenn kein Anti-Cheat erkannt wird.",
   "Un eseguibile per riga, ad esempio cod.exe": "Eine ausführbare Datei pro Zeile, zum Beispiel cod.exe",
   "Giochi sempre protetti": "Immer geschützte Spiele",
-  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Das Gaming-Mode-Protokoll (%APPDATA%\\GamingMode\\agent.log) zeigt, wann der Schutz aktiv wird und warum."
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "Das Gaming-Mode-Protokoll (%APPDATA%\\GamingMode\\agent.log) zeigt, wann der Schutz aktiv wird und warum.",
+  "Apri la Dashboard con il controller": "Dashboard mit dem Controller öffnen",
+  "Playhub non legge il controller: lo gestisce Steam. Assegna in Steam un accordo del tasto Guida alla scorciatoia da tastiera della Dashboard.": "Playhub liest den Controller nicht aus: Steam verwaltet ihn. Weise in Steam einen Guide-Tasten-Akkord dem Tastenkürzel des Dashboards zu.",
+  "1. Apri gli accordi del tasto Guida con il pulsante qui sotto, oppure in Steam: Impostazioni > Controller > Layout accordi del tasto Guida > Modifica.": "1. Öffne die Guide-Tasten-Akkorde mit der Schaltfläche unten oder in Steam: Einstellungen > Controller > Layout der Guide-Tasten-Akkorde > Bearbeiten.",
+  "2. Scegli un tasto libero, ad esempio Y, e assegnagli il tasto P della tastiera.": "2. Wähle eine freie Taste, zum Beispiel Y, und weise ihr die Tastaturtaste P zu.",
+  "3. Nelle opzioni di quel comando aggiungi Ctrl sinistro e Alt sinistro come comandi extra, così un'unica pressione invia Ctrl + Alt + P.": "3. Füge in den Optionen dieses Befehls Strg links und Alt links als zusätzliche Befehle hinzu, damit ein einziger Druck Strg + Alt + P sendet.",
+  "4. Tieni premuto il tasto Guida e premi Y: la Dashboard si apre, anche durante il gioco.": "4. Halte die Guide-Taste gedrückt und drücke Y: Das Dashboard öffnet sich, auch im Spiel.",
+  "Apri gli accordi del tasto Guida in Steam": "Guide-Tasten-Akkorde in Steam öffnen",
+  "Steam non ha aperto gli accordi del tasto Guida. Seguili da Impostazioni > Controller.": "Steam hat die Guide-Tasten-Akkorde nicht geöffnet. Folge den Schritten über Einstellungen > Controller.",
+  "Scorciatoia attuale: {0}": "Aktuelles Tastenkürzel: {0}",
+  "La scorciatoia da tastiera della Dashboard è disattivata.": "Das Tastenkürzel für das Dashboard ist deaktiviert."
 }

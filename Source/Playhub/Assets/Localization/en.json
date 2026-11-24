@@ -1459,5 +1459,15 @@
   "Sospende le stesse funzioni con qualunque gioco, anche quando non viene riconosciuto un anti-cheat.": "Pauses the same features for any game, even when no anti-cheat is recognized.",
   "Un eseguibile per riga, ad esempio cod.exe": "One executable per line, for example cod.exe",
   "Giochi sempre protetti": "Always protected games",
-  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "The Gaming Mode log (%APPDATA%\\GamingMode\\agent.log) shows when protection turns on and why."
+  "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perché.": "The Gaming Mode log (%APPDATA%\\GamingMode\\agent.log) shows when protection turns on and why.",
+  "Apri la Dashboard con il controller": "Open the Dashboard with your controller",
+  "Playhub non legge il controller: lo gestisce Steam. Assegna in Steam un accordo del tasto Guida alla scorciatoia da tastiera della Dashboard.": "Playhub doesn't read the controller: Steam handles it. In Steam, assign a Guide button chord to the Dashboard's keyboard shortcut.",
+  "1. Apri gli accordi del tasto Guida con il pulsante qui sotto, oppure in Steam: Impostazioni > Controller > Layout accordi del tasto Guida > Modifica.": "1. Open the Guide button chords with the button below, or in Steam: Settings > Controller > Guide Button Chord Layout > Edit.",
+  "2. Scegli un tasto libero, ad esempio Y, e assegnagli il tasto P della tastiera.": "2. Pick a free button, for example Y, and assign it the keyboard key P.",
+  "3. Nelle opzioni di quel comando aggiungi Ctrl sinistro e Alt sinistro come comandi extra, così un'unica pressione invia Ctrl + Alt + P.": "3. In that command's options, add Left Ctrl and Left Alt as extra commands, so a single press sends Ctrl + Alt + P.",
+  "4. Tieni premuto il tasto Guida e premi Y: la Dashboard si apre, anche durante il gioco.": "4. Hold the Guide button and press Y: the Dashboard opens, even in game.",
+  "Apri gli accordi del tasto Guida in Steam": "Open the Guide button chords in Steam",
+  "Steam non ha aperto gli accordi del tasto Guida. Seguili da Impostazioni > Controller.": "Steam didn't open the Guide button chords. Follow the steps from Settings > Controller.",
+  "Scorciatoia attuale: {0}": "Current shortcut: {0}",
+  "La scorciatoia da tastiera della Dashboard è disattivata.": "The Dashboard keyboard shortcut is turned off."
 }
