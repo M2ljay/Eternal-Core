@@ -82,7 +82,13 @@ export function parseOwnedLaunchRoute(value: unknown, observedApp: number | null
 // enters the existing common Guide admission and its unchanged coalescing rules.
 export function createOwnedLaunchDispatcher(deps: Dependencies) {
   let disposed = false, version = 0;
-  let launch: { canonical: number; at: number } | undefined;
+  // A shortcut launch hint. It outlives Steam's UI view of the app on purpose
+  // (an Epic-protocol or wrapped launch can leave MainRunningAppID at 0 while
+  // the game runs), so UI idleness never retires it. Steam's own lifetime
+  // notification for that shortcut does: once Steam reports the shortcut it
+  // saw running as stopped, Playhub's wrapper (which every owned route needs
+  // alive) is gone, and a retained hint would only swallow Home/QAM presses.
+  let launch: { canonical: number; at: number; seenRunning: boolean } | undefined;
   let nativeLaunch: number | undefined;
   let cache: { scope: Scope; route: OwnedLaunchRoute; version: number } | undefined;
   let pending: { scope: Scope; version: number; lookup: Promise<Discovered | undefined>; stop?: () => void } | undefined;
@@ -185,9 +191,17 @@ export function createOwnedLaunchDispatcher(deps: Dependencies) {
       try {
         if (typeof gameId !== "string" || !uint64(gameId)) return;
         const id = BigInt(gameId), candidate = Number(id >> 32n);
-        if ((id & 0xffffffffn) === 0x02000000n && canonical(candidate)) launch = { canonical: candidate, at: deps.now() };
+        if ((id & 0xffffffffn) === 0x02000000n && canonical(candidate)) launch = { canonical: candidate, at: deps.now(), seenRunning: false };
         else if (id <= 0xffffffffn) nativeLaunch = Number(id);
       } catch { /* A malformed hint grants no discovery eligibility. */ }
+    },
+    noteAppLifetime(appId: unknown, running: unknown) {
+      if (disposed || !launch || !canonical(appId) || appId !== launch.canonical || typeof running !== "boolean") return;
+      if (running) { launch.seenRunning = true; return; }
+      // A stop without an observed start could belong to an earlier session.
+      if (!launch.seenRunning) return;
+      ++version; cache = undefined; pending?.stop?.(); pending = undefined; launch = undefined;
+      trace("launch-hint-retired");
     },
     signal(origin: Origin, menu: Intent, fallback?: () => void): boolean {
       const s = scope();

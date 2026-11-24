@@ -48,6 +48,12 @@ function parseOwnedLaunchRoute(value, observedApp) {
 // enters the existing common Guide admission and its unchanged coalescing rules.
 function createOwnedLaunchDispatcher(deps) {
     let disposed = false, version = 0;
+    // A shortcut launch hint. It outlives Steam's UI view of the app on purpose
+    // (an Epic-protocol or wrapped launch can leave MainRunningAppID at 0 while
+    // the game runs), so UI idleness never retires it. Steam's own lifetime
+    // notification for that shortcut does: once Steam reports the shortcut it
+    // saw running as stopped, Playhub's wrapper (which every owned route needs
+    // alive) is gone, and a retained hint would only swallow Home/QAM presses.
     let launch;
     let nativeLaunch;
     let cache;
@@ -215,11 +221,28 @@ function createOwnedLaunchDispatcher(deps) {
                     return;
                 const id = BigInt(gameId), candidate = Number(id >> 32n);
                 if ((id & 0xffffffffn) === 0x02000000n && canonical$1(candidate))
-                    launch = { canonical: candidate, at: deps.now() };
+                    launch = { canonical: candidate, at: deps.now(), seenRunning: false };
                 else if (id <= 0xffffffffn)
                     nativeLaunch = Number(id);
             }
             catch { /* A malformed hint grants no discovery eligibility. */ }
+        },
+        noteAppLifetime(appId, running) {
+            if (disposed || !launch || !canonical$1(appId) || appId !== launch.canonical || typeof running !== "boolean")
+                return;
+            if (running) {
+                launch.seenRunning = true;
+                return;
+            }
+            // A stop without an observed start could belong to an earlier session.
+            if (!launch.seenRunning)
+                return;
+            ++version;
+            cache = undefined;
+            pending?.stop?.();
+            pending = undefined;
+            launch = undefined;
+            trace("launch-hint-retired");
         },
         signal(origin, menu, fallback) {
             const s = scope();
@@ -30248,10 +30271,10 @@ var plugins = [
 		author: "LoZazaMastro",
 		repository: "LoZazaMastro/Playhub-Artworks",
 		repositoryUrl: "https://github.com/LoZazaMastro/Playhub-Artworks",
-		version: "1.1.9",
-		releaseAssetName: "Playhub-Artworks-1.1.9_Installer.zip",
-		catalogReleaseUrl: "https://github.com/LoZazaMastro/Playhub-Artworks/releases/download/1.1.9/Playhub-Artworks-1.1.9_Installer.zip",
-		releasePublishedAt: "2026-10-03T18:28:34Z",
+		version: "1.2.0",
+		releaseAssetName: "Playhub-Artworks-1.2.0_Installer.zip",
+		catalogReleaseUrl: "https://github.com/LoZazaMastro/Playhub-Artworks/releases/download/1.2.0/Playhub-Artworks-1.2.0_Installer.zip",
+		releasePublishedAt: "2026-11-17T08:42:26Z",
 		category: "Playhub",
 		shortDescription: "The right artwork for every game in your library.",
 		longDescription: "Playhub Artworks brings artwork management into Big Picture with a controller-first experience: search, choose, and apply covers, banners, heroes, logos, and icons without returning to the desktop.\n\n## What it does\n• Searches for artwork across SteamGridDB, IGDB, PlayStation Store, Nintendo eShop, Xbox, AlphaCoders, iiDB, and IGN.\n• Remembers your filters and most recently used source separately for each artwork type.\n• Creates Perfect Heroes and Perfect Banners by blending a background and logo, with adjustable position, scale, opacity, and shadow.\n• Lets you leave the logo out of the composition when you only want the background.\n• Positions and resizes game logos just like Steam.\n• Displays square covers throughout the library and across every Home shelf, including Steam banners.\n• Fills in missing artwork for your entire library in the background.\n\n## Note\n• Searches using SteamGridDB require a personal API key, which is stored only on your PC.",
@@ -30280,7 +30303,7 @@ var plugins = [
 			"Playhub-Artworks"
 		],
 		firstPublishedAt: "2026-09-02T20:42:06Z",
-		updatedAt: "2026-10-03T18:28:34Z"
+		updatedAt: "2026-11-17T08:42:26Z"
 	},
 	{
 		active: true,
@@ -30289,7 +30312,7 @@ var plugins = [
 		author: "LoZazaMastro",
 		repository: "LoZazaMastro/Launch-Curtain",
 		repositoryUrl: "https://github.com/LoZazaMastro/Launch-Curtain",
-		version: "2.5.7",
+		version: "3.0.0",
 		releaseAssetName: "",
 		catalogReleaseUrl: "",
 		releasePublishedAt: "",
@@ -30319,7 +30342,7 @@ var plugins = [
 			"Launch-Curtain"
 		],
 		firstPublishedAt: "2026-06-10T10:47:32Z",
-		updatedAt: "2026-10-03T18:28:50Z"
+		updatedAt: "2026-11-17T08:40:45Z"
 	},
 	{
 		active: true,
@@ -30369,10 +30392,10 @@ var plugins = [
 		author: "LoZazaMastro",
 		repository: "LoZazaMastro/Playhub-Metadata",
 		repositoryUrl: "https://github.com/LoZazaMastro/Playhub-Metadata",
-		version: "1.8.5",
-		releaseAssetName: "Playhub-Metadata_1.8.5_Installer.zip",
-		catalogReleaseUrl: "https://github.com/LoZazaMastro/Playhub-Metadata/releases/download/1.8.5/Playhub-Metadata_1.8.5_Installer.zip",
-		releasePublishedAt: "2026-11-10T11:57:19Z",
+		version: "1.8.13",
+		releaseAssetName: "Playhub-Metadata_1.8.13_Installer.zip",
+		catalogReleaseUrl: "https://github.com/LoZazaMastro/Playhub-Metadata/releases/download/1.8.13/Playhub-Metadata_1.8.13_Installer.zip",
+		releasePublishedAt: "2026-11-17T08:30:37Z",
 		category: "Playhub",
 		shortDescription: "Details, artwork, and achievements for your games.",
 		longDescription: "Playhub Metadata gives your Big Picture library a richer, more polished, console-like feel, especially for non-Steam games such as external PC titles, Game Pass games, Xbox apps, and emulators. It adds metadata, community images and videos, categories, and even achievements.\n\n## Metadata and images\n• Automatically finds missing game metadata.\n• Adds descriptions, developers, publishers, release dates, ratings, and information panels.\n• Adds community screenshots and media when available.\n• Lets you edit each game's metadata manually.\n\n## Achievements\n• Displays achievements for non-Steam games inside Big Picture.\n• Supports RetroAchievements for ROMs and emulators.\n• Supports Xbox, Game Pass, and Microsoft Store achievements through OpenXBL (games must be imported through Playhub's Import Games tab).\n• Lets you choose the source for each game: Auto, RetroAchievements, Xbox, or Disabled.\n• Offers flexible hourly, daily, weekly, per-session, or manual caching to limit API calls.\n\n## Note\n• These do not become native Steam achievements; they are displayed only inside Big Picture.",
@@ -30401,7 +30424,7 @@ var plugins = [
 			"Playhub-Metadata"
 		],
 		firstPublishedAt: "2026-06-15T10:06:10Z",
-		updatedAt: "2026-11-10T11:57:19Z"
+		updatedAt: "2026-11-17T08:30:37Z"
 	},
 	{
 		active: false,
@@ -30759,12 +30782,12 @@ var plugins = [
 		author: "LoZazaMastro, based on Steamcord by Necrosiak",
 		repository: "LoZazaMastro/Playhub-Discord",
 		repositoryUrl: "https://github.com/LoZazaMastro/Playhub-Discord",
-		version: "1.0.2",
-		releaseAssetName: "Discord_Installer-1.0.2.zip",
-		catalogReleaseUrl: "https://github.com/LoZazaMastro/Playhub-Discord/releases/download/v1.0.2/Discord_Installer-1.0.2.zip",
-		releasePublishedAt: "2026-11-14T12:57:33Z",
+		version: "1.0.3",
+		releaseAssetName: "Discord_Installer-1.0.3.zip",
+		catalogReleaseUrl: "https://github.com/LoZazaMastro/Playhub-Discord/releases/download/v1.0.3/Discord_Installer-1.0.3.zip",
+		releasePublishedAt: "2026-11-14T18:07:04Z",
 		firstPublishedAt: "2026-11-13T13:44:30Z",
-		updatedAt: "2026-11-14T12:57:33Z",
+		updatedAt: "2026-11-14T18:07:04Z",
 		category: "Playhub",
 		shortDescription: "Discord voice, channels and conversations, built into Playhub for Windows.",
 		longDescription: "Discord voice, channels and conversations, built into Playhub for Windows.",
@@ -52167,7 +52190,7 @@ var plugins = [
 		updatedAt: "2026-11-12T05:37:24Z"
 	}
 ];
-var catalogRevision = 17;
+var catalogRevision = 19;
 var bundledCatalogData = {
 	schemaVersion: schemaVersion,
 	verifiedAt: verifiedAt,
@@ -60156,6 +60179,19 @@ function installControlledQamFocus(onMirrorAdmitted, onNativeAdmitted) {
                 applicationSelected();
                 ownedDispatcher?.noteLaunch(args[0]);
             }));
+        // A non-Steam launch hint must end with the game, or the Home/QAM patches
+        // keep routing presses to a game that no longer exists (upstream #22).
+        try {
+            const lifetime = steam?.GameSessions?.RegisterForAppLifetimeNotifications;
+            if (typeof lifetime === "function")
+                register(lifetime.call(steam.GameSessions, (event) => {
+                    if (!disposed)
+                        ownedDispatcher?.noteAppLifetime(Number(event?.unAppID), event?.bRunning);
+                }));
+        }
+        catch (error) {
+            console.warn("[Playhub QAM] Steam app lifetime events unavailable", error);
+        }
         try {
             patch(steam?.Apps, "RaiseWindowForGame", (args, result) => {
                 const appId = shortcutAppId(args[0]);

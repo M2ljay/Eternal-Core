@@ -406,6 +406,16 @@ export function installControlledQamFocus(onMirrorAdmitted?: (app: number, mirro
       applicationSelected();
       ownedDispatcher?.noteLaunch(args[0]);
     }));
+    // A non-Steam launch hint must end with the game, or the Home/QAM patches
+    // keep routing presses to a game that no longer exists (upstream #22).
+    try {
+      const lifetime = steam?.GameSessions?.RegisterForAppLifetimeNotifications;
+      if (typeof lifetime === "function") register(lifetime.call(steam.GameSessions, (event: any) => {
+        if (!disposed) ownedDispatcher?.noteAppLifetime(Number(event?.unAppID), event?.bRunning);
+      }));
+    } catch (error) {
+      console.warn("[Playhub QAM] Steam app lifetime events unavailable", error);
+    }
     try {
       patch(steam?.Apps, "RaiseWindowForGame", (args, result) => {
         const appId = shortcutAppId(args[0]);

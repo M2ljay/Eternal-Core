@@ -63,6 +63,8 @@ function fixture(infos=[], nativeReply={ok:true}, appId=42, options={}) {
     UI:{RegisterDesiredSteamUIWindowsChanged(callback){windowRegistered++;windowCallback=callback;
       return{unregister(){windowUnregistered++;}};}},
     System:{UI:{RegisterForSystemKeyEvents(callback){systemCallback=callback;return{unregister(){unregistered++;}};}}}};
+  let lifetimeCallback;
+  if(options.lifetime)steam.GameSessions={RegisterForAppLifetimeNotifications(callback){lifetimeCallback=callback;return{unregister(){lifetimeCallback=undefined;}};}};
   if(options.companion) Object.assign(steam.Overlay,{SetOverlayState(){calls.push(["overlay-state"]);},
     RegisterForOverlayActivated(callback){overlayCallback=callback;return {unregister(){}};}});
   const api=load("controlledQamIntegration",name=>name==="./controlBackend"?{call:async (...args)=>{
@@ -79,7 +81,7 @@ function fixture(infos=[], nativeReply={ok:true}, appId=42, options={}) {
   });
   return{calls,deckyCalls,main,mainWindow,ui,observedStore,apps:steam.Apps,stop:api.installControlledQamFocus(),
     system:event=>systemCallback(event),unregistered:()=>unregistered,createMainWindow,
-    overlayEvent:(...args)=>overlayCallback?.(...args),
+    overlayEvent:(...args)=>overlayCallback?.(...args),lifetime:event=>lifetimeCallback?.(event),
     setMain:(instance,sync=true)=>{if(sync)windowStore.UpdateDesiredWindows(instance);else windowStore.GamepadUIMainWindowInstance=instance;},
     notifyWindowChange:()=>windowCallback(),windowSubscriptions:()=>[windowRegistered,windowUnregistered]};
 }
@@ -518,4 +520,39 @@ for(const ui of [undefined,0])test(`actual nullable running-app getter ${ui} ret
 test("missing optional overlay APIs keep ordinary HUD/return routing synchronous and unchanged",()=>{
  const f=fixture([],{ok:false},42);
  try{assert.equal(ownedLaunch.resolveOwnedGameApp(42),42);assert.equal(ownedLaunch.readOwnedGameApp(42),42);}finally{f.stop();}
+});
+
+// Upstream #22: after a non-Steam game exits, Big Picture's Home/QAM must answer again.
+for(const ui of [undefined,0])test(`non-Steam launch then exit passes Home (UI ${ui}) to the original handler without an owned lookup`,async()=>{
+ const f=fixture([],{ok:false},2979426017,{companion:true,lifetime:true,uiObserved:ui,rpc:method=>method==="get_owned_game_route"?{ok:false}:{ok:false}});
+ try{
+  f.apps.RunGame(dawnSnapshot.originalGameId);
+  f.lifetime({unAppID:2979426017,bRunning:true});
+  f.lifetime({unAppID:2979426017,bRunning:false});
+  f.mainWindow.OnHomeButtonPressed();for(let i=0;i<4;i++)await settle();
+  assert.ok(f.calls.some(row=>row[0]==="native-home"));assert.equal(f.main.GetOpenSideMenu(),1);
+  assert.equal(f.deckyCalls.some(c=>c[0]==="get_owned_game_route"),false);
+ }finally{f.stop();}
+});
+test("non-Steam game still running keeps swallowing Home for the owned route",async()=>{
+ const f=fixture([],{ok:false},2979426017,{companion:true,lifetime:true,uiObserved:0,rpc:method=>method==="get_owned_game_route"?{ok:false}:{ok:false}});
+ try{
+  f.apps.RunGame(dawnSnapshot.originalGameId);
+  f.lifetime({unAppID:2979426017,bRunning:true});
+  f.mainWindow.OnHomeButtonPressed();for(let i=0;i<4;i++)await settle();
+  assert.equal(f.calls.some(row=>row[0]==="native-home"),false);
+  assert.equal(f.deckyCalls.filter(c=>c[0]==="get_owned_game_route").length,1);
+ }finally{f.stop();}
+});
+test("without the exit the stale hint is what swallowed Home (reproduces #22)",async()=>{
+ const f=fixture([],{ok:false},2979426017,{companion:true,lifetime:true,uiObserved:0,rpc:method=>method==="get_owned_game_route"?{ok:false}:{ok:false}});
+ try{
+  f.apps.RunGame(dawnSnapshot.originalGameId);
+  f.mainWindow.OnHomeButtonPressed();for(let i=0;i<4;i++)await settle();
+  assert.equal(f.calls.some(row=>row[0]==="native-home"),false);
+ }finally{f.stop();}
+});
+test("lifetime subscription is released with the integration",()=>{
+ const f=fixture([],{ok:false},42,{companion:true,lifetime:true});f.stop();
+ assert.doesNotThrow(()=>f.lifetime({unAppID:42,bRunning:false}));
 });

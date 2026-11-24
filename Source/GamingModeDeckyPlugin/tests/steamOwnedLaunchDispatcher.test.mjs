@@ -77,3 +77,47 @@ test("Epic no-observation route accepts only canonical/null UI hints",()=>{asser
 for(const change of [{launchProvenance:undefined},{launchProvenance:"steam-child"},{observedFresh:true},{observedSteamGameId:undefined}])
  test(`nullable route refuses missing or false provenance ${JSON.stringify(change)}`,()=>assert.equal(parseOwnedLaunchRoute({...epicRoute,...change},null),undefined));
 test("unknown provenance cannot relabel an actual observed Steam route",()=>assert.equal(parseOwnedLaunchRoute({...route,launchProvenance:"other"},480),undefined));
+
+// Upstream #22: a non-Steam launch hint outlived its game and swallowed Home/QAM presses.
+for(const ui of [null,0])test(`UI${ui}: non-Steam launch that Steam saw start and stop passes the next press through`,()=>{
+ const f=fixture();f.scope.observedApp=ui;f.router.noteLaunch(full);
+ f.router.noteAppLifetime(canonical,true);f.router.noteAppLifetime(canonical,false);
+ assert.equal(f.router.signal("home","main"),false);assert.equal(f.router.signal("quick","quick"),false);assert.equal(f.router.signal("system","main"),false);
+ assert.equal(f.reads,0);assert.equal(f.calls.length,0);assert.equal(f.router.app(),ui??0);
+});
+test("a running non-Steam launch keeps the existing owned routing",async()=>{
+ const f=fixture();f.scope.observedApp=null;f.router.noteLaunch(full);f.router.noteAppLifetime(canonical,true);
+ assert.equal(f.router.signal("system","main"),true);f.resolve({ok:true,route:{...route,uiObservedApp:null,observedSteamGameId:full}});await flush();
+ assert.equal(f.reads,1);assert.equal(f.calls.length,1);assert.equal(f.router.app(),canonical);
+});
+test("a stop without an observed start never retires the hint",()=>{
+ const f=fixture();f.scope.observedApp=null;f.router.noteLaunch(full);f.router.noteAppLifetime(canonical,false);
+ assert.equal(f.router.signal("home","main"),true);assert.equal(f.reads,1);
+});
+test("lifetime events of another app, or malformed ones, never retire the hint",()=>{
+ const f=fixture();f.scope.observedApp=null;f.router.noteLaunch(full);
+ for(const id of [canonical+1,480,String(canonical),undefined])f.router.noteAppLifetime(id,true);
+ for(const id of [canonical+1,480,String(canonical),undefined])f.router.noteAppLifetime(id,false);
+ f.router.noteAppLifetime(canonical,true);f.router.noteAppLifetime(canonical,"false");
+ assert.equal(f.router.signal("home","main"),true);assert.equal(f.reads,1);
+});
+test("a new launch restarts the hint, so a late stop from the old session cannot retire it",()=>{
+ const f=fixture();f.scope.observedApp=null;f.router.noteLaunch(full);f.router.noteAppLifetime(canonical,true);
+ f.router.noteLaunch(full);f.router.noteAppLifetime(canonical,false);
+ assert.equal(f.router.signal("home","main"),true);assert.equal(f.reads,1);
+});
+test("exit while a lookup is pending cancels it without a late dispatch or fallback",async()=>{
+ const f=fixture();f.scope.observedApp=null;let original=0;f.router.noteLaunch(full);f.router.noteAppLifetime(canonical,true);
+ f.router.signal("home","main",()=>original++);f.router.noteAppLifetime(canonical,false);
+ f.resolve({ok:true,route:{...route,uiObservedApp:null,observedSteamGameId:full}});await flush();
+ assert.equal(f.calls.length,0);assert.equal(original,0);assert.equal(f.timers.size,0);assert.equal(f.router.signal("home","main"),false);
+});
+test("native Steam launch path is unchanged by lifetime events",()=>{
+ const f=fixture();f.router.noteLaunch("480");f.router.noteAppLifetime(480,true);
+ assert.equal(f.router.signal("home","main"),false);f.router.noteAppLifetime(480,false);f.scope.observedApp=0;
+ assert.equal(f.router.signal("home","main"),false);assert.equal(f.reads,0);
+});
+test("a running shortcut still uses the reload candidate after the hinted one exits",async()=>{
+ const f=fixture();f.scope.observedApp=null;f.router.noteLaunch(full);f.router.noteAppLifetime(canonical,true);f.router.noteAppLifetime(canonical,false);
+ f.scope.runningShortcuts=[2979426017];assert.equal(f.router.signal("home","main"),true);assert.equal(f.reads,1);
+});
