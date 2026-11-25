@@ -3837,7 +3837,7 @@ public sealed partial class MainWindow : Window
         // ---------- Informazioni ----------
         var about = Card();
         about.Children.Add(IconHeader(((char)0xE946).ToString(), "Informazioni",
-            $"{global::Playhub.Shared.EternalRelease.DisplayName} {global::Playhub.Shared.EternalRelease.DisplayVersion}"));
+            $"{(global::Playhub.Shared.EternalRelease.DisplayName)} {(global::Playhub.Shared.EternalRelease.DisplayVersion)}"));
         about.Children.Add(Body("Core di Eternal. Basato su Playhub di Andrea Sgarro (LoZazaMastro), licenza MIT. © 2026 Andrea Sgarro (LoZazaMastro)."));
         about.Children.Add(Body("Componenti di terze parti (licenza MIT): UWPHook © 2016 Brian Lima · VDFParser © 2016 Victor Gama · SharpSteam © 2020 Brian Lima."));
         about.Children.Add(Body("Core è un progetto indipendente e non è affiliato né approvato da Valve. Steam e Steam Controller sono marchi di Valve Corporation."));

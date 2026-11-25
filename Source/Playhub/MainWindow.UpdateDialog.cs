@@ -75,7 +75,7 @@ public sealed partial class MainWindow
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch
             };
-            AutomationProperties.SetName(dialog, $"{global::Playhub.Shared.EternalRelease.DisplayName} {displayInfo.LatestVersion}");
+            AutomationProperties.SetName(dialog, $"{(global::Playhub.Shared.EternalRelease.DisplayName)} {displayInfo.LatestVersion}");
             dialog.Resources["ContentDialogMinWidth"] = 0d;
             dialog.Resources["ContentDialogMaxWidth"] = 640d;
             dialog.Resources["ContentDialogMinHeight"] = 0d;
