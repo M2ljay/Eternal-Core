@@ -92,12 +92,11 @@ Check(eternalMarkII.All(key => LocalizationService.Translate("it", key) == key),
 
 // Eternal Core rebrand (docs/eternal/REBRAND.md): the app is called Core everywhere the user reads it.
 // "Playhub" stays only where it names something that still carries that name: the upstream project in
-// the credits and the support card, the upstream Playhub-* plugin suite, the CSS Loader profile that is
+// the credits, the upstream Playhub-* plugin suite, the CSS Loader profile that is
 // installed as "Playhub", and the Playhub.exe file. Any other product-name use is a missed string.
 var upstreamName = new Regex(@"(?<![A-Za-z0-9_./\\])Playhub(?!\.[A-Za-z]|[A-Za-z0-9_/\\]| (?:Metadata|Artworks?|Notifications|Surround|Discord)\b)");
 var keptOnPurpose = new Regex(@"[Pp]rofil[oi] Playhub|Playhub \(Big Image|Tema Playhub|plugin di Playhub|suite Playhub|plugin Playhub"
-    + @"|^Ti piace Playhub\?$|^Playhub è sviluppato e mantenuto|^Playhub è gratuito e open source|^Se Playhub ti è utile"
-    + @"|^Playhub cresce grazie alla community|^Grazie per essere parte di Playhub|^Core di Eternal\. Basato su Playhub di Andrea Sgarro");
+    + @"|^Core di Eternal\. Basato su Playhub di Andrea Sgarro");
 const string credit = "Core di Eternal. Basato su Playhub di Andrea Sgarro (LoZazaMastro), licenza MIT. © 2026 Andrea Sgarro (LoZazaMastro).";
 foreach (var language in LocalizationService.Languages)
 {
@@ -115,5 +114,22 @@ foreach (var language in LocalizationService.Languages)
     Check(translatedCredit.Contains("Core") && translatedCredit.Contains("Eternal") && translatedCredit.Contains("Playhub") && translatedCredit.Contains("Andrea Sgarro (LoZazaMastro)")
         && translatedCredit.Contains("MIT") && translatedCredit.Contains("© 2026"),
         $"{language.Key}: the app is called Core, and the About card says Core by Eternal, based on Playhub by Andrea Sgarro under MIT");
+}
+// The support card and the donation reminder (Ko-fi link to the upstream author) were removed from Core;
+// their strings must not come back in the code table or in any language file.
+string[] removedSupport =
+{
+    "Supporto", "Fai una donazione", "Ti piace Playhub?", "Grazie per essere parte di Playhub",
+    "Playhub è gratuito e open source. Lo sviluppo, i test e la manutenzione sono sostenuti da una sola persona.",
+    "Playhub cresce grazie alla community e al tempo dedicato al progetto.",
+    "Playhub è sviluppato e mantenuto da una sola persona.",
+    "Se ti va di sostenerlo, anche una piccola donazione significa molto per me."
+};
+foreach (var language in LocalizationService.Languages)
+{
+    var data = JsonNode.Parse(File.ReadAllText(Path.Combine(directory, language.Key + ".json")))!.AsObject();
+    Check(removedSupport.All(key => LocalizationService.Translate(language.Key, key) == key && !data.ContainsKey(key))
+        && !data.Any(pair => pair.Key.StartsWith("Se Playhub ti è utile", StringComparison.Ordinal)),
+        $"{language.Key}: no support or donation strings remain");
 }
 Console.WriteLine($"{passed} PC and generic localization checks passed.");

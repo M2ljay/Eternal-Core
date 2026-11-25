@@ -239,7 +239,6 @@ public sealed partial class MainWindow
                 await ReviewFeaturedArtworkAsync(output, Check);
                 await ReviewPluginActionWidthAsync(Check);
                 await ReviewPlayhubUpdateDialogAsync(output, Check);
-                await ReviewSupportReminderAsync(output, Check);
                 await ReviewClockRenderingAsync(output, Check, countdownSamples);
                 return;
             }
@@ -247,7 +246,6 @@ public sealed partial class MainWindow
             {
                 await ReviewPageHeadersAsync(output, Check);
                 await ReviewPlayhubUpdateDialogAsync(output, Check);
-                await ReviewSupportReminderAsync(output, Check);
                 return;
             }
             if (Environment.GetEnvironmentVariable("PLAYHUB_REVIEW_LAYOUT_ONLY") == "1")
@@ -659,7 +657,7 @@ public sealed partial class MainWindow
             finally { CompositionTarget.Rendering -= onStoreFrame; }
             Check(!_featuredPluginTransitioning && _pluginFeaturedCarouselHost.Children.Count == 1, "40 carousel round trips");
             await ReviewFeaturedCountdownAsync(Check, countdownSamples);
-            foreach (var tag in new[] { "decky", "gaming", "xbox", "styler", "settings", "support" })
+            foreach (var tag in new[] { "decky", "gaming", "xbox", "styler", "settings" })
             {
                 ShowPage(tag); await Task.Delay(80);
                 Check(_pageHost.Children.OfType<FrameworkElement>().Count(page => page.Visibility == Visibility.Visible) == 1,
@@ -667,7 +665,6 @@ public sealed partial class MainWindow
                 Check(_pluginBackButton.Visibility == Visibility.Collapsed, "no back outside store: " + tag);
                 NavigatePluginStoreBack();
                 Check(_currentPageTag == tag, "back does not navigate other tabs: " + tag);
-                if (tag == "support") ReviewSupportCopy(Check);
             }
             ShowPage("gaming"); await Task.Delay(200);
             var gamingTop = ReviewDescendants(_pageHost).OfType<Grid>().First(grid => grid.ColumnDefinitions.Count == 2 &&
@@ -682,7 +679,6 @@ public sealed partial class MainWindow
             await ReviewPageHeadersAsync(output, Check);
             await ReviewPluginScreenshotsAsync(output, Check);
             await ReviewPlayhubUpdateDialogAsync(output, Check);
-            await ReviewSupportReminderAsync(output, Check);
         }
         catch (Exception ex) { failures.Add(ex.ToString()); }
         finally
@@ -796,7 +792,7 @@ public sealed partial class MainWindow
                 check(T("Strumenti per diagnosi e sviluppo.") != "Strumenti per diagnosi e sviluppo." &&
                     T(rawStatus) != rawStatus, language + ": actual translations exist");
 
-            foreach (var page in new[] { "decky", "gaming", "xbox", "styler", "settings", "support" })
+            foreach (var page in new[] { "decky", "gaming", "xbox", "styler", "settings" })
             {
                 ShowPage(page);
                 await Task.Delay(30);
@@ -807,8 +803,7 @@ public sealed partial class MainWindow
                     "gaming" => "Scegli cosa vedere quando accendi il PC.",
                     "xbox" => "Riunisci i tuoi giochi in Steam e completa automaticamente copertine, sfondi e loghi.",
                     "styler" => "Mantieni la versione attuale di Steam. Puoi riattivare gli aggiornamenti in qualsiasi momento.",
-                    "settings" => "Core verrà riavviato.",
-                    _ => "Fai una donazione"
+                    _ => "Core verrà riavviato."
                 };
                 var rendered = ReviewDescendants(visible).OfType<TextBlock>().Select(item => item.Text).ToArray();
                 check(rendered.Contains(T(expected)), language + ": actual page translation " + page);
@@ -1038,17 +1033,6 @@ public sealed partial class MainWindow
         check(swatches.All(button => ToolTipService.GetToolTip(button) is null &&
             !string.IsNullOrWhiteSpace(AutomationProperties.GetName(button))),
             context + " swatches have accessible names without tooltips");
-    }
-
-    private void ReviewSupportCopy(Action<bool, string> check)
-    {
-        var page = _pageHost.Children.OfType<FrameworkElement>().First(element => Equals(element.Tag, "support"));
-        var text = ReviewDescendants(page).OfType<TextBlock>().Select(block => block.Text).ToArray();
-        foreach (var expected in new[] {
-            "Grazie per essere parte di Playhub",
-            "Playhub è gratuito e open source. Lo sviluppo, i test e la manutenzione sono sostenuti da una sola persona.",
-            "Se Playhub ti è utile e vuoi aiutare il progetto a continuare a crescere, una donazione è sempre apprezzata. Nessun contenuto è bloccato: è semplicemente un modo gentile per sostenere il lavoro che c'è dietro."
-        }) check(text.Contains(T(expected)), "support preserves original copy: " + expected);
     }
 
     private static IReadOnlyList<DeckyPluginInfo> ReviewPluginItems(UIElement? view) =>
@@ -1617,23 +1601,6 @@ public sealed partial class MainWindow
             _playhubUpdateDialog?.Hide();
             await ReviewWaitUntilAsync(() => _playhubUpdateDialog is null);
         }
-        ShowPage("support");
-        var supportShowing = ShowSupportReminderAsync(force: true);
-        check(await ReviewWaitUntilAsync(() => _supportReminderDialog?.Content is FrameworkElement { IsLoaded: true }),
-            "native support popup opens");
-        await Task.Delay(350);
-        if (_supportReminderDialog?.Content is FrameworkElement support)
-        {
-            var scroll = ReviewDescendants(support).OfType<ScrollViewer>().First();
-            check(scroll.ScrollableHeight > 0 && await ReviewWheelAsync(scroll, -360) && scroll.VerticalOffset > 0,
-                "actual mouse wheel scrolls support popup");
-            var close = ReviewDescendants(support).OfType<Button>().First(button => button.Name == "SupportReminderClose");
-            var clicked = await ReviewPointerAsync(close, null);
-            check(clicked && await ReviewWaitUntilAsync(() => _supportReminderDialog is null),
-                "actual mouse click closes support popup");
-        }
-        _supportReminderDialog?.Hide();
-        await supportShowing;
         if (presenter is not null) presenter.IsAlwaysOnTop = false;
     }
 
@@ -1810,49 +1777,6 @@ public sealed partial class MainWindow
         check(_playhubUpdateDialog is not null, "settings can reopen an already noticed update");
         _playhubUpdateDialog?.Hide();
         await Task.Delay(200);
-    }
-
-    private async Task ReviewSupportReminderAsync(string output, Action<bool, string> check)
-    {
-        ShowPage("support");
-        await Task.Delay(200);
-        var supportPage = _pageHost.Children.OfType<FrameworkElement>().First(page => Equals(page.Tag, "support"));
-        var testButton = ReviewDescendants(supportPage).OfType<Button>()
-            .FirstOrDefault(button => AutomationProperties.GetAutomationId(button) == "SupportReminderTest");
-        check((testButton is not null) == PlayhubUpdatePolicy.IsPreview, "donation Test button exists only in the update-test build");
-        _supportUsageClock = new SupportUsageClock(123);
-        var savedSeconds = _settings.SupportReminderUsageSeconds;
-        _pluginBulkUpdateRunning = true;
-        await ShowSupportReminderAsync(force: true);
-        check(_supportReminderDialog is null, "support popup defers while a plugin operation is running");
-        _pluginBulkUpdateRunning = false;
-        var showing = ShowSupportReminderAsync(force: true);
-        check(await ReviewWaitUntilAsync(() => _supportReminderDialog is not null), "support popup opens on explicit test without two hours of waiting");
-        await Task.Delay(300);
-        if (_supportReminderDialog?.Content is FrameworkElement content)
-        {
-            var picture = ReviewDescendants(content).OfType<Image>().FirstOrDefault();
-            check(picture?.Source is BitmapImage bitmap && bitmap.UriSource?.LocalPath.EndsWith("Donation.png") == true,
-                "support popup reuses the approved Support mascot image");
-            check(ReviewDescendants(content).OfType<TextBlock>().Any(block => block.Text == T("Ti piace Playhub?")),
-                "support popup shows the requested heading");
-            var popupText = ReviewDescendants(content).OfType<TextBlock>().Select(block => block.Text).ToArray();
-            foreach (var text in new[] {
-                "Playhub è gratuito e open source. Lo sviluppo, i test e la manutenzione sono sostenuti da una sola persona.",
-                "Se Playhub ti è utile e vuoi aiutare il progetto a continuare a crescere, una donazione è sempre apprezzata. Nessun contenuto è bloccato: è semplicemente un modo gentile per sostenere il lavoro che c'è dietro."
-            }) check(popupText.Contains(T(text)), "support popup preserves the Support card paragraph verbatim");
-            var donation = ReviewDescendants(content).OfType<Button>().FirstOrDefault(button =>
-                AutomationProperties.GetAutomationId(button) == "SupportReminderDonate");
-            check(donation is not null && donation.IsEnabled, "support popup exposes the accent donation command");
-            check(content.ActualWidth <= Content.XamlRoot.Size.Width && content.ActualHeight <= Content.XamlRoot.Size.Height,
-                "support popup fits the current viewport");
-            await ReviewCaptureAsync(content, Path.Combine(output, "support-popup.png"));
-        }
-        _supportReminderDialog?.Hide();
-        await showing;
-        check(_supportUsageClock.UsageSeconds == 123 && _settings.SupportReminderUsageSeconds == savedSeconds,
-            "forced support test does not consume accumulated usage or write settings");
-        _supportUsageClock = null;
     }
 
     private static IEnumerable<Inline> ReviewInlines(InlineCollection inlines)

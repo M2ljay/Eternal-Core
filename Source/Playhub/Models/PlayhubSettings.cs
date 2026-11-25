@@ -12,7 +12,6 @@ public sealed class PlayhubSettings
     public string DeckyPluginsPath { get; set; } = "";
     // Empty resolves to the fork's release repository (PlayhubUpdatePolicy.Repository).
     public string PlayhubUpdateRepository { get; set; } = "";
-    public double SupportReminderUsageSeconds { get; set; }
     public Dictionary<string, string> PluginStoreLayouts { get; set; } = new();
     public bool PluginRestartPromptsEnabled { get; set; } = true;
     public string SteamGridDbApiKey { get; set; } = "";

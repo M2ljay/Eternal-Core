@@ -461,7 +461,6 @@ public sealed partial class MainWindow : Window
             await RefreshDeckyStateAsync();
             Diag.Step("LoadAsync: steps done");
             ApplyLanguage();
-            InitializeSupportReminder();
 
         }
         catch (Exception ex)
@@ -642,7 +641,6 @@ public sealed partial class MainWindow : Window
         navigation.MenuItems.Add(NavItem("StoreLibrary.Stores", "digital-stores", Symbol.Shop));
         navigation.MenuItems.Add(NavItem("Big Picture Styler", "styler", ((char)0xE771).ToString()));
         navigation.MenuItems.Add(NavItem("Impostazioni", "settings", Symbol.Setting));
-        navigation.MenuItems.Add(NavItem("Supporto", "support", VectorIcon(KoFiIconPath)));
         navigation.SelectionChanged += (_, args) =>
         {
             if (args.SelectedItem is NavigationViewItem item && item.Tag is string tag)
@@ -686,8 +684,6 @@ public sealed partial class MainWindow : Window
         _pageHost.Children.Add(BuildBigPictureStylerPage());
         Diag.Step("BuildShell: Settings");
         _pageHost.Children.Add(BuildSettingsPage());
-        Diag.Step("BuildShell: Support");
-        _pageHost.Children.Add(BuildSupportPage());
         Diag.Step("BuildShell: pages done");
 
         // Auto-save di tutti i controlli Gaming Mode: agganciato DOPO che tutte le
@@ -941,9 +937,6 @@ public sealed partial class MainWindow : Window
 
     private const string LayerDiagonalAddPath =
         "M12.5 4.25194C12.5 3.73196 11.9837 3.36976 11.4948 3.54669L4.65454 6.02188C3.96161 6.27262 3.5 6.93056 3.5 7.66746V13.7491C3.5 14.2691 4.01625 14.6313 4.5052 14.4544L5 14.2753V15.8705C3.5378 16.388 2 15.3035 2 13.7491V7.66746C2 6.29894 2.85728 5.07704 4.14414 4.61138L10.9844 2.1362C12.4512 1.60541 14 2.69202 14 4.25194V4.42895L12.5 4.97174V4.25194ZM16.5 7.25194C16.5 6.73196 15.9837 6.36976 15.4948 6.54669L8.32467 9.14124C7.82972 9.32034 7.5 9.7903 7.5 10.3167V16.7491C7.5 17.2691 8.01625 17.6313 8.5052 17.4544L9 17.2753V18.8705C7.5378 19.388 6 18.3035 6 16.7491V10.3167C6 9.15868 6.72539 8.12477 7.81427 7.73075L14.9844 5.1362C16.4512 4.60541 18 5.69202 18 7.25194V7.42895L16.5 7.97174V7.25194ZM19.4948 9.54667C19.9837 9.36975 20.5 9.73195 20.5 10.2519V11.3135C21.0335 11.4858 21.5368 11.7253 22 12.0218V10.2519C22 8.692 20.4512 7.60539 18.9844 8.13618L11.4844 10.8501C10.5935 11.1725 10 12.0184 10 12.9658V19.7491C10 21.309 11.5488 22.3956 13.0156 21.8649L13.5231 21.6812C13.1928 21.2884 12.9081 20.856 12.6773 20.3921L12.5052 20.4544C12.0163 20.6313 11.5 20.2691 11.5 19.7491V12.9658C11.5 12.65 11.6978 12.368 11.9948 12.2606L19.4948 9.54667ZM24 17.5C24 14.4624 21.5376 12 18.5 12C15.4624 12 13 14.4624 13 17.5C13 20.5376 15.4624 23 18.5 23C21.5376 23 24 20.5376 24 17.5ZM19.0006 18L19.0011 20.5035C19.0011 20.7797 18.7773 21.0035 18.5011 21.0035C18.225 21.0035 18.0011 20.7797 18.0011 20.5035L18.0006 18H15.4956C15.2197 18 14.9961 17.7762 14.9961 17.5C14.9961 17.2239 15.2197 17 15.4956 17H18.0005L18 14.4993C18 14.2231 18.2239 13.9993 18.5 13.9993C18.7761 13.9993 19 14.2231 19 14.4993L19.0005 17H21.4966C21.7725 17 21.9961 17.2239 21.9961 17.5C21.9961 17.7762 21.7725 18 21.4966 18H19.0006Z";
-
-    private const string KoFiIconPath =
-        "M4 5H17V7H19C21.2091 7 23 8.79086 23 11C23 13.2091 21.2091 15 19 15H17.6C16.5 18.4 13.3 21 9.5 21C4.8 21 1 17.2 1 12.5V5H4ZM17 9V13H19C20.1046 13 21 12.1046 21 11C21 9.89543 20.1046 9 19 9H17ZM9 8.4C8.1 7.5 6.6 7.5 5.7 8.4C4.8 9.3 4.8 10.8 5.7 11.7L9 15L12.3 11.7C13.2 10.8 13.2 9.3 12.3 8.4C11.4 7.5 9.9 7.5 9 8.4Z";
 
     private static IconElement VectorIcon(string pathData)
         => (IconElement)Microsoft.UI.Xaml.Markup.XamlReader.Load(
@@ -3564,38 +3557,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private UIElement BuildSupportPage()
-    {
-        var panel = PageWithoutHeader("support");
-
-        panel.Children.Add(new Image
-        {
-            Source = new BitmapImage(new Uri(Path.Combine(AppContext.BaseDirectory, "Assets", "Support", "Donation.png"))),
-            MaxWidth = 760,
-            Height = 330,
-            Stretch = Stretch.Uniform,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 4, 0, 0)
-        });
-
-        var support = Card();
-        support.Root.MaxWidth = 820;
-        support.Root.HorizontalAlignment = HorizontalAlignment.Center;
-        support.Children.Add(IconHeader(((char)0xEB51).ToString(), "Grazie per essere parte di Playhub",
-            "Playhub è gratuito e open source. Lo sviluppo, i test e la manutenzione sono sostenuti da una sola persona."));
-        support.Children.Add(Body(
-            "Se Playhub ti è utile e vuoi aiutare il progetto a continuare a crescere, una donazione è sempre apprezzata. Nessun contenuto è bloccato: è semplicemente un modo gentile per sostenere il lavoro che c'è dietro."));
-        support.Children.Add(ActionRow(Button("Fai una donazione", async () =>
-            await Windows.System.Launcher.LaunchUriAsync(new Uri("https://ko-fi.com/lozazamastro")), primary: true)));
-#if PLAYHUB_UPDATE_PREVIEW
-        var testReminder = Button("Test", () => ShowSupportReminderAsync(force: true));
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(testReminder, "SupportReminderTest");
-        support.Children.Add(ActionRow(testReminder));
-#endif
-        panel.Children.Add(support);
-        return panel;
-    }
-
     private UIElement BuildSettingsPage()
     {
         var panel = Page("settings", "Impostazioni", "Aspetto, avvio e informazioni di Core.");
@@ -5721,7 +5682,6 @@ by Valve.";
         button.Click += async (_, _) =>
         {
             using var context = BeginNotificationContext("plugins");
-            using var reminderOperation = BeginSupportReminderOperation();
             try
             {
                 button.IsEnabled = false;
@@ -8701,7 +8661,6 @@ by Valve.";
         button.Click += async (_, _) =>
         {
             using var context = BeginNotificationContext();
-            using var reminderOperation = BeginSupportReminderOperation();
             try
             {
                 button.IsEnabled = false;
@@ -8742,7 +8701,6 @@ by Valve.";
         button.Click += async (_, _) =>
         {
             using var context = BeginNotificationContext();
-            using var reminderOperation = BeginSupportReminderOperation();
             try
             {
                 button.IsEnabled = false;
@@ -9245,7 +9203,6 @@ by Valve.";
 
     private async Task SaveSettingsSilentlyAsync()
     {
-        CaptureSupportReminderUsageForSave();
         await _settingsService.SaveAsync();
     }
 
