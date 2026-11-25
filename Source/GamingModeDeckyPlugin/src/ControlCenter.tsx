@@ -70,7 +70,7 @@ function update(next: ControlPreferences, locale: string) {
   listeners.forEach(listener => listener());
   const snapshot = prefs;
   write = write.catch(() => {}).then(async () => { await call("save_panel_preferences", snapshot); }).catch(() => {
-    toaster.toast({ title: "Playhub", body: controlLocale(locale).saveError });
+    toaster.toast({ title: "Core", body: controlLocale(locale).saveError });
   });
 }
 const css = `
@@ -282,7 +282,7 @@ export function ControlCenter({ locale, origin, session, store, controller, sett
       </>}
     </Focusable></ScrollPanel> : <>
       <Focusable className="ph-control-nav" flow-children="row">
-        <Focusable className="ph-control-tabs" flow-children="row" role="tablist" aria-label="Playhub">
+        <Focusable className="ph-control-tabs" flow-children="row" role="tablist" aria-label="Core">
           {visible.map(id => { const Icon = icons[id]; return <DialogButton key={id} className="ph-control-icon" role="tab" aria-selected={active === id} aria-label={copy[id]} onOKActionDescription={copy[id]} disabled={!ready}
             data-playhub-onboarding={origin === "qam" ? id : undefined}
             onClick={() => choose(id)}><Icon /></DialogButton>; })}

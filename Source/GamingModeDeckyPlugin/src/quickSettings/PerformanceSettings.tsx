@@ -104,7 +104,7 @@ export function PerformanceSettings({ locale, appId }: { locale: string; appId: 
     : state.status === "Ready" || state.status === "Disabled" ? "" : common.unavailable;
   return <>
     <div className="qsDropdownFullWidth"><DropdownItem bottomSeparator="none" layout="below" label={copy[0]}
-      rgOptions={[{ data: "live", label: "Playhub" }, { data: "steam", label: "Steam" }]} selectedOption={source}
+      rgOptions={[{ data: "live", label: "Core" }, { data: "steam", label: "Steam" }]} selectedOption={source}
       disabled={view.busy || changing} onChange={option => { if (option.data === "live" || option.data === "steam") void choose(option.data); }} /></div>
     {source === "steam" ? <SteamPerformanceSettings locale={locale} appId={appId} /> : <>
       <ToggleField bottomSeparator="none" label={copy[1]} checked={state?.enabled === true} disabled={disabled}

@@ -54,7 +54,7 @@ export function StoreDownloadMenu({ job, locale }: { job: StoreJob; locale: stri
   const run = async (action: JobAction) => {
     setBusy(true);
     try { if (!(await storeJobAction(job, action)).accepted) throw new Error("store_command_rejected"); }
-    catch { toaster.toast({ title: "Playhub", body: c["StoreLibrary.CommandFailed"] }); }
+    catch { toaster.toast({ title: "Core", body: c["StoreLibrary.CommandFailed"] }); }
     finally { setBusy(false); }
   };
   const options = [

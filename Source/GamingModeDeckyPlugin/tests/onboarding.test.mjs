@@ -297,20 +297,21 @@ test("all twelve locales supply complete distinct copy without fixed controller 
     assert.equal(Object.values(copy).length, 14);
     assert.ok(copy.outroTitle.length > 0 && copy.outro.length > 0, "the closing slide is localized too");
     for (const title of [copy.playhubTitle, copy.deckyTitle, copy.storeTitle, copy.customizeTitle])
-      assert.ok(!["Playhub", "Decky", "Plugin Store"].includes(title));
+      assert.ok(!["Playhub", "Core", "Decky", "Plugin Store"].includes(title));
     assert.ok(Object.values(api.getOnboardingExtraCopy(key)).every(value => value.length > 0));
     const extra = api.getOnboardingExtraCopy(key);
     assert.match(extra.store, /Playhub/); assert.match(extra.store, /Decky Store/); assert.match(extra.store, /GitHub/);
     assert.equal(copy.deckyOff, copy.decky);
     assert.match(copy.decky, /Decky/);
-    assert.match(copy.decky, /Playhub/);
+    assert.match(copy.decky, /Core/);
+    assert.doesNotMatch(copy.decky, /Playhub/);
     assert.doesNotMatch(copy.decky, /Steam|optional|facoltativ/);
     if (key === "en") {
       assert.equal(copy.deckyTitle, "Your plugins, together");
-      assert.equal(copy.decky, "The Decky menu is now part of Playhub, always available to browse your installed plugins. You can restore the Decky tab at any time from Playhub settings.");
+      assert.equal(copy.decky, "The Decky menu is now part of Core, always available to browse your installed plugins. You can restore the Decky tab at any time from Core settings.");
     }
     if (key === "it") {
-      assert.equal(copy.decky, "Ora il menu di Decky è parte di Playhub e puoi accedervi in qualsiasi momento per vedere la lista dei tuoi plugin installati. Puoi anche ripristinare la tab Decky in qualsiasi momento dalle impostazioni di Playhub.");
+      assert.equal(copy.decky, "Ora il menu di Decky è parte di Core e puoi accedervi in qualsiasi momento per vedere la lista dei tuoi plugin installati. Puoi anche ripristinare la tab Decky in qualsiasi momento dalle impostazioni di Core.");
       assert.doesNotMatch(JSON.stringify({ ...copy, ...extra }), /schede|scheda|facoltativ|attivarla|più fonti/);
       assert.match(extra.customize, /Riordina le tab/);
     }
@@ -640,9 +641,9 @@ test("all twelve locales cover the four added tabs and actual settings, preservi
     for (const tab of ["audio", "performance", "graphics", "controller", "customize"]) {
       const value = api.getOnboardingTabCopy(lang, tab);
       assert.ok(value.title?.length > 0 && value.body?.length > 0);
-      if (tab === "customize") { assert.match(value.body, /Playhub/); assert.match(value.body, /Decky/); }
+      if (tab === "customize") { assert.match(value.body, /Core/); assert.match(value.body, /Decky/); }
     }
-  assert.equal(api.getOnboardingTabCopy("en", "customize").title, "Make Playhub yours");
+  assert.equal(api.getOnboardingTabCopy("en", "customize").title, "Make Core yours");
   assert.match(api.getOnboardingTabCopy("en", "customize").body, /device information and diagnostics/);
 });
 

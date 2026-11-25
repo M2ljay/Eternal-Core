@@ -960,7 +960,7 @@ function Header({ tab, setTab, copy, locale, logo }: { tab: TabId; setTab: (tab:
   return (
     <header className="ph-header">
       <div className="ph-brand">
-        {logo ? <img src={logo} alt="Playhub" /> : <div className="ph-brand-fallback">playhub</div>}
+        {logo ? <img src={logo} alt="Core" /> : <div className="ph-brand-fallback">core</div>}
       </div>
       <Focusable className="ph-tabs" flow-children="horizontal">
         {tabs.map((item) => {

@@ -53,7 +53,7 @@ export function installStandaloneQam(hook: Hook, options: PlayhubQamOptions, isV
   if (descriptor) return null;
   const previous = hook.render;
   const probe = Object.create(hook);
-  Object.defineProperty(probe, "tabs", { value: [{ id: TAB_ID, ...options, title: options.title ?? "Playhub" }] });
+  Object.defineProperty(probe, "tabs", { value: [{ id: TAB_ID, ...options, title: options.title ?? "Core" }] });
   const sample: Tab[] = [];
   try {
     const result = previous.call(probe, sample, false);

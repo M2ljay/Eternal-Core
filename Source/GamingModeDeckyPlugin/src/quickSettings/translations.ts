@@ -495,5 +495,5 @@ const strings: Record<string, Strings> = { en, it };
 
 export function t(locale = navigator.language): Strings {
   const language = locale.split("-")[0];
-  return { ...(strings[language] ?? strings.en), ...quickCoreLocale(language), title: "Playhub" };
+  return { ...(strings[language] ?? strings.en), ...quickCoreLocale(language), title: "Core" };
 }

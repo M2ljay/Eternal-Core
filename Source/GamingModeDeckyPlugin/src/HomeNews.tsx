@@ -27,7 +27,7 @@ export function HomeNewsSettings({ locale }: { locale: string }) {
     if (pending.current) return;
     pending.current = true; setBusy(true);
     try { config = await call<[boolean, string], Config>("set_home_news_settings", next.enabled, next.country); notify(); }
-    catch { toaster.toast({ title: "Playhub", body: copy[5] }); }
+    catch { toaster.toast({ title: "Core", body: copy[5] }); }
     finally { pending.current = false; setBusy(false); }
   };
   const names = new Intl.DisplayNames([locale], { type: "region" });

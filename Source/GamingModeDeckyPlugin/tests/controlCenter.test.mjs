@@ -23,18 +23,18 @@ test("Decky integration has dedicated copy in every supported language", () => {
   for (const language of ["en", "it", "de", "es", "fr", "pt", "ru", "uk", "ja", "ko", "zh", "hi"]) {
     const copy = deckyIntegrationLocale(language);
     assert.ok(copy.label.length > 0 && copy.description.length > 0);
-    assert.match(copy.description, /Playhub/);
+    assert.match(copy.description, /Core/);
     if (language !== "en") assert.notEqual(copy.description, english.description);
     assert.equal(deckyIntegrationLocale(`${language}-XX`).description, copy.description);
   }
   assert.equal(deckyIntegrationLocale("unknown").description, english.description);
   assert.equal(deckyIntegrationLocale("it").label, "Nascondi Decky dalle tab di Steam");
-  assert.equal(deckyIntegrationLocale("it").description, "Decky rimane sempre disponibile nel menu di Playhub.");
+  assert.equal(deckyIntegrationLocale("it").description, "Decky rimane sempre disponibile nel menu di Core.");
 });
 
-test("game menu uses the Playhub Game Settings product name in all languages", () => {
+test("game menu uses the Core Game Settings product name in all languages", () => {
   for (const locale of [null, "italian", "en-US", "koreana", "brazilian", "ja", "zh", "hi"])
-    assert.equal(gameSettingsLabel(locale), "Playhub Game Settings");
+    assert.equal(gameSettingsLabel(locale), "Core Game Settings");
 });
 
 test("control center restores valid unique tabs and retains a visible tab", () => {

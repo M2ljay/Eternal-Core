@@ -49,7 +49,7 @@ let hapticSettingsWrite = Promise.resolve();
 function saveHapticSettings(changes: Parameters<typeof writeSettings>[0]) {
   hapticSettingsWrite = hapticSettingsWrite.catch(() => {}).then(async () => { await writeSettings(changes); });
 }
-const playhubTitle = <img src={playhubWordmark} alt="Playhub" style={{ display: "block", width: 144, maxWidth: "100%", height: 36, objectFit: "contain", objectPosition: "left center" }} />;
+const playhubTitle = <img src={playhubWordmark} alt="Core" style={{ display: "block", width: 144, maxWidth: "100%", height: 36, objectFit: "contain", objectPosition: "left center" }} />;
 function ModeButtonLabel({ mode }: { mode: "gaming" | "desktop" }) {
   return <span className="ph-mode-action-label"><span>{mode === "gaming" ? "Gaming" : "Desktop"}</span><span>Mode</span></span>;
 }
@@ -107,7 +107,7 @@ const strings: Record<string, Strings> = {
     gamingMode: "Gaming Mode",
     notConnected: "Agent not connected",
     agentReturned: "Agent returned",
-    dashboard: "Playhub Dashboard",
+    dashboard: "Core Dashboard",
     openDashboard: "Open Dashboard",
     dashboardShortcut: "Also open it with Ctrl + Alt + P",
     dashboardSteamInput: "In Steam Input, assign this shortcut to Guide + any button for instant controller access.",
@@ -127,7 +127,7 @@ const strings: Record<string, Strings> = {
     gamingMode: "Modalità Gaming",
     notConnected: "Agent non collegato",
     agentReturned: "Agent ha risposto",
-    dashboard: "Playhub Dashboard",
+    dashboard: "Core Dashboard",
     openDashboard: "Apri Dashboard",
     dashboardShortcut: "Aprila anche con Ctrl + Alt + P",
     dashboardSteamInput: "In Steam Input, assegna questa scorciatoia a Guida + un pulsante per aprirla subito dal controller.",
@@ -147,7 +147,7 @@ const strings: Record<string, Strings> = {
     gamingMode: "Modo Gaming",
     notConnected: "Agente no conectado",
     agentReturned: "El agente devolvió",
-    dashboard: "Playhub Dashboard",
+    dashboard: "Core Dashboard",
     openDashboard: "Abrir Dashboard",
     dashboardShortcut: "Ábrelo también con Ctrl + Alt + P",
     dashboardSteamInput: "En Steam Input, asigna este atajo a Guía + un botón para abrirlo al instante con el mando.",
@@ -165,7 +165,7 @@ const strings: Record<string, Strings> = {
     gamingMode: "Mode Gaming",
     notConnected: "Agent non connecté",
     agentReturned: "Agent a renvoyé",
-    dashboard: "Playhub Dashboard",
+    dashboard: "Core Dashboard",
     openDashboard: "Ouvrir le Dashboard",
     dashboardShortcut: "Ouvrez-le aussi avec Ctrl + Alt + P",
     dashboardSteamInput: "Dans Steam Input, associez ce raccourci à Guide + un bouton pour l'ouvrir instantanément avec la manette.",
@@ -183,7 +183,7 @@ const strings: Record<string, Strings> = {
     gamingMode: "Gaming-Modus",
     notConnected: "Agent nicht verbunden",
     agentReturned: "Agent meldete",
-    dashboard: "Playhub Dashboard",
+    dashboard: "Core Dashboard",
     openDashboard: "Dashboard öffnen",
     dashboardShortcut: "Auch mit Ctrl + Alt + P öffnen",
     dashboardSteamInput: "Weise diese Tastenkombination in Steam Input Guide + einer Taste zu, um das Dashboard direkt per Controller zu öffnen.",
@@ -201,7 +201,7 @@ const strings: Record<string, Strings> = {
     gamingMode: "Modo Gaming",
     notConnected: "Agente não ligado",
     agentReturned: "Agente devolveu",
-    dashboard: "Playhub Dashboard",
+    dashboard: "Core Dashboard",
     openDashboard: "Abrir Dashboard",
     dashboardShortcut: "Abra também com Ctrl + Alt + P",
     dashboardSteamInput: "No Steam Input, atribua este atalho a Guia + um botão para abrir imediatamente pelo comando.",
@@ -214,7 +214,7 @@ const strings: Record<string, Strings> = {
     mode: "Режим запуску", switchGaming: "Перейти в ігровий режим", switchDesktop: "Перейти в режим робочого столу",
     defaultStartup: "Типовий запуск", desktopMode: "Режим робочого столу", gamingMode: "Ігровий режим",
     notConnected: "Агент не підключено", agentReturned: "Агент повернув",
-    dashboard: "Панель Playhub", openDashboard: "Відкрити панель",
+    dashboard: "Панель Core", openDashboard: "Відкрити панель",
     dashboardShortcut: "Також відкривайте за допомогою Ctrl + Alt + P",
     dashboardSteamInput: "У Steam Input призначте це сполучення на Guide + будь-яку кнопку для миттєвого доступу з контролера.",
     haptics: "Відгук контролера", hapticsDescription: "Додає тактильний відгук під час навігації Steam.", hapticsIntensity: "Інтенсивність",
@@ -226,7 +226,7 @@ const strings: Record<string, Strings> = {
     mode: "启动模式", switchGaming: "切换到游戏模式", switchDesktop: "切换到桌面模式",
     defaultStartup: "默认启动模式", desktopMode: "桌面模式", gamingMode: "游戏模式",
     notConnected: "代理未连接", agentReturned: "代理返回",
-    dashboard: "Playhub 控制面板", openDashboard: "打开控制面板",
+    dashboard: "Core 控制面板", openDashboard: "打开控制面板",
     dashboardShortcut: "也可按 Ctrl + Alt + P 打开",
     dashboardSteamInput: "在 Steam Input 中，将此快捷键绑定到 Guide + 任意按钮，即可通过控制器快速打开。",
     haptics: "手柄反馈", hapticsDescription: "在 Steam 中导航时提供触觉反馈。", hapticsIntensity: "反馈强度",
@@ -238,7 +238,7 @@ const strings: Record<string, Strings> = {
     mode: "起動モード", switchGaming: "ゲーミングモードに切り替え", switchDesktop: "デスクトップモードに切り替え",
     defaultStartup: "既定の起動", desktopMode: "デスクトップモード", gamingMode: "ゲーミングモード",
     notConnected: "エージェントに接続されていません", agentReturned: "エージェントの応答",
-    dashboard: "Playhub ダッシュボード", openDashboard: "ダッシュボードを開く",
+    dashboard: "Core ダッシュボード", openDashboard: "ダッシュボードを開く",
     dashboardShortcut: "Ctrl + Alt + P でも開けます",
     dashboardSteamInput: "Steam Input でこのショートカットを Guide + 任意のボタンに割り当てると、コントローラーからすぐに開けます。",
     haptics: "コントローラーのフィードバック", hapticsDescription: "Steam の操作に触覚フィードバックを加えます。", hapticsIntensity: "フィードバックの強さ",
@@ -250,7 +250,7 @@ const strings: Record<string, Strings> = {
     mode: "시작 모드", switchGaming: "게이밍 모드로 전환", switchDesktop: "데스크톱 모드로 전환",
     defaultStartup: "기본 시작", desktopMode: "데스크톱 모드", gamingMode: "게이밍 모드",
     notConnected: "에이전트가 연결되지 않음", agentReturned: "에이전트 응답",
-    dashboard: "Playhub 대시보드", openDashboard: "대시보드 열기",
+    dashboard: "Core 대시보드", openDashboard: "대시보드 열기",
     dashboardShortcut: "Ctrl + Alt + P로도 열 수 있습니다",
     dashboardSteamInput: "Steam Input에서 이 단축키를 Guide + 원하는 버튼에 지정하면 컨트롤러로 즉시 열 수 있습니다.",
     haptics: "컨트롤러 피드백", hapticsDescription: "Steam을 탐색할 때 촉각 피드백을 추가합니다.", hapticsIntensity: "피드백 강도",
@@ -262,7 +262,7 @@ const strings: Record<string, Strings> = {
     mode: "स्टार्टअप मोड", switchGaming: "गेमिंग मोड पर जाएं", switchDesktop: "डेस्कटॉप मोड पर जाएं",
     defaultStartup: "डिफ़ॉल्ट स्टार्टअप", desktopMode: "डेस्कटॉप मोड", gamingMode: "गेमिंग मोड",
     notConnected: "एजेंट कनेक्ट नहीं है", agentReturned: "एजेंट ने लौटाया",
-    dashboard: "Playhub डैशबोर्ड", openDashboard: "डैशबोर्ड खोलें",
+    dashboard: "Core डैशबोर्ड", openDashboard: "डैशबोर्ड खोलें",
     dashboardShortcut: "Ctrl + Alt + P से भी खोलें",
     dashboardSteamInput: "कंट्रोलर से तुरंत खोलने के लिए Steam Input में इस शॉर्टकट को Guide + किसी बटन से जोड़ें।",
     haptics: "कंट्रोलर फ़ीडबैक", hapticsDescription: "Steam में नेविगेट करते समय स्पर्श प्रतिक्रिया जोड़ता है।", hapticsIntensity: "फ़ीडबैक की तीव्रता",
@@ -274,7 +274,7 @@ const strings: Record<string, Strings> = {
     mode: "Режим запуска", switchGaming: "Перейти в игровой режим", switchDesktop: "Перейти в режим рабочего стола",
     defaultStartup: "Запуск по умолчанию", desktopMode: "Режим рабочего стола", gamingMode: "Игровой режим",
     notConnected: "Агент не подключен", agentReturned: "Агент вернул",
-    dashboard: "Панель Playhub", openDashboard: "Открыть панель",
+    dashboard: "Панель Core", openDashboard: "Открыть панель",
     dashboardShortcut: "Также открывайте с помощью Ctrl + Alt + P",
     dashboardSteamInput: "В Steam Input назначьте это сочетание на Guide + любую кнопку для мгновенного доступа с контроллера.",
     haptics: "Отклик контроллера", hapticsDescription: "Добавляет тактильный отклик при навигации в Steam.", hapticsIntensity: "Интенсивность",
@@ -974,7 +974,7 @@ function Content({ origin = "decky" }: { origin?: "qam" | "decky" }) {
             layout="below"
             onClick={() => openDashboard()}
           >
-            Playhub Dashboard
+            Core Dashboard
           </ButtonItem>
         </PanelSectionRow>
         <PanelSectionRow>
@@ -1123,7 +1123,7 @@ export default definePlugin(() => {
     check: () => controlCall<[], UpdateNotice>("get_playhub_update_notice"),
     read: () => window.localStorage.getItem("playhub.update-notice.version"),
     write: version => window.localStorage.setItem("playhub.update-notice.version", version),
-    notify: version => { toaster.toast({ title: "Playhub", body: updateNoticeBody(currentLocale, version) }); },
+    notify: version => { toaster.toast({ title: "Core", body: updateNoticeBody(currentLocale, version) }); },
     schedule: (callback, delay) => window.setTimeout(callback, delay),
     cancel: timer => window.clearTimeout(timer as number),
   }));
@@ -1162,7 +1162,7 @@ export default definePlugin(() => {
   const uninstallPlayhubQam = initPlayhubQam({ content: <Content origin="qam" />, icon: <PlayhubIcon />, title: <div style={{ paddingInline: 16, boxSizing: "border-box" }}>{playhubTitle}</div> });
   const uninstallPowerMenuPatch = installOptionalHook("Power menu", () => installPowerMenuPatch(
     () => ({ gaming: t().switchGaming, desktop: t().switchDesktop }),
-    (mode) => confirmModeSwitch(mode, () => { void post(`/mode/${mode}/switch`).catch((error) => toaster.toast({ title: "Playhub", body: String(error) })); })
+    (mode) => confirmModeSwitch(mode, () => { void post(`/mode/${mode}/switch`).catch((error) => toaster.toast({ title: "Core", body: String(error) })); })
   ));
 
   const hapticRevision = getNavigationHapticsRevision();

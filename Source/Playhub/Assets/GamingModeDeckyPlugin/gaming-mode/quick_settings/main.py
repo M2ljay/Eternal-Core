@@ -3360,8 +3360,8 @@ LOSSLESS_APPID = "993090"
 _LS_SCALING_ACTIVE = {"on": False}
 _LS_ACTIVATION_SETTLE_SECONDS = 1.2
 _LS_EXTERNAL_UI_MESSAGE = (
-    "Lossless Scaling is already open outside Playhub. "
-    "Close it before enabling Playhub-managed scaling."
+    "Lossless Scaling is already open outside Core. "
+    "Close it before enabling Core-managed scaling."
 )
 
 _MODIFIER_VK = {"control": 0x11, "ctrl": 0x11, "alt": 0x12, "menu": 0x12, "shift": 0x10, "win": 0x5B}
@@ -4758,7 +4758,7 @@ def _stop_owned_lossless_ui():
             owned.terminate()
             owned.wait(timeout=4)
         except (OSError, subprocess.TimeoutExpired) as error:
-            return f"Could not stop the Lossless Scaling instance opened by Playhub: {error}"
+            return f"Could not stop the Lossless Scaling instance opened by Core: {error}"
         _LS_OWNED_UI = None
         return ""
 

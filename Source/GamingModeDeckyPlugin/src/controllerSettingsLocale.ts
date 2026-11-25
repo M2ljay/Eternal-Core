@@ -23,14 +23,14 @@ export function controllerProfileLocale(locale: string) {
   const italian = /^(it|italian)(-|_|$)/i.test(locale);
   // Other languages use explicit English fallback until the new strings are translated.
   return italian ? {
-    title: "Profili Playhub", offline: "Solo profilo locale - input reale non attivo",
+    title: "Profili Core", offline: "Solo profilo locale - input reale non attivo",
     profile: "Profilo", source: "Pulsante sorgente", target: "Destinazione", none: "Disattivato",
     left: "Zona morta sinistra", right: "Zona morta destra", preview: "Anteprima sintetica",
     saved: "Salvato localmente", empty: "Profilo predefinito non salvato", dirty: "Modifiche non salvate",
     invalid: "Profilo non valido", storageError: "Archivio locale non disponibile",
     save: "Salva profilo locale", reset: "Ripristina valori predefiniti", discard: "Annulla modifiche",
   } : {
-    title: "Playhub profiles", offline: "Local profile only - live input inactive",
+    title: "Core profiles", offline: "Local profile only - live input inactive",
     profile: "Profile", source: "Source button", target: "Target", none: "Disabled",
     left: "Left deadzone", right: "Right deadzone", preview: "Synthetic preview",
     saved: "Saved locally", empty: "Unsaved default profile", dirty: "Unsaved changes",

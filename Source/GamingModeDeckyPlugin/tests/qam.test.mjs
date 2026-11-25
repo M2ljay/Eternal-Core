@@ -249,7 +249,7 @@ test("all twelve locales have dedicated labels", () => {
   const locales = ["en", "it", "es", "fr", "de", "pt", "uk", "zh", "ja", "ko", "hi", "ru"];
   const labels = locales.map(copy.getPlayhubQamLabel);
   assert.equal(new Set(labels).size, 12);
-  assert.ok(labels.every((label) => label.includes("Playhub")));
+  assert.ok(labels.every((label) => label.includes("Core") && !label.includes("Playhub")));
 });
 
 test("standalone host preserves native root, hides only after commit, survives inactive tab and restores", () => {

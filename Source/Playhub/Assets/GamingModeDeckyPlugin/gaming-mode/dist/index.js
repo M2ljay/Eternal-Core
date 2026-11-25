@@ -1649,7 +1649,7 @@ function installStoreDigitalIntentPump(request, open = openStoreDigitalGame, clo
 // SPDX-License-Identifier: MIT. Playhub, Copyright (c) 2026 LoZazaMastro.
 const states = new Set(["queued", "blockedSteam", "starting", "downloading", "pausing", "pausedByUser", "pausedBySteam", "installing", "verifying", "completed", "canceling", "canceled", "failed", "interrupted", "externalHandoff"]);
 function createStoreCompletionNotifications() {
-    const observe = createCompletionObserver("playhub.store-completions.v1", job => toaster?.toast?.({ title: completionTitle(navigator.language), body: job.title, subtext: "Playhub", showToast: true, playSound: true, onClick: () => openStoreDigitalDownloads() }));
+    const observe = createCompletionObserver("playhub.store-completions.v1", job => toaster?.toast?.({ title: completionTitle(navigator.language), body: job.title, subtext: "Core", showToast: true, playSound: true, onClick: () => openStoreDigitalDownloads() }));
     let revision = 0;
     return (jobs) => {
         if (!Array.isArray(jobs) || jobs.some(job => !job?.key || !states.has(job.state) || !["epic", "gog", "xbox", "amazon"].includes(job.key.store) || typeof job.key.id !== "string"))
@@ -5727,18 +5727,18 @@ const rows$9 = {
     hi: ["डिवाइस का नाम", "मॉडल", "प्रोसेसर", "GPU", "मेमोरी", "कुल स्थानीय स्टोरेज", "Windows संस्करण", "Windows संस्करण संख्या", "Windows Update", "डिवाइस की जानकारी लोड हो रही है...", "उपलब्ध नहीं", "Windows Update नहीं खुल सका।", "डिवाइस की जानकारी लोड नहीं हो सकी।"],
 };
 const profiles = {
-    en: ["Device profile", "Automatic", "Windows PC", "Other handheld", "Experimental", "The profile changes how Playhub presents your device. Windows supplies the available controls.", "On battery", "Plugged in", "Primary display", "Video controls", "Power controls", "Hardware details", "Could not save the device profile.", "Try again"],
-    it: ["Profilo dispositivo", "Automatico", "PC Windows", "Altro portatile da gioco", "Sperimentale", "Il profilo adatta Playhub al dispositivo. I controlli disponibili dipendono da Windows.", "A batteria", "Alimentatore collegato", "Schermo principale", "Controlli video", "Controlli di alimentazione", "Dettagli hardware", "Impossibile salvare il profilo dispositivo.", "Riprova"],
-    de: ["Geräteprofil", "Automatisch", "Windows-PC", "Anderes Handheld", "Experimentell", "Das Profil passt Playhub an dein Gerät an. Windows bestimmt die verfügbaren Einstellungen.", "Akkubetrieb", "Netzbetrieb", "Hauptbildschirm", "Videoeinstellungen", "Energieeinstellungen", "Hardwaredetails", "Das Geräteprofil konnte nicht gespeichert werden.", "Erneut versuchen"],
-    es: ["Perfil del dispositivo", "Automático", "PC con Windows", "Otra consola portátil", "Experimental", "El perfil adapta Playhub a tu dispositivo. Windows determina los controles disponibles.", "Con batería", "Conectado a la corriente", "Pantalla principal", "Controles de vídeo", "Controles de energía", "Detalles del hardware", "No se pudo guardar el perfil del dispositivo.", "Reintentar"],
-    fr: ["Profil de l’appareil", "Automatique", "PC Windows", "Autre console portable", "Expérimental", "Le profil adapte Playhub à votre appareil. Windows détermine les commandes disponibles.", "Sur batterie", "Branché au secteur", "Écran principal", "Réglages vidéo", "Réglages d’alimentation", "Détails du matériel", "Impossible d’enregistrer le profil de l’appareil.", "Réessayer"],
-    pt: ["Perfil do dispositivo", "Automático", "PC com Windows", "Outro portátil para jogos", "Experimental", "O perfil adapta o Playhub ao seu dispositivo. O Windows define os controles disponíveis.", "Na bateria", "Ligado à tomada", "Tela principal", "Controles de vídeo", "Controles de energia", "Detalhes do hardware", "Não foi possível salvar o perfil do dispositivo.", "Tentar novamente"],
-    ru: ["Профиль устройства", "Автоматически", "ПК с Windows", "Другая портативная консоль", "Экспериментально", "Профиль адаптирует Playhub к вашему устройству. Доступные настройки определяет Windows.", "От батареи", "От сети", "Основной экран", "Настройки видео", "Настройки питания", "Сведения об оборудовании", "Не удалось сохранить профиль устройства.", "Повторить"],
-    uk: ["Профіль пристрою", "Автоматично", "ПК з Windows", "Інша портативна консоль", "Експериментально", "Профіль адаптує Playhub до вашого пристрою. Доступні налаштування визначає Windows.", "Від батареї", "Від мережі", "Основний екран", "Налаштування відео", "Налаштування живлення", "Відомості про обладнання", "Не вдалося зберегти профіль пристрою.", "Повторити"],
-    ja: ["デバイスプロファイル", "自動", "Windows PC", "その他の携帯ゲーム機", "実験的", "プロファイルに応じて Playhub の表示が変わります。利用できる操作は Windows が判定します。", "バッテリー駆動", "電源に接続中", "メインディスプレイ", "映像設定", "電源設定", "ハードウェアの詳細", "デバイスプロファイルを保存できませんでした。", "再試行"],
-    ko: ["장치 프로필", "자동", "Windows PC", "기타 휴대용 게임기", "실험적", "프로필에 따라 Playhub의 표시가 달라집니다. 사용할 수 있는 제어 기능은 Windows가 결정합니다.", "배터리 사용 중", "전원 연결됨", "기본 디스플레이", "화면 설정", "전원 설정", "하드웨어 정보", "장치 프로필을 저장할 수 없습니다.", "다시 시도"],
-    zh: ["设备配置", "自动", "Windows PC", "其他游戏掌机", "实验性", "Playhub 会根据配置调整界面。可用的控制选项由 Windows 决定。", "使用电池", "已接通电源", "主显示器", "显示设置", "电源设置", "硬件详情", "无法保存设备配置。", "重试"],
-    hi: ["डिवाइस प्रोफ़ाइल", "स्वचालित", "Windows PC", "अन्य हैंडहेल्ड", "प्रयोगात्मक", "प्रोफ़ाइल के अनुसार Playhub का इंटरफ़ेस बदलता है। उपलब्ध नियंत्रण Windows तय करता है।", "बैटरी पर", "बिजली से कनेक्ट है", "मुख्य डिस्प्ले", "वीडियो नियंत्रण", "पावर नियंत्रण", "हार्डवेयर की जानकारी", "डिवाइस प्रोफ़ाइल सेव नहीं हो सकी।", "फिर कोशिश करें"],
+    en: ["Device profile", "Automatic", "Windows PC", "Other handheld", "Experimental", "The profile changes how Core presents your device. Windows supplies the available controls.", "On battery", "Plugged in", "Primary display", "Video controls", "Power controls", "Hardware details", "Could not save the device profile.", "Try again"],
+    it: ["Profilo dispositivo", "Automatico", "PC Windows", "Altro portatile da gioco", "Sperimentale", "Il profilo adatta Core al dispositivo. I controlli disponibili dipendono da Windows.", "A batteria", "Alimentatore collegato", "Schermo principale", "Controlli video", "Controlli di alimentazione", "Dettagli hardware", "Impossibile salvare il profilo dispositivo.", "Riprova"],
+    de: ["Geräteprofil", "Automatisch", "Windows-PC", "Anderes Handheld", "Experimentell", "Das Profil passt Core an dein Gerät an. Windows bestimmt die verfügbaren Einstellungen.", "Akkubetrieb", "Netzbetrieb", "Hauptbildschirm", "Videoeinstellungen", "Energieeinstellungen", "Hardwaredetails", "Das Geräteprofil konnte nicht gespeichert werden.", "Erneut versuchen"],
+    es: ["Perfil del dispositivo", "Automático", "PC con Windows", "Otra consola portátil", "Experimental", "El perfil adapta Core a tu dispositivo. Windows determina los controles disponibles.", "Con batería", "Conectado a la corriente", "Pantalla principal", "Controles de vídeo", "Controles de energía", "Detalles del hardware", "No se pudo guardar el perfil del dispositivo.", "Reintentar"],
+    fr: ["Profil de l’appareil", "Automatique", "PC Windows", "Autre console portable", "Expérimental", "Le profil adapte Core à votre appareil. Windows détermine les commandes disponibles.", "Sur batterie", "Branché au secteur", "Écran principal", "Réglages vidéo", "Réglages d’alimentation", "Détails du matériel", "Impossible d’enregistrer le profil de l’appareil.", "Réessayer"],
+    pt: ["Perfil do dispositivo", "Automático", "PC com Windows", "Outro portátil para jogos", "Experimental", "O perfil adapta o Core ao seu dispositivo. O Windows define os controles disponíveis.", "Na bateria", "Ligado à tomada", "Tela principal", "Controles de vídeo", "Controles de energia", "Detalhes do hardware", "Não foi possível salvar o perfil do dispositivo.", "Tentar novamente"],
+    ru: ["Профиль устройства", "Автоматически", "ПК с Windows", "Другая портативная консоль", "Экспериментально", "Профиль адаптирует Core к вашему устройству. Доступные настройки определяет Windows.", "От батареи", "От сети", "Основной экран", "Настройки видео", "Настройки питания", "Сведения об оборудовании", "Не удалось сохранить профиль устройства.", "Повторить"],
+    uk: ["Профіль пристрою", "Автоматично", "ПК з Windows", "Інша портативна консоль", "Експериментально", "Профіль адаптує Core до вашого пристрою. Доступні налаштування визначає Windows.", "Від батареї", "Від мережі", "Основний екран", "Налаштування відео", "Налаштування живлення", "Відомості про обладнання", "Не вдалося зберегти профіль пристрою.", "Повторити"],
+    ja: ["デバイスプロファイル", "自動", "Windows PC", "その他の携帯ゲーム機", "実験的", "プロファイルに応じて Core の表示が変わります。利用できる操作は Windows が判定します。", "バッテリー駆動", "電源に接続中", "メインディスプレイ", "映像設定", "電源設定", "ハードウェアの詳細", "デバイスプロファイルを保存できませんでした。", "再試行"],
+    ko: ["장치 프로필", "자동", "Windows PC", "기타 휴대용 게임기", "실험적", "프로필에 따라 Core의 표시가 달라집니다. 사용할 수 있는 제어 기능은 Windows가 결정합니다.", "배터리 사용 중", "전원 연결됨", "기본 디스플레이", "화면 설정", "전원 설정", "하드웨어 정보", "장치 프로필을 저장할 수 없습니다.", "다시 시도"],
+    zh: ["设备配置", "自动", "Windows PC", "其他游戏掌机", "实验性", "Core 会根据配置调整界面。可用的控制选项由 Windows 决定。", "使用电池", "已接通电源", "主显示器", "显示设置", "电源设置", "硬件详情", "无法保存设备配置。", "重试"],
+    hi: ["डिवाइस प्रोफ़ाइल", "स्वचालित", "Windows PC", "अन्य हैंडहेल्ड", "प्रयोगात्मक", "प्रोफ़ाइल के अनुसार Core का इंटरफ़ेस बदलता है। उपलब्ध नियंत्रण Windows तय करता है।", "बैटरी पर", "बिजली से कनेक्ट है", "मुख्य डिस्प्ले", "वीडियो नियंत्रण", "पावर नियंत्रण", "हार्डवेयर की जानकारी", "डिवाइस प्रोफ़ाइल सेव नहीं हो सकी।", "फिर कोशिश करें"],
 };
 const batteryHealth = {
     en: "Battery health", it: "Salute batteria", de: "Akkuzustand", es: "Salud de la batería",
@@ -5849,7 +5849,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "The store could not confirm this action. Refresh and try again.",
         "StoreLibrary.GameCountOne": "{0} game",
         "StoreLibrary.DownloadNow": "Download now",
-        "StoreLibrary.OpenPlayhub": "Open Playhub",
+        "StoreLibrary.OpenPlayhub": "Open Core",
         "StoreLibrary.Actions": "Options",
         "StoreLibrary.No": "No",
         "StoreLibrary.Yes": "Yes",
@@ -5939,7 +5939,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "Lo store non ha confermato questa azione. Aggiorna e riprova.",
         "StoreLibrary.GameCountOne": "{0} gioco",
         "StoreLibrary.DownloadNow": "Scarica ora",
-        "StoreLibrary.OpenPlayhub": "Apri Playhub",
+        "StoreLibrary.OpenPlayhub": "Apri Core",
         "StoreLibrary.Actions": "Opzioni",
         "StoreLibrary.No": "No",
         "StoreLibrary.Yes": "Sì",
@@ -6029,7 +6029,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "La tienda no pudo confirmar esta acción. Actualiza e inténtalo de nuevo.",
         "StoreLibrary.GameCountOne": "{0} juego",
         "StoreLibrary.DownloadNow": "Descargar ahora",
-        "StoreLibrary.OpenPlayhub": "Abrir Playhub",
+        "StoreLibrary.OpenPlayhub": "Abrir Core",
         "StoreLibrary.Actions": "Opciones",
         "StoreLibrary.No": "No",
         "StoreLibrary.Yes": "Sí",
@@ -6119,7 +6119,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "La boutique n’a pas pu confirmer cette action. Actualisez puis réessayez.",
         "StoreLibrary.GameCountOne": "{0} jeu",
         "StoreLibrary.DownloadNow": "Télécharger maintenant",
-        "StoreLibrary.OpenPlayhub": "Ouvrir Playhub",
+        "StoreLibrary.OpenPlayhub": "Ouvrir Core",
         "StoreLibrary.Actions": "Options",
         "StoreLibrary.No": "Non",
         "StoreLibrary.Yes": "Oui",
@@ -6209,7 +6209,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "Der Store konnte diese Aktion nicht bestätigen. Aktualisiere und versuche es erneut.",
         "StoreLibrary.GameCountOne": "{0} Spiel",
         "StoreLibrary.DownloadNow": "Jetzt herunterladen",
-        "StoreLibrary.OpenPlayhub": "Playhub öffnen",
+        "StoreLibrary.OpenPlayhub": "Core öffnen",
         "StoreLibrary.Actions": "Optionen",
         "StoreLibrary.No": "Nein",
         "StoreLibrary.Yes": "Ja",
@@ -6299,7 +6299,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "A loja não confirmou esta ação. Atualize e tente novamente.",
         "StoreLibrary.GameCountOne": "{0} jogo",
         "StoreLibrary.DownloadNow": "Baixar agora",
-        "StoreLibrary.OpenPlayhub": "Abrir Playhub",
+        "StoreLibrary.OpenPlayhub": "Abrir Core",
         "StoreLibrary.Actions": "Opções",
         "StoreLibrary.No": "Não",
         "StoreLibrary.Yes": "Sim",
@@ -6389,7 +6389,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "Магазин не підтвердив дію. Оновіть і спробуйте знову.",
         "StoreLibrary.GameCountOne": "{0} гра",
         "StoreLibrary.DownloadNow": "Завантажити зараз",
-        "StoreLibrary.OpenPlayhub": "Відкрити Playhub",
+        "StoreLibrary.OpenPlayhub": "Відкрити Core",
         "StoreLibrary.Actions": "Параметри",
         "StoreLibrary.No": "Ні",
         "StoreLibrary.Yes": "Так",
@@ -6479,7 +6479,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "商店无法确认此操作。请刷新后重试。",
         "StoreLibrary.GameCountOne": "{0} 个游戏",
         "StoreLibrary.DownloadNow": "立即下载",
-        "StoreLibrary.OpenPlayhub": "打开 Playhub",
+        "StoreLibrary.OpenPlayhub": "打开 Core",
         "StoreLibrary.Actions": "选项",
         "StoreLibrary.No": "否",
         "StoreLibrary.Yes": "是",
@@ -6569,7 +6569,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "ストアが操作を確認できませんでした。更新して再試行してください。",
         "StoreLibrary.GameCountOne": "{0} 件のゲーム",
         "StoreLibrary.DownloadNow": "今すぐダウンロード",
-        "StoreLibrary.OpenPlayhub": "Playhub を開く",
+        "StoreLibrary.OpenPlayhub": "Core を開く",
         "StoreLibrary.Actions": "オプション",
         "StoreLibrary.No": "いいえ",
         "StoreLibrary.Yes": "はい",
@@ -6659,7 +6659,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "스토어에서 이 작업을 확인하지 못했습니다. 새로 고친 후 다시 시도하세요.",
         "StoreLibrary.GameCountOne": "게임 {0}개",
         "StoreLibrary.DownloadNow": "지금 다운로드",
-        "StoreLibrary.OpenPlayhub": "Playhub 열기",
+        "StoreLibrary.OpenPlayhub": "Core 열기",
         "StoreLibrary.Actions": "옵션",
         "StoreLibrary.No": "아니요",
         "StoreLibrary.Yes": "예",
@@ -6749,7 +6749,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "स्टोर इस कार्रवाई की पुष्टि नहीं कर सका। रीफ़्रेश करके फिर कोशिश करें।",
         "StoreLibrary.GameCountOne": "{0} गेम",
         "StoreLibrary.DownloadNow": "अभी डाउनलोड करें",
-        "StoreLibrary.OpenPlayhub": "Playhub खोलें",
+        "StoreLibrary.OpenPlayhub": "Core खोलें",
         "StoreLibrary.Actions": "विकल्प",
         "StoreLibrary.No": "नहीं",
         "StoreLibrary.Yes": "हाँ",
@@ -6839,7 +6839,7 @@ const copy$8 = {
         "StoreLibrary.JobFailed": "Магазин не подтвердил действие. Обновите и повторите попытку.",
         "StoreLibrary.GameCountOne": "{0} игра",
         "StoreLibrary.DownloadNow": "Скачать сейчас",
-        "StoreLibrary.OpenPlayhub": "Открыть Playhub",
+        "StoreLibrary.OpenPlayhub": "Открыть Core",
         "StoreLibrary.Actions": "Параметры",
         "StoreLibrary.No": "Нет",
         "StoreLibrary.Yes": "Да",
@@ -6889,7 +6889,7 @@ function StoreDownloadMenu({ job, locale }) {
                 throw new Error("store_command_rejected");
         }
         catch {
-            toaster.toast({ title: "Playhub", body: c["StoreLibrary.CommandFailed"] });
+            toaster.toast({ title: "Core", body: c["StoreLibrary.CommandFailed"] });
         }
         finally {
             setBusy(false);
@@ -6922,9 +6922,9 @@ const { DialogButton: DialogButton$8 } = _global_DFL;
 const labelStore = (store) => ({ gog: "GOG", epic: "Epic Games", xbox: "Xbox", amazon: "Amazon Games" }[store] ?? "");
 const terminal = (job) => !job || ["completed", "canceled", "failed"].includes(job.state) || job.state === "externalHandoff" && job.reasonCode !== "windows_store_managed";
 let locale = () => navigator.language;
-const strings$2 = () => storeLibraryLocale(locale());
+const strings$3 = () => storeLibraryLocale(locale());
 const text$4 = () => {
-    const c = strings$2(), t = (key) => c[`StoreLibrary.${key}`];
+    const c = strings$3(), t = (key) => c[`StoreLibrary.${key}`];
     return { install: t("Install"), next: t("Review"), cancel: t("Cancel"), drive: t("Drive"), folder: t("Folder"),
         available: t("Free"), required: t("Required"), confirm: t("Review"), waiting: t("Verifying"),
         error: t("PrepareFailed"), downloads: t("Downloads"), pause: t("Pause"), resume: t("Resume"), retry: t("Refresh") };
@@ -7201,7 +7201,7 @@ async function listPrograms() {
     // rinunceremmo proprio mentre sta per rispondere.
     const result = await request("/dash/programs", undefined, 20000);
     if (!result) {
-        return { items: [], note: "L'agente di Playhub non ha risposto. Controlla che Playhub sia in esecuzione.", pending: false };
+        return { items: [], note: "L'agente di Core non ha risposto. Controlla che Core sia in esecuzione.", pending: false };
     }
     return { items: result.items ?? [], note: result.note ?? "", pending: result.pending === true };
 }
@@ -7414,170 +7414,170 @@ function pollStatus(read, update) {
 const copy$7 = {
     "en": {
         "Title": "Gaming Mode optional",
-        "Description": "Start in Big Picture, switch to the desktop and open the Playhub Dashboard with a controller.",
+        "Description": "Start in Big Picture, switch to the desktop and open the Core Dashboard with a controller.",
         "Install": "Install Gaming Mode",
         "Remove": "Remove Gaming Mode",
         "Installed": "Installed",
         "NotInstalled": "Not installed",
-        "ConfirmRemove": "Remove Gaming Mode and restore desktop startup? Playhub and its Decky plugin stay available.",
-        "AgentRequired": "Install or start Gaming Mode in the Playhub desktop app to use mode switching and the Dashboard.",
+        "ConfirmRemove": "Remove Gaming Mode and restore desktop startup? Core and its Decky plugin stay available.",
+        "AgentRequired": "Install or start Gaming Mode in the Core desktop app to use mode switching and the Dashboard.",
         "Installing": "Installing Gaming Mode.",
         "Removing": "Removing Gaming Mode.",
-        "Removed": "Gaming Mode removed. Playhub remains available.",
+        "Removed": "Gaming Mode removed. Core remains available.",
         "Ready": "Gaming Mode is ready."
     },
     "it": {
         "Title": "Gaming Mode facoltativa",
-        "Description": "Avvia il PC in Big Picture, passa al desktop e apri la Dashboard di Playhub con il controller.",
+        "Description": "Avvia il PC in Big Picture, passa al desktop e apri la Dashboard di Core con il controller.",
         "Install": "Installa Gaming Mode",
         "Remove": "Rimuovi Gaming Mode",
         "Installed": "Installata",
         "NotInstalled": "Non installata",
-        "ConfirmRemove": "Rimuovere Gaming Mode e ripristinare l’avvio sul desktop? Playhub e il suo plugin Decky restano disponibili.",
-        "AgentRequired": "Installa o avvia Gaming Mode dall’app Playhub sul desktop per cambiare modalità e usare la Dashboard.",
+        "ConfirmRemove": "Rimuovere Gaming Mode e ripristinare l’avvio sul desktop? Core e il suo plugin Decky restano disponibili.",
+        "AgentRequired": "Installa o avvia Gaming Mode dall’app Core sul desktop per cambiare modalità e usare la Dashboard.",
         "Installing": "Installazione di Gaming Mode.",
         "Removing": "Rimozione di Gaming Mode.",
-        "Removed": "Gaming Mode rimossa. Playhub resta disponibile.",
+        "Removed": "Gaming Mode rimossa. Core resta disponibile.",
         "Ready": "Gaming Mode è pronta."
     },
     "es": {
         "Title": "Gaming Mode opcional",
-        "Description": "Inicia el PC en Big Picture, cambia al escritorio y abre el panel de Playhub con el mando.",
+        "Description": "Inicia el PC en Big Picture, cambia al escritorio y abre el panel de Core con el mando.",
         "Install": "Instalar Gaming Mode",
         "Remove": "Eliminar Gaming Mode",
         "Installed": "Instalado",
         "NotInstalled": "No instalado",
-        "ConfirmRemove": "¿Eliminar Gaming Mode y restaurar el inicio en el escritorio? Playhub y su plugin de Decky seguirán disponibles.",
-        "AgentRequired": "Instala o inicia Gaming Mode desde Playhub en el escritorio para cambiar de modo y usar el panel.",
+        "ConfirmRemove": "¿Eliminar Gaming Mode y restaurar el inicio en el escritorio? Core y su plugin de Decky seguirán disponibles.",
+        "AgentRequired": "Instala o inicia Gaming Mode desde Core en el escritorio para cambiar de modo y usar el panel.",
         "Installing": "Instalando Gaming Mode.",
         "Removing": "Eliminando Gaming Mode.",
-        "Removed": "Gaming Mode eliminado. Playhub sigue disponible.",
+        "Removed": "Gaming Mode eliminado. Core sigue disponible.",
         "Ready": "Gaming Mode está listo."
     },
     "fr": {
         "Title": "Gaming Mode facultatif",
-        "Description": "Démarrez en Big Picture, passez au bureau et ouvrez le tableau de bord Playhub à la manette.",
+        "Description": "Démarrez en Big Picture, passez au bureau et ouvrez le tableau de bord Core à la manette.",
         "Install": "Installer Gaming Mode",
         "Remove": "Supprimer Gaming Mode",
         "Installed": "Installé",
         "NotInstalled": "Non installé",
-        "ConfirmRemove": "Supprimer Gaming Mode et rétablir le démarrage sur le bureau ? Playhub et son plugin Decky resteront disponibles.",
-        "AgentRequired": "Installez ou démarrez Gaming Mode depuis Playhub sur le bureau pour changer de mode et utiliser le tableau de bord.",
+        "ConfirmRemove": "Supprimer Gaming Mode et rétablir le démarrage sur le bureau ? Core et son plugin Decky resteront disponibles.",
+        "AgentRequired": "Installez ou démarrez Gaming Mode depuis Core sur le bureau pour changer de mode et utiliser le tableau de bord.",
         "Installing": "Installation de Gaming Mode.",
         "Removing": "Suppression de Gaming Mode.",
-        "Removed": "Gaming Mode supprimé. Playhub reste disponible.",
+        "Removed": "Gaming Mode supprimé. Core reste disponible.",
         "Ready": "Gaming Mode est prêt."
     },
     "de": {
         "Title": "Gaming Mode optional",
-        "Description": "Starte in Big Picture, wechsle zum Desktop und öffne das Playhub-Dashboard mit dem Controller.",
+        "Description": "Starte in Big Picture, wechsle zum Desktop und öffne das Core-Dashboard mit dem Controller.",
         "Install": "Gaming Mode installieren",
         "Remove": "Gaming Mode entfernen",
         "Installed": "Installiert",
         "NotInstalled": "Nicht installiert",
-        "ConfirmRemove": "Gaming Mode entfernen und den Desktop-Start wiederherstellen? Playhub und das Decky-Plugin bleiben verfügbar.",
-        "AgentRequired": "Installiere oder starte Gaming Mode in der Playhub-Desktop-App, um den Modus zu wechseln und das Dashboard zu verwenden.",
+        "ConfirmRemove": "Gaming Mode entfernen und den Desktop-Start wiederherstellen? Core und das Decky-Plugin bleiben verfügbar.",
+        "AgentRequired": "Installiere oder starte Gaming Mode in der Core-Desktop-App, um den Modus zu wechseln und das Dashboard zu verwenden.",
         "Installing": "Gaming Mode wird installiert.",
         "Removing": "Gaming Mode wird entfernt.",
-        "Removed": "Gaming Mode entfernt. Playhub bleibt verfügbar.",
+        "Removed": "Gaming Mode entfernt. Core bleibt verfügbar.",
         "Ready": "Gaming Mode ist bereit."
     },
     "pt": {
         "Title": "Gaming Mode opcional",
-        "Description": "Inicia o PC em Big Picture, muda para o ambiente de trabalho e abre o painel Playhub com o comando.",
+        "Description": "Inicia o PC em Big Picture, muda para o ambiente de trabalho e abre o painel Core com o comando.",
         "Install": "Instalar Gaming Mode",
         "Remove": "Remover Gaming Mode",
         "Installed": "Instalado",
         "NotInstalled": "Não instalado",
-        "ConfirmRemove": "Remover Gaming Mode e restaurar o arranque no ambiente de trabalho? Playhub e o plugin Decky continuam disponíveis.",
-        "AgentRequired": "Instala ou inicia Gaming Mode na aplicação Playhub no ambiente de trabalho para mudar de modo e usar o painel.",
+        "ConfirmRemove": "Remover Gaming Mode e restaurar o arranque no ambiente de trabalho? Core e o plugin Decky continuam disponíveis.",
+        "AgentRequired": "Instala ou inicia Gaming Mode na aplicação Core no ambiente de trabalho para mudar de modo e usar o painel.",
         "Installing": "A instalar Gaming Mode.",
         "Removing": "A remover Gaming Mode.",
-        "Removed": "Gaming Mode removido. Playhub continua disponível.",
+        "Removed": "Gaming Mode removido. Core continua disponível.",
         "Ready": "Gaming Mode está pronto."
     },
     "uk": {
         "Title": "Gaming Mode за бажанням",
-        "Description": "Запускайте ПК у Big Picture, переходьте на робочий стіл і відкривайте панель Playhub із контролера.",
+        "Description": "Запускайте ПК у Big Picture, переходьте на робочий стіл і відкривайте панель Core із контролера.",
         "Install": "Установити Gaming Mode",
         "Remove": "Видалити Gaming Mode",
         "Installed": "Установлено",
         "NotInstalled": "Не встановлено",
-        "ConfirmRemove": "Видалити Gaming Mode і відновити запуск робочого столу? Playhub і його плагін Decky залишаться доступними.",
-        "AgentRequired": "Установіть або запустіть Gaming Mode у програмі Playhub на робочому столі, щоб перемикати режими й користуватися панеллю.",
+        "ConfirmRemove": "Видалити Gaming Mode і відновити запуск робочого столу? Core і його плагін Decky залишаться доступними.",
+        "AgentRequired": "Установіть або запустіть Gaming Mode у програмі Core на робочому столі, щоб перемикати режими й користуватися панеллю.",
         "Installing": "Установлення Gaming Mode.",
         "Removing": "Видалення Gaming Mode.",
-        "Removed": "Gaming Mode видалено. Playhub залишається доступним.",
+        "Removed": "Gaming Mode видалено. Core залишається доступним.",
         "Ready": "Gaming Mode готовий."
     },
     "ru": {
         "Title": "Gaming Mode по желанию",
-        "Description": "Запускайте ПК в Big Picture, переходите на рабочий стол и открывайте панель Playhub с контроллера.",
+        "Description": "Запускайте ПК в Big Picture, переходите на рабочий стол и открывайте панель Core с контроллера.",
         "Install": "Установить Gaming Mode",
         "Remove": "Удалить Gaming Mode",
         "Installed": "Установлено",
         "NotInstalled": "Не установлено",
-        "ConfirmRemove": "Удалить Gaming Mode и восстановить запуск рабочего стола? Playhub и его плагин Decky останутся доступны.",
-        "AgentRequired": "Установите или запустите Gaming Mode в приложении Playhub на рабочем столе, чтобы переключать режимы и пользоваться панелью.",
+        "ConfirmRemove": "Удалить Gaming Mode и восстановить запуск рабочего стола? Core и его плагин Decky останутся доступны.",
+        "AgentRequired": "Установите или запустите Gaming Mode в приложении Core на рабочем столе, чтобы переключать режимы и пользоваться панелью.",
         "Installing": "Установка Gaming Mode.",
         "Removing": "Удаление Gaming Mode.",
-        "Removed": "Gaming Mode удалён. Playhub остаётся доступен.",
+        "Removed": "Gaming Mode удалён. Core остаётся доступен.",
         "Ready": "Gaming Mode готов."
     },
     "zh": {
         "Title": "Gaming Mode 可选",
-        "Description": "以 Big Picture 启动电脑，切换到桌面，并通过控制器打开 Playhub 仪表板。",
+        "Description": "以 Big Picture 启动电脑，切换到桌面，并通过控制器打开 Core 仪表板。",
         "Install": "安装 Gaming Mode",
         "Remove": "移除 Gaming Mode",
         "Installed": "已安装",
         "NotInstalled": "未安装",
-        "ConfirmRemove": "移除 Gaming Mode 并恢复桌面启动？Playhub 及其 Decky 插件仍可使用。",
-        "AgentRequired": "在桌面的 Playhub 应用中安装或启动 Gaming Mode，即可切换模式并使用仪表板。",
+        "ConfirmRemove": "移除 Gaming Mode 并恢复桌面启动？Core 及其 Decky 插件仍可使用。",
+        "AgentRequired": "在桌面的 Core 应用中安装或启动 Gaming Mode，即可切换模式并使用仪表板。",
         "Installing": "正在安装 Gaming Mode.",
         "Removing": "正在移除 Gaming Mode.",
-        "Removed": "Gaming Mode 已移除。Playhub 仍可使用。",
+        "Removed": "Gaming Mode 已移除。Core 仍可使用。",
         "Ready": "Gaming Mode 已就绪。"
     },
     "ja": {
         "Title": "Gaming Mode 任意",
-        "Description": "Big Picture で PC を起動し、デスクトップに切り替えて、コントローラーで Playhub ダッシュボードを開きます。",
+        "Description": "Big Picture で PC を起動し、デスクトップに切り替えて、コントローラーで Core ダッシュボードを開きます。",
         "Install": "Gaming Mode をインストール",
         "Remove": "Gaming Mode を削除",
         "Installed": "インストール済み",
         "NotInstalled": "未インストール",
-        "ConfirmRemove": "Gaming Mode を削除してデスクトップ起動に戻しますか？Playhub と Decky プラグインは引き続き利用できます。",
-        "AgentRequired": "モードの切り替えとダッシュボードを利用するには、デスクトップの Playhub アプリで Gaming Mode をインストールまたは起動してください。",
+        "ConfirmRemove": "Gaming Mode を削除してデスクトップ起動に戻しますか？Core と Decky プラグインは引き続き利用できます。",
+        "AgentRequired": "モードの切り替えとダッシュボードを利用するには、デスクトップの Core アプリで Gaming Mode をインストールまたは起動してください。",
         "Installing": "Gaming Mode をインストール中.",
         "Removing": "Gaming Mode を削除中.",
-        "Removed": "Gaming Mode を削除しました。Playhub は引き続き利用できます。",
+        "Removed": "Gaming Mode を削除しました。Core は引き続き利用できます。",
         "Ready": "Gaming Mode の準備ができました。"
     },
     "ko": {
         "Title": "Gaming Mode 선택 사항",
-        "Description": "Big Picture로 PC를 시작하고 데스크톱으로 전환하며 컨트롤러로 Playhub 대시보드를 엽니다.",
+        "Description": "Big Picture로 PC를 시작하고 데스크톱으로 전환하며 컨트롤러로 Core 대시보드를 엽니다.",
         "Install": "Gaming Mode 설치",
         "Remove": "Gaming Mode 제거",
         "Installed": "설치됨",
         "NotInstalled": "설치되지 않음",
-        "ConfirmRemove": "Gaming Mode를 제거하고 데스크톱 시작을 복원할까요? Playhub와 Decky 플러그인은 계속 사용할 수 있습니다.",
-        "AgentRequired": "모드를 전환하고 대시보드를 사용하려면 데스크톱의 Playhub 앱에서 Gaming Mode를 설치하거나 시작하세요.",
+        "ConfirmRemove": "Gaming Mode를 제거하고 데스크톱 시작을 복원할까요? Core와 Decky 플러그인은 계속 사용할 수 있습니다.",
+        "AgentRequired": "모드를 전환하고 대시보드를 사용하려면 데스크톱의 Core 앱에서 Gaming Mode를 설치하거나 시작하세요.",
         "Installing": "Gaming Mode 설치 중.",
         "Removing": "Gaming Mode 제거 중.",
-        "Removed": "Gaming Mode가 제거되었습니다. Playhub는 계속 사용할 수 있습니다.",
+        "Removed": "Gaming Mode가 제거되었습니다. Core는 계속 사용할 수 있습니다.",
         "Ready": "Gaming Mode가 준비되었습니다."
     },
     "hi": {
         "Title": "Gaming Mode वैकल्पिक",
-        "Description": "PC को Big Picture में शुरू करें, डेस्कटॉप पर जाएँ और कंट्रोलर से Playhub डैशबोर्ड खोलें।",
+        "Description": "PC को Big Picture में शुरू करें, डेस्कटॉप पर जाएँ और कंट्रोलर से Core डैशबोर्ड खोलें।",
         "Install": "Gaming Mode इंस्टॉल करें",
         "Remove": "Gaming Mode हटाएँ",
         "Installed": "इंस्टॉल है",
         "NotInstalled": "इंस्टॉल नहीं है",
-        "ConfirmRemove": "Gaming Mode हटाकर डेस्कटॉप स्टार्टअप बहाल करें? Playhub और उसका Decky प्लगइन उपलब्ध रहेंगे।",
-        "AgentRequired": "मोड बदलने और डैशबोर्ड इस्तेमाल करने के लिए Playhub डेस्कटॉप ऐप में Gaming Mode इंस्टॉल या शुरू करें।",
+        "ConfirmRemove": "Gaming Mode हटाकर डेस्कटॉप स्टार्टअप बहाल करें? Core और उसका Decky प्लगइन उपलब्ध रहेंगे।",
+        "AgentRequired": "मोड बदलने और डैशबोर्ड इस्तेमाल करने के लिए Core डेस्कटॉप ऐप में Gaming Mode इंस्टॉल या शुरू करें।",
         "Installing": "Gaming Mode इंस्टॉल हो रहा है.",
         "Removing": "Gaming Mode हटाया जा रहा है.",
-        "Removed": "Gaming Mode हटा दिया गया है। Playhub उपलब्ध है।",
+        "Removed": "Gaming Mode हटा दिया गया है। Core उपलब्ध है।",
         "Ready": "Gaming Mode तैयार है।"
     }
 };
@@ -7741,7 +7741,7 @@ function insertPluginSection(React, tree, entry) {
 }
 
 function gameSettingsLabel(_language) {
-    return "Playhub Game Settings";
+    return "Core Game Settings";
 }
 
 const copy$6 = {
@@ -8152,10 +8152,10 @@ const it = {
     cancel: "Annulla",
     notConnected: "Agent Quick Settings non collegato",
 };
-const strings$1 = { en, it };
+const strings$2 = { en, it };
 function t$1(locale = navigator.language) {
     const language = locale.split("-")[0];
-    return { ...(strings$1[language] ?? strings$1.en), ...quickCoreLocale(language), title: "Playhub" };
+    return { ...(strings$2[language] ?? strings$2.en), ...quickCoreLocale(language), title: "Core" };
 }
 
 const ROUTE = "/quick-settings/:appid";
@@ -10098,7 +10098,7 @@ function PerformanceSettings({ locale, appId }) {
         : state.status === "NoData" ? copy[4]
             : state.suspended || state.status === "GameNotForeground" || state.status === "Suspended" ? copy[5]
                 : state.status === "Ready" || state.status === "Disabled" ? "" : common.unavailable;
-    return SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "qsDropdownFullWidth", children: SP_JSX.jsx(DFL.DropdownItem, { bottomSeparator: "none", layout: "below", label: copy[0], rgOptions: [{ data: "live", label: "Playhub" }, { data: "steam", label: "Steam" }], selectedOption: source, disabled: view.busy || changing, onChange: option => { if (option.data === "live" || option.data === "steam")
+    return SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "qsDropdownFullWidth", children: SP_JSX.jsx(DFL.DropdownItem, { bottomSeparator: "none", layout: "below", label: copy[0], rgOptions: [{ data: "live", label: "Core" }, { data: "steam", label: "Steam" }], selectedOption: source, disabled: view.busy || changing, onChange: option => { if (option.data === "live" || option.data === "steam")
                         void choose(option.data); } }) }), source === "steam" ? SP_JSX.jsx(SteamPerformanceSettings, { locale: locale, appId: appId }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(DFL.ToggleField, { bottomSeparator: "none", label: copy[1], checked: state?.enabled === true, disabled: disabled, onChange: value => change({ enabled: value }) }), state?.enabled && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(DFL.ToggleField, { bottomSeparator: "none", label: copy[2], checked: state.transparent, disabled: disabled, onChange: value => change({ transparent: value }) }), SP_JSX.jsx("div", { className: "qsDropdownFullWidth", children: SP_JSX.jsx(DFL.DropdownItem, { bottomSeparator: "none", layout: "below", label: colors[0], selectedOption: state.textColor ?? "white", disabled: disabled, rgOptions: colorValues.map((value, index) => ({ data: value, label: colors[index + 1] })), onChange: option => change({ textColor: option.data }) }) }), SP_JSX.jsx("div", { className: "qsDropdownFullWidth", children: SP_JSX.jsx(DFL.DropdownItem, { bottomSeparator: "none", layout: "below", label: steamLabel("#Settings_InGame_PerfOverlayDetailLevel", "Detail level"), disabled: disabled, selectedOption: state.detail, rgOptions: details.map((value, index) => ({ data: index + 1,
                                         label: steamLabel(`#Settings_InGame_PerfOverlay_${value}`, detailFallback[index]) })), onChange: option => change({ detail: option.data }) }) }), SP_JSX.jsx("div", { className: "qsDropdownFullWidth", children: SP_JSX.jsx(DFL.DropdownItem, { bottomSeparator: "none", layout: "below", label: steamLabel("#Settings_InGame_PerformanceMonitor", "Position"), disabled: disabled, selectedOption: state.corner, rgOptions: cornerTokens.map((value, index) => ({ data: index + 1,
                                         label: steamLabel(`#Corner_${value}`, cornerFallback[index]) })), onChange: option => change({ corner: option.data }) }) }), description && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: description })] }), !state && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: view.loading ? common.loading : common.unavailable })] }), ((source === "live" && view.failed) || sourceFailed) && SP_JSX.jsxs("div", { className: "qsMeta", role: "status", children: [common.saveError, " ", SP_JSX.jsx(DFL.DialogButton, { disabled: changing || view.busy, onClick: () => { setSourceFailed(false); void runtime.refresh(); }, children: common.retry })] })] });
@@ -24257,18 +24257,18 @@ function HomeHistorySettings({ locale }) {
 }
 
 const words$2 = {
-    en: ["Gaming news", "Show gaming news in Home", "Country", "Follow Playhub language", "News unavailable. Try again later.", "Could not save news settings.", "Last available news"],
-    it: ["Notizie dal mondo dei videogiochi", "Mostra le news nella Home", "Paese delle notizie", "Segui la lingua di Playhub", "Notizie non disponibili. Riprova più tardi.", "Impossibile salvare le impostazioni News.", "Ultime notizie disponibili"],
-    de: ["Gaming-Nachrichten", "Gaming-Nachrichten auf der Startseite", "Land", "Playhub-Sprache verwenden", "Nachrichten derzeit nicht verfügbar.", "Nachrichteneinstellungen konnten nicht gespeichert werden.", "Zuletzt verfügbare Nachrichten"],
-    es: ["Noticias de videojuegos", "Mostrar noticias en Inicio", "País", "Seguir el idioma de Playhub", "Noticias no disponibles. Inténtalo más tarde.", "No se pudo guardar la configuración.", "Últimas noticias disponibles"],
-    fr: ["Actualités des jeux vidéo", "Afficher les actualités sur l’accueil", "Pays", "Suivre la langue de Playhub", "Actualités indisponibles. Réessayez plus tard.", "Impossible d’enregistrer les paramètres.", "Dernières actualités disponibles"],
-    pt: ["Notícias de videogames", "Mostrar notícias na página inicial", "País", "Usar o idioma do Playhub", "Notícias indisponíveis. Tente mais tarde.", "Não foi possível salvar as configurações.", "Últimas notícias disponíveis"],
-    ru: ["Новости видеоигр", "Показывать новости на главной", "Страна", "Использовать язык Playhub", "Новости пока недоступны.", "Не удалось сохранить настройки.", "Последние доступные новости"],
-    uk: ["Новини відеоігор", "Показувати новини на головній", "Країна", "Використовувати мову Playhub", "Новини поки недоступні.", "Не вдалося зберегти налаштування.", "Останні доступні новини"],
-    ja: ["ゲームニュース", "ホームにゲームニュースを表示", "国", "Playhubの言語に合わせる", "ニュースを取得できません。後でもう一度お試しください。", "設定を保存できませんでした。", "前回取得したニュース"],
-    ko: ["게임 소식", "홈에 게임 소식 표시", "국가", "Playhub 언어 따르기", "뉴스를 불러올 수 없습니다.", "설정을 저장하지 못했습니다.", "마지막으로 받은 소식"],
-    zh: ["游戏新闻", "在主页显示游戏新闻", "国家或地区", "跟随 Playhub 语言", "暂时无法获取新闻，请稍后重试。", "无法保存设置。", "最近获取的新闻"],
-    hi: ["वीडियो गेम समाचार", "होम में गेम समाचार दिखाएँ", "देश", "Playhub की भाषा का उपयोग करें", "समाचार उपलब्ध नहीं हैं। बाद में फिर कोशिश करें।", "सेटिंग सहेजी नहीं जा सकी।", "पिछले उपलब्ध समाचार"],
+    en: ["Gaming news", "Show gaming news in Home", "Country", "Follow Core language", "News unavailable. Try again later.", "Could not save news settings.", "Last available news"],
+    it: ["Notizie dal mondo dei videogiochi", "Mostra le news nella Home", "Paese delle notizie", "Segui la lingua di Core", "Notizie non disponibili. Riprova più tardi.", "Impossibile salvare le impostazioni News.", "Ultime notizie disponibili"],
+    de: ["Gaming-Nachrichten", "Gaming-Nachrichten auf der Startseite", "Land", "Core-Sprache verwenden", "Nachrichten derzeit nicht verfügbar.", "Nachrichteneinstellungen konnten nicht gespeichert werden.", "Zuletzt verfügbare Nachrichten"],
+    es: ["Noticias de videojuegos", "Mostrar noticias en Inicio", "País", "Seguir el idioma de Core", "Noticias no disponibles. Inténtalo más tarde.", "No se pudo guardar la configuración.", "Últimas noticias disponibles"],
+    fr: ["Actualités des jeux vidéo", "Afficher les actualités sur l’accueil", "Pays", "Suivre la langue de Core", "Actualités indisponibles. Réessayez plus tard.", "Impossible d’enregistrer les paramètres.", "Dernières actualités disponibles"],
+    pt: ["Notícias de videogames", "Mostrar notícias na página inicial", "País", "Usar o idioma do Core", "Notícias indisponíveis. Tente mais tarde.", "Não foi possível salvar as configurações.", "Últimas notícias disponíveis"],
+    ru: ["Новости видеоигр", "Показывать новости на главной", "Страна", "Использовать язык Core", "Новости пока недоступны.", "Не удалось сохранить настройки.", "Последние доступные новости"],
+    uk: ["Новини відеоігор", "Показувати новини на головній", "Країна", "Використовувати мову Core", "Новини поки недоступні.", "Не вдалося зберегти налаштування.", "Останні доступні новини"],
+    ja: ["ゲームニュース", "ホームにゲームニュースを表示", "国", "Coreの言語に合わせる", "ニュースを取得できません。後でもう一度お試しください。", "設定を保存できませんでした。", "前回取得したニュース"],
+    ko: ["게임 소식", "홈에 게임 소식 표시", "국가", "Core 언어 따르기", "뉴스를 불러올 수 없습니다.", "설정을 저장하지 못했습니다.", "마지막으로 받은 소식"],
+    zh: ["游戏新闻", "在主页显示游戏新闻", "国家或地区", "跟随 Core 语言", "暂时无法获取新闻，请稍后重试。", "无法保存设置。", "最近获取的新闻"],
+    hi: ["वीडियो गेम समाचार", "होम में गेम समाचार दिखाएँ", "देश", "Core की भाषा का उपयोग करें", "समाचार उपलब्ध नहीं हैं। बाद में फिर कोशिश करें।", "सेटिंग सहेजी नहीं जा सकी।", "पिछले उपलब्ध समाचार"],
 };
 const NEWS_COUNTRIES = ["US", "IT", "DE", "ES", "FR", "BR", "RU", "UA", "JP", "KR", "TW", "IN"];
 function newsCopy(locale) { return words$2[locale] ?? words$2.en; }
@@ -24299,7 +24299,7 @@ function HomeNewsSettings({ locale }) {
             notify();
         }
         catch {
-            toaster.toast({ title: "Playhub", body: copy[5] });
+            toaster.toast({ title: "Core", body: copy[5] });
         }
         finally {
             pending.current = false;
@@ -26071,7 +26071,7 @@ function Header({ tab, setTab, copy, locale, logo }) {
             { id: "system", label: copy.system, icon: FiCpu },
         ];
     }, [copy]);
-    return (SP_JSX.jsxs("header", { className: "ph-header", children: [SP_JSX.jsx("div", { className: "ph-brand", children: logo ? SP_JSX.jsx("img", { src: logo, alt: "Playhub" }) : SP_JSX.jsx("div", { className: "ph-brand-fallback", children: "playhub" }) }), SP_JSX.jsx(Focusable$5, { className: "ph-tabs", "flow-children": "horizontal", children: tabs.map((item) => {
+    return (SP_JSX.jsxs("header", { className: "ph-header", children: [SP_JSX.jsx("div", { className: "ph-brand", children: logo ? SP_JSX.jsx("img", { src: logo, alt: "Core" }) : SP_JSX.jsx("div", { className: "ph-brand-fallback", children: "core" }) }), SP_JSX.jsx(Focusable$5, { className: "ph-tabs", "flow-children": "horizontal", children: tabs.map((item) => {
                     const Icon = item.icon;
                     return (SP_JSX.jsxs(FocusItem, { className: `ph-tab ${tab === item.id ? "ph-active" : ""}`, onPress: () => setTab(item.id), onButtonDown: (event) => {
                             if (item.id !== "system" || tab !== "system" || Number(event?.detail?.button) !== GamepadButton$2?.DIR_DOWN)
@@ -29289,7 +29289,7 @@ function installStandaloneQam(hook, options, isVisible) {
         return null;
     const previous = hook.render;
     const probe = Object.create(hook);
-    Object.defineProperty(probe, "tabs", { value: [{ id: TAB_ID, ...options, title: options.title ?? "Playhub" }] });
+    Object.defineProperty(probe, "tabs", { value: [{ id: TAB_ID, ...options, title: options.title ?? "Core" }] });
     const sample = [];
     try {
         const result = previous.call(probe, sample, false);
@@ -29631,51 +29631,51 @@ function localizePluginCategory(category, locale) {
 }
 
 const labels = {
-    en: "Show Playhub in quick-access tabs",
-    it: "Mostra Playhub nelle tab di accesso rapido",
-    es: "Mostrar Playhub en las pestañas de acceso rápido",
-    fr: "Afficher Playhub dans les onglets d’accès rapide",
-    de: "Playhub in den Schnellzugriff-Tabs anzeigen",
-    pt: "Mostrar Playhub nas abas de acesso rápido",
-    uk: "Показувати Playhub у вкладках швидкого доступу",
-    zh: "在快速访问标签页中显示 Playhub",
-    ja: "クイックアクセスタブに Playhub を表示",
-    ko: "빠른 액세스 탭에 Playhub 표시",
-    hi: "त्वरित ऐक्सेस टैब में Playhub दिखाएँ",
-    ru: "Показывать Playhub во вкладках быстрого доступа",
+    en: "Show Core in quick-access tabs",
+    it: "Mostra Core nelle tab di accesso rapido",
+    es: "Mostrar Core en las pestañas de acceso rápido",
+    fr: "Afficher Core dans les onglets d’accès rapide",
+    de: "Core in den Schnellzugriff-Tabs anzeigen",
+    pt: "Mostrar Core nas abas de acesso rápido",
+    uk: "Показувати Core у вкладках швидкого доступу",
+    zh: "在快速访问标签页中显示 Core",
+    ja: "クイックアクセスタブに Core を表示",
+    ko: "빠른 액세스 탭에 Core 표시",
+    hi: "त्वरित ऐक्सेस टैब में Core दिखाएँ",
+    ru: "Показывать Core во вкладках быстрого доступа",
 };
 function getPlayhubQamLabel(locale) {
     return labels[normalizeStoreLocale(locale)];
 }
 const descriptions = {
-    en: "Shows a dedicated Playhub tab in the quick-access menu. If you have installed the Shortcuts plugin, this preference stays synchronized while it is active.",
-    it: "Mostra una tab dedicata a Playhub nel menu di accesso rapido. Se hai installato il plugin Shortcuts, questa preferenza viene sincronizzata quando è attivo.",
-    es: "Muestra una pestaña dedicada a Playhub en el menú de acceso rápido. Si has instalado el plugin Shortcuts, esta preferencia se sincroniza mientras está activo.",
-    fr: "Affiche un onglet dédié à Playhub dans le menu d'accès rapide. Si vous avez installé le plugin Shortcuts, cette préférence est synchronisée lorsqu'il est actif.",
-    de: "Zeigt einen eigenen Playhub-Tab im Schnellzugriffsmenü. Wenn du das Shortcuts-Plugin installiert hast, wird diese Einstellung synchronisiert, solange es aktiv ist.",
-    pt: "Mostra uma aba dedicada ao Playhub no menu de acesso rápido. Se você instalou o plugin Shortcuts, esta preferência é sincronizada enquanto ele está ativo.",
-    uk: "Показує окрему вкладку Playhub у меню швидкого доступу. Якщо ви встановили плагін Shortcuts, це налаштування синхронізується, доки він активний.",
-    zh: "在快速访问菜单中显示专用的 Playhub 标签页。如果你已安装 Shortcuts 插件，启用该插件时会同步此偏好设置。",
-    ja: "クイックアクセスメニューにPlayhub専用のタブを表示します。Shortcutsプラグインをインストールしている場合、有効にしている間はこの設定が同期されます。",
-    ko: "빠른 액세스 메뉴에 Playhub 전용 탭을 표시합니다. Shortcuts 플러그인을 설치했다면 활성화되어 있는 동안 이 설정이 동기화됩니다.",
-    hi: "त्वरित ऐक्सेस मेन्यू में Playhub का अलग टैब दिखाता है। यदि आपने Shortcuts प्लगइन इंस्टॉल किया है, तो उसके सक्रिय रहने पर यह प्राथमिकता सिंक होती है।",
-    ru: "Показывает отдельную вкладку Playhub в меню быстрого доступа. Если у вас установлен плагин Shortcuts, эта настройка синхронизируется, пока он активен.",
+    en: "Shows a dedicated Core tab in the quick-access menu. If you have installed the Shortcuts plugin, this preference stays synchronized while it is active.",
+    it: "Mostra una tab dedicata a Core nel menu di accesso rapido. Se hai installato il plugin Shortcuts, questa preferenza viene sincronizzata quando è attivo.",
+    es: "Muestra una pestaña dedicada a Core en el menú de acceso rápido. Si has instalado el plugin Shortcuts, esta preferencia se sincroniza mientras está activo.",
+    fr: "Affiche un onglet dédié à Core dans le menu d'accès rapide. Si vous avez installé le plugin Shortcuts, cette préférence est synchronisée lorsqu'il est actif.",
+    de: "Zeigt einen eigenen Core-Tab im Schnellzugriffsmenü. Wenn du das Shortcuts-Plugin installiert hast, wird diese Einstellung synchronisiert, solange es aktiv ist.",
+    pt: "Mostra uma aba dedicada ao Core no menu de acesso rápido. Se você instalou o plugin Shortcuts, esta preferência é sincronizada enquanto ele está ativo.",
+    uk: "Показує окрему вкладку Core у меню швидкого доступу. Якщо ви встановили плагін Shortcuts, це налаштування синхронізується, доки він активний.",
+    zh: "在快速访问菜单中显示专用的 Core 标签页。如果你已安装 Shortcuts 插件，启用该插件时会同步此偏好设置。",
+    ja: "クイックアクセスメニューにCore専用のタブを表示します。Shortcutsプラグインをインストールしている場合、有効にしている間はこの設定が同期されます。",
+    ko: "빠른 액세스 메뉴에 Core 전용 탭을 표시합니다. Shortcuts 플러그인을 설치했다면 활성화되어 있는 동안 이 설정이 동기화됩니다.",
+    hi: "त्वरित ऐक्सेस मेन्यू में Core का अलग टैब दिखाता है। यदि आपने Shortcuts प्लगइन इंस्टॉल किया है, तो उसके सक्रिय रहने पर यह प्राथमिकता सिंक होती है।",
+    ru: "Показывает отдельную вкладку Core в меню быстрого доступа. Если у вас установлен плагин Shortcuts, эта настройка синхронизируется, пока он активен.",
 };
 function getPlayhubQamDescription(locale) {
     return descriptions[normalizeStoreLocale(locale)];
 }
 const discover = {
-    en: ["Discover new plugins", "Explore plugins from Playhub, the Decky Store and independent projects on GitHub. New possibilities, all in one place."],
+    en: ["Discover new plugins", "Explore plugins from Core, the Decky Store and independent projects on GitHub. New possibilities, all in one place."],
     it: ["Scopri nuovi plugin", "Esplora i plugin di Playhub, del Decky Store e dei progetti indipendenti su GitHub. Nuove possibilità, tutte in un unico posto."],
     es: ["Descubre nuevos plugins", "Explora plugins de Playhub, Decky Store y proyectos independientes en GitHub. Nuevas posibilidades, todo en un solo lugar."],
     fr: ["Découvrez de nouveaux plugins", "Explorez les plugins de Playhub, du Decky Store et de projets indépendants sur GitHub. De nouvelles possibilités, réunies au même endroit."],
     de: ["Neue Plugins entdecken", "Entdecke Plugins von Playhub, aus dem Decky Store und von unabhängigen Projekten auf GitHub. Neue Möglichkeiten, alles an einem Ort."],
     pt: ["Descubra novos plugins", "Explore plugins do Playhub, da Decky Store e de projetos independentes no GitHub. Novas possibilidades, tudo em um só lugar."],
     uk: ["Відкрийте нові плагіни", "Знайдіть плагіни Playhub, Decky Store та незалежних проєктів на GitHub. Нові можливості — усе в одному місці."],
-    zh: ["发现新插件", "探索来自 Playhub、Decky Store 和 GitHub 独立项目的插件。在这里，发现更多可能。"],
-    ja: ["新しいプラグインを見つけよう", "Playhub、Decky Store、GitHub の個人・独立開発プロジェクトからプラグインを探そう。新たな可能性が、ここに集まります。"],
-    ko: ["새 플러그인 둘러보기", "Playhub, Decky Store, GitHub의 독립 프로젝트에서 제공하는 플러그인을 만나 보세요. 새로운 가능성이 한곳에 모여 있습니다."],
-    hi: ["नए प्लगइन खोजें", "Playhub, Decky Store और GitHub के स्वतंत्र प्रोजेक्ट के प्लगइन खोजें। नई संभावनाएँ, सब एक ही जगह।"],
+    zh: ["发现新插件", "探索来自 Core、Decky Store 和 GitHub 独立项目的插件。在这里，发现更多可能。"],
+    ja: ["新しいプラグインを見つけよう", "Core、Decky Store、GitHub の個人・独立開発プロジェクトからプラグインを探そう。新たな可能性が、ここに集まります。"],
+    ko: ["새 플러그인 둘러보기", "Core, Decky Store, GitHub의 독립 프로젝트에서 제공하는 플러그인을 만나 보세요. 새로운 가능성이 한곳에 모여 있습니다."],
+    hi: ["नए प्लगइन खोजें", "Core, Decky Store और GitHub के स्वतंत्र प्रोजेक्ट के प्लगइन खोजें। नई संभावनाएँ, सब एक ही जगह।"],
     ru: ["Откройте новые плагины", "Находите плагины Playhub, Decky Store и независимых проектов на GitHub. Новые возможности — всё в одном месте."],
 };
 function getPlayhubDiscoverCopy(locale) {
@@ -29851,7 +29851,7 @@ function parsePlugin(value) {
 function parseCatalog(value) {
     const root = typeof value === "string" ? objectValue(JSON.parse(value)) : objectValue(value);
     if (!root || !Array.isArray(root.plugins))
-        throw new Error("Invalid Playhub plugin catalog.");
+        throw new Error("Invalid Core plugin catalog.");
     const seen = new Set();
     const plugins = [];
     for (const candidate of root.plugins) {
@@ -29865,7 +29865,7 @@ function parseCatalog(value) {
         plugins.push(plugin);
     }
     if (!plugins.length)
-        throw new Error("The Playhub plugin catalog is empty.");
+        throw new Error("The Core plugin catalog is empty.");
     return {
         schemaVersion: Number(root.schemaVersion) || 0,
         verifiedAt: text$1(root.verifiedAt, 80),
@@ -30260,7 +30260,7 @@ function resolveInstallArtifact(plugin, release) {
     return { url, name, version, hash, ...(releaseMetadata ? { release: releaseMetadata } : {}) };
 }
 
-var schemaVersion = 3;
+var schemaVersion$1 = 3;
 var verifiedAt = "2026-11-14T08:41:28Z";
 var officialDeckyCatalogUrl = "https://plugins.deckbrew.xyz/plugins";
 var plugins = [
@@ -52192,7 +52192,7 @@ var plugins = [
 ];
 var catalogRevision = 19;
 var bundledCatalogData = {
-	schemaVersion: schemaVersion,
+	schemaVersion: schemaVersion$1,
 	verifiedAt: verifiedAt,
 	officialDeckyCatalogUrl: officialDeckyCatalogUrl,
 	plugins: plugins,
@@ -52674,6 +52674,138 @@ async function loadPluginDetails(plugin) {
     };
 }
 
+var schemaVersion = 1;
+var forks = [
+	{
+		id: "eternal-collector",
+		displayName: "The Collector",
+		repository: "M2ljay/Eternal-Collector",
+		repositoryAliases: [
+			"M2ljay/eternal-romm"
+		],
+		supersedes: [
+			"Crimson3076/romm-dock"
+		],
+		folders: [
+			"romm-dock",
+			"The Collector"
+		],
+		pluginNames: [
+			"RomM-Dock",
+			"The Collector"
+		],
+		versionMarkers: [
+			"-win."
+		]
+	},
+	{
+		id: "eternal-forge",
+		displayName: "Forge",
+		repository: "M2ljay/Eternal-Forge",
+		repositoryAliases: [
+			"M2ljay/vibe-nexus"
+		],
+		supersedes: [
+			"RedRanger14/decky-nexus"
+		],
+		folders: [
+			"Nexus Mods",
+			"Forge"
+		],
+		pluginNames: [
+			"Nexus Mods",
+			"Forge"
+		],
+		versionMarkers: [
+			"-anygame"
+		]
+	},
+	{
+		id: "eternal-mix",
+		displayName: "Awesome Mix",
+		repository: "M2ljay/Eternal-Mix",
+		repositoryAliases: [
+		],
+		supersedes: [
+		],
+		folders: [
+			"Awesome Mix",
+			"Now Playing Plus"
+		],
+		pluginNames: [
+			"Awesome Mix",
+			"Now Playing Plus"
+		],
+		versionMarkers: [
+		]
+	},
+	{
+		id: "eternal-assemble",
+		displayName: "Discord",
+		repository: "M2ljay/Eternal-Assemble",
+		repositoryAliases: [
+		],
+		supersedes: [
+			"LoZazaMastro/Playhub-Discord"
+		],
+		folders: [
+			"Discord",
+			"playhub-discord"
+		],
+		pluginNames: [
+			"Discord"
+		],
+		versionMarkers: [
+		]
+	}
+];
+var protectedForksData = {
+	schemaVersion: schemaVersion,
+	forks: forks
+};
+
+function strings$1(value) {
+    return Array.isArray(value) ? value.filter((item) => typeof item === "string" && item.trim().length > 0) : [];
+}
+function parseProtectedForks(document) {
+    const root = document;
+    if (!root || root.schemaVersion !== 1 || !Array.isArray(root.forks))
+        throw new Error("Unsupported protected fork list.");
+    return root.forks.map((item) => ({
+        id: String(item?.id ?? ""),
+        displayName: String(item?.displayName ?? ""),
+        repository: String(item?.repository ?? ""),
+        repositoryAliases: strings$1(item?.repositoryAliases),
+        supersedes: strings$1(item?.supersedes),
+        folders: strings$1(item?.folders),
+        pluginNames: strings$1(item?.pluginNames),
+        versionMarkers: strings$1(item?.versionMarkers),
+    })).filter((fork) => fork.id && fork.repository);
+}
+const PROTECTED_FORKS = parseProtectedForks(protectedForksData);
+function protectedForkFor(plugin, forks = PROTECTED_FORKS) {
+    const name = normalizePluginIdentity(plugin.name);
+    const version = plugin.version.toLocaleLowerCase("en-US");
+    return forks.find((fork) => fork.pluginNames.some((candidate) => normalizePluginIdentity(candidate) === name) &&
+        (!fork.versionMarkers.length || fork.versionMarkers.some((marker) => version.includes(marker.toLocaleLowerCase("en-US")))));
+}
+/** True when installing or updating this catalogue entry could replace one of the user's forks. */
+function isShieldedByInstalledFork(plugin, installed, forks = PROTECTED_FORKS) {
+    const repository = String(plugin.repository ?? "").toLocaleLowerCase("en-US");
+    const current = findInstalledPlugin(plugin, installed);
+    if (current && protectedForkFor(current, forks))
+        return true;
+    return installed.some((entry) => {
+        const fork = protectedForkFor(entry, forks);
+        return Boolean(fork && [fork.repository, ...fork.repositoryAliases, ...fork.supersedes]
+            .some((value) => value.toLocaleLowerCase("en-US") === repository));
+    });
+}
+/** Catalogue without the entries that an installed fork replaces; the fork itself stays as installed-only. */
+function withoutShieldedPlugins(plugins, installed, forks = PROTECTED_FORKS) {
+    return plugins.filter((plugin) => !isShieldedByInstalledFork(plugin, installed, forks));
+}
+
 var DeckyInstallType;
 (function (DeckyInstallType) {
     DeckyInstallType[DeckyInstallType["Install"] = 0] = "Install";
@@ -52721,6 +52853,10 @@ function operationType(plugin, installed) {
 function requestDeckyInstall(plugin, artifact, installed) {
     if (!isSafePluginName(plugin.name))
         return Promise.reject(new Error("Invalid plugin name."));
+    // Eternal Core: Decky would replace the user's fork (Source/Shared/ProtectedPluginForks.json).
+    if (isShieldedByInstalledFork(plugin, installed)) {
+        return Promise.reject(new Error(`${plugin.name}: a personal fork is installed; the store never replaces it.`));
+    }
     const request = {
         url: artifact.url,
         name: plugin.name,
@@ -53509,7 +53645,7 @@ function PluginStorePage() {
     useEffect$1(() => {
         if (!plugins?.length || !installed.length)
             return;
-        const targets = plugins.filter((plugin) => {
+        const targets = withoutShieldedPlugins(plugins, installed).filter((plugin) => {
             if (plugin.catalogSource === "decky-store" || !findInstalledPlugin(plugin, installed))
                 return false;
             const key = `${plugin.repository.toLocaleLowerCase("en-US")}:${plugin.version}`;
@@ -53547,13 +53683,15 @@ function PluginStorePage() {
         });
         return () => { alive = false; };
     }, [plugins, installed]);
+    // Eternal Core: entries that an installed fork of the user's replaces are never offered.
+    const visiblePlugins = useMemo$1(() => plugins ? withoutShieldedPlugins(plugins, installed) : null, [plugins, installed]);
     if (error) {
         return (SP_JSX.jsxs("div", { className: "ph-store-page", children: [SP_JSX.jsx("style", { children: STORE_STYLE }), SP_JSX.jsx("div", { className: "ph-store-empty", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("p", { children: copy.catalogUnavailable }), SP_JSX.jsx(DialogButton$4, { onClick: () => load(true), children: copy.retry })] }) })] }));
     }
     if (!plugins) {
         return (SP_JSX.jsxs("div", { className: "ph-store-page", children: [SP_JSX.jsx("style", { children: STORE_STYLE }), SP_JSX.jsxs("div", { className: "ph-store-empty", children: [SP_JSX.jsx(SteamSpinner, {}), SP_JSX.jsx("span", { children: copy.loading })] })] }));
     }
-    const shared = { plugins, installed, copy, locale, progress };
+    const shared = { plugins: visiblePlugins ?? plugins, installed, copy, locale, progress };
     const footer = {
         actionDescriptionMap: {
             [GamepadButton$1.BUMPER_LEFT]: copy.switchTabs,
@@ -54376,18 +54514,18 @@ function DeckyHost({ active }) {
 }
 
 const rows$1 = {
-    en: ["Hide Decky from Steam tabs", "Decky always remains available in the Playhub menu."],
-    it: ["Nascondi Decky dalle tab di Steam", "Decky rimane sempre disponibile nel menu di Playhub."],
-    de: ["Decky in den Steam-Tabs ausblenden", "Decky bleibt im Playhub-Menü immer verfügbar."],
-    es: ["Ocultar Decky de las pestañas de Steam", "Decky sigue siempre disponible en el menú de Playhub."],
-    fr: ["Masquer Decky dans les onglets Steam", "Decky reste toujours disponible dans le menu Playhub."],
-    pt: ["Ocultar Decky das abas do Steam", "Decky permanece sempre disponível no menu do Playhub."],
-    ru: ["Скрыть Decky из вкладок Steam", "Decky всегда остаётся доступным в меню Playhub."],
-    uk: ["Приховати Decky з вкладок Steam", "Decky завжди залишається доступним у меню Playhub."],
-    zh: ["在 Steam 标签页中隐藏 Decky", "Decky 始终可在 Playhub 菜单中使用。"],
-    ja: ["SteamのタブからDeckyを非表示にする", "Deckyは引き続きPlayhubメニューでいつでも利用できます。"],
-    ko: ["Steam 탭에서 Decky 숨기기", "Decky는 Playhub 메뉴에서 항상 사용할 수 있습니다."],
-    hi: ["Steam टैब से Decky छिपाएँ", "Decky हमेशा Playhub मेनू में उपलब्ध रहता है।"],
+    en: ["Hide Decky from Steam tabs", "Decky always remains available in the Core menu."],
+    it: ["Nascondi Decky dalle tab di Steam", "Decky rimane sempre disponibile nel menu di Core."],
+    de: ["Decky in den Steam-Tabs ausblenden", "Decky bleibt im Core-Menü immer verfügbar."],
+    es: ["Ocultar Decky de las pestañas de Steam", "Decky sigue siempre disponible en el menú de Core."],
+    fr: ["Masquer Decky dans les onglets Steam", "Decky reste toujours disponible dans le menu Core."],
+    pt: ["Ocultar Decky das abas do Steam", "Decky permanece sempre disponível no menu do Core."],
+    ru: ["Скрыть Decky из вкладок Steam", "Decky всегда остаётся доступным в меню Core."],
+    uk: ["Приховати Decky з вкладок Steam", "Decky завжди залишається доступним у меню Core."],
+    zh: ["在 Steam 标签页中隐藏 Decky", "Decky 始终可在 Core 菜单中使用。"],
+    ja: ["SteamのタブからDeckyを非表示にする", "Deckyは引き続きCoreメニューでいつでも利用できます。"],
+    ko: ["Steam 탭에서 Decky 숨기기", "Decky는 Core 메뉴에서 항상 사용할 수 있습니다."],
+    hi: ["Steam टैब से Decky छिपाएँ", "Decky हमेशा Core मेनू में उपलब्ध रहता है।"],
 };
 function deckyIntegrationLocale(locale) {
     const row = rows$1[locale.split(/[-_]/)[0]] ?? rows$1.en;
@@ -54395,18 +54533,18 @@ function deckyIntegrationLocale(locale) {
 }
 
 const copy$1 = {
-    en: ["Discover the new Playhub experience", "Open Quick Access to discover Playhub.", "Everything is here: your Playhub, in Quick Access.", "Decky is available here. You can restore its Quick Access tab in Playhub settings.", "Decky integration is optional. You can enable it in Playhub settings and restore its Quick Access tab at any time.", "Continue", "Pause guide", "Finish"],
-    it: ["Scopri la nuova esperienza Playhub", "Apri l'accesso rapido per scoprire Playhub.", "Trovi tutto qui: il tuo Playhub, nell'accesso rapido.", "Decky è accessibile qui. Puoi ripristinare la sua scheda nell'accesso rapido dalle impostazioni di Playhub.", "L'integrazione di Decky è facoltativa. Puoi attivarla nelle impostazioni di Playhub e ripristinare la sua scheda nell'accesso rapido in qualsiasi momento.", "Continua", "Sospendi la guida", "Concludi"],
-    es: ["Descubre la nueva experiencia Playhub", "Abre el acceso rápido para descubrir Playhub.", "Todo está aquí: tu Playhub, en el acceso rápido.", "Decky está disponible aquí. Puedes restaurar su pestaña de acceso rápido en los ajustes de Playhub.", "La integración de Decky es opcional. Puedes activarla en los ajustes de Playhub y restaurar su pestaña de acceso rápido cuando quieras.", "Continuar", "Pausar la guía", "Finalizar"],
-    fr: ["Découvrez la nouvelle expérience Playhub", "Ouvrez l’accès rapide pour découvrir Playhub.", "Tout est ici : votre Playhub, dans l’accès rapide.", "Decky est accessible ici. Vous pouvez rétablir son onglet d’accès rapide dans les paramètres de Playhub.", "L’intégration de Decky est facultative. Vous pouvez l’activer dans les paramètres de Playhub et rétablir son onglet d’accès rapide à tout moment.", "Continuer", "Suspendre le guide", "Terminer"],
-    de: ["Entdecke das neue Playhub-Erlebnis", "Öffne den Schnellzugriff, um Playhub zu entdecken.", "Alles ist hier: dein Playhub im Schnellzugriff.", "Decky ist hier verfügbar. Seinen Schnellzugriff-Tab kannst du in den Playhub-Einstellungen wiederherstellen.", "Die Decky-Integration ist optional. Du kannst sie in den Playhub-Einstellungen aktivieren und den Schnellzugriff-Tab jederzeit wiederherstellen.", "Weiter", "Anleitung pausieren", "Abschließen"],
-    pt: ["Descubra a nova experiência Playhub", "Abra o acesso rápido para descobrir o Playhub.", "Está tudo aqui: seu Playhub, no acesso rápido.", "O Decky está disponível aqui. Você pode restaurar sua aba de acesso rápido nas configurações do Playhub.", "A integração do Decky é opcional. Você pode ativá-la nas configurações do Playhub e restaurar sua aba de acesso rápido a qualquer momento.", "Continuar", "Pausar guia", "Concluir"],
-    uk: ["Відкрийте нові можливості Playhub", "Відкрийте швидкий доступ, щоб познайомитися з Playhub.", "Усе тут: ваш Playhub у швидкому доступі.", "Decky доступний тут. Його вкладку швидкого доступу можна відновити в налаштуваннях Playhub.", "Інтеграція Decky необов’язкова. Її можна ввімкнути в налаштуваннях Playhub і будь-коли відновити вкладку швидкого доступу.", "Продовжити", "Призупинити посібник", "Завершити"],
-    zh: ["探索全新 Playhub 体验", "打开快捷访问，探索 Playhub。", "一切尽在此处：快捷访问中的 Playhub。", "你可以在此使用 Decky，也可以在 Playhub 设置中恢复它的快捷访问标签页。", "Decky 集成是可选的。你可以在 Playhub 设置中启用它，并随时恢复它的快捷访问标签页。", "继续", "暂停引导", "完成"],
-    ja: ["新しい Playhub を体験しよう", "クイックアクセスを開いて Playhub を見てみましょう。", "すべてがここに。クイックアクセスから Playhub を使えます。", "Decky はここから使えます。Playhub の設定でクイックアクセスタブを元に戻せます。", "Decky の統合は任意です。Playhub の設定で有効にでき、いつでもクイックアクセスタブを元に戻せます。", "続ける", "ガイドを一時停止", "完了"],
-    ko: ["새로운 Playhub를 만나보세요", "빠른 액세스를 열어 Playhub를 살펴보세요.", "모든 기능이 여기에 있습니다. 빠른 액세스에서 Playhub를 이용하세요.", "여기에서 Decky를 이용할 수 있습니다. Playhub 설정에서 빠른 액세스 탭을 복원할 수 있습니다.", "Decky 통합은 선택 사항입니다. Playhub 설정에서 활성화하고 언제든지 빠른 액세스 탭을 복원할 수 있습니다.", "계속", "안내 일시 중지", "완료"],
-    hi: ["Playhub का नया अनुभव जानें", "Playhub देखने के लिए त्वरित ऐक्सेस खोलें।", "सब कुछ यहाँ है: त्वरित ऐक्सेस में आपका Playhub।", "Decky यहाँ उपलब्ध है। Playhub की सेटिंग में उसका त्वरित ऐक्सेस टैब वापस ला सकते हैं।", "Decky का एकीकरण वैकल्पिक है। इसे Playhub की सेटिंग में चालू कर सकते हैं और कभी भी त्वरित ऐक्सेस टैब वापस ला सकते हैं।", "जारी रखें", "गाइड रोकें", "पूरा करें"],
-    ru: ["Откройте новый Playhub", "Откройте быстрый доступ, чтобы познакомиться с Playhub.", "Всё здесь: ваш Playhub в быстром доступе.", "Decky доступен здесь. Его вкладку быстрого доступа можно восстановить в настройках Playhub.", "Интеграция Decky необязательна. Её можно включить в настройках Playhub и в любой момент восстановить вкладку быстрого доступа.", "Продолжить", "Приостановить руководство", "Завершить"],
+    en: ["Discover the new Core experience", "Open Quick Access to discover Core.", "Everything is here: your Core, in Quick Access.", "Decky is available here. You can restore its Quick Access tab in Core settings.", "Decky integration is optional. You can enable it in Core settings and restore its Quick Access tab at any time.", "Continue", "Pause guide", "Finish"],
+    it: ["Scopri la nuova esperienza Core", "Apri l'accesso rapido per scoprire Core.", "Trovi tutto qui: il tuo Core, nell'accesso rapido.", "Decky è accessibile qui. Puoi ripristinare la sua scheda nell'accesso rapido dalle impostazioni di Core.", "L'integrazione di Decky è facoltativa. Puoi attivarla nelle impostazioni di Core e ripristinare la sua scheda nell'accesso rapido in qualsiasi momento.", "Continua", "Sospendi la guida", "Concludi"],
+    es: ["Descubre la nueva experiencia Core", "Abre el acceso rápido para descubrir Core.", "Todo está aquí: tu Core, en el acceso rápido.", "Decky está disponible aquí. Puedes restaurar su pestaña de acceso rápido en los ajustes de Core.", "La integración de Decky es opcional. Puedes activarla en los ajustes de Core y restaurar su pestaña de acceso rápido cuando quieras.", "Continuar", "Pausar la guía", "Finalizar"],
+    fr: ["Découvrez la nouvelle expérience Core", "Ouvrez l’accès rapide pour découvrir Core.", "Tout est ici : votre Core, dans l’accès rapide.", "Decky est accessible ici. Vous pouvez rétablir son onglet d’accès rapide dans les paramètres de Core.", "L’intégration de Decky est facultative. Vous pouvez l’activer dans les paramètres de Core et rétablir son onglet d’accès rapide à tout moment.", "Continuer", "Suspendre le guide", "Terminer"],
+    de: ["Entdecke das neue Core-Erlebnis", "Öffne den Schnellzugriff, um Core zu entdecken.", "Alles ist hier: dein Core im Schnellzugriff.", "Decky ist hier verfügbar. Seinen Schnellzugriff-Tab kannst du in den Core-Einstellungen wiederherstellen.", "Die Decky-Integration ist optional. Du kannst sie in den Core-Einstellungen aktivieren und den Schnellzugriff-Tab jederzeit wiederherstellen.", "Weiter", "Anleitung pausieren", "Abschließen"],
+    pt: ["Descubra a nova experiência Core", "Abra o acesso rápido para descobrir o Core.", "Está tudo aqui: seu Core, no acesso rápido.", "O Decky está disponível aqui. Você pode restaurar sua aba de acesso rápido nas configurações do Core.", "A integração do Decky é opcional. Você pode ativá-la nas configurações do Core e restaurar sua aba de acesso rápido a qualquer momento.", "Continuar", "Pausar guia", "Concluir"],
+    uk: ["Відкрийте нові можливості Core", "Відкрийте швидкий доступ, щоб познайомитися з Core.", "Усе тут: ваш Core у швидкому доступі.", "Decky доступний тут. Його вкладку швидкого доступу можна відновити в налаштуваннях Core.", "Інтеграція Decky необов’язкова. Її можна ввімкнути в налаштуваннях Core і будь-коли відновити вкладку швидкого доступу.", "Продовжити", "Призупинити посібник", "Завершити"],
+    zh: ["探索全新 Core 体验", "打开快捷访问，探索 Core。", "一切尽在此处：快捷访问中的 Core。", "你可以在此使用 Decky，也可以在 Core 设置中恢复它的快捷访问标签页。", "Decky 集成是可选的。你可以在 Core 设置中启用它，并随时恢复它的快捷访问标签页。", "继续", "暂停引导", "完成"],
+    ja: ["新しい Core を体験しよう", "クイックアクセスを開いて Core を見てみましょう。", "すべてがここに。クイックアクセスから Core を使えます。", "Decky はここから使えます。Core の設定でクイックアクセスタブを元に戻せます。", "Decky の統合は任意です。Core の設定で有効にでき、いつでもクイックアクセスタブを元に戻せます。", "続ける", "ガイドを一時停止", "完了"],
+    ko: ["새로운 Core를 만나보세요", "빠른 액세스를 열어 Core를 살펴보세요.", "모든 기능이 여기에 있습니다. 빠른 액세스에서 Core를 이용하세요.", "여기에서 Decky를 이용할 수 있습니다. Core 설정에서 빠른 액세스 탭을 복원할 수 있습니다.", "Decky 통합은 선택 사항입니다. Core 설정에서 활성화하고 언제든지 빠른 액세스 탭을 복원할 수 있습니다.", "계속", "안내 일시 중지", "완료"],
+    hi: ["Core का नया अनुभव जानें", "Core देखने के लिए त्वरित ऐक्सेस खोलें।", "सब कुछ यहाँ है: त्वरित ऐक्सेस में आपका Core।", "Decky यहाँ उपलब्ध है। Core की सेटिंग में उसका त्वरित ऐक्सेस टैब वापस ला सकते हैं।", "Decky का एकीकरण वैकल्पिक है। इसे Core की सेटिंग में चालू कर सकते हैं और कभी भी त्वरित ऐक्सेस टैब वापस ला सकते हैं।", "जारी रखें", "गाइड रोकें", "पूरा करें"],
+    ru: ["Откройте новый Core", "Откройте быстрый доступ, чтобы познакомиться с Core.", "Всё здесь: ваш Core в быстром доступе.", "Decky доступен здесь. Его вкладку быстрого доступа можно восстановить в настройках Core.", "Интеграция Decky необязательна. Её можно включить в настройках Core и в любой момент восстановить вкладку быстрого доступа.", "Продолжить", "Приостановить руководство", "Завершить"],
 };
 function getOnboardingCopy(locale) {
     const [, open, , decky, , next, pause, finish] = copy$1[normalizeStoreLocale(locale)];
@@ -54418,46 +54556,46 @@ function getOnboardingCopy(locale) {
         outroTitle: text[10], outro: text[11] };
 }
 const nativeDeckyCopy = {
-    en: "Manage Decky's Playhub tab in the tab editor. The separate setting only hides or restores Decky's tab in Steam Quick Access.",
-    it: "Gestisci la scheda Decky di Playhub nell'editor delle schede. L'impostazione separata nasconde o ripristina soltanto la scheda Decky nell'accesso rapido di Steam.",
-    es: "Gestiona la pestaña Decky de Playhub en el editor de pestañas. El ajuste separado solo oculta o restaura la pestaña Decky en el acceso rápido de Steam.",
-    fr: "Gérez l’onglet Decky de Playhub dans l’éditeur d’onglets. Le réglage séparé masque ou rétablit uniquement l’onglet Decky dans l’accès rapide de Steam.",
-    de: "Verwalte den Decky-Tab von Playhub im Tab-Editor. Die separate Einstellung blendet nur den Decky-Tab im Steam-Schnellzugriff aus oder wieder ein.",
-    pt: "Gerencie a aba Decky do Playhub no editor de abas. A configuração separada apenas oculta ou restaura a aba Decky no acesso rápido do Steam.",
-    uk: "Керуйте вкладкою Decky у Playhub через редактор вкладок. Окреме налаштування лише приховує або відновлює вкладку Decky у швидкому доступі Steam.",
-    zh: "在标签页编辑器中管理 Playhub 的 Decky 标签页。独立设置仅隐藏或恢复 Steam 快捷访问中的 Decky 标签页。",
-    ja: "Playhub の Decky タブはタブ編集で管理できます。別の設定では Steam のクイックアクセスにある Decky タブだけを非表示にしたり戻したりできます。",
-    ko: "탭 편집기에서 Playhub의 Decky 탭을 관리하세요. 별도 설정은 Steam 빠른 액세스의 Decky 탭만 숨기거나 복원합니다.",
-    hi: "टैब संपादक में Playhub के Decky टैब को व्यवस्थित करें। अलग सेटिंग केवल Steam के त्वरित ऐक्सेस में Decky टैब को छिपाती या वापस लाती है।",
-    ru: "Управляйте вкладкой Decky в Playhub через редактор вкладок. Отдельная настройка только скрывает или восстанавливает вкладку Decky в быстром доступе Steam.",
+    en: "Manage Decky's Core tab in the tab editor. The separate setting only hides or restores Decky's tab in Steam Quick Access.",
+    it: "Gestisci la scheda Decky di Core nell'editor delle schede. L'impostazione separata nasconde o ripristina soltanto la scheda Decky nell'accesso rapido di Steam.",
+    es: "Gestiona la pestaña Decky de Core en el editor de pestañas. El ajuste separado solo oculta o restaura la pestaña Decky en el acceso rápido de Steam.",
+    fr: "Gérez l’onglet Decky de Core dans l’éditeur d’onglets. Le réglage séparé masque ou rétablit uniquement l’onglet Decky dans l’accès rapide de Steam.",
+    de: "Verwalte den Decky-Tab von Core im Tab-Editor. Die separate Einstellung blendet nur den Decky-Tab im Steam-Schnellzugriff aus oder wieder ein.",
+    pt: "Gerencie a aba Decky do Core no editor de abas. A configuração separada apenas oculta ou restaura a aba Decky no acesso rápido do Steam.",
+    uk: "Керуйте вкладкою Decky у Core через редактор вкладок. Окреме налаштування лише приховує або відновлює вкладку Decky у швидкому доступі Steam.",
+    zh: "在标签页编辑器中管理 Core 的 Decky 标签页。独立设置仅隐藏或恢复 Steam 快捷访问中的 Decky 标签页。",
+    ja: "Core の Decky タブはタブ編集で管理できます。別の設定では Steam のクイックアクセスにある Decky タブだけを非表示にしたり戻したりできます。",
+    ko: "탭 편집기에서 Core의 Decky 탭을 관리하세요. 별도 설정은 Steam 빠른 액세스의 Decky 탭만 숨기거나 복원합니다.",
+    hi: "टैब संपादक में Core के Decky टैब को व्यवस्थित करें। अलग सेटिंग केवल Steam के त्वरित ऐक्सेस में Decky टैब को छिपाती या वापस लाती है।",
+    ru: "Управляйте вкладкой Decky в Core через редактор вкладок. Отдельная настройка только скрывает или восстанавливает вкладку Decky в быстром доступе Steam.",
 };
 const welcome = {
-    en: ["Welcome to Playhub", "Open your Dashboard, adjust controls and discover plugins from one place."],
-    it: ["Benvenuto in Playhub", "Apri la Dashboard, regola i controlli e scopri i plugin da un unico posto."],
-    es: ["Te damos la bienvenida a Playhub", "Abre tu Dashboard, ajusta los controles y descubre plugins en un solo lugar."],
-    fr: ["Bienvenue dans Playhub", "Ouvrez le Dashboard, réglez les commandes et découvrez des plugins au même endroit."],
-    de: ["Willkommen bei Playhub", "Öffne dein Dashboard, passe die Steuerung an und entdecke Plugins an einem Ort."],
-    pt: ["Boas-vindas ao Playhub", "Abra o Dashboard, ajuste os controles e descubra plugins em um só lugar."],
-    uk: ["Ласкаво просимо до Playhub", "Відкривайте Dashboard, налаштовуйте керування та знаходьте плагіни в одному місці."],
-    zh: ["欢迎使用 Playhub", "在同一处打开 Dashboard、调整控制设置并发现插件。"],
-    ja: ["Playhub へようこそ", "Dashboard を開き、操作を調整し、プラグインを探す。すべてここから。"],
-    ko: ["Playhub에 오신 것을 환영합니다", "한곳에서 Dashboard를 열고, 조작을 설정하고, 플러그인을 찾아보세요."],
-    hi: ["Playhub में आपका स्वागत है", "एक ही जगह से Dashboard खोलें, नियंत्रण बदलें और प्लगइन खोजें।"],
-    ru: ["Добро пожаловать в Playhub", "Открывайте Dashboard, настраивайте управление и находите плагины в одном месте."],
+    en: ["Welcome to Core", "Open your Dashboard, adjust controls and discover plugins from one place."],
+    it: ["Benvenuto in Core", "Apri la Dashboard, regola i controlli e scopri i plugin da un unico posto."],
+    es: ["Te damos la bienvenida a Core", "Abre tu Dashboard, ajusta los controles y descubre plugins en un solo lugar."],
+    fr: ["Bienvenue dans Core", "Ouvrez le Dashboard, réglez les commandes et découvrez des plugins au même endroit."],
+    de: ["Willkommen bei Core", "Öffne dein Dashboard, passe die Steuerung an und entdecke Plugins an einem Ort."],
+    pt: ["Boas-vindas ao Core", "Abra o Dashboard, ajuste os controles e descubra plugins em um só lugar."],
+    uk: ["Ласкаво просимо до Core", "Відкривайте Dashboard, налаштовуйте керування та знаходьте плагіни в одному місці."],
+    zh: ["欢迎使用 Core", "在同一处打开 Dashboard、调整控制设置并发现插件。"],
+    ja: ["Core へようこそ", "Dashboard を開き、操作を調整し、プラグインを探す。すべてここから。"],
+    ko: ["Core에 오신 것을 환영합니다", "한곳에서 Dashboard를 열고, 조작을 설정하고, 플러그인을 찾아보세요."],
+    hi: ["Core में आपका स्वागत है", "एक ही जगह से Dashboard खोलें, नियंत्रण बदलें और प्लगइन खोजें।"],
+    ru: ["Добро пожаловать в Core", "Открывайте Dashboard, настраивайте управление и находите плагины в одном месте."],
 };
 const extras = {
-    en: ["Explore the Plugin Store to find plugins for Steam and Playhub.", "Choose which tabs appear and arrange them in the order you prefer.", "Resume Playhub guide"],
-    it: ["Esplora il Plugin Store per trovare plugin per Steam e Playhub.", "Scegli quali schede mostrare e disponile nell'ordine che preferisci.", "Riprendi la guida di Playhub"],
-    es: ["Explora Plugin Store para encontrar plugins para Steam y Playhub.", "Elige qué pestañas mostrar y organízalas en el orden que prefieras.", "Reanudar la guía de Playhub"],
-    fr: ["Explorez le Plugin Store pour trouver des plugins pour Steam et Playhub.", "Choisissez les onglets à afficher et disposez-les dans l’ordre souhaité.", "Reprendre le guide Playhub"],
-    de: ["Entdecke im Plugin Store Plugins für Steam und Playhub.", "Wähle die sichtbaren Tabs und ordne sie nach deinen Wünschen an.", "Playhub-Anleitung fortsetzen"],
-    pt: ["Explore o Plugin Store para encontrar plugins para Steam e Playhub.", "Escolha quais abas mostrar e organize-as na ordem que preferir.", "Retomar guia do Playhub"],
-    uk: ["Перегляньте Plugin Store, щоб знайти плагіни для Steam і Playhub.", "Виберіть видимі вкладки та розташуйте їх у зручному порядку.", "Продовжити посібник Playhub"],
-    zh: ["浏览 Plugin Store，查找适用于 Steam 和 Playhub 的插件。", "选择要显示的标签页，并按喜好排列顺序。", "继续 Playhub 引导"],
-    ja: ["Plugin Store で Steam や Playhub のプラグインを探しましょう。", "表示するタブを選び、好きな順序に並べられます。", "Playhub ガイドを再開"],
-    ko: ["Plugin Store에서 Steam과 Playhub용 플러그인을 찾아보세요.", "표시할 탭을 선택하고 원하는 순서로 배치하세요.", "Playhub 안내 재개"],
-    hi: ["Steam और Playhub के प्लगइन खोजने के लिए Plugin Store देखें।", "दिखने वाले टैब चुनें और उन्हें अपने पसंदीदा क्रम में रखें।", "Playhub गाइड जारी रखें"],
-    ru: ["Откройте Plugin Store, чтобы найти плагины для Steam и Playhub.", "Выберите видимые вкладки и расположите их в удобном порядке.", "Продолжить руководство Playhub"],
+    en: ["Explore the Plugin Store to find plugins for Steam and Core.", "Choose which tabs appear and arrange them in the order you prefer.", "Resume Core guide"],
+    it: ["Esplora il Plugin Store per trovare plugin per Steam e Core.", "Scegli quali schede mostrare e disponile nell'ordine che preferisci.", "Riprendi la guida di Core"],
+    es: ["Explora Plugin Store para encontrar plugins para Steam y Core.", "Elige qué pestañas mostrar y organízalas en el orden que prefieras.", "Reanudar la guía de Core"],
+    fr: ["Explorez le Plugin Store pour trouver des plugins pour Steam et Core.", "Choisissez les onglets à afficher et disposez-les dans l’ordre souhaité.", "Reprendre le guide Core"],
+    de: ["Entdecke im Plugin Store Plugins für Steam und Core.", "Wähle die sichtbaren Tabs und ordne sie nach deinen Wünschen an.", "Core-Anleitung fortsetzen"],
+    pt: ["Explore o Plugin Store para encontrar plugins para Steam e Core.", "Escolha quais abas mostrar e organize-as na ordem que preferir.", "Retomar guia do Core"],
+    uk: ["Перегляньте Plugin Store, щоб знайти плагіни для Steam і Core.", "Виберіть видимі вкладки та розташуйте їх у зручному порядку.", "Продовжити посібник Core"],
+    zh: ["浏览 Plugin Store，查找适用于 Steam 和 Core 的插件。", "选择要显示的标签页，并按喜好排列顺序。", "继续 Core 引导"],
+    ja: ["Plugin Store で Steam や Core のプラグインを探しましょう。", "表示するタブを選び、好きな順序に並べられます。", "Core ガイドを再開"],
+    ko: ["Plugin Store에서 Steam과 Core용 플러그인을 찾아보세요.", "표시할 탭을 선택하고 원하는 순서로 배치하세요.", "Core 안내 재개"],
+    hi: ["Steam और Core के प्लगइन खोजने के लिए Plugin Store देखें।", "दिखने वाले टैब चुनें और उन्हें अपने पसंदीदा क्रम में रखें।", "Core गाइड जारी रखें"],
+    ru: ["Откройте Plugin Store, чтобы найти плагины для Steam и Core.", "Выберите видимые вкладки и расположите их в удобном порядке.", "Продолжить руководство Core"],
 };
 function getOnboardingExtraCopy(locale) {
     const [store, customize, resume] = extras[normalizeStoreLocale(locale)];
@@ -54465,78 +54603,78 @@ function getOnboardingExtraCopy(locale) {
     return { store: text[7], customize: text[9], resume, replay: replayLabels[normalizeStoreLocale(locale)] };
 }
 const presentation = {
-    it: ["Il controllo, a portata di gioco", "Dashboard, plugin e impostazioni: scopri cosa trovi nell'accesso rapido di Playhub.",
-        "Il tuo viaggio inizia qui", "Apri la Playhub Dashboard per tenere tutto sotto controllo, e da questo pannello scegli se avviare in Gaming Mode o Desktop Mode.",
-        "I tuoi plugin, tutti qui", "Ora il menu di Decky è parte di Playhub e puoi accedervi in qualsiasi momento per vedere la lista dei tuoi plugin installati. Puoi anche ripristinare la tab Decky in qualsiasi momento dalle impostazioni di Playhub.",
+    it: ["Il controllo, a portata di gioco", "Dashboard, plugin e impostazioni: scopri cosa trovi nell'accesso rapido di Core.",
+        "Il tuo viaggio inizia qui", "Apri la Core Dashboard per tenere tutto sotto controllo, e da questo pannello scegli se avviare in Gaming Mode o Desktop Mode.",
+        "I tuoi plugin, tutti qui", "Ora il menu di Decky è parte di Core e puoi accedervi in qualsiasi momento per vedere la lista dei tuoi plugin installati. Puoi anche ripristinare la tab Decky in qualsiasi momento dalle impostazioni di Core.",
         "Più plugin, un solo Store", "Scopri plugin Playhub, Decky Store e progetti indipendenti su GitHub, riuniti in un solo catalogo.",
         "Le tab, nel tuo ordine", "Riordina le tab e nascondi quelle che non usi. Puoi mostrarle di nuovo quando vuoi.",
-        "È il momento di giocare come mai prima d'ora", "Scopri, prova, personalizza, gioca e divertiti.\nQuesto è lo spirito di Playhub."],
-    en: ["Control within reach", "Dashboard, plugins and settings: see what Playhub brings to Quick Access.",
-        "Your journey starts here", "Open the Playhub Dashboard to keep everything under control, and choose from this panel whether to start in Gaming Mode or Desktop Mode.",
-        "Your plugins, together", "The Decky menu is now part of Playhub, always available to browse your installed plugins. You can restore the Decky tab at any time from Playhub settings.",
+        "È il momento di giocare come mai prima d'ora", "Scopri, prova, personalizza, gioca e divertiti.\nQuesto è lo spirito di Core."],
+    en: ["Control within reach", "Dashboard, plugins and settings: see what Core brings to Quick Access.",
+        "Your journey starts here", "Open the Core Dashboard to keep everything under control, and choose from this panel whether to start in Gaming Mode or Desktop Mode.",
+        "Your plugins, together", "The Decky menu is now part of Core, always available to browse your installed plugins. You can restore the Decky tab at any time from Core settings.",
         "More plugins, one Store", "Discover Playhub plugins, Decky Store and independent GitHub projects in one catalog.",
         "Your tabs, your order", "Reorder tabs and hide the ones you don't use. Bring them back whenever you like.",
-        "It's time to enjoy gaming like never before", "Discover, try, customize, play and have fun.\nThis is the spirit of Playhub."],
-    es: ["El control, a tu alcance", "Dashboard, plugins y ajustes: descubre lo que ofrece Playhub en el acceso rápido.",
-        "Tu viaje empieza aquí", "Abre Playhub Dashboard para tenerlo todo bajo control y elige en este panel si quieres iniciar en Gaming Mode o Desktop Mode.",
-        "Tus plugins, juntos", "El menú de Decky ahora forma parte de Playhub y está siempre disponible para ver tus plugins instalados. También puedes restaurar la tab Decky en cualquier momento desde los ajustes de Playhub.",
+        "It's time to enjoy gaming like never before", "Discover, try, customize, play and have fun.\nThis is the spirit of Core."],
+    es: ["El control, a tu alcance", "Dashboard, plugins y ajustes: descubre lo que ofrece Core en el acceso rápido.",
+        "Tu viaje empieza aquí", "Abre Core Dashboard para tenerlo todo bajo control y elige en este panel si quieres iniciar en Gaming Mode o Desktop Mode.",
+        "Tus plugins, juntos", "El menú de Decky ahora forma parte de Core y está siempre disponible para ver tus plugins instalados. También puedes restaurar la tab Decky en cualquier momento desde los ajustes de Core.",
         "Más plugins, una sola tienda", "Descubre plugins de Playhub, Decky Store y proyectos independientes de GitHub en un catálogo.",
         "Tus pestañas, a tu manera", "Reordena las pestañas y oculta las que no uses. Puedes volver a mostrarlas cuando quieras.",
-        "Ha llegado el momento de disfrutar de los videojuegos como nunca", "Descubre, prueba, personaliza, juega y diviértete.\nEse es el espíritu de Playhub."],
-    fr: ["Le contrôle à portée de main", "Dashboard, plugins et réglages : découvrez Playhub dans l’accès rapide.",
-        "Votre voyage commence ici", "Ouvrez le Playhub Dashboard pour garder le contrôle, et choisissez dans ce panneau de démarrer en Gaming Mode ou en Desktop Mode.",
-        "Vos plugins, réunis", "Le menu Decky fait désormais partie de Playhub et reste accessible à tout moment pour consulter vos plugins installés. Vous pouvez aussi rétablir l’onglet Decky à tout moment dans les paramètres de Playhub.",
+        "Ha llegado el momento de disfrutar de los videojuegos como nunca", "Descubre, prueba, personaliza, juega y diviértete.\nEse es el espíritu de Core."],
+    fr: ["Le contrôle à portée de main", "Dashboard, plugins et réglages : découvrez Core dans l’accès rapide.",
+        "Votre voyage commence ici", "Ouvrez le Core Dashboard pour garder le contrôle, et choisissez dans ce panneau de démarrer en Gaming Mode ou en Desktop Mode.",
+        "Vos plugins, réunis", "Le menu Decky fait désormais partie de Core et reste accessible à tout moment pour consulter vos plugins installés. Vous pouvez aussi rétablir l’onglet Decky à tout moment dans les paramètres de Core.",
         "Plus de plugins, un seul Store", "Découvrez les plugins Playhub, Decky Store et les projets indépendants GitHub dans un même catalogue.",
         "Vos onglets, dans votre ordre", "Réorganisez les onglets et masquez ceux que vous n’utilisez pas. Vous pourrez les réafficher à tout moment.",
-        "Il est temps de jouer comme jamais auparavant", "Découvre, essaie, personnalise, joue et amuse-toi.\nC'est l'esprit de Playhub."],
-    de: ["Alles schnell im Griff", "Dashboard, Plugins und Einstellungen: entdecke Playhub im Schnellzugriff.",
-        "Deine Reise beginnt hier", "Öffne das Playhub Dashboard, um alles im Griff zu behalten, und wähle in diesem Bereich, ob du im Gaming Mode oder im Desktop Mode starten willst.",
-        "Deine Plugins an einem Ort", "Das Decky-Menü ist jetzt Teil von Playhub und jederzeit verfügbar, um deine installierten Plugins anzusehen. Du kannst den Decky-Tab jederzeit in den Playhub-Einstellungen wiederherstellen.",
+        "Il est temps de jouer comme jamais auparavant", "Découvre, essaie, personnalise, joue et amuse-toi.\nC'est l'esprit de Core."],
+    de: ["Alles schnell im Griff", "Dashboard, Plugins und Einstellungen: entdecke Core im Schnellzugriff.",
+        "Deine Reise beginnt hier", "Öffne das Core Dashboard, um alles im Griff zu behalten, und wähle in diesem Bereich, ob du im Gaming Mode oder im Desktop Mode starten willst.",
+        "Deine Plugins an einem Ort", "Das Decky-Menü ist jetzt Teil von Core und jederzeit verfügbar, um deine installierten Plugins anzusehen. Du kannst den Decky-Tab jederzeit in den Core-Einstellungen wiederherstellen.",
         "Mehr Plugins, ein Store", "Entdecke Playhub-Plugins, Decky Store und unabhängige GitHub-Projekte in einem Katalog.",
         "Deine Tabs in deiner Reihenfolge", "Ordne Tabs neu an und blende ungenutzte aus. Du kannst sie jederzeit wieder einblenden.",
-        "Zeit, Gaming wie nie zuvor zu genießen", "Entdecke, probiere aus, passe Playhub an, spiele und hab Spaß.\nGenau das macht Playhub aus."],
-    pt: ["O controle ao seu alcance", "Dashboard, plugins e configurações: conheça o Playhub no acesso rápido.",
-        "Sua jornada começa aqui", "Abra o Playhub Dashboard para manter tudo sob controle e escolha neste painel se quer iniciar em Gaming Mode ou Desktop Mode.",
-        "Seus plugins, reunidos", "O menu do Decky agora faz parte do Playhub e está sempre disponível para ver seus plugins instalados. Você também pode restaurar a aba Decky a qualquer momento nas configurações do Playhub.",
+        "Zeit, Gaming wie nie zuvor zu genießen", "Entdecke, probiere aus, passe Core an, spiele und hab Spaß.\nGenau das macht Core aus."],
+    pt: ["O controle ao seu alcance", "Dashboard, plugins e configurações: conheça o Core no acesso rápido.",
+        "Sua jornada começa aqui", "Abra o Core Dashboard para manter tudo sob controle e escolha neste painel se quer iniciar em Gaming Mode ou Desktop Mode.",
+        "Seus plugins, reunidos", "O menu do Decky agora faz parte do Core e está sempre disponível para ver seus plugins instalados. Você também pode restaurar a aba Decky a qualquer momento nas configurações do Core.",
         "Mais plugins, uma só loja", "Descubra plugins do Playhub, Decky Store e projetos independentes do GitHub em um catálogo.",
         "Suas abas, na sua ordem", "Reorganize as abas e oculte as que não usa. Você pode exibi-las novamente quando quiser.",
-        "É hora de curtir os games como nunca antes", "Descubra, experimente, personalize, jogue e divirta-se.\nEsse é o espírito do Playhub."],
-    uk: ["Керування завжди поруч", "Dashboard, плагіни й налаштування: відкрийте Playhub у швидкому доступі.",
-        "Ваша подорож починається тут", "Відкрийте Playhub Dashboard, щоб тримати все під контролем, і виберіть на цій панелі, запускатися в Gaming Mode чи Desktop Mode.",
-        "Ваші плагіни разом", "Меню Decky тепер є частиною Playhub і завжди доступне для перегляду встановлених плагінів. Ви також можете будь-коли відновити вкладку Decky в налаштуваннях Playhub.",
+        "É hora de curtir os games como nunca antes", "Descubra, experimente, personalize, jogue e divirta-se.\nEsse é o espírito do Core."],
+    uk: ["Керування завжди поруч", "Dashboard, плагіни й налаштування: відкрийте Core у швидкому доступі.",
+        "Ваша подорож починається тут", "Відкрийте Core Dashboard, щоб тримати все під контролем, і виберіть на цій панелі, запускатися в Gaming Mode чи Desktop Mode.",
+        "Ваші плагіни разом", "Меню Decky тепер є частиною Core і завжди доступне для перегляду встановлених плагінів. Ви також можете будь-коли відновити вкладку Decky в налаштуваннях Core.",
         "Більше плагінів, один магазин", "Знаходьте плагіни Playhub, Decky Store та незалежні проєкти GitHub в одному каталозі.",
         "Вкладки у вашому порядку", "Змінюйте порядок вкладок і приховуйте непотрібні. Їх можна знову показати будь-коли.",
-        "Час насолоджуватися іграми як ніколи", "Відкривай, пробуй, налаштовуй, грай і розважайся.\nЦе і є дух Playhub."],
-    zh: ["控制，触手可及", "在快捷访问中探索 Playhub 的 Dashboard、插件和设置。",
-        "你的旅程从这里开始", "打开 Playhub Dashboard，让一切尽在掌握，并在此面板中选择以 Gaming Mode 还是 Desktop Mode 启动。",
-        "你的插件，汇聚一处", "Decky 菜单现已成为 Playhub 的一部分，你可以随时打开它，查看已安装的插件列表。你也可以随时在 Playhub 设置中恢复 Decky 标签页。",
+        "Час насолоджуватися іграми як ніколи", "Відкривай, пробуй, налаштовуй, грай і розважайся.\nЦе і є дух Core."],
+    zh: ["控制，触手可及", "在快捷访问中探索 Core 的 Dashboard、插件和设置。",
+        "你的旅程从这里开始", "打开 Core Dashboard，让一切尽在掌握，并在此面板中选择以 Gaming Mode 还是 Desktop Mode 启动。",
+        "你的插件，汇聚一处", "Decky 菜单现已成为 Core 的一部分，你可以随时打开它，查看已安装的插件列表。你也可以随时在 Core 设置中恢复 Decky 标签页。",
         "更多插件，一个商店", "在一个目录中探索 Playhub 插件、Decky Store 和 GitHub 独立项目。",
         "标签顺序，由你安排", "重新排列标签页，隐藏不用的标签页。随时都能重新显示。",
-        "是时候以前所未有的方式享受游戏了", "探索、尝试、自定义、畅玩并享受乐趣。\n这就是 Playhub 的精神。"],
-    ja: ["操作を、すぐ手元に", "Dashboard、プラグイン、設定。クイックアクセスで Playhub を見てみましょう。",
-        "あなたの旅はここから", "Playhub Dashboard を開いてすべてを管理し、このパネルで Gaming Mode と Desktop Mode のどちらで起動するかを選べます。",
-        "いつものプラグインを一か所に", "Decky メニューが Playhub の一部になり、インストール済みプラグインの一覧をいつでも確認できます。Playhub の設定から Decky タブをいつでも元に戻せます。",
+        "是时候以前所未有的方式享受游戏了", "探索、尝试、自定义、畅玩并享受乐趣。\n这就是 Core 的精神。"],
+    ja: ["操作を、すぐ手元に", "Dashboard、プラグイン、設定。クイックアクセスで Core を見てみましょう。",
+        "あなたの旅はここから", "Core Dashboard を開いてすべてを管理し、このパネルで Gaming Mode と Desktop Mode のどちらで起動するかを選べます。",
+        "いつものプラグインを一か所に", "Decky メニューが Core の一部になり、インストール済みプラグインの一覧をいつでも確認できます。Core の設定から Decky タブをいつでも元に戻せます。",
         "プラグイン探しは、このストアで", "Playhub のプラグイン、Decky Store、GitHub の独立プロジェクトを、ひとつのカタログで探せます。",
         "タブを、自分の順番に", "タブを並べ替え、使わないものは非表示に。いつでも表示に戻せます。",
-        "これまでにないゲーム体験を", "見つけて、試して、カスタマイズして、遊んで、楽しもう。\nこれが Playhub の精神です。"],
-    ko: ["필요한 조작을 가까이", "Dashboard, 플러그인, 설정까지. 빠른 액세스에서 Playhub를 살펴보세요.",
-        "여기서 시작하는 나의 여정", "Playhub Dashboard를 열어 모든 것을 관리하고, 이 패널에서 Gaming Mode와 Desktop Mode 중 무엇으로 시작할지 선택하세요.",
-        "내 플러그인을 한곳에", "이제 Decky 메뉴가 Playhub의 일부가 되어 언제든 설치된 플러그인 목록을 확인할 수 있습니다. Playhub 설정에서 Decky 탭을 언제든 복원할 수도 있습니다.",
+        "これまでにないゲーム体験を", "見つけて、試して、カスタマイズして、遊んで、楽しもう。\nこれが Core の精神です。"],
+    ko: ["필요한 조작을 가까이", "Dashboard, 플러그인, 설정까지. 빠른 액세스에서 Core를 살펴보세요.",
+        "여기서 시작하는 나의 여정", "Core Dashboard를 열어 모든 것을 관리하고, 이 패널에서 Gaming Mode와 Desktop Mode 중 무엇으로 시작할지 선택하세요.",
+        "내 플러그인을 한곳에", "이제 Decky 메뉴가 Core의 일부가 되어 언제든 설치된 플러그인 목록을 확인할 수 있습니다. Core 설정에서 Decky 탭을 언제든 복원할 수도 있습니다.",
         "더 많은 플러그인, 하나의 스토어", "Playhub 플러그인, Decky Store, GitHub 독립 프로젝트를 하나의 카탈로그에서 살펴보세요.",
         "탭 순서는 내 방식대로", "탭 순서를 바꾸고 쓰지 않는 탭은 숨기세요. 언제든 다시 표시할 수 있습니다.",
-        "이제 전에 없던 방식으로 게임을 즐길 시간입니다", "발견하고, 체험하고, 맞춤 설정하고, 플레이하며 즐기세요.\n이것이 Playhub의 정신입니다."],
-    hi: ["नियंत्रण, आपके पास", "Dashboard, प्लगइन और सेटिंग: त्वरित ऐक्सेस में Playhub को जानें।",
-        "आपकी यात्रा यहाँ से शुरू होती है", "सब कुछ नियंत्रण में रखने के लिए Playhub Dashboard खोलें, और इस पैनल से चुनें कि Gaming Mode में शुरू करना है या Desktop Mode में।",
-        "आपके प्लगइन, एक साथ", "Decky मेनू अब Playhub का हिस्सा है और आप अपने इंस्टॉल किए गए प्लगइन की सूची देखने के लिए इसे कभी भी खोल सकते हैं। Playhub की सेटिंग से Decky टैब को भी कभी भी वापस ला सकते हैं।",
+        "이제 전에 없던 방식으로 게임을 즐길 시간입니다", "발견하고, 체험하고, 맞춤 설정하고, 플레이하며 즐기세요.\n이것이 Core의 정신입니다."],
+    hi: ["नियंत्रण, आपके पास", "Dashboard, प्लगइन और सेटिंग: त्वरित ऐक्सेस में Core को जानें।",
+        "आपकी यात्रा यहाँ से शुरू होती है", "सब कुछ नियंत्रण में रखने के लिए Core Dashboard खोलें, और इस पैनल से चुनें कि Gaming Mode में शुरू करना है या Desktop Mode में।",
+        "आपके प्लगइन, एक साथ", "Decky मेनू अब Core का हिस्सा है और आप अपने इंस्टॉल किए गए प्लगइन की सूची देखने के लिए इसे कभी भी खोल सकते हैं। Core की सेटिंग से Decky टैब को भी कभी भी वापस ला सकते हैं।",
         "ज़्यादा प्लगइन, एक स्टोर", "Playhub प्लगइन, Decky Store और GitHub के स्वतंत्र प्रोजेक्ट एक ही कैटलॉग में खोजें।",
         "आपके टैब, आपके क्रम में", "टैब का क्रम बदलें और जिनका उपयोग नहीं करते उन्हें छिपाएँ। उन्हें कभी भी वापस दिखा सकते हैं।",
-        "अब गेमिंग का ऐसा आनंद लें जैसा पहले कभी नहीं", "खोजें, आज़माएँ, कस्टमाइज़ करें, खेलें और आनंद लें।\nयही Playhub की भावना है।"],
-    ru: ["Управление под рукой", "Dashboard, плагины и настройки: познакомьтесь с Playhub в быстром доступе.",
-        "Ваше путешествие начинается здесь", "Откройте Playhub Dashboard, чтобы держать всё под контролем, и выберите на этой панели, запускаться в Gaming Mode или Desktop Mode.",
-        "Ваши плагины вместе", "Меню Decky теперь является частью Playhub и всегда доступно для просмотра установленных плагинов. Вы также можете в любой момент восстановить вкладку Decky в настройках Playhub.",
+        "अब गेमिंग का ऐसा आनंद लें जैसा पहले कभी नहीं", "खोजें, आज़माएँ, कस्टमाइज़ करें, खेलें और आनंद लें।\nयही Core की भावना है।"],
+    ru: ["Управление под рукой", "Dashboard, плагины и настройки: познакомьтесь с Core в быстром доступе.",
+        "Ваше путешествие начинается здесь", "Откройте Core Dashboard, чтобы держать всё под контролем, и выберите на этой панели, запускаться в Gaming Mode или Desktop Mode.",
+        "Ваши плагины вместе", "Меню Decky теперь является частью Core и всегда доступно для просмотра установленных плагинов. Вы также можете в любой момент восстановить вкладку Decky в настройках Core.",
         "Больше плагинов, один магазин", "Находите плагины Playhub, Decky Store и независимые проекты GitHub в одном каталоге.",
         "Вкладки в вашем порядке", "Меняйте порядок вкладок и скрывайте ненужные. Их можно снова показать в любой момент.",
-        "Пора наслаждаться играми как никогда раньше", "Открывай, пробуй, настраивай, играй и получай удовольствие.\nВ этом и есть дух Playhub."],
+        "Пора наслаждаться играми как никогда раньше", "Открывай, пробуй, настраивай, играй и получай удовольствие.\nВ этом и есть дух Core."],
 };
 const replayLabels = {
     en: "Replay introduction", it: "Ripeti introduzione", es: "Repetir presentación",
@@ -54703,18 +54841,18 @@ function OnboardingIllustration({ view, scale = 1, height }) {
 var playhubWordmark = 'http://127.0.0.1:1337/plugins/Playhub/assets/playhub-wordmark-large-b86af753.png';
 
 const text = {
-    en: ["Your screen, adjusted", "Adjust brightness, resolution, refresh rate and HDR where supported.", "Your sound, adjusted", "Choose speakers and microphone, and adjust their volume.", "More from every frame", "Find Lossless Scaling and AMD graphics controls when available on your system.", "Controls that fit", "Select your controller and open its supported settings and Steam Input controls.", "Make Playhub yours", "Arrange or hide tabs, manage Playhub and Decky in Quick Access, and find device information and diagnostics."],
-    it: ["Il video, come lo vuoi", "Regola luminosità, risoluzione, frequenza di aggiornamento e HDR dove supportati.", "Il suono, come lo vuoi", "Scegli uscita audio e microfono e regola i rispettivi volumi.", "Più controllo su ogni frame", "Trova i controlli di Lossless Scaling e della grafica AMD disponibili sul tuo sistema.", "I comandi, come li vuoi", "Seleziona il controller e apri le impostazioni supportate e i controlli di Steam Input.", "Playhub, come lo vuoi tu", "Riordina o nascondi le tab, gestisci Playhub e Decky nell'accesso rapido e consulta informazioni sul dispositivo e diagnostica."],
-    es: ["La imagen a tu gusto", "Ajusta brillo, resolución, frecuencia de actualización y HDR cuando sea compatible.", "El sonido a tu gusto", "Elige la salida de audio y el micrófono y ajusta sus volúmenes.", "Más control en cada fotograma", "Encuentra los controles de Lossless Scaling y gráficos AMD disponibles en tu sistema.", "Controles a tu medida", "Selecciona tu mando y abre sus ajustes compatibles y los controles de Steam Input.", "Haz Playhub tuyo", "Ordena u oculta pestañas, gestiona Playhub y Decky en el acceso rápido y consulta información del dispositivo y diagnósticos."],
-    fr: ["L’image à votre goût", "Réglez luminosité, résolution, fréquence de rafraîchissement et HDR si pris en charge.", "Le son à votre goût", "Choisissez la sortie audio et le microphone et réglez leurs volumes.", "Plus de contrôle sur chaque image", "Retrouvez les commandes Lossless Scaling et graphiques AMD disponibles sur votre système.", "Des commandes à votre mesure", "Sélectionnez votre manette et ouvrez ses réglages compatibles et les commandes Steam Input.", "Un Playhub à votre image", "Organisez ou masquez les onglets, gérez Playhub et Decky dans l’accès rapide et consultez les informations de l’appareil et les diagnostics."],
-    de: ["Dein Bildschirm, angepasst", "Passe Helligkeit, Auflösung, Bildwiederholrate und unterstütztes HDR an.", "Dein Sound, angepasst", "Wähle Audioausgabe und Mikrofon und passe ihre Lautstärke an.", "Mehr Kontrolle über jedes Bild", "Finde die auf deinem System verfügbaren Einstellungen für Lossless Scaling und AMD-Grafik.", "Steuerung nach deinem Geschmack", "Wähle deinen Controller und öffne unterstützte Einstellungen sowie Steam Input.", "Mach Playhub zu deinem", "Ordne Tabs an oder blende sie aus, verwalte Playhub und Decky im Schnellzugriff und finde Geräteinformationen und Diagnosen."],
-    pt: ["A imagem do seu jeito", "Ajuste brilho, resolução, taxa de atualização e HDR quando compatível.", "O som do seu jeito", "Escolha a saída de áudio e o microfone e ajuste seus volumes.", "Mais controle em cada quadro", "Encontre os controles de Lossless Scaling e gráficos AMD disponíveis no seu sistema.", "Controles do seu jeito", "Selecione seu controle e abra as configurações compatíveis e os controles do Steam Input.", "Deixe o Playhub com a sua cara", "Organize ou oculte abas, gerencie Playhub e Decky no acesso rápido e consulte informações do dispositivo e diagnósticos."],
-    uk: ["Зображення на ваш смак", "Налаштовуйте яскравість, роздільність, частоту оновлення та HDR за наявності підтримки.", "Звук на ваш смак", "Вибирайте аудіовихід і мікрофон та налаштовуйте їхню гучність.", "Більше контролю над кадром", "Знаходьте доступні у вашій системі налаштування Lossless Scaling і графіки AMD.", "Зручне керування", "Виберіть контролер і відкрийте його підтримувані налаштування та Steam Input.", "Налаштуйте Playhub під себе", "Упорядковуйте або приховуйте вкладки, керуйте Playhub і Decky у швидкому доступі та переглядайте відомості про пристрій і діагностику."],
-    zh: ["按喜好调整画面", "调整亮度、分辨率、刷新率及受支持的 HDR。", "按喜好调整声音", "选择音频输出和麦克风，并调整各自音量。", "掌控每一帧", "查找系统中可用的 Lossless Scaling 和 AMD 图形控制选项。", "适合你的操作", "选择控制器，打开其支持的设置和 Steam Input 控制选项。", "打造你的 Playhub", "排列或隐藏标签页，管理快捷访问中的 Playhub 和 Decky，并查看设备信息与诊断。"],
-    ja: ["画面を自分好みに", "明るさ、解像度、リフレッシュレート、対応するHDRを調整できます。", "音を自分好みに", "音声出力とマイクを選び、それぞれの音量を調整できます。", "一枚一枚の映像を調整", "システムで利用できる Lossless Scaling と AMD グラフィックスの設定を確認できます。", "自分に合った操作へ", "コントローラーを選び、対応する設定や Steam Input を開けます。", "Playhub を自分らしく", "タブの並べ替えや非表示、クイックアクセスの Playhub・Decky の管理、デバイス情報や診断の確認ができます。"],
-    ko: ["나에게 맞는 화면", "밝기, 해상도, 주사율 및 지원되는 HDR을 조정하세요.", "나에게 맞는 소리", "오디오 출력과 마이크를 선택하고 각각의 볼륨을 조정하세요.", "프레임마다 더 세밀하게", "시스템에서 사용할 수 있는 Lossless Scaling과 AMD 그래픽 설정을 찾아보세요.", "나에게 맞는 조작", "컨트롤러를 선택하고 지원되는 설정과 Steam Input을 여세요.", "나만의 Playhub로", "탭을 정렬하거나 숨기고, 빠른 액세스의 Playhub와 Decky를 관리하며, 기기 정보와 진단을 확인하세요."],
-    hi: ["अपनी पसंद का वीडियो", "समर्थित चमक, रिज़ॉल्यूशन, रीफ़्रेश दर और HDR समायोजित करें।", "अपनी पसंद की आवाज़", "ऑडियो आउटपुट और माइक्रोफ़ोन चुनें और उनका वॉल्यूम समायोजित करें।", "हर फ़्रेम पर बेहतर नियंत्रण", "अपने सिस्टम पर उपलब्ध Lossless Scaling और AMD ग्राफ़िक्स नियंत्रण खोजें।", "आपके हिसाब से नियंत्रण", "अपना कंट्रोलर चुनें और उसकी समर्थित सेटिंग तथा Steam Input खोलें।", "Playhub को अपना बनाएँ", "टैब व्यवस्थित करें या छिपाएँ, त्वरित ऐक्सेस में Playhub और Decky प्रबंधित करें और उपकरण की जानकारी व निदान देखें।"],
-    ru: ["Изображение по вашему вкусу", "Настраивайте яркость, разрешение, частоту обновления и HDR, если поддерживается.", "Звук по вашему вкусу", "Выбирайте аудиовыход и микрофон и настраивайте их громкость.", "Больше контроля над кадром", "Находите доступные в вашей системе настройки Lossless Scaling и графики AMD.", "Удобное управление", "Выберите контроллер и откройте его поддерживаемые настройки и Steam Input.", "Настройте Playhub под себя", "Упорядочивайте или скрывайте вкладки, управляйте Playhub и Decky в быстром доступе и просматривайте сведения об устройстве и диагностику."],
+    en: ["Your screen, adjusted", "Adjust brightness, resolution, refresh rate and HDR where supported.", "Your sound, adjusted", "Choose speakers and microphone, and adjust their volume.", "More from every frame", "Find Lossless Scaling and AMD graphics controls when available on your system.", "Controls that fit", "Select your controller and open its supported settings and Steam Input controls.", "Make Core yours", "Arrange or hide tabs, manage Core and Decky in Quick Access, and find device information and diagnostics."],
+    it: ["Il video, come lo vuoi", "Regola luminosità, risoluzione, frequenza di aggiornamento e HDR dove supportati.", "Il suono, come lo vuoi", "Scegli uscita audio e microfono e regola i rispettivi volumi.", "Più controllo su ogni frame", "Trova i controlli di Lossless Scaling e della grafica AMD disponibili sul tuo sistema.", "I comandi, come li vuoi", "Seleziona il controller e apri le impostazioni supportate e i controlli di Steam Input.", "Core, come lo vuoi tu", "Riordina o nascondi le tab, gestisci Core e Decky nell'accesso rapido e consulta informazioni sul dispositivo e diagnostica."],
+    es: ["La imagen a tu gusto", "Ajusta brillo, resolución, frecuencia de actualización y HDR cuando sea compatible.", "El sonido a tu gusto", "Elige la salida de audio y el micrófono y ajusta sus volúmenes.", "Más control en cada fotograma", "Encuentra los controles de Lossless Scaling y gráficos AMD disponibles en tu sistema.", "Controles a tu medida", "Selecciona tu mando y abre sus ajustes compatibles y los controles de Steam Input.", "Haz Core tuyo", "Ordena u oculta pestañas, gestiona Core y Decky en el acceso rápido y consulta información del dispositivo y diagnósticos."],
+    fr: ["L’image à votre goût", "Réglez luminosité, résolution, fréquence de rafraîchissement et HDR si pris en charge.", "Le son à votre goût", "Choisissez la sortie audio et le microphone et réglez leurs volumes.", "Plus de contrôle sur chaque image", "Retrouvez les commandes Lossless Scaling et graphiques AMD disponibles sur votre système.", "Des commandes à votre mesure", "Sélectionnez votre manette et ouvrez ses réglages compatibles et les commandes Steam Input.", "Un Core à votre image", "Organisez ou masquez les onglets, gérez Core et Decky dans l’accès rapide et consultez les informations de l’appareil et les diagnostics."],
+    de: ["Dein Bildschirm, angepasst", "Passe Helligkeit, Auflösung, Bildwiederholrate und unterstütztes HDR an.", "Dein Sound, angepasst", "Wähle Audioausgabe und Mikrofon und passe ihre Lautstärke an.", "Mehr Kontrolle über jedes Bild", "Finde die auf deinem System verfügbaren Einstellungen für Lossless Scaling und AMD-Grafik.", "Steuerung nach deinem Geschmack", "Wähle deinen Controller und öffne unterstützte Einstellungen sowie Steam Input.", "Mach Core zu deinem", "Ordne Tabs an oder blende sie aus, verwalte Core und Decky im Schnellzugriff und finde Geräteinformationen und Diagnosen."],
+    pt: ["A imagem do seu jeito", "Ajuste brilho, resolução, taxa de atualização e HDR quando compatível.", "O som do seu jeito", "Escolha a saída de áudio e o microfone e ajuste seus volumes.", "Mais controle em cada quadro", "Encontre os controles de Lossless Scaling e gráficos AMD disponíveis no seu sistema.", "Controles do seu jeito", "Selecione seu controle e abra as configurações compatíveis e os controles do Steam Input.", "Deixe o Core com a sua cara", "Organize ou oculte abas, gerencie Core e Decky no acesso rápido e consulte informações do dispositivo e diagnósticos."],
+    uk: ["Зображення на ваш смак", "Налаштовуйте яскравість, роздільність, частоту оновлення та HDR за наявності підтримки.", "Звук на ваш смак", "Вибирайте аудіовихід і мікрофон та налаштовуйте їхню гучність.", "Більше контролю над кадром", "Знаходьте доступні у вашій системі налаштування Lossless Scaling і графіки AMD.", "Зручне керування", "Виберіть контролер і відкрийте його підтримувані налаштування та Steam Input.", "Налаштуйте Core під себе", "Упорядковуйте або приховуйте вкладки, керуйте Core і Decky у швидкому доступі та переглядайте відомості про пристрій і діагностику."],
+    zh: ["按喜好调整画面", "调整亮度、分辨率、刷新率及受支持的 HDR。", "按喜好调整声音", "选择音频输出和麦克风，并调整各自音量。", "掌控每一帧", "查找系统中可用的 Lossless Scaling 和 AMD 图形控制选项。", "适合你的操作", "选择控制器，打开其支持的设置和 Steam Input 控制选项。", "打造你的 Core", "排列或隐藏标签页，管理快捷访问中的 Core 和 Decky，并查看设备信息与诊断。"],
+    ja: ["画面を自分好みに", "明るさ、解像度、リフレッシュレート、対応するHDRを調整できます。", "音を自分好みに", "音声出力とマイクを選び、それぞれの音量を調整できます。", "一枚一枚の映像を調整", "システムで利用できる Lossless Scaling と AMD グラフィックスの設定を確認できます。", "自分に合った操作へ", "コントローラーを選び、対応する設定や Steam Input を開けます。", "Core を自分らしく", "タブの並べ替えや非表示、クイックアクセスの Core・Decky の管理、デバイス情報や診断の確認ができます。"],
+    ko: ["나에게 맞는 화면", "밝기, 해상도, 주사율 및 지원되는 HDR을 조정하세요.", "나에게 맞는 소리", "오디오 출력과 마이크를 선택하고 각각의 볼륨을 조정하세요.", "프레임마다 더 세밀하게", "시스템에서 사용할 수 있는 Lossless Scaling과 AMD 그래픽 설정을 찾아보세요.", "나에게 맞는 조작", "컨트롤러를 선택하고 지원되는 설정과 Steam Input을 여세요.", "나만의 Core로", "탭을 정렬하거나 숨기고, 빠른 액세스의 Core와 Decky를 관리하며, 기기 정보와 진단을 확인하세요."],
+    hi: ["अपनी पसंद का वीडियो", "समर्थित चमक, रिज़ॉल्यूशन, रीफ़्रेश दर और HDR समायोजित करें।", "अपनी पसंद की आवाज़", "ऑडियो आउटपुट और माइक्रोफ़ोन चुनें और उनका वॉल्यूम समायोजित करें।", "हर फ़्रेम पर बेहतर नियंत्रण", "अपने सिस्टम पर उपलब्ध Lossless Scaling और AMD ग्राफ़िक्स नियंत्रण खोजें।", "आपके हिसाब से नियंत्रण", "अपना कंट्रोलर चुनें और उसकी समर्थित सेटिंग तथा Steam Input खोलें।", "Core को अपना बनाएँ", "टैब व्यवस्थित करें या छिपाएँ, त्वरित ऐक्सेस में Core और Decky प्रबंधित करें और उपकरण की जानकारी व निदान देखें।"],
+    ru: ["Изображение по вашему вкусу", "Настраивайте яркость, разрешение, частоту обновления и HDR, если поддерживается.", "Звук по вашему вкусу", "Выбирайте аудиовыход и микрофон и настраивайте их громкость.", "Больше контроля над кадром", "Находите доступные в вашей системе настройки Lossless Scaling и графики AMD.", "Удобное управление", "Выберите контроллер и откройте его поддерживаемые настройки и Steam Input.", "Настройте Core под себя", "Упорядочивайте или скрывайте вкладки, управляйте Core и Decky в быстром доступе и просматривайте сведения об устройстве и диагностику."],
 };
 function getOnboardingTabCopy(locale, tab) {
     const index = ["audio", "performance", "graphics", "controller", "customize"].indexOf(tab) * 2;
@@ -56755,7 +56893,7 @@ function update(next, locale) {
     listeners.forEach(listener => listener());
     const snapshot = prefs;
     write = write.catch(() => { }).then(async () => { await call("save_panel_preferences", snapshot); }).catch(() => {
-        toaster.toast({ title: "Playhub", body: controlLocale(locale).saveError });
+        toaster.toast({ title: "Core", body: controlLocale(locale).saveError });
     });
 }
 const css = `
@@ -56934,7 +57072,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
                                             }, children: editorTabs.map(id => {
                                                 const Icon = icons[id];
                                                 return SP_JSX.jsx(DialogButton$1, { className: "ph-control-icon", role: "tab", "aria-label": `${copy[id]}: ${state.hidden.includes(id) ? editorCopy.hidden : editorCopy.visible}`, title: copy[id], onOKActionDescription: editorAction(id), onSecondaryActionDescription: editor.draftOrder ? editorCopy.confirm : editorCopy.move, onCancelActionDescription: editorCopy.cancel, actionDescriptionMap: { [GamepadButton.OK]: editorAction(id), [GamepadButton.SECONDARY]: editor.draftOrder ? editorCopy.confirm : editorCopy.move, [GamepadButton.CANCEL]: editorCopy.cancel }, "aria-selected": editing === id, "data-hidden": state.hidden.includes(id), "data-moving": editing === id && !!editor.draftOrder, style: { order: (editor.draftOrder ?? state.order).indexOf(id) }, onFocus: () => edit({ type: "select", id }), onGamepadFocus: () => edit({ type: "select", id }), onGamepadDirection: editor.draftOrder ? editorDirection : undefined, onSecondaryButton: (event) => { event.preventDefault?.(); event.stopPropagation?.(); edit({ type: "select", id }); edit({ type: "secondary" }); }, onCancelButton: cancelEditor, onClick: () => { edit({ type: "select", id }); edit({ type: "confirm" }); }, children: SP_JSX.jsx(Icon, {}) }, id);
-                                            }) }), SP_JSX.jsx("div", { className: "ph-control-setting-row", "aria-live": "polite", children: SP_JSX.jsxs("div", { className: "ph-selected-tab", children: [SP_JSX.jsx("span", { children: copy[editing] }), SP_JSX.jsxs("span", { className: "ph-selected-tab-status", children: [state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible, !canToggleTab(state, editing, deckyAvailable) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("br", {}), editorCopy.lastTab] })] })] }) }), SP_JSX.jsxs(DialogButton$1, { className: "ph-settings-action", onOKActionDescription: editorCopy.reset, onClick: () => edit({ type: "reset" }), children: [SP_JSX.jsx(TbRestore, {}), SP_JSX.jsx("span", { children: editorCopy.reset })] }), SP_JSX.jsx("p", { className: "ph-tab-reset-hint", children: editorCopy.resetHint }), SP_JSX.jsxs("div", { className: "ph-editor-following", children: [SP_JSX.jsxs("div", { style: { paddingTop: 16 }, children: [SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) }), !showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: visible.includes("audio") ? openDeviceVideo : undefined, openPerformance: visible.includes("graphics") ? openDevicePerformance : undefined, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] })] }), SP_JSX.jsx(ControlSection, { id: "news", title: "News", locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("news"), onToggle: toggleSection, children: SP_JSX.jsx(HomeNewsSettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "daily-history", title: historyTitle(locale), locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("daily-history"), onToggle: toggleSection, children: SP_JSX.jsx(HomeHistorySettings, { locale: locale }) }), SP_JSX.jsx(QuickSettingsContent, { page: "tools", locale: locale, expanded: expanded, onToggle: toggleSection }), SP_JSX.jsxs(DialogButton$1, { className: "ph-settings-action", onClick: () => { setCustomizing(false); replayPlayhubOnboarding(); }, children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] })] })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$1, { className: "ph-control-nav", "flow-children": "row", children: SP_JSX.jsxs(Focusable$1, { className: "ph-control-tabs", "flow-children": "row", role: "tablist", "aria-label": "Playhub", children: [visible.map(id => {
+                                            }) }), SP_JSX.jsx("div", { className: "ph-control-setting-row", "aria-live": "polite", children: SP_JSX.jsxs("div", { className: "ph-selected-tab", children: [SP_JSX.jsx("span", { children: copy[editing] }), SP_JSX.jsxs("span", { className: "ph-selected-tab-status", children: [state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible, !canToggleTab(state, editing, deckyAvailable) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("br", {}), editorCopy.lastTab] })] })] }) }), SP_JSX.jsxs(DialogButton$1, { className: "ph-settings-action", onOKActionDescription: editorCopy.reset, onClick: () => edit({ type: "reset" }), children: [SP_JSX.jsx(TbRestore, {}), SP_JSX.jsx("span", { children: editorCopy.reset })] }), SP_JSX.jsx("p", { className: "ph-tab-reset-hint", children: editorCopy.resetHint }), SP_JSX.jsxs("div", { className: "ph-editor-following", children: [SP_JSX.jsxs("div", { style: { paddingTop: 16 }, children: [SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) }), !showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: visible.includes("audio") ? openDeviceVideo : undefined, openPerformance: visible.includes("graphics") ? openDevicePerformance : undefined, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] })] }), SP_JSX.jsx(ControlSection, { id: "news", title: "News", locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("news"), onToggle: toggleSection, children: SP_JSX.jsx(HomeNewsSettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "daily-history", title: historyTitle(locale), locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("daily-history"), onToggle: toggleSection, children: SP_JSX.jsx(HomeHistorySettings, { locale: locale }) }), SP_JSX.jsx(QuickSettingsContent, { page: "tools", locale: locale, expanded: expanded, onToggle: toggleSection }), SP_JSX.jsxs(DialogButton$1, { className: "ph-settings-action", onClick: () => { setCustomizing(false); replayPlayhubOnboarding(); }, children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] })] })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$1, { className: "ph-control-nav", "flow-children": "row", children: SP_JSX.jsxs(Focusable$1, { className: "ph-control-tabs", "flow-children": "row", role: "tablist", "aria-label": "Core", children: [visible.map(id => {
                                             const Icon = icons[id];
                                             return SP_JSX.jsx(DialogButton$1, { className: "ph-control-icon", role: "tab", "aria-selected": active === id, "aria-label": copy[id], onOKActionDescription: copy[id], disabled: !ready, "data-playhub-onboarding": origin === "qam" ? id : undefined, onClick: () => choose(id), children: SP_JSX.jsx(Icon, {}) }, id);
                                         }), SP_JSX.jsx(DialogButton$1, { className: "ph-control-icon", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, "aria-label": copy.settings, onOKActionDescription: copy.settings, disabled: !ready, onClick: () => setCustomizing(true), children: SP_JSX.jsx(TbSettings, {}) })] }) }), active !== "decky" && (active !== "home" || homeTitle) && SP_JSX.jsx("h2", { className: "ph-control-heading", children: active === "home" ? homeTitle : copy[active] }), !hostActive && SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs("div", { "data-playhub-onboarding-content": origin === "qam" ? active : undefined, children: [active === "home" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "home" : undefined, children: session }) : active === "store" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "store" : undefined, children: store }) : active === "controller" ? SP_JSX.jsx(SP_JSX.Fragment, { children: controller }) :
@@ -60401,18 +60539,18 @@ function installPlayhubUpdateNotice(deps) {
 }
 function updateNoticeBody(locale, version) {
     const copy = {
-        en: "Playhub {version} is available. Open Playhub on your PC to update.",
-        it: "È disponibile Playhub {version}. Apri Playhub sul PC per aggiornare.",
-        es: "Playhub {version} está disponible. Abre Playhub en tu PC para actualizar.",
-        fr: "Playhub {version} est disponible. Ouvrez Playhub sur votre PC pour le mettre à jour.",
-        de: "Playhub {version} ist verfügbar. Öffne Playhub auf deinem PC, um es zu aktualisieren.",
-        pt: "O Playhub {version} está disponível. Abra o Playhub no PC para atualizar.",
-        uk: "Доступна версія Playhub {version}. Відкрийте Playhub на ПК, щоб оновити.",
-        zh: "Playhub {version} 已推出。请在电脑上打开 Playhub 进行更新。",
-        ja: "Playhub {version} が利用できます。PC で Playhub を開いて更新してください。",
-        ko: "Playhub {version}을 사용할 수 있습니다. PC에서 Playhub를 열어 업데이트하세요.",
-        hi: "Playhub {version} उपलब्ध है। अपडेट करने के लिए अपने PC पर Playhub खोलें।",
-        ru: "Доступна версия Playhub {version}. Откройте Playhub на ПК, чтобы обновить.",
+        en: "Core {version} is available. Open Core on your PC to update.",
+        it: "È disponibile Core {version}. Apri Core sul PC per aggiornare.",
+        es: "Core {version} está disponible. Abre Core en tu PC para actualizar.",
+        fr: "Core {version} est disponible. Ouvrez Core sur votre PC pour le mettre à jour.",
+        de: "Core {version} ist verfügbar. Öffne Core auf deinem PC, um es zu aktualisieren.",
+        pt: "O Core {version} está disponível. Abra o Core no PC para atualizar.",
+        uk: "Доступна версія Core {version}. Відкрийте Core на ПК, щоб оновити.",
+        zh: "Core {version} 已推出。请在电脑上打开 Core 进行更新。",
+        ja: "Core {version} が利用できます。PC で Core を開いて更新してください。",
+        ko: "Core {version}을 사용할 수 있습니다. PC에서 Core를 열어 업데이트하세요.",
+        hi: "Core {version} उपलब्ध है। अपडेट करने के लिए अपने PC पर Core खोलें।",
+        ru: "Доступна версия Core {version}. Откройте Core на ПК, чтобы обновить.",
     };
     return (copy[locale] ?? copy.en).replace("{version}", version);
 }
@@ -60422,7 +60560,7 @@ let hapticSettingsWrite = Promise.resolve();
 function saveHapticSettings(changes) {
     hapticSettingsWrite = hapticSettingsWrite.catch(() => { }).then(async () => { await writeSettings(changes); });
 }
-const playhubTitle = SP_JSX.jsx("img", { src: playhubWordmark$1, alt: "Playhub", style: { display: "block", width: 144, maxWidth: "100%", height: 36, objectFit: "contain", objectPosition: "left center" } });
+const playhubTitle = SP_JSX.jsx("img", { src: playhubWordmark$1, alt: "Core", style: { display: "block", width: 144, maxWidth: "100%", height: 36, objectFit: "contain", objectPosition: "left center" } });
 function ModeButtonLabel({ mode }) {
     return SP_JSX.jsxs("span", { className: "ph-mode-action-label", children: [SP_JSX.jsx("span", { children: mode === "gaming" ? "Gaming" : "Desktop" }), SP_JSX.jsx("span", { children: "Mode" })] });
 }
@@ -60438,7 +60576,7 @@ const strings = {
         gamingMode: "Gaming Mode",
         notConnected: "Agent not connected",
         agentReturned: "Agent returned",
-        dashboard: "Playhub Dashboard",
+        dashboard: "Core Dashboard",
         openDashboard: "Open Dashboard",
         dashboardShortcut: "Also open it with Ctrl + Alt + P",
         dashboardSteamInput: "In Steam Input, assign this shortcut to Guide + any button for instant controller access.",
@@ -60458,7 +60596,7 @@ const strings = {
         gamingMode: "Modalità Gaming",
         notConnected: "Agent non collegato",
         agentReturned: "Agent ha risposto",
-        dashboard: "Playhub Dashboard",
+        dashboard: "Core Dashboard",
         openDashboard: "Apri Dashboard",
         dashboardShortcut: "Aprila anche con Ctrl + Alt + P",
         dashboardSteamInput: "In Steam Input, assegna questa scorciatoia a Guida + un pulsante per aprirla subito dal controller.",
@@ -60478,7 +60616,7 @@ const strings = {
         gamingMode: "Modo Gaming",
         notConnected: "Agente no conectado",
         agentReturned: "El agente devolvió",
-        dashboard: "Playhub Dashboard",
+        dashboard: "Core Dashboard",
         openDashboard: "Abrir Dashboard",
         dashboardShortcut: "Ábrelo también con Ctrl + Alt + P",
         dashboardSteamInput: "En Steam Input, asigna este atajo a Guía + un botón para abrirlo al instante con el mando.",
@@ -60496,7 +60634,7 @@ const strings = {
         gamingMode: "Mode Gaming",
         notConnected: "Agent non connecté",
         agentReturned: "Agent a renvoyé",
-        dashboard: "Playhub Dashboard",
+        dashboard: "Core Dashboard",
         openDashboard: "Ouvrir le Dashboard",
         dashboardShortcut: "Ouvrez-le aussi avec Ctrl + Alt + P",
         dashboardSteamInput: "Dans Steam Input, associez ce raccourci à Guide + un bouton pour l'ouvrir instantanément avec la manette.",
@@ -60514,7 +60652,7 @@ const strings = {
         gamingMode: "Gaming-Modus",
         notConnected: "Agent nicht verbunden",
         agentReturned: "Agent meldete",
-        dashboard: "Playhub Dashboard",
+        dashboard: "Core Dashboard",
         openDashboard: "Dashboard öffnen",
         dashboardShortcut: "Auch mit Ctrl + Alt + P öffnen",
         dashboardSteamInput: "Weise diese Tastenkombination in Steam Input Guide + einer Taste zu, um das Dashboard direkt per Controller zu öffnen.",
@@ -60532,7 +60670,7 @@ const strings = {
         gamingMode: "Modo Gaming",
         notConnected: "Agente não ligado",
         agentReturned: "Agente devolveu",
-        dashboard: "Playhub Dashboard",
+        dashboard: "Core Dashboard",
         openDashboard: "Abrir Dashboard",
         dashboardShortcut: "Abra também com Ctrl + Alt + P",
         dashboardSteamInput: "No Steam Input, atribua este atalho a Guia + um botão para abrir imediatamente pelo comando.",
@@ -60545,7 +60683,7 @@ const strings = {
         mode: "Режим запуску", switchGaming: "Перейти в ігровий режим", switchDesktop: "Перейти в режим робочого столу",
         defaultStartup: "Типовий запуск", desktopMode: "Режим робочого столу", gamingMode: "Ігровий режим",
         notConnected: "Агент не підключено", agentReturned: "Агент повернув",
-        dashboard: "Панель Playhub", openDashboard: "Відкрити панель",
+        dashboard: "Панель Core", openDashboard: "Відкрити панель",
         dashboardShortcut: "Також відкривайте за допомогою Ctrl + Alt + P",
         dashboardSteamInput: "У Steam Input призначте це сполучення на Guide + будь-яку кнопку для миттєвого доступу з контролера.",
         haptics: "Відгук контролера", hapticsDescription: "Додає тактильний відгук під час навігації Steam.", hapticsIntensity: "Інтенсивність",
@@ -60557,7 +60695,7 @@ const strings = {
         mode: "启动模式", switchGaming: "切换到游戏模式", switchDesktop: "切换到桌面模式",
         defaultStartup: "默认启动模式", desktopMode: "桌面模式", gamingMode: "游戏模式",
         notConnected: "代理未连接", agentReturned: "代理返回",
-        dashboard: "Playhub 控制面板", openDashboard: "打开控制面板",
+        dashboard: "Core 控制面板", openDashboard: "打开控制面板",
         dashboardShortcut: "也可按 Ctrl + Alt + P 打开",
         dashboardSteamInput: "在 Steam Input 中，将此快捷键绑定到 Guide + 任意按钮，即可通过控制器快速打开。",
         haptics: "手柄反馈", hapticsDescription: "在 Steam 中导航时提供触觉反馈。", hapticsIntensity: "反馈强度",
@@ -60569,7 +60707,7 @@ const strings = {
         mode: "起動モード", switchGaming: "ゲーミングモードに切り替え", switchDesktop: "デスクトップモードに切り替え",
         defaultStartup: "既定の起動", desktopMode: "デスクトップモード", gamingMode: "ゲーミングモード",
         notConnected: "エージェントに接続されていません", agentReturned: "エージェントの応答",
-        dashboard: "Playhub ダッシュボード", openDashboard: "ダッシュボードを開く",
+        dashboard: "Core ダッシュボード", openDashboard: "ダッシュボードを開く",
         dashboardShortcut: "Ctrl + Alt + P でも開けます",
         dashboardSteamInput: "Steam Input でこのショートカットを Guide + 任意のボタンに割り当てると、コントローラーからすぐに開けます。",
         haptics: "コントローラーのフィードバック", hapticsDescription: "Steam の操作に触覚フィードバックを加えます。", hapticsIntensity: "フィードバックの強さ",
@@ -60581,7 +60719,7 @@ const strings = {
         mode: "시작 모드", switchGaming: "게이밍 모드로 전환", switchDesktop: "데스크톱 모드로 전환",
         defaultStartup: "기본 시작", desktopMode: "데스크톱 모드", gamingMode: "게이밍 모드",
         notConnected: "에이전트가 연결되지 않음", agentReturned: "에이전트 응답",
-        dashboard: "Playhub 대시보드", openDashboard: "대시보드 열기",
+        dashboard: "Core 대시보드", openDashboard: "대시보드 열기",
         dashboardShortcut: "Ctrl + Alt + P로도 열 수 있습니다",
         dashboardSteamInput: "Steam Input에서 이 단축키를 Guide + 원하는 버튼에 지정하면 컨트롤러로 즉시 열 수 있습니다.",
         haptics: "컨트롤러 피드백", hapticsDescription: "Steam을 탐색할 때 촉각 피드백을 추가합니다.", hapticsIntensity: "피드백 강도",
@@ -60593,7 +60731,7 @@ const strings = {
         mode: "स्टार्टअप मोड", switchGaming: "गेमिंग मोड पर जाएं", switchDesktop: "डेस्कटॉप मोड पर जाएं",
         defaultStartup: "डिफ़ॉल्ट स्टार्टअप", desktopMode: "डेस्कटॉप मोड", gamingMode: "गेमिंग मोड",
         notConnected: "एजेंट कनेक्ट नहीं है", agentReturned: "एजेंट ने लौटाया",
-        dashboard: "Playhub डैशबोर्ड", openDashboard: "डैशबोर्ड खोलें",
+        dashboard: "Core डैशबोर्ड", openDashboard: "डैशबोर्ड खोलें",
         dashboardShortcut: "Ctrl + Alt + P से भी खोलें",
         dashboardSteamInput: "कंट्रोलर से तुरंत खोलने के लिए Steam Input में इस शॉर्टकट को Guide + किसी बटन से जोड़ें।",
         haptics: "कंट्रोलर फ़ीडबैक", hapticsDescription: "Steam में नेविगेट करते समय स्पर्श प्रतिक्रिया जोड़ता है।", hapticsIntensity: "फ़ीडबैक की तीव्रता",
@@ -60605,7 +60743,7 @@ const strings = {
         mode: "Режим запуска", switchGaming: "Перейти в игровой режим", switchDesktop: "Перейти в режим рабочего стола",
         defaultStartup: "Запуск по умолчанию", desktopMode: "Режим рабочего стола", gamingMode: "Игровой режим",
         notConnected: "Агент не подключен", agentReturned: "Агент вернул",
-        dashboard: "Панель Playhub", openDashboard: "Открыть панель",
+        dashboard: "Панель Core", openDashboard: "Открыть панель",
         dashboardShortcut: "Также открывайте с помощью Ctrl + Alt + P",
         dashboardSteamInput: "В Steam Input назначьте это сочетание на Guide + любую кнопку для мгновенного доступа с контроллера.",
         haptics: "Отклик контроллера", hapticsDescription: "Добавляет тактильный отклик при навигации в Steam.", hapticsIntensity: "Интенсивность",
@@ -61295,7 +61433,7 @@ function Content({ origin = "decky" }) {
     }, []);
     const gameAppId = steamAppId(window.SteamUIStore?.MainRunningAppID ?? _global_DFL.Router?.MainRunningAppID);
     return (SP_JSX.jsx(SP_JSX.Fragment, { children: SP_JSX.jsx(ControlCenter, { locale: locale, origin: origin, homeTitle: local.controlCentre, gameAppId: gameAppId, gamingMode: status?.currentMode === "Gaming", downloads: SP_JSX.jsx(StoreDownloadsQam, { locale: locale }), frameTiming: origin === "qam" && status && gameAppId !== 0 ? SP_JSX.jsx(GameFrameTiming, { appId: gameAppId, locale: locale }, gameAppId) : null, session: SP_JSX.jsxs(SP_JSX.Fragment, { children: [!status && SP_JSX.jsx(PanelSection, { children: SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsxs("div", { role: "status", style: { margin: "8px 0 16px", padding: "16px", borderRadius: 10,
-                                    background: "rgba(255,255,255,.055)", border: "1px solid rgba(255,255,255,.12)" }, children: [SP_JSX.jsx("div", { style: { fontSize: 16, fontWeight: 650, marginBottom: 8 }, children: optional.Title }), SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, opacity: .8 }, children: optional.AgentRequired })] }) }) }), SP_JSX.jsxs(PanelSection, { children: [SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsx(ButtonItem, { disabled: !dashboardEnabled || !status, bottomSeparator: "none", layout: "below", onClick: () => openDashboard(), children: "Playhub Dashboard" }) }), SP_JSX.jsxs(PanelSectionRow, { children: [SP_JSX.jsx("style", { children: `
+                                    background: "rgba(255,255,255,.055)", border: "1px solid rgba(255,255,255,.12)" }, children: [SP_JSX.jsx("div", { style: { fontSize: 16, fontWeight: 650, marginBottom: 8 }, children: optional.Title }), SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, opacity: .8 }, children: optional.AgentRequired })] }) }) }), SP_JSX.jsxs(PanelSection, { children: [SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsx(ButtonItem, { disabled: !dashboardEnabled || !status, bottomSeparator: "none", layout: "below", onClick: () => openDashboard(), children: "Core Dashboard" }) }), SP_JSX.jsxs(PanelSectionRow, { children: [SP_JSX.jsx("style", { children: `
             @keyframes phShortcutPulse { 0%,100% { opacity:.62; transform:scale(.96); } 50% { opacity:1; transform:scale(1); } }
             @keyframes phShortcutTravel { 0%,100% { transform:translateX(-3px); opacity:.35; } 50% { transform:translateX(3px); opacity:1; } }
             .ph-dashboard-shortcut { box-sizing:border-box; width:100%; padding:9px 16px 14px; color:rgba(255,255,255,.88); }
@@ -61357,7 +61495,7 @@ var index = definePlugin(() => {
         check: () => call("get_playhub_update_notice"),
         read: () => window.localStorage.getItem("playhub.update-notice.version"),
         write: version => window.localStorage.setItem("playhub.update-notice.version", version),
-        notify: version => { toaster.toast({ title: "Playhub", body: updateNoticeBody(currentLocale, version) }); },
+        notify: version => { toaster.toast({ title: "Core", body: updateNoticeBody(currentLocale, version) }); },
         schedule: (callback, delay) => window.setTimeout(callback, delay),
         cancel: timer => window.clearTimeout(timer),
     }));
@@ -61397,7 +61535,7 @@ var index = definePlugin(() => {
     const uninstallNavigationHaptics = installOptionalHook("Navigation haptics", installNavigationHaptics);
     const uninstallVirtualControllerName = installOptionalHook("Virtual controller name", installVirtualControllerName);
     const uninstallPlayhubQam = initPlayhubQam({ content: SP_JSX.jsx(Content, { origin: "qam" }), icon: SP_JSX.jsx(PlayhubIcon, {}), title: SP_JSX.jsx("div", { style: { paddingInline: 16, boxSizing: "border-box" }, children: playhubTitle }) });
-    const uninstallPowerMenuPatch = installOptionalHook("Power menu", () => installPowerMenuPatch(() => ({ gaming: t().switchGaming, desktop: t().switchDesktop }), (mode) => confirmModeSwitch(mode, () => { void post(`/mode/${mode}/switch`).catch((error) => toaster.toast({ title: "Playhub", body: String(error) })); })));
+    const uninstallPowerMenuPatch = installOptionalHook("Power menu", () => installPowerMenuPatch(() => ({ gaming: t().switchGaming, desktop: t().switchDesktop }), (mode) => confirmModeSwitch(mode, () => { void post(`/mode/${mode}/switch`).catch((error) => toaster.toast({ title: "Core", body: String(error) })); })));
     const hapticRevision = getNavigationHapticsRevision();
     void hapticSettingsWrite.catch(() => { }).then(() => readSettings()).then((settings) => {
         if (settings && hapticRevision === getNavigationHapticsRevision())

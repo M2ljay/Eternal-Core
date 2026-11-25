@@ -53,18 +53,18 @@ export function installPlayhubUpdateNotice(deps: Dependencies): () => void {
 
 export function updateNoticeBody(locale: string, version: string): string {
   const copy: Record<string, string> = {
-    en: "Playhub {version} is available. Open Playhub on your PC to update.",
-    it: "È disponibile Playhub {version}. Apri Playhub sul PC per aggiornare.",
-    es: "Playhub {version} está disponible. Abre Playhub en tu PC para actualizar.",
-    fr: "Playhub {version} est disponible. Ouvrez Playhub sur votre PC pour le mettre à jour.",
-    de: "Playhub {version} ist verfügbar. Öffne Playhub auf deinem PC, um es zu aktualisieren.",
-    pt: "O Playhub {version} está disponível. Abra o Playhub no PC para atualizar.",
-    uk: "Доступна версія Playhub {version}. Відкрийте Playhub на ПК, щоб оновити.",
-    zh: "Playhub {version} 已推出。请在电脑上打开 Playhub 进行更新。",
-    ja: "Playhub {version} が利用できます。PC で Playhub を開いて更新してください。",
-    ko: "Playhub {version}을 사용할 수 있습니다. PC에서 Playhub를 열어 업데이트하세요.",
-    hi: "Playhub {version} उपलब्ध है। अपडेट करने के लिए अपने PC पर Playhub खोलें।",
-    ru: "Доступна версия Playhub {version}. Откройте Playhub на ПК, чтобы обновить.",
+    en: "Core {version} is available. Open Core on your PC to update.",
+    it: "È disponibile Core {version}. Apri Core sul PC per aggiornare.",
+    es: "Core {version} está disponible. Abre Core en tu PC para actualizar.",
+    fr: "Core {version} est disponible. Ouvrez Core sur votre PC pour le mettre à jour.",
+    de: "Core {version} ist verfügbar. Öffne Core auf deinem PC, um es zu aktualisieren.",
+    pt: "O Core {version} está disponível. Abra o Core no PC para atualizar.",
+    uk: "Доступна версія Core {version}. Відкрийте Core на ПК, щоб оновити.",
+    zh: "Core {version} 已推出。请在电脑上打开 Core 进行更新。",
+    ja: "Core {version} が利用できます。PC で Core を開いて更新してください。",
+    ko: "Core {version}을 사용할 수 있습니다. PC에서 Core를 열어 업데이트하세요.",
+    hi: "Core {version} उपलब्ध है। अपडेट करने के लिए अपने PC पर Core खोलें।",
+    ru: "Доступна версия Core {version}. Откройте Core на ПК, чтобы обновить.",
   };
   return (copy[locale] ?? copy.en).replace("{version}", version);
 }

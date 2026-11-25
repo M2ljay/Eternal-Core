@@ -206,7 +206,7 @@ function parsePlugin(value: unknown): CatalogPlugin | null {
 
 export function parseCatalog(value: unknown): CatalogDocument {
   const root = typeof value === "string" ? objectValue(JSON.parse(value)) : objectValue(value);
-  if (!root || !Array.isArray(root.plugins)) throw new Error("Invalid Playhub plugin catalog.");
+  if (!root || !Array.isArray(root.plugins)) throw new Error("Invalid Core plugin catalog.");
 
   const seen = new Set<string>();
   const plugins: CatalogPlugin[] = [];
@@ -218,7 +218,7 @@ export function parseCatalog(value: unknown): CatalogDocument {
     seen.add(key);
     plugins.push(plugin);
   }
-  if (!plugins.length) throw new Error("The Playhub plugin catalog is empty.");
+  if (!plugins.length) throw new Error("The Core plugin catalog is empty.");
 
   return {
     schemaVersion: Number(root.schemaVersion) || 0,

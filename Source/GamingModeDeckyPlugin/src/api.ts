@@ -320,7 +320,7 @@ export async function listPrograms(): Promise<ProgramList> {
   // rinunceremmo proprio mentre sta per rispondere.
   const result = await request<ProgramList>("/dash/programs", undefined, 20000);
   if (!result) {
-    return { items: [], note: "L'agente di Playhub non ha risposto. Controlla che Playhub sia in esecuzione.", pending: false };
+    return { items: [], note: "L'agente di Core non ha risposto. Controlla che Core sia in esecuzione.", pending: false };
   }
   return { items: result.items ?? [], note: result.note ?? "", pending: result.pending === true };
 }

@@ -13,7 +13,7 @@ test("desktop app waits for mode completion and does not offer Dashboard disable
   assert.match(change, /Timeout = TimeSpan.FromSeconds\(90\)/);
   assert.match(change, /TryGetProperty\("ok"/);
   assert.doesNotMatch(change, /PostAgentAsync/);
-  assert.doesNotMatch(ui, /"Attiva Playhub Dashboard"|"Prova Playhub Dashboard"|GetToggle\("dashboardEnabled"\)/);
+  assert.doesNotMatch(ui, /"Attiva (?:Playhub|Core) Dashboard"|"Prova (?:Playhub|Core) Dashboard"|GetToggle\("dashboardEnabled"\)/);
 });
 
 test("animation color previews three channels in a full swatch and hint follows the accent button", () => {
@@ -26,7 +26,7 @@ test("animation color previews three channels in a full swatch and hint follows 
   assert.match(ui, /SliderTrackValueFill[\s\S]*Colors.Transparent/);
   assert.match(ui, /Button\("Provalo ora"[^\n]*primary: true/);
   assert.match(ui, /previewHint.TextAlignment = TextAlignment.Right/);
-  assert.match(ui, /Body\("Premi ESC o fai clic per tornare a Playhub"\)/);
+  assert.match(ui, /Body\("Premi ESC o fai clic per tornare a Core"\)/);
 });
 
 test("Explorer autostart and agent launches share a Decky startup lock", () => {
