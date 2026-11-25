@@ -4,7 +4,7 @@ namespace GamingMode;
 
 public sealed record LogoChoice(string Name, string? Path)
 {
-	public static LogoChoice Playhub { get; } = new LogoChoice("Playhub", null);
+	public static LogoChoice Playhub { get; } = new LogoChoice("Core", null);
 
 	[CompilerGenerated]
 	private LogoChoice(LogoChoice original)
