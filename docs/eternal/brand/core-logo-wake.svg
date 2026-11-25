@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 300" width="620" height="300">
+<title>Core</title>
+<defs><linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F7FA"/><stop offset="0.48" stop-color="#AEB8C2"/><stop offset="0.52" stop-color="#5B636C"/><stop offset="1" stop-color="#C9D1D9"/></linearGradient></defs>
+<style>
+.lit{stroke-dasharray:389.6;stroke-dashoffset:389.6;animation:charge 2.4s ease-in-out .3s forwards}
+.spin{transform:rotate(-180deg);animation:spin 2.6s linear .3s forwards}
+.tk{opacity:.3;animation:tick .4s ease-out 2.7s forwards}
+.core{transform-box:fill-box;transform-origin:center;animation:pulse .6s ease-out 2.6s 1}
+.word{opacity:0;animation:word .7s ease-out 2.9s forwards}
+@keyframes charge{to{stroke-dashoffset:0}}
+@keyframes spin{0%{transform:rotate(-180deg)}40%{transform:rotate(-80deg)}80%{transform:rotate(-12deg)}88%{transform:rotate(6deg)}94%{transform:rotate(-2deg)}100%{transform:rotate(0deg)}}
+@keyframes tick{to{opacity:1}}
+@keyframes pulse{50%{transform:scale(1.15)}}
+@keyframes word{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.lit{animation:none;stroke-dashoffset:0}.tk,.word{animation:none;opacity:1}.spin{animation:none;transform:none}.core{animation:none}}
+</style>
+<rect width="620" height="300" fill="#0A0B0D"/>
+<g transform="translate(310,125) scale(0.95)">
+<circle r="62" fill="none" stroke="#3A3F46" stroke-width="9"/>
+<circle r="62" fill="none" stroke="#D7263D" stroke-width="9" stroke-linecap="round" transform="rotate(180)" class="lit"/>
+<g class="spin"><g class="tk" stroke="url(#chrome)" stroke-width="5" stroke-linecap="round">
+<line x1="0" y1="-48" x2="0" y2="-38"/><line x1="0" y1="38" x2="0" y2="48"/><line x1="-48" y1="0" x2="-38" y2="0"/><line x1="38" y1="0" x2="48" y2="0"/>
+<line x1="-33.9" y1="-33.9" x2="-26.9" y2="-26.9"/><line x1="26.9" y1="26.9" x2="33.9" y2="33.9"/><line x1="33.9" y1="-33.9" x2="26.9" y2="-26.9"/><line x1="-26.9" y1="26.9" x2="-33.9" y2="33.9"/>
+</g></g>
+<g class="core"><circle r="22" fill="url(#chrome)"/><circle r="9" fill="#D7263D"/></g>
+</g>
+<text class="word" x="314" y="242" text-anchor="middle" font-family="Inter, 'Segoe UI', sans-serif" font-size="24" letter-spacing="14" fill="url(#chrome)">CORE</text>
+</svg>
