@@ -4,15 +4,15 @@
              ShutdownMode="OnMainWindowClose">
   <Application.Resources>
 
-    <!-- ====== Palette (continuità con l'app) ====== -->
-    <Color x:Key="AccentColor">#FFCB0F</Color>
-    <SolidColorBrush x:Key="Accent" Color="#FFCB0F"/>
-    <SolidColorBrush x:Key="AccentHover" Color="#FFD740"/>
-    <SolidColorBrush x:Key="AccentPressed" Color="#E6B800"/>
+    <!-- ====== Palette (continuità con l'app): Core crimson su gunmetal ====== -->
+    <Color x:Key="AccentColor">#D7263D</Color>
+    <SolidColorBrush x:Key="Accent" Color="#D7263D"/>
+    <SolidColorBrush x:Key="AccentHover" Color="#C11F35"/>
+    <SolidColorBrush x:Key="AccentPressed" Color="#A51A2D"/>
     <SolidColorBrush x:Key="TextPrimary" Color="#F2F2F2"/>
     <SolidColorBrush x:Key="TextSecondary" Color="#A8A8A8"/>
-    <SolidColorBrush x:Key="Surface" Color="#1B1D1F"/>
-    <SolidColorBrush x:Key="SurfaceStroke" Color="#2A2D30"/>
+    <SolidColorBrush x:Key="Surface" Color="#1A1D21"/>
+    <SolidColorBrush x:Key="SurfaceStroke" Color="#3A3F46"/>
     <SolidColorBrush x:Key="TrackColor" Color="#33000000"/>
 
     <Style x:Key="InstallerButton" TargetType="Button">
@@ -23,10 +23,10 @@
       <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
 
-    <!-- ====== Pulsante primario (accent giallo, testo scuro) ====== -->
+    <!-- ====== Pulsante primario (accent crimson, testo bianco) ====== -->
     <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource InstallerButton}">
       <Setter Property="Background" Value="{StaticResource Accent}"/>
-      <Setter Property="Foreground" Value="#1A1A1A"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="FontSize" Value="14"/>
       <Setter Property="Cursor" Value="Hand"/>
@@ -93,7 +93,7 @@
                       BorderBrush="{StaticResource SurfaceStroke}" BorderThickness="1"
                       VerticalAlignment="Center">
                 <Path x:Name="tick" Width="11" Height="11" Stretch="Uniform"
-                      Data="M2,6 L5,9 L10,2" Stroke="#1A1A1A" StrokeThickness="2"
+                      Data="M2,6 L5,9 L10,2" Stroke="#FFFFFF" StrokeThickness="2"
                       Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center"/>
               </Border>
               <ContentPresenter Margin="10,0,0,0" VerticalAlignment="Center"/>
@@ -113,7 +113,7 @@
       </Setter>
     </Style>
 
-    <!-- ====== Progress bar Fluent (track scuro, barra gialla, angoli tondi) ====== -->
+    <!-- ====== Progress bar Fluent (track scuro, barra crimson, angoli tondi) ====== -->
     <Style x:Key="FluentProgress" TargetType="ProgressBar">
       <Setter Property="Height" Value="6"/>
       <Setter Property="Foreground" Value="{StaticResource Accent}"/>
@@ -132,7 +132,7 @@
       </Setter>
     </Style>
 
-    <!-- ====== Lista lingue (item card, selezione gialla) ====== -->
+    <!-- ====== Lista lingue (item card, selezione crimson) ====== -->
     <Style x:Key="LangItem" TargetType="ListBoxItem">
       <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
       <Setter Property="FontSize" Value="14"/>
@@ -155,7 +155,7 @@
               <Trigger Property="IsSelected" Value="True">
                 <Setter TargetName="bd" Property="Background" Value="{StaticResource Accent}"/>
                 <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                <Setter Property="Foreground" Value="#1A1A1A"/>
+                <Setter Property="Foreground" Value="#FFFFFF"/>
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>

@@ -115,7 +115,7 @@ export const STORE_STYLE = `
   .ph-store-row-trailing { display:flex; align-items:center; justify-content:flex-end; gap:9px; min-width:54px; padding:12px 14px 12px 6px; }
   .ph-store-source-badge { display:inline-flex; height:30px; align-items:center; gap:7px; max-width:142px; padding:4px 8px; border-radius:5px; color:rgba(255,255,255,.92); background:rgba(255,255,255,.12); font-size:12px; font-weight:600; line-height:1; white-space:nowrap; }
   .ph-store-source-badge img, .ph-store-source-badge svg { width:20px; height:20px; flex:0 0 20px; object-fit:contain; }
-  .ph-store-source-badge[data-source="playhub"] { background:rgba(255,203,0,.15); }
+  .ph-store-source-badge[data-source="playhub"] { background:rgba(215,38,61,.15); }
   .ph-store-source-badge[data-source="decky-store"] { background:rgba(71,205,211,.14); }
   .ph-store-source-badge[data-source="outside-store"] { background:rgba(151,92,220,.18); }
   .ph-store-update-marker { display:grid; width:27px; height:27px; place-items:center; border-radius:50%; color:#161616; background:#fff; }

@@ -936,6 +936,13 @@ public sealed class GamingModeService
             config.Gaming.Splash = new SplashOptions();
             changed = true;
         }
+        // Playhub's yellow is no longer in the palette: its old default follows Core's crimson.
+        if (!config.Gaming.Splash.AnimationUseCustomColor &&
+            string.Equals(config.Gaming.Splash.AnimationColor, "#FFCB0F", StringComparison.OrdinalIgnoreCase))
+        {
+            config.Gaming.Splash.AnimationColor = "#D7263D";
+            changed = true;
+        }
 
         if (string.IsNullOrWhiteSpace(config.Gaming.SteamArguments))
         {

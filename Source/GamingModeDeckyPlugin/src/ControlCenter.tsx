@@ -84,7 +84,7 @@ const css = `
 .ph-controls .ph-control-tabs>.ph-control-icon{width:auto!important;max-width:none!important;flex:1 0 32px!important}
 .ph-control-nav>.ph-control-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);overflow:visible;min-width:0}
 .ph-controls .ph-control-nav .ph-control-tabs>.ph-control-icon{width:100%!important;min-width:0!important;max-width:100%!important;flex:none!important}
-.ph-controls .ph-control-icon[aria-selected=true]{border-bottom-color:#fee505!important}
+.ph-controls .ph-control-icon[aria-selected=true]{border-bottom-color:#d7263d!important}
 .ph-controls .ph-control-icon.gpfocus,.ph-controls .ph-control-icon:focus-visible,.ph-controls .ph-control-icon:hover{background:#dcdedf!important;color:#171a21!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.85)!important;transform:none!important}
 .ph-control-heading{font-size:18px;font-weight:700;margin:0 18px 12px;line-height:1.35}
 .ph-control-section{width:100%;min-width:0;margin:0 0 3px;border:0!important}

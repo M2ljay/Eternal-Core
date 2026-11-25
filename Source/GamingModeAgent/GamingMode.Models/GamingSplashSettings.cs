@@ -3,7 +3,7 @@ namespace GamingMode.Models;
 public sealed class GamingSplashSettings
 {
 	public bool AnimationEnabled { get; set; } = true;
-	public string AnimationColor { get; set; } = "#FFCB0F";
+	public string AnimationColor { get; set; } = "#D7263D";
 	public double AnimationOpacity { get; set; } = 100;
 	public bool AnimationUseCustomColor { get; set; }
 	public double AnimationCustomHue { get; set; } = 47;

@@ -7,7 +7,7 @@ public sealed class PlayhubSettings
     public string Theme { get; set; } = "Sistema";
     public string Backdrop { get; set; } = "Acrylic";
     public string Language { get; set; } = "en";
-    public string AccentColor { get; set; } = "#FFCB0F";
+    public string AccentColor { get; set; } = "#D7263D";
     public string PluginRoot { get; set; } = "";
     public string DeckyPluginsPath { get; set; } = "";
     // Empty resolves to the fork's release repository (PlayhubUpdatePolicy.Repository).

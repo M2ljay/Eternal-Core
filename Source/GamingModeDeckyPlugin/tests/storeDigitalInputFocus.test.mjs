@@ -21,7 +21,7 @@ test('native search and dialog input focus survives late Steam outline resets at
   socket=new WebSocket(target.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true});});
   socket.addEventListener('message',event=>{const message=JSON.parse(event.data),entry=pending.get(message.id);if(!entry)return;pending.delete(message.id);clearTimeout(entry.timeout);message.error?entry.reject(Error(JSON.stringify(message.error))):entry.resolve(message.result);});
   const source=loadDigitalSource({decky:{SP_REACT:{}}})('StoreDigitalStyles').storeDigitalStyle;
-  const fix='.ph-sd-root input:is(.gpfocus,.gpfocuswithin,:focus-visible){outline:2px solid var(--sd-accent)!important;outline-offset:4px!important}';
+  const fix='.ph-sd-root input:is(.gpfocus,.gpfocuswithin,:focus-visible){outline:2px solid var(--sd-accent-line)!important;outline-offset:4px!important}';
   assert.ok(source.includes(fix));const baseline=source.replace(fix,'');
   await call('Page.enable');await call('Emulation.setFocusEmulationEnabled',{enabled:true});
   const metrics=[];
@@ -36,7 +36,7 @@ test('native search and dialog input focus survives late Steam outline resets at
     else{assert.deepEqual(value,{style:'solid',width:'2px',color:'rgb(255, 204, 0)',offset:'4px'},`${surface}/${focus}`);metrics.push({width,height,surface,focus,...value});}
    }
   }
-  const rowFix='.ph-sd-download:is(.gpfocus,.ph-sd-focused,:focus-visible){outline:2px solid var(--sd-accent)!important;outline-offset:4px!important}';assert.ok(source.includes(rowFix));
+  const rowFix='.ph-sd-download:is(.gpfocus,.ph-sd-focused,:focus-visible){outline:2px solid var(--sd-accent-line)!important;outline-offset:4px!important}';assert.ok(source.includes(rowFix));
   for(const [width,height]of [[1920,1080],[1280,720]]){await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});for(const [version,css]of [['baseline',source.replace(rowFix,'')],['fixed',source]]){
    const html=`<html><head><style>${css}</style></head><body><div class="ph-sd-root"><div id="download-row" class="ph-sd-download gpfocus" style="outline-style:none">Static download status</div></div><style>div.gpfocus{outline:none}</style></body></html>`;const tree=await call('Page.getFrameTree');await call('Page.setDocumentContent',{frameId:tree.frameTree.frame.id,html});const result=await call('Runtime.evaluate',{expression:"(()=>{const s=getComputedStyle(document.getElementById('download-row'));return{style:s.outlineStyle,width:s.outlineWidth,color:s.outlineColor,offset:s.outlineOffset};})()",returnByValue:true});
    if(version==='baseline')assert.equal(result.result.value.style,'none');else{assert.deepEqual(result.result.value,{style:'solid',width:'2px',color:'rgb(255, 204, 0)',offset:'4px'});metrics.push({width,height,surface:'download-row',focus:'gpfocus',...result.result.value});}

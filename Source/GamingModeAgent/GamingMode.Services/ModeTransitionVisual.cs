@@ -93,8 +93,8 @@ internal static class ModeTransitionVisual
     internal static void AddGlows(Grid root, double width, double height, GamingSplashSettings? settings = null)
     {
         if (settings?.AnimationEnabled == false) return;
-        Color color = Color.FromRgb(255, 203, 15);
-        try { color = (Color)ColorConverter.ConvertFromString(settings?.AnimationColor ?? "#FFCB0F"); }
+        Color color = Color.FromRgb(215, 38, 61);
+        try { color = (Color)ColorConverter.ConvertFromString(settings?.AnimationColor ?? "#D7263D"); }
         catch (FormatException) { }
         catch (ArgumentException) { }
         double opacity = settings?.AnimationOpacity ?? 100;

@@ -41,6 +41,6 @@ test('each Digital Stores game card disables the native Steam ring while keeping
  const f=await digitalFixture();try{
   const cards=[...f.container.querySelectorAll('.ph-sd-game')];assert.ok(cards.length>0);
   for(const card of cards){const node=f.native.nodeFor(card);assert.equal(node.m_Properties.noFocusRing,true);await f.settle(()=>assert.equal(f.native.focusElement(card),true));assert.ok(card.classList.contains('gpfocus'));assert.equal(f.native.focused(),node);}
-  assert.match(f.load('StoreDigitalStyles').storeDigitalStyle,/\.ph-sd-game:is\([^}]+outline:2px solid var\(--sd-accent\)!important/);
+  assert.match(f.load('StoreDigitalStyles').storeDigitalStyle,/\.ph-sd-game:is\([^}]+outline:2px solid var\(--sd-accent-line\)!important/);
  }finally{await f.close();}
 });

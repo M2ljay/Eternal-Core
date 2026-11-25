@@ -310,7 +310,7 @@ public sealed partial class MainWindow : Window
 
     private static readonly ComboOption[] SplashLogoOptions =
     {
-        new("playhub", "Playhub"),
+        new("playhub", "Core"),
         new("asus", "ASUS"),
         new("lenovo", "Lenovo"),
         new("msi", "MSI"),
@@ -388,10 +388,12 @@ public sealed partial class MainWindow : Window
                     _navigation.SelectedItem = startupItem;
                 }
             }
+            // Earlier defaults, including Playhub's yellow (no longer offered), move to Core's crimson.
             if (string.Equals(_settings.AccentColor, "#4CC2FF", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(_settings.AccentColor, "#FFB454", StringComparison.OrdinalIgnoreCase))
+                string.Equals(_settings.AccentColor, "#FFB454", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(_settings.AccentColor, "#FFCB0F", StringComparison.OrdinalIgnoreCase))
             {
-                _settings.AccentColor = "#FFCB0F";
+                _settings.AccentColor = "#D7263D";
                 await _settingsService.SaveAsync();
             }
 
@@ -2026,7 +2028,7 @@ public sealed partial class MainWindow : Window
         button.Background = new SolidColorBrush(background);
         button.Foreground = new SolidColorBrush(foreground);
         SetLocalBrush(button, "ButtonBackground", background);
-        SetLocalBrush(button, "ButtonBackgroundPointerOver", selected ? Mix(accent, Colors.White, 0.12) : Color.FromArgb(28, 255, 255, 255));
+        SetLocalBrush(button, "ButtonBackgroundPointerOver", selected ? AccentHover(accent, 0.12) : Color.FromArgb(28, 255, 255, 255));
         SetLocalBrush(button, "ButtonBackgroundPressed", selected ? Mix(accent, Colors.Black, 0.12) : Color.FromArgb(42, 255, 255, 255));
         SetLocalBrush(button, "ButtonForeground", foreground);
         SetLocalBrush(button, "ButtonForegroundPointerOver", foreground);
@@ -5794,13 +5796,13 @@ by Valve.";
         };
         var start = status switch
         {
-            "playhub" => Color.FromArgb(255, 188, 132, 0),
+            "playhub" => Color.FromArgb(255, 215, 38, 61),
             "decky" => Color.FromArgb(255, 57, 211, 197),
             _ => Color.FromArgb(255, 102, 56, 157)
         };
         var end = status switch
         {
-            "playhub" => Color.FromArgb(255, 112, 72, 0),
+            "playhub" => Color.FromArgb(255, 122, 18, 32),
             "decky" => Color.FromArgb(255, 31, 52, 91),
             _ => Color.FromArgb(255, 102, 56, 157)
         };
@@ -5837,11 +5839,11 @@ by Valve.";
                     EndPoint = new Windows.Foundation.Point(1, 1),
                     GradientStops =
                     {
-                        new GradientStop { Color = Color.FromArgb(255, 255, 241, 157), Offset = 0 },
-                        new GradientStop { Color = Color.FromArgb(255, 236, 185, 49), Offset = 0.2 },
-                        new GradientStop { Color = Color.FromArgb(255, 170, 101, 0), Offset = 0.5 },
-                        new GradientStop { Color = Color.FromArgb(255, 219, 155, 22), Offset = 0.73 },
-                        new GradientStop { Color = Color.FromArgb(255, 103, 54, 0), Offset = 1 }
+                        new GradientStop { Color = Color.FromArgb(255, 91, 99, 108), Offset = 0 },
+                        new GradientStop { Color = Color.FromArgb(255, 58, 63, 70), Offset = 0.2 },
+                        new GradientStop { Color = Color.FromArgb(255, 26, 29, 33), Offset = 0.5 },
+                        new GradientStop { Color = Color.FromArgb(255, 58, 63, 70), Offset = 0.73 },
+                        new GradientStop { Color = Color.FromArgb(255, 10, 11, 13), Offset = 1 }
                     }
                 }
             });
@@ -5851,10 +5853,9 @@ by Valve.";
                 iconHost.Children.Add(new Image
                 {
                     Source = new BitmapImage(new Uri(logoPath)),
-                    Width = 17.1,
-                    Height = 17.1,
+                    Width = 26,
+                    Height = 26,
                     Stretch = Stretch.Uniform,
-                    RenderTransform = new CompositeTransform { TranslateX = 0.5 },
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center
                 });
@@ -5863,10 +5864,10 @@ by Valve.";
             {
                 iconHost.Children.Add(new TextBlock
                 {
-                    Text = "P",
+                    Text = "C",
                     FontSize = 19,
                     FontWeight = Microsoft.UI.Text.FontWeights.Bold,
-                    Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 223, 76)),
+                    Foreground = new SolidColorBrush(Color.FromArgb(255, 201, 209, 217)),
                     Margin = new Thickness(0),
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center
@@ -6311,7 +6312,7 @@ by Valve.";
         var content = new StackPanel { Spacing = 8 };
 
         var headerRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, VerticalAlignment = VerticalAlignment.Center };
-        headerRow.Children.Add(new TextBlock { Text = "Novità", FontSize = 14, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Foreground = new SolidColorBrush(accent), VerticalAlignment = VerticalAlignment.Center });
+        headerRow.Children.Add(new TextBlock { Text = "Novità", FontSize = 14, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Foreground = new SolidColorBrush(AccentText(accent)), VerticalAlignment = VerticalAlignment.Center });
         if (!string.IsNullOrWhiteSpace(plugin.ReleaseNotesVersion))
         {
             headerRow.Children.Add(new Border
@@ -6320,7 +6321,7 @@ by Valve.";
                 CornerRadius = new CornerRadius(10),
                 Padding = new Thickness(8, 2, 8, 2),
                 VerticalAlignment = VerticalAlignment.Center,
-                Child = new TextBlock { Text = plugin.ReleaseNotesVersion, FontSize = 12, Foreground = new SolidColorBrush(accent) }
+                Child = new TextBlock { Text = plugin.ReleaseNotesVersion, FontSize = 12, Foreground = new SolidColorBrush(AccentText(accent)) }
             });
         }
         if (!string.IsNullOrWhiteSpace(plugin.ReleaseNotesPublishedAt))
@@ -8925,7 +8926,7 @@ by Valve.";
 
     private static readonly string[] AccentPalette =
     {
-        "#FFCB0F", "#0F6CBD", "#107C10", "#C50F1F", "#8764B8",
+        "#D7263D", "#0F6CBD", "#107C10", "#C50F1F", "#8764B8",
         "#E97A9D", "#7DDCB5", "#73BCEB", "#B79AE8", "#F2A36F"
     };
 
@@ -8981,7 +8982,7 @@ by Valve.";
                 : Color.FromArgb(220, 255, 255, 255);
             button.Background = WelcomeBackdropBrush(button, "ButtonBackground", active ? accent : Colors.Transparent);
             button.Foreground = WelcomeBackdropBrush(button, "ButtonForeground", foreground);
-            WelcomeBackdropBrush(button, "ButtonBackgroundPointerOver", active ? Mix(accent, Colors.White, 0.12) : Color.FromArgb(28, 255, 255, 255));
+            WelcomeBackdropBrush(button, "ButtonBackgroundPointerOver", active ? AccentHover(accent, 0.12) : Color.FromArgb(28, 255, 255, 255));
             WelcomeBackdropBrush(button, "ButtonBackgroundPressed", active ? Mix(accent, Colors.Black, 0.12) : Color.FromArgb(42, 255, 255, 255));
             WelcomeBackdropBrush(button, "ButtonForegroundPointerOver", foreground);
             WelcomeBackdropBrush(button, "ButtonForegroundPressed", foreground);
@@ -9635,6 +9636,16 @@ by Valve.";
             (byte)Math.Round(source.B + ((target.B - source.B) * amount)));
     }
 
+    // Text drawn in the accent colour on the dark surfaces: a dark accent such as Core's crimson
+    // (#D7263D, about 3.4:1 on #1A1D21) is lightened to its Light2 tint (about 6:1) to stay readable.
+    private static Color AccentText(Color accent)
+        => NeedsLightForeground(accent) ? Mix(accent, Colors.White, 0.38) : accent;
+
+    // Pointer-over fill. Lightening a dark accent under white text drops crimson below 4.5:1,
+    // so dark accents darken a little instead; light accents (black text) still lighten.
+    private static Color AccentHover(Color accent, double amount)
+        => NeedsLightForeground(accent) ? Mix(accent, Colors.Black, amount * 0.6) : Mix(accent, Colors.White, amount);
+
     private static bool NeedsLightForeground(Color color)
     {
         var luminance = (0.299 * color.R) + (0.587 * color.G) + (0.114 * color.B);
@@ -9746,7 +9757,7 @@ by Valve.";
 
     private void ApplyAccentResources(Color accent)
     {
-        var hover = Mix(accent, Colors.White, 0.16);
+        var hover = AccentHover(accent, 0.16);
         var pressed = Mix(accent, Colors.Black, 0.18);
         var subtle = WithAlpha(accent, 44);
         var subtleHover = WithAlpha(accent, 62);
@@ -9795,7 +9806,7 @@ by Valve.";
     private void ApplyAccentToButton(Button button)
     {
         var accent = ParseColor(_settings.AccentColor);
-        var hover = Mix(accent, Colors.White, 0.16);
+        var hover = AccentHover(accent, 0.16);
         var pressed = Mix(accent, Colors.Black, 0.18);
         var onAccent = NeedsLightForeground(accent) ? Colors.White : Colors.Black;
 

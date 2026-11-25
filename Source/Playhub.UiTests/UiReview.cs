@@ -217,7 +217,7 @@ public sealed partial class MainWindow
             if (!isolated) throw new InvalidOperationException("Publish UI review to an isolated directory; do not replace the installed Playhub.");
             if (_appWindow?.Presenter is OverlappedPresenter presenter) presenter.Maximize();
             _settings.Language = "it";
-            _settings.AccentColor = "#FFCB0F";
+            _settings.AccentColor = "#D7263D";
             ApplyTheme();
             ApplyLanguage();
             if (Environment.GetEnvironmentVariable("PLAYHUB_REVIEW_UPDATE_SCROLL_ONLY") == "1")
@@ -367,7 +367,7 @@ public sealed partial class MainWindow
             Check(ReviewDescendants(_welcomeRoot).OfType<TextBlock>().Any(text => text.Text == "Scegli il tuo stile"),
                 "cached welcome slides follow the chosen language");
             await ReviewCaptureAsync((FrameworkElement)Content, Path.Combine(output, "welcome-colors.png"));
-            _settings.AccentColor = "#FFCB0F"; ApplyTheme();
+            _settings.AccentColor = "#D7263D"; ApplyTheme();
             _featuredAutoAdvancePointerOver = true;
             var names = new[] { "Launch Curtain", "News", "Now Playing", "Playhub Artworks", "Playhub Metadata",
                 "Playhub Notifications", "Quick Settings", "Playhub Surround", "Weather", "Proton VPN" };
