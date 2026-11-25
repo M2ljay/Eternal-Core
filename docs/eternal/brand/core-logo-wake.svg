@@ -14,7 +14,7 @@
 @keyframes word{to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.lit{animation:none;stroke-dashoffset:0}.tk,.word{animation:none;opacity:1}.spin{animation:none;transform:none}.core{animation:none}}
 </style>
-<rect width="620" height="300" fill="#0A0B0D"/>
+<rect width="620" height="300" fill="#000000"/>
 <g transform="translate(310,125) scale(0.95)">
 <circle r="62" fill="none" stroke="#3A3F46" stroke-width="9"/>
 <circle r="62" fill="none" stroke="#D7263D" stroke-width="9" stroke-linecap="round" transform="rotate(180)" class="lit"/>

@@ -10,7 +10,7 @@
 @keyframes glint{50%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.half,.e{animation:none;stroke-dashoffset:0}.glint{animation:none}}
 </style>
-<rect width="620" height="200" fill="#0A0B0D"/>
+<rect width="620" height="200" fill="#000000"/>
 <text x="308" y="98" text-anchor="middle" font-family="Inter, 'Segoe UI', sans-serif" font-size="32" letter-spacing="11" fill="url(#chrome)">ETERNAL</text>
 <g fill="none" stroke="#3A3F46" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M170 122 H450"/><path d="M310 122 V140 H321 M310 131 H319"/></g>
 <g fill="none" stroke="#D7263D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">

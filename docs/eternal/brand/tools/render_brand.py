@@ -19,7 +19,7 @@ OUT = sys.argv[1]
 os.makedirs(OUT, exist_ok=True)
 FONT = "/usr/share/fonts/opentype/inter/Inter-Medium.otf"
 
-GUNMETAL, UNLIT, CRIMSON, STEEL, BOOT = "#1A1D21", "#3A3F46", "#D7263D", "#C9D1D9", "#0A0B0D"
+GUNMETAL, UNLIT, CRIMSON, STEEL, BOOT = "#1A1D21", "#3A3F46", "#D7263D", "#C9D1D9", "#000000"
 CHROME = ('<linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">'
           '<stop offset="0" stop-color="#F4F7FA"/><stop offset="0.48" stop-color="#AEB8C2"/>'
           '<stop offset="0.52" stop-color="#5B636C"/><stop offset="1" stop-color="#C9D1D9"/></linearGradient>')
