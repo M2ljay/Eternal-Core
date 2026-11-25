@@ -85,11 +85,17 @@ is not.
 
 ### Where the name and version are displayed
 
-- About card: `Playhub/MainWindow.xaml.cs:3836`: `"Playhub {GetAppVersion()} · © 2026 Andrea Sgarro (LoZazaMastro)"`.
+Upstream v3.0.0 (line numbers) and, after the arrow, the fork since the Phase 1 rebrand (`docs/eternal/REBRAND.md`):
+
+- About card: `Playhub/MainWindow.xaml.cs:3836`: `"Playhub {GetAppVersion()} · © 2026 Andrea Sgarro (LoZazaMastro)"`
+  → `"Core Mark II (3.2.0)"` plus the credit line "Core by Eternal. Based on Playhub by Andrea Sgarro (LoZazaMastro),
+  MIT licence. © 2026 Andrea Sgarro (LoZazaMastro)." (localized).
 - Update UI: `"Playhub {0} disponibile"` with the remote tag version (`MainWindow.xaml.cs:8997`,
-  `MainWindow.UpdateDialog.cs`).
-- Setup window: `PlayhubSetup/MainWindow.xaml.cs:112`.
-- Windows "Installed apps": `DisplayName = "Playhub"`, `DisplayVersion`, `Publisher = "Andrea Sgarro (LoZazaMastro)"`.
+  `MainWindow.UpdateDialog.cs`) → `"Core {0} disponibile"`.
+- Setup window: `PlayhubSetup/MainWindow.xaml.cs:112` → title `Core Setup`.
+- Windows "Installed apps": `DisplayName = "Playhub"`, `DisplayVersion`, `Publisher = "Andrea Sgarro (LoZazaMastro)"`
+  → `DisplayName = "Core"` and `Publisher = "Eternal"` (`EternalRelease.DisplayName` / `MakerName`); the key path
+  `Uninstall\Playhub` is unchanged.
 - Diagnostics report: `Services/DiagnosticsService.cs:159` (full assembly version).
 
 ### What `mark-i` changed
@@ -135,11 +141,12 @@ keeps publishing.
 ### Identity constants (not URLs, intentionally unchanged)
 
 - `Shared/ShellIdentity.cs:11` `AppId = "LoZazaMastro.Playhub"`: Windows AppUserModelID. Changing it would orphan
-  taskbar pins and Start shortcuts and split notification identity. Leave it until a full rebrand.
+  taskbar pins and Start shortcuts and split notification identity. The Phase 1 rebrand kept it; only the relaunch
+  display name (window property 4) and the shortcut file names became `Core`. Phase 2 list: `docs/eternal/REBRAND.md`.
 - `Playhub/Services/GamingModeService.cs:597`: finds the bundled Gaming Mode Decky plugin by
   `author == "LoZazaMastro"` in its `plugin.json`. Changing either side alone breaks detection.
-- `PlayhubSetup/Installer.cs:31` `Publisher`, `PlayhubSetup.csproj` `Company`, SPDX headers: copyright and credit.
-  Not touched.
+- `PlayhubSetup.csproj` `Company`, SPDX headers: copyright and credit. Not touched. `Installer.Publisher` (the
+  Installed apps "Publisher" column, display only) is `Eternal` since the rebrand.
 
 ## 3. Build system
 
@@ -339,3 +346,18 @@ updates itself; the store only shows it as installed.
 Tests: `Source/Playhub.CatalogIdentity.Tests` (`ForkProtectionTests.cs`; the upstream identity contracts there run
 with an empty fork list), `Source/Playhub.BundledPlugin.Tests` (install guard), and
 `GamingModeDeckyPlugin/tests/pluginStoreForks.test.mjs`. All three run in the release workflow.
+
+## 6. Rebrand to Core (Phase 1)
+
+The visible name comes from `Source/Shared/EternalRelease.cs` (`DisplayName = "Core"`, `MakerName = "Eternal"`).
+`Source/EternalRelease.props` reads `DisplayName` with the same kind of regex as `Version` and sets `Product` and
+`AssemblyTitle` of the app (`Core`) and the setup (`Core Setup`), so Task Manager and file properties follow it. The
+localized UI text is keyed by its Italian source string, so a rename changes the key in code, in every
+`Assets/Localization/*.json` and in `LocalizationService.cs` together; `LocalizationResource.Tests` fails on any
+remaining product-name "Playhub" outside the deliberate list. The Decky plugin has no shared constant (its tests load
+single source files, so a new import breaks their loaders); its strings say "Core" directly.
+
+Shortcuts: Windows shows a `.lnk` file's name, so the setup writes `Core.lnk` and renames an existing owned
+`Playhub.lnk` (`ShellIdentity.MoveOwnedShortcut`: only when it targets this install's `Playhub.exe` and the new name
+is free). Everything an installed copy reads by name is unchanged; the full list, the reasons and the image inventory
+are in `docs/eternal/REBRAND.md`.

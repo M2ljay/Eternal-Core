@@ -42,7 +42,11 @@ Fork of Playhub v3.0.0 (`2f60fb0`). Fork docs: `docs/eternal/README.md`, `docs/e
 
 ## Conventions
 
-- Keep the original copyright, the SPDX headers and the "Andrea Sgarro (LoZazaMastro)" credits. Branding (app name,
-  AppUserModelID `LoZazaMastro.Playhub`, publisher, install folder) stays unchanged until a deliberate rebrand.
+- Keep the original copyright, the SPDX headers and the "Andrea Sgarro (LoZazaMastro)" credits. The user-visible
+  name is **Core** and the maker brand is **Eternal** ("Core by Eternal"), both from `Source/Shared/EternalRelease.cs`
+  (`DisplayName`, `MakerName`); "Eternal Core" only in About/credits and docs. Identifiers (install and data folders,
+  uninstall key, AppUserModelID `LoZazaMastro.Playhub`, exe/assembly names, namespaces, plugin names and IDs, pipes,
+  persisted keys) stay "Playhub" until a Phase 2 migration. Deliberate exceptions and the asset inventory:
+  `docs/eternal/REBRAND.md`. New UI text says Core; `LocalizationResource.Tests` fails on a stray product "Playhub".
 - Work on branches. `main` mirrors upstream v3.0.0 plus README commits.
 - Releases are drafts created by CI from a tag. Publishing the draft is what ships an update to installed copies.

@@ -4,10 +4,15 @@ Eternal Core is a personal fork of [Playhub](https://github.com/LoZazaMastro/Pla
 (Decky Loader and Gaming Mode on Windows, Steam Big Picture). Upstream development stopped at v3.0.0, so this fork
 continues it.
 
+**Names.** The app is called **Core** wherever the user reads it; **Eternal** is the maker brand ("Core by Eternal",
+like PlayStation by Sony). "Eternal Core" names this repository and the docs. Internal identifiers (install and data
+folders, uninstall key, AppUserModelID, executables, plugin IDs) still say Playhub so updates keep working. Details,
+the list of what deliberately still says Playhub, and the image inventory: [REBRAND.md](REBRAND.md).
+
 - **Base:** Playhub v3.0.0, commit `2f60fb0` (the fork's `main` adds only README and screenshot commits).
 - **Licence:** MIT, unchanged. The original copyright, © 2026 Andrea Sgarro (LoZazaMastro), is kept in `LICENSE`,
-  in the source headers and in the app's About card. The app is still called Playhub; only the version display
-  changed.
+  in the source headers and in the app's About card, which reads "Core by Eternal. Based on Playhub by Andrea Sgarro
+  (LoZazaMastro), MIT licence."
 - **Technical notes:** [ARCHITECTURE-NOTES.md](ARCHITECTURE-NOTES.md) covers the update mechanism, every remote
   source that points at upstream, and the build system.
 
@@ -36,7 +41,7 @@ shows `3.2.0`.
 
 1. A release on `M2ljay/Eternal-Core` that is published, not a draft and not a prerelease, has a numeric tag
    (`v3.1.0`) and an asset named `Playhub-Setup.exe`.
-2. Playhub checks `releases/latest` of the fork every few minutes. Installs that still store upstream's repository in
+2. Core checks `releases/latest` of the fork every few minutes. Installs that still store upstream's repository in
    `settings.json` are redirected automatically.
 3. The download is checked against GitHub's SHA-256 digest of the asset, its size and the `MZ` header. Then the
    installer runs with `--update` and upgrades in place, keeping settings.
@@ -118,7 +123,7 @@ reads the memory of a game process. Every ~0.75 s it checks, in order:
    parents, and stops at library folders such as `steamapps\common` so a neighbouring game never matches.
 4. **Treat every game as protected** (off by default): any running Steam game or game-like window.
 
-Settings (Playhub > Gaming Mode > *Protezione anti-cheat* / *Anti-cheat protection*):
+Settings (Core > Gaming Mode > *Protezione anti-cheat* / *Anti-cheat protection*):
 
 - **Anti-cheat safe mode**: master switch, on by default.
 - **Treat every game as protected**: off by default.
@@ -151,13 +156,13 @@ Anti-cheat safe mode released: no protected game is detected any more (it was en
 ### Big Picture menu after a non-Steam game (upstream #22)
 
 After a non-Steam game exited, Ctrl+1, Ctrl+2 and the Steam menu button stopped opening Big Picture's menus until a
-Steam game was launched. Playhub's own Decky plugin kept treating the exited game as running. It now forgets the game
+Steam game was launched. Core's own Decky plugin kept treating the exited game as running. It now forgets the game
 when Steam reports that it stopped, and the press reaches Big Picture again.
 
 ### Dashboard from the controller (upstream #10)
 
-Playhub never reads controllers: Steam owns them, and an earlier attempt to read them directly broke Steam Input. The
-Dashboard card in Playhub > Gaming Mode now has *Apri la Dashboard con il controller* (*Open the Dashboard with your
+Core never reads controllers: Steam owns them, and an earlier attempt to read them directly broke Steam Input. The
+Dashboard card in Core > Gaming Mode now has *Apri la Dashboard con il controller* (*Open the Dashboard with your
 controller*): it shows the current keyboard shortcut (Ctrl+Alt+P unless changed), explains how to bind a Steam
 Guide-button chord (for example Guide + Y) to that shortcut, and has a button that opens Steam's chord configurator
 (`steam://controllerconfig/443510`). Valve documents `steam://controllerconfig/<app id>`, and 443510 is the app ID
@@ -182,12 +187,14 @@ not open it, follow *Settings > Controller > Guide Button Chord Layout > Edit* b
    only part with no offline fallback. Options and a recommendation for each are in
    [ARCHITECTURE-NOTES.md §2](ARCHITECTURE-NOTES.md#2-other-remote-sources-tied-to-upstream). Keep, mirror into the
    fork, or bundle?
-2. **Update notice wording:** the "Playhub 3.2.0 available" dialog shows the version number, not the Mark name. Should
+2. **Update notice wording:** the "Core 3.2.0 available" dialog shows the version number, not the Mark name. Should
    it map 3.N to "Mark N"?
 3. **Code signing:** upstream never signed the installer, so Windows SmartScreen warns. A certificate would remove that
    warning but costs money.
-4. **Branding:** the app name, AppUserModelID (`LoZazaMastro.Playhub`), publisher string and install folder are
-   unchanged on purpose. Renaming them later needs a migration plan (shortcuts, uninstall key, plugin author check).
+4. **Branding, Phase 2:** Phase 1 renamed every visible name to Core ([REBRAND.md](REBRAND.md)). The identifiers
+   (AppUserModelID `LoZazaMastro.Playhub`, install and data folders, uninstall key, executables, plugin IDs) and the
+   images are unchanged. Renaming them needs the migration plan sketched there, plus an Eternal maker logo for a boot
+   sequence.
 5. **Release tests:** upstream's `PlayhubUpdate.Tests` is broken at v3.0.0. Fix it, or rely on `EternalRelease.Tests`?
 6. **Ricochet's exact trigger** is unknown. Once it is bisected on the PC
    ([ARCHITECTURE-NOTES.md §4](ARCHITECTURE-NOTES.md#4-mark-ii-changes)), should the pause list shrink to the
