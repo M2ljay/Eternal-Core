@@ -7,7 +7,8 @@ headers and `LICENSE` stay.
 
 ## Phase 1 (branch `core-rebrand`): names the user sees
 
-Text only. No image changed, and no identifier that an installed copy depends on.
+Text first (this section), then images, colours and the support card (sections below). No identifier that an
+installed copy depends on changed.
 
 | Area | What changed |
 | ---- | ------------ |
@@ -30,11 +31,9 @@ regex. `ShellIdentityChecks` (Windows only, not in CI) covers the shortcut renam
 | Text | Why |
 | ---- | --- |
 | About credit, `README.md`, licence and copyright lines | Credit to the upstream project and author. |
-| Support card and donation reminder ("Enjoying Playhub?", "Playhub is free and open source…", "Thank you for being part of Playhub") | It links to Andrea Sgarro's Ko-fi: the donation supports Playhub's author, not Core. Rewording it is a separate decision. |
 | "Playhub plugins", the store's "Playhub" source filter and category, the plugin names Playhub Artworks, Metadata, Notifications, Surround, Discord | The upstream plugin suite. Their names come from upstream's catalogue and `plugin.json` and are matched by name. |
 | CSS Loader "Playhub" profile and "Playhub (Big Image Mode)" | The theme is installed into CSS Loader under that name (`Playhub.profile`); the text matches what CSS Loader shows. |
 | "Playhub.exe" in the Controlled folder access help | The file the user has to pick is still called `Playhub.exe`. |
-| Splash logo option "Playhub" (app and agent `LogoChoice`) | It names the Playhub logo image, which Phase 1 does not change. |
 | Log lines, thread names, exception messages that only reach logs | Not shown in the UI; renaming them would break log searches. |
 | Decky `plugin.json` description | Only shown by a Decky store, which does not list this bundled plugin. |
 | `ChainFreeEngine/Plugin` | Suspended plugin, not shipped. |
@@ -67,45 +66,84 @@ Each one is read by an installed copy, by Windows or by another component. Renam
 A Phase 2 migration would, per item: write the new name, keep reading the old one, move user data once with a marker
 file, and keep the old update and asset names working for at least one release.
 
-## Image assets (unchanged in Phase 1)
+## Images (done)
 
-Pixel sizes read from the files. "Used by" lists the code that references each file.
+Every Playhub logo, icon and splash image the app, setup, agent and Big Picture plugin show is now Core's. File names,
+pixel sizes and formats are unchanged, so no reference moved. Masters: [brand/](brand/) (`PALETTE.md`); the rasters
+were rendered from them by `brand/tools/render_brand.py` (rsvg-convert; "CORE" outlined from Inter Medium with
+fontTools, so no viewer needs Inter). `brand/core-wordmark.svg` is the outlined wordmark master.
 
-| File | Format and size | Used by |
-| ---- | --------------- | ------- |
-| `Source/Playhub/Assets/Brand/Playhub.ico` | ICO, 256x256 | App exe icon (`ApplicationIcon` in `Playhub.csproj`), window and taskbar icon (`MainWindow.xaml.cs`, `ShellIdentity`), Start menu and desktop shortcuts (`Installer.cs`), `PlayhubLauncher` |
-| `Source/PlayhubSetup/Assets/Playhub.ico` | ICO, 256x256 | Installer exe icon (`PlayhubSetup.csproj`) |
-| `Source/GamingModeAgent/app.ico` | ICO, 207x207 | Gaming Mode agent exe icon (`GamingMode.csproj`) |
-| `Source/Playhub/Plugins/Gaming Mode/gaming-mode-win-x64/assets/logo.ico` | ICO, 207x207 | Gaming Mode shortcuts (`install.ps1`) |
-| `Source/Playhub/Assets/Brand/Playhub Cube Icon.png` | PNG, 512x512 | Small icon (22x22) in the app's title bar (`MainWindow.xaml.cs`) |
-| `Source/Playhub/Assets/Brand/cube.png` | PNG, 1024x1024 | Update dialog header (`MainWindow.UpdateDialog.cs`); required payload entry (`build-update-preview.ps1`) |
-| `Source/PlayhubSetup/Assets/cube.png` | PNG, 1024x1024 | Installer window (`PlayhubSetup.csproj`) |
-| `Source/Playhub/Assets/Brand/playhub-wordmark-white.png` | PNG, 500x132 | Update dialog wordmark; required payload entry |
-| `Source/Playhub/Assets/Brand/PlayhubTag.png` | PNG, 450x450 | Plugin Store badge for the upstream suite's plugins (`MainWindow.xaml.cs`) |
-| `Source/Playhub/Assets/Brand/base-logo.png` and `Plugins/Gaming Mode/gaming-mode-win-x64/assets/base-logo.png` | PNG, 2257x595 | Gaming Mode boot/transition splash, default "Playhub" logo choice (`SplashScreenService.cs`, agent `MainWindow.cs`, app splash picker) |
-| `Source/PlayhubSetup/Assets/mascot.png` | PNG, 783x1241 | Installer and Decky repair page mascot |
-| `Source/PlayhubSetup/Assets/setup-agreement.png`, `setup-done.png`, `setup-language.png` | PNG, 1254x1254 | Installer pages (XAML) |
-| `Source/PlayhubSetup/Assets/setup-progress.png` | PNG, 1254x1146 | Installer progress page (XAML) |
-| `Source/GamingModeDeckyPlugin/assets/playhub-logo-decky.png` (+ `.svg` source) | PNG, 450x450 | Decky plugin icon (`plugin.json`), copied to the app's assets by `build-plugin.bat` |
-| `Source/GamingModeDeckyPlugin/assets/playhub-wordmark.png` | PNG, 500x132 | Quick Access header (`index.tsx`) |
-| `Source/GamingModeDeckyPlugin/assets/playhub-wordmark-large.png` | PNG, 1600x371 | Big Picture onboarding (`PlayhubOnboarding.tsx`) |
-| `Source/GamingModeDeckyPlugin/assets/source-badges/playhub.png` | PNG, 450x450 | Plugin Store source badge for the upstream suite (`pluginStoreAssets.ts`) |
-| `Source/Playhub/Assets/Welcome/Mascots/*.png` (17 files, e.g. `final-onboarding.png` 1619x971, `card-playhub-update-v2.png` 1254x1254) | PNG | Desktop onboarding and page headers; `final-onboarding.png` is hash-checked by `build-update-preview.ps1` |
-| `Source/Playhub/Assets/Extra/css-theme-preview.png` | PNG, 2400x1349 | CSS Loader profile preview (shows the Playhub theme) |
-| `Source/Playhub/Assets/Support/Donation.png` | PNG, 1350x760 | Support card (upstream author) |
-| `docs/images/readme-logo-card.png` 550x190, `logo.png` 760x300, `hero.png` 1255x485, `readme-*.png` | PNG | Root `README.md` (upstream README) |
+| File | Format and size | Now | Used by |
+| ---- | --------------- | --- | ------- |
+| `Source/Playhub/Assets/Brand/Playhub.ico`, `Source/PlayhubSetup/Assets/Playhub.ico`, `Source/GamingModeAgent/app.ico`, `Plugins/Gaming Mode/gaming-mode-win-x64/assets/logo.ico` | ICO 16, 24, 32, 48, 64, 128, 256 (was one 256 or 207 frame) | Core mark on the gunmetal tile; 16-32 px use a simplified ring (thicker, no ticks) | App, setup and agent exe icons, window/taskbar, Start and desktop shortcuts, `PlayhubLauncher`, Gaming Mode shortcuts |
+| `Source/Playhub/Assets/Brand/Playhub Cube Icon.png` | PNG 512x512 | Tiled mark | Title-bar icon |
+| `Source/Playhub/Assets/Brand/cube.png`, `Source/PlayhubSetup/Assets/cube.png` | PNG 1024x1024 | Tiled mark | Update dialog header; setup resource; required payload entry |
+| `Source/Playhub/Assets/Brand/playhub-wordmark-white.png` | PNG 500x132 | Ring + "CORE", near-white `#F4F7FA` | Update dialog; required payload entry |
+| `Source/Playhub/Assets/Brand/base-logo.png`, `Plugins/Gaming Mode/gaming-mode-win-x64/assets/base-logo.png`, `Source/PlayhubSetup/Assets/wordmark.png` | PNG 2257x595 | Ring + "CORE", chrome gradient | Gaming Mode boot/transition splash (default logo choice, now labelled "Core"); installer side panel |
+| `Source/Playhub/Assets/Brand/PlayhubTag.png` | PNG 450x450 | Mark alone (drawn at 26 px on a gunmetal disc) | Store badge for the upstream suite's plugins |
+| `Source/GamingModeDeckyPlugin/assets/playhub-logo-decky.png` (+ `.svg`, + the copy in `Assets/GamingModeDeckyPlugin/gaming-mode/assets`) | PNG 450x450, SVG | Mark alone | Decky plugin icon |
+| `Source/GamingModeDeckyPlugin/assets/playhub-wordmark.png` | PNG 500x132 | Ring + "CORE", near-white | Quick Access header |
+| `Source/GamingModeDeckyPlugin/assets/playhub-wordmark-large.png` | PNG 1600x371 | Ring + "CORE", chrome | Big Picture onboarding |
+| `Source/GamingModeDeckyPlugin/assets/source-badges/playhub.png` | PNG 450x450 | Tiled mark | Big Picture store source badge for the upstream suite |
 
-Not app branding, left as is: plugin covers (`PluginCovers/`, `plugin-covers/`, the hashed `dist/assets/Playhub *.jpg`),
-store and service logos, OEM splash logos (`assets/logos/`), the "On this day" images. There are no Windows tile images
-(the app is unpackaged, no `Assets/*Tile*.png`) and no installer banner bitmaps (the installer is a WPF window).
+The committed bundle (`Assets/GamingModeDeckyPlugin/gaming-mode/dist`) was rebuilt: `index.js` and the three hashed
+`playhub-*.png` outputs (old hashes removed). Release packaging pins no image by a literal hash:
+`build-update-preview.ps1` compares `final-onboarding.png` and the bundle with their own source files, so nothing
+needed re-pinning.
 
-The committed `Source/Playhub/Assets/GamingModeDeckyPlugin/gaming-mode/dist/assets/playhub-*.png` are build outputs of
-the Decky plugin images above and change with them.
+Not changed, on purpose:
 
-## Maker logo (Eternal), needed later
+| Image | Why |
+| ----- | --- |
+| `Source/Playhub/Assets/Welcome/Mascots/*.png` (17), `Assets/Extra/decky-repair-mascot.png` | Character illustrations, not logos; none shows the Playhub name or "p" mark. Two (`plugin-store-grid-v2`, the installer's unused `mascot.png`) hold a small yellow cube that echoes the old logo. Replacing the mascots is an art decision, not a palette swap. |
+| `Source/PlayhubSetup/Assets/mascot.png`, `setup-agreement.png`, `setup-done.png`, `setup-language.png`, `setup-progress.png`, `setup-ready.png` | Not referenced by the installer (only `wordmark.png` and `cube.png` are resources); leftovers from upstream. |
+| `Source/Playhub/Assets/Extra/css-theme-preview.png` | Preview of the CSS Loader "Playhub" theme, which is unchanged. |
+| `docs/images/*` | Upstream README. |
+| `Source/ChainFreeEngine/Plugin/assets/*` | Suspended plugin, not shipped. |
+| Plugin covers, store and service logos, OEM splash logos (`assets/logos/`), "On this day" images, `DeckyStoreBadge.png` | Not app branding. |
 
-A separate Eternal logo and wordmark is needed for a boot sequence: the Eternal logo first, then Core, like a console
-start-up. Nothing exists yet. Places where a maker logo could appear:
+The four Eternal plugin icons (`brand/icons/`) are not placed: this repository bundles no icon for The Collector,
+Awesome Mix, Forge or Assemble.
+
+## Colours (done)
+
+A palette swap from Playhub's yellow `#FFCB0F` to Core's crimson `#D7263D` with gunmetal `#1A1D21` surfaces and
+`#3A3F46` strokes. Contrast (WCAG 2.1): white on crimson 4.96:1; crimson as text on gunmetal is only 3.4:1, so text
+uses lighter tints.
+
+| Area | Change |
+| ---- | ------ |
+| App accent (`PlayhubSettings.AccentColor`, `AccentPalette`) | Default and first swatch `#D7263D`. A saved `#FFCB0F` (no longer offered) moves to crimson once, like the older `#4CC2FF`/`#FFB454` defaults. White text on the accent (`NeedsLightForeground`). Hover on a dark accent now darkens (`AccentHover`; lightening put white text at 4.05:1). Accent-coloured text (release-notes "Novità" and version) uses the Light2 tint `#E67887`, 5.96:1 on gunmetal (`AccentText`). Icons and progress keep the accent (3:1 for graphics). |
+| Store suite badge (app) | Gunmetal metal disc instead of the gold one; label gradient `#D7263D` to `#7A1220` (white text). |
+| Gaming Mode transition colour | Defaults `#D7263D` (app model, agent model, agent fallback). `GamingModeService.NormalizeConfig` moves a saved non-custom `#FFCB0F` to crimson once, so the agent's config follows. |
+| Installer (`App.xaml`, `MainWindow.xaml`) | Accent `#D7263D`, hover `#C11F35`, pressed `#A51A2D`, all with white text (4.96, 5.97, 7.54:1). Surfaces `#1A1D21`, strokes `#3A3F46`. Accent bar and "done" disc crimson with a white tick. |
+| Big Picture plugin | Control Center tab indicator crimson; the store's suite badge tint crimson. Digital Stores: `--sd-accent: #d7263d` for fills (focused tab with white text, progress), and `--sd-accent-line: #ff5a6e` for outlines, icons, caret and the active-tab underline on its grey surfaces (3.96 to 6.6:1, where crimson would be 2.4 to 3:1). |
+
+Left as is:
+
+- The app's surfaces: Mica, Acrylic or the WinUI dark theme supply them; tinting them gunmetal would be a redesign.
+- The amber warning card (`BuildYellowWarning`) and the plugin's yellow "experimental" badge: warning semantics, not brand.
+- "On this day" (`DailyHistory.tsx`): its sepia and gold editorial look.
+- The agent's standalone settings window (`GamingMode/MainWindow.cs`, `AppBrushes.Yellow #fcba03` with ink text; shown
+  only when the agent exe runs without arguments): swapping the fill to crimson would need its text inverted (ink on
+  crimson is 3.8:1), which is a redesign.
+- The installer window's translucent black backdrop (`#9E121316`).
+- CSS Loader themes (`Assets/CssLoaderThemes/themes.zip`): third-party themes.
+
+## Support card (removed)
+
+The Support page and the usage-timed "Enjoying Playhub?" reminder linked to Andrea Sgarro's Ko-fi. Both are removed,
+with their navigation item, `SupportUsageClock`, the saved `SupportReminderUsageSeconds` (an old value in
+`settings.json` is ignored), `Assets/Support/Donation.png`, the `Playhub.SupportUsage.Tests` project, the UI-review
+hooks and their strings in the code table and all 12 language files. `LocalizationResource.Tests` checks the strings
+stay gone. The About credit, copyright lines and MIT licence are unchanged. The Big Picture plugin and the installer
+had no support or donation entry.
+
+## Maker logo (Eternal): placements still open
+
+An Eternal logo and wordmark now exist as masters (`brand/eternal-logo.svg`, `brand/eternal-wake.svg`), but no image
+in the product uses them yet: no current asset is a maker spot. A boot sequence would show the Eternal logo first, then
+Core, like a console start-up. Places where a maker logo could appear:
 
 - Gaming Mode boot and mode-switch splash (agent `SplashScreenService.cs` and `ModeTransitionVisual.cs`): Eternal,
   then the Core logo, before Big Picture.

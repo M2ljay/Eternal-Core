@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eternal Core boot</title>
+<style>
+/* VOICE: a console reveal, quiet and confident.
+   IDEA: the TV in a dark living room when the machine wakes.
+   PICTURE: the boot sequence itself, full width, with its sound.
+   COLOUR and TYPE: gunmetal, crimson, chrome; Inter, widely spaced capitals as in the logos.
+   LAYOUT: the screen first, then the maker, the platform and the app family. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap');
+:root{color-scheme:dark;--bg:#0A0B0D;--panel:#14171B;--ink:#E6EAEE;--muted:#9AA4AE;--crimson:#D7263D;--line:#2A2F35}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,"Segoe UI",system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(24px,4vw,56px) max(5vw,16px);max-width:1240px;margin:0 auto}
+h1{font-size:clamp(28px,4vw,44px);line-height:1.05;font-weight:500;margin:0 0 8px;text-wrap:balance}
+h2{font-size:20px;font-weight:500;margin:0 0 12px}
+p{color:var(--muted);margin:0 0 16px;max-width:68ch}
+.screen{position:relative;aspect-ratio:16/9;background:#000;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.screen svg{position:absolute;inset:0;width:100%;height:100%}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:16px}
+button{font:inherit;min-height:44px;padding:0 20px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button.primary{background:var(--crimson);border-color:var(--crimson);color:#fff}
+button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.hint{font-size:14px;color:var(--muted)}
+.marks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card svg{width:100%;height:auto;display:block;border-radius:10px;background:var(--bg)}
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:20px}
+.app{margin:0;text-align:center}.app svg{width:100%;max-width:150px;height:auto}
+.app figcaption{display:grid;margin-top:8px}.app b{font-weight:500}.app span{color:var(--muted);font-size:14px}
+.sw{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}.sw div{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}.sw i{width:22px;height:22px;border-radius:6px;display:inline-block;border:1px solid var(--line)}
+/* sequence: everything waits until .go */
+.eg{animation:fadeE 4.1s linear}
+@keyframes fadeE{0%{opacity:0}5%,88%{opacity:1}100%{opacity:0}}
+.half{stroke-dasharray:140;animation:draw 1.8s ease-in-out .5s}
+.ekey{stroke-dasharray:40;animation:drawE .6s ease-out 2.3s}
+@keyframes draw{from{stroke-dashoffset:140}to{stroke-dashoffset:0}}
+@keyframes drawE{from{stroke-dashoffset:40}to{stroke-dashoffset:0}}
+.glint{animation:glint .45s ease-out 2.9s}
+@keyframes glint{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+.cg{animation:fadeC .3s linear 4.05s}
+@keyframes fadeC{from{opacity:0}to{opacity:1}}
+.lit{stroke-dasharray:389.6;animation:charge 2.3s ease-in-out 4.3s}
+@keyframes charge{from{stroke-dashoffset:389.6}to{stroke-dashoffset:0}}
+.spin{animation:spin 2.3s linear 4.3s}
+@keyframes spin{0%{transform:rotate(-180deg)}40%{transform:rotate(-80deg)}80%{transform:rotate(-12deg)}88%{transform:rotate(6deg)}94%{transform:rotate(-2deg)}100%{transform:rotate(0)}}
+.tk{animation:tick .3s ease-out 6.6s}
+@keyframes tick{from{opacity:.3}to{opacity:1}}
+.core{transform-box:fill-box;transform-origin:center;animation:pulse .6s ease-out 6.6s}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.word{animation:fadeC .7s ease-out 6.9s}
+.seq *{animation-fill-mode:both!important}
+.seq.idle *{animation:none!important}.seq.idle .eg,.seq.idle .cg{opacity:0}
+@media (prefers-reduced-motion:reduce){.seq *{animation:none!important}.seq .eg{opacity:0}.seq .cg{opacity:1}}
+</style></head><body>
+<main>
+<section class="band">
+<h1>Eternal, then Core</h1>
+<p>The boot sequence as it plays when Core wakes: Eternal's key forms its E and glints, then Core's dial turns and locks. Turn your sound on.</p>
+<div class="screen">
+<svg id="seq" class="seq idle" viewBox="0 0 1280 720" role="img" aria-label="Eternal and Core boot animation">
+<defs><linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F7FA"/><stop offset="0.48" stop-color="#AEB8C2"/><stop offset="0.52" stop-color="#5B636C"/><stop offset="1" stop-color="#C9D1D9"/></linearGradient></defs>
+<rect width="1280" height="720" fill="#0A0B0D"/>
+<g class="eg">
+<text x="636" y="352" text-anchor="middle" font-family="Inter, 'Segoe UI', sans-serif" font-size="56" letter-spacing="20" fill="url(#chrome)">ETERNAL</text>
+<g transform="translate(640,400) scale(1.9) translate(-310,-122)">
+<g fill="none" stroke="#3A3F46" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M170 122 H450"/><path d="M310 122 V140 H321 M310 131 H319"/></g>
+<g fill="none" stroke="#D7263D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path class="half" d="M170 122 H310"/><path class="half" d="M450 122 H310"/><path class="ekey" d="M310 122 V140 H321 M310 131 H319"/></g>
+<path class="glint" d="M310 122 V140 H321 M310 131 H319" fill="none" stroke="#FF8A96" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</g></g>
+<g class="cg">
+<g transform="translate(640,320) scale(1.7)">
+<circle r="62" fill="none" stroke="#3A3F46" stroke-width="9"/>
+<circle class="lit" r="62" fill="none" stroke="#D7263D" stroke-width="9" stroke-linecap="round" transform="rotate(180)"/>
+<g class="spin"><g class="tk" stroke="url(#chrome)" stroke-width="5" stroke-linecap="round"><line x1="0" y1="-48" x2="0" y2="-38"/><line x1="0" y1="38" x2="0" y2="48"/><line x1="-48" y1="0" x2="-38" y2="0"/><line x1="38" y1="0" x2="48" y2="0"/><line x1="-33.9" y1="-33.9" x2="-26.9" y2="-26.9"/><line x1="26.9" y1="26.9" x2="33.9" y2="33.9"/><line x1="33.9" y1="-33.9" x2="26.9" y2="-26.9"/><line x1="-26.9" y1="26.9" x2="-33.9" y2="33.9"/></g></g>
+<g class="core"><circle r="22" fill="url(#chrome)"/><circle r="9" fill="#D7263D"/></g>
+</g>
+<text class="word" x="646" y="540" text-anchor="middle" font-family="Inter, 'Segoe UI', sans-serif" font-size="40" letter-spacing="26" fill="url(#chrome)">CORE</text>
+</g>
+</svg>
+</div>
+<div class="controls">
+<button class="primary" id="play" type="button">Play with sound</button>
+<label class="hint" for="style">Sound</label>
+<select id="style" style="font:inherit;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:0 12px">
+<option value="boot-key.mp3">Key: scrapes in, turns, latch throws</option>
+<option value="boot-tumbler.mp3">Tumbler: key slides in, pins lift, latch turns</option>
+<option value="boot-vault.mp3">Vault: heavy key, bolt throws back</option>
+<option value="boot-arcade.mp3">Arcade: lane switches and a bumper hit</option>
+</select>
+<button id="silent" type="button">Play silently</button>
+<span class="hint" id="msg">About 8 seconds.</span>
+</div>
+<audio id="snd" src="boot-key.mp3" preload="auto"></audio>
+</section>
+<section class="band">
+<h2>The marks</h2>
+<div class="marks">
+<div class="card"><svg viewBox="0 0 300 130" role="img" aria-label="Eternal logo"><defs><linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F7FA"/><stop offset="0.48" stop-color="#AEB8C2"/><stop offset="0.52" stop-color="#5B636C"/><stop offset="1" stop-color="#C9D1D9"/></linearGradient></defs><text x="148" y="60" text-anchor="middle" font-family="Inter, 'Segoe UI', sans-serif" font-size="26" letter-spacing="9" fill="url(#chrome)">ETERNAL</text><path d="M130 80 H170 M150 80 V90 H157 M150 85 H155" fill="none" stroke="#D7263D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><p style="margin:12px 0 0">Eternal, the maker. The key under the bar reads as an E.</p></div>
+<div class="card"><svg viewBox="0 0 300 130" role="img" aria-label="Core logo"><defs><linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F7FA"/><stop offset="0.48" stop-color="#AEB8C2"/><stop offset="0.52" stop-color="#5B636C"/><stop offset="1" stop-color="#C9D1D9"/></linearGradient></defs><g transform="translate(150,65) scale(.85)"><circle r="62" fill="#1A1D21"/><circle r="62" fill="none" stroke="#3A3F46" stroke-width="9"/><circle r="62" fill="none" stroke="#D7263D" stroke-width="9" stroke-linecap="round" transform="rotate(180)" stroke-dasharray="389.6" stroke-dashoffset="194.8"/><g stroke="url(#chrome)" stroke-width="5" stroke-linecap="round"><line x1="0" y1="-48" x2="0" y2="-38"/><line x1="0" y1="38" x2="0" y2="48"/><line x1="-48" y1="0" x2="-38" y2="0"/><line x1="38" y1="0" x2="48" y2="0"/><line x1="-33.9" y1="-33.9" x2="-26.9" y2="-26.9"/><line x1="26.9" y1="26.9" x2="33.9" y2="33.9"/><line x1="33.9" y1="-33.9" x2="26.9" y2="-26.9"/><line x1="-26.9" y1="26.9" x2="-33.9" y2="33.9"/></g><circle r="22" fill="url(#chrome)"/><circle r="9" fill="#D7263D"/></g></svg><p style="margin:12px 0 0">Core, the platform. The ring is always powering up.</p></div>
+</div>
+<div class="sw"><div><i style="background:#1A1D21"></i>Gunmetal #1A1D21</div><div><i style="background:#D7263D"></i>Crimson #D7263D</div><div><i style="background:#C9D1D9"></i>Steel #C9D1D9</div><div><i style="background:#0A0B0D"></i>Boot black #0A0B0D</div></div>
+</section>
+<section class="band">
+<h2>Eternal's apps</h2>
+<div class="apps"><figure class="app"><svg viewBox="0 0 140 140" role="img" aria-label="The Collector icon"><rect width="140" height="140" rx="28" fill="#1A1D21"/><rect width="140" height="140" rx="28" fill="#1A1D21"/><path d="M40 28 H100 V112 H92 V104 H48 V112 H40 Z" fill="url(#chrome)"/><rect x="49" y="38" width="42" height="40" rx="4" fill="#1A1D21"/><path d="M58 54 H62 V50 H66 V54 H70 V58 H66 V62 H62 V58 H58 Z" fill="#C9D1D9"/><circle cx="80" cy="53" r="3.5" fill="#D7263D"/><circle cx="84" cy="61" r="3.5" fill="#D7263D"/><g stroke="#1A1D21" stroke-width="3"><line x1="56" y1="88" x2="56" y2="98"/><line x1="64" y1="88" x2="64" y2="98"/><line x1="72" y1="88" x2="72" y2="98"/><line x1="80" y1="88" x2="80" y2="98"/></g></svg><figcaption><b>The Collector</b><span>Games</span></figcaption></figure><figure class="app"><svg viewBox="0 0 140 140" role="img" aria-label="Awesome Mix icon"><rect width="140" height="140" rx="28" fill="#1A1D21"/><rect width="140" height="140" rx="28" fill="#1A1D21"/><rect x="28" y="40" width="84" height="58" rx="6" fill="url(#chrome)"/><rect x="40" y="50" width="60" height="22" rx="11" fill="#1A1D21"/><circle cx="54" cy="61" r="7" fill="none" stroke="#C9D1D9" stroke-width="3"/><circle cx="86" cy="61" r="7" fill="none" stroke="#C9D1D9" stroke-width="3"/><rect x="40" y="80" width="60" height="5" rx="2" fill="#D7263D"/><path d="M44 98 L50 90 H90 L96 98 Z" fill="#5B636C"/></svg><figcaption><b>Awesome Mix</b><span>Music</span></figcaption></figure><figure class="app"><svg viewBox="0 0 140 140" role="img" aria-label="Forge icon"><rect width="140" height="140" rx="28" fill="#1A1D21"/><rect width="140" height="140" rx="28" fill="#1A1D21"/><path d="M30 58 H104 Q104 70 92 74 L88 76 V84 H96 V96 H44 V84 H52 V76 Q38 72 30 58 Z" fill="url(#chrome)"/><path d="M104 58 L116 52 V64 Z" fill="url(#chrome)"/><g fill="#D7263D"><circle cx="70" cy="40" r="4"/><circle cx="84" cy="34" r="3"/><circle cx="58" cy="32" r="2.5"/><circle cx="94" cy="44" r="2"/></g></svg><figcaption><b>Forge</b><span>Mods</span></figcaption></figure><figure class="app"><svg viewBox="0 0 140 140" role="img" aria-label="Assemble icon"><rect width="140" height="140" rx="28" fill="#1A1D21"/><rect width="140" height="140" rx="28" fill="#1A1D21"/><g stroke="url(#chrome)" stroke-width="9" stroke-linecap="round"><line x1="60" y1="36" x2="52" y2="104"/><line x1="88" y1="36" x2="80" y2="104"/><line x1="38" y1="58" x2="102" y2="58"/><line x1="34" y1="84" x2="98" y2="84"/></g><circle cx="106" cy="34" r="12" fill="#D7263D" stroke="#1A1D21" stroke-width="4"/></svg><figcaption><b>Assemble</b><span>Discord</span></figcaption></figure></div>
+</section>
+</main>
+<script>
+{
+const seq=document.getElementById('seq'),snd=document.getElementById('snd'),msg=document.getElementById('msg'),sel=document.getElementById('style');
+sel.addEventListener('change',()=>{snd.src=sel.value;snd.load();msg.textContent='Sound changed.'});
+function run(withSound){
+  seq.classList.add('idle');void seq.getBoundingClientRect();
+  if(withSound){snd.currentTime=0;snd.play().then(()=>{seq.classList.remove('idle');msg.textContent='Playing.'}).catch(()=>{seq.classList.remove('idle');msg.textContent='Sound was blocked here; playing silently.'});}
+  else{try{snd.pause()}catch(e){};seq.classList.remove('idle');msg.textContent='Playing silently.'}
+}
+document.getElementById('play').addEventListener('click',()=>run(true));
+document.getElementById('silent').addEventListener('click',()=>run(false));
+}
+</script>
+</body></html>

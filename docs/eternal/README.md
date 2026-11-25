@@ -191,10 +191,11 @@ not open it, follow *Settings > Controller > Guide Button Chord Layout > Edit* b
    it map 3.N to "Mark N"?
 3. **Code signing:** upstream never signed the installer, so Windows SmartScreen warns. A certificate would remove that
    warning but costs money.
-4. **Branding, Phase 2:** Phase 1 renamed every visible name to Core ([REBRAND.md](REBRAND.md)). The identifiers
-   (AppUserModelID `LoZazaMastro.Playhub`, install and data folders, uninstall key, executables, plugin IDs) and the
-   images are unchanged. Renaming them needs the migration plan sketched there, plus an Eternal maker logo for a boot
-   sequence.
+4. **Branding, Phase 2:** Phase 1 renamed every visible name to Core and replaced the logos, icons, splash and accent
+   colours ([REBRAND.md](REBRAND.md); masters in [brand/](brand/)). The identifiers (AppUserModelID
+   `LoZazaMastro.Playhub`, install and data folders, uninstall key, executables, plugin IDs) are unchanged. Renaming
+   them needs the migration plan sketched there. Still open: the onboarding mascots, and where the Eternal maker logo
+   appears (a boot sequence).
 5. **Release tests:** upstream's `PlayhubUpdate.Tests` is broken at v3.0.0. Fix it, or rely on `EternalRelease.Tests`?
 6. **Ricochet's exact trigger** is unknown. Once it is bisected on the PC
    ([ARCHITECTURE-NOTES.md §4](ARCHITECTURE-NOTES.md#4-mark-ii-changes)), should the pause list shrink to the
