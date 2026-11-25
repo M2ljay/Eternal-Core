@@ -30,3 +30,15 @@ Like Sony and PlayStation: **Eternal** is the maker, **Core** is the platform.
 - `eternal-wake.svg`: the boot animation. A long grey line charges crimson in from both ends, meets at the centre and drops into the key cut (which reads as an "E"), then glints; that glint hands over to Core's wake-up.
 - Chrome: vertical gradient `#F4F7FA` → `#AEB8C2` | `#5B636C` → `#C9D1D9`. Boot background `#0A0B0D`.
 - Lettering: an upright, widely spaced sans. Before shipping, outline the text with an open-licensed font (Inter, SIL OFL) so it renders identically everywhere.
+
+## App icons (Eternal's first-party plugins)
+
+Gunmetal tile, one chrome symbol, one crimson accent: `icons/the-collector.svg` (cartridge with a D-pad label),
+`icons/awesome-mix.svg` (cassette), `icons/forge.svg` (anvil and sparks), `icons/assemble.svg` (channel `#` with a ping).
+
+## Boot sound
+
+`sound/make_boot_sound.py` synthesises the original boot sound (numpy) in time with the two animations: rising
+tones closing in, a key slide and a bell as the E glints (2.9 s), then a rising hum with ratchet clicks as Core's
+dial turns, a lock thump (6.6 s) and a warm D add9 swell as CORE appears. `sound/eternal-core-boot.ogg` is the
+rendered file. `preview/index.html` plays the whole sequence with sound.
