@@ -38,7 +38,8 @@ Gunmetal tile, one chrome symbol, one crimson accent: `icons/the-collector.svg` 
 
 ## Boot sound
 
-`sound/make_boot_sound.py` synthesises the original boot sound (numpy) in time with the two animations: rising
-tones closing in, a key slide and a bell as the E glints (2.9 s), then a rising hum with ratchet clicks as Core's
-dial turns, a lock thump (6.6 s) and a warm D add9 swell as CORE appears. `sound/eternal-core-boot.ogg` is the
-rendered file. `preview/index.html` plays the whole sequence with sound.
+Chosen: **arcade** (2026-11-25). `sound/make_boot_sound.py <style>` synthesises it (numpy + scipy, all original) in time
+with the two animations: two rising tones closing in; four lane-switch blips as the key goes in; a bumper pop that
+drops in pitch, with two rebounds, on the E's glint (2.9 s); then Core's rising hum and dial detent clicks, the lock
+thump (6.6 s) and a warm D add9 swell as CORE appears. Other styles kept for later: `key`, `tumbler`, `vault`.
+`sound/eternal-core-boot.ogg` is the chosen render. `preview/index.html` plays the sequence with any of them.

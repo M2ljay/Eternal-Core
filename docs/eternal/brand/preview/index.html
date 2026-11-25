@@ -81,10 +81,17 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 </div>
 <div class="controls">
 <button class="primary" id="play" type="button">Play with sound</button>
+<label class="hint" for="style">Sound</label>
+<select id="style" style="font:inherit;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:0 12px">
+<option value="boot-key.mp3">Key: scrapes in, turns, latch throws</option>
+<option value="boot-tumbler.mp3">Tumbler: key slides in, pins lift, latch turns</option>
+<option value="boot-vault.mp3">Vault: heavy key, bolt throws back</option>
+<option value="boot-arcade.mp3">Arcade: lane switches and a bumper hit</option>
+</select>
 <button id="silent" type="button">Play silently</button>
 <span class="hint" id="msg">About 8 seconds.</span>
 </div>
-<audio id="snd" src="boot.mp3" preload="auto"></audio>
+<audio id="snd" src="boot-key.mp3" preload="auto"></audio>
 </section>
 <section class="band">
 <h2>The marks</h2>
@@ -101,7 +108,8 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 </main>
 <script>
 {
-const seq=document.getElementById('seq'),snd=document.getElementById('snd'),msg=document.getElementById('msg');
+const seq=document.getElementById('seq'),snd=document.getElementById('snd'),msg=document.getElementById('msg'),sel=document.getElementById('style');
+sel.addEventListener('change',()=>{snd.src=sel.value;snd.load();msg.textContent='Sound changed.'});
 function run(withSound){
   seq.classList.add('idle');void seq.getBoundingClientRect();
   if(withSound){snd.currentTime=0;snd.play().then(()=>{seq.classList.remove('idle');msg.textContent='Playing.'}).catch(()=>{seq.classList.remove('idle');msg.textContent='Sound was blocked here; playing silently.'});}
