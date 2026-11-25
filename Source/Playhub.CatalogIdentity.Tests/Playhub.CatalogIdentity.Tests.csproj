@@ -8,6 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Playhub/Services/PluginCatalogService.cs" Link="PluginCatalogService.cs" />
+    <Compile Include="../Shared/PluginForkProtection.cs" Link="PluginForkProtection.cs" />
+    <EmbeddedResource Include="../Shared/ProtectedPluginForks.json" LogicalName="Playhub.ProtectedPluginForks.json" />
     <Compile Include="../Playhub/Services/PluginCatalogService.Releases.cs" Link="PluginCatalogService.Releases.cs" />
     <Compile Include="../Playhub/Services/RemotePluginCatalogService.cs" Link="RemotePluginCatalogService.cs" />
     <Compile Include="../Playhub/Services/RemotePluginCatalogService.Decky.cs" Link="RemotePluginCatalogService.Decky.cs" />

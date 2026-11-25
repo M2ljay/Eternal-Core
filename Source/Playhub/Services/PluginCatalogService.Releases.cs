@@ -40,7 +40,7 @@ public sealed partial class PluginCatalogService
             {
                 var changed = 0;
                 using var concurrency = new SemaphoreSlim(3, 3);
-                var github = plugins.Where(p => p.CatalogSource != "decky-store" &&
+                var github = plugins.Where(p => p.CatalogSource != "decky-store" && !p.IsProtectedFork &&
                     (p.IsInstalled || p.IsPlayhubPlugin) && IsValidRepositorySlug(p.RepositorySlug))
                     .GroupBy(p => p.RepositorySlug, StringComparer.OrdinalIgnoreCase)
                     .Select(g => g.First()).ToArray();
@@ -125,6 +125,11 @@ public sealed partial class PluginCatalogService
 
     private static void ApplyLatestRelease(DeckyPluginInfo plugin, ReleaseInfo release)
     {
+        if (plugin.IsProtectedFork)
+        {
+            plugin.HasUpdate = false;
+            return;
+        }
         plugin.FirstPublishedAt = FirstValidPublicationTimestamp(plugin.FirstPublishedAt, release.FirstPublishedAt);
         plugin.UpdatedAt = LatestPublicationTimestamp(plugin.UpdatedAt, release.UpdatedAt, release.PublishedAt);
         if (!string.IsNullOrWhiteSpace(release.Version) &&

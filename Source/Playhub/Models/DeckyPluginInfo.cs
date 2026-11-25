@@ -42,6 +42,9 @@ public sealed class DeckyPluginInfo
     public string UpdatedAt { get; set; } = "";
     public bool IsInstalled { get; set; }
     public string InstalledFolder { get; set; } = "";
+    // Eternal Core: id of the user's fork in this folder (Shared/ProtectedPluginForks.json); never updated by the store.
+    public string ProtectedForkId { get; set; } = "";
+    public bool IsProtectedFork => !string.IsNullOrEmpty(ProtectedForkId);
 }
 
 public sealed class PluginMediaInfo

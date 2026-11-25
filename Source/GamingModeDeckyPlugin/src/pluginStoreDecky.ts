@@ -6,6 +6,7 @@ import {
   findInstalledPlugin,
   isSafePluginName,
 } from "./pluginStoreCatalog";
+import { isShieldedByInstalledFork } from "./pluginStoreForks";
 
 export enum DeckyInstallType {
   Install = 0,
@@ -96,6 +97,10 @@ export function requestDeckyInstall(
   installed: InstalledPlugin[],
 ): Promise<void> {
   if (!isSafePluginName(plugin.name)) return Promise.reject(new Error("Invalid plugin name."));
+  // Eternal Core: Decky would replace the user's fork (Source/Shared/ProtectedPluginForks.json).
+  if (isShieldedByInstalledFork(plugin, installed)) {
+    return Promise.reject(new Error(`${plugin.name}: a personal fork is installed; the store never replaces it.`));
+  }
   const request = {
     url: artifact.url,
     name: plugin.name,

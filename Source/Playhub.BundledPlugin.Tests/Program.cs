@@ -56,6 +56,24 @@ try
     Check(DeckyPluginService.ShouldUseBundledVersion("1.8.3", "v1.8.3"), "Equal online release uses local bytes");
     Check(!DeckyPluginService.ShouldUseBundledVersion("1.8.3-beta", "1.8.3"), "Prerelease bundle cannot displace stable release");
     Check(!DeckyPluginService.ShouldUseBundledVersion("1.8.3", "unknown"), "Unknown remote version preserves online resolution");
+    // Eternal Core: a store install or update never replaces one of the user's forks.
+    var forks = Path.Combine(root, "forks");
+    var fork = Path.Combine(forks, "romm-dock");
+    Directory.CreateDirectory(fork);
+    File.WriteAllText(Path.Combine(fork, "plugin.json"), "{\"name\":\"RomM-Dock\",\"version\":\"0.33.0-win.17\"}");
+    File.WriteAllText(Path.Combine(fork, "package.json"), "{\"name\":\"romm-dock\",\"version\":\"0.33.0-win.17\"}");
+    foreach (var installed in new[] { false, true })
+    {
+        var upstream = new DeckyPluginInfo { Name = "RomM-Dock", FolderName = "romm-dock", SourceFolder = source,
+            InstallerZip = Zip("upstream-" + installed, "0.34.0", true), RepositorySlug = "Crimson3076/romm-dock",
+            IsInstalled = installed, InstalledFolder = installed ? fork : "" };
+        var refused = false;
+        try { await new DeckyPluginService().InstallOrUpdateAsync(upstream, forks, bundledOnly: true); }
+        catch (InvalidOperationException error) when (error.Message.Contains("M2ljay/Eternal-Collector")) { refused = true; }
+        Check(refused && File.ReadAllText(Path.Combine(fork, "plugin.json")).Contains("0.33.0-win.17") &&
+            !File.Exists(Path.Combine(fork, ".playhub-release.json")),
+            installed ? "Store update refuses to overwrite a protected fork" : "Store install refuses a protected fork's folder");
+    }
     foreach (var pair in args.Chunk(2))
     {
         var real = DeckyPluginService.FindBundledPayload(new DeckyPluginInfo { InstallerZip = pair[0] });

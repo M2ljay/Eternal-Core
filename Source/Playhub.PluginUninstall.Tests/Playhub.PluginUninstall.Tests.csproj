@@ -8,6 +8,8 @@
   <ItemGroup>
     <Compile Include="../Playhub/MainWindow.PluginInstallProgress.cs" Link="MainWindow.PluginInstallProgress.cs" />
     <Compile Include="../Playhub/Services/DeckyPluginService.cs" Link="DeckyPluginService.cs" />
+    <Compile Include="../Shared/PluginForkProtection.cs" Link="PluginForkProtection.cs" />
+    <EmbeddedResource Include="../Shared/ProtectedPluginForks.json" LogicalName="Playhub.ProtectedPluginForks.json" />
     <Compile Include="../Playhub/Services/BundledExecutableCopy.cs" Link="BundledExecutableCopy.cs" />
     <Compile Include="../Playhub/Models/DeckyPluginInfo.cs" Link="DeckyPluginInfo.cs" />
   </ItemGroup>

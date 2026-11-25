@@ -19,6 +19,16 @@ function compile(path, context = {}) {
 }
 
 const catalog = compile(join(here, "..", "src", "pluginStoreCatalog.ts"));
+// Eternal Core: the install guard for the user's forks (tests/pluginStoreForks.test.mjs).
+const forks = compile(join(here, "..", "src", "pluginStoreForks.ts"), {
+  require: (id) => {
+    if (id === "./pluginStoreCatalog") return catalog;
+    if (id === "../../Shared/ProtectedPluginForks.json") {
+      return { default: JSON.parse(readFileSync(join(here, "..", "..", "Shared", "ProtectedPluginForks.json"), "utf8")) };
+    }
+    throw new Error(`unexpected import ${id}`);
+  },
+});
 
 function fixture({
   installedPlugins = [{ name: "Example", version: "1.0.0" }],
@@ -65,6 +75,7 @@ function fixture({
     window,
     require: (id) => {
       if (id === "./pluginStoreCatalog") return catalog;
+      if (id === "./pluginStoreForks") return forks;
       throw new Error(`unexpected import ${id}`);
     },
   });

@@ -2,6 +2,8 @@
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <ItemGroup>
     <Compile Include="../Playhub/Services/DeckyPluginService.cs" Link="DeckyPluginService.cs" />
+    <Compile Include="../Shared/PluginForkProtection.cs" Link="PluginForkProtection.cs" />
+    <EmbeddedResource Include="../Shared/ProtectedPluginForks.json" LogicalName="Playhub.ProtectedPluginForks.json" />
     <Compile Include="../Playhub/Services/BundledExecutableCopy.cs" Link="BundledExecutableCopy.cs" />
     <Compile Include="../Playhub/Models/DeckyPluginInfo.cs" Link="DeckyPluginInfo.cs" />
   </ItemGroup>

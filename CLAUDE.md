@@ -32,6 +32,10 @@ Fork of Playhub v3.0.0 (`2f60fb0`). Fork docs: `docs/eternal/README.md`, `docs/e
 - `PlayhubUpdate.Tests` does not compile at v3.0.0 (pre-existing). Five Linux test failures are Windows-only
   behaviour: `ControlledQamFocusChecks`, `DeckyArtifactComparison`, `BundledDecky`, `ImportCatalog`,
   `PluginUninstall`.
+- The store must never update or overwrite the user's own plugin forks. They are listed in
+  `Source/Shared/ProtectedPluginForks.json`, which both the app (embedded resource) and the Decky plugin read. Any
+  project that links `DeckyPluginService.cs` or `PluginCatalogService.cs` must also link
+  `Shared/PluginForkProtection.cs` and embed that JSON. See ARCHITECTURE-NOTES §5.
 - Plugin catalog, "On this day" feed and images, and upstream plugin update checks still point at LoZazaMastro on
   purpose. See ARCHITECTURE-NOTES §2 before changing them. The image URL allowlist in
   `quick_settings/history_remote.py` is pinned to the upstream repository.

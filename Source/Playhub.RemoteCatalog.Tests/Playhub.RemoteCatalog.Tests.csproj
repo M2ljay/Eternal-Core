@@ -14,6 +14,8 @@
     <Compile Include="../Playhub/Services/RemotePluginCatalogService.Decky.cs" Link="RemotePluginCatalogService.Decky.cs" />
     <Compile Include="../Playhub/Models/RemotePluginCatalog.cs" Link="RemotePluginCatalog.cs" />
     <Compile Include="../Playhub/Services/PluginCatalogService.cs" Link="PluginCatalogService.cs" />
+    <Compile Include="../Shared/PluginForkProtection.cs" Link="PluginForkProtection.cs" />
+    <EmbeddedResource Include="../Shared/ProtectedPluginForks.json" LogicalName="Playhub.ProtectedPluginForks.json" />
     <Compile Include="../Playhub/Services/PluginCatalogService.Releases.cs" Link="PluginCatalogService.Releases.cs" />
     <Compile Include="../Playhub/Models/DeckyPluginInfo.cs" Link="DeckyPluginInfo.cs" />
     <Compile Include="../Playhub/Services/PluginCatalogReconciliation.cs" Link="PluginCatalogReconciliation.cs" />

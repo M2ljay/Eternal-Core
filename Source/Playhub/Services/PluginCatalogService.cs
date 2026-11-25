@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using ExternalPluginDefinition = Playhub.Models.RemotePluginCatalogEntry;
+using Playhub.Shared;
 
 namespace Playhub.Services;
 
@@ -383,12 +384,20 @@ public sealed partial class PluginCatalogService
         var bundled = Definitions.ToDictionary(definition => $"{Owner}/{definition.RepositoryName}", StringComparer.OrdinalIgnoreCase);
         var releases = new Dictionary<string, ReleaseInfo>(StringComparer.OrdinalIgnoreCase);
         var repositories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // Eternal Core: an installed fork of the user's hides the upstream entry it replaces, so
+        // neither an update nor a fresh install can land on top of it (ARCHITECTURE-NOTES section 5).
+        var protectedForks = PluginForkProtection.FindInstalled(deckyPluginsPath, ProtectedForkOverride);
+        var shieldedRepositories = PluginForkProtection.ShieldedRepositories(protectedForks);
+        var shieldedFolders = protectedForks.Select(fork => Path.GetFileName(fork.Folder))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (var definition in catalog.Plugins.Where(entry => entry.Active))
         {
             if (!IsValidRepositorySlug(definition.Repository) ||
                 IsBlockedPluginIdentity(new[] { definition.Name, definition.InstallFolder, definition.Repository }
-                    .Concat(definition.Aliases).ToArray()) || !repositories.Add(definition.Repository))
+                    .Concat(definition.Aliases).ToArray()) || shieldedRepositories.Contains(definition.Repository) ||
+                shieldedFolders.Contains(SafeInstallFolderName(definition.InstallFolder, definition.Name)) ||
+                !repositories.Add(definition.Repository))
                 continue;
             var repositoryName = definition.Repository[(definition.Repository.IndexOf('/') + 1)..];
             var isPlayhub = definition.CatalogSource == "playhub" && definition.CatalogStatus == "playhub" &&
@@ -457,13 +466,15 @@ public sealed partial class PluginCatalogService
             });
         }
 
+        AppendProtectedForks(plugins, protectedForks, claimedInstalledFolders);
         // One installed-folder pass hydrates both bundled and newly published definitions.
         AppendUncataloguedInstalledPlugins(plugins, deckyPluginsPath, claimedInstalledFolders);
 #if !PLAYHUB_UI_REVIEW
         foreach (var plugin in plugins)
         {
-            // Local candidates have no published repository or remote release history.
-            if (plugin.CatalogSource == "bundled-local") continue;
+            // Local candidates have no published repository or remote release history, and the
+            // user's forks update themselves, never through the store.
+            if (plugin.CatalogSource == "bundled-local" || plugin.IsProtectedFork) continue;
             var cacheKey = ReleaseCacheKey(plugin.RepositorySlug, plugin.CatalogSource);
             var latest = releases.GetValueOrDefault(plugin.RepositorySlug) ?? LoadReleaseCache(cacheKey);
             ApplyLatestRelease(plugin, latest);
@@ -508,6 +519,60 @@ public sealed partial class PluginCatalogService
             .ThenBy(p => p.IsPlayhubPlugin ? "" : p.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
         return result;
+    }
+
+    // Test seam: upstream identity contracts run with no user forks; null means the bundled list.
+    internal static IReadOnlyList<ProtectedPluginFork>? ProtectedForkOverride { get; set; }
+
+    private static void AppendProtectedForks(List<DeckyPluginInfo> plugins,
+        IReadOnlyList<ProtectedForkInstall> forks, HashSet<string> claimedInstalledFolders)
+    {
+        foreach (var install in forks)
+        {
+            var fork = install.Fork;
+            // Manifest text only (author, description, image); identity, version and release
+            // fields come from the fork rule, never from a possibly stale upstream marker.
+            var metadata = ReadInstalledPluginMetadata(install.Folder);
+            var folderName = Path.GetFileName(install.Folder);
+            var repositoryName = fork.Repository[(fork.Repository.IndexOf('/') + 1)..];
+            var version = string.IsNullOrWhiteSpace(install.Version) ? MissingInstalledVersion : install.Version;
+            plugins.Add(new DeckyPluginInfo
+            {
+                Name = install.Name,
+                FolderName = folderName,
+                Author = metadata.Author,
+                Version = version,
+                InstalledVersion = version,
+                HasUpdate = false,
+                ShortDescription = metadata.Description,
+                LongDescription = metadata.Description,
+                Readme = metadata.Description,
+                IconGlyph = ((char)0xE8B7).ToString(),
+                SourceFolder = "",
+                Image = metadata.Image,
+                CoverImage = metadata.Image,
+                RepositoryUrl = $"https://github.com/{fork.Repository}",
+                RepositoryName = repositoryName,
+                RepositorySlug = fork.Repository,
+                ReleaseAssetName = "",
+                CatalogReleaseZipUrl = null,
+                ReleaseZipUrl = null,
+                InstallAliases = new[] { install.Name, folderName, fork.DisplayName, fork.Repository }
+                    .Concat(fork.RepositoryAliases).Where(value => !string.IsNullOrWhiteSpace(value))
+                    .Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
+                Category = InferInstalledCategory(metadata.Name, metadata.Description, metadata.Tags),
+                Keywords = string.Join(' ', metadata.Tags),
+                IsPlayhubPlugin = false,
+                CatalogStatus = "github",
+                CatalogSource = "installed",
+                Compatibility = $"Fork personale ({fork.DisplayName}): Playhub non lo aggiorna e non lo sovrascrive.",
+                ReleasePageUrl = $"https://github.com/{fork.Repository}",
+                ProtectedForkId = fork.Id,
+                IsInstalled = true,
+                InstalledFolder = install.Folder
+            });
+            ClaimInstalledFolder(claimedInstalledFolders, install.Folder);
+        }
     }
 
     private static void AppendLocalDiscordBundle(List<DeckyPluginInfo> plugins, string pluginRoot,

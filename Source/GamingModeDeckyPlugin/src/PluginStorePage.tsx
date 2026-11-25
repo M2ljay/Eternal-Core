@@ -47,6 +47,7 @@ import { bundledPluginCover, pluginCoverSources, SOURCE_BADGES } from "./pluginS
 import { openHistoryImage } from "./historyInteractions";
 import { STORE_LAYOUT_PROFILES, storeLayoutForWidth } from "./pluginStoreLayout";
 import { descriptionToMarkdown } from "./pluginStoreDescription";
+import { withoutShieldedPlugins } from "./pluginStoreForks";
 import {
   TbArrowLeft,
   TbArrowsSort,
@@ -1177,7 +1178,7 @@ export function PluginStorePage() {
   useEffect(() => subscribePluginProgress(setProgress), []);
   useEffect(() => {
     if (!plugins?.length || !installed.length) return;
-    const targets = plugins.filter((plugin) => {
+    const targets = withoutShieldedPlugins(plugins, installed).filter((plugin) => {
       if (plugin.catalogSource === "decky-store" || !findInstalledPlugin(plugin, installed)) return false;
       const key = `${plugin.repository.toLocaleLowerCase("en-US")}:${plugin.version}`;
       if (probedReleases.current.has(key)) return false;
@@ -1212,6 +1213,11 @@ export function PluginStorePage() {
     });
     return () => { alive = false; };
   }, [plugins, installed]);
+  // Eternal Core: entries that an installed fork of the user's replaces are never offered.
+  const visiblePlugins = useMemo(
+    () => plugins ? withoutShieldedPlugins(plugins, installed) : null,
+    [plugins, installed],
+  );
 
   if (error) {
     return (
@@ -1234,7 +1240,7 @@ export function PluginStorePage() {
       </div>
     );
   }
-  const shared: SharedStoreProps = { plugins, installed, copy, locale, progress };
+  const shared: SharedStoreProps = { plugins: visiblePlugins ?? plugins, installed, copy, locale, progress };
   const footer = {
     actionDescriptionMap: {
       [GamepadButton.BUMPER_LEFT]: copy.switchTabs,

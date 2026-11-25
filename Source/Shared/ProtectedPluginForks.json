@@ -1,0 +1,46 @@
+{
+  "$comment": "Eternal Core: the user's own plugin forks. The Plugin Store (desktop app and Big Picture) never offers an upstream update for them, never lists the upstream plugin they replace while they are installed, and never installs into their folders. Read by Source/Shared/PluginForkProtection.cs (embedded resource) and Source/GamingModeDeckyPlugin/src/pluginStoreForks.ts. See docs/eternal/ARCHITECTURE-NOTES.md, section 5.",
+  "schemaVersion": 1,
+  "forks": [
+    {
+      "id": "eternal-collector",
+      "displayName": "The Collector",
+      "repository": "M2ljay/Eternal-Collector",
+      "repositoryAliases": ["M2ljay/eternal-romm"],
+      "supersedes": ["Crimson3076/romm-dock"],
+      "folders": ["romm-dock", "The Collector"],
+      "pluginNames": ["RomM-Dock", "The Collector"],
+      "versionMarkers": ["-win."]
+    },
+    {
+      "id": "eternal-forge",
+      "displayName": "Forge",
+      "repository": "M2ljay/Eternal-Forge",
+      "repositoryAliases": ["M2ljay/vibe-nexus"],
+      "supersedes": ["RedRanger14/decky-nexus"],
+      "folders": ["Nexus Mods", "Forge"],
+      "pluginNames": ["Nexus Mods", "Forge"],
+      "versionMarkers": ["-anygame"]
+    },
+    {
+      "id": "eternal-mix",
+      "displayName": "Awesome Mix",
+      "repository": "M2ljay/Eternal-Mix",
+      "repositoryAliases": [],
+      "supersedes": [],
+      "folders": ["Awesome Mix", "Now Playing Plus"],
+      "pluginNames": ["Awesome Mix", "Now Playing Plus"],
+      "versionMarkers": []
+    },
+    {
+      "id": "eternal-assemble",
+      "displayName": "Discord",
+      "repository": "M2ljay/Eternal-Assemble",
+      "repositoryAliases": [],
+      "supersedes": ["LoZazaMastro/Playhub-Discord"],
+      "folders": ["Discord", "playhub-discord"],
+      "pluginNames": ["Discord"],
+      "versionMarkers": []
+    }
+  ]
+}

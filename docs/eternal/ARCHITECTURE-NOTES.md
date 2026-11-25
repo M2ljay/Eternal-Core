@@ -274,3 +274,68 @@ Follow-up, not built: the Decky plugin already receives `SteamClient.Input.Regis
 Big Picture is foreground (`navigationHaptics.ts`). It could open the Dashboard on a chord there without touching the
 controller itself, but only while Steam's UI is focused, and it must not consume input Steam Input also maps.
 
+## 5. Plugin Store: the user's own forks
+
+### The risk (Mark II as released)
+
+The store has two front ends with independent matching, and neither knew about the user's forks.
+
+- **Which catalogue.** The desktop app reads the bundled `catalog/plugins.json` (copied to
+  `Assets/PluginCatalog/store-catalog.json`) merged with upstream's
+  `raw.githubusercontent.com/LoZazaMastro/Playhub/main/catalog/plugins.json` (§2 #1; `RemotePluginCatalogService`,
+  6 h refresh, last good copy cached). The Big Picture store fetches the same upstream URL and falls back to the copy
+  bundled at build time (`pluginStoreData.ts`). On top of the catalogue, both look up `releases/latest` of each
+  installed entry's repository (`PluginCatalogService.Releases.cs` `RefreshReleasesAsync`, `PluginStorePage.tsx`), so
+  an upstream GitHub release raises the offered version before the catalogue does.
+- **Desktop matching** (`PluginCatalogService.AppendUncataloguedInstalledPlugins`): a repository declared in
+  `plugin.json`/`package.json` or in Playhub's `.playhub-release.json` marker is authoritative. Without one, the exact
+  install folder (`installFolder`) wins, then a unique alias (name, folder, `aliases`). The match sets
+  `HasUpdate = installed < offered` (`HasVersionUpdate`, SemVer: `0.33.0-win.17` is a prerelease of `0.33.0`).
+- **Desktop install** (`DeckyPluginService.InstallOrUpdateAsync`): the destination is the matched installed folder;
+  it is deleted, replaced with the upstream ZIP and stamped with an upstream marker. "Aggiorna tutto" runs this for
+  every `HasUpdate` plugin; the app only notifies on its own (no silent plugin auto-update exists).
+- **Big Picture matching** (`pluginStoreCatalog.ts` `findInstalledPlugin`): Decky's plugin name against the entry's
+  name, folder and aliases; the update goes through Decky's `utilities/install_plugin`.
+
+Result, verified with the real catalogue and the forks' real manifests:
+
+| Fork (folder) | Matched to | Today |
+| ------------- | ---------- | ----- |
+| The Collector (`romm-dock`, `0.33.0-win.N`, no repository) | `Crimson3076/romm-dock` by folder | **Update offered now** on the desktop (0.33.0 > 0.33.0-win.17); any later upstream release on both front ends |
+| Forge (`Nexus Mods`, `1.21.32-anygame.N`) | `RedRanger14/decky-nexus` by alias "Nexus Mods" | **Update to 1.21.40 offered now** on both front ends |
+| Eternal-Assemble (`Discord`, manifests identical to upstream, 1.0.3) | `LoZazaMastro/Playhub-Discord` | Offered as soon as upstream publishes > 1.0.3 |
+| Awesome Mix (declares `M2ljay/Eternal-Mix`) | nothing (own repository) | Safe; an old `Now Playing Plus` folder was also unmatched |
+
+A fork deployed over an earlier store install of the upstream plugin can also keep the upstream
+`.playhub-release.json`, whose repository and version then override the fork's own manifests.
+
+### The fix
+
+`Source/Shared/ProtectedPluginForks.json` lists the forks: own repository (and older names), the upstream
+repositories they replace (`supersedes`), folders, Decky plugin names and optional version markers (`-win.`,
+`-anygame`). A folder is a fork when its own `plugin.json`/`package.json` declare a fork repository, or when its
+folder or plugin name is listed **and** its version carries the marker (an upstream RomM-Dock or decky-nexus install has
+no marker and keeps its updates). The marker file is ignored for this decision.
+
+- Desktop (`Source/Shared/PluginForkProtection.cs`, embedded resource `Playhub.ProtectedPluginForks.json`):
+  `LoadCatalog` lists each installed fork as an installed entry with the fork's repository, its manifest version, no
+  release ZIP and `ProtectedForkId` set; hides the catalogue entries it supersedes or whose install folder it occupies;
+  skips release refreshes for it; `ApplyLatestRelease` never sets `HasUpdate` on it. `DeckyPluginService` refuses
+  any install or update whose destination is a fork folder (checked again just before the delete), so "Aggiorna
+  tutto", a stale view or a future code path cannot overwrite one. Uninstalling stays possible.
+- Big Picture (`src/pluginStoreForks.ts`, same JSON): an installed fork, recognised by Decky name plus marker, hides
+  the entries it replaces; `requestDeckyInstall` refuses such an entry before calling Decky.
+- Eternal-Assemble has the same manifests as upstream Playhub-Discord, so **any** `Discord` plugin counts as the fork:
+  upstream Discord updates are never offered. Declaring `M2ljay/Eternal-Assemble` in its `package.json` would make the
+  rule exact; the folder rule can then be dropped.
+- To add a fork, or after a rename (The Collector, Forge), edit the JSON only: both front ends and the tests read it.
+  Tests fail if a `supersedes` repository disappears from `catalog/plugins.json`.
+
+**No catalogue entries for the forks.** The catalogue validator (`RemotePluginCatalogService` `Validate`) requires a
+`github.com/<repo>/releases/...` ZIP for every external entry. Eternal-Collector publishes `romm-dock.zip` and
+`update.json` on a `release` branch, and the other forks have no releases, so the store cannot install them. Each fork
+updates itself; the store only shows it as installed.
+
+Tests: `Source/Playhub.CatalogIdentity.Tests` (`ForkProtectionTests.cs`; the upstream identity contracts there run
+with an empty fork list), `Source/Playhub.BundledPlugin.Tests` (install guard), and
+`GamingModeDeckyPlugin/tests/pluginStoreForks.test.mjs`. All three run in the release workflow.

@@ -83,6 +83,20 @@ jobs:
         working-directory: Source/LocalizationResource.Tests
         run: dotnet run -c Release
 
+      # The Plugin Store never offers or installs an upstream update over the user's forks
+      # (Source/Shared/ProtectedPluginForks.json), plus the upstream catalogue identity contracts.
+      - name: Plugin store identity and fork protection tests
+        working-directory: Source/Playhub.CatalogIdentity.Tests
+        run: dotnet run -c Release
+
+      - name: Plugin install payload and fork guard tests
+        working-directory: Source/Playhub.BundledPlugin.Tests
+        run: dotnet run -c Release
+
+      - name: Big Picture plugin store tests (Decky plugin)
+        working-directory: Source/GamingModeDeckyPlugin
+        run: node --test tests/pluginStoreForks.test.mjs tests/pluginStoreOperations.test.mjs tests/pluginStoreCatalog.test.mjs
+
       # Upstream #22: Big Picture's Home/QAM must answer again after a non-Steam game exits.
       - name: Big Picture menu regression tests (Decky plugin)
         working-directory: Source/GamingModeDeckyPlugin

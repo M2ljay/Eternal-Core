@@ -1,4 +1,5 @@
 using Playhub.Models;
+using Playhub.Shared;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -48,6 +49,7 @@ public sealed class DeckyPluginService
                 ? plugin.InstalledFolder
                 : Path.Combine(deckyPluginsPath, plugin.FolderName);
         });
+        await Task.Run(() => RefuseProtectedFork(destination));
         var source = plugin.SourceFolder;
         var bundled = FindBundledPayload(plugin);
 
@@ -122,6 +124,7 @@ public sealed class DeckyPluginService
                 throw new OperationCanceledException("Bundled plugin maintenance deferred by the process guard.");
             if (Directory.Exists(destination))
             {
+                RefuseProtectedFork(destination);
                 StopPluginProcesses(destination);
                 DeleteDirectoryWithRetry(destination);
             }
@@ -134,6 +137,15 @@ public sealed class DeckyPluginService
         plugin.InstalledVersion = plugin.Version;
         plugin.HasUpdate = false;
         progress?.Report(new PluginInstallProgress(PluginInstallPhase.Completed, Percent: 100));
+    }
+
+    // Eternal Core: the store never replaces one of the user's own forks (Shared/ProtectedPluginForks.json),
+    // whatever entry or bulk update asked for it. Uninstalling stays the user's choice.
+    private static void RefuseProtectedFork(string destination)
+    {
+        if (PluginForkProtection.Identify(destination) is { } fork)
+            throw new InvalidOperationException(
+                $"{fork.Name}: fork personale protetto ({fork.Fork.Repository}). Playhub non lo aggiorna e non lo sovrascrive.");
     }
 
     public Task UninstallAsync(DeckyPluginInfo plugin) =>

@@ -9,6 +9,8 @@ var catalog = RemotePluginCatalogService.Parse(File.ReadAllBytes(Path.Combine(Ap
 var windows = catalog.Plugins.Single(p => p.Repository == "LoZazaMastro/ThemeDeck-Windows");
 var linux = catalog.Plugins.Single(p => p.Repository == "BrenticusMaximus/ThemeDeck");
 var decky = catalog.Plugins.First(p => p.CatalogSource == "decky-store");
+// Upstream identity contracts: no Eternal Core user fork is installed (ForkProtectionTests covers those).
+PluginCatalogService.ProtectedForkOverride = Array.Empty<Playhub.Shared.ProtectedPluginFork>();
 var failures = 0;
 var total = 0;
 await Run("Windows declared repository wins over shared name", async () =>
@@ -365,6 +367,7 @@ await Run("Featured exclusions preserve browse entries even when pinned or the o
     Check(browser.Name == "Web Browser" && browser.CatalogPluginId == 59, "Featured filtering changed the browse identity.");
     return Task.CompletedTask;
 });
+await ForkProtectionTests.RunAll(catalog, Run);
 Console.WriteLine($"{total - failures}/{total} passed; {failures} failed.");
 return failures == 0 ? 0 : 1;
 
