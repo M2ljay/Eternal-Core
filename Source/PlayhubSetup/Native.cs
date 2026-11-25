@@ -22,7 +22,7 @@ public static class Shortcuts
             sc.WorkingDirectory = workingDir;
             if (!string.IsNullOrEmpty(arguments)) sc.Arguments = arguments;
             if (!string.IsNullOrEmpty(iconPath)) sc.IconLocation = iconPath + ",0";
-            sc.Description = "Playhub";
+            sc.Description = global::Playhub.Shared.EternalRelease.DisplayName;
             sc.Save();
             Marshal.FinalReleaseComObject(sc);
             if (!string.IsNullOrEmpty(iconPath))

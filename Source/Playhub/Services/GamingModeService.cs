@@ -78,14 +78,14 @@ public sealed class GamingModeService
         if (!File.Exists(script))
         {
             Diag.Crash("GamingModeService.InstallAsync", "install.ps1 mancante: " + script);
-            return new(false, "Mancano alcuni file di Gaming Mode: non trovo " + script + ". Reinstalla Playhub e riprova.");
+            return new(false, "Mancano alcuni file di Gaming Mode: non trovo " + script + ". Reinstalla Core e riprova.");
         }
 
         var bundledExe = Path.Combine(AppPaths.GamingModePackage, "GamingMode.exe");
         if (!File.Exists(bundledExe))
         {
             Diag.Crash("GamingModeService.InstallAsync", "GamingMode.exe mancante: " + bundledExe);
-            return new(false, "Mancano alcuni file di Gaming Mode: non trovo " + bundledExe + ". Reinstalla Playhub e riprova.");
+            return new(false, "Mancano alcuni file di Gaming Mode: non trovo " + bundledExe + ". Reinstalla Core e riprova.");
         }
 
         var companionPath = ResolveDeckyPluginPath(deckyPluginsPath);
@@ -158,7 +158,7 @@ public sealed class GamingModeService
         if (!File.Exists(script))
         {
             Diag.Crash("GamingModeService.UninstallAsync", "uninstall.ps1 mancante: " + script);
-            return new(false, "Mancano alcuni file di Gaming Mode: non trovo " + script + ". Reinstalla Playhub e riprova.");
+            return new(false, "Mancano alcuni file di Gaming Mode: non trovo " + script + ". Reinstalla Core e riprova.");
         }
 
         // Persist the decision before touching processes. Even a partially failed
@@ -355,7 +355,7 @@ public sealed class GamingModeService
         {
             if (!Directory.Exists(DeckyPluginSource))
             {
-                return new(false, "Mancano alcuni file di Gaming Mode. Reinstalla Playhub e riprova.");
+                return new(false, "Mancano alcuni file di Gaming Mode. Reinstalla Core e riprova.");
             }
 
             if (string.IsNullOrWhiteSpace(deckyPluginsPath))

@@ -283,7 +283,7 @@ public sealed class DeckyInstallerService
             var loader = LoaderPath(console);
             if (DeckyProcessTree.FindRoot(listener, loader) is not null) return loader;
         }
-        throw new IOException("La porta 1337 è occupata da un'altra installazione o applicazione. Playhub non l'ha fermata.");
+        throw new IOException("La porta 1337 è occupata da un'altra installazione o applicazione. Core non l'ha fermata.");
     }
 
     private static string PrepareAutostart(string loader)
@@ -354,7 +354,7 @@ public sealed class DeckyInstallerService
         string runtime = Path.Combine(ServicesDir, "PlayhubRuntime");
         DeckyFileUpgrade.RequireOrdinaryPath(runtime);
         if (!File.Exists(Path.Combine(source, "Playhub-DeckyHost.exe")))
-            throw new IOException("Il runtime Decky di Playhub è mancante. Reinstalla Playhub per ripristinarlo.");
+            throw new IOException("Il runtime Decky di Core è mancante. Reinstalla Core per ripristinarlo.");
         string[] files = Directory.GetFiles(source).OrderBy(file => Path.GetFileName(file), StringComparer.Ordinal).ToArray();
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         foreach (string file in files)

@@ -145,7 +145,7 @@ public sealed class DeckyPluginService
     {
         if (PluginForkProtection.Identify(destination) is { } fork)
             throw new InvalidOperationException(
-                $"{fork.Name}: fork personale protetto ({fork.Fork.Repository}). Playhub non lo aggiorna e non lo sovrascrive.");
+                $"{fork.Name}: fork personale protetto ({fork.Fork.Repository}). Core non lo aggiorna e non lo sovrascrive.");
     }
 
     public Task UninstallAsync(DeckyPluginInfo plugin) =>

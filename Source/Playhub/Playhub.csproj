@@ -17,6 +17,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <DebugType>none</DebugType>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Product>$(EternalDisplayName)</Product>
+    <AssemblyTitle>$(EternalDisplayName)</AssemblyTitle>
     <DefaultItemExcludes>$(DefaultItemExcludes);dist_publish\**</DefaultItemExcludes>
     <DefineConstants>$(DefineConstants);PLAYHUB_NATIVE_INTEGRATIONS</DefineConstants>
   </PropertyGroup>

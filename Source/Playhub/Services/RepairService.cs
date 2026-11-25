@@ -31,7 +31,7 @@ public sealed class RepairService
         var agentInstalled = _gamingMode.IsInstalled;
 
         // ---------- 1) File del pacchetto Playhub ----------
-        progress.Report((0.05, "Controllo i file di Playhub…"));
+        progress.Report((0.05, "Controllo i file di Core…"));
         await Task.Delay(150);
         var payloadReady = false;
         try
@@ -43,7 +43,7 @@ public sealed class RepairService
         catch
         {
             found++;
-            notes.Add("Il pacchetto Gaming Mode incluso in Playhub è incompleto: reinstalla Playhub per ripristinarlo.");
+            notes.Add("Il pacchetto Gaming Mode incluso in Core è incompleto: reinstalla Core per ripristinarlo.");
         }
         if (agentInstalled && !payloadReady && found == 0)
         {
@@ -62,11 +62,11 @@ public sealed class RepairService
             }
             catch (GamingModeRepairDeferredException)
             {
-                notes.Add("Riparazione agente differita: reinstalla Playhub per aggiornare l'agente in uso. La sessione corrente non è stata interrotta.");
+                notes.Add("Riparazione agente differita: reinstalla Core per aggiornare l'agente in uso. La sessione corrente non è stata interrotta.");
             }
             catch
             {
-                notes.Add("Gaming Mode non è stato riparato del tutto: riprova o reinstalla Playhub.");
+                notes.Add("Gaming Mode non è stato riparato del tutto: riprova o reinstalla Core.");
             }
         }
 
@@ -142,13 +142,13 @@ public sealed class RepairService
                     fixedCount++;
                     notes.Add("Il collegamento di avvio dell'agente è stato riparato. Preferenze e modalità predefinita conservate.");
                 }
-                else notes.Add("Avvio agente non riparato: collegamento assente o personalizzato. Reinstalla Playhub se desideri riattivare l'avvio automatico.");
+                else notes.Add("Avvio agente non riparato: collegamento assente o personalizzato. Reinstalla Core se desideri riattivare l'avvio automatico.");
             }
         }
         catch
         {
             found++;
-            notes.Add("Avvio agente non riparato: collegamento assente o personalizzato. Reinstalla Playhub se desideri riattivare l'avvio automatico.");
+            notes.Add("Avvio agente non riparato: collegamento assente o personalizzato. Reinstalla Core se desideri riattivare l'avvio automatico.");
         }
 
         // ---------- 7) UWPHook ----------

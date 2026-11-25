@@ -1,7 +1,7 @@
 <Window x:Class="PlayhubSetup.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Playhub Setup"
+        Title="Core Setup"
         Width="780" Height="500"
         WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="False"
         Background="Transparent" WindowStartupLocation="CenterScreen"
@@ -16,7 +16,7 @@
 
       <!-- ===== Barra titolo (trascinabile) + chiudi ===== -->
       <Grid x:Name="TitleBar" Grid.Row="0" Background="Transparent">
-        <TextBlock Text="Playhub Setup" Foreground="#8AFFFFFF" FontSize="12"
+        <TextBlock Text="Core Setup" Foreground="#8AFFFFFF" FontSize="12"
                    VerticalAlignment="Center" Margin="18,0,0,0"/>
         <Button x:Name="BtnClose" Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets"
                 FontSize="11" Foreground="#C8FFFFFF" Width="46" Height="46"
@@ -71,7 +71,7 @@
             <TextBlock x:Name="LangTitle" Text="Choose your language" Foreground="#F2F2F2"
                        FontSize="25" FontWeight="SemiBold"/>
             <TextBlock x:Name="LangSubtitle"
-                       Text="Select the language for Playhub and the installer."
+                       Text="Select the language for Core and the installer."
                        Foreground="#A8A8A8" FontSize="13.5" TextWrapping="Wrap" Margin="0,8,0,0"/>
             <ListBox x:Name="LangList" Height="196" Margin="0,16,0,0"
                      Style="{StaticResource LangListStyle}"/>
@@ -94,7 +94,7 @@
 
           <!-- STATO: PRONTO -->
           <StackPanel x:Name="PanelReady" VerticalAlignment="Center" Visibility="Collapsed">
-            <TextBlock x:Name="ReadyTitle" Text="Installa Playhub" Foreground="#F2F2F2"
+            <TextBlock x:Name="ReadyTitle" Text="Installa Core" Foreground="#F2F2F2"
                        FontSize="25" FontWeight="SemiBold"/>
             <TextBlock x:Name="ReadySubtitle"
                        Text="Verrà installato per il tuo utente."
@@ -157,10 +157,10 @@
             </Border>
             <TextBlock x:Name="DoneTitle" Text="Installazione completata" Foreground="#F2F2F2"
                        FontSize="25" FontWeight="SemiBold" Margin="0,18,0,0"/>
-            <TextBlock x:Name="DoneSub" Text="Playhub è pronto all'uso." Foreground="#A8A8A8"
+            <TextBlock x:Name="DoneSub" Text="Core è pronto all'uso." Foreground="#A8A8A8"
                        FontSize="13.5" TextWrapping="Wrap" Margin="0,8,0,0"/>
             <CheckBox x:Name="ChkLaunchEnd" Style="{StaticResource DarkCheck}"
-                      Content="Apri Playhub ora" IsChecked="True" Margin="0,18,0,0"
+                      Content="Apri Core ora" IsChecked="True" Margin="0,18,0,0"
                       Visibility="Collapsed"/>
           </StackPanel>
 

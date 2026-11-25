@@ -4,6 +4,8 @@
     <EternalReleaseSource>$(MSBuildThisFileDirectory)Shared/EternalRelease.cs</EternalReleaseSource>
     <EternalVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(EternalReleaseSource)')), 'const string Version = "([0-9]+\.[0-9]+\.[0-9]+)";').Groups[1].Value)</EternalVersion>
     <Version>$(EternalVersion)</Version>
+    <!-- Display name (Windows file properties, Task Manager); see DisplayName in EternalRelease.cs. -->
+    <EternalDisplayName>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(EternalReleaseSource)')), 'const string DisplayName = "([^"]+)";').Groups[1].Value)</EternalDisplayName>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(EternalReleaseSource)" Link="Shared/EternalRelease.cs" />
@@ -11,5 +13,7 @@
   <Target Name="EternalValidateVersion" BeforeTargets="BeforeBuild">
     <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(EternalVersion)', '^[0-9]+\.[0-9]+\.[0-9]+$'))"
            Text="Could not read 'const string Version' from $(EternalReleaseSource)." />
+    <Error Condition="'$(EternalDisplayName)' == ''"
+           Text="Could not read 'const string DisplayName' from $(EternalReleaseSource)." />
   </Target>
 </Project>

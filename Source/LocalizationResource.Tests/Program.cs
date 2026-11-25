@@ -64,7 +64,7 @@ string[] eternalMarkII =
     "Giochi sempre protetti",
     "Il registro di Gaming Mode (%APPDATA%\\GamingMode\\agent.log) indica quando la protezione si attiva e perch\u00e9.",
     "Apri la Dashboard con il controller",
-    "Playhub non legge il controller: lo gestisce Steam. Assegna in Steam un accordo del tasto Guida alla scorciatoia da tastiera della Dashboard.",
+    "Core non legge il controller: lo gestisce Steam. Assegna in Steam un accordo del tasto Guida alla scorciatoia da tastiera della Dashboard.",
     "1. Apri gli accordi del tasto Guida con il pulsante qui sotto, oppure in Steam: Impostazioni > Controller > Layout accordi del tasto Guida > Modifica.",
     "2. Scegli un tasto libero, ad esempio Y, e assegnagli il tasto P della tastiera.",
     "3. Nelle opzioni di quel comando aggiungi Ctrl sinistro e Alt sinistro come comandi extra, cos\u00ec un'unica pressione invia Ctrl + Alt + P.",
@@ -89,4 +89,31 @@ foreach (var language in LocalizationService.Languages.Where(language => languag
         $"{language.Key}: {eternalMarkII.Length} Mark II strings translate, and the formatted shortcut line too");
 }
 Check(eternalMarkII.All(key => LocalizationService.Translate("it", key) == key), "Mark II Italian source strings render as written");
+
+// Eternal Core rebrand (docs/eternal/REBRAND.md): the app is called Core everywhere the user reads it.
+// "Playhub" stays only where it names something that still carries that name: the upstream project in
+// the credits and the support card, the upstream Playhub-* plugin suite, the CSS Loader profile that is
+// installed as "Playhub", and the Playhub.exe file. Any other product-name use is a missed string.
+var upstreamName = new Regex(@"(?<![A-Za-z0-9_./\\])Playhub(?!\.[A-Za-z]|[A-Za-z0-9_/\\]| (?:Metadata|Artworks?|Notifications|Surround|Discord)\b)");
+var keptOnPurpose = new Regex(@"[Pp]rofil[oi] Playhub|Playhub \(Big Image|Tema Playhub|plugin di Playhub|suite Playhub|plugin Playhub"
+    + @"|^Ti piace Playhub\?$|^Playhub è sviluppato e mantenuto|^Playhub è gratuito e open source|^Se Playhub ti è utile"
+    + @"|^Playhub cresce grazie alla community|^Grazie per essere parte di Playhub|^Core di Eternal\. Basato su Playhub di Andrea Sgarro");
+const string credit = "Core di Eternal. Basato su Playhub di Andrea Sgarro (LoZazaMastro), licenza MIT. © 2026 Andrea Sgarro (LoZazaMastro).";
+foreach (var language in LocalizationService.Languages)
+{
+    var data = JsonNode.Parse(File.ReadAllText(Path.Combine(directory, language.Key + ".json")))!.AsObject();
+    foreach (var (key, value) in data)
+    {
+        if (keptOnPurpose.IsMatch(key)) continue;
+        var text = value!.GetValue<string>();
+        if (upstreamName.IsMatch(key) || upstreamName.IsMatch(text))
+            throw new Exception($"Rebrand: '{language.Key}/{key}' still calls the app Playhub: {text}");
+    }
+    var translatedCredit = LocalizationService.Translate(language.Key, credit);
+    if (language.Key != "it" && translatedCredit == credit)
+        throw new Exception($"Rebrand: About credit is not translated: {language.Key}");
+    Check(translatedCredit.Contains("Core") && translatedCredit.Contains("Eternal") && translatedCredit.Contains("Playhub") && translatedCredit.Contains("Andrea Sgarro (LoZazaMastro)")
+        && translatedCredit.Contains("MIT") && translatedCredit.Contains("© 2026"),
+        $"{language.Key}: the app is called Core, and the About card says Core by Eternal, based on Playhub by Andrea Sgarro under MIT");
+}
 Console.WriteLine($"{passed} PC and generic localization checks passed.");

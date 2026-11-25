@@ -47,7 +47,7 @@ internal static class GamingModeRepairPayload
         RejectRedirectedPath(package);
         var exe = Path.Combine(package, "GamingMode.exe");
         if (!File.Exists(exe) || new FileInfo(exe).Length == 0)
-            throw new IOException("Pacchetto agente mancante o incompleto. Reinstalla Playhub.");
+            throw new IOException("Pacchetto agente mancante o incompleto. Reinstalla Core.");
         var files = new List<string>();
         Visit(package);
         return files;

@@ -61,6 +61,16 @@ try
         return Task.CompletedTask;
     });
 
+    await Test("rebrand: the user sees Core by Eternal; upgrade identifiers keep Playhub", () =>
+    {
+        Require(EternalRelease.DisplayName == "Core", "display name");
+        Require(EternalRelease.MakerName == "Eternal", "maker name");
+        Require(EternalRelease.UpstreamUpdateRepository == "LoZazaMastro/Playhub", "legacy update repository must stay mapped");
+        var props = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "EternalRelease.props"));
+        Require(props.Contains("const string DisplayName = \"([^\"]+)\";"), "EternalRelease.props no longer reads DisplayName for the file metadata");
+        return Task.CompletedTask;
+    });
+
     await Test("persisted upstream or empty repository resolves to the fork; custom ones are kept", () =>
     {
         Require(!PlayhubUpdatePolicy.IsPreview, "test expects the public build");

@@ -565,7 +565,7 @@ public sealed partial class PluginCatalogService
                 IsPlayhubPlugin = false,
                 CatalogStatus = "github",
                 CatalogSource = "installed",
-                Compatibility = $"Fork personale ({fork.DisplayName}): Playhub non lo aggiorna e non lo sovrascrive.",
+                Compatibility = $"Fork personale ({fork.DisplayName}): Core non lo aggiorna e non lo sovrascrive.",
                 ReleasePageUrl = $"https://github.com/{fork.Repository}",
                 ProtectedForkId = fork.Id,
                 IsInstalled = true,
@@ -2137,7 +2137,7 @@ public sealed partial class PluginCatalogService
                 IsPlayhubPlugin = isDiscordFork,
                 CatalogStatus = isDiscordFork ? "playhub" : "github",
                 CatalogSource = "installed",
-                Compatibility = "Plugin installato localmente e non ancora identificato dal catalogo Playhub.",
+                Compatibility = "Plugin installato localmente e non ancora identificato dal catalogo Core.",
                 ReleasePageUrl = canResolveRelease
                     ? $"https://github.com/{metadata.RepositorySlug}/releases"
                     : metadata.RepositoryUrl,

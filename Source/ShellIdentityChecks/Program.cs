@@ -19,7 +19,7 @@ internal static class Program
         ShellIdentity.ApplyWindow((key, value) => writes.Add((key, value)), executable, icon);
         Check(writes.Select(value => value.Key).SequenceEqual(new uint[] { 2, 4, 3, 5 }), "relaunch tuple precedes window ID");
         Check(writes[0].Value == "\"" + executable + "\"", "relaunch has exact quoted executable");
-        Check(writes[1].Value == "Playhub", "stable product name");
+        Check(writes[1].Value == "Core" && writes[1].Value == EternalRelease.DisplayName, "taskbar relaunch name is the display name");
         Check(writes[2].Value == icon + ",0", "explicit ICO resource index");
         Check(writes[3].Value == "LoZazaMastro.Playhub", "version-independent shared identity");
         Check(ShellIdentity.IsMainTarget(executable, executable), "same canonical main app");
@@ -62,6 +62,18 @@ internal static class Program
             byte[] before = SHA256.HashData(File.ReadAllBytes(foreign));
             Check(!ShellIdentity.UpdateOwnedShortcut(foreign, executable, icon), "different target not modified");
             Check(before.SequenceEqual(SHA256.HashData(File.ReadAllBytes(foreign))), "unrelated shortcut bytes preserved");
+
+            // Rebrand: an owned "Playhub.lnk" is renamed to "Core.lnk" with its contents intact.
+            string renamed = Path.Combine(scratch, "renamed.lnk");
+            byte[] ownedBytes = File.ReadAllBytes(owned);
+            Check(ShellIdentity.MoveOwnedShortcut(owned, renamed, executable), "owned shortcut renamed");
+            Check(!File.Exists(owned) && ownedBytes.SequenceEqual(File.ReadAllBytes(renamed)), "renamed shortcut keeps its contents");
+            Check(!ShellIdentity.MoveOwnedShortcut(foreign, Path.Combine(scratch, "foreign-moved.lnk"), executable), "foreign shortcut not renamed");
+            Check(File.Exists(foreign) && before.SequenceEqual(SHA256.HashData(File.ReadAllBytes(foreign))), "foreign shortcut left in place");
+            File.Copy(renamed, owned);
+            Check(!ShellIdentity.MoveOwnedShortcut(owned, renamed, executable), "existing destination never overwritten");
+            Check(File.Exists(owned) && File.Exists(renamed), "both shortcuts kept when the new name is taken");
+            Check(!ShellIdentity.MoveOwnedShortcut(Path.Combine(scratch, "absent.lnk"), Path.Combine(scratch, "x.lnk"), executable), "missing shortcut not created");
         }
         finally { Marshal.ReleaseComObject(shell); }
     }

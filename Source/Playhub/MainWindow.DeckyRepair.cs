@@ -37,7 +37,7 @@ public sealed partial class MainWindow
                 Source = new BitmapImage(new Uri(Path.Combine(AppContext.BaseDirectory, "Assets", "Extra", "decky-repair-mascot.png"))),
                 Height = 150, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Center
             };
-            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(mascot, T("Mascotte Playhub"));
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(mascot, T("Mascotte Core"));
             body.Children.Add(mascot);
             body.Children.Add(new TextBlock
             {

@@ -325,7 +325,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Title = "Playhub";
+        Title = global::Playhub.Shared.EternalRelease.DisplayName;
         ExtendsContentIntoTitleBar = true;
         SystemBackdrop = new MicaBackdrop();
         Closed += (_, _) => { _shellIdentity?.Dispose(); _playhubUpdateCheckTimer?.Stop(); CancelNavigationRestore(); CancelPluginCardMorph(); ReleaseMediaForShutdown(); CloseLibraryDensity(); ClosePcCardViewports(); };
@@ -1102,13 +1102,13 @@ public sealed partial class MainWindow : Window
     {
         var slides = new (string Asset, string Title, string Body, bool ShowColor)[]
         {
-            ("welcome-onboarding.png", "Benvenuto in Playhub", "Il tuo PC da gioco, con l'anima di una console.", false),
-            ("decky-installation-onboarding.png", "Installare Decky è semplice, come dovrebbe essere", "Playhub ti guida passo dopo passo e installa Decky in modo semplice.", false),
+            ("welcome-onboarding.png", "Benvenuto in Core", "Il tuo PC da gioco, con l'anima di una console.", false),
+            ("decky-installation-onboarding.png", "Installare Decky è semplice, come dovrebbe essere", "Core ti guida passo dopo passo e installa Decky in modo semplice.", false),
             ("plugin-store-grid-v2.png", "I migliori plugin sono tutti qui", "Scopri, installa, aggiorna, e disinstalla i plugin di Playhub, quelli del Decky Store e i progetti indipendenti pubblicati su GitHub.", false),
-            ("gaming-mode-page-header.png", "Il tuo PC è la migliore console mai creata", "Con Playhub Gaming Mode puoi scegliere se avviare il PC in Desktop Mode, la classica esperienza Windows, oppure in Gaming Mode: un'esperienza da console che ottimizza i processi del PC, esclude i processi non necessari per giocare e mette Steam Big Picture al centro di tutto, così puoi dimenticare mouse e tastiera.", false),
+            ("gaming-mode-page-header.png", "Il tuo PC è la migliore console mai creata", "Con Core Gaming Mode puoi scegliere se avviare il PC in Desktop Mode, la classica esperienza Windows, oppure in Gaming Mode: un'esperienza da console che ottimizza i processi del PC, esclude i processi non necessari per giocare e mette Steam Big Picture al centro di tutto, così puoi dimenticare mouse e tastiera.", false),
             ("import-games-onboarding.png", "Tutti i tuoi giochi, una sola libreria", "Import.Welcome.Pc", false),
-            ("choose-color-onboarding.png", "Scegli il tuo stile", "Scegli un colore per la tua app Playhub.", true),
-            ("final-onboarding.png", "È il momento di giocare come mai prima d'ora", "Scopri, prova, personalizza, gioca e divertiti. Questo è lo spirito di Playhub.", false)
+            ("choose-color-onboarding.png", "Scegli il tuo stile", "Scegli un colore per la tua app Core.", true),
+            ("final-onboarding.png", "È il momento di giocare come mai prima d'ora", "Scopri, prova, personalizza, gioca e divertiti. Questo è lo spirito di Core.", false)
         };
         var index = 0;
         var renderedIndex = 0;
@@ -2109,8 +2109,8 @@ public sealed partial class MainWindow : Window
 
         var quickAccess = BuildQuickAccessTutorialCard(
             "gaming",
-            "Apri Playhub in Gaming Mode",
-            "In Big Picture, apri il menu rapido e seleziona l’icona Playhub.",
+            "Apri Core in Gaming Mode",
+            "In Big Picture, apri il menu rapido e seleziona l’icona Core.",
             "",
             warning: "Se il menu rapido non risponde, chiudi Steam per tornare al desktop. Puoi anche tenere premuto Shift durante l'accesso a Windows.",
             videoFile: "Gaming-Mode-Plugin.mp4",
@@ -2119,7 +2119,7 @@ public sealed partial class MainWindow : Window
 
         var dashboardCard = Card();
         var dashboardText = new StackPanel { Spacing = 12, VerticalAlignment = VerticalAlignment.Center };
-        dashboardText.Children.Add(IconHeader(((char)0xE80F).ToString(), "Playhub Dashboard",
+        dashboardText.Children.Add(IconHeader(((char)0xE80F).ToString(), "Core Dashboard",
             "Passa fra giochi e app, controlla il PC e raggiungi gli strumenti essenziali senza lasciare il controller."));
         dashboardText.Children.Add(Body("Aprila con Ctrl + Alt + P per passare tra le finestre, gestire le app preferite e controllare prestazioni e processi. Puoi anche chiudere un'app bloccata senza tornare al desktop."));
         dashboardText.Children.Add(BuildDashboardControllerChordGuide());
@@ -2279,7 +2279,7 @@ public sealed partial class MainWindow : Window
         var advancedCard = Card();
         advancedCard.Children.Add(IconHeader(((char)0xE713).ToString(), "Avanzate",
             "Rete locale, per chi vuole il controllo completo."));
-        advancedCard.Children.Add(NumberWithHint(_apiPortBox, "Porta di rete locale con cui Playhub comunica con la Gaming Mode. Cambiala solo se è già occupata."));
+        advancedCard.Children.Add(NumberWithHint(_apiPortBox, "Porta di rete locale con cui Core comunica con la Gaming Mode. Cambiala solo se è già occupata."));
         AddExplainedToggle(advancedCard, "Consenti API remote",
             "Permette ad altri dispositivi di comandare la modalità sulla rete locale.", "remoteApi");
 
@@ -3194,7 +3194,7 @@ public sealed partial class MainWindow : Window
 
         var executableImport = Card();
         _executableChevron = AddCollapsibleHeader(executableImport, IconHeader(((char)0xE8B7).ToString(), "Aggiungi giochi e app dal PC",
-            "Scegli una cartella o un file .exe. Playhub trova i giochi nelle sottocartelle e li prepara per Steam."), () => _executableGamesPanel);
+            "Scegli una cartella o un file .exe. Core trova i giochi nelle sottocartelle e li prepara per Steam."), () => _executableGamesPanel);
         executableImport.Children.Add(ImportActionRow(
             Button("Aggiungi cartella", async () => await ChooseExecutableFolderAsync()),
             Button("Aggiungi file", async () => await ChooseExecutableFileAsync()),
@@ -3403,7 +3403,7 @@ public sealed partial class MainWindow : Window
 
     private UIElement BuildBigPictureStylerPage()
     {
-        var panel = Page("styler", "Big Picture Styler", "Dai a Big Picture lo stile di Playhub e proteggi gli artwork della libreria.");
+        var panel = Page("styler", "Big Picture Styler", "Dai a Big Picture lo stile di Core e proteggi gli artwork della libreria.");
 
         var css = Card();
         var cssText = new StackPanel { Spacing = 12, VerticalAlignment = VerticalAlignment.Center };
@@ -3598,14 +3598,14 @@ public sealed partial class MainWindow : Window
 
     private UIElement BuildSettingsPage()
     {
-        var panel = Page("settings", "Impostazioni", "Aspetto, avvio e informazioni di Playhub.");
+        var panel = Page("settings", "Impostazioni", "Aspetto, avvio e informazioni di Core.");
 
         // ---------- Lingua ----------
         // Prima card della pagina: una sola scelta, senza etichetta sopra la tendina
         // (ripeterebbe il titolo della card).
         var language = Card();
         language.Children.Add(IconHeader(((char)0xE909).ToString(), "Lingua",
-            "Scegli la lingua della app di Playhub"));
+            "Scegli la lingua della app di Core"));
         _languageCombo = LanguageCombo();
         _languageCombo.SelectionChanged += async (_, _) => await ChangeLanguageAsync();
         var languageRow = new StackPanel
@@ -3617,7 +3617,7 @@ public sealed partial class MainWindow : Window
         languageRow.Children.Add(_languageCombo);
         languageRow.Children.Add(new TextBlock
         {
-            Text = "Playhub verrà riavviato",
+            Text = "Core verrà riavviato",
             Opacity = 0.68,
             FontSize = 13,
             VerticalAlignment = VerticalAlignment.Center,
@@ -3629,7 +3629,7 @@ public sealed partial class MainWindow : Window
         // ---------- Aspetto ----------
         var appearance = Card();
         appearance.Children.Add(IconHeader(((char)0xE713).ToString(), "Aspetto",
-            "Personalizza lo sfondo e il colore di Playhub."));
+            "Personalizza lo sfondo e il colore di Core."));
 
         _backdropCombo = ChoiceCombo(BackdropOptions);
         _backdropCombo.SelectionChanged += async (_, _) =>
@@ -3660,7 +3660,7 @@ public sealed partial class MainWindow : Window
         // ---------- Avvio ----------
         var startup = Card();
         startup.Children.Add(IconHeader(((char)0xE80F).ToString(), "Avvio",
-            "La pagina su cui si apre Playhub ogni volta che lo avvii."));
+            "La pagina su cui si apre Core ogni volta che lo avvii."));
         _startupPageCombo = ChoiceCombo(StartupPageOptions);
         _startupPageCombo.SelectionChanged += async (_, _) =>
         {
@@ -3674,7 +3674,7 @@ public sealed partial class MainWindow : Window
         // ---------- Plugin Store ----------
         var pluginStore = Card();
         pluginStore.Children.Add(IconHeader(((char)0xE719).ToString(), "Plugin Store",
-            "Scegli se Playhub deve chiederti di riavviare Decky dopo aver installato o aggiornato i plugin."));
+            "Scegli se Core deve chiederti di riavviare Decky dopo aver installato o aggiornato i plugin."));
         var restartPromptsToggle = new ToggleSwitch
         {
             Header = "Chiedi di riavviare Decky",
@@ -3812,8 +3812,8 @@ public sealed partial class MainWindow : Window
 
         // ---------- Aggiornamenti Playhub ----------
         var updates = Card();
-        updates.Children.Add(IconHeader(((char)0xE895).ToString(), "Aggiorna Playhub",
-            "Installa gli ultimi aggiornamenti disponibili di Playhub"));
+        updates.Children.Add(IconHeader(((char)0xE895).ToString(), "Aggiorna Core",
+            "Installa gli ultimi aggiornamenti disponibili di Core"));
         _playhubUpdateButton = Button("Cerca aggiornamenti", CheckPlayhubUpdatesAsync, primary: true);
         _playhubUpdateBar = new ProgressBar
         {
@@ -3837,9 +3837,10 @@ public sealed partial class MainWindow : Window
         // ---------- Informazioni ----------
         var about = Card();
         about.Children.Add(IconHeader(((char)0xE946).ToString(), "Informazioni",
-            $"Playhub {(global::Playhub.Shared.EternalRelease.DisplayVersion)} · © 2026 Andrea Sgarro (LoZazaMastro)"));
+            $"{global::Playhub.Shared.EternalRelease.DisplayName} {global::Playhub.Shared.EternalRelease.DisplayVersion}"));
+        about.Children.Add(Body("Core di Eternal. Basato su Playhub di Andrea Sgarro (LoZazaMastro), licenza MIT. © 2026 Andrea Sgarro (LoZazaMastro)."));
         about.Children.Add(Body("Componenti di terze parti (licenza MIT): UWPHook © 2016 Brian Lima · VDFParser © 2016 Victor Gama · SharpSteam © 2020 Brian Lima."));
-        about.Children.Add(Body("Playhub è un progetto indipendente e non è affiliato né approvato da Valve. Steam e Steam Controller sono marchi di Valve Corporation."));
+        about.Children.Add(Body("Core è un progetto indipendente e non è affiliato né approvato da Valve. Steam e Steam Controller sono marchi di Valve Corporation."));
         about.Children.Add(ActionRow(
             Button("UWPHook", async () => await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/BrianLima/UWPHook"))),
             Button("VDFParser", async () => await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/BrianLima/VDFParser"))),
@@ -8491,7 +8492,7 @@ by Valve.";
     private FrameworkElement BuildDashboardControllerChordGuide()
     {
         var content = new StackPanel { Spacing = 10 };
-        content.Children.Add(Body("Playhub non legge il controller: lo gestisce Steam. Assegna in Steam un accordo del tasto Guida alla scorciatoia da tastiera della Dashboard."));
+        content.Children.Add(Body("Core non legge il controller: lo gestisce Steam. Assegna in Steam un accordo del tasto Guida alla scorciatoia da tastiera della Dashboard."));
         _dashboardHotkeyText = new TextBlock { TextWrapping = TextWrapping.Wrap, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold };
         content.Children.Add(_dashboardHotkeyText);
         content.Children.Add(Body("1. Apri gli accordi del tasto Guida con il pulsante qui sotto, oppure in Steam: Impostazioni > Controller > Layout accordi del tasto Guida > Modifica."));
@@ -9097,13 +9098,13 @@ by Valve.";
 
             if (PlayhubUpdatePolicy.ShouldOffer(info))
             {
-                _playhubUpdateStatus.Text = string.Format(T("Playhub {0} disponibile"), info.LatestVersion);
+                _playhubUpdateStatus.Text = string.Format(T("Core {0} disponibile"), info.LatestVersion);
                 ShowPlayhubUpdateDialog(info, force: true);
             }
             else
             {
-                _playhubUpdateStatus.Text = T("Playhub è già aggiornato.");
-                SetStatus("Playhub è aggiornato.", InfoBarSeverity.Success);
+                _playhubUpdateStatus.Text = T("Core è già aggiornato.");
+                SetStatus("Core è aggiornato.", InfoBarSeverity.Success);
             }
         }
         finally
@@ -9119,7 +9120,7 @@ by Valve.";
         _playhubUpdateButton.IsEnabled = true;
         _playhubUpdateBar.Visibility = Visibility.Collapsed;
         _playhubUpdateStatus.Visibility = Visibility.Collapsed;
-        UpdatePlayhubUpdateDialogProgress(info.DownloadSize > 0 ? 0 : null, $"Scarico Playhub {info.LatestVersion}…");
+        UpdatePlayhubUpdateDialogProgress(info.DownloadSize > 0 ? 0 : null, $"Scarico Core {info.LatestVersion}…");
 
         try
         {
@@ -9147,7 +9148,7 @@ by Valve.";
             _playhubUpdateRunning = false;
             _playhubUpdateButton.IsEnabled = true;
             Diag.Crash("DownloadAndInstallUpdateAsync", ex);
-            UpdatePlayhubUpdateDialogProgress(null, "Non riesco ad aggiornare Playhub. Riprova.", failed: true);
+            UpdatePlayhubUpdateDialogProgress(null, "Non riesco ad aggiornare Core. Riprova.", failed: true);
         }
     }
 
@@ -9442,7 +9443,7 @@ by Valve.";
         {
             Diag.Crash("Language restart", ex);
         }
-        SetStatus("Non riesco a riavviare Playhub. Chiudilo e riaprilo manualmente.", InfoBarSeverity.Warning);
+        SetStatus("Non riesco a riavviare Core. Chiudilo e riaprilo manualmente.", InfoBarSeverity.Warning);
         return false;
     }
 
@@ -9500,7 +9501,7 @@ by Valve.";
         return TranslatePrefix(message, "Rimozione non riuscita: ") ??
                TranslatePrefix(message, "Installazione del plugin non riuscita: ") ??
                TranslatePrefix(message, "Rimozione del plugin non riuscita: ") ??
-               TranslatePrefix(message, "Windows ha impedito la scrittura del file shortcuts di Steam. Consenti Playhub in Accesso alle cartelle controllato e riprova. ") ??
+               TranslatePrefix(message, "Windows ha impedito la scrittura del file shortcuts di Steam. Consenti Core in Accesso alle cartelle controllato e riprova. ") ??
                T(message);
     }
 

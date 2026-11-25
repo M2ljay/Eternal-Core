@@ -19,4 +19,14 @@ internal static class EternalRelease
 
     // Value that every Playhub 3.0 install persisted in settings.json.
     internal const string UpstreamUpdateRepository = "LoZazaMastro/Playhub";
+
+    // Name the user sees (window title, installer, shortcuts, Installed apps, taskbar).
+    // Internal identifiers keep "Playhub" so upgrades work: install and data folders, the
+    // uninstall key, AppUserModelID, executable and assembly names, plugin IDs, pipes.
+    // See docs/eternal/REBRAND.md before renaming any of those.
+    internal const string DisplayName = "Core";
+
+    // Maker brand (Sony to Core's PlayStation): shown where a publisher is named to the user,
+    // as in "Core by Eternal" (About card, Installed apps "Publisher"). Not an identifier.
+    internal const string MakerName = "Eternal";
 }

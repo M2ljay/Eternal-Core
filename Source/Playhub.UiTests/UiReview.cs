@@ -807,7 +807,7 @@ public sealed partial class MainWindow
                     "gaming" => "Scegli cosa vedere quando accendi il PC.",
                     "xbox" => "Riunisci i tuoi giochi in Steam e completa automaticamente copertine, sfondi e loghi.",
                     "styler" => "Mantieni la versione attuale di Steam. Puoi riattivare gli aggiornamenti in qualsiasi momento.",
-                    "settings" => "Playhub verrà riavviato.",
+                    "settings" => "Core verrà riavviato.",
                     _ => "Fai una donazione"
                 };
                 var rendered = ReviewDescendants(visible).OfType<TextBlock>().Select(item => item.Text).ToArray();

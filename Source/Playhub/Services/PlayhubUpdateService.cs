@@ -215,7 +215,7 @@ public sealed class PlayhubUpdateService
             uri.Scheme != Uri.UriSchemeHttps ||
             !string.Equals(uri.Host, "github.com", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("La release non contiene un installer Playhub valido.");
+            throw new InvalidOperationException("La release non contiene un installer Core valido.");
         }
 
         AppPaths.EnsureRoots();

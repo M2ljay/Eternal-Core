@@ -138,7 +138,7 @@ internal sealed class NativeSteamDownloadPowerRequest : IDisposable
         bool acquired = false;
         try
         {
-            reason = Marshal.StringToHGlobalUni("Playhub: finishing a Steam download");
+            reason = Marshal.StringToHGlobalUni("Core: finishing a Steam download");
             var context = new ReasonContext { Version = 0, Flags = 1, Reason = new ReasonUnion { Simple = reason } };
             handle = PowerCreateRequest(in context);
             if (!handle.IsInvalid && OnAc() && PowerSetRequest(handle, SystemRequired))

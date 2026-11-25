@@ -75,7 +75,7 @@ public sealed partial class MainWindow
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch
             };
-            AutomationProperties.SetName(dialog, $"Playhub {displayInfo.LatestVersion}");
+            AutomationProperties.SetName(dialog, $"{global::Playhub.Shared.EternalRelease.DisplayName} {displayInfo.LatestVersion}");
             dialog.Resources["ContentDialogMinWidth"] = 0d;
             dialog.Resources["ContentDialogMaxWidth"] = 640d;
             dialog.Resources["ContentDialogMinHeight"] = 0d;
@@ -187,7 +187,7 @@ public sealed partial class MainWindow
         var cube = BrandImage("cube.png", 108, 108);
         var wordmark = BrandImage("playhub-wordmark-white.png", 216, 57.024);
         wordmark.Margin = new Thickness(0, 8, 0, 0);
-        AutomationProperties.SetName(wordmark, "Playhub");
+        AutomationProperties.SetName(wordmark, global::Playhub.Shared.EternalRelease.DisplayName);
         header.Children.Add(cube);
         header.Children.Add(wordmark);
         header.Children.Add(new TextBlock
@@ -233,7 +233,7 @@ public sealed partial class MainWindow
             Background = new SolidColorBrush(Color.FromArgb(35, 255, 255, 255)),
             IsHitTestVisible = false
         };
-        AutomationProperties.SetName(progress, T("Aggiornamento Playhub"));
+        AutomationProperties.SetName(progress, T("Aggiornamento Core"));
         var status = new TextBlock
         {
             Name = "PlayhubUpdateDialogStatus",
@@ -486,7 +486,7 @@ public sealed partial class MainWindow
         catch (Exception ex)
         {
             Diag.Crash(nameof(InvokePlayhubUpdateDialogUpdateAsync), ex);
-            UpdatePlayhubUpdateDialogProgress(null, T("Non riesco ad aggiornare Playhub. Riprova."), failed: true);
+            UpdatePlayhubUpdateDialogProgress(null, T("Non riesco ad aggiornare Core. Riprova."), failed: true);
         }
         finally
         {

@@ -62,7 +62,7 @@ try
     {
         Loc.Lang = language.Code;
         string message = Loc.T("GamingModeUpdateIncomplete");
-        Check(message != "GamingModeUpdateIncomplete" && message.Contains("Playhub") && message.Contains("Gaming Mode"),
+        Check(message != "GamingModeUpdateIncomplete" && message.Contains("Core") && !message.Contains("Playhub") && message.Contains("Gaming Mode"),
             "The setup failure has an actionable localized message: " + language.Code);
     }
     Console.WriteLine($"{checks}/{checks} agent installation readback checks passed. No agent, setup or Steam process was executed.");

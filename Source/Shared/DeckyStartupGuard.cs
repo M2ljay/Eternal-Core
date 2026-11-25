@@ -184,7 +184,7 @@ try {
         if (!executableName.Equals("PluginLoader.exe", StringComparison.OrdinalIgnoreCase) && !executableName.Equals("PluginLoader_noconsole.exe", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("Not a Decky executable.");
         string host = RuntimeHostPath(loader);
-        if (!File.Exists(host)) throw new IOException("The Playhub Decky runtime host is missing. Open Playhub to repair Decky startup.");
+        if (!File.Exists(host)) throw new IOException("The Core Decky runtime host is missing. Open Core to repair Decky startup.");
         if (!string.IsNullOrEmpty(start.Arguments) || start.ArgumentList.Count != 0)
             throw new ArgumentException("Decky root startup does not accept worker arguments.");
         start.FileName = host;

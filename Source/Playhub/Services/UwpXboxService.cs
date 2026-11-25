@@ -860,7 +860,7 @@ public sealed partial class UwpXboxService
         }
         catch (UnauthorizedAccessException)
         {
-            return "Sicurezza di Windows impedisce a Playhub di leggere la libreria Steam.";
+            return "Sicurezza di Windows impedisce a Core di leggere la libreria Steam.";
         }
         foreach (var game in selected)
         {
@@ -877,7 +877,7 @@ public sealed partial class UwpXboxService
         var uwpHookDir = uwpHookExe is null ? "" : Path.GetDirectoryName(uwpHookExe) ?? AppContext.BaseDirectory;
         var sessionExe = Path.Combine(AppContext.BaseDirectory, "Playhub.GameSession.exe");
         if (!File.Exists(sessionExe))
-            return "Non trovo il componente di avvio Playhub.GameSession. Ripristina l'installazione di Playhub e riprova.";
+            return "Non trovo il componente di avvio Playhub.GameSession. Ripristina l'installazione di Core e riprova.";
         var backupRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Briano", "UWPHook", "backups");
         Directory.CreateDirectory(backupRoot);
 
@@ -978,7 +978,7 @@ public sealed partial class UwpXboxService
         if (blockedPaths.Count > 0)
         {
             Diag.Crash("UwpXboxService.ExportSelectedToSteamAsync", $"Accesso negato: {blockedPaths[0]}");
-            return "Sicurezza di Windows impedisce a Playhub di aggiornare la libreria. Consenti Playhub in “Accesso alle cartelle controllato”, poi riprova.";
+            return "Sicurezza di Windows impedisce a Core di aggiornare la libreria. Consenti Core in “Accesso alle cartelle controllato”, poi riprova.";
         }
 
         return $"Ho aggiunto {selected.Count} giochi alla libreria Steam.";

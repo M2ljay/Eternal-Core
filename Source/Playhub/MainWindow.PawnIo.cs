@@ -26,11 +26,11 @@ public sealed partial class MainWindow
     {
         var card = Card();
         card.Children.Add(IconHeader(((char)0xE945).ToString(), "Controllo del TDP",
-            "Per regolare il consumo della CPU serve PawnIO, un driver firmato che Playhub non sostituisce."));
+            "Per regolare il consumo della CPU serve PawnIO, un driver firmato che Core non sostituisce."));
         card.Children.Add(Body(
-            "PawnIO è il driver che permette a Playhub di leggere e scrivere il limite di potenza del processore. " +
+            "PawnIO è il driver che permette a Core di leggere e scrivere il limite di potenza del processore. " +
             "È altamente raccomandato: senza di lui il controllo del TDP resta spento. " +
-            "Playhub lo scarica, ne verifica firma e impronta, e apre l'installazione davanti a questa finestra: " +
+            "Core lo scarica, ne verifica firma e impronta, e apre l'installazione davanti a questa finestra: " +
             "non devi scaricare né estrarre niente da solo."));
 
         _pawnIoStatusText = new TextBlock
@@ -142,7 +142,7 @@ public sealed partial class MainWindow
             "service_manager_unavailable" => "Non riesco a interrogare i servizi di Windows per verificare PawnIO.",
             "service_query_denied" => "Windows non consente di leggere lo stato del servizio PawnIO.",
             "service_query_failed" => "La lettura dello stato del servizio PawnIO non è riuscita.",
-            "driver_signature_invalid" => "La firma del driver PawnIO installato non è valida: Playhub non lo usa.",
+            "driver_signature_invalid" => "La firma del driver PawnIO installato non è valida: Core non lo usa.",
             "platform_unsupported" => "Il controllo del TDP è disponibile solo su Windows.",
             "detection_failed" => "Non riesco a stabilire lo stato di PawnIO.",
 

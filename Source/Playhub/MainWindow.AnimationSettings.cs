@@ -33,7 +33,7 @@ public sealed partial class MainWindow
     {
         var card = Card();
         card.Children.Add(IconHeader(((char)0xE790).ToString(), "Animazione Gaming Mode", "All'avvio e durante il cambio modalita."));
-        AddExplainedToggle(card, "Attiva animazione", "Il colore e indipendente dall'accent di Playhub.", "splashAnimation");
+        AddExplainedToggle(card, "Attiva animazione", "Il colore e indipendente dall'accent di Core.", "splashAnimation");
         var palette = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
         var swatches = new List<Button>();
         var customButton = new Button
@@ -129,7 +129,7 @@ public sealed partial class MainWindow
         previewRow.Children.Add(variants);
         previewRow.Children.Add(previewButton);
         card.Children.Add(previewRow);
-        var previewHint = Body("Premi ESC o fai clic per tornare a Playhub");
+        var previewHint = Body("Premi ESC o fai clic per tornare a Core");
         previewHint.HorizontalAlignment = HorizontalAlignment.Right;
         previewHint.TextAlignment = TextAlignment.Right;
         card.Children.Add(previewHint);

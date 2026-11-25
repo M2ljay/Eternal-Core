@@ -26,9 +26,15 @@ public sealed record InstallOptions(
 /// </summary>
 public static class Installer
 {
+    // Internal name: install folder, uninstall key, process name. Unchanged so that
+    // updates land on existing installs (see docs/eternal/REBRAND.md).
     public const string AppName = "Playhub";
+    // Name the user sees in Installed apps, the Start menu and on the desktop.
+    public const string DisplayName = global::Playhub.Shared.EternalRelease.DisplayName;
     public const string AppVersion = global::Playhub.Shared.EternalRelease.Version;
-    public const string Publisher = "Andrea Sgarro (LoZazaMastro)";
+    // Shown as "Publisher" in Installed apps only. The file metadata (Company) and the
+    // copyright keep Andrea Sgarro (LoZazaMastro), the upstream author.
+    public const string Publisher = global::Playhub.Shared.EternalRelease.MakerName;
     public const string AppExeName = "Playhub.exe";
     public const string UninstallerName = "unins-playhub.exe";
 
@@ -39,10 +45,18 @@ public static class Installer
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Programs", AppName);
 
+    // A shortcut's file name is the name Windows shows for it.
     private static string StartMenuShortcut =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), AppName + ".lnk");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), DisplayName + ".lnk");
 
     private static string DesktopShortcut =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), DisplayName + ".lnk");
+
+    // Names written by Playhub 3.0 and Eternal Core before the rebrand.
+    private static string LegacyStartMenuShortcut =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), AppName + ".lnk");
+
+    private static string LegacyDesktopShortcut =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), AppName + ".lnk");
 
     private static string StartupShortcut =>
@@ -82,6 +96,10 @@ public static class Installer
             if (!File.Exists(iconPath)) iconPath = exePath;
 
             progress.Report((0.90, Loc.T("CreatingShortcuts")));
+            // Rename our own old "Playhub" shortcuts (arguments and pins inside them are kept).
+            // A shortcut that points elsewhere is not ours and is left alone.
+            Playhub.Shared.ShellIdentity.MoveOwnedShortcut(LegacyStartMenuShortcut, StartMenuShortcut, exePath, message => Debug.WriteLine(message));
+            Playhub.Shared.ShellIdentity.MoveOwnedShortcut(LegacyDesktopShortcut, DesktopShortcut, exePath, message => Debug.WriteLine(message));
             if (!options.PreserveExistingShortcuts)
             {
                 if (options.StartMenuShortcut)
@@ -357,7 +375,7 @@ public static class Installer
         if (key is null) return;
 
         var uninstaller = Path.Combine(installDir, UninstallerName);
-        key.SetValue("DisplayName", AppName);
+        key.SetValue("DisplayName", DisplayName);
         key.SetValue("DisplayVersion", AppVersion);
         key.SetValue("Publisher", Publisher);
         key.SetValue("DisplayIcon", exePath);
@@ -410,6 +428,8 @@ public static class Installer
             progress.Report((0.15, Loc.T("RemovingShortcuts")));
             SafeDelete(StartMenuShortcut);
             SafeDelete(DesktopShortcut);
+            SafeDelete(LegacyStartMenuShortcut);
+            SafeDelete(LegacyDesktopShortcut);
             SafeDelete(StartupShortcut);
 
             progress.Report((0.35, Loc.T("RemovingRegistration")));

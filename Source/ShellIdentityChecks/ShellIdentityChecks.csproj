@@ -3,5 +3,8 @@
     <OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
   </PropertyGroup>
-  <ItemGroup><Compile Include="..\Shared\ShellIdentity.cs" Link="ShellIdentity.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\ShellIdentity.cs" Link="ShellIdentity.cs" />
+    <Compile Include="..\Shared\EternalRelease.cs" Link="EternalRelease.cs" />
+  </ItemGroup>
 </Project>

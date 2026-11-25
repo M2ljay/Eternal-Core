@@ -41,7 +41,7 @@ internal static class ShellIdentity
     {
         // The complete relaunch tuple precedes the explicit ID; Shell observes SetValue immediately.
         write(2, "\"" + Path.GetFullPath(executable) + "\"");
-        write(4, "Playhub");
+        write(4, EternalRelease.DisplayName);
         write(3, Path.GetFullPath(icon) + ",0");
         write(5, AppId);
     }
@@ -79,6 +79,29 @@ internal static class ShellIdentity
             return true;
         }
         catch (Exception error) { log?.Invoke("Shell shortcut identity: " + error.Message); return false; }
+        finally { if (link is not null) Marshal.ReleaseComObject(link); }
+    }
+
+    // Renames a shortcut only when it launches this install's main executable and the new
+    // name is free; anything else (a user's own link, a reparse point) is left untouched.
+    internal static bool MoveOwnedShortcut(string from, string to, string executable, Action<string>? log = null)
+    {
+        object? link = null;
+        try
+        {
+            if (!File.Exists(from) || File.Exists(to) || !IsMainTarget(executable, executable)
+                || (File.GetAttributes(from) & FileAttributes.ReparsePoint) != 0) return false;
+            link = Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("00021401-0000-0000-C000-000000000046"), true)!)!;
+            ((IPersistFile)link).Load(Path.GetFullPath(from), 0);
+            var target = new StringBuilder(32768);
+            Marshal.ThrowExceptionForHR(((IShellLink)link).GetPath(target, target.Capacity, 0, 4));
+            if (!IsMainTarget(Environment.ExpandEnvironmentVariables(target.ToString()), executable)) return false;
+            Marshal.ReleaseComObject(link);
+            link = null;
+            File.Move(from, to);
+            return true;
+        }
+        catch (Exception error) { log?.Invoke("Shell shortcut rename: " + error.Message); return false; }
         finally { if (link is not null) Marshal.ReleaseComObject(link); }
     }
 

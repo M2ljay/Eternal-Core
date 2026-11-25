@@ -38,7 +38,7 @@ public sealed class ExtraService
         var source = File.Exists(AppPaths.LocalSteamCfg) ? AppPaths.LocalSteamCfg : AppPaths.BundledSteamCfg;
         if (!File.Exists(source))
         {
-            return Task.FromResult("Manca un file necessario. Reinstalla Playhub e riprova.");
+            return Task.FromResult("Manca un file necessario. Reinstalla Core e riprova.");
         }
 
         Directory.CreateDirectory(AppPaths.BackupsRoot);
@@ -81,7 +81,7 @@ public sealed class ExtraService
         var zip = BundledThemesZip;
         if (!File.Exists(zip))
         {
-            return Task.FromResult("Manca un file necessario. Reinstalla Playhub e riprova.");
+            return Task.FromResult("Manca un file necessario. Reinstalla Core e riprova.");
         }
 
         var themesDir = CssThemesDir;

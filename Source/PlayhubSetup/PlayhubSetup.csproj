@@ -15,7 +15,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Company>Andrea Sgarro (LoZazaMastro)</Company>
-    <Product>Playhub Setup</Product>
+    <Product>$(EternalDisplayName) Setup</Product>
+    <AssemblyTitle>$(EternalDisplayName) Setup</AssemblyTitle>
     <!-- Single-file self-contained: vedi build-installer.bat -->
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
