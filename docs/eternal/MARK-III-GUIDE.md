@@ -14,6 +14,15 @@ button skips it.** It plays while Steam is starting underneath, so it costs no t
 - Turn it off, or just its sound: Core > Gaming Mode > *Sequenza di avvio* /
   *Boot sequence*. It also follows the startup splash switch.
 
+## Screensaver: Core Starfield
+
+Steam's screensaver list offers **Core Starfield** (it replaces Playhub Circles; pick it once
+in Steam > Settings > Display if Circles was selected). The Core mark bounces around the
+screen like the old DVD logo. Its ring fills to show how close each bounce came to a
+corner; a true corner fills it, flashes the mark and rushes the stars. When the minute
+changes, stars gather into the time, hold a few seconds and scatter. Nothing stays lit in
+one place, so it is safe on an OLED.
+
 ## TV control (LG webOS, for example the C9)
 
 When Core starts or wakes into Gaming Mode and the TV is **off**, Core turns it on and

@@ -1,6 +1,8 @@
 import { DFL } from "./decky";
 import { call } from "./controlBackend";
-const MODE="Playhub Circles";
+// Core Starfield (Mark III) replaces Playhub Circles in the same uioverride folder. The
+// screensaver list shows this id as its name; the old name is renamed in place.
+const MODE="Core Starfield",LEGACY="Playhub Circles";
 function documents():Document[]{
  const docs=[document];
  const add=(value:any)=>{try{if(value?.document&&!docs.includes(value.document))docs.push(value.document);}catch{}};
@@ -29,6 +31,7 @@ export function installCirclesScreensaver(locale:()=>string){
   const decorate=()=>{
    const data=client.getQueryData(key);
    if(Array.isArray(data)&&data.some((entry:any)=>entry.strID==="uioverride-playhub-circles"))rename("uioverride-playhub-circles",MODE);
+   else if(Array.isArray(data)&&data.some((entry:any)=>entry.strID===LEGACY))rename(LEGACY,MODE);
    else if(!Array.isArray(data)||!data.some((entry:any)=>entry.strID===MODE))client.setQueryData(key,[...(Array.isArray(data)?data:[{strID:"steam-gameslideshow",strURL:"steam-gameslideshow.steamscreensavers.host"},{strID:"steam-bouncinglogo",strURL:"steam-bouncinglogo.steamscreensavers.host"}]),{strID:MODE,strURL:"uioverride-playhub-circles.steamscreensavers.host"}]);
   };
   const unsubscribe=client.getQueryCache().subscribe((event:any)=>{if(JSON.stringify(event?.query?.queryKey)===JSON.stringify(key))decorate();});
@@ -55,9 +58,9 @@ export function installCirclesScreensaver(locale:()=>string){
             }
 
    await call("sync_circles_screensaver",{locale:locale(),header,clockText,dateText,weatherIcon:weather?.enabled?weather.iconText:"",weatherTemp:weather?.enabled?weather.tempText:""});
-  }catch(error){console.debug("Playhub Circles",error);}finally{busy=false;}
+  }catch(error){console.debug("Core Starfield",error);}finally{busy=false;}
  }
- void register().catch(error=>console.warn("Playhub Circles registration",error));
+ void register().catch(error=>console.warn("Core Starfield registration",error));
  const timer=window.setInterval(tick,1500);
  return()=>{disposed=true;window.clearInterval(timer);restore();};
 }
