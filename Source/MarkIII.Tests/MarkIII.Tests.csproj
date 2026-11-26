@@ -16,8 +16,7 @@
     <Compile Include="../GamingModeAgent/GamingMode.Services/TvControl.cs" Link="TvControl.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/SteamUpdateHold.cs" Link="SteamUpdateHold.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/SteamClientBackup.cs" Link="SteamClientBackup.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="DeckyTests.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/DeckyHeartbeat.cs" Link="DeckyHeartbeat.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/CoreText.cs" Link="CoreText.cs" />
   </ItemGroup>
 </Project>

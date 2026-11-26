@@ -136,10 +136,13 @@ public static class AgentHost
 			using SplashScreenService splashScreen = new SplashScreenService(logger);
 			using SteamThemeStartupCover? themedStartup = showSplash
 				? new(splashScreen, logger, modeConfig.Gaming.SteamPath, minSplashVisibleMs, maxSplashVisibleMs, coldBoot: true) : null;
+			// Mark III: wake the TV and switch it to Core beside the boot; the boot sequence
+			// waits for it briefly (BootSequencePolicy.MaxStartDelay), nothing else does.
+			Task tvAtBoot = showSplash ? MarkIIIHost.WakeTvForBootAsync(modeConfig, paths, logger) : Task.CompletedTask;
 			// Paint the login curtain before constructing any input, audio or dashboard service.
 			if (showSplash)
 			{
-				splashScreen.Show(modeConfig.Gaming.Splash, maxSplashVisibleMs);
+				splashScreen.Show(modeConfig.Gaming.Splash, maxSplashVisibleMs, tvAtBoot);
 			}
 			ProcessTools processTools = new ProcessTools(logger);
 			ShellTools shellTools = new ShellTools(logger);
@@ -172,6 +175,8 @@ public static class AgentHost
 					new AntiCheatPausable("cursor", "cursor auto-hide", () => cursorAutoHide.SetAntiCheatPaused(true), () => cursorAutoHide.SetAntiCheatPaused(false)),
 				});
 				antiCheat.Start();
+				// Mark III: TV control, Steam update hold, Decky health check and Core Repair.
+				using MarkIIIHost markIII = new MarkIIIHost(paths, store, manager, processTools, antiCheat, logger);
 				using SteamTaskbarFullscreenService steamTaskbar = new(logger, modeConfig.Gaming.SteamPath);
 				manager.ModeTransitionStarted += steamTaskbar.ModeChanging;
 				manager.ModeTransitionCompleted += steamTaskbar.ModeCompleted;
@@ -985,6 +990,8 @@ public static class AgentHost
 
 				app.MapPost("/restart/steam", (Func<Task<IResult>>)(async () => Results.Json(await manager.RestartSteamAsync())));
 				app.MapPost("/restart/decky", (Func<Task<IResult>>)(async () => Results.Json(await manager.RestartDeckyAsync())));
+				markIII.Map(app);
+				markIII.Start(app.Lifetime.ApplicationStopping);
 				app.MapPost("/cursor/autohide/start", (Func<IResult>)delegate
 				{
 					ModeConfig modeConfig2 = store.LoadConfig();

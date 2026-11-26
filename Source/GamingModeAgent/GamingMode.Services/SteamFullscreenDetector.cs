@@ -321,6 +321,13 @@ public static class SteamFullscreenDetector
 		}
 	}
 
+	// Mark III (Decky health check): Big Picture is on screen, by the relaxed fullscreen match.
+	internal static bool IsBigPictureUp()
+	{
+		try { return IsSteamFullscreen(relaxed: true); }
+		catch { return false; }
+	}
+
 	private static bool IsSteamFullscreen(bool relaxed)
 	{
 		bool detected = false;

@@ -16,6 +16,9 @@ internal static class Program
 			return GameExecutionQosOwner.RunAsync().GetAwaiter().GetResult();
 		try
 		{
+			// Mark III: Core Repair, launched from its Steam library tile; isolated from the agent
+			// (it talks to the running agent over HTTP) and works without Decky.
+			if (args is ["repair"]) return CoreRepairWindow.Run();
 			// Preview is deliberately isolated from the agent and every mode-switch command.
 			if (args.Length > 0 && args[0] == "preview-animation")
 			{
