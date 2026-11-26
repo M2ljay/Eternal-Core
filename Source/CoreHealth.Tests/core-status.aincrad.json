@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "written_at": "2026-11-26T03:31:12-05:00",
+  "server": "serverv3",
+  "backup": {
+    "result": "ok",
+    "started_at": "2026-11-26T03:30:00-05:00",
+    "finished_at": "2026-11-26T03:31:12-05:00",
+    "message": "backup serverv3-2026-11-26 complete",
+    "uploaded_bytes": 734003200,
+    "consecutive_failures": 0,
+    "last_success_at": "2026-11-26T03:31:12-05:00"
+  },
+  "drive": { "label": "/mnt/storage", "health": "healthy", "free_bytes": 500000000000, "total_bytes": 2000000000000 },
+  "romm": { "reachable": true, "checked_at": "2026-11-26T03:31:12-05:00" }
+}

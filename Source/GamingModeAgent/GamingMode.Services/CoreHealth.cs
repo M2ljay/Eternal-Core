@@ -8,8 +8,8 @@ using System.Text.Json;
 namespace GamingMode.Services;
 
 // Eternal Core: "Core Health". One place that says whether the living-room setup is fine: the
-// home server's nightly backup and health (read from \\<server>\CoreStatus\core-status.json, written
-// by server/backup/Backup-Core.ps1), Windows restarts and update night, the TV, the PC's system drive
+// home server's nightly backup and health (read from http://<server>:8123/local/core-status.json, written
+// by the Aincrad repo's nightly scripts/backup.sh), Windows restarts and update night, the TV, the PC's system drive
 // and Core's own version. Pure: observations in, rows and problems out. The agent gathers the
 // observations (MarkIIIHost) and the Quick Access tab renders the rows (src/HealthSection.tsx).
 internal enum ServerStatusRead { NotConfigured, Unreachable, Missing, Unreadable, Ok }
@@ -106,17 +106,27 @@ internal static class CoreHealthPolicy
 	// The order the Quick Access section shows the rows in.
 	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "tv", "streaming", "microphone", "pc-disk", "core-update" };
 
-	// "V3", "\\V3", "\\V3\CoreStatus", "\\V3\CoreStatus\core-status.json" or an IP address. The share
-	// name defaults to CoreStatus (server/backup/Install-CoreBackup.ps1).
-	internal static string? StatusPath(string? serverName)
+	// The home server running Aincrad: "serverv3", "192.168.1.109", "serverv3:8123" or a full http(s) URL.
+	// Its nightly backup writes core-status.json into Home Assistant's www/ folder, served without a
+	// login at /local/. A leading "\\\\" from the old file-share setting is tolerated.
+	internal const int HomeAssistantPort = 8123;
+	internal const string StatusUrlPath = "/local/core-status.json";
+
+	internal static Uri? StatusUrl(string? server)
 	{
-		if (string.IsNullOrWhiteSpace(serverName)) return null;
-		string value = serverName.Trim().TrimStart('\\', '/').Replace('/', '\\').TrimEnd('\\');
-		if (value.Length == 0 || value.IndexOfAny(new[] { ':', '*', '?', '"', '<', '>', '|' }) >= 0 || value.Contains("..", StringComparison.Ordinal)) return null;
-		string[] parts = value.Split('\\', StringSplitOptions.RemoveEmptyEntries);
-		if (parts.Length == 1) return $@"\\{parts[0]}\CoreStatus\core-status.json";
-		if (parts[^1].EndsWith(".json", StringComparison.OrdinalIgnoreCase)) return @"\\" + string.Join('\\', parts);
-		return @"\\" + string.Join('\\', parts) + @"\core-status.json";
+		if (string.IsNullOrWhiteSpace(server)) return null;
+		string value = server.Trim();
+		if (!value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && !value.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+		{
+			value = value.TrimStart('\\', '/').Split('\\', '/')[0];
+			if (value.Length == 0) return null;
+			value = "http://" + value;
+			if (!Uri.TryCreate(value, UriKind.Absolute, out Uri? bare) || bare.UserInfo.Length > 0) return null;
+			return new UriBuilder(bare.Scheme, bare.Host, bare.IsDefaultPort ? HomeAssistantPort : bare.Port, StatusUrlPath).Uri;
+		}
+		if (!Uri.TryCreate(value, UriKind.Absolute, out Uri? url) || url.UserInfo.Length > 0 || url.Host.Length == 0) return null;
+		if (url.AbsolutePath is "" or "/") return new UriBuilder(url.Scheme, url.Host, url.Port, StatusUrlPath).Uri;
+		return url;
 	}
 
 	// ---------- core-status.json ----------

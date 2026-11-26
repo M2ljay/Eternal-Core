@@ -177,9 +177,7 @@ are folded in here. Logs: `%APPDATA%\GamingMode\agent.log`.
 1. **Install** the test build's `Core-Setup.exe` over the current Core. Settings and data are kept.
 2. **Core Health, server side** (once): [CORE-HEALTH.md](CORE-HEALTH.md#at-the-server-once). Then on the PC: Core >
    Gaming Mode > **Core Health**, type the server name, leave **Health alerts** on, press **Check now**: "All good" or
-   "Things to check: N". After the server scripts are updated, run `.\Backup-Core.ps1` once on the server: its log
-   shows *Canary: canary-… is in Drive*. A night that says *Proton CLI too old* needs Proton Drive CLI v0.8.0 or
-   later; the first night also writes `saves-manifest.json` (saves now keep one cloud copy per change).
+   "Things to check: N". The server side is Aincrad's nightly backup (`docs/backups.md` in that repo).
 3. **Quiet Windows:** Core > Gaming Mode > Quiet Windows > **Apply**. The line *Voice calls do not lower the volume of
    games and music* is ticked afterwards.
 4. **TV control** (once, if not paired yet): the TV settings and **Pair** steps in [TV control](#tv-control-lg-webos-for-example-the-c9).

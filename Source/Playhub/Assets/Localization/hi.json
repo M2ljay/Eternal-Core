@@ -1511,7 +1511,7 @@
   "Niente richieste di Edge al primo avvio o come browser predefinito": "Edge के पहली बार चलने या डिफ़ॉल्ट ब्राउज़र के संकेत नहीं",
   "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.": "क्विक एक्सेस > Core दिखाता है कि बैकअप, सर्वर, टीवी और पीसी ठीक हैं या नहीं।",
   "Server di casa": "घर का सर्वर",
-  "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.": "सर्वर पीसी का नाम, जैसे V3। Core उसकी स्थिति साझा फ़ोल्डर CoreStatus से पढ़ता है।",
+  "Il nome del server di casa, per esempio serverv3. Core legge lo stato del backup da Home Assistant su quel server.": "घर के सर्वर का नाम, जैसे serverv3। Core उस सर्वर पर Home Assistant से बैकअप की स्थिति पढ़ता है।",
   "Avvisi di salute": "हेल्थ अलर्ट",
   "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "जब बैकअप लगातार दो रात विफल हो, सर्वर की ड्राइव में समस्या हो या सर्वर डेढ़ दिन से ज़्यादा चुप रहे, तब Gaming Mode में एक छोटी सूचना। दिन में ज़्यादा से ज़्यादा एक बार, गेम के दौरान कभी नहीं।",
   "Controlla ora": "अभी जाँचें",

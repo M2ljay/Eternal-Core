@@ -227,15 +227,15 @@ public sealed partial class MainWindow
     // ---------- Core Health ----------
 
     // The home server's name for Quick Access > Core > Health (the agent reads
-    // \\<server>\CoreStatus\core-status.json, written by server/backup on the server).
+    // http://<server>:8123/local/core-status.json, written by Aincrad's nightly backup).
     private FluentCard BuildCoreHealthCard()
     {
         var card = Card();
         card.Children.Add(IconHeader(((char)0xE95E).ToString(), "Core Health",
             "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto."));
-        _healthServerBox = TextBox("V3");
+        _healthServerBox = TextBox("serverv3");
         card.Children.Add(Labeled("Server di casa", _healthServerBox));
-        card.Children.Add(Body("Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus."));
+        card.Children.Add(Body("Il nome del server di casa, per esempio serverv3. Core legge lo stato del backup da Home Assistant su quel server."));
         AddExplainedToggle(card, "Avvisi di salute",
             "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.", "healthAlerts");
         card.Children.Add(ActionRow(Button("Controlla ora", CheckCoreHealthAsync)));

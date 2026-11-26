@@ -5,7 +5,7 @@ attention: 2"), then a row for each part. Press **A** on a row to show its detai
 
 | Row | From | Needs attention when |
 | --- | ---- | -------------------- |
-| Server backup | the home server's `core-status.json` | the last run failed or partly failed (its details show the server's reason, for example *Proton CLI too old* or a missing canary), the status file is missing, unreadable or older than 36 hours, or the server cannot be reached |
+| Server backup | the home server's `core-status.json` | the last run failed or partly failed (its details show the server's reason, for example a failed upload), the status file is missing, unreadable or older than 36 hours, or the server cannot be reached |
 | Restore check | same | the monthly check failed, or the last one is over 45 days old |
 | Server drive | same | Windows on the server reports the library drive as Warning or Unhealthy (or under 5% free) |
 | RomM | same | RomM did not answer the server's own check |
@@ -35,31 +35,18 @@ again. A problem that clears and comes back alerts again too.
 
 ### At the server (once)
 
-Everything is in [`server/backup/README.md`](../../server/backup/README.md). In short:
-
-1. Install the Proton Drive CLI and run `proton-drive auth login` yourself (browser sign-in).
-2. Copy `backup-config.example.json` to `backup-config.json`; fill in the RomM folders, the RomM address and the
-   Proton pool size (`pool.total_bytes`, plus `pool.others_used_bytes` for your partner's share).
-3. In an administrator PowerShell: `.\Install-CoreBackup.ps1 -RunNow`. It creates `C:\CoreStatus`, shares it
-   read-only as `\\<server>\CoreStatus`, and schedules the nightly run at 05:30.
-4. Optional but tighter than *Everyone*: create a local standard account on the server (for example `corestatus`)
-   with a password you choose, set `share.read_account` to `<server>\corestatus`, and run the installer again.
+The server is the Ubuntu box running Aincrad (M2ljay/Aincrad). Its nightly `scripts/backup.sh` (RomM database,
+saves and config, Home Assistant; Proton Drive off-site) also writes `core-status.json` into Home Assistant's `www/`
+folder. Follow Aincrad's `docs/backups.md`, then restart Home Assistant once after the first run so it serves that
+folder. Check from any browser: `http://serverv3:8123/local/core-status.json` shows the file.
 
 ### On the gaming PC (once)
 
-1. Core > Gaming Mode > **Core Health**: type the server's name in **Home server** (for example `V3`; an IP address or
-   `\\V3\CoreStatus` also works). Leave **Health alerts** on.
+1. Core > Gaming Mode > **Core Health**: type the server's name in **Home server** (`serverv3`; an IP address, a
+   `name:port` or a full `http(s)://` address also works). Leave **Health alerts** on.
 2. Press **Check now**. "All good" or "Things to check: N" means the agent could read the status.
-3. If the server row says **Server not reachable** although the server is on: open `\\V3\CoreStatus` in File
-   Explorer. If Windows asks for a user name, the gaming PC's account is not known to the server. Either use the same
-   Microsoft account on both, or store the read-only account once, typing its password yourself when asked:
-
-   ```
-   cmdkey /add:V3 /user:V3\corestatus /pass
-   ```
-
-   (`/pass` without a value makes `cmdkey` prompt for it.) The Gaming Mode agent runs as your Windows user, so it uses
-   the same stored credential.
+3. If the server row says **Server not reachable** although the server is on, open the address above in a browser
+   on the PC. No login is involved.
 
 ### At the TV
 
@@ -69,15 +56,16 @@ Everything is in [`server/backup/README.md`](../../server/backup/README.md). In 
 
 ## How it works
 
-- Server: `server/backup/Backup-Core.ps1` writes `core-status.json` (schema 1) atomically every night; `-HealthOnly`
-  rewrites it without uploading.
+- Server: Aincrad's `scripts/backup.sh` writes `core-status.json` (schema 1: backup result, last success, failures in
+  a row, `/mnt/storage` space, RomM answering) atomically every night. It has no restore-check section, so that row
+  reads *never* until one is added.
 - Agent: `GET /health` and `POST /health/dismiss?id=` on 127.0.0.1:47991 (`MarkIIIHost.Health.cs`). The status file is
   read at most once a minute with a 4-second time box, so a sleeping server never stalls Quick Access; the TV probe is
   a TCP connect to webOS ports 3001/3000 (no Wake-on-LAN, no command); Core's version comes from the agent's cached
   update check (at most one GitHub request per 30 minutes, the same check Big Picture's update notice uses). The
   notice check runs every five minutes. Alert memory: `%APPDATA%\GamingMode\core-health-alerts.json`.
-- Rules: `CoreHealth.cs` (pure; tests in `Source/CoreHealth.Tests`, which also read a status file written by the
-  server scripts). Quick Access: `GamingModeDeckyPlugin/src/HealthSection.tsx` and `healthReport.ts` (texts in 12
+- Rules: `CoreHealth.cs` (pure; tests in `Source/CoreHealth.Tests`, which also read a status file shaped exactly as
+  Aincrad writes it). Quick Access: `GamingModeDeckyPlugin/src/HealthSection.tsx` and `healthReport.ts` (texts in 12
   languages; `tests/coreHealthSection.test.mjs`).
 - Settings, in `%APPDATA%\GamingMode\config.json` (`gaming` section): `coreHealthServer`, `coreHealthAlertsEnabled`.
 

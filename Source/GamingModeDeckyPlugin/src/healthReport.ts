@@ -249,7 +249,7 @@ function rowValue(row: HealthRowData, text: Copy, locale: string, now: Date): { 
   const when = (key: string) => formatWhen(data[key], locale, now);
   const sourceState = serverStates[row.state];
   if (sourceState && ["server-backup", "restore-check", "server-drive", "romm"].includes(row.id)) {
-    if (row.id === "server-backup" && typeof data.server === "string" && data.server) details.push(`\\\\${data.server}\\CoreStatus`);
+    if (row.id === "server-backup" && typeof data.server === "string" && data.server) details.push(`${data.server} · Home Assistant`);
     return { value: row.id === "server-backup" ? text[sourceState] : text.unknown, details };
   }
   if (row.state === "stale") return { value: fill(text.stale, { when: when("writtenAt") }), details };

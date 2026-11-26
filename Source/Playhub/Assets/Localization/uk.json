@@ -1531,7 +1531,7 @@
   "Niente richieste di Edge al primo avvio o come browser predefinito": "Жодних запитів Edge під час першого запуску чи щодо браузера за замовчуванням",
   "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.": "Швидкий доступ > Core показує, чи все гаразд із резервними копіями, сервером, телевізором і ПК.",
   "Server di casa": "Домашній сервер",
-  "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.": "Ім'я ПК-сервера, наприклад V3. Core читає його стан зі спільної папки CoreStatus.",
+  "Il nome del server di casa, per esempio serverv3. Core legge lo stato del backup da Home Assistant su quel server.": "Ім'я домашнього сервера, наприклад serverv3. Core читає стан резервної копії з Home Assistant на цьому сервері.",
   "Avvisi di salute": "Сповіщення про стан",
   "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "Коротке сповіщення в Gaming Mode, коли резервне копіювання не вдається дві ночі поспіль, диск сервера повідомляє про проблему або сервер мовчить понад півтори доби. Не частіше разу на день і ніколи під час гри.",
   "Controlla ora": "Перевірити зараз",

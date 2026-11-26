@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -58,21 +60,24 @@ internal sealed partial class MarkIIIHost
 		return (ServerStatusRead.Unreachable, null);
 	}
 
-	private static (ServerStatusRead, ServerStatus?) ReadServerFile(string? name)
+	private static readonly HttpClient StatusClient = new() { Timeout = TimeSpan.FromSeconds(4) };
+
+	private static async Task<(ServerStatusRead, ServerStatus?)> ReadServerFile(string? name)
 	{
-		string? path = CoreHealthPolicy.StatusPath(name);
-		if (path is null) return (ServerStatusRead.NotConfigured, null);
+		Uri? url = CoreHealthPolicy.StatusUrl(name);
+		if (url is null) return (ServerStatusRead.NotConfigured, null);
 		try
 		{
-			if (!Directory.Exists(Path.GetDirectoryName(path))) return (ServerStatusRead.Unreachable, null);
-			if (!File.Exists(path)) return (ServerStatusRead.Missing, null);
-			using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-			if (stream.Length > 256 * 1024) return (ServerStatusRead.Unreadable, null);
-			using var reader = new StreamReader(stream);
-			ServerStatus? status = CoreHealthPolicy.Parse(reader.ReadToEnd());
+			using HttpResponseMessage response = await StatusClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+			if (response.StatusCode == HttpStatusCode.NotFound) return (ServerStatusRead.Missing, null);
+			if (!response.IsSuccessStatusCode) return (ServerStatusRead.Unreadable, null);
+			if (response.Content.Headers.ContentLength > 256 * 1024) return (ServerStatusRead.Unreadable, null);
+			string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+			if (json.Length > 256 * 1024) return (ServerStatusRead.Unreadable, null);
+			ServerStatus? status = CoreHealthPolicy.Parse(json);
 			return status is null ? (ServerStatusRead.Unreadable, null) : (ServerStatusRead.Ok, status);
 		}
-		catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return (ServerStatusRead.Unreadable, null); }
+		catch (Exception error) when (error is HttpRequestException or TaskCanceledException) { return (ServerStatusRead.Unreachable, null); }
 	}
 
 	// Port 3001 (wss) or 3000 (ws) answering means the TV's webOS service is up. A connect, nothing sent.

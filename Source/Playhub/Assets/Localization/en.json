@@ -1529,7 +1529,7 @@
   "Niente richieste di Edge al primo avvio o come browser predefinito": "No Edge first-run or default-browser prompts",
   "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.": "Quick Access > Core shows whether backups, the server, the TV and the PC are fine.",
   "Server di casa": "Home server",
-  "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.": "The server PC's name, for example V3. Core reads its status from the shared CoreStatus folder.",
+  "Il nome del server di casa, per esempio serverv3. Core legge lo stato del backup da Home Assistant su quel server.": "The home server's name, for example serverv3. Core reads the backup status from Home Assistant on that server.",
   "Avvisi di salute": "Health alerts",
   "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "A short notice in Gaming Mode when the backup fails two nights in a row, the server's drive reports a problem or the server has been silent for more than a day and a half. At most once a day, never during a game.",
   "Controlla ora": "Check now",

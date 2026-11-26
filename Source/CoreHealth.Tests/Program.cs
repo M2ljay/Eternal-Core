@@ -23,12 +23,16 @@ CoreHealthInputs Base(ServerStatusRead read = ServerStatusRead.Ok, ServerStatus?
 };
 
 // ---------- server path ----------
-Check(CoreHealthPolicy.StatusPath("V3") == @"\\V3\CoreStatus\core-status.json", "path: bare server name");
-Check(CoreHealthPolicy.StatusPath(@"\\V3") == @"\\V3\CoreStatus\core-status.json", "path: leading backslashes");
-Check(CoreHealthPolicy.StatusPath(@"\\V3\Status") == @"\\V3\Status\core-status.json", "path: custom share");
-Check(CoreHealthPolicy.StatusPath(@"\\192.168.1.20\CoreStatus\core-status.json") == @"\\192.168.1.20\CoreStatus\core-status.json", "path: full file path");
-Check(CoreHealthPolicy.StatusPath("  ") is null && CoreHealthPolicy.StatusPath(null) is null, "path: empty is not configured");
-Check(CoreHealthPolicy.StatusPath(@"C:\temp") is null && CoreHealthPolicy.StatusPath(@"\\V3\..\x") is null, "path: drive letters and .. refused");
+Check(CoreHealthPolicy.StatusUrl("serverv3")?.ToString() == "http://serverv3:8123/local/core-status.json", "url: bare server name");
+Check(CoreHealthPolicy.StatusUrl("192.168.1.109")?.ToString() == "http://192.168.1.109:8123/local/core-status.json", "url: IP address");
+Check(CoreHealthPolicy.StatusUrl("serverv3:9000")?.ToString() == "http://serverv3:9000/local/core-status.json", "url: custom port");
+Check(CoreHealthPolicy.StatusUrl(@"\\V3\CoreStatus")?.ToString() == "http://v3:8123/local/core-status.json", "url: old file-share value still works");
+Check(CoreHealthPolicy.StatusUrl("https://serverv3.tail.ts.net")?.ToString() == "https://serverv3.tail.ts.net/local/core-status.json", "url: full URL without a path");
+Check(CoreHealthPolicy.StatusUrl("http://serverv3:8123/local/x.json")?.ToString() == "http://serverv3:8123/local/x.json", "url: full URL kept");
+Check(CoreHealthPolicy.StatusUrl("  ") is null && CoreHealthPolicy.StatusUrl(null) is null, "url: empty is not configured");
+Check(CoreHealthPolicy.StatusUrl("http://user:pw@serverv3") is null && CoreHealthPolicy.StatusUrl("bad host") is null, "url: credentials and junk refused");
+ServerStatus? aincrad = CoreHealthPolicy.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "core-status.aincrad.json")));
+Check(aincrad is { BackupResult: "ok", ConsecutiveFailures: 0, RommReachable: true, DriveHealth: "healthy" } && aincrad.LastSuccessAt is not null && aincrad.RestoreResult is null, "aincrad: backup.sh output parses");
 
 // ---------- parsing (the file the PowerShell script writes) ----------
 ServerStatus? status = CoreHealthPolicy.Parse(sample);
