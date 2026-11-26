@@ -11,4 +11,5 @@
     <Compile Include="../GamingModeAgent/GamingMode.Services/SteamInstallationPath.cs" Link="SteamInstallationPath.cs" />
     <Compile Include="../Shared/UwpSessionIdentity.cs" Link="UwpSessionIdentity.cs" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" /></ItemGroup>
 </Project>

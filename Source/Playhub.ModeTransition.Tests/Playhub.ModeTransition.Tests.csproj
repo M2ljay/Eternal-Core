@@ -21,4 +21,5 @@
     <Compile Include="../GamingModeAgent/GamingMode.Models/GamingStartupApp.cs" Link="GamingStartupApp.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/GamingOverlayShortcut.cs" Link="GamingOverlayShortcut.cs" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" /></ItemGroup>
 </Project>

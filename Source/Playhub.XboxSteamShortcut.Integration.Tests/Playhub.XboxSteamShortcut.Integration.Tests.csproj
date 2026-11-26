@@ -12,4 +12,5 @@
     <Compile Include="../Playhub/Importing/ImportedShortcutIdentity.cs" />
     <Compile Include="../Playhub/Services/ProcessService.cs;../Playhub/Services/SteamLibraryEditSession.cs;../Playhub/Services/UwpXboxService.cs;../Playhub/Services/XboxSteamShortcut.cs;../Playhub/Services/UwpHookSteamManager.cs;../Playhub/Services/CoverFormat.cs;../Playhub/Services/CommandLine.cs;../Playhub/Services/AppPaths.cs;../Playhub/Services/Diag.cs;../Playhub/Services/EpicGamesService.cs;../Playhub/Services/GogService.cs" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" /></ItemGroup>
 </Project>

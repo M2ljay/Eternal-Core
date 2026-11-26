@@ -18,4 +18,5 @@
   <ItemGroup><Content Include="..\Playhub.XboxSession\Native\InputFencePrototype\PlayhubInputFence.dll" Link="PlayhubInputFence.dll" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
 
   <ItemGroup><Compile Include="../Playhub.GameSession/UwpStoreCompanionBinding.cs" Link="UwpStoreCompanionBinding.cs" /><Compile Include="../Shared/StoreLibraryModels.cs" Link="StoreLibraryModels.cs" /><Compile Include="../Shared/StorePrivateLaunchModels.cs" Link="StorePrivateLaunchModels.cs" /><Compile Include="../Playhub.StoreHost/StoreLibraryService.cs" Link="StoreLibraryService.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" /></ItemGroup>
 </Project>

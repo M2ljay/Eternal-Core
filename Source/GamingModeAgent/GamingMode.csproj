@@ -88,4 +88,5 @@
     <WriteCodeFragment Language="C#" AssemblyAttributes="@(ShellFreeOverlayAttribute)" OutputFile="$(IntermediateOutputPath)ShellFreeOverlayPins.g.cs" />
     <ItemGroup><Compile Include="$(IntermediateOutputPath)ShellFreeOverlayPins.g.cs" /></ItemGroup>
   </Target>
+  <ItemGroup><Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" /></ItemGroup>
 </Project>

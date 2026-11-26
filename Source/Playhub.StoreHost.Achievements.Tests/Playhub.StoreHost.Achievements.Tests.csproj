@@ -6,4 +6,5 @@
     <Compile Include="../Shared/EpicLaunchCatalog.cs"/><Compile Include="../Playhub/Services/EpicManifestPaths.cs"/>
     <PackageReference Include="SharpCompress" Version="[0.50.9]" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" /></ItemGroup>
 </Project>

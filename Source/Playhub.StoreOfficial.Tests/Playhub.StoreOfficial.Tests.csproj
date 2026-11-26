@@ -9,4 +9,5 @@
     <Compile Include="../Playhub.GameSession/StoreOfficialEpicLaunch.cs"/>
     <PackageReference Include="SharpCompress" Version="0.50.9"/>
   </ItemGroup>
+  <ItemGroup><Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" /></ItemGroup>
 </Project>

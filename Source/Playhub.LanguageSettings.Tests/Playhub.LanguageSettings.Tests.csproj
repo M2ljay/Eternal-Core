@@ -23,4 +23,5 @@
     <Content Include="..\Playhub\Assets\Localization\*.json" Link="Assets\Localization\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\Playhub\Services\LocalizationService.cs" Link="Source\LocalizationService.cs" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" /></ItemGroup>
 </Project>

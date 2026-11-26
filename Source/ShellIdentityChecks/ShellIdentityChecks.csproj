@@ -6,5 +6,6 @@
   <ItemGroup>
     <Compile Include="..\Shared\ShellIdentity.cs" Link="ShellIdentity.cs" />
     <Compile Include="..\Shared\EternalRelease.cs" Link="EternalRelease.cs" />
+    <Compile Include="..\Shared\CoreNames.cs" Link="CoreNames.cs" />
   </ItemGroup>
 </Project>

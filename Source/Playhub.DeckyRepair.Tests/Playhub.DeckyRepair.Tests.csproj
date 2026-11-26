@@ -5,4 +5,5 @@
     <Compile Include="../Playhub/Services/DeckyInstallerService.cs;../Playhub/Services/DeckyWindowsReleaseClient.cs;../Playhub/Services/DeckyWindowsReleaseClient.Web.cs;../Playhub/Services/DeckyFileUpgrade.cs;../Playhub/Services/RestartSequence.cs;../Playhub/Models/DeckyWindowsRelease.cs;../Shared/DeckyStartupGuard.cs;../Playhub.DeckyHost/DeckyProcessTree.cs" />
     <Compile Include="../Playhub/Services/BundledDeckyWindowsRelease.cs" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" /></ItemGroup>
 </Project>

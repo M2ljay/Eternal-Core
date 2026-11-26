@@ -21,4 +21,5 @@
     <Compile Include="..\Shared\EditorialPhotoMigration.cs" Link="EditorialPhotoMigration.cs" />
     <Compile Include="..\Shared\GamingModeInstallationPolicy.cs" Link="GamingModeInstallationPolicy.cs" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" /></ItemGroup>
 </Project>
