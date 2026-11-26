@@ -23,7 +23,7 @@ const style = `
 .core-health-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .core-health-title{font-size:13px;color:${WHITE};font-weight:600;white-space:nowrap}
 .core-health-value{font-size:12px;color:${STEEL};text-align:right;overflow:hidden;text-overflow:ellipsis}
-.core-health-row.ok .core-health-value{color:${CORE_STATUS.ok}}
+.core-health-row.ok .core-health-value{color:${CORE_STATUS.neutral}}
 .core-health-row.info .core-health-value{color:${CORE_STATUS.warning}}
 .core-health-row.attention .core-health-value,.core-health-row.crimson .core-health-value{color:${CORE_STATUS.error};font-weight:600}
 .core-health-detail{margin-top:6px;font-size:11px;line-height:1.45;color:${STEEL};word-break:break-word}

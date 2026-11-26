@@ -4497,9 +4497,10 @@ const CORE = {
 };
 // Status as a colour for text or a dot on black/gunmetal (all 4.5:1 or better there).
 const CORE_STATUS = {
-    ok: CORE.ok,
     warning: CORE.warning,
-    error: CORE.crimsonText};
+    error: CORE.crimsonText,
+    neutral: CORE.steel,
+};
 // "#RRGGBB" plus an opacity, as rgba() for CSS.
 function coreAlpha(hex, opacity) {
     const value = Number.parseInt(hex.slice(1, 7), 16);
@@ -61131,7 +61132,7 @@ const style$2 = `
 .core-health-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .core-health-title{font-size:13px;color:${WHITE$2};font-weight:600;white-space:nowrap}
 .core-health-value{font-size:12px;color:${STEEL$2};text-align:right;overflow:hidden;text-overflow:ellipsis}
-.core-health-row.ok .core-health-value{color:${CORE_STATUS.ok}}
+.core-health-row.ok .core-health-value{color:${CORE_STATUS.neutral}}
 .core-health-row.info .core-health-value{color:${CORE_STATUS.warning}}
 .core-health-row.attention .core-health-value,.core-health-row.crimson .core-health-value{color:${CORE_STATUS.error};font-weight:600}
 .core-health-detail{margin-top:6px;font-size:11px;line-height:1.45;color:${STEEL$2};word-break:break-word}
