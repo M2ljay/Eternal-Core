@@ -108,9 +108,9 @@ jobs:
         working-directory: Source/MarkIII.Tests
         run: dotnet run -c Release
 
-      - name: Mark III Big Picture plugin tests (heartbeat, Core Repair tile, optional startup, Health and Voice sections)
+      - name: Mark III Big Picture plugin tests (heartbeat, Core Repair tile, optional startup, Health, Voice and Stream mode sections)
         working-directory: Source/GamingModeDeckyPlugin
-        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs tests/coreHealthSection.test.mjs tests/coreVoiceSection.test.mjs
+        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs tests/coreHealthSection.test.mjs tests/coreVoiceSection.test.mjs tests/coreStreamMode.test.mjs
 
       # Core Health: reading the home server's core-status.json, every row's verdict and the notice
       # rules (once a day per problem; a dismissed problem returns only if it changes).
@@ -122,6 +122,12 @@ jobs:
       # how the Xbox party button opens the Game Bar and hands the screen back, the ducking fix.
       - name: Core Voice tests
         working-directory: Source/CoreVoice.Tests
+        run: dotnet run -c Release
+
+      # Stream mode: what counts as streaming, the Sunshine/Apollo log, the PC's sound kept off the TV
+      # with an exact restore, and the TV hold against a fake TV (nothing is sent while streaming).
+      - name: Core Stream mode tests
+        working-directory: Source/CoreStreamMode.Tests
         run: dotnet run -c Release
 
       # The agent's WPF and Windows code builds only here; fail fast before packaging.

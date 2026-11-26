@@ -1513,5 +1513,6 @@
   "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "当备份连续两晚失败、服务器硬盘报告问题，或服务器超过一天半没有消息时，在 Gaming Mode 中显示简短提醒。每天最多一次，游戏中从不显示。",
   "Controlla ora": "立即检查",
   "Tutto a posto.": "一切正常。",
-  "Cose da controllare: {0}": "需要检查的项目：{0}"
+  "Cose da controllare: {0}": "需要检查的项目：{0}",
+  "Modalità streaming attiva: Core lascia stare la TV.": "串流模式已开启：Core 不会操作电视。"
 }

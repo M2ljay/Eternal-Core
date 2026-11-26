@@ -75,6 +75,16 @@ internal sealed record CoreHealthInputs
 	// lives on another PC), so it adds no attention and no notice.
 	public string? CallsMicName { get; init; }
 	public string? CallsMicStatus { get; init; }
+	// Stream mode (CoreStreamMode.cs): on, forced by "Keep TV out of it", seen streaming; the source code
+	// ("steam", "steamvr", "sunshine", "apollo") and the device when known; Apollo's virtual display when
+	// Apollo runs. Information only. While on, the TV is not probed (TvHeld): nothing is sent to it.
+	public bool StreamActive { get; init; }
+	public bool StreamForced { get; init; }
+	public bool StreamDetected { get; init; }
+	public string? StreamSource { get; init; }
+	public string? StreamDevice { get; init; }
+	public bool? StreamVirtualDisplay { get; init; }
+	public bool TvHeld { get; init; }
 }
 
 internal sealed record HealthRow(string Id, HealthLevel Level, string State, IReadOnlyDictionary<string, object?> Data);
@@ -94,7 +104,7 @@ internal static class CoreHealthPolicy
 	internal const long PcMinFreeBytes = 20L * 1000 * 1000 * 1000;
 
 	// The order the Quick Access section shows the rows in.
-	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "tv", "microphone", "pc-disk", "core-update" };
+	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "tv", "streaming", "microphone", "pc-disk", "core-update" };
 
 	// "V3", "\\V3", "\\V3\CoreStatus", "\\V3\CoreStatus\core-status.json" or an IP address. The share
 	// name defaults to CoreStatus (server/backup/Install-CoreBackup.ps1).
@@ -283,9 +293,16 @@ internal static class CoreHealthPolicy
 		var tv = new Dictionary<string, object?> { ["enabled"] = input.TvEnabled, ["paired"] = input.TvPaired, ["reachable"] = input.TvReachable };
 		if (!input.TvEnabled) rows.Add(new HealthRow("tv", HealthLevel.Info, "off", tv));
 		else if (!input.TvPaired) rows.Add(new HealthRow("tv", HealthLevel.Attention, "not-paired", tv));
+		else if (input.TvHeld) rows.Add(new HealthRow("tv", HealthLevel.Info, "stream-mode", tv));
 		else if (input.TvReachable == true) rows.Add(new HealthRow("tv", HealthLevel.Ok, "reachable", tv));
 		else if (input.TvReachable == false) rows.Add(new HealthRow("tv", HealthLevel.Attention, "unreachable", tv));
 		else rows.Add(new HealthRow("tv", HealthLevel.Unknown, "unknown", tv));
+
+		// Streaming: information only ("idle", "streaming" to a device, or "kept-out" by the override).
+		var stream = new Dictionary<string, object?> { ["source"] = input.StreamDetected ? input.StreamSource : null, ["device"] = input.StreamDevice, ["forced"] = input.StreamForced, ["virtualDisplay"] = input.StreamVirtualDisplay };
+		rows.Add(!input.StreamActive ? new HealthRow("streaming", HealthLevel.Ok, "idle", stream)
+			: input.StreamDetected ? new HealthRow("streaming", HealthLevel.Info, "streaming", stream)
+			: new HealthRow("streaming", HealthLevel.Info, "kept-out", stream));
 
 		// Microphone: information only. Muted is a choice, not a problem (the plugin shows it in crimson).
 		// Partly muted is worth a look: a call may use the muted one while the badge's other mic is live.

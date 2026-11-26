@@ -91,7 +91,8 @@ portable test projects run on Linux; see `CLAUDE.md` at the repo root.
 
 How to use it, the TV and BIOS setup, and what to test on the PC: [MARK-III-GUIDE.md](MARK-III-GUIDE.md).
 Core Health (the Quick Access health section and the home server's nightly Proton Drive backup in `server/backup/`):
-[CORE-HEALTH.md](CORE-HEALTH.md).
+[CORE-HEALTH.md](CORE-HEALTH.md). Core Voice: [CORE-VOICE.md](CORE-VOICE.md). Stream mode (the TV left alone while
+the PC streams to another device): [CORE-STREAM-MODE.md](CORE-STREAM-MODE.md).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

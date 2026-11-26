@@ -159,6 +159,8 @@ public sealed partial class MainWindow
             "Rejected" => "Abbinamento rifiutato sulla TV.",
             "PromptTimedOut" => "La richiesta sulla TV non è stata accettata in tempo.",
             "Unreachable" => "La TV non risponde. Controlla che sia accesa e sulla stessa rete.",
+            // Stream mode (agent CoreStreamMode.cs): the PC streams elsewhere or "Keep TV out of it" is on.
+            "StreamMode" => "Modalità streaming attiva: Core lascia stare la TV.",
             _ => "Non riesco a controllare la TV."
         });
     }

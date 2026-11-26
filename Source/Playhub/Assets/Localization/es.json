@@ -1534,5 +1534,6 @@
   "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "Un aviso breve en Gaming Mode cuando la copia de seguridad falla dos noches seguidas, el disco del servidor informa de un problema o el servidor lleva más de un día y medio sin dar señales. Como mucho una vez al día, nunca durante un juego.",
   "Controlla ora": "Comprobar ahora",
   "Tutto a posto.": "Todo bien.",
-  "Cose da controllare: {0}": "Cosas que revisar: {0}"
+  "Cose da controllare: {0}": "Cosas que revisar: {0}",
+  "Modalità streaming attiva: Core lascia stare la TV.": "El modo streaming está activado: Core deja la TV tranquila."
 }

@@ -161,6 +161,8 @@ _VOICE_MUTE_SCOPES = ("all", "calls")
 _VOICE_DEVICE_ID = re.compile(r"\{[0-9.]{1,32}\}\.\{[0-9A-Fa-f-]{36}\}")
 # /voice/state lists the capture devices for the calls mic picker, so it outgrows 4 KB.
 _VOICE_STATE_MAXIMUM = 32768
+# Stream mode's state (src/StreamSection.tsx): a few short fields.
+_STREAM_STATE_MAXIMUM = 8192
 
 
 class Plugin(QuickSettingsPlugin):
@@ -254,6 +256,24 @@ class Plugin(QuickSettingsPlugin):
 
     async def core_voice_party(self):
         return await asyncio.to_thread(self._agent_local, "POST", "/voice/party", timeout=6)
+
+    # Stream mode (src/StreamSection.tsx, src/streamMode.ts; agent MarkIIIHost.Stream.cs): while this PC
+    # streams to another device, Core leaves the TV alone. The frontend reports Steam Remote Play, which
+    # only Steam itself can see; the agent forgets a report after 90 s.
+    async def core_stream_state(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/stream/state", timeout=4, maximum=_STREAM_STATE_MAXIMUM)
+
+    async def core_stream_keep_tv_out(self, on):
+        if not isinstance(on, bool):
+            return {}
+        return await asyncio.to_thread(self._agent_local, "POST", "/stream/keep-tv-out?on=" + ("true" if on else "false"), timeout=4, maximum=_STREAM_STATE_MAXIMUM)
+
+    async def core_stream_report(self, active, device):
+        if not isinstance(active, bool) or not isinstance(device, str):
+            return {}
+        device = "".join(character for character in device if character.isprintable())[:64]
+        query = urllib.parse.urlencode({"active": "true" if active else "false", "device": device})
+        return await asyncio.to_thread(self._agent_local, "POST", "/stream/steam?" + query, timeout=3)
 
     @staticmethod
     def _agent_local(method, path, *, timeout=2.5, maximum=4096):

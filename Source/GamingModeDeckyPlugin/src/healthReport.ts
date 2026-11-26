@@ -24,6 +24,7 @@ const en: Copy = {
   pcOk: "{free} free", pcLow: "Only {free} free", cAvail: "Core {latest} available", cCurrent: "Up to date · {current}",
   r_mic: "Microphone", micMuted: "Muted", micLive: "Live", micNone: "No microphone", micPartial: "Partly muted",
   micCalls: "Calls mic: {name}", micAway: "calls mic not connected", micAwayDetail: "Not connected. Calls use Windows' default microphone.", micActiveDetail: "Connected and used for calls.", micChangedDetail: "Connected; Windows uses another microphone for calls.", micFailedDetail: "Windows did not let Core make it the default.",
+  r_stream: "Streaming", sIdle: "Idle", sTo: "Streaming to {device}", sVia: "Streaming · {source}", sKept: "TV kept out by you", tHeld: "Left alone (Stream mode)", sThrough: "Through {source}", sVd: "Apollo's virtual display is active",
 };
 
 const copy: Record<string, Copy> = {
@@ -41,6 +42,7 @@ const copy: Record<string, Copy> = {
     pcOk: "{free} liberi", pcLow: "Solo {free} liberi", cAvail: "Core {latest} disponibile", cCurrent: "Aggiornato · {current}",
     r_mic: "Microfono", micMuted: "Silenziato", micLive: "Attivo", micNone: "Nessun microfono", micPartial: "Silenziato in parte",
     micCalls: "Microfono per le chiamate: {name}", micAway: "microfono per le chiamate non collegato", micAwayDetail: "Non collegato. Le chiamate usano il microfono predefinito di Windows.", micActiveDetail: "Collegato e usato per le chiamate.", micChangedDetail: "Collegato; Windows usa un altro microfono per le chiamate.", micFailedDetail: "Windows non ha permesso a Core di impostarlo come predefinito.",
+    r_stream: "Streaming", sIdle: "Inattivo", sTo: "Streaming verso {device}", sVia: "Streaming · {source}", sKept: "TV lasciata stare da te", tHeld: "Lasciata stare (modalità streaming)", sThrough: "Tramite {source}", sVd: "Lo schermo virtuale di Apollo è attivo",
   },
   es: {
     title: "Estado", allGood: "Todo bien", attention: "Necesita atención: {n}", checking: "Comprobando…", agentDown: "El servicio de Core no responde.", dismiss: "Descartar aviso",
@@ -55,6 +57,7 @@ const copy: Record<string, Copy> = {
     pcOk: "{free} libres", pcLow: "Solo {free} libres", cAvail: "Core {latest} disponible", cCurrent: "Actualizado · {current}",
     r_mic: "Micrófono", micMuted: "Silenciado", micLive: "Activo", micNone: "No hay micrófono", micPartial: "Silenciado en parte",
     micCalls: "Micrófono de llamadas: {name}", micAway: "micrófono de llamadas no conectado", micAwayDetail: "No conectado. Las llamadas usan el micrófono predeterminado de Windows.", micActiveDetail: "Conectado y usado para llamadas.", micChangedDetail: "Conectado; Windows usa otro micrófono para llamadas.", micFailedDetail: "Windows no dejó que Core lo pusiera como predeterminado.",
+    r_stream: "Streaming", sIdle: "Inactivo", sTo: "Transmitiendo a {device}", sVia: "Transmitiendo · {source}", sKept: "TV apartada por ti", tHeld: "Sin tocar (modo streaming)", sThrough: "Mediante {source}", sVd: "La pantalla virtual de Apollo está activa",
   },
   fr: {
     title: "Santé", allGood: "Tout va bien", attention: "À vérifier : {n}", checking: "Vérification…", agentDown: "Le service de Core ne répond pas.", dismiss: "Ignorer l'alerte",
@@ -69,6 +72,7 @@ const copy: Record<string, Copy> = {
     pcOk: "{free} libres", pcLow: "Seulement {free} libres", cAvail: "Core {latest} disponible", cCurrent: "À jour · {current}",
     r_mic: "Micro", micMuted: "Coupé", micLive: "Actif", micNone: "Aucun micro", micPartial: "Coupé en partie",
     micCalls: "Micro des appels : {name}", micAway: "micro des appels non connecté", micAwayDetail: "Non connecté. Les appels utilisent le micro par défaut de Windows.", micActiveDetail: "Connecté et utilisé pour les appels.", micChangedDetail: "Connecté ; Windows utilise un autre micro pour les appels.", micFailedDetail: "Windows n'a pas laissé Core le définir par défaut.",
+    r_stream: "Streaming", sIdle: "Inactif", sTo: "Streaming vers {device}", sVia: "Streaming · {source}", sKept: "TV tenue à l'écart par vous", tHeld: "Laissée tranquille (mode streaming)", sThrough: "Via {source}", sVd: "L'écran virtuel d'Apollo est actif",
   },
   de: {
     title: "Status", allGood: "Alles in Ordnung", attention: "Zu prüfen: {n}", checking: "Wird geprüft…", agentDown: "Der Core-Dienst antwortet nicht.", dismiss: "Warnung ausblenden",
@@ -83,6 +87,7 @@ const copy: Record<string, Copy> = {
     pcOk: "{free} frei", pcLow: "Nur {free} frei", cAvail: "Core {latest} verfügbar", cCurrent: "Aktuell · {current}",
     r_mic: "Mikrofon", micMuted: "Stumm", micLive: "An", micNone: "Kein Mikrofon", micPartial: "Teilweise stumm",
     micCalls: "Anruf-Mikrofon: {name}", micAway: "Anruf-Mikrofon nicht verbunden", micAwayDetail: "Nicht verbunden. Anrufe nutzen das Standardmikrofon von Windows.", micActiveDetail: "Verbunden und für Anrufe genutzt.", micChangedDetail: "Verbunden; Windows nutzt ein anderes Mikrofon für Anrufe.", micFailedDetail: "Windows hat Core nicht erlaubt, es als Standard festzulegen.",
+    r_stream: "Streaming", sIdle: "Inaktiv", sTo: "Streamt an {device}", sVia: "Streamt · {source}", sKept: "Fernseher von dir ausgenommen", tHeld: "In Ruhe gelassen (Streaming-Modus)", sThrough: "Über {source}", sVd: "Der virtuelle Bildschirm von Apollo ist aktiv",
   },
   pt: {
     title: "Saúde", allGood: "Tudo certo", attention: "Precisa de atenção: {n}", checking: "Verificando…", agentDown: "O serviço do Core não responde.", dismiss: "Dispensar alerta",
@@ -97,6 +102,7 @@ const copy: Record<string, Copy> = {
     pcOk: "{free} livres", pcLow: "Só {free} livres", cAvail: "Core {latest} disponível", cCurrent: "Atualizado · {current}",
     r_mic: "Microfone", micMuted: "Silenciado", micLive: "Ativo", micNone: "Sem microfone", micPartial: "Silenciado em parte",
     micCalls: "Microfone das chamadas: {name}", micAway: "microfone das chamadas não conectado", micAwayDetail: "Não conectado. As chamadas usam o microfone padrão do Windows.", micActiveDetail: "Conectado e usado nas chamadas.", micChangedDetail: "Conectado; o Windows usa outro microfone nas chamadas.", micFailedDetail: "O Windows não deixou o Core defini-lo como padrão.",
+    r_stream: "Streaming", sIdle: "Inativo", sTo: "Transmitindo para {device}", sVia: "Transmitindo · {source}", sKept: "TV deixada de fora por você", tHeld: "Deixada em paz (modo streaming)", sThrough: "Via {source}", sVd: "A tela virtual do Apollo está ativa",
   },
   uk: {
     title: "Стан", allGood: "Усе гаразд", attention: "Потребує уваги: {n}", checking: "Перевірка…", agentDown: "Служба Core не відповідає.", dismiss: "Приховати сповіщення",
@@ -111,6 +117,7 @@ const copy: Record<string, Copy> = {
     pcOk: "Вільно {free}", pcLow: "Вільно лише {free}", cAvail: "Доступний Core {latest}", cCurrent: "Актуальний · {current}",
     r_mic: "Мікрофон", micMuted: "Вимкнено", micLive: "Увімкнено", micNone: "Немає мікрофона", micPartial: "Вимкнено частково",
     micCalls: "Мікрофон для дзвінків: {name}", micAway: "мікрофон для дзвінків не підключено", micAwayDetail: "Не підключено. Дзвінки використовують мікрофон Windows за замовчуванням.", micActiveDetail: "Підключено й використовується для дзвінків.", micChangedDetail: "Підключено; Windows використовує інший мікрофон для дзвінків.", micFailedDetail: "Windows не дозволила Core зробити його мікрофоном за замовчуванням.",
+    r_stream: "Трансляція", sIdle: "Немає", sTo: "Трансляція на {device}", sVia: "Трансляція · {source}", sKept: "Телевізор не чіпати (вами)", tHeld: "Не чіпаємо (режим трансляції)", sThrough: "Через {source}", sVd: "Віртуальний екран Apollo активний",
   },
   ru: {
     title: "Состояние", allGood: "Всё в порядке", attention: "Требует внимания: {n}", checking: "Проверка…", agentDown: "Служба Core не отвечает.", dismiss: "Скрыть оповещение",
@@ -125,6 +132,7 @@ const copy: Record<string, Copy> = {
     pcOk: "Свободно {free}", pcLow: "Свободно всего {free}", cAvail: "Доступен Core {latest}", cCurrent: "Актуален · {current}",
     r_mic: "Микрофон", micMuted: "Выключен", micLive: "Включён", micNone: "Нет микрофона", micPartial: "Выключен частично",
     micCalls: "Микрофон для звонков: {name}", micAway: "микрофон для звонков не подключён", micAwayDetail: "Не подключён. Звонки используют микрофон Windows по умолчанию.", micActiveDetail: "Подключён и используется для звонков.", micChangedDetail: "Подключён; Windows использует другой микрофон для звонков.", micFailedDetail: "Windows не позволила Core сделать его микрофоном по умолчанию.",
+    r_stream: "Трансляция", sIdle: "Нет", sTo: "Трансляция на {device}", sVia: "Трансляция · {source}", sKept: "Телевизор не трогать (вами)", tHeld: "Не трогаем (режим трансляции)", sThrough: "Через {source}", sVd: "Виртуальный экран Apollo активен",
   },
   zh: {
     title: "健康", allGood: "一切正常", attention: "需要注意：{n}", checking: "正在检查…", agentDown: "Core 服务没有响应。", dismiss: "忽略提醒",
@@ -139,6 +147,7 @@ const copy: Record<string, Copy> = {
     pcOk: "剩余 {free}", pcLow: "仅剩 {free}", cAvail: "Core {latest} 可用", cCurrent: "已是最新 · {current}",
     r_mic: "麦克风", micMuted: "已静音", micLive: "已开启", micNone: "没有麦克风", micPartial: "部分静音",
     micCalls: "通话麦克风：{name}", micAway: "通话麦克风未连接", micAwayDetail: "未连接。通话使用 Windows 的默认麦克风。", micActiveDetail: "已连接，用于通话。", micChangedDetail: "已连接；Windows 正在用另一个麦克风通话。", micFailedDetail: "Windows 不允许 Core 将其设为默认。",
+    r_stream: "串流", sIdle: "空闲", sTo: "正在串流到 {device}", sVia: "正在串流 · {source}", sKept: "你已设置不动电视", tHeld: "不动电视（串流模式）", sThrough: "通过 {source}", sVd: "Apollo 虚拟显示器已启用",
   },
   ja: {
     title: "状態", allGood: "問題なし", attention: "要確認: {n}", checking: "確認中…", agentDown: "Core のサービスが応答しません。", dismiss: "お知らせを閉じる",
@@ -153,6 +162,7 @@ const copy: Record<string, Copy> = {
     pcOk: "空き {free}", pcLow: "空きは {free} のみ", cAvail: "Core {latest} を利用可能", cCurrent: "最新 · {current}",
     r_mic: "マイク", micMuted: "ミュート中", micLive: "オン", micNone: "マイクなし", micPartial: "一部ミュート中",
     micCalls: "通話用マイク：{name}", micAway: "通話用マイク未接続", micAwayDetail: "未接続です。通話には Windows の既定のマイクが使われます。", micActiveDetail: "接続済みで、通話に使われています。", micChangedDetail: "接続済み。Windows は通話に別のマイクを使っています。", micFailedDetail: "Windows が Core による既定の設定を許可しませんでした。",
+    r_stream: "ストリーミング", sIdle: "待機中", sTo: "{device} にストリーミング中", sVia: "ストリーミング中 · {source}", sKept: "手動でテレビに触れない設定", tHeld: "触れていません（ストリーミングモード）", sThrough: "{source} 経由", sVd: "Apollo の仮想ディスプレイが有効です",
   },
   ko: {
     title: "상태", allGood: "모두 정상", attention: "확인 필요: {n}", checking: "확인 중…", agentDown: "Core 서비스가 응답하지 않습니다.", dismiss: "알림 닫기",
@@ -167,6 +177,7 @@ const copy: Record<string, Copy> = {
     pcOk: "{free} 남음", pcLow: "{free}만 남음", cAvail: "Core {latest} 사용 가능", cCurrent: "최신 · {current}",
     r_mic: "마이크", micMuted: "음소거됨", micLive: "켜짐", micNone: "마이크 없음", micPartial: "일부 음소거됨",
     micCalls: "통화용 마이크: {name}", micAway: "통화용 마이크 연결 안 됨", micAwayDetail: "연결되지 않았습니다. 통화에는 Windows 기본 마이크가 쓰입니다.", micActiveDetail: "연결되어 통화에 쓰이고 있습니다.", micChangedDetail: "연결됨. Windows가 통화에 다른 마이크를 쓰고 있습니다.", micFailedDetail: "Windows가 Core의 기본값 설정을 허용하지 않았습니다.",
+    r_stream: "스트리밍", sIdle: "대기 중", sTo: "{device}(으)로 스트리밍 중", sVia: "스트리밍 중 · {source}", sKept: "직접 TV 건드리지 않기 켬", tHeld: "건드리지 않음 (스트리밍 모드)", sThrough: "{source} 통해", sVd: "Apollo 가상 디스플레이 사용 중",
   },
   hi: {
     title: "हेल्थ", allGood: "सब ठीक है", attention: "ध्यान चाहिए: {n}", checking: "जाँच हो रही है…", agentDown: "Core की सेवा जवाब नहीं दे रही।", dismiss: "अलर्ट हटाएँ",
@@ -181,6 +192,7 @@ const copy: Record<string, Copy> = {
     pcOk: "{free} खाली", pcLow: "सिर्फ़ {free} खाली", cAvail: "Core {latest} उपलब्ध", cCurrent: "अप टू डेट · {current}",
     r_mic: "माइक्रोफ़ोन", micMuted: "म्यूट", micLive: "चालू", micNone: "कोई माइक्रोफ़ोन नहीं", micPartial: "आंशिक रूप से म्यूट",
     micCalls: "कॉल माइक: {name}", micAway: "कॉल माइक कनेक्ट नहीं", micAwayDetail: "कनेक्ट नहीं है। कॉल Windows का डिफ़ॉल्ट माइक्रोफ़ोन इस्तेमाल करती हैं।", micActiveDetail: "कनेक्ट है और कॉल के लिए इस्तेमाल हो रहा है।", micChangedDetail: "कनेक्ट है; Windows कॉल के लिए दूसरा माइक्रोफ़ोन इस्तेमाल कर रहा है।", micFailedDetail: "Windows ने Core को इसे डिफ़ॉल्ट बनाने नहीं दिया।",
+    r_stream: "स्ट्रीमिंग", sIdle: "निष्क्रिय", sTo: "{device} पर स्ट्रीमिंग", sVia: "स्ट्रीमिंग · {source}", sKept: "आपने टीवी को अलग रखा", tHeld: "नहीं छुआ गया (स्ट्रीम मोड)", sThrough: "{source} के ज़रिए", sVd: "Apollo का वर्चुअल डिस्प्ले चालू है",
   },
 };
 
@@ -226,7 +238,7 @@ function formatTime(value: unknown, locale: string, hour: unknown): string {
 
 const titles: Record<string, string> = {
   "server-backup": "r_backup", "restore-check": "r_restore", "server-drive": "r_drive", romm: "r_romm",
-  "windows-restart": "r_restart", "update-night": "r_night", tv: "r_tv", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
+  "windows-restart": "r_restart", "update-night": "r_night", tv: "r_tv", streaming: "r_stream", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
 };
 
 const serverStates: Record<string, string> = { "not-configured": "notConfigured", unreachable: "unreachable", missing: "missing", unreadable: "unreadable" };
@@ -275,7 +287,18 @@ function rowValue(row: HealthRowData, text: Copy, locale: string, now: Date): { 
       return { value: row.state === "scheduled" ? fill(text.nScheduled, { time: formatTime(data.scheduledFor, locale, data.hour) })
         : row.state === "waiting" ? text.nWaiting : text.nNothing, details };
     case "tv":
-      return { value: ({ off: text.tOff, "not-paired": text.tNotPaired, reachable: text.tOk, unreachable: text.tDown } as Record<string, string>)[row.state] ?? text.unknown, details };
+      return { value: ({ off: text.tOff, "not-paired": text.tNotPaired, reachable: text.tOk, unreachable: text.tDown, "stream-mode": text.tHeld } as Record<string, string>)[row.state] ?? text.unknown, details };
+    case "streaming": {
+      // Stream mode (CORE-STREAM-MODE.md): information only; the TV is left alone while it is on.
+      const sources: Record<string, string> = { steam: "Steam Remote Play", steamvr: "SteamVR", sunshine: "Sunshine", apollo: "Apollo" };
+      const source = typeof data.source === "string" ? sources[data.source] ?? "" : "";
+      const device = typeof data.device === "string" ? data.device.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 64) : "";
+      if (source) details.push(fill(text.sThrough, { source }));
+      if (data.virtualDisplay === true) details.push(text.sVd);
+      if (row.state === "streaming") return { value: device ? fill(text.sTo, { device }) : source ? fill(text.sVia, { source }) : text.sKept, details };
+      if (row.state === "kept-out") return { value: text.sKept, details };
+      return { value: row.state === "idle" ? text.sIdle : text.unknown, details };
+    }
     case "microphone": {
       // The calls mic rides along as information: its name, or "not connected" (calm, never an alert;
       // calls then use Windows' default). No battery: Windows exposes none for a USB audio receiver.

@@ -4411,7 +4411,7 @@ const storeDigitalTranslations = {
 };
 
 // SPDX-License-Identifier: MIT. Playhub, Copyright (c) 2026 LoZazaMastro.
-const en$3 = {
+const en$4 = {
     errorQueueChanged: "The download list changed. Refresh it and try again.",
     partnerInstallEa: "This game requires EA app. Installation from Digital Stores is not available yet.",
     partnerInstallUbisoft: "This game requires Ubisoft Connect. Installation from Digital Stores is not available yet.",
@@ -4434,7 +4434,7 @@ const en$3 = {
     canceled: "Canceled", failed: "Failed", interrupted: "Interrupted", installing: "Installing", verifying: "Verifying", canceling: "Canceling", waiting: "Queued", signInCanceled: "Sign-in canceled. You can try again from Accounts.", signInFailed: "Sign-in failed. Try again from Accounts.", title: "Digital stores", subtitle: "Install and manage your games", library: "Your games", accounts: "Accounts", downloads: "Downloads", search: "Search your games", filters: "Filters", allStores: "All stores", allGames: "All games", installed: "Installed", notInstalled: "Not installed", install: "Install", manage: "Manage", uninstall: "Uninstall", refresh: "Refresh", signIn: "Sign in", signOut: "Sign out", connected: "Connected", disconnected: "Not connected", connecting: "Connecting…", expired: "Sign in again", unavailable: "Unavailable", signInNote: "Complete sign-in in the window that opened.", accountHint: "Sign in to see the games you own.", automaticSteam: "Installed games appear automatically in your Steam library, grouped by store.", installIntentLoading: "Finding this game in your library…", gameMissing: "This game is not available in the connected account. Refresh the library or check your account.", back: "Back", cancel: "Cancel", close: "Close", continue: "Continue", review: "Review installation", confirmInstall: "Install now", chooseFolder: "Choose folder", useFolder: "Use this folder", parentFolder: "Parent folder", thisPc: "This PC", directoryEmpty: "No folders here", directoryTruncated: "Showing the first 512 folders. Open a subfolder to continue.", pathNote: "A separate folder for this game will be created here.", loading: "Loading…", retry: "Retry", errorRead: "Couldn’t read your library. Your last confirmed data is still shown.", errorCommand: "The store couldn’t confirm this action. Refresh and try again.", errorPrepare: "Couldn’t prepare this installation. Try again.", errorDestination: "Choose a valid installation folder.", errorNotEmpty: "This game folder is not empty or writable. Choose another location.", errorSpace: "There is not enough free space in this location.", errorChanged: "The game or account changed. Review the current details and try again.", errorProviderBusy: "Another store operation is in progress. Try again when it finishes.", errorUninstall: "Couldn’t prepare this uninstall. Refresh and try again.", free: "Free space", required: "Required space", folder: "Installation folder", drive: "Drive", selectedDestination: "Selected destination", clearCompleted: "Clear completed", completed: "Completed", paused: "Paused", active: "In progress", downloadNow: "Download now", pause: "Pause", resume: "Resume", cancelDownload: "Cancel download", confirmCancel: "Cancel this download?", confirmUninstall: "Uninstall this game?", uninstallNote: "The selected game will be removed from this PC.", uninstallUnavailable: "Uninstall is unavailable for this installation.", emptyLibrary: "No games to show", emptyLibraryHelp: "Connect an account or adjust your filters.", emptyDownloads: "No downloads yet", emptyDownloadsHelp: "Choose a game to install from Your games.", xboxInstallNote: "Installation and its location are managed by Microsoft Store.", xboxRequested: "Installation requested. Progress appears here after the store confirms it.", unknown: "Not available", sort: "Sort by", titleOrder: "Title A–Z", installedFirst: "Installed first", refreshing: "Refreshing library…", games: "games", directoryError: "Couldn’t open this folder. Choose another location.", statusRetry: "Refresh installation status", accountRefreshFailed: "Couldn’t refresh this store. The previous library is kept."
 };
 function storeDigitalCopy(locale = getSteamLocale()) {
-    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$3 };
+    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$4 };
     for (const key of Object.keys(result)) {
         const value = translated?.[key];
         if (typeof value === "string" && value.trim())
@@ -5768,7 +5768,7 @@ function deviceInfoLocale(locale) {
         profile: profile[0], auto: profile[1], pc: profile[2], handheld: profile[3], experimental: profile[4], profileHint: profile[5], battery: profile[6], ac: profile[7], primaryDisplay: profile[8], video: profile[9], power: profile[10], details: profile[11], saveError: profile[12], retry: profile[13], batteryHealth: batteryHealth[language] ?? batteryHealth.en };
 }
 
-const copy$b = {
+const copy$c = {
     "en": {
         "StoreLibrary.WindowsManaged": "Installation managed by Microsoft Store",
         "StoreLibrary.Stores": "Digital stores",
@@ -6850,9 +6850,9 @@ const copy$b = {
         "StoreLibrary.ConfirmCancelDownload": "Вы действительно хотите отменить загрузку?"
     }
 };
-function storeLibraryLocale(locale) { return copy$b[deviceLanguage(locale)] ?? copy$b.en; }
+function storeLibraryLocale(locale) { return copy$c[deviceLanguage(locale)] ?? copy$c.en; }
 
-const { PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$6, DropdownItem: DropdownItem$5, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = _global_DFL;
+const { PanelSection: PanelSection$6, PanelSectionRow: PanelSectionRow$7, DropdownItem: DropdownItem$5, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = _global_DFL;
 const danger = `.ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) {
 background:#c42b1c!important;color:#fff!important}
 .ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) * {color:inherit!important}`;
@@ -6919,7 +6919,7 @@ function StoreDownloadsQam({ locale }) {
     const c = storeLibraryLocale(locale);
     if (!jobs.length)
         return null;
-    return SP_JSX.jsx(PanelSection$5, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
+    return SP_JSX.jsx(PanelSection$6, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
 }
 
 const { DialogButton: DialogButton$9 } = _global_DFL;
@@ -7309,7 +7309,7 @@ function translationController(store) {
     }
 }
 
-const { PanelSectionRow: PanelSectionRow$5, ToggleField: ToggleField$5 } = _global_DFL;
+const { PanelSectionRow: PanelSectionRow$6, ToggleField: ToggleField$6 } = _global_DFL;
 const descriptions$1 = {
     en: "Makes the Steam Controller appear as an Xbox controller.",
     it: "Fa riconoscere lo Steam Controller come un pad Xbox.",
@@ -7358,7 +7358,7 @@ function TranslationControllerToggle({ locale }) {
     }, []);
     if (!connected || enabled === null)
         return null;
-    return SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsx(ToggleField$5, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
+    return SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsx(ToggleField$6, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
                 if (typeof value !== "boolean" || writing.current || !available || !mounted.current || !translationController(window.ControllerStore))
                     return;
                 writing.current = true;
@@ -7415,7 +7415,7 @@ function pollStatus(read, update) {
     return () => { stopped = true; clearTimeout(timer); controller?.abort(); };
 }
 
-const copy$a = {
+const copy$b = {
     "en": {
         "Title": "Gaming Mode optional",
         "Description": "Start in Big Picture, switch to the desktop and open the Core Dashboard with a controller.",
@@ -7585,7 +7585,7 @@ const copy$a = {
         "Ready": "Gaming Mode तैयार है।"
     }
 };
-function optionalAgentCopy(locale) { return copy$a[locale] ?? copy$a.en; }
+function optionalAgentCopy(locale) { return copy$b[locale] ?? copy$b.en; }
 
 // Backend client for Quick Settings.
 //   * call(...)  -> Decky Python backend (main.py)
@@ -7748,7 +7748,7 @@ function gameSettingsLabel(_language) {
     return "Core Game Settings";
 }
 
-const copy$9 = {
+const copy$a = {
     en: ["Session", "Audio", "Display", "Performance", "Graphics", "Controller", "System", "Settings", "Customize your panel", "Show tabs", "Move up", "Move down", "Restore defaults", "Back", "Hide a tab without changing its settings or disabling its features.", "Expand", "Collapse", "Switch tab", "Settings could not be saved. Try again."],
     it: ["Sessione", "Audio", "Schermo", "Prestazioni", "Grafica", "Controller", "Sistema", "Impostazioni", "Personalizza il pannello", "Mostra le schede", "Sposta su", "Sposta giù", "Ripristina predefiniti", "Indietro", "Nascondere una scheda non modifica le impostazioni e non disattiva le sue funzioni.", "Espandi", "Comprimi", "Cambia scheda", "Impossibile salvare le impostazioni. Riprova."],
     de: ["Sitzung", "Audio", "Bildschirm", "Leistung", "Grafik", "Controller", "System", "Einstellungen", "Panel anpassen", "Tabs anzeigen", "Nach oben", "Nach unten", "Standard wiederherstellen", "Zurück", "Das Ausblenden eines Tabs ändert keine Einstellungen und deaktiviert keine Funktionen.", "Ausklappen", "Einklappen", "Tab wechseln", "Einstellungen konnten nicht gespeichert werden. Erneut versuchen."],
@@ -7765,7 +7765,7 @@ const copy$9 = {
 function controlLocale(locale) {
     const aliases = { english: "en", italian: "it", german: "de", spanish: "es", latam: "es", french: "fr", brazilian: "pt", portuguese: "pt", russian: "ru", ukrainian: "uk", japanese: "ja", koreana: "ko", schinese: "zh", tchinese: "zh", hindi: "hi" };
     const key = aliases[locale] ?? locale.split(/[-_]/)[0];
-    const row = copy$9[key] ?? copy$9.en;
+    const row = copy$a[key] ?? copy$a.en;
     const tabs = tabCopy[key] ?? tabCopy.en;
     const video = { en: "Video", it: "Video", de: "Video", es: "Vídeo", fr: "Vidéo", pt: "Vídeo", ru: "Видео", uk: "Відео", ja: "映像", ko: "비디오", zh: "视频", hi: "वीडियो" };
     return { home: row[0], audio: video[key] ?? video.en, display: row[2], performance: row[1], graphics: row[3], controller: row[5], tools: row[6], store: 'Plugin Store', decky: 'Decky', settings: row[7], customize: tabs[1], show: tabs[4], up: tabs[2], down: tabs[3], reset: row[12], back: row[13], hint: row[14], expand: row[15], collapse: row[16], switchTab: row[17], saveError: row[18], device: tabs[5], unavailable: tabs[6], loading: tabs[7], retry: tabs[8] };
@@ -7914,7 +7914,7 @@ const amdIt = {
     amdDisplayTemperature: "Temperatura colore",
     amdDriverRejected: "Il driver AMD non ha confermato questa modifica. Il valore precedente è stato ripristinato.",
 };
-const en$2 = {
+const en$3 = {
     title: "Quick Settings",
     audio: "Audio",
     volume: "Device volume",
@@ -8156,7 +8156,7 @@ const it = {
     cancel: "Annulla",
     notConnected: "Agent Quick Settings non collegato",
 };
-const strings$2 = { en: en$2, it };
+const strings$2 = { en: en$3, it };
 function t$1(locale = navigator.language) {
     const language = locale.split("-")[0];
     return { ...(strings$2[language] ?? strings$2.en), ...quickCoreLocale(language), title: "Core" };
@@ -8904,10 +8904,10 @@ function TbWindow (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M12 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"},"child":[]},{"tag":"path","attr":{"d":"M4 6l8 0"},"child":[]},{"tag":"path","attr":{"d":"M16 6l4 0"},"child":[]},{"tag":"path","attr":{"d":"M6 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"},"child":[]},{"tag":"path","attr":{"d":"M4 12l2 0"},"child":[]},{"tag":"path","attr":{"d":"M10 12l10 0"},"child":[]},{"tag":"path","attr":{"d":"M15 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"},"child":[]},{"tag":"path","attr":{"d":"M4 18l11 0"},"child":[]},{"tag":"path","attr":{"d":"M19 18l1 0"},"child":[]}]})(props);
 }
 
-const { DialogButton: DialogButton$8, Focusable: Focusable$a } = _global_DFL;
+const { DialogButton: DialogButton$8, Focusable: Focusable$b } = _global_DFL;
 function ControlSection({ id, title, icon, children, collapsed, onToggle, locale }) {
     const copy = controlLocale(locale);
-    return SP_JSX.jsxs(Focusable$a, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$8, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$a, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
+    return SP_JSX.jsxs(Focusable$b, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$8, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$b, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
 }
 
 /** One writer per independent setting/resource; callbacks receive only current results. */
@@ -10147,7 +10147,7 @@ function bounded$1(operation) {
         operation.then(value => { window.clearTimeout(timer); resolve(value); }, error => { window.clearTimeout(timer); reject(error); });
     });
 }
-const copy$8 = {
+const copy$9 = {
     en: ["Check shader support", "Graphics requirements met", "Requirements unmet", "Needs verification", "Listed by Intel · cache unverified", "Graphics adapter unavailable"],
     it: ["Verifica supporto shader", "Requisiti grafici soddisfatti", "Fuori requisiti", "Da verificare", "Nel catalogo Intel · cache da verificare", "Scheda grafica da rilevare"],
     de: ["Shader-Unterstützung prüfen", "Grafikanforderungen erfüllt", "Nicht unterstützt", "Nicht geprüft", "Bei Intel gelistet · Cache nicht geprüft", "Keine Grafikkarte erkannt"],
@@ -10186,7 +10186,7 @@ function ShaderCompatibility({ appId, locale, renderSection }) {
         return () => { mounted.current = false; ++epoch.current; window.removeEventListener("focus", onFocus); };
     }, [appId]);
     const text = shaderCacheCopy(locale);
-    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$8[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$8.en;
+    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$9[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$9.en;
     const labels = { eligible, unsupported, unverified: unknown };
     const current = (generation) => mounted.current && epoch.current === generation;
     function accept(next, generation) {
@@ -11685,7 +11685,7 @@ function createSteamDownloadPower(read, send) {
     };
 }
 
-const copy$7 = {
+const copy$8 = {
     en: ["Finish Steam download", "Stop keeping awake", "On AC power, Windows can turn off the display while Steam finishes the current download.", "PC stays awake for this download.", "Could not start download power mode."],
     it: ["Completa il download Steam", "Termina modalità download", "Con l’alimentazione collegata, Windows può spegnere lo schermo mentre Steam completa il download.", "Il PC resta sveglio per questo download.", "Impossibile avviare la modalità download."],
     de: ["Steam-Download abschließen", "Wachhalten beenden", "Am Netz kann Windows den Bildschirm ausschalten, während Steam den Download beendet.", "Der PC bleibt für diesen Download wach.", "Downloadmodus konnte nicht gestartet werden."],
@@ -11753,7 +11753,7 @@ function SteamDownloadPower({ locale }) {
     }, []);
     if (!state.available && !state.active)
         return null;
-    const [start, stop, detail, active, failed] = copy$7[locale.split(/[-_]/)[0]] ?? copy$7.en;
+    const [start, stop, detail, active, failed] = copy$8[locale.split(/[-_]/)[0]] ?? copy$8.en;
     return SP_JSX.jsxs("div", { className: "qsCardBody", "aria-busy": state.busy, children: [SP_JSX.jsx(_global_DFL.DialogButton, { disabled: state.busy, onClick: () => void (state.active ? downloadPower.stop() : downloadPower.start()), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: state.active ? stop : start }) }), SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: state.failed ? failed : state.active ? active : detail })] });
 }
 
@@ -23928,7 +23928,7 @@ function useHistoryPhoto(url) {
     return resolved?.source === url && resolved.digest === expected?.sha256 ? resolved.url : undefined;
 }
 
-const copy$6 = {
+const copy$7 = {
     it: ['Premi', 'per approfondire', 'per richiudere', 'Visualizza immagine', 'Chiudi'],
     en: ['Press', 'to explore', 'to collapse', 'View image', 'Close'],
     de: ['Drücke', 'für mehr', 'zum Zuklappen', 'Bild ansehen', 'Schließen'],
@@ -23942,7 +23942,7 @@ const copy$6 = {
     zh: ['按', '深入閱讀', '收起內容', '查看圖片', '關閉'],
     hi: ['', 'दबाकर विस्तार से पढ़ें', 'दबाकर समेटें', 'चित्र देखें', 'बंद करें'],
 };
-const historyActionCopy = (locale) => copy$6[locale.split(/[-_]/)[0]] ?? copy$6.en;
+const historyActionCopy = (locale) => copy$7[locale.split(/[-_]/)[0]] ?? copy$7.en;
 class GlyphBoundary extends _global_SP_REACT.Component {
     constructor() {
         super(...arguments);
@@ -24028,7 +24028,7 @@ function historyHeadingCover(all, kind, coverFile) {
 }
 
 const historyDigest = (image) => historyPhotoIntegrity[image.url]?.sha256;
-const { Focusable: Focusable$9, DialogButton: DialogButton$7, Navigation: Navigation$4 } = _global_DFL;
+const { Focusable: Focusable$a, DialogButton: DialogButton$7, Navigation: Navigation$4 } = _global_DFL;
 const labels$1 = {
     it: ['Accade oggi', 'La storia dei videogiochi, un giorno alla volta', 'In questo giorno', '', 'Dietro la storia', 'Continua su Wikipedia', 'Immagine: crediti e licenza', 'Prepariamo la storia di oggi…', 'Storia non disponibile. Riprova', 'Ultima storia disponibile', 'Fonte: Wikipedia · testo CC BY-SA 4.0'],
     en: ['On this day', 'Video game history, one day at a time', 'On this day', 'Today’s discovery', 'Behind the story', 'Read on Wikipedia', 'Image: credits and license', 'Finding today’s story…', 'Story unavailable. Retry', 'Last available story', 'Source: Wikipedia · text CC BY-SA 4.0'],
@@ -24137,7 +24137,7 @@ function Block({ story, chapter, index, locale }) {
     const open = () => { const now = Date.now(); if (now - lastActivation.current < 350)
         return; lastActivation.current = now; if (!media)
         return; openHistoryImage(media.url, media.subject, locale, cardRef.current?.ownerDocument.defaultView ?? window); };
-    return SP_JSX.jsxs(Focusable$9, { ref: cardRef, className: `ph-history-card ${index % 2 ? 'reverse' : ''} ${photo ? '' : 'no-image'}`, role: photo ? 'button' : 'article', "aria-label": title, focusable: true, onOKActionDescription: photo ? historyActionCopy(locale)[3] : undefined, onActivate: photo ? open : undefined, onClick: photo ? open : undefined, children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: chapter ? SP_JSX.jsx("span", { className: "ph-history-subject", children: chapter.subject || story.article.title }) : story.relationship ?? (occasion ? `${occasion} · ${story.article.title}` : story.article.title) }), renderTitle(), SP_JSX.jsx("p", { children: chapter?.body ?? story.editorial.intro }), !chapter && story.year && SP_JSX.jsx("div", { className: "ph-history-year", children: story.year })] }), media && photo && SP_JSX.jsxs("div", { className: "ph-history-image", children: [SP_JSX.jsx("img", { className: "ph-history-image-bg", src: photo, alt: "", "aria-hidden": true, role: "presentation" }), SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject, onError: () => setFailed(previous => [...previous, media.url]) })] })] });
+    return SP_JSX.jsxs(Focusable$a, { ref: cardRef, className: `ph-history-card ${index % 2 ? 'reverse' : ''} ${photo ? '' : 'no-image'}`, role: photo ? 'button' : 'article', "aria-label": title, focusable: true, onOKActionDescription: photo ? historyActionCopy(locale)[3] : undefined, onActivate: photo ? open : undefined, onClick: photo ? open : undefined, children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: chapter ? SP_JSX.jsx("span", { className: "ph-history-subject", children: chapter.subject || story.article.title }) : story.relationship ?? (occasion ? `${occasion} · ${story.article.title}` : story.article.title) }), renderTitle(), SP_JSX.jsx("p", { children: chapter?.body ?? story.editorial.intro }), !chapter && story.year && SP_JSX.jsx("div", { className: "ph-history-year", children: story.year })] }), media && photo && SP_JSX.jsxs("div", { className: "ph-history-image", children: [SP_JSX.jsx("img", { className: "ph-history-image-bg", src: photo, alt: "", "aria-hidden": true, role: "presentation" }), SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject, onError: () => setFailed(previous => [...previous, media.url]) })] })] });
 }
 const expandedRelatedStories = new Set();
 function RelatedStory({ story, locale }) {
@@ -24152,7 +24152,7 @@ function RelatedStory({ story, locale }) {
         expandedRelatedStories.delete(storyKey);
     else
         expandedRelatedStories.add(storyKey); return !value; }); };
-    return SP_JSX.jsxs("div", { className: "ph-history-related", children: [SP_JSX.jsxs(Focusable$9, { className: "ph-history-card ph-history-related-summary", role: "button", "aria-expanded": expanded, focusable: true, onActivate: toggle, onClick: toggle, onOKActionDescription: historyActionCopy(locale)[expanded ? 2 : 1], children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: story.relationship ?? words$3(locale)[4] }), SP_JSX.jsx("h3", { children: story.article.title }), SP_JSX.jsx(HistoryConfirmHint, { locale: locale, expanded: expanded })] }), media && photo && SP_JSX.jsx("div", { className: "ph-history-image", children: SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject }) })] }), expanded && SP_JSX.jsxs("div", { className: "ph-history-related-content", children: [SP_JSX.jsx(Block, { story: story, index: 0, locale: locale }), story.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: story, chapter: chapter, index: index + 1, locale: locale }), story.quote && (story.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$9, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: story.quote.quoted ? `«${story.quote.text}»` : story.quote.text }), story.quote.attribution && SP_JSX.jsx("span", { children: story.quote.attribution })] })] }, index))] })] });
+    return SP_JSX.jsxs("div", { className: "ph-history-related", children: [SP_JSX.jsxs(Focusable$a, { className: "ph-history-card ph-history-related-summary", role: "button", "aria-expanded": expanded, focusable: true, onActivate: toggle, onClick: toggle, onOKActionDescription: historyActionCopy(locale)[expanded ? 2 : 1], children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: story.relationship ?? words$3(locale)[4] }), SP_JSX.jsx("h3", { children: story.article.title }), SP_JSX.jsx(HistoryConfirmHint, { locale: locale, expanded: expanded })] }), media && photo && SP_JSX.jsx("div", { className: "ph-history-image", children: SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject }) })] }), expanded && SP_JSX.jsxs("div", { className: "ph-history-related-content", children: [SP_JSX.jsx(Block, { story: story, index: 0, locale: locale }), story.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: story, chapter: chapter, index: index + 1, locale: locale }), story.quote && (story.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$a, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: story.quote.quoted ? `«${story.quote.text}»` : story.quote.text }), story.quote.attribution && SP_JSX.jsx("span", { children: story.quote.attribution })] })] }, index))] })] });
 }
 let historyPreviewOffset = 0;
 function DailyHistory({ getLocale }) {
@@ -24220,7 +24220,7 @@ function DailyHistory({ getLocale }) {
     }
     catch { } };
     const headingContent = SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-date", children: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(date) }), story ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("div", { className: "ph-history-sub", children: [heading && SP_JSX.jsx("span", { children: heading }), SP_JSX.jsx("strong", { children: story.article.title }), story.year && story.occasion?.kind !== 'feature' && SP_JSX.jsx("span", { className: "ph-history-year", children: story.year })] }), headingMedia(story)] }) : SP_JSX.jsx("div", { className: "ph-history-sub", children: copy[1] })] });
-    return SP_JSX.jsxs(Focusable$9, { className: "ph-history", ref: root, "flow-children": "column", onButtonDown: navigate, actionDescriptionMap: story?.preview ? { [buttons.SECONDARY]: hints[0], [buttons.OPTIONS]: hints[1] } : {}, children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx(Focusable$9, { className: "ph-history-head ph-history-day-card", role: "button", "aria-label": story?.article.title ?? copy[0], focusable: true, onActivate: dayAppId ? openDayGame : undefined, onClick: dayAppId ? openDayGame : undefined, children: headingContent }), !story ? SP_JSX.jsx("div", { className: "ph-history-empty", children: failed ? SP_JSX.jsx(DialogButton$7, { onClick: () => setRetry(v => v + 1), children: copy[8] }) : SP_JSX.jsx("span", { role: "status", children: copy[7] }) }) : [story, ...(story.also ?? [])].map(item => SP_JSX.jsxs("div", { className: "ph-history-story", children: [SP_JSX.jsx(Block, { story: item, index: 0, locale: locale }), item.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: item, chapter: chapter, index: index + 1, locale: locale }), item.quote && (item.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$9, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] })] }, index)), item.quote && !item.editorial.chapters?.length && SP_JSX.jsxs(Focusable$9, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] }), item.connections?.length ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-connections-title", children: copy[4] }), item.connections.map(related => SP_JSX.jsx(RelatedStory, { story: related, locale: locale }, `${related.date}-${related.editorial.id}`))] }) : null] }, `${item.date}-${item.editorial.id}`))] });
+    return SP_JSX.jsxs(Focusable$a, { className: "ph-history", ref: root, "flow-children": "column", onButtonDown: navigate, actionDescriptionMap: story?.preview ? { [buttons.SECONDARY]: hints[0], [buttons.OPTIONS]: hints[1] } : {}, children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx(Focusable$a, { className: "ph-history-head ph-history-day-card", role: "button", "aria-label": story?.article.title ?? copy[0], focusable: true, onActivate: dayAppId ? openDayGame : undefined, onClick: dayAppId ? openDayGame : undefined, children: headingContent }), !story ? SP_JSX.jsx("div", { className: "ph-history-empty", children: failed ? SP_JSX.jsx(DialogButton$7, { onClick: () => setRetry(v => v + 1), children: copy[8] }) : SP_JSX.jsx("span", { role: "status", children: copy[7] }) }) : [story, ...(story.also ?? [])].map(item => SP_JSX.jsxs("div", { className: "ph-history-story", children: [SP_JSX.jsx(Block, { story: item, index: 0, locale: locale }), item.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: item, chapter: chapter, index: index + 1, locale: locale }), item.quote && (item.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$a, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] })] }, index)), item.quote && !item.editorial.chapters?.length && SP_JSX.jsxs(Focusable$a, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] }), item.connections?.length ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-connections-title", children: copy[4] }), item.connections.map(related => SP_JSX.jsx(RelatedStory, { story: related, locale: locale }, `${related.date}-${related.editorial.id}`))] }) : null] }, `${item.date}-${item.editorial.id}`))] });
 }
 let historyConfig = { enabled: true, revision: 0 };
 let historyReady = false;
@@ -24277,7 +24277,7 @@ const words$2 = {
 const NEWS_COUNTRIES = ["US", "IT", "DE", "ES", "FR", "BR", "RU", "UA", "JP", "KR", "TW", "IN"];
 function newsCopy(locale) { return words$2[locale] ?? words$2.en; }
 
-const { Focusable: Focusable$8, DialogButton: DialogButton$6, DropdownItem: DropdownItem$4, ToggleField: ToggleField$4, Navigation: Navigation$3 } = _global_DFL;
+const { Focusable: Focusable$9, DialogButton: DialogButton$6, DropdownItem: DropdownItem$4, ToggleField: ToggleField$5, Navigation: Navigation$3 } = _global_DFL;
 let config$1 = { enabled: true, country: "auto" };
 let ready = false;
 const listeners$6 = new Set();
@@ -24311,7 +24311,7 @@ function HomeNewsSettings({ locale }) {
         }
     };
     const names = new Intl.DisplayNames([locale], { type: "region" });
-    return SP_JSX.jsxs(Focusable$8, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [loadFailed && SP_JSX.jsx(DialogButton$6, { onClick: () => void readConfig().then(() => setLoadFailed(false)).catch(() => { }), children: copy[4] }), SP_JSX.jsx(ToggleField$4, { label: copy[1], bottomSeparator: "none", checked: value.enabled, disabled: busy || !ready, onChange: (enabled) => void save({ ...value, enabled }) }), SP_JSX.jsx(DropdownItem$4, { label: copy[2], layout: "below", bottomSeparator: "none", selectedOption: value.country, disabled: busy || !ready, rgOptions: [{ data: "auto", label: copy[3] }, ...NEWS_COUNTRIES.map(data => ({ data, label: names.of(data) ?? data }))], onChange: (option) => void save({ ...value, country: option.data }) })] });
+    return SP_JSX.jsxs(Focusable$9, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [loadFailed && SP_JSX.jsx(DialogButton$6, { onClick: () => void readConfig().then(() => setLoadFailed(false)).catch(() => { }), children: copy[4] }), SP_JSX.jsx(ToggleField$5, { label: copy[1], bottomSeparator: "none", checked: value.enabled, disabled: busy || !ready, onChange: (enabled) => void save({ ...value, enabled }) }), SP_JSX.jsx(DropdownItem$4, { label: copy[2], layout: "below", bottomSeparator: "none", selectedOption: value.country, disabled: busy || !ready, rgOptions: [{ data: "auto", label: copy[3] }, ...NEWS_COUNTRIES.map(data => ({ data, label: names.of(data) ?? data }))], onChange: (option) => void save({ ...value, country: option.data }) })] });
 }
 function nativeNewsRows(tree) {
     const children = tree?.props?.children;
@@ -24358,7 +24358,7 @@ function NewsCard({ item, width, height, locale, skin }) {
     const [missing, setMissing] = _global_SP_REACT.useState(false);
     const c = skin.classes;
     const date = item.published > 0 ? new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "long" }).format(new Date(item.published * 1000)) : "";
-    return SP_JSX.jsxs("div", { className: `${c.OuterWrapper} ph-news-card`, style: { width, height }, "data-news-url": item.url, children: [SP_JSX.jsx("div", { className: c.EventType, children: item.source }), SP_JSX.jsxs(Focusable$8, { className: `${c.EventPreviewContainer} ph-news-content`, focusable: true, "aria-label": `${item.title} Â· ${item.source}`, onActivate: () => {
+    return SP_JSX.jsxs("div", { className: `${c.OuterWrapper} ph-news-card`, style: { width, height }, "data-news-url": item.url, children: [SP_JSX.jsx("div", { className: c.EventType, children: item.source }), SP_JSX.jsxs(Focusable$9, { className: `${c.EventPreviewContainer} ph-news-content`, focusable: true, "aria-label": `${item.title} Â· ${item.source}`, onActivate: () => {
                     if (/^https?:\/\//i.test(item.url))
                         Navigation$3.NavigateToExternalWeb(item.url);
                 }, children: [SP_JSX.jsx("div", { className: `${c.EventImageWrapper} ph-news-cover`, style: { height: Math.round(width * 9 / 16), minHeight: Math.round(width * 9 / 16), flexShrink: 0 }, "data-logo": fallback, children: !missing ? SP_JSX.jsx("img", { className: `${c.EventImage} ph-news-image`, loading: "lazy", alt: "", src: fallback ? item.logo : item.image, onError: () => fallback ? setMissing(true) : setFallback(true) }) : SP_JSX.jsx("span", { children: item.source }) }), SP_JSX.jsxs("div", { className: `${c.EventInfo} ph-news-info`, children: [SP_JSX.jsx("div", { className: "ph-news-date", children: date }), SP_JSX.jsx("div", { className: `${c.Title} ph-news-title`, children: item.title })] })] })] });
@@ -25195,7 +25195,7 @@ function SiSteam (props) {
 }
 
 const { useCallback: useCallback$1, useEffect: useEffect$2, useLayoutEffect, useMemo: useMemo$2, useRef: useRef$1, useState: useState$2 } = _global_SP_REACT;
-const { Focusable: Focusable$7, GamepadButton: GamepadButton$2, Navigation: Navigation$2, TextField: TextField$1, ToggleField: ToggleField$3 } = _global_DFL;
+const { Focusable: Focusable$8, GamepadButton: GamepadButton$2, Navigation: Navigation$2, TextField: TextField$1, ToggleField: ToggleField$4 } = _global_DFL;
 const DASHBOARD_ROUTE = "/playhub-dashboard";
 const dashboardExit = createDashboardExit({
     hideOverlay: () => { closeDashboardOverlay(); clearDashboardChrome(); },
@@ -25909,7 +25909,7 @@ function FocusItem({ className = "", children, onPress, onFocus, ...props }) {
         sound("open");
         onPress?.();
     };
-    return (SP_JSX.jsx(Focusable$7, { ...props, tabIndex: 0, "data-ph-focusable": "true", noFocusRing: true, focusClassName: "ph-focus", className: className, onActivate: activate, onClick: (event) => { if (event?.detail > 0)
+    return (SP_JSX.jsx(Focusable$8, { ...props, tabIndex: 0, "data-ph-focusable": "true", noFocusRing: true, focusClassName: "ph-focus", className: className, onActivate: activate, onClick: (event) => { if (event?.detail > 0)
             activate(event); }, onFocus: (event) => { sound("move"); onFocus?.(event); }, children: children }));
 }
 function gridDirectionFromKey(key) {
@@ -26054,7 +26054,7 @@ function focusSystemMetric(position = 0) {
     return true;
 }
 function FocusGrid({ className = "", children, ...props }) {
-    return (SP_JSX.jsx(Focusable$7, { ...props, className: className, "flow-children": "grid", "data-ph-focus-grid": "true", children: children }));
+    return (SP_JSX.jsx(Focusable$8, { ...props, className: className, "flow-children": "grid", "data-ph-focus-grid": "true", children: children }));
 }
 function useClock() {
     const [now, setNow] = useState$2(() => new Date());
@@ -26075,7 +26075,7 @@ function Header({ tab, setTab, copy, locale, logo }) {
             { id: "system", label: copy.system, icon: FiCpu },
         ];
     }, [copy]);
-    return (SP_JSX.jsxs("header", { className: "ph-header", children: [SP_JSX.jsx("div", { className: "ph-brand", children: logo ? SP_JSX.jsx("img", { src: logo, alt: "Core" }) : SP_JSX.jsx("div", { className: "ph-brand-fallback", children: "core" }) }), SP_JSX.jsx(Focusable$7, { className: "ph-tabs", "flow-children": "horizontal", children: tabs.map((item) => {
+    return (SP_JSX.jsxs("header", { className: "ph-header", children: [SP_JSX.jsx("div", { className: "ph-brand", children: logo ? SP_JSX.jsx("img", { src: logo, alt: "Core" }) : SP_JSX.jsx("div", { className: "ph-brand-fallback", children: "core" }) }), SP_JSX.jsx(Focusable$8, { className: "ph-tabs", "flow-children": "horizontal", children: tabs.map((item) => {
                     const Icon = item.icon;
                     return (SP_JSX.jsxs(FocusItem, { className: `ph-tab ${tab === item.id ? "ph-active" : ""}`, onPress: () => setTab(item.id), onButtonDown: (event) => {
                             if (item.id !== "system" || tab !== "system" || Number(event?.detail?.button) !== GamepadButton$2?.DIR_DOWN)
@@ -26252,7 +26252,7 @@ function TaskSwitcher({ copy, onReady, onSelectWindow }) {
             closingHandles.current.delete(entry.handle);
         }
     }, [windows, refresh, onReady]);
-    return (SP_JSX.jsxs("div", { className: "ph-page ph-switcher-page", children: [closeNotice ? SP_JSX.jsx("div", { className: "ph-window-notice", role: "status", "aria-live": "polite", children: closeNotice.text }) : null, windows.length === 0 ? (SP_JSX.jsx("div", { className: "ph-empty", children: SP_JSX.jsxs("div", { className: "ph-empty-inner", children: [SP_JSX.jsx(FiMonitor, {}), SP_JSX.jsx("div", { className: "ph-empty-title", children: copy.noWindows }), SP_JSX.jsx("div", { className: "ph-muted", children: copy.noWindowsBody })] }) })) : (SP_JSX.jsx(Focusable$7, { ref: rail, className: `ph-window-rail ${orderedWindows.length === 1 ? "ph-single" : ""}`, "flow-children": "horizontal", "data-ph-focus-grid": "true", children: orderedWindows.map((entry, index) => (SP_JSX.jsx(WindowCard, { entry: entry, artwork: artwork[entry.handle] ?? "", index: index, copy: copy, onSelect: () => onSelectWindow(entry), onAskClose: () => void closeEntry(entry, index) }, entry.handle))) }))] }));
+    return (SP_JSX.jsxs("div", { className: "ph-page ph-switcher-page", children: [closeNotice ? SP_JSX.jsx("div", { className: "ph-window-notice", role: "status", "aria-live": "polite", children: closeNotice.text }) : null, windows.length === 0 ? (SP_JSX.jsx("div", { className: "ph-empty", children: SP_JSX.jsxs("div", { className: "ph-empty-inner", children: [SP_JSX.jsx(FiMonitor, {}), SP_JSX.jsx("div", { className: "ph-empty-title", children: copy.noWindows }), SP_JSX.jsx("div", { className: "ph-muted", children: copy.noWindowsBody })] }) })) : (SP_JSX.jsx(Focusable$8, { ref: rail, className: `ph-window-rail ${orderedWindows.length === 1 ? "ph-single" : ""}`, "flow-children": "horizontal", "data-ph-focus-grid": "true", children: orderedWindows.map((entry, index) => (SP_JSX.jsx(WindowCard, { entry: entry, artwork: artwork[entry.handle] ?? "", index: index, copy: copy, onSelect: () => onSelectWindow(entry), onAskClose: () => void closeEntry(entry, index) }, entry.handle))) }))] }));
 }
 function focusShortcutTile(id) {
     const tile = Array.from(dashboardRoot()?.querySelectorAll("[data-shortcut-id]") ?? [])
@@ -26677,7 +26677,7 @@ function SystemTab({ copy, extra, onConfirm }) {
                                                     stopDirectionalEvent(event);
                                                     focusDashboard(".ph-process-row");
                                                 }
-                                            }, children: [SP_JSX.jsx(FiRefreshCw, {}), SP_JSX.jsx("span", { children: copy.restartDecky })] })] }), SP_JSX.jsx(Focusable$7, { className: "ph-process-list", "flow-children": "vertical", children: processes.slice(0, 18).map((process) => (SP_JSX.jsxs(FocusItem, { className: "ph-process-row", onPress: () => setSelectedProcess(process), onOKActionDescription: copy.open, onButtonDown: (event) => {
+                                            }, children: [SP_JSX.jsx(FiRefreshCw, {}), SP_JSX.jsx("span", { children: copy.restartDecky })] })] }), SP_JSX.jsx(Focusable$8, { className: "ph-process-list", "flow-children": "vertical", children: processes.slice(0, 18).map((process) => (SP_JSX.jsxs(FocusItem, { className: "ph-process-row", onPress: () => setSelectedProcess(process), onOKActionDescription: copy.open, onButtonDown: (event) => {
                                             const direction = gridDirectionFromGamepad(event?.detail?.button);
                                             if (direction === "up" && process === processes[0]) {
                                                 stopDirectionalEvent(event);
@@ -26720,14 +26720,14 @@ function ProcessOptionsSheet({ process, copy, onCancel, onClose, onKill }) {
         const timer = window.setTimeout(() => focusDashboard(".ph-process-options .ph-confirm-button"), 40);
         return () => window.clearTimeout(timer);
     }, []);
-    return (SP_JSX.jsx(Focusable$7, { className: "ph-confirm-backdrop ph-process-options", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: process.name }), SP_JSX.jsxs("div", { className: "ph-confirm-name", children: ["PID ", process.id] }), SP_JSX.jsxs(Focusable$7, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onClose, children: copy.close }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onKill, children: copy.forceClose })] })] }) }));
+    return (SP_JSX.jsx(Focusable$8, { className: "ph-confirm-backdrop ph-process-options", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: process.name }), SP_JSX.jsxs("div", { className: "ph-confirm-name", children: ["PID ", process.id] }), SP_JSX.jsxs(Focusable$8, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onClose, children: copy.close }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onKill, children: copy.forceClose })] })] }) }));
 }
 function ConfirmSheet({ title, name, copy, onCancel, onConfirm }) {
     useEffect$2(() => {
         const timer = window.setTimeout(() => focusDashboard(".ph-confirm-button"), 40);
         return () => window.clearTimeout(timer);
     }, []);
-    return (SP_JSX.jsx(Focusable$7, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: title }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: name }), SP_JSX.jsxs(Focusable$7, { className: "ph-confirm-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onConfirm, children: copy.continue })] })] }) }));
+    return (SP_JSX.jsx(Focusable$8, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: title }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: name }), SP_JSX.jsxs(Focusable$8, { className: "ph-confirm-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onConfirm, children: copy.continue })] })] }) }));
 }
 function AppOptionsSheet({ shortcut, copy, extra, onCancel, onRemove, onSave }) {
     const [name, setName] = useState$2(shortcut.name);
@@ -26736,7 +26736,7 @@ function AppOptionsSheet({ shortcut, copy, extra, onCancel, onRemove, onSave }) 
         const timer = window.setTimeout(() => focusDashboard(".ph-options-field input"), 50);
         return () => window.clearTimeout(timer);
     }, []);
-    return (SP_JSX.jsx(Focusable$7, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: extra.options }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: shortcut.name }), SP_JSX.jsx("div", { className: "ph-options-field", children: SP_JSX.jsx(TextField$1, { value: name, onChange: (event) => setName(event.target.value), style: { width: "100%", minWidth: 0 } }) }), SP_JSX.jsx(ToggleField$3, { label: extra.sdl3, description: extra.sdl3Description, checked: sdl3, onChange: setSdl3 }), SP_JSX.jsxs(Focusable$7, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onRemove, children: copy.remove }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: () => { if (name.trim())
+    return (SP_JSX.jsx(Focusable$8, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: extra.options }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: shortcut.name }), SP_JSX.jsx("div", { className: "ph-options-field", children: SP_JSX.jsx(TextField$1, { value: name, onChange: (event) => setName(event.target.value), style: { width: "100%", minWidth: 0 } }) }), SP_JSX.jsx(ToggleField$4, { label: extra.sdl3, description: extra.sdl3Description, checked: sdl3, onChange: setSdl3 }), SP_JSX.jsxs(Focusable$8, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onRemove, children: copy.remove }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: () => { if (name.trim())
                                 onSave(name.trim(), sdl3); }, children: extra.save })] })] }) }));
 }
 function DashboardSurface() {
@@ -26982,7 +26982,7 @@ function DashboardSurface() {
         targets.forEach((targetWindow) => targetWindow.addEventListener("keydown", onKeyDown, true));
         return () => targets.forEach((targetWindow) => targetWindow.removeEventListener("keydown", onKeyDown, true));
     }, [cancelDashboard, tab]);
-    return (SP_JSX.jsxs(Focusable$7, { ref: root, className: "ph-dashboard", noFocusRing: true, onButtonDown: (event) => {
+    return (SP_JSX.jsxs(Focusable$8, { ref: root, className: "ph-dashboard", noFocusRing: true, onButtonDown: (event) => {
             const button = Number(event?.detail?.button);
             if (button === (GamepadButton$2?.CANCEL ?? 2)) {
                 cancelDashboard(event);
@@ -52937,7 +52937,7 @@ function subscribePluginProgress(listener) {
 }
 
 const { useCallback, useEffect: useEffect$1, useMemo: useMemo$1, useRef, useState: useState$1 } = _global_SP_REACT;
-const { DialogButton: DialogButton$5, ConfirmModal: ConfirmModal$1, Focusable: Focusable$6, GamepadButton: GamepadButton$1, ModalRoot, Navigation: Navigation$1, SteamSpinner, Tabs, TextField, showModal: showModal$1, } = _global_DFL;
+const { DialogButton: DialogButton$5, ConfirmModal: ConfirmModal$1, Focusable: Focusable$7, GamepadButton: GamepadButton$1, ModalRoot, Navigation: Navigation$1, SteamSpinner, Tabs, TextField, showModal: showModal$1, } = _global_DFL;
 const PLUGIN_STORE_ROUTE = "/playhub/plugin-store";
 const STORE_STYLE = `
   .ph-store-page { box-sizing:border-box; width:100%; height:100%; min-width:0; color:#f5f5f5; background:rgba(8,8,10,.76); }
@@ -53220,7 +53220,7 @@ function ScrollReader({ children, copy, onBack }) {
         onBack();
     }, [reading, onBack]);
     const cancel = useGuardedCancel(cancelAction);
-    return (SP_JSX.jsx(Focusable$6, { ref: ref, className: `ph-store-reader${reading ? " ph-reading" : ""}`, noFocusRing: true, "flow-children": "none", onActivate: (event) => { stopEvent(event); setReading(true); }, onOKButton: (event) => { stopEvent(event); setReading(true); }, onCancel: cancel, onCancelButton: cancel, onOKActionDescription: reading ? undefined : copy.scroll, onCancelActionDescription: reading ? copy.stopReading : copy.back, actionDescriptionMap: reading ? {
+    return (SP_JSX.jsx(Focusable$7, { ref: ref, className: `ph-store-reader${reading ? " ph-reading" : ""}`, noFocusRing: true, "flow-children": "none", onActivate: (event) => { stopEvent(event); setReading(true); }, onOKButton: (event) => { stopEvent(event); setReading(true); }, onCancel: cancel, onCancelButton: cancel, onOKActionDescription: reading ? undefined : copy.scroll, onCancelActionDescription: reading ? copy.stopReading : copy.back, actionDescriptionMap: reading ? {
             [GamepadButton$1.DIR_UP]: copy.scroll,
             [GamepadButton$1.DIR_DOWN]: copy.scroll,
         } : undefined, onButtonDown: (event) => {
@@ -53236,7 +53236,7 @@ function ScrollReader({ children, copy, onBack }) {
 function MediaViewer({ item, copy, closeModal }) {
     const video = useRef(null);
     const close = useGuardedCancel(() => closeModal?.());
-    return (SP_JSX.jsx(ModalRoot, { closeModal: closeModal, onCancel: () => closeModal?.(), style: { width: "90vw", maxWidth: "1200px", boxSizing: "border-box" }, children: SP_JSX.jsx(Focusable$6, { className: "ph-store-media-modal", style: { width: "100%", maxWidth: "100%", height: "78vh", minWidth: 0, overflow: "hidden", display: "grid", gridTemplateRows: "minmax(0,1fr)" }, "flow-children": "column", onCancel: close, onCancelButton: close, onMenuButton: stopEvent, onMenuActionDescription: "", children: SP_JSX.jsx(Focusable$6, { style: { width: "100%", height: "100%", minWidth: 0, minHeight: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }, "flow-children": "none", onOKActionDescription: copy.select, onOKButton: (event) => {
+    return (SP_JSX.jsx(ModalRoot, { closeModal: closeModal, onCancel: () => closeModal?.(), style: { width: "90vw", maxWidth: "1200px", boxSizing: "border-box" }, children: SP_JSX.jsx(Focusable$7, { className: "ph-store-media-modal", style: { width: "100%", maxWidth: "100%", height: "78vh", minWidth: 0, overflow: "hidden", display: "grid", gridTemplateRows: "minmax(0,1fr)" }, "flow-children": "column", onCancel: close, onCancelButton: close, onMenuButton: stopEvent, onMenuActionDescription: "", children: SP_JSX.jsx(Focusable$7, { style: { width: "100%", height: "100%", minWidth: 0, minHeight: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }, "flow-children": "none", onOKActionDescription: copy.select, onOKButton: (event) => {
                     stopEvent(event);
                     if (video.current?.paused)
                         void video.current.play().catch(() => { });
@@ -53257,7 +53257,7 @@ function SafeMedia({ item, copy }) {
     const [visible, setVisible] = useState$1(true);
     if (!visible)
         return null;
-    return (SP_JSX.jsx(Focusable$6, { className: "ph-store-media-item", "flow-children": "none", onOKActionDescription: copy.select, onActivate: (event) => {
+    return (SP_JSX.jsx(Focusable$7, { className: "ph-store-media-item", "flow-children": "none", onOKActionDescription: copy.select, onActivate: (event) => {
             stopEvent(event);
             openStoreMedia(item, copy);
         }, children: item.kind === "video"
@@ -53326,7 +53326,7 @@ function PluginActionButton({ plugin, shared }) {
 }
 function VersionPicker({ plugin, shared, versions, closeModal }) {
     const [busy, setBusy] = useState$1(false);
-    return SP_JSX.jsxs(ModalRoot, { closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: shared.copy.chooseVersion }), SP_JSX.jsx(Focusable$6, { "flow-children": "column", style: { maxHeight: "60vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "8px 4px" }, children: !versions.length ? SP_JSX.jsx("p", { children: shared.copy.releaseUnavailable }) :
+    return SP_JSX.jsxs(ModalRoot, { closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: shared.copy.chooseVersion }), SP_JSX.jsx(Focusable$7, { "flow-children": "column", style: { maxHeight: "60vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "8px 4px" }, children: !versions.length ? SP_JSX.jsx("p", { children: shared.copy.releaseUnavailable }) :
                     versions.map((artifact) => SP_JSX.jsx(DialogButton$5, { disabled: busy, onClick: async () => {
                             if (!await confirmStoreOperation(shared.copy.installQuestion, "", shared.copy.install, shared.copy))
                                 return;
@@ -53362,10 +53362,10 @@ function UninstallButton({ plugin, shared }) {
 }
 function PluginRow({ plugin, shared, onOpen, manage = false }) {
     const update = pluginHasUpdate(plugin, shared.installed);
-    const body = (SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-store-row-media", children: SP_JSX.jsx(PluginImage, { plugin: plugin }) }), SP_JSX.jsxs("div", { className: "ph-store-row-copy", children: [SP_JSX.jsx("h3", { className: "ph-store-row-title", children: plugin.name }), SP_JSX.jsx("p", { className: "ph-store-row-description", children: plugin.shortDescription })] }), SP_JSX.jsxs("div", { className: "ph-store-row-trailing", children: [update ? SP_JSX.jsx("span", { className: "ph-store-update-marker", "aria-label": shared.copy.update, children: SP_JSX.jsx(TbRefresh, {}) }) : null, plugin.catalogStatus === "installed-only" ? null : SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), manage ? (SP_JSX.jsxs(Focusable$6, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: plugin, shared: shared }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })) : null] })] }));
+    const body = (SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-store-row-media", children: SP_JSX.jsx(PluginImage, { plugin: plugin }) }), SP_JSX.jsxs("div", { className: "ph-store-row-copy", children: [SP_JSX.jsx("h3", { className: "ph-store-row-title", children: plugin.name }), SP_JSX.jsx("p", { className: "ph-store-row-description", children: plugin.shortDescription })] }), SP_JSX.jsxs("div", { className: "ph-store-row-trailing", children: [update ? SP_JSX.jsx("span", { className: "ph-store-update-marker", "aria-label": shared.copy.update, children: SP_JSX.jsx(TbRefresh, {}) }) : null, plugin.catalogStatus === "installed-only" ? null : SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), manage ? (SP_JSX.jsxs(Focusable$7, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: plugin, shared: shared }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })) : null] })] }));
     if (manage || !onOpen)
         return SP_JSX.jsx("div", { className: "ph-store-row ph-store-row-manage", children: body });
-    return (SP_JSX.jsx(Focusable$6, { className: "ph-store-row ph-store-row-openable", onActivate: (event) => { stopEvent(event); onOpen(plugin); }, onOKButton: (event) => { stopEvent(event); onOpen(plugin); }, onOKActionDescription: shared.copy.select, children: body }));
+    return (SP_JSX.jsx(Focusable$7, { className: "ph-store-row ph-store-row-openable", onActivate: (event) => { stopEvent(event); onOpen(plugin); }, onOKButton: (event) => { stopEvent(event); onOpen(plugin); }, onOKActionDescription: shared.copy.select, children: body }));
 }
 function PluginRows({ plugins, shared, onOpen, manage = false }) {
     if (!plugins.length)
@@ -53379,7 +53379,7 @@ function SourceFilters({ value, onChange, copy }) {
         { id: "decky-store", label: "Decky Store" },
         { id: "outside-store", label: "GitHub" },
     ];
-    return (SP_JSX.jsx(Focusable$6, { className: "ph-store-filter", "flow-children": "row", noFocusRing: true, children: options.map((option) => (SP_JSX.jsx(DialogButton$5, { className: value === option.id ? "ph-selected" : "", onClick: () => onChange(option.id), children: option.id === "all" ? option.label : SP_JSX.jsx(SourceBadge, { source: option.id }) }, option.id))) }));
+    return (SP_JSX.jsx(Focusable$7, { className: "ph-store-filter", "flow-children": "row", noFocusRing: true, children: options.map((option) => (SP_JSX.jsx(DialogButton$5, { className: value === option.id ? "ph-selected" : "", onClick: () => onChange(option.id), children: option.id === "all" ? option.label : SP_JSX.jsx(SourceBadge, { source: option.id }) }, option.id))) }));
 }
 function sortLabel(sort, copy) {
     if (sort === "newest")
@@ -53393,7 +53393,7 @@ function SortPickerModal({ value, copy, onChange, closeModal }) {
         onChange(next);
         closeModal();
     };
-    return (SP_JSX.jsxs(ModalRoot, { className: "ph-store-sort-modal", closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: copy.sortBy }), SP_JSX.jsx(Focusable$6, { className: "ph-store-sort-options", "flow-children": "column", noFocusRing: true, children: ["name", "newest", "updated"].map((option) => (SP_JSX.jsx(DialogButton$5, { className: value === option ? "ph-selected" : "", onClick: () => choose(option), children: sortLabel(option, copy) }, option))) })] }));
+    return (SP_JSX.jsxs(ModalRoot, { className: "ph-store-sort-modal", closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: copy.sortBy }), SP_JSX.jsx(Focusable$7, { className: "ph-store-sort-options", "flow-children": "column", noFocusRing: true, children: ["name", "newest", "updated"].map((option) => (SP_JSX.jsx(DialogButton$5, { className: value === option ? "ph-selected" : "", onClick: () => choose(option), children: sortLabel(option, copy) }, option))) })] }));
 }
 function openSortPicker(value, copy, onChange) {
     let modal;
@@ -53421,7 +53421,7 @@ function PluginCollection({ title, items, collectionKey, shared, onOpen, onBack,
         openSortPicker(sort, shared.copy, setSort);
     }, [sort, shared.copy]);
     const guardedBack = useGuardedCancel(onBack);
-    return (SP_JSX.jsxs(Focusable$6, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: title, sort: sort, copy: shared.copy }), SP_JSX.jsxs("div", { className: "ph-store-toolbar", children: [toolbarStart, SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy })] }), SP_JSX.jsx(PluginRows, { plugins: filtered, shared: shared, onOpen: onOpen, manage: manage })] }));
+    return (SP_JSX.jsxs(Focusable$7, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: title, sort: sort, copy: shared.copy }), SP_JSX.jsxs("div", { className: "ph-store-toolbar", children: [toolbarStart, SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy })] }), SP_JSX.jsx(PluginRows, { plugins: filtered, shared: shared, onOpen: onOpen, manage: manage })] }));
 }
 function PluginDetail({ plugin, shared, onBack }) {
     const [release, setRelease] = useState$1(null);
@@ -53473,16 +53473,16 @@ function PluginDetail({ plugin, shared, onBack }) {
     const description = readme || plugin.longDescription || plugin.shortDescription;
     const galleryMedia = media.filter((item) => item.url !== activeCover
         && !(activeCover === bundledPluginCover(plugin.repository) && item.url === plugin.coverUrl));
-    return (SP_JSX.jsxs(Focusable$6, { className: "ph-store-tab-body ph-store-detail ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsxs(Focusable$6, { className: "ph-store-detail-heading", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(Focusable$6, { className: "ph-store-detail-hero", "flow-children": "none", onOKActionDescription: shared.copy.select, onActivate: (event) => {
+    return (SP_JSX.jsxs(Focusable$7, { className: "ph-store-tab-body ph-store-detail ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsxs(Focusable$7, { className: "ph-store-detail-heading", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(Focusable$7, { className: "ph-store-detail-hero", "flow-children": "none", onOKActionDescription: shared.copy.select, onActivate: (event) => {
                             stopEvent(event);
                             if (activeCover)
                                 openStoreMedia({ kind: "image", url: activeCover, alt: plugin.name }, shared.copy);
-                        }, children: SP_JSX.jsx(PluginImage, { plugin: plugin, fallbackSources: coverSources, onImageLoaded: setActiveCover }) }), SP_JSX.jsxs("div", { className: "ph-store-detail-summary", children: [SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), SP_JSX.jsx("h1", { className: "ph-store-detail-title", children: plugin.name }), SP_JSX.jsxs("div", { className: "ph-store-detail-status", children: [installed ? SP_JSX.jsxs("span", { children: [shared.copy.installedVersion, ": ", installed.version || "?"] }) : null, SP_JSX.jsxs("span", { children: [shared.copy.latestVersion, ": ", latestVersion || "?"] })] }), SP_JSX.jsxs(Focusable$6, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: currentPlugin, shared: shared }), versions.some((item) => compareVersions(item.version, latestVersion) < 0) && SP_JSX.jsx(DialogButton$5, { className: "ph-store-action", "aria-label": shared.copy.chooseVersion, title: shared.copy.chooseVersion, onOKActionDescription: shared.copy.chooseVersion, onClick: () => showModal$1(SP_JSX.jsx(VersionPicker, { plugin: plugin, shared: shared, versions: versions }), window, { bNeverPopOut: true }), children: SP_JSX.jsx(TbHistory, {}) }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })] })] }), galleryMedia.length ? (SP_JSX.jsxs("section", { className: "ph-store-media-section", children: [SP_JSX.jsx("h2", { children: shared.copy.media }), SP_JSX.jsx(Focusable$6, { className: "ph-store-media-strip", "flow-children": "row", noFocusRing: true, children: galleryMedia.map((item) => SP_JSX.jsx(SafeMedia, { item: item, copy: shared.copy }, item.url)) })] })) : null, loading ? (SP_JSX.jsx("div", { className: "ph-store-empty", children: SP_JSX.jsx(SteamSpinner, {}) })) : (SP_JSX.jsxs(ScrollReader, { copy: shared.copy, onBack: onBack, children: [SP_JSX.jsx(MarkdownBlocks, { markdown: description }), SP_JSX.jsx("h2", { children: shared.copy.releaseNotes }), releaseNotes
+                        }, children: SP_JSX.jsx(PluginImage, { plugin: plugin, fallbackSources: coverSources, onImageLoaded: setActiveCover }) }), SP_JSX.jsxs("div", { className: "ph-store-detail-summary", children: [SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), SP_JSX.jsx("h1", { className: "ph-store-detail-title", children: plugin.name }), SP_JSX.jsxs("div", { className: "ph-store-detail-status", children: [installed ? SP_JSX.jsxs("span", { children: [shared.copy.installedVersion, ": ", installed.version || "?"] }) : null, SP_JSX.jsxs("span", { children: [shared.copy.latestVersion, ": ", latestVersion || "?"] })] }), SP_JSX.jsxs(Focusable$7, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: currentPlugin, shared: shared }), versions.some((item) => compareVersions(item.version, latestVersion) < 0) && SP_JSX.jsx(DialogButton$5, { className: "ph-store-action", "aria-label": shared.copy.chooseVersion, title: shared.copy.chooseVersion, onOKActionDescription: shared.copy.chooseVersion, onClick: () => showModal$1(SP_JSX.jsx(VersionPicker, { plugin: plugin, shared: shared, versions: versions }), window, { bNeverPopOut: true }), children: SP_JSX.jsx(TbHistory, {}) }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })] })] }), galleryMedia.length ? (SP_JSX.jsxs("section", { className: "ph-store-media-section", children: [SP_JSX.jsx("h2", { children: shared.copy.media }), SP_JSX.jsx(Focusable$7, { className: "ph-store-media-strip", "flow-children": "row", noFocusRing: true, children: galleryMedia.map((item) => SP_JSX.jsx(SafeMedia, { item: item, copy: shared.copy }, item.url)) })] })) : null, loading ? (SP_JSX.jsx("div", { className: "ph-store-empty", children: SP_JSX.jsx(SteamSpinner, {}) })) : (SP_JSX.jsxs(ScrollReader, { copy: shared.copy, onBack: onBack, children: [SP_JSX.jsx(MarkdownBlocks, { markdown: description }), SP_JSX.jsx("h2", { children: shared.copy.releaseNotes }), releaseNotes
                         ? SP_JSX.jsx(MarkdownBlocks, { markdown: releaseNotes })
                         : SP_JSX.jsx("p", { children: shared.copy.releaseNotesUnavailable })] }))] }));
 }
 function CategoryLink({ title, onOpen, copy }) {
-    return (SP_JSX.jsx(Focusable$6, { className: "ph-store-section-link", onActivate: (event) => { stopEvent(event); onOpen(); }, onOKButton: (event) => { stopEvent(event); onOpen(); }, onOKActionDescription: copy.openCategory, children: SP_JSX.jsx("h2", { children: title }) }));
+    return (SP_JSX.jsx(Focusable$7, { className: "ph-store-section-link", onActivate: (event) => { stopEvent(event); onOpen(); }, onOKButton: (event) => { stopEvent(event); onOpen(); }, onOKActionDescription: copy.openCategory, children: SP_JSX.jsx("h2", { children: title }) }));
 }
 function FeaturedSlider({ plugins, shared, onOpen }) {
     const [index, setIndex] = useState$1(0);
@@ -53494,7 +53494,7 @@ function FeaturedSlider({ plugins, shared, onOpen }) {
     const move = (delta) => {
         setIndex((value) => (value + delta + plugins.length) % plugins.length);
     };
-    return (SP_JSX.jsxs("div", { className: "ph-store-featured-shell", children: [SP_JSX.jsxs(Focusable$6, { className: "ph-store-featured-slide", "flow-children": "none", onActivate: (event) => { stopEvent(event); onOpen(active); }, onOKButton: (event) => { stopEvent(event); onOpen(active); }, onOKActionDescription: shared.copy.select, actionDescriptionMap: {
+    return (SP_JSX.jsxs("div", { className: "ph-store-featured-shell", children: [SP_JSX.jsxs(Focusable$7, { className: "ph-store-featured-slide", "flow-children": "none", onActivate: (event) => { stopEvent(event); onOpen(active); }, onOKButton: (event) => { stopEvent(event); onOpen(active); }, onOKActionDescription: shared.copy.select, actionDescriptionMap: {
                     [GamepadButton$1.DIR_LEFT]: shared.copy.previous,
                     [GamepadButton$1.DIR_RIGHT]: shared.copy.next,
                 }, onButtonDown: (event) => {
@@ -53534,7 +53534,7 @@ function DiscoverTab(shared) {
     const featured = featuredPlugins(shared.plugins, 10);
     const featuredRepositories = new Set(featured.map((plugin) => plugin.repository.toLocaleLowerCase("en-US")));
     const categories = discoveryCategories(shared.plugins);
-    return (SP_JSX.jsxs(Focusable$6, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsx("section", { className: "ph-store-section", children: SP_JSX.jsx(FeaturedSlider, { plugins: featured, shared: shared, onOpen: (plugin) => setView({ kind: "detail", plugin }) }) }), categories.map((category) => {
+    return (SP_JSX.jsxs(Focusable$7, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsx("section", { className: "ph-store-section", children: SP_JSX.jsx(FeaturedSlider, { plugins: featured, shared: shared, onOpen: (plugin) => setView({ kind: "detail", plugin }) }) }), categories.map((category) => {
                 let items = shared.plugins.filter((plugin) => pluginInCategory(plugin, category));
                 if (category === "Playhub") {
                     items = items.filter((plugin) => !featuredRepositories.has(plugin.repository.toLocaleLowerCase("en-US")));
@@ -53618,7 +53618,7 @@ function SearchTab({ active, ...shared }) {
         stopEvent(event);
         openSortPicker(sort, shared.copy, setSort);
     };
-    return (SP_JSX.jsxs(Focusable$6, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: shared.copy.search, sort: sort, copy: shared.copy }), SP_JSX.jsx("div", { className: "ph-store-search-shell", children: SP_JSX.jsx(TextField, { label: shared.copy.searchPlaceholder, value: query, onChange: (event) => setQuery(event.target.value) }) }), SP_JSX.jsx("div", { className: "ph-store-toolbar", children: SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy }) }), SP_JSX.jsx(PluginRows, { plugins: results, shared: shared, onOpen: setDetail })] }));
+    return (SP_JSX.jsxs(Focusable$7, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: shared.copy.search, sort: sort, copy: shared.copy }), SP_JSX.jsx("div", { className: "ph-store-search-shell", children: SP_JSX.jsx(TextField, { label: shared.copy.searchPlaceholder, value: query, onChange: (event) => setQuery(event.target.value) }) }), SP_JSX.jsx("div", { className: "ph-store-toolbar", children: SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy }) }), SP_JSX.jsx(PluginRows, { plugins: results, shared: shared, onOpen: setDetail })] }));
 }
 function PluginStorePage() {
     const locale = useStoreLocale();
@@ -53839,7 +53839,7 @@ function tabEditorLocale(locale) {
 // Testi della sezione "Barra superiore" nelle impostazioni del plugin.
 // Ordine: titolo, data accanto all'ora, descrizione, sposta a sinistra,
 // descrizione, formato della data, automatico.
-const copy$5 = {
+const copy$6 = {
     en: ["Top bar", "Date next to the time", "Shows the date in Steam's top bar, before the weather and the current track.", "Move time and date to the left", "Moves the clock group, together with weather and music when shown.", "Date format", "Automatic"],
     it: ["Barra superiore", "Data accanto all'ora", "Mostra la data nella barra superiore di Steam, prima di meteo e brano corrente.", "Sposta ora e data a sinistra", "Sposta il gruppo dell’orologio, insieme a meteo e musica se presenti.", "Formato della data", "Automatico"],
     de: ["Obere Leiste", "Datum neben der Uhrzeit", "Zeigt das Datum in der oberen Leiste von Steam, vor Wetter und aktuellem Titel.", "Uhrzeit und Datum nach links", "Verschiebt die Uhrgruppe, zusammen mit Wetter und Musik, falls vorhanden.", "Datumsformat", "Automatisch"],
@@ -53858,10 +53858,10 @@ const tags = { en: "en-US", it: "it-IT", de: "de-DE", es: "es-ES", fr: "fr-FR", 
 function key(locale) {
     const lower = String(locale || "").toLowerCase();
     const k = aliases[lower] ?? lower.split(/[-_]/)[0];
-    return copy$5[k] ? k : "en";
+    return copy$6[k] ? k : "en";
 }
 function topbarDateCopy(locale) {
-    const [title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic] = copy$5[key(locale)];
+    const [title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic] = copy$6[key(locale)];
     return { title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic };
 }
 // Esempi calcolati come li scrive la barra superiore: stesse opzioni Intl e
@@ -53894,7 +53894,7 @@ function topbarDateOptions(locale, sample = new Date(2026, 8, 19)) {
             }
         }
         if (data === "auto")
-            label = `${copy$5[k][6]} (${label})`;
+            label = `${copy$6[k][6]} (${label})`;
         return { data, label };
     });
 }
@@ -54538,7 +54538,7 @@ function deckyIntegrationLocale(locale) {
     return { label: row[0], description: row[1] };
 }
 
-const copy$4 = {
+const copy$5 = {
     en: ["Discover the new Core experience", "Open Quick Access to discover Core.", "Everything is here: your Core, in Quick Access.", "Decky is available here. You can restore its Quick Access tab in Core settings.", "Decky integration is optional. You can enable it in Core settings and restore its Quick Access tab at any time.", "Continue", "Pause guide", "Finish"],
     it: ["Scopri la nuova esperienza Core", "Apri l'accesso rapido per scoprire Core.", "Trovi tutto qui: il tuo Core, nell'accesso rapido.", "Decky è accessibile qui. Puoi ripristinare la sua scheda nell'accesso rapido dalle impostazioni di Core.", "L'integrazione di Decky è facoltativa. Puoi attivarla nelle impostazioni di Core e ripristinare la sua scheda nell'accesso rapido in qualsiasi momento.", "Continua", "Sospendi la guida", "Concludi"],
     es: ["Descubre la nueva experiencia Core", "Abre el acceso rápido para descubrir Core.", "Todo está aquí: tu Core, en el acceso rápido.", "Decky está disponible aquí. Puedes restaurar su pestaña de acceso rápido en los ajustes de Core.", "La integración de Decky es opcional. Puedes activarla en los ajustes de Core y restaurar su pestaña de acceso rápido cuando quieras.", "Continuar", "Pausar la guía", "Finalizar"],
@@ -54553,7 +54553,7 @@ const copy$4 = {
     ru: ["Откройте новый Core", "Откройте быстрый доступ, чтобы познакомиться с Core.", "Всё здесь: ваш Core в быстром доступе.", "Decky доступен здесь. Его вкладку быстрого доступа можно восстановить в настройках Core.", "Интеграция Decky необязательна. Её можно включить в настройках Core и в любой момент восстановить вкладку быстрого доступа.", "Продолжить", "Приостановить руководство", "Завершить"],
 };
 function getOnboardingCopy(locale) {
-    const [, open, , decky, , next, pause, finish] = copy$4[normalizeStoreLocale(locale)];
+    const [, open, , decky, , next, pause, finish] = copy$5[normalizeStoreLocale(locale)];
     nativeDeckyCopy[normalizeStoreLocale(locale)];
     const [title] = welcome[normalizeStoreLocale(locale)];
     const text = presentation[normalizeStoreLocale(locale)];
@@ -56150,7 +56150,7 @@ function deviceCapabilitiesLocale(locale) {
         statuses: { available: r[2], windows: r[2], readback: r[3], "manual-commands": r[4], "read-only": r[3], "manual-required": r[5], unavailable: r[6], pending: r[7], "hardware-required": r[8] } };
 }
 
-const { DialogButton: DialogButton$4, Focusable: Focusable$5 } = _global_DFL;
+const { DialogButton: DialogButton$4, Focusable: Focusable$6 } = _global_DFL;
 const ids = new Set(["windows-display", "windows-power", "windows-battery", "presets", "fans", "temperatures", "power-limits", "charge-limit", "rgb", "vibration"]);
 const css$1 = `.ph-device-capabilities{display:grid;gap:10px;min-width:0;padding:12px 0;border-top:1px solid #ffffff18}.ph-device-capability-list{display:grid;gap:10px;margin:0}.ph-device-capability-row{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;align-items:start}.ph-device-capability-row>svg{width:16px;height:16px;margin-top:2px;opacity:.65}.ph-device-capability-row[data-available=true]>svg{color:#9bd7a7;opacity:1}.ph-device-capability-row dt{font-size:13px;line-height:1.4}.ph-device-capability-row dd{margin:2px 0 0;font-size:11px;line-height:1.4;color:#c5cbd1;overflow-wrap:anywhere}.ph-device-capability-mismatch{display:flex;gap:8px;font-size:12px;line-height:1.45;color:#FF5A6E}.ph-device-capability-mismatch svg{width:16px;height:16px;flex:none;margin-top:2px}.ph-device-capabilities .ph-device-actions button{justify-content:flex-start;white-space:normal;min-width:0}.ph-device-capabilities>strong{font-size:13px}`;
 function DeviceCapabilities({ selection, effective, detected, locale, openVideo, openPerformance }) {
@@ -56194,7 +56194,7 @@ function DeviceCapabilities({ selection, effective, detected, locale, openVideo,
     const rows = current?.controls ?? [];
     const video = rows.some(row => row.available && row.destination === "video") ? openVideo : undefined;
     const performance = rows.some(row => row.available && row.destination === "performance") ? openPerformance : undefined;
-    return SP_JSX.jsxs(Focusable$5, { className: "ph-device-capabilities", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$1 }), SP_JSX.jsx("strong", { children: current?.coverage === "windows" ? copy.windows : copy.title }), effective !== detected && SP_JSX.jsxs("div", { className: "ph-device-capability-mismatch", role: "status", children: [SP_JSX.jsx(TbInfoCircle, { "aria-hidden": "true" }), SP_JSX.jsx("span", { children: copy.mismatch })] }), busy && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loading }), failed && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loadError }), current && SP_JSX.jsx("dl", { className: "ph-device-capability-list", children: rows.map(row => SP_JSX.jsxs("div", { className: "ph-device-capability-row", "data-available": row.available, children: [row.available ? SP_JSX.jsx(TbCheck, { "aria-hidden": "true" }) : SP_JSX.jsx(TbMinus, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.labels[row.id] }), SP_JSX.jsxs("dd", { children: [copy.statuses[row.status], row.id === "fans" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 ", row.values.map(v => v ?? "—").join(" / "), " RPM"] }), row.id === "temperatures" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 CPU ", row.values[0] ?? "—", " / GPU ", row.values[1] ?? "—", " \u00B0C"] })] })] })] }, row.id)) }), (video || performance) && SP_JSX.jsxs(Focusable$5, { className: "ph-device-actions", "flow-children": "column", children: [video && SP_JSX.jsxs(DialogButton$4, { onClick: video, children: [SP_JSX.jsx("span", { children: device.video }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), performance && SP_JSX.jsxs(DialogButton$4, { onClick: performance, children: [SP_JSX.jsx("span", { children: device.power }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] })] }), (failed || rows.some(row => row.status === "pending" || row.status === "unavailable")) && SP_JSX.jsx(DialogButton$4, { disabled: busy, onClick: () => setAttempt(value => value + 1), children: copy.retry })] });
+    return SP_JSX.jsxs(Focusable$6, { className: "ph-device-capabilities", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$1 }), SP_JSX.jsx("strong", { children: current?.coverage === "windows" ? copy.windows : copy.title }), effective !== detected && SP_JSX.jsxs("div", { className: "ph-device-capability-mismatch", role: "status", children: [SP_JSX.jsx(TbInfoCircle, { "aria-hidden": "true" }), SP_JSX.jsx("span", { children: copy.mismatch })] }), busy && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loading }), failed && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loadError }), current && SP_JSX.jsx("dl", { className: "ph-device-capability-list", children: rows.map(row => SP_JSX.jsxs("div", { className: "ph-device-capability-row", "data-available": row.available, children: [row.available ? SP_JSX.jsx(TbCheck, { "aria-hidden": "true" }) : SP_JSX.jsx(TbMinus, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.labels[row.id] }), SP_JSX.jsxs("dd", { children: [copy.statuses[row.status], row.id === "fans" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 ", row.values.map(v => v ?? "—").join(" / "), " RPM"] }), row.id === "temperatures" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 CPU ", row.values[0] ?? "—", " / GPU ", row.values[1] ?? "—", " \u00B0C"] })] })] })] }, row.id)) }), (video || performance) && SP_JSX.jsxs(Focusable$6, { className: "ph-device-actions", "flow-children": "column", children: [video && SP_JSX.jsxs(DialogButton$4, { onClick: video, children: [SP_JSX.jsx("span", { children: device.video }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), performance && SP_JSX.jsxs(DialogButton$4, { onClick: performance, children: [SP_JSX.jsx("span", { children: device.power }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] })] }), (failed || rows.some(row => row.status === "pending" || row.status === "unavailable")) && SP_JSX.jsx(DialogButton$4, { disabled: busy, onClick: () => setAttempt(value => value + 1), children: copy.retry })] });
 }
 
 const words$1 = {
@@ -56647,8 +56647,8 @@ function GpdV1ControllerControls({ locale, deviceKey, profile, active = true }) 
                             model.current?.edit(data); } }), SP_JSX.jsxs("div", { className: "qsMeta", children: [copy[6], ": ", label(snapshot.state.rumble)] }), view.editing && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: disabled, onClick: () => void model.current?.run("apply"), children: copy[4] }), snapshot.restoreAvailable && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: view.busy || snapshot.recoveryRequired, onClick: () => void model.current?.run("restore"), children: copy[5] })] }) : SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: common.unavailable }), (view.error || snapshot?.recoveryRequired) && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: view.error === "changed" ? copy[7] : common.saveError }), (!snapshot || view.error || snapshot.recoveryRequired) && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: view.busy, onClick: () => void model.current?.refresh(), children: common.retry })] });
 }
 
-const { DialogButton: DialogButton$3, DropdownItem: DropdownItem$3, Focusable: Focusable$4 } = _global_DFL;
-const style$3 = `
+const { DialogButton: DialogButton$3, DropdownItem: DropdownItem$3, Focusable: Focusable$5 } = _global_DFL;
+const style$4 = `
 .ph-device-settings{display:grid;gap:12px;min-width:0;padding:4px 4px 0;overflow-wrap:anywhere}
 .ph-device-identity{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:12px;border-radius:9px;background:rgba(255,255,255,.07)}
 .ph-device-symbol{display:grid;place-items:center;width:42px;height:42px;border-radius:8px;background:rgba(255,255,255,.09);font-size:22px}
@@ -56749,7 +56749,7 @@ function DeviceSettings({ locale, openVideo, openPerformance, detailsOpen = fals
         }
     };
     if (!profile)
-        return SP_JSX.jsxs(Focusable$4, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$3 }), SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: error === "load" ? copy.loadError : copy.loading }), error === "load" && SP_JSX.jsx(DialogButton$3, { onClick: () => { setError(undefined); setLoadAttempt(value => value + 1); }, children: copy.retry })] });
+        return SP_JSX.jsxs(Focusable$5, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$4 }), SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: error === "load" ? copy.loadError : copy.loading }), error === "load" && SP_JSX.jsx(DialogButton$3, { onClick: () => { setError(undefined); setLoadAttempt(value => value + 1); }, children: copy.retry })] });
     const profileNames = [{ id: "pc", name: copy.pc }, { id: "handheld", name: copy.handheld }, ...profile.handhelds];
     const names = new Map(profileNames.map(({ id, name }) => [id, name]));
     const handheld = profile.effective !== "pc";
@@ -56766,7 +56766,7 @@ function DeviceSettings({ locale, openVideo, openPerformance, detailsOpen = fals
         ? `${copy.batteryRemaining} · ${new Intl.NumberFormat(copy.language, {
             style: "unit", unit: "minute", unitDisplay: "short", maximumFractionDigits: 0,
         }).format(Math.ceil(seconds / 60))}` : undefined;
-    return SP_JSX.jsxs(Focusable$4, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$3 }), SP_JSX.jsxs("div", { className: "ph-device-identity", children: [SP_JSX.jsx("div", { className: "ph-device-symbol", "aria-hidden": "true", children: handheld ? SP_JSX.jsx(TbDeviceGamepad2, {}) : SP_JSX.jsx(TbDeviceDesktop, {}) }), SP_JSX.jsxs("div", { children: [SP_JSX.jsxs("div", { className: "ph-device-title", children: [SP_JSX.jsx("strong", { children: names.get(profile.effective) ?? copy.pc }), handheld && SP_JSX.jsx("span", { className: "ph-device-experimental", children: copy.experimental })] }), modelLabel && SP_JSX.jsxs("div", { className: "ph-device-detail", children: [copy.model, " \u00B7 ", modelLabel] })] })] }), SP_JSX.jsx(DropdownItem$3, { label: copy.profile, layout: "below", bottomSeparator: "none", selectedOption: profile.selection, disabled: saving, rgOptions: [{ label: copy.auto, data: "auto" }, ...profileNames.map(({ id, name }) => ({ label: name, data: id }))], onChange: select }), SP_JSX.jsx("p", { className: "ph-device-hint", children: copy.profileHint }), error === "save" && SP_JSX.jsx("div", { className: "ph-device-detail", role: "alert", children: copy.saveError }), (battery || health || remaining) && SP_JSX.jsxs("div", { className: "ph-device-battery", children: [SP_JSX.jsx(TbBattery, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [battery && SP_JSX.jsx("div", { children: battery }), remaining && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: remaining }), health && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: health })] })] }), display && SP_JSX.jsx("dl", { className: "ph-device-status", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.primaryDisplay }), SP_JSX.jsxs("dd", { children: [display.width, " \u00D7 ", display.height, display.hz ? ` · ${display.hz} Hz` : ""] })] }) }), SP_JSX.jsx(DeviceCapabilities, { selection: profile.selection, effective: profile.effective, detected: profile.detected, locale: locale, openVideo: openVideo, openPerformance: openPerformance }), profile.effective === "ayaneo-3" && profile.detected === "ayaneo-3" && SP_JSX.jsx(Ayaneo3ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), profile.effective === profile.detected && ["gpd-win-4", "gpd-win-mini"].includes(profile.detected) && SP_JSX.jsx(GpdV1ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), profile: profile.detected, locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), SP_JSX.jsxs(DialogButton$3, { className: "ph-device-details", "aria-expanded": detailsOpen, onClick: onDetailsToggle, children: [SP_JSX.jsx("span", { children: copy.details }), detailsOpen ? SP_JSX.jsx(TbChevronDown, { "aria-hidden": "true" }) : SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), detailsOpen && SP_JSX.jsx(DeviceInfo, { copy: copy, model: actualModel })] });
+    return SP_JSX.jsxs(Focusable$5, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$4 }), SP_JSX.jsxs("div", { className: "ph-device-identity", children: [SP_JSX.jsx("div", { className: "ph-device-symbol", "aria-hidden": "true", children: handheld ? SP_JSX.jsx(TbDeviceGamepad2, {}) : SP_JSX.jsx(TbDeviceDesktop, {}) }), SP_JSX.jsxs("div", { children: [SP_JSX.jsxs("div", { className: "ph-device-title", children: [SP_JSX.jsx("strong", { children: names.get(profile.effective) ?? copy.pc }), handheld && SP_JSX.jsx("span", { className: "ph-device-experimental", children: copy.experimental })] }), modelLabel && SP_JSX.jsxs("div", { className: "ph-device-detail", children: [copy.model, " \u00B7 ", modelLabel] })] })] }), SP_JSX.jsx(DropdownItem$3, { label: copy.profile, layout: "below", bottomSeparator: "none", selectedOption: profile.selection, disabled: saving, rgOptions: [{ label: copy.auto, data: "auto" }, ...profileNames.map(({ id, name }) => ({ label: name, data: id }))], onChange: select }), SP_JSX.jsx("p", { className: "ph-device-hint", children: copy.profileHint }), error === "save" && SP_JSX.jsx("div", { className: "ph-device-detail", role: "alert", children: copy.saveError }), (battery || health || remaining) && SP_JSX.jsxs("div", { className: "ph-device-battery", children: [SP_JSX.jsx(TbBattery, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [battery && SP_JSX.jsx("div", { children: battery }), remaining && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: remaining }), health && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: health })] })] }), display && SP_JSX.jsx("dl", { className: "ph-device-status", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.primaryDisplay }), SP_JSX.jsxs("dd", { children: [display.width, " \u00D7 ", display.height, display.hz ? ` · ${display.hz} Hz` : ""] })] }) }), SP_JSX.jsx(DeviceCapabilities, { selection: profile.selection, effective: profile.effective, detected: profile.detected, locale: locale, openVideo: openVideo, openPerformance: openPerformance }), profile.effective === "ayaneo-3" && profile.detected === "ayaneo-3" && SP_JSX.jsx(Ayaneo3ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), profile.effective === profile.detected && ["gpd-win-4", "gpd-win-mini"].includes(profile.detected) && SP_JSX.jsx(GpdV1ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), profile: profile.detected, locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), SP_JSX.jsxs(DialogButton$3, { className: "ph-device-details", "aria-expanded": detailsOpen, onClick: onDetailsToggle, children: [SP_JSX.jsx("span", { children: copy.details }), detailsOpen ? SP_JSX.jsx(TbChevronDown, { "aria-hidden": "true" }) : SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), detailsOpen && SP_JSX.jsx(DeviceInfo, { copy: copy, model: actualModel })] });
 }
 
 // The panel preference store owns expansion across QAM openings and tab changes.
@@ -56862,7 +56862,7 @@ function MsiChargeLimit({ locale }) {
     return SP_JSX.jsxs("div", { className: "qsCardBody qsDropdownFullWidth", "aria-busy": busy, children: [SP_JSX.jsx(DFL.DropdownItem, { label: copy[0], description: `${copy[1]} · ${deviceInfoLocale(locale).experimental}`, bottomSeparator: "none", layout: "below", selectedOption: state.chargeLimit, disabled: busy, rgOptions: choices.map(percent => ({ data: percent, label: `${percent}%` })), onChange: ({ data }) => void choose(data) }), failed && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: controlLocale(locale).saveError })] });
 }
 
-const { Focusable: Focusable$3, DialogButton: DialogButton$2, ToggleField: ToggleField$2, DropdownItem: DropdownItem$2, ScrollPanel, GamepadButton } = _global_DFL;
+const { Focusable: Focusable$4, DialogButton: DialogButton$2, ToggleField: ToggleField$3, DropdownItem: DropdownItem$2, ScrollPanel, GamepadButton } = _global_DFL;
 const icons = { home: TbPower, audio: TbDeviceTv, performance: TbVolume, graphics: TbGauge, controller: TbDeviceGamepad2, store: TbShoppingBag, decky: TbPlug };
 let prefs = normalizeControlPreferences({});
 let loaded = false;
@@ -56873,7 +56873,7 @@ const listeners = new Set();
 const subscribe = (listener) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
 function TopbarDateSettings({ state, update, locale }) {
     const text = topbarDateCopy(locale);
-    return SP_JSX.jsxs(Focusable$3, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 10 }, children: [SP_JSX.jsx(ToggleField$2, { label: text.dateLabel, description: text.dateDescription, bottomSeparator: "none", checked: state.topbarDateEnabled, onChange: (enabled) => update({ ...state, topbarDateEnabled: enabled }, locale) }), SP_JSX.jsx(ToggleField$2, { bottomSeparator: "none", label: text.leftLabel, description: text.leftDescription, checked: state.topbarClockLeft, onChange: (enabled) => update({ ...state, topbarClockLeft: enabled }, locale) }), SP_JSX.jsx(DropdownItem$2, { label: text.formatLabel, layout: "below", bottomSeparator: "none", selectedOption: state.topbarDateFormat, disabled: !state.topbarDateEnabled, rgOptions: topbarDateOptions(locale), onChange: (option) => update({ ...state, topbarDateFormat: option.data }, locale) })] });
+    return SP_JSX.jsxs(Focusable$4, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 10 }, children: [SP_JSX.jsx(ToggleField$3, { label: text.dateLabel, description: text.dateDescription, bottomSeparator: "none", checked: state.topbarDateEnabled, onChange: (enabled) => update({ ...state, topbarDateEnabled: enabled }, locale) }), SP_JSX.jsx(ToggleField$3, { bottomSeparator: "none", label: text.leftLabel, description: text.leftDescription, checked: state.topbarClockLeft, onChange: (enabled) => update({ ...state, topbarClockLeft: enabled }, locale) }), SP_JSX.jsx(DropdownItem$2, { label: text.formatLabel, layout: "below", bottomSeparator: "none", selectedOption: state.topbarDateFormat, disabled: !state.topbarDateEnabled, rgOptions: topbarDateOptions(locale), onChange: (option) => update({ ...state, topbarDateFormat: option.data }, locale) })] });
 }
 function OnboardingInputCapture({ active }) {
     const root = _global_SP_REACT.useRef(null);
@@ -57052,7 +57052,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
         const index = visible.indexOf(active);
         choose(visible[(index + direction + visible.length) % visible.length]);
     };
-    return SP_JSX.jsxs(Focusable$3, { className: "ph-control-shell", "flow-children": "column", onMoveDown: () => true, "data-playhub-onboarding-controls": origin === "qam" ? "true" : undefined, "data-onboarding-ready": ready, "data-onboarding-decky-enabled": deckyHost.available, "data-onboarding-decky-visible": visible.includes("decky"), "data-onboarding-customizing": customizing, "data-onboarding-active-tab": customizing ? "customize" : active, "data-onboarding-store-visible": visible.includes("store"), "data-onboarding-showcasing": showcasing, "data-onboarding-visible-tabs": JSON.stringify(visible), "data-onboarding-content-ready": ready && (active !== "decky" || customizing || deckyHost.ready), actionDescriptionMap: customizing ? {} : { [GamepadButton.BUMPER_LEFT]: copy.switchTab, [GamepadButton.BUMPER_RIGHT]: copy.switchTab }, onButtonDown: (event) => {
+    return SP_JSX.jsxs(Focusable$4, { className: "ph-control-shell", "flow-children": "column", onMoveDown: () => true, "data-playhub-onboarding-controls": origin === "qam" ? "true" : undefined, "data-onboarding-ready": ready, "data-onboarding-decky-enabled": deckyHost.available, "data-onboarding-decky-visible": visible.includes("decky"), "data-onboarding-customizing": customizing, "data-onboarding-active-tab": customizing ? "customize" : active, "data-onboarding-store-visible": visible.includes("store"), "data-onboarding-showcasing": showcasing, "data-onboarding-visible-tabs": JSON.stringify(visible), "data-onboarding-content-ready": ready && (active !== "decky" || customizing || deckyHost.ready), actionDescriptionMap: customizing ? {} : { [GamepadButton.BUMPER_LEFT]: copy.switchTab, [GamepadButton.BUMPER_RIGHT]: copy.switchTab }, onButtonDown: (event) => {
             if (customizing)
                 return;
             const button = event?.detail?.button;
@@ -57061,7 +57061,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
             event.preventDefault?.();
             event.stopPropagation?.();
             step(button === GamepadButton.BUMPER_LEFT ? -1 : 1);
-        }, onCancelButton: customizing ? cancelEditor : undefined, onCancelActionDescription: customizing ? editorCopy.cancel : undefined, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: css }), customizing ? SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs(Focusable$3, { className: "ph-control-settings", "flow-children": "column", "data-playhub-onboarding-content": origin === "qam" ? "customize" : undefined, children: [SP_JSX.jsx("style", { children: `.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:rgba(0,0,0,.22);margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:rgba(255,255,255,.16)!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:#fff!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid #fff!important;outline-offset:-2px!important}` }), !showcasing && SP_JSX.jsxs(Focusable$3, { className: "ph-settings-pages", "flow-children": "row", role: "tablist", children: [SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'general', onClick: () => setSettingsPage('general'), children: qamSettingsCopy(locale)[0] }), SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'qam', onClick: () => setSettingsPage('qam'), children: "Shortcuts" })] }), settingsPage === 'qam' && !showcasing ? SP_JSX.jsxs(QamSettings, { locale: locale, children: [settings, SP_JSX.jsx(ToggleField$2, { label: integrationCopy.label, description: integrationCopy.description, bottomSeparator: "none", checked: state.deckyHostEnabled, onChange: (enabled) => update({ ...state, deckyHostEnabled: enabled }, locale) })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h2", { className: "ph-tab-editor-title", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: editorCopy.title }), SP_JSX.jsx("p", { children: editorCopy.introduction }), SP_JSX.jsx(Focusable$3, { className: "ph-control-tabs ph-tab-editor", "flow-children": "row", role: "tablist", "aria-label": copy.customize, onKeyDown: (event) => {
+        }, onCancelButton: customizing ? cancelEditor : undefined, onCancelActionDescription: customizing ? editorCopy.cancel : undefined, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: css }), customizing ? SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs(Focusable$4, { className: "ph-control-settings", "flow-children": "column", "data-playhub-onboarding-content": origin === "qam" ? "customize" : undefined, children: [SP_JSX.jsx("style", { children: `.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:rgba(0,0,0,.22);margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:rgba(255,255,255,.16)!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:#fff!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid #fff!important;outline-offset:-2px!important}` }), !showcasing && SP_JSX.jsxs(Focusable$4, { className: "ph-settings-pages", "flow-children": "row", role: "tablist", children: [SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'general', onClick: () => setSettingsPage('general'), children: qamSettingsCopy(locale)[0] }), SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'qam', onClick: () => setSettingsPage('qam'), children: "Shortcuts" })] }), settingsPage === 'qam' && !showcasing ? SP_JSX.jsxs(QamSettings, { locale: locale, children: [settings, SP_JSX.jsx(ToggleField$3, { label: integrationCopy.label, description: integrationCopy.description, bottomSeparator: "none", checked: state.deckyHostEnabled, onChange: (enabled) => update({ ...state, deckyHostEnabled: enabled }, locale) })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h2", { className: "ph-tab-editor-title", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: editorCopy.title }), SP_JSX.jsx("p", { children: editorCopy.introduction }), SP_JSX.jsx(Focusable$4, { className: "ph-control-tabs ph-tab-editor", "flow-children": "row", role: "tablist", "aria-label": copy.customize, onKeyDown: (event) => {
                                                 if (event.key === "x" || event.key === "X") {
                                                     event.preventDefault();
                                                     event.stopPropagation();
@@ -57078,7 +57078,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
                                             }, children: editorTabs.map(id => {
                                                 const Icon = icons[id];
                                                 return SP_JSX.jsx(DialogButton$2, { className: "ph-control-icon", role: "tab", "aria-label": `${copy[id]}: ${state.hidden.includes(id) ? editorCopy.hidden : editorCopy.visible}`, title: copy[id], onOKActionDescription: editorAction(id), onSecondaryActionDescription: editor.draftOrder ? editorCopy.confirm : editorCopy.move, onCancelActionDescription: editorCopy.cancel, actionDescriptionMap: { [GamepadButton.OK]: editorAction(id), [GamepadButton.SECONDARY]: editor.draftOrder ? editorCopy.confirm : editorCopy.move, [GamepadButton.CANCEL]: editorCopy.cancel }, "aria-selected": editing === id, "data-hidden": state.hidden.includes(id), "data-moving": editing === id && !!editor.draftOrder, style: { order: (editor.draftOrder ?? state.order).indexOf(id) }, onFocus: () => edit({ type: "select", id }), onGamepadFocus: () => edit({ type: "select", id }), onGamepadDirection: editor.draftOrder ? editorDirection : undefined, onSecondaryButton: (event) => { event.preventDefault?.(); event.stopPropagation?.(); edit({ type: "select", id }); edit({ type: "secondary" }); }, onCancelButton: cancelEditor, onClick: () => { edit({ type: "select", id }); edit({ type: "confirm" }); }, children: SP_JSX.jsx(Icon, {}) }, id);
-                                            }) }), SP_JSX.jsx("div", { className: "ph-control-setting-row", "aria-live": "polite", children: SP_JSX.jsxs("div", { className: "ph-selected-tab", children: [SP_JSX.jsx("span", { children: copy[editing] }), SP_JSX.jsxs("span", { className: "ph-selected-tab-status", children: [state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible, !canToggleTab(state, editing, deckyAvailable) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("br", {}), editorCopy.lastTab] })] })] }) }), SP_JSX.jsxs(DialogButton$2, { className: "ph-settings-action", onOKActionDescription: editorCopy.reset, onClick: () => edit({ type: "reset" }), children: [SP_JSX.jsx(TbRestore, {}), SP_JSX.jsx("span", { children: editorCopy.reset })] }), SP_JSX.jsx("p", { className: "ph-tab-reset-hint", children: editorCopy.resetHint }), SP_JSX.jsxs("div", { className: "ph-editor-following", children: [SP_JSX.jsxs("div", { style: { paddingTop: 16 }, children: [SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) }), !showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: visible.includes("audio") ? openDeviceVideo : undefined, openPerformance: visible.includes("graphics") ? openDevicePerformance : undefined, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] })] }), SP_JSX.jsx(ControlSection, { id: "news", title: "News", locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("news"), onToggle: toggleSection, children: SP_JSX.jsx(HomeNewsSettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "daily-history", title: historyTitle(locale), locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("daily-history"), onToggle: toggleSection, children: SP_JSX.jsx(HomeHistorySettings, { locale: locale }) }), SP_JSX.jsx(QuickSettingsContent, { page: "tools", locale: locale, expanded: expanded, onToggle: toggleSection }), SP_JSX.jsxs(DialogButton$2, { className: "ph-settings-action", onClick: () => { setCustomizing(false); replayPlayhubOnboarding(); }, children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] })] })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$3, { className: "ph-control-nav", "flow-children": "row", children: SP_JSX.jsxs(Focusable$3, { className: "ph-control-tabs", "flow-children": "row", role: "tablist", "aria-label": "Core", children: [visible.map(id => {
+                                            }) }), SP_JSX.jsx("div", { className: "ph-control-setting-row", "aria-live": "polite", children: SP_JSX.jsxs("div", { className: "ph-selected-tab", children: [SP_JSX.jsx("span", { children: copy[editing] }), SP_JSX.jsxs("span", { className: "ph-selected-tab-status", children: [state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible, !canToggleTab(state, editing, deckyAvailable) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("br", {}), editorCopy.lastTab] })] })] }) }), SP_JSX.jsxs(DialogButton$2, { className: "ph-settings-action", onOKActionDescription: editorCopy.reset, onClick: () => edit({ type: "reset" }), children: [SP_JSX.jsx(TbRestore, {}), SP_JSX.jsx("span", { children: editorCopy.reset })] }), SP_JSX.jsx("p", { className: "ph-tab-reset-hint", children: editorCopy.resetHint }), SP_JSX.jsxs("div", { className: "ph-editor-following", children: [SP_JSX.jsxs("div", { style: { paddingTop: 16 }, children: [SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) }), !showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: visible.includes("audio") ? openDeviceVideo : undefined, openPerformance: visible.includes("graphics") ? openDevicePerformance : undefined, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] })] }), SP_JSX.jsx(ControlSection, { id: "news", title: "News", locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("news"), onToggle: toggleSection, children: SP_JSX.jsx(HomeNewsSettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "daily-history", title: historyTitle(locale), locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("daily-history"), onToggle: toggleSection, children: SP_JSX.jsx(HomeHistorySettings, { locale: locale }) }), SP_JSX.jsx(QuickSettingsContent, { page: "tools", locale: locale, expanded: expanded, onToggle: toggleSection }), SP_JSX.jsxs(DialogButton$2, { className: "ph-settings-action", onClick: () => { setCustomizing(false); replayPlayhubOnboarding(); }, children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] })] })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$4, { className: "ph-control-nav", "flow-children": "row", children: SP_JSX.jsxs(Focusable$4, { className: "ph-control-tabs", "flow-children": "row", role: "tablist", "aria-label": "Core", children: [visible.map(id => {
                                             const Icon = icons[id];
                                             return SP_JSX.jsx(DialogButton$2, { className: "ph-control-icon", role: "tab", "aria-selected": active === id, "aria-label": copy[id], onOKActionDescription: copy[id], disabled: !ready, "data-playhub-onboarding": origin === "qam" ? id : undefined, onClick: () => choose(id), children: SP_JSX.jsx(Icon, {}) }, id);
                                         }), SP_JSX.jsx(DialogButton$2, { className: "ph-control-icon", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, "aria-label": copy.settings, onOKActionDescription: copy.settings, disabled: !ready, onClick: () => setCustomizing(true), children: SP_JSX.jsx(TbSettings, {}) })] }) }), active !== "decky" && (active !== "home" || homeTitle) && SP_JSX.jsx("h2", { className: "ph-control-heading", children: active === "home" ? homeTitle : copy[active] }), !hostActive && SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs("div", { "data-playhub-onboarding-content": origin === "qam" ? active : undefined, children: [active === "home" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "home" : undefined, children: session }) : active === "store" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "store" : undefined, children: store }) : active === "controller" ? SP_JSX.jsx(SP_JSX.Fragment, { children: controller }) :
@@ -57141,8 +57141,8 @@ function createGameFrameComparison() {
 }
 const gameFrameComparison = createGameFrameComparison();
 
-const { ButtonItem: ButtonItem$3, PanelSection: PanelSection$4, PanelSectionRow: PanelSectionRow$4 } = _global_DFL;
-const copy$3 = {
+const { ButtonItem: ButtonItem$3, PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$5 } = _global_DFL;
+const copy$4 = {
     en: ["Frame timing", "Measure FPS", "Measuring…", "Four-second sample of the current game.", "Presented FPS", "Frame time", "No game frames captured. Try during play.", "Frame measurement is unavailable.", "Windows denied access to frame data."],
     it: ["Tempi dei fotogrammi", "Misura FPS", "Misurazione…", "Campione di quattro secondi del gioco in corso.", "FPS presentati", "Tempo per fotogramma", "Nessun fotogramma rilevato. Riprova durante il gioco.", "Misurazione dei fotogrammi non disponibile.", "Windows ha negato l’accesso ai dati dei fotogrammi."],
     de: ["Framezeiten", "FPS messen", "Messung läuft…", "Vier Sekunden aus dem laufenden Spiel.", "Ausgegebene FPS", "Framezeit", "Keine Frames erfasst. Versuche es im Spiel erneut.", "Frame-Messung nicht verfügbar.", "Windows hat den Zugriff auf Frame-Daten verweigert."],
@@ -57172,7 +57172,7 @@ const comparisonCopy = {
 };
 function GameFrameTiming({ appId, locale }) {
     const language = locale.split(/[-_]/)[0];
-    const [title, , measuring, , fps, frame, empty, unavailable, denied] = copy$3[language] ?? copy$3.en;
+    const [title, , measuring, , fps, frame, empty, unavailable, denied] = copy$4[language] ?? copy$4.en;
     const [measureFirst, measureSecond, repeat, clear, hint, prepare, firstLabel, secondLabel, change, returnToGame] = comparisonCopy[language] ?? comparisonCopy.en;
     const [result, setResult] = _global_SP_REACT.useState(() => gameFrameComparison.read(appId));
     _global_SP_REACT.useEffect(() => {
@@ -57193,10 +57193,10 @@ function GameFrameTiming({ appId, locale }) {
         { label: frame, before: first.medianFrameTimeMs, after: second?.medianFrameTimeMs, unit: " ms" },
         { label: "P95", before: first.p95FrameTimeMs, after: second?.p95FrameTimeMs, unit: " ms" },
     ] : [];
-    return SP_JSX.jsxs(PanelSection$4, { title: title, children: [SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => void gameFrameComparison.capture(appId, id => call("measure_game_frames", id, true)), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: busy ? measuring : measure }) }) }), SP_JSX.jsxs("div", { role: "status", style: { padding: "4px 16px 12px", fontSize: 13, lineHeight: 1.5, overflowWrap: "anywhere" }, children: [SP_JSX.jsx("div", { children: message }), !busy && !error && SP_JSX.jsx("div", { style: { opacity: .74 }, children: prepare }), first && SP_JSX.jsx("dl", { style: { display: "grid", gap: 8, margin: "12px 0 0" }, children: rows.map(({ label, before, after, unit }) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { style: { fontWeight: 650 }, children: label }), SP_JSX.jsxs("dd", { style: { margin: 0, display: "flex", flexWrap: "wrap", columnGap: 12 }, children: [SP_JSX.jsxs("span", { children: [firstLabel, " \u00B7 ", format(before), unit] }), after !== undefined && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { children: [secondLabel, " \u00B7 ", format(after), unit] }), SP_JSX.jsxs("span", { children: [change, " \u00B7 ", format(Number((after - before).toFixed(2)), true), unit] })] })] })] }, label)) })] }), first && SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => gameFrameComparison.reset(appId), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: clear }) }) })] });
+    return SP_JSX.jsxs(PanelSection$5, { title: title, children: [SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => void gameFrameComparison.capture(appId, id => call("measure_game_frames", id, true)), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: busy ? measuring : measure }) }) }), SP_JSX.jsxs("div", { role: "status", style: { padding: "4px 16px 12px", fontSize: 13, lineHeight: 1.5, overflowWrap: "anywhere" }, children: [SP_JSX.jsx("div", { children: message }), !busy && !error && SP_JSX.jsx("div", { style: { opacity: .74 }, children: prepare }), first && SP_JSX.jsx("dl", { style: { display: "grid", gap: 8, margin: "12px 0 0" }, children: rows.map(({ label, before, after, unit }) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { style: { fontWeight: 650 }, children: label }), SP_JSX.jsxs("dd", { style: { margin: 0, display: "flex", flexWrap: "wrap", columnGap: 12 }, children: [SP_JSX.jsxs("span", { children: [firstLabel, " \u00B7 ", format(before), unit] }), after !== undefined && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { children: [secondLabel, " \u00B7 ", format(after), unit] }), SP_JSX.jsxs("span", { children: [change, " \u00B7 ", format(Number((after - before).toFixed(2)), true), unit] })] })] })] }, label)) })] }), first && SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => gameFrameComparison.reset(appId), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: clear }) }) })] });
 }
 
-const style$2 = `
+const style$3 = `
 .ph-store-intro{isolation:isolate;width:100%;min-width:0;padding:0 0 14px;box-sizing:border-box}
 .ph-store-launch{position:relative;z-index:1}
 .ph-store-download{position:relative;z-index:0;width:100%;overflow:hidden;pointer-events:none}
@@ -57255,7 +57255,7 @@ function PluginStoreIntro({ description, button }) {
             observer.observe(target);
         return () => observer.disconnect();
     }, []);
-    return SP_JSX.jsxs("div", { className: "ph-store-intro", ref: container, children: [SP_JSX.jsx("style", { children: style$2 }), SP_JSX.jsx("div", { className: "ph-store-launch", ref: launcher, children: button }), SP_JSX.jsx("div", { className: "ph-store-download", style: { height: Math.max(0, height - overlap), marginTop: -wrapperGap }, "aria-hidden": "true", children: SP_JSX.jsx("div", { className: "ph-store-download-viewport", style: { height, top: -overlap }, children: SP_JSX.jsxs("div", { className: "ph-store-download-stage", children: [SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbPhoto, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbMusic, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbDeviceGamepad2, {}) }), SP_JSX.jsx("span", { className: "ph-store-shelf" }), SP_JSX.jsx(TbCheck, { className: "ph-store-saved" })] }) }) }), SP_JSX.jsx("div", { className: "ph-store-intro-copy", children: description })] });
+    return SP_JSX.jsxs("div", { className: "ph-store-intro", ref: container, children: [SP_JSX.jsx("style", { children: style$3 }), SP_JSX.jsx("div", { className: "ph-store-launch", ref: launcher, children: button }), SP_JSX.jsx("div", { className: "ph-store-download", style: { height: Math.max(0, height - overlap), marginTop: -wrapperGap }, "aria-hidden": "true", children: SP_JSX.jsx("div", { className: "ph-store-download-viewport", style: { height, top: -overlap }, children: SP_JSX.jsxs("div", { className: "ph-store-download-stage", children: [SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbPhoto, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbMusic, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbDeviceGamepad2, {}) }), SP_JSX.jsx("span", { className: "ph-store-shelf" }), SP_JSX.jsx(TbCheck, { className: "ph-store-saved" })] }) }) }), SP_JSX.jsx("div", { className: "ph-store-intro-copy", children: description })] });
 }
 
 /** Three startup checks only. Evidence and the durable session claim live in Python. */
@@ -60658,8 +60658,8 @@ async function ensureCoreRepairTile(deps) {
 // while someone is signed in, so when Windows has a restart pending (or a month has
 // passed) this card offers to restart at 5:00. The agent does the restart, never during a
 // game (GamingMode.Services/UpdateNight.cs). Shown only when there is something to say.
-const { PanelSection: PanelSection$3, PanelSectionRow: PanelSectionRow$3, ButtonItem: ButtonItem$2 } = _global_DFL;
-const copy$2 = {
+const { PanelSection: PanelSection$4, PanelSectionRow: PanelSectionRow$4, ButtonItem: ButtonItem$2 } = _global_DFL;
+const copy$3 = {
     en: { title: "Windows updates", offer: "Windows has updates waiting. Restart tonight at {time}?", restart: "Restart at {time}", scheduled: "Core will restart at {time} for Windows updates, unless a game is running.", cancel: "Cancel" },
     it: { title: "Aggiornamenti di Windows", offer: "Windows ha degli aggiornamenti in attesa. Riavviare stanotte alle {time}?", restart: "Riavvia alle {time}", scheduled: "Core si riavvierà alle {time} per gli aggiornamenti di Windows, a meno che un gioco sia aperto.", cancel: "Annulla" },
     es: { title: "Actualizaciones de Windows", offer: "Windows tiene actualizaciones pendientes. ¿Reiniciar esta noche a las {time}?", restart: "Reiniciar a las {time}", scheduled: "Core se reiniciará a las {time} para las actualizaciones de Windows, salvo que haya un juego abierto.", cancel: "Cancelar" },
@@ -60691,7 +60691,7 @@ function nightTime(locale, state, now = new Date()) {
 function UpdateNightCard({ locale }) {
     const [state, setState] = _global_SP_REACT.useState();
     const [busy, setBusy] = _global_SP_REACT.useState(false);
-    const text = copy$2[locale] ?? copy$2.en;
+    const text = copy$3[locale] ?? copy$3.en;
     _global_SP_REACT.useEffect(() => {
         let alive = true;
         const load = () => { call("core_update_night").then(value => { if (alive)
@@ -60713,13 +60713,13 @@ function UpdateNightCard({ locale }) {
             setBusy(false);
         }
     };
-    return (SP_JSX.jsxs(PanelSection$3, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, opacity: .85, margin: "0 0 8px" }, children: (state.scheduledFor ? text.scheduled : text.offer).replace("{time}", time) }) }), SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsx(ButtonItem$2, { layout: "below", disabled: busy, onClick: () => act(state.scheduledFor ? "core_update_night_cancel" : "core_update_night_schedule"), children: state.scheduledFor ? text.cancel : text.restart.replace("{time}", time) }) })] }));
+    return (SP_JSX.jsxs(PanelSection$4, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, opacity: .85, margin: "0 0 8px" }, children: (state.scheduledFor ? text.scheduled : text.offer).replace("{time}", time) }) }), SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsx(ButtonItem$2, { layout: "below", disabled: busy, onClick: () => act(state.scheduledFor ? "core_update_night_cancel" : "core_update_night_schedule"), children: state.scheduledFor ? text.cancel : text.restart.replace("{time}", time) }) })] }));
 }
 
 // Eternal Core: Core Health in Quick Access. Turns the agent's GET /health answer
 // (GamingMode.Services/CoreHealth.cs) into the lines HealthSection.tsx shows, in Core's 12
 // languages. Self-contained on purpose: tests/coreHealthSection.test.mjs loads this file alone.
-const en$1 = {
+const en$2 = {
     title: "Health", allGood: "All good", attention: "Needs attention: {n}", checking: "Checking…", agentDown: "Core's service is not answering.", dismiss: "Dismiss alert",
     r_backup: "Server backup", r_restore: "Restore check", r_drive: "Server drive", r_romm: "RomM", r_restart: "Windows restart", r_night: "Update night", r_tv: "TV", r_pc: "PC disk space", r_core: "Core update",
     notConfigured: "Set the server in Core > Gaming Mode", unreachable: "Server not reachable", missing: "No status file on the server", unreadable: "Status file unreadable", stale: "Last news {when}", unknown: "Unknown",
@@ -60732,9 +60732,10 @@ const en$1 = {
     pcOk: "{free} free", pcLow: "Only {free} free", cAvail: "Core {latest} available", cCurrent: "Up to date · {current}",
     r_mic: "Microphone", micMuted: "Muted", micLive: "Live", micNone: "No microphone", micPartial: "Partly muted",
     micCalls: "Calls mic: {name}", micAway: "calls mic not connected", micAwayDetail: "Not connected. Calls use Windows' default microphone.", micActiveDetail: "Connected and used for calls.", micChangedDetail: "Connected; Windows uses another microphone for calls.", micFailedDetail: "Windows did not let Core make it the default.",
+    r_stream: "Streaming", sIdle: "Idle", sTo: "Streaming to {device}", sVia: "Streaming · {source}", sKept: "TV kept out by you", tHeld: "Left alone (Stream mode)", sThrough: "Through {source}", sVd: "Apollo's virtual display is active",
 };
-const copy$1 = {
-    en: en$1,
+const copy$2 = {
+    en: en$2,
     it: {
         title: "Salute", allGood: "Tutto a posto", attention: "Da controllare: {n}", checking: "Controllo…", agentDown: "Il servizio di Core non risponde.", dismiss: "Ignora l'avviso",
         r_backup: "Backup del server", r_restore: "Prova di ripristino", r_drive: "Disco del server", r_romm: "RomM", r_restart: "Riavvio di Windows", r_night: "Notte degli aggiornamenti", r_tv: "TV", r_pc: "Spazio sul PC", r_core: "Aggiornamento di Core",
@@ -60748,6 +60749,7 @@ const copy$1 = {
         pcOk: "{free} liberi", pcLow: "Solo {free} liberi", cAvail: "Core {latest} disponibile", cCurrent: "Aggiornato · {current}",
         r_mic: "Microfono", micMuted: "Silenziato", micLive: "Attivo", micNone: "Nessun microfono", micPartial: "Silenziato in parte",
         micCalls: "Microfono per le chiamate: {name}", micAway: "microfono per le chiamate non collegato", micAwayDetail: "Non collegato. Le chiamate usano il microfono predefinito di Windows.", micActiveDetail: "Collegato e usato per le chiamate.", micChangedDetail: "Collegato; Windows usa un altro microfono per le chiamate.", micFailedDetail: "Windows non ha permesso a Core di impostarlo come predefinito.",
+        r_stream: "Streaming", sIdle: "Inattivo", sTo: "Streaming verso {device}", sVia: "Streaming · {source}", sKept: "TV lasciata stare da te", tHeld: "Lasciata stare (modalità streaming)", sThrough: "Tramite {source}", sVd: "Lo schermo virtuale di Apollo è attivo",
     },
     es: {
         title: "Estado", allGood: "Todo bien", attention: "Necesita atención: {n}", checking: "Comprobando…", agentDown: "El servicio de Core no responde.", dismiss: "Descartar aviso",
@@ -60762,6 +60764,7 @@ const copy$1 = {
         pcOk: "{free} libres", pcLow: "Solo {free} libres", cAvail: "Core {latest} disponible", cCurrent: "Actualizado · {current}",
         r_mic: "Micrófono", micMuted: "Silenciado", micLive: "Activo", micNone: "No hay micrófono", micPartial: "Silenciado en parte",
         micCalls: "Micrófono de llamadas: {name}", micAway: "micrófono de llamadas no conectado", micAwayDetail: "No conectado. Las llamadas usan el micrófono predeterminado de Windows.", micActiveDetail: "Conectado y usado para llamadas.", micChangedDetail: "Conectado; Windows usa otro micrófono para llamadas.", micFailedDetail: "Windows no dejó que Core lo pusiera como predeterminado.",
+        r_stream: "Streaming", sIdle: "Inactivo", sTo: "Transmitiendo a {device}", sVia: "Transmitiendo · {source}", sKept: "TV apartada por ti", tHeld: "Sin tocar (modo streaming)", sThrough: "Mediante {source}", sVd: "La pantalla virtual de Apollo está activa",
     },
     fr: {
         title: "Santé", allGood: "Tout va bien", attention: "À vérifier : {n}", checking: "Vérification…", agentDown: "Le service de Core ne répond pas.", dismiss: "Ignorer l'alerte",
@@ -60776,6 +60779,7 @@ const copy$1 = {
         pcOk: "{free} libres", pcLow: "Seulement {free} libres", cAvail: "Core {latest} disponible", cCurrent: "À jour · {current}",
         r_mic: "Micro", micMuted: "Coupé", micLive: "Actif", micNone: "Aucun micro", micPartial: "Coupé en partie",
         micCalls: "Micro des appels : {name}", micAway: "micro des appels non connecté", micAwayDetail: "Non connecté. Les appels utilisent le micro par défaut de Windows.", micActiveDetail: "Connecté et utilisé pour les appels.", micChangedDetail: "Connecté ; Windows utilise un autre micro pour les appels.", micFailedDetail: "Windows n'a pas laissé Core le définir par défaut.",
+        r_stream: "Streaming", sIdle: "Inactif", sTo: "Streaming vers {device}", sVia: "Streaming · {source}", sKept: "TV tenue à l'écart par vous", tHeld: "Laissée tranquille (mode streaming)", sThrough: "Via {source}", sVd: "L'écran virtuel d'Apollo est actif",
     },
     de: {
         title: "Status", allGood: "Alles in Ordnung", attention: "Zu prüfen: {n}", checking: "Wird geprüft…", agentDown: "Der Core-Dienst antwortet nicht.", dismiss: "Warnung ausblenden",
@@ -60790,6 +60794,7 @@ const copy$1 = {
         pcOk: "{free} frei", pcLow: "Nur {free} frei", cAvail: "Core {latest} verfügbar", cCurrent: "Aktuell · {current}",
         r_mic: "Mikrofon", micMuted: "Stumm", micLive: "An", micNone: "Kein Mikrofon", micPartial: "Teilweise stumm",
         micCalls: "Anruf-Mikrofon: {name}", micAway: "Anruf-Mikrofon nicht verbunden", micAwayDetail: "Nicht verbunden. Anrufe nutzen das Standardmikrofon von Windows.", micActiveDetail: "Verbunden und für Anrufe genutzt.", micChangedDetail: "Verbunden; Windows nutzt ein anderes Mikrofon für Anrufe.", micFailedDetail: "Windows hat Core nicht erlaubt, es als Standard festzulegen.",
+        r_stream: "Streaming", sIdle: "Inaktiv", sTo: "Streamt an {device}", sVia: "Streamt · {source}", sKept: "Fernseher von dir ausgenommen", tHeld: "In Ruhe gelassen (Streaming-Modus)", sThrough: "Über {source}", sVd: "Der virtuelle Bildschirm von Apollo ist aktiv",
     },
     pt: {
         title: "Saúde", allGood: "Tudo certo", attention: "Precisa de atenção: {n}", checking: "Verificando…", agentDown: "O serviço do Core não responde.", dismiss: "Dispensar alerta",
@@ -60804,6 +60809,7 @@ const copy$1 = {
         pcOk: "{free} livres", pcLow: "Só {free} livres", cAvail: "Core {latest} disponível", cCurrent: "Atualizado · {current}",
         r_mic: "Microfone", micMuted: "Silenciado", micLive: "Ativo", micNone: "Sem microfone", micPartial: "Silenciado em parte",
         micCalls: "Microfone das chamadas: {name}", micAway: "microfone das chamadas não conectado", micAwayDetail: "Não conectado. As chamadas usam o microfone padrão do Windows.", micActiveDetail: "Conectado e usado nas chamadas.", micChangedDetail: "Conectado; o Windows usa outro microfone nas chamadas.", micFailedDetail: "O Windows não deixou o Core defini-lo como padrão.",
+        r_stream: "Streaming", sIdle: "Inativo", sTo: "Transmitindo para {device}", sVia: "Transmitindo · {source}", sKept: "TV deixada de fora por você", tHeld: "Deixada em paz (modo streaming)", sThrough: "Via {source}", sVd: "A tela virtual do Apollo está ativa",
     },
     uk: {
         title: "Стан", allGood: "Усе гаразд", attention: "Потребує уваги: {n}", checking: "Перевірка…", agentDown: "Служба Core не відповідає.", dismiss: "Приховати сповіщення",
@@ -60818,6 +60824,7 @@ const copy$1 = {
         pcOk: "Вільно {free}", pcLow: "Вільно лише {free}", cAvail: "Доступний Core {latest}", cCurrent: "Актуальний · {current}",
         r_mic: "Мікрофон", micMuted: "Вимкнено", micLive: "Увімкнено", micNone: "Немає мікрофона", micPartial: "Вимкнено частково",
         micCalls: "Мікрофон для дзвінків: {name}", micAway: "мікрофон для дзвінків не підключено", micAwayDetail: "Не підключено. Дзвінки використовують мікрофон Windows за замовчуванням.", micActiveDetail: "Підключено й використовується для дзвінків.", micChangedDetail: "Підключено; Windows використовує інший мікрофон для дзвінків.", micFailedDetail: "Windows не дозволила Core зробити його мікрофоном за замовчуванням.",
+        r_stream: "Трансляція", sIdle: "Немає", sTo: "Трансляція на {device}", sVia: "Трансляція · {source}", sKept: "Телевізор не чіпати (вами)", tHeld: "Не чіпаємо (режим трансляції)", sThrough: "Через {source}", sVd: "Віртуальний екран Apollo активний",
     },
     ru: {
         title: "Состояние", allGood: "Всё в порядке", attention: "Требует внимания: {n}", checking: "Проверка…", agentDown: "Служба Core не отвечает.", dismiss: "Скрыть оповещение",
@@ -60832,6 +60839,7 @@ const copy$1 = {
         pcOk: "Свободно {free}", pcLow: "Свободно всего {free}", cAvail: "Доступен Core {latest}", cCurrent: "Актуален · {current}",
         r_mic: "Микрофон", micMuted: "Выключен", micLive: "Включён", micNone: "Нет микрофона", micPartial: "Выключен частично",
         micCalls: "Микрофон для звонков: {name}", micAway: "микрофон для звонков не подключён", micAwayDetail: "Не подключён. Звонки используют микрофон Windows по умолчанию.", micActiveDetail: "Подключён и используется для звонков.", micChangedDetail: "Подключён; Windows использует другой микрофон для звонков.", micFailedDetail: "Windows не позволила Core сделать его микрофоном по умолчанию.",
+        r_stream: "Трансляция", sIdle: "Нет", sTo: "Трансляция на {device}", sVia: "Трансляция · {source}", sKept: "Телевизор не трогать (вами)", tHeld: "Не трогаем (режим трансляции)", sThrough: "Через {source}", sVd: "Виртуальный экран Apollo активен",
     },
     zh: {
         title: "健康", allGood: "一切正常", attention: "需要注意：{n}", checking: "正在检查…", agentDown: "Core 服务没有响应。", dismiss: "忽略提醒",
@@ -60846,6 +60854,7 @@ const copy$1 = {
         pcOk: "剩余 {free}", pcLow: "仅剩 {free}", cAvail: "Core {latest} 可用", cCurrent: "已是最新 · {current}",
         r_mic: "麦克风", micMuted: "已静音", micLive: "已开启", micNone: "没有麦克风", micPartial: "部分静音",
         micCalls: "通话麦克风：{name}", micAway: "通话麦克风未连接", micAwayDetail: "未连接。通话使用 Windows 的默认麦克风。", micActiveDetail: "已连接，用于通话。", micChangedDetail: "已连接；Windows 正在用另一个麦克风通话。", micFailedDetail: "Windows 不允许 Core 将其设为默认。",
+        r_stream: "串流", sIdle: "空闲", sTo: "正在串流到 {device}", sVia: "正在串流 · {source}", sKept: "你已设置不动电视", tHeld: "不动电视（串流模式）", sThrough: "通过 {source}", sVd: "Apollo 虚拟显示器已启用",
     },
     ja: {
         title: "状態", allGood: "問題なし", attention: "要確認: {n}", checking: "確認中…", agentDown: "Core のサービスが応答しません。", dismiss: "お知らせを閉じる",
@@ -60860,6 +60869,7 @@ const copy$1 = {
         pcOk: "空き {free}", pcLow: "空きは {free} のみ", cAvail: "Core {latest} を利用可能", cCurrent: "最新 · {current}",
         r_mic: "マイク", micMuted: "ミュート中", micLive: "オン", micNone: "マイクなし", micPartial: "一部ミュート中",
         micCalls: "通話用マイク：{name}", micAway: "通話用マイク未接続", micAwayDetail: "未接続です。通話には Windows の既定のマイクが使われます。", micActiveDetail: "接続済みで、通話に使われています。", micChangedDetail: "接続済み。Windows は通話に別のマイクを使っています。", micFailedDetail: "Windows が Core による既定の設定を許可しませんでした。",
+        r_stream: "ストリーミング", sIdle: "待機中", sTo: "{device} にストリーミング中", sVia: "ストリーミング中 · {source}", sKept: "手動でテレビに触れない設定", tHeld: "触れていません（ストリーミングモード）", sThrough: "{source} 経由", sVd: "Apollo の仮想ディスプレイが有効です",
     },
     ko: {
         title: "상태", allGood: "모두 정상", attention: "확인 필요: {n}", checking: "확인 중…", agentDown: "Core 서비스가 응답하지 않습니다.", dismiss: "알림 닫기",
@@ -60874,6 +60884,7 @@ const copy$1 = {
         pcOk: "{free} 남음", pcLow: "{free}만 남음", cAvail: "Core {latest} 사용 가능", cCurrent: "최신 · {current}",
         r_mic: "마이크", micMuted: "음소거됨", micLive: "켜짐", micNone: "마이크 없음", micPartial: "일부 음소거됨",
         micCalls: "통화용 마이크: {name}", micAway: "통화용 마이크 연결 안 됨", micAwayDetail: "연결되지 않았습니다. 통화에는 Windows 기본 마이크가 쓰입니다.", micActiveDetail: "연결되어 통화에 쓰이고 있습니다.", micChangedDetail: "연결됨. Windows가 통화에 다른 마이크를 쓰고 있습니다.", micFailedDetail: "Windows가 Core의 기본값 설정을 허용하지 않았습니다.",
+        r_stream: "스트리밍", sIdle: "대기 중", sTo: "{device}(으)로 스트리밍 중", sVia: "스트리밍 중 · {source}", sKept: "직접 TV 건드리지 않기 켬", tHeld: "건드리지 않음 (스트리밍 모드)", sThrough: "{source} 통해", sVd: "Apollo 가상 디스플레이 사용 중",
     },
     hi: {
         title: "हेल्थ", allGood: "सब ठीक है", attention: "ध्यान चाहिए: {n}", checking: "जाँच हो रही है…", agentDown: "Core की सेवा जवाब नहीं दे रही।", dismiss: "अलर्ट हटाएँ",
@@ -60888,14 +60899,15 @@ const copy$1 = {
         pcOk: "{free} खाली", pcLow: "सिर्फ़ {free} खाली", cAvail: "Core {latest} उपलब्ध", cCurrent: "अप टू डेट · {current}",
         r_mic: "माइक्रोफ़ोन", micMuted: "म्यूट", micLive: "चालू", micNone: "कोई माइक्रोफ़ोन नहीं", micPartial: "आंशिक रूप से म्यूट",
         micCalls: "कॉल माइक: {name}", micAway: "कॉल माइक कनेक्ट नहीं", micAwayDetail: "कनेक्ट नहीं है। कॉल Windows का डिफ़ॉल्ट माइक्रोफ़ोन इस्तेमाल करती हैं।", micActiveDetail: "कनेक्ट है और कॉल के लिए इस्तेमाल हो रहा है।", micChangedDetail: "कनेक्ट है; Windows कॉल के लिए दूसरा माइक्रोफ़ोन इस्तेमाल कर रहा है।", micFailedDetail: "Windows ने Core को इसे डिफ़ॉल्ट बनाने नहीं दिया।",
+        r_stream: "स्ट्रीमिंग", sIdle: "निष्क्रिय", sTo: "{device} पर स्ट्रीमिंग", sVia: "स्ट्रीमिंग · {source}", sKept: "आपने टीवी को अलग रखा", tHeld: "नहीं छुआ गया (स्ट्रीम मोड)", sThrough: "{source} के ज़रिए", sVd: "Apollo का वर्चुअल डिस्प्ले चालू है",
     },
 };
 function healthCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$1[language === "ua" ? "uk" : language] ?? en$1;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$1[key] ?? key });
+    const table = copy$2[language === "ua" ? "uk" : language] ?? en$2;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$2[key] ?? key });
 }
-function fill$1(template, values) {
+function fill$2(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? String(values[name]) : all));
 }
 function formatBytes(bytes, locale = "en") {
@@ -60942,7 +60954,7 @@ function formatTime(value, locale, hour) {
 }
 const titles = {
     "server-backup": "r_backup", "restore-check": "r_restore", "server-drive": "r_drive", romm: "r_romm",
-    "windows-restart": "r_restart", "update-night": "r_night", tv: "r_tv", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
+    "windows-restart": "r_restart", "update-night": "r_night", tv: "r_tv", streaming: "r_stream", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
 };
 const serverStates = { "not-configured": "notConfigured", unreachable: "unreachable", missing: "missing", unreadable: "unreadable" };
 function rowValue(row, text, locale, now) {
@@ -60956,28 +60968,28 @@ function rowValue(row, text, locale, now) {
         return { value: row.id === "server-backup" ? text[sourceState] : text.unknown, details };
     }
     if (row.state === "stale")
-        return { value: fill$1(text.stale, { when: when("writtenAt") }), details };
+        return { value: fill$2(text.stale, { when: when("writtenAt") }), details };
     switch (row.id) {
         case "server-backup": {
             const failures = Number(data.consecutiveFailures) || 0;
             const skipped = Array.isArray(data.skippedPlatforms) ? data.skippedPlatforms.filter(item => typeof item === "string") : [];
             if (row.state !== "ok" && data.lastSuccessAt)
-                details.push(fill$1(text.lastSuccess, { when: when("lastSuccessAt") }));
+                details.push(fill$2(text.lastSuccess, { when: when("lastSuccessAt") }));
             if (failures > 0)
-                details.push(fill$1(text.failures, { n: failures }));
+                details.push(fill$2(text.failures, { n: failures }));
             if (skipped.length)
-                details.push(fill$1(text.skipped, { list: skipped.join(", ") }));
+                details.push(fill$2(text.skipped, { list: skipped.join(", ") }));
             if (row.state !== "ok" && typeof data.message === "string" && data.message)
                 details.push(data.message);
-            const value = row.state === "ok" ? fill$1(text.bOk, { when: when("lastSuccessAt") })
+            const value = row.state === "ok" ? fill$2(text.bOk, { when: when("lastSuccessAt") })
                 : row.state === "partial" ? text.bPartial : row.state === "failed" ? text.bFailed : row.state === "never" ? text.bNever : text.unknown;
             return { value, details };
         }
         case "restore-check": {
             if (typeof data.message === "string" && data.message && row.state !== "ok")
                 details.push(data.message);
-            const value = row.state === "ok" ? fill$1(text.rOk, { when: when("at") }) : row.state === "failed" ? text.rFailed
-                : row.state === "overdue" ? fill$1(text.rOverdue, { when: when("at") }) : row.state === "never" ? text.rNever : text.unknown;
+            const value = row.state === "ok" ? fill$2(text.rOk, { when: when("at") }) : row.state === "failed" ? text.rFailed
+                : row.state === "overdue" ? fill$2(text.rOverdue, { when: when("at") }) : row.state === "never" ? text.rNever : text.unknown;
             return { value, details };
         }
         case "server-drive": {
@@ -60985,7 +60997,7 @@ function rowValue(row, text, locale, now) {
                 details.push(data.label);
             if (row.state !== "healthy" && typeof data.message === "string" && data.message)
                 details.push(data.message);
-            const value = row.state === "healthy" ? fill$1(text.dHealthy, { free: formatBytes(data.freeBytes, locale) })
+            const value = row.state === "healthy" ? fill$2(text.dHealthy, { free: formatBytes(data.freeBytes, locale) })
                 : row.state === "warning" ? text.dWarning : row.state === "unhealthy" ? text.dUnhealthy : text.unknown;
             return { value, details };
         }
@@ -60996,10 +61008,25 @@ function rowValue(row, text, locale, now) {
         case "windows-restart":
             return { value: row.state === "pending" ? text.pending : text.notNeeded, details };
         case "update-night":
-            return { value: row.state === "scheduled" ? fill$1(text.nScheduled, { time: formatTime(data.scheduledFor, locale, data.hour) })
+            return { value: row.state === "scheduled" ? fill$2(text.nScheduled, { time: formatTime(data.scheduledFor, locale, data.hour) })
                     : row.state === "waiting" ? text.nWaiting : text.nNothing, details };
         case "tv":
-            return { value: { off: text.tOff, "not-paired": text.tNotPaired, reachable: text.tOk, unreachable: text.tDown }[row.state] ?? text.unknown, details };
+            return { value: { off: text.tOff, "not-paired": text.tNotPaired, reachable: text.tOk, unreachable: text.tDown, "stream-mode": text.tHeld }[row.state] ?? text.unknown, details };
+        case "streaming": {
+            // Stream mode (CORE-STREAM-MODE.md): information only; the TV is left alone while it is on.
+            const sources = { steam: "Steam Remote Play", steamvr: "SteamVR", sunshine: "Sunshine", apollo: "Apollo" };
+            const source = typeof data.source === "string" ? sources[data.source] ?? "" : "";
+            const device = typeof data.device === "string" ? data.device.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 64) : "";
+            if (source)
+                details.push(fill$2(text.sThrough, { source }));
+            if (data.virtualDisplay === true)
+                details.push(text.sVd);
+            if (row.state === "streaming")
+                return { value: device ? fill$2(text.sTo, { device }) : source ? fill$2(text.sVia, { source }) : text.sKept, details };
+            if (row.state === "kept-out")
+                return { value: text.sKept, details };
+            return { value: row.state === "idle" ? text.sIdle : text.unknown, details };
+        }
         case "microphone": {
             // The calls mic rides along as information: its name, or "not connected" (calm, never an alert;
             // calls then use Windows' default). No battery: Windows exposes none for a USB audio receiver.
@@ -61009,7 +61036,7 @@ function rowValue(row, text, locale, now) {
             if (status === "none" || !["active", "absent", "changed", "failed"].includes(status))
                 return { value: state, details };
             if (name)
-                details.push(fill$1(text.micCalls, { name }));
+                details.push(fill$2(text.micCalls, { name }));
             details.push({ active: text.micActiveDetail, absent: text.micAwayDetail, changed: text.micChangedDetail, failed: text.micFailedDetail }[status]);
             return { value: `${state} · ${status === "absent" ? text.micAway : name || text.micActiveDetail}`, details };
         }
@@ -61017,18 +61044,18 @@ function rowValue(row, text, locale, now) {
             if (typeof data.drive === "string" && data.drive)
                 details.push(data.drive);
             const free = formatBytes(data.freeBytes, locale);
-            return { value: row.state === "ok" ? fill$1(text.pcOk, { free }) : row.state === "low" ? fill$1(text.pcLow, { free }) : text.unknown, details };
+            return { value: row.state === "ok" ? fill$2(text.pcOk, { free }) : row.state === "low" ? fill$2(text.pcLow, { free }) : text.unknown, details };
         }
         case "core-update":
-            return { value: row.state === "available" ? fill$1(text.cAvail, { latest: String(data.latest ?? "?") })
-                    : row.state === "current" ? fill$1(text.cCurrent, { current: String(data.current ?? "?") }) : text.unknown, details };
+            return { value: row.state === "available" ? fill$2(text.cAvail, { latest: String(data.latest ?? "?") })
+                    : row.state === "current" ? fill$2(text.cCurrent, { current: String(data.current ?? "?") }) : text.unknown, details };
     }
     return { value: text.unknown, details };
 }
 function healthSummary(answer, locale) {
     const text = healthCopy(locale);
     const attention = Math.max(0, Number(answer?.attention) || 0);
-    return { line: attention === 0 ? text.allGood : fill$1(text.attention, { n: attention }), attention };
+    return { line: attention === 0 ? text.allGood : fill$2(text.attention, { n: attention }), attention };
 }
 function healthLines(answer, locale, now = new Date()) {
     const text = healthCopy(locale);
@@ -61046,27 +61073,27 @@ function healthLines(answer, locale, now = new Date()) {
 
 // Eternal Core: the Health section of Quick Access > Core. One line for the whole setup, then a
 // row each for the home server's backup, restore check, drive and RomM (from the server's
-// core-status.json), Windows restart, update night, the TV, the microphone, the PC's disk and
-// Core's version.
+// core-status.json), Windows restart, update night, the TV, streaming (Stream mode), the microphone,
+// the PC's disk and Core's version.
 // The agent does the gathering (GamingMode.Services/MarkIIIHost.Health.cs); this only renders.
 // Rows are focusable: D-pad moves between them, A shows or hides a row's details, and a row with
 // an active alert offers "Dismiss alert" (it comes back only if the problem changes).
-const { PanelSection: PanelSection$2, PanelSectionRow: PanelSectionRow$2, ButtonItem: ButtonItem$1, Focusable: Focusable$2 } = _global_DFL;
-const BLACK$1 = "#000000", CRIMSON$1 = "#D7263D", STEEL$1 = "#C9D1D9", GUNMETAL$1 = "#1A1D21";
-const style$1 = `
-.core-health{background:${BLACK$1};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+const { PanelSection: PanelSection$3, PanelSectionRow: PanelSectionRow$3, ButtonItem: ButtonItem$1, Focusable: Focusable$3 } = _global_DFL;
+const BLACK$2 = "#000000", CRIMSON$2 = "#D7263D", STEEL$2 = "#C9D1D9", GUNMETAL$2 = "#1A1D21";
+const style$2 = `
+.core-health{background:${BLACK$2};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-health-summary{padding:8px 12px;font-size:14px;font-weight:650;color:#fff}
-.core-health-summary.problem{color:${CRIMSON$1}}
-.core-health-row{background:${GUNMETAL$1};border-radius:6px;padding:9px 12px;outline:none;box-shadow:none;text-shadow:none}
-.core-health-row.gpfocus,.core-health-row:focus-visible{outline:2px solid ${STEEL$1};outline-offset:-2px}
+.core-health-summary.problem{color:${CRIMSON$2}}
+.core-health-row{background:${GUNMETAL$2};border-radius:6px;padding:9px 12px;outline:none;box-shadow:none;text-shadow:none}
+.core-health-row.gpfocus,.core-health-row:focus-visible{outline:2px solid ${STEEL$2};outline-offset:-2px}
 .core-health-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .core-health-title{font-size:13px;color:#fff;font-weight:600;white-space:nowrap}
-.core-health-value{font-size:12px;color:${STEEL$1};text-align:right;overflow:hidden;text-overflow:ellipsis}
-.core-health-row.attention .core-health-value,.core-health-row.crimson .core-health-value{color:${CRIMSON$1};font-weight:600}
-.core-health-detail{margin-top:6px;font-size:11px;line-height:1.45;color:${STEEL$1};word-break:break-word}
+.core-health-value{font-size:12px;color:${STEEL$2};text-align:right;overflow:hidden;text-overflow:ellipsis}
+.core-health-row.attention .core-health-value,.core-health-row.crimson .core-health-value{color:${CRIMSON$2};font-weight:600}
+.core-health-detail{margin-top:6px;font-size:11px;line-height:1.45;color:${STEEL$2};word-break:break-word}
 `;
 function Row({ line, open, onToggle }) {
-    return (SP_JSX.jsxs(Focusable$2, { className: `core-health-row ${line.level}${line.tone ? " " + line.tone : ""}`, onActivate: onToggle, "aria-expanded": open, noFocusRing: true, children: [SP_JSX.jsxs("div", { className: "core-health-head", children: [SP_JSX.jsx("span", { className: "core-health-title", children: line.title }), SP_JSX.jsx("span", { className: "core-health-value", children: line.value })] }), open && line.details.length > 0 && SP_JSX.jsx("div", { className: "core-health-detail", children: line.details.map((detail, index) => SP_JSX.jsx("div", { children: detail }, index)) })] }));
+    return (SP_JSX.jsxs(Focusable$3, { className: `core-health-row ${line.level}${line.tone ? " " + line.tone : ""}`, onActivate: onToggle, "aria-expanded": open, noFocusRing: true, children: [SP_JSX.jsxs("div", { className: "core-health-head", children: [SP_JSX.jsx("span", { className: "core-health-title", children: line.title }), SP_JSX.jsx("span", { className: "core-health-value", children: line.value })] }), open && line.details.length > 0 && SP_JSX.jsx("div", { className: "core-health-detail", children: line.details.map((detail, index) => SP_JSX.jsx("div", { children: detail }, index)) })] }));
 }
 function HealthSection({ locale }) {
     const [answer, setAnswer] = _global_SP_REACT.useState(undefined);
@@ -61100,14 +61127,14 @@ function HealthSection({ locale }) {
     };
     const lines = answer ? healthLines(answer, locale) : [];
     const summary = answer ? healthSummary(answer, locale) : undefined;
-    return (SP_JSX.jsxs(PanelSection$2, { title: text.title, children: [SP_JSX.jsx("style", { children: style$1 }), SP_JSX.jsx(PanelSectionRow$2, { children: SP_JSX.jsxs(Focusable$2, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id)))] }) }), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$2, { children: SP_JSX.jsx(ButtonItem$1, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
+    return (SP_JSX.jsxs(PanelSection$3, { title: text.title, children: [SP_JSX.jsx("style", { children: style$2 }), SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsxs(Focusable$3, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id)))] }) }), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsx(ButtonItem$1, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
 }
 
 // Eternal Core: the Voice section of Quick Access > Core. Turns the agent's GET /voice/state and
 // POST /voice/party answers (GamingMode.Services/MarkIIIHost.Voice.cs) into what VoiceSection.tsx
 // shows, in Core's 12 languages. Self-contained on purpose: tests/coreVoiceSection.test.mjs loads
 // this file alone.
-const en = {
+const en$1 = {
     title: "Voice", agentDown: "Core's service is not answering.",
     mute: "Mute microphone", unmute: "Unmute microphone", live: "Microphone live", muted: "Microphone muted", none: "No microphone", unknown: "Microphone: unknown", partial: "Microphone partly muted", partialDetail: "One default microphone is muted, the other is live. Check which one your call uses.",
     mutedElsewhere: "Muted outside Core", hotkey: "Shortcut {keys}: bind it to a controller chord in Steam",
@@ -61117,8 +61144,8 @@ const en = {
     callsMic: "Calls mic", callsMicHint: "Windows' default microphone for calls: Xbox party, Discord.", windowsChoice: "Windows' choice", unnamed: "Microphone", tagCalls: "calls", tagApps: "games and apps", notConnected: "not connected", cmActive: "Connected and used for calls.", cmAbsent: "Not connected. Calls use Windows' default microphone.", cmChanged: "Windows uses another microphone for calls. Pick it again to use it.", cmFailed: "Windows did not let Core set the default. Pick it again, or set it in Windows' sound settings.", cmNotFound: "That microphone is no longer connected.",
     everything: "Use for everything", everythingHint: "Also the default for games and apps.", scope: "Mute", scopeAll: "Mute everything", scopeCalls: "Mute calls only", scopeAllHint: "Mutes the calls mic and the games and apps mic.", scopeCallsHint: "Mutes only the calls mic; the games and apps mic stays live. Windows mutes a microphone for every app at once, so an app that records from the calls mic itself (like OBS) is muted too.",
 };
-const copy = {
-    en,
+const copy$1 = {
+    en: en$1,
     it: {
         title: "Voce", agentDown: "Il servizio di Core non risponde.",
         mute: "Silenzia il microfono", unmute: "Riattiva il microfono", live: "Microfono attivo", muted: "Microfono silenziato", none: "Nessun microfono", unknown: "Microfono: sconosciuto", partial: "Microfono silenziato in parte", partialDetail: "Un microfono predefinito è silenziato, l'altro è attivo. Controlla quale usa la chiamata.",
@@ -61232,10 +61259,10 @@ const copy = {
 };
 function voiceCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy[language === "ua" ? "uk" : language] ?? en;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en[key] ?? key });
+    const table = copy$1[language === "ua" ? "uk" : language] ?? en$1;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$1[key] ?? key });
 }
-function fill(template, values) {
+function fill$1(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? values[name] : all));
 }
 function micView(answer, locale) {
@@ -61246,7 +61273,7 @@ function micView(answer, locale) {
     // button goes the way the agent's toggle does: the Communications default (the call mic) decides.
     const muted = state === "muted" || state === "partial";
     const unmutes = state === "muted" || (state === "partial" && mic?.communications === "muted");
-    const hotkey = typeof mic?.hotkey === "string" && mic.hotkey.trim() && mic.hotkey.length <= 40 ? fill(text.hotkey, { keys: mic.hotkey.trim() }) : "";
+    const hotkey = typeof mic?.hotkey === "string" && mic.hotkey.trim() && mic.hotkey.length <= 40 ? fill$1(text.hotkey, { keys: mic.hotkey.trim() }) : "";
     const detail = state === "partial" ? text.partialDetail : muted && mic?.coreMuted === false ? text.mutedElsewhere : hotkey;
     return { state, muted, line: text[state], button: unmutes ? text.unmute : text.mute, detail };
 }
@@ -61313,23 +61340,23 @@ function discordInstalled(inventory) {
 // another plugin's panel. The agent does the work (GamingMode.Services/MarkIIIHost.Voice.cs).
 // Below the button: the calls mic picker (makes a device Windows' default for calls, and for
 // everything with the toggle) and the mute scope (everything, the default, or calls only).
-const { PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1, Focusable: Focusable$1, DialogButton: DialogButton$1, DropdownItem: DropdownItem$1, ToggleField: ToggleField$1 } = _global_DFL;
-const BLACK = "#000000", CRIMSON = "#D7263D", STEEL = "#C9D1D9", GUNMETAL = "#1A1D21";
-const style = `
-.core-voice{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
-.core-voice .core-voice-button{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box;background:${GUNMETAL}!important;color:#fff!important;border-radius:6px!important;padding:12px 14px!important;display:flex;align-items:center;gap:12px;text-align:left;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important}
-.core-voice .core-voice-button.gpfocus,.core-voice .core-voice-button:focus-visible{outline:2px solid ${STEEL};outline-offset:-2px}
-.core-voice .core-voice-button.muted{background:${CRIMSON}!important}
+const { PanelSection: PanelSection$2, PanelSectionRow: PanelSectionRow$2, Focusable: Focusable$2, DialogButton: DialogButton$1, DropdownItem: DropdownItem$1, ToggleField: ToggleField$2 } = _global_DFL;
+const BLACK$1 = "#000000", CRIMSON$1 = "#D7263D", STEEL$1 = "#C9D1D9", GUNMETAL$1 = "#1A1D21";
+const style$1 = `
+.core-voice{background:${BLACK$1};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
+.core-voice .core-voice-button{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box;background:${GUNMETAL$1}!important;color:#fff!important;border-radius:6px!important;padding:12px 14px!important;display:flex;align-items:center;gap:12px;text-align:left;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important}
+.core-voice .core-voice-button.gpfocus,.core-voice .core-voice-button:focus-visible{outline:2px solid ${STEEL$1};outline-offset:-2px}
+.core-voice .core-voice-button.muted{background:${CRIMSON$1}!important}
 .core-voice-icon{width:28px;height:28px;flex:0 0 auto}
 .core-voice-text{display:flex;flex-direction:column;gap:2px;min-width:0}
 .core-voice-label{font-size:15px;font-weight:650;line-height:1.2}
-.core-voice-state{font-size:12px;color:${STEEL};line-height:1.3}
+.core-voice-state{font-size:12px;color:${STEEL$1};line-height:1.3}
 .core-voice .muted .core-voice-state{color:#fff}
-.core-voice-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL}}
-.core-voice-row{background:${GUNMETAL};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.core-voice-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL$1}}
+.core-voice-row{background:${GUNMETAL$1};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .core-voice-row-title{font-size:13px;color:#fff;font-weight:600}
-.core-voice-row-value{font-size:12px;color:${STEEL};text-align:right}
-.core-voice-note{padding:0 12px;font-size:12px;color:${CRIMSON}}
+.core-voice-row-value{font-size:12px;color:${STEEL$1};text-align:right}
+.core-voice-note{padding:0 12px;font-size:12px;color:${CRIMSON$1}}
 .core-voice-settings{display:flex;flex-direction:column;gap:6px;padding:0 4px}
 `;
 // Lucide Mic and MicOff (ISC; see quick_settings/THIRD-PARTY-NOTICES.md).
@@ -61436,9 +61463,222 @@ function VoiceSection({ locale }) {
     const mic = micView(answer, locale);
     const calls = callsMicView(answer, locale);
     const scope = scopeView(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$1, { title: text.title, children: [SP_JSX.jsx("style", { children: style }), SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsxs(Focusable$1, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$1, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs("div", { className: "core-voice-settings", children: [SP_JSX.jsx(DropdownItem$1, { label: text.callsMic, description: text.callsMicHint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: calls.options, selectedOption: calls.selected, onChange: (option) => { if (option.data !== calls.selected)
-                                        void pickCallsMic(option.data, calls.everything); } }), calls.line && SP_JSX.jsx("div", { className: "core-voice-hint", role: "status", children: calls.line }), callsNote && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: callsNote }), SP_JSX.jsx(ToggleField$1, { label: text.everything, description: text.everythingHint, bottomSeparator: "none", checked: calls.everything, disabled: busy || !answer || !calls.canToggleEverything, onChange: (enabled) => void pickCallsMic(calls.selected, enabled) }), SP_JSX.jsx(DropdownItem$1, { label: text.scope, description: scope.hint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: scope.options, selectedOption: scope.selected, onChange: (option) => { if (option.data !== scope.selected)
+    return (SP_JSX.jsxs(PanelSection$2, { title: text.title, children: [SP_JSX.jsx("style", { children: style$1 }), SP_JSX.jsx(PanelSectionRow$2, { children: SP_JSX.jsxs(Focusable$2, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$1, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs("div", { className: "core-voice-settings", children: [SP_JSX.jsx(DropdownItem$1, { label: text.callsMic, description: text.callsMicHint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: calls.options, selectedOption: calls.selected, onChange: (option) => { if (option.data !== calls.selected)
+                                        void pickCallsMic(option.data, calls.everything); } }), calls.line && SP_JSX.jsx("div", { className: "core-voice-hint", role: "status", children: calls.line }), callsNote && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: callsNote }), SP_JSX.jsx(ToggleField$2, { label: text.everything, description: text.everythingHint, bottomSeparator: "none", checked: calls.everything, disabled: busy || !answer || !calls.canToggleEverything, onChange: (enabled) => void pickCallsMic(calls.selected, enabled) }), SP_JSX.jsx(DropdownItem$1, { label: text.scope, description: scope.hint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: scope.options, selectedOption: scope.selected, onChange: (option) => { if (option.data !== scope.selected)
                                         void pickScope(option.data); } })] }), SP_JSX.jsxs(DialogButton$1, { className: "core-voice-button", disabled: !answer, onClick: openParty, children: [SP_JSX.jsx(PartyIcon, {}), SP_JSX.jsx("span", { className: "core-voice-text", children: SP_JSX.jsx("span", { className: "core-voice-label", children: text.party }) })] }), SP_JSX.jsx("div", { className: "core-voice-hint", children: text.partyHint }), note && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: note }), SP_JSX.jsxs("div", { className: "core-voice-row", children: [SP_JSX.jsx("span", { className: "core-voice-row-title", children: text.discord }), SP_JSX.jsx("span", { className: "core-voice-row-value", children: discord ? text.discordInstalled : text.discordMissing })] })] }) })] }));
+}
+
+// Eternal Core: the Stream mode section of Quick Access > Core. Turns the agent's GET /stream/state
+// answer (GamingMode.Services/MarkIIIHost.Stream.cs) into what StreamSection.tsx shows, in Core's 12
+// languages. Self-contained on purpose: tests/coreStreamMode.test.mjs loads this file alone.
+// Product names: the same in every language.
+const STREAM_SOURCES = { steam: "Steam Remote Play", steamvr: "SteamVR", sunshine: "Sunshine", apollo: "Apollo" };
+const en = {
+    title: "Stream mode", agentDown: "Core's service is not answering.", off: "Off", onDevice: "On · {device}", onSource: "On · {source}", forcedOn: "On · kept on by you", keep: "Keep TV out of it", keepHint: "Stream mode stays on even when Core sees no stream.", heldDetail: "Core does not wake the TV, switch its input or send it anything, and holds its notices.", offDetail: "Turns on by itself when this PC streams to another device.", audioVirtual: "Sound: on the stream ({device})", audioAlready: "Sound: already on the stream", audioMuted: "Sound: TV speaker muted", audioNone: "Sound: no TV speaker to mute", audioOff: "Sound: left as it is (turned off in settings)", apolloMissing: "Apollo: not installed (optional, see Core's guide)", apolloIdle: "Apollo: installed, not streaming", apolloDisplay: "Apollo: virtual display active", apolloNoDisplay: "Apollo: streaming without a virtual display",
+};
+const copy = {
+    en,
+    it: {
+        title: "Modalità streaming", agentDown: "Il servizio di Core non risponde.", off: "Spenta", onDevice: "Attiva · {device}", onSource: "Attiva · {source}", forcedOn: "Attiva · tenuta accesa da te", keep: "Lascia stare la TV", keepHint: "La modalità streaming resta attiva anche quando Core non vede uno streaming.", heldDetail: "Core non accende la TV, non cambia ingresso, non le invia nulla e trattiene i suoi avvisi.", offDetail: "Si attiva da sola quando questo PC trasmette a un altro dispositivo.", audioVirtual: "Audio: sullo streaming ({device})", audioAlready: "Audio: già sullo streaming", audioMuted: "Audio: altoparlante della TV silenziato", audioNone: "Audio: nessun altoparlante della TV da silenziare", audioOff: "Audio: lasciato com'è (disattivato nelle impostazioni)", apolloMissing: "Apollo: non installato (facoltativo, vedi la guida di Core)", apolloIdle: "Apollo: installato, nessuno streaming", apolloDisplay: "Apollo: schermo virtuale attivo", apolloNoDisplay: "Apollo: streaming senza schermo virtuale",
+    },
+    es: {
+        title: "Modo streaming", agentDown: "El servicio de Core no responde.", off: "Desactivado", onDevice: "Activado · {device}", onSource: "Activado · {source}", forcedOn: "Activado · lo mantienes tú", keep: "Deja la TV tranquila", keepHint: "El modo streaming sigue activado aunque Core no vea ninguna transmisión.", heldDetail: "Core no enciende la TV, no cambia su entrada ni le envía nada, y retiene sus avisos.", offDetail: "Se activa solo cuando este PC transmite a otro dispositivo.", audioVirtual: "Sonido: en la transmisión ({device})", audioAlready: "Sonido: ya en la transmisión", audioMuted: "Sonido: altavoz de la TV silenciado", audioNone: "Sonido: no hay altavoz de la TV que silenciar", audioOff: "Sonido: sin cambios (desactivado en los ajustes)", apolloMissing: "Apollo: no instalado (opcional, ver la guía de Core)", apolloIdle: "Apollo: instalado, sin transmitir", apolloDisplay: "Apollo: pantalla virtual activa", apolloNoDisplay: "Apollo: transmitiendo sin pantalla virtual",
+    },
+    fr: {
+        title: "Mode streaming", agentDown: "Le service de Core ne répond pas.", off: "Désactivé", onDevice: "Activé · {device}", onSource: "Activé · {source}", forcedOn: "Activé · maintenu par vous", keep: "Laisser la TV tranquille", keepHint: "Le mode streaming reste actif même si Core ne voit aucun streaming.", heldDetail: "Core n'allume pas la TV, ne change pas son entrée, ne lui envoie rien et retient ses avis.", offDetail: "S'active tout seul quand ce PC diffuse vers un autre appareil.", audioVirtual: "Son : sur le streaming ({device})", audioAlready: "Son : déjà sur le streaming", audioMuted: "Son : haut-parleur de la TV coupé", audioNone: "Son : aucun haut-parleur de TV à couper", audioOff: "Son : inchangé (désactivé dans les réglages)", apolloMissing: "Apollo : non installé (facultatif, voir le guide de Core)", apolloIdle: "Apollo : installé, pas de streaming", apolloDisplay: "Apollo : écran virtuel actif", apolloNoDisplay: "Apollo : streaming sans écran virtuel",
+    },
+    de: {
+        title: "Streaming-Modus", agentDown: "Der Dienst von Core antwortet nicht.", off: "Aus", onDevice: "An · {device}", onSource: "An · {source}", forcedOn: "An · von dir eingeschaltet", keep: "Fernseher in Ruhe lassen", keepHint: "Der Streaming-Modus bleibt an, auch wenn Core kein Streaming sieht.", heldDetail: "Core schaltet den Fernseher nicht ein, wechselt nicht den Eingang, sendet ihm nichts und hält seine Hinweise zurück.", offDetail: "Schaltet sich selbst ein, wenn dieser PC an ein anderes Gerät streamt.", audioVirtual: "Ton: im Stream ({device})", audioAlready: "Ton: schon im Stream", audioMuted: "Ton: Fernseherlautsprecher stumm", audioNone: "Ton: kein Fernseherlautsprecher zum Stummschalten", audioOff: "Ton: unverändert (in den Einstellungen aus)", apolloMissing: "Apollo: nicht installiert (optional, siehe Core-Anleitung)", apolloIdle: "Apollo: installiert, kein Streaming", apolloDisplay: "Apollo: virtueller Bildschirm aktiv", apolloNoDisplay: "Apollo: Streaming ohne virtuellen Bildschirm",
+    },
+    pt: {
+        title: "Modo streaming", agentDown: "O serviço do Core não responde.", off: "Desligado", onDevice: "Ligado · {device}", onSource: "Ligado · {source}", forcedOn: "Ligado · mantido por você", keep: "Deixe a TV em paz", keepHint: "O modo streaming continua ligado mesmo quando o Core não vê nenhuma transmissão.", heldDetail: "O Core não liga a TV, não troca a entrada, não envia nada a ela e segura os avisos.", offDetail: "Liga sozinho quando este PC transmite para outro dispositivo.", audioVirtual: "Som: na transmissão ({device})", audioAlready: "Som: já na transmissão", audioMuted: "Som: alto-falante da TV silenciado", audioNone: "Som: nenhum alto-falante da TV para silenciar", audioOff: "Som: sem mudanças (desligado nas configurações)", apolloMissing: "Apollo: não instalado (opcional, veja o guia do Core)", apolloIdle: "Apollo: instalado, sem transmitir", apolloDisplay: "Apollo: tela virtual ativa", apolloNoDisplay: "Apollo: transmitindo sem tela virtual",
+    },
+    uk: {
+        title: "Режим трансляції", agentDown: "Служба Core не відповідає.", off: "Вимкнено", onDevice: "Увімкнено · {device}", onSource: "Увімкнено · {source}", forcedOn: "Увімкнено · вами", keep: "Не чіпати телевізор", keepHint: "Режим трансляції лишається ввімкненим, навіть коли Core не бачить трансляції.", heldDetail: "Core не вмикає телевізор, не перемикає вхід, нічого йому не надсилає і притримує свої сповіщення.", offDetail: "Вмикається сам, коли цей ПК транслює на інший пристрій.", audioVirtual: "Звук: у трансляції ({device})", audioAlready: "Звук: уже в трансляції", audioMuted: "Звук: динамік телевізора вимкнено", audioNone: "Звук: немає динаміка телевізора, щоб вимкнути", audioOff: "Звук: без змін (вимкнено в налаштуваннях)", apolloMissing: "Apollo: не встановлено (необов'язково, див. посібник Core)", apolloIdle: "Apollo: встановлено, трансляції немає", apolloDisplay: "Apollo: віртуальний екран активний", apolloNoDisplay: "Apollo: трансляція без віртуального екрана",
+    },
+    ru: {
+        title: "Режим трансляции", agentDown: "Служба Core не отвечает.", off: "Выключен", onDevice: "Включён · {device}", onSource: "Включён · {source}", forcedOn: "Включён · вами", keep: "Не трогать телевизор", keepHint: "Режим трансляции остаётся включённым, даже когда Core не видит трансляции.", heldDetail: "Core не включает телевизор, не переключает вход, ничего ему не отправляет и придерживает свои уведомления.", offDetail: "Включается сам, когда этот ПК транслирует на другое устройство.", audioVirtual: "Звук: в трансляции ({device})", audioAlready: "Звук: уже в трансляции", audioMuted: "Звук: динамик телевизора выключен", audioNone: "Звук: нет динамика телевизора, чтобы выключить", audioOff: "Звук: без изменений (выключено в настройках)", apolloMissing: "Apollo: не установлен (необязательно, см. руководство Core)", apolloIdle: "Apollo: установлен, трансляции нет", apolloDisplay: "Apollo: виртуальный экран активен", apolloNoDisplay: "Apollo: трансляция без виртуального экрана",
+    },
+    zh: {
+        title: "串流模式", agentDown: "Core 的服务没有响应。", off: "关", onDevice: "开 · {device}", onSource: "开 · {source}", forcedOn: "开 · 由你保持开启", keep: "不要动电视", keepHint: "即使 Core 没有检测到串流，串流模式也保持开启。", heldDetail: "Core 不会开启电视、切换输入或向电视发送任何内容，并暂缓它的通知。", offDetail: "当这台电脑向其他设备串流时自动开启。", audioVirtual: "声音：在串流中（{device}）", audioAlready: "声音：已在串流中", audioMuted: "声音：电视扬声器已静音", audioNone: "声音：没有可静音的电视扬声器", audioOff: "声音：保持不变（已在设置中关闭）", apolloMissing: "Apollo：未安装（可选，见 Core 指南）", apolloIdle: "Apollo：已安装，未在串流", apolloDisplay: "Apollo：虚拟显示器已启用", apolloNoDisplay: "Apollo：串流中，没有虚拟显示器",
+    },
+    ja: {
+        title: "ストリーミングモード", agentDown: "Core のサービスが応答しません。", off: "オフ", onDevice: "オン · {device}", onSource: "オン · {source}", forcedOn: "オン · 手動でオン", keep: "テレビに触れない", keepHint: "Core がストリーミングを検出しなくても、ストリーミングモードをオンのままにします。", heldDetail: "Core はテレビの電源を入れず、入力を切り替えず、何も送らず、通知も控えます。", offDetail: "この PC が別のデバイスへストリーミングすると自動でオンになります。", audioVirtual: "音声：ストリーム側（{device}）", audioAlready: "音声：すでにストリーム側", audioMuted: "音声：テレビのスピーカーをミュート", audioNone: "音声：ミュートするテレビのスピーカーがありません", audioOff: "音声：変更なし（設定でオフ）", apolloMissing: "Apollo：未インストール（任意、Core のガイドを参照）", apolloIdle: "Apollo：インストール済み、ストリーミングなし", apolloDisplay: "Apollo：仮想ディスプレイ有効", apolloNoDisplay: "Apollo：仮想ディスプレイなしでストリーミング中",
+    },
+    ko: {
+        title: "스트리밍 모드", agentDown: "Core 서비스가 응답하지 않습니다.", off: "꺼짐", onDevice: "켜짐 · {device}", onSource: "켜짐 · {source}", forcedOn: "켜짐 · 직접 켬", keep: "TV 건드리지 않기", keepHint: "Core가 스트리밍을 감지하지 않아도 스트리밍 모드를 켜 둡니다.", heldDetail: "Core는 TV를 켜거나 입력을 바꾸거나 아무것도 보내지 않으며 알림도 보류합니다.", offDetail: "이 PC가 다른 기기로 스트리밍하면 자동으로 켜집니다.", audioVirtual: "소리: 스트림으로 ({device})", audioAlready: "소리: 이미 스트림으로", audioMuted: "소리: TV 스피커 음소거", audioNone: "소리: 음소거할 TV 스피커 없음", audioOff: "소리: 그대로 (설정에서 꺼짐)", apolloMissing: "Apollo: 설치되지 않음 (선택 사항, Core 가이드 참고)", apolloIdle: "Apollo: 설치됨, 스트리밍 안 함", apolloDisplay: "Apollo: 가상 디스플레이 사용 중", apolloNoDisplay: "Apollo: 가상 디스플레이 없이 스트리밍 중",
+    },
+    hi: {
+        title: "स्ट्रीम मोड", agentDown: "Core की सेवा जवाब नहीं दे रही है।", off: "बंद", onDevice: "चालू · {device}", onSource: "चालू · {source}", forcedOn: "चालू · आपने चालू रखा", keep: "टीवी को न छुएँ", keepHint: "Core को कोई स्ट्रीम न दिखे तब भी स्ट्रीम मोड चालू रहता है।", heldDetail: "Core टीवी को चालू नहीं करता, इनपुट नहीं बदलता, उसे कुछ नहीं भेजता और अपनी सूचनाएँ रोक कर रखता है।", offDetail: "जब यह पीसी किसी दूसरे डिवाइस पर स्ट्रीम करता है तो अपने आप चालू होता है।", audioVirtual: "आवाज़: स्ट्रीम पर ({device})", audioAlready: "आवाज़: पहले से स्ट्रीम पर", audioMuted: "आवाज़: टीवी स्पीकर म्यूट", audioNone: "आवाज़: म्यूट करने के लिए कोई टीवी स्पीकर नहीं", audioOff: "आवाज़: जैसी थी वैसी (सेटिंग में बंद)", apolloMissing: "Apollo: इंस्टॉल नहीं (वैकल्पिक, Core गाइड देखें)", apolloIdle: "Apollo: इंस्टॉल है, स्ट्रीम नहीं", apolloDisplay: "Apollo: वर्चुअल डिस्प्ले चालू", apolloNoDisplay: "Apollo: वर्चुअल डिस्प्ले के बिना स्ट्रीम",
+    },
+};
+function streamCopy(locale) {
+    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
+    const table = copy[language === "ua" ? "uk" : language] ?? en;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en[key] ?? key });
+}
+function fill(template, values) {
+    return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? values[name] : all));
+}
+function clean(value) {
+    return typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 64) : "";
+}
+function streamSourceLabel(source) {
+    return typeof source === "string" && STREAM_SOURCES[source] ? STREAM_SOURCES[source] : "";
+}
+function streamView(answer, locale) {
+    const text = streamCopy(locale);
+    if (!answer || typeof answer.active !== "boolean")
+        return { state: "unknown", line: answer === null ? text.agentDown : "…", detail: "", forced: false, audio: "", apollo: "" };
+    const forced = answer.forced === true;
+    const apollo = apolloLine(answer, text);
+    if (!answer.active)
+        return { state: "off", line: text.off, detail: text.offDetail, forced, audio: "", apollo };
+    const device = clean(answer.device), source = streamSourceLabel(answer.source);
+    const line = answer.detected ? (device ? fill(text.onDevice, { device }) : source ? fill(text.onSource, { source }) : text.forcedOn) : text.forcedOn;
+    return { state: "on", line, detail: text.heldDetail, forced, audio: audioLine(answer, text), apollo };
+}
+function audioLine(answer, text) {
+    const audio = answer.audio ?? {};
+    if (audio.enabled === false)
+        return text.audioOff;
+    switch (audio.mode) {
+        case "virtual": return fill(text.audioVirtual, { device: clean(audio.device) || "Steam Streaming Speakers" });
+        case "already": return text.audioAlready;
+        case "muted": return text.audioMuted;
+        case "none": return text.audioNone;
+        default: return "";
+    }
+}
+// Apollo is optional (Core never installs it); the line only says what Core sees.
+function apolloLine(answer, text) {
+    const apollo = answer.apollo ?? {};
+    if (apollo.installed !== true)
+        return text.apolloMissing;
+    if (apollo.running !== true)
+        return text.apolloIdle;
+    return apollo.virtualDisplay === true ? text.apolloDisplay : text.apolloNoDisplay;
+}
+
+// Eternal Core: the Stream mode section of Quick Access > Core. One row says whether Stream mode is on
+// (and to which device the PC streams, when known), a toggle forces it on ("Keep TV out of it"), and
+// short lines say what happens to the PC's sound and whether Apollo's virtual display is active. While
+// Stream mode is on, Core sends nothing to the TV (GamingMode.Services/MarkIIIHost.Stream.cs).
+const { PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1, Focusable: Focusable$1, ToggleField: ToggleField$1 } = _global_DFL;
+const BLACK = "#000000", CRIMSON = "#D7263D", STEEL = "#C9D1D9", GUNMETAL = "#1A1D21";
+const style = `
+.core-stream{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-stream-row{background:${GUNMETAL};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none;box-shadow:none;text-shadow:none}
+.core-stream-row.gpfocus,.core-stream-row:focus-visible{outline:2px solid ${STEEL};outline-offset:-2px}
+.core-stream-row.on{border-left:3px solid ${CRIMSON}}
+.core-stream-title{font-size:13px;color:#fff;font-weight:600;white-space:nowrap}
+.core-stream-value{font-size:12px;color:${STEEL};text-align:right;overflow:hidden;text-overflow:ellipsis}
+.core-stream-row.on .core-stream-value{color:${CRIMSON};font-weight:600}
+.core-stream-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL}}
+.core-stream-settings{display:flex;flex-direction:column;gap:6px;padding:0 4px}
+`;
+function StreamSection({ locale }) {
+    const [answer, setAnswer] = _global_SP_REACT.useState(undefined);
+    const [busy, setBusy] = _global_SP_REACT.useState(false);
+    const text = streamCopy(locale);
+    _global_SP_REACT.useEffect(() => {
+        let alive = true;
+        const load = () => {
+            call("core_stream_state")
+                .then(value => { if (alive)
+                setAnswer(value && typeof value.active === "boolean" ? value : null); })
+                .catch(() => { if (alive)
+                setAnswer(null); });
+        };
+        load();
+        const timer = window.setInterval(load, 4000);
+        return () => { alive = false; window.clearInterval(timer); };
+    }, []);
+    const keepTvOut = async (on) => {
+        setBusy(true);
+        try {
+            const value = await call("core_stream_keep_tv_out", on);
+            if (value && typeof value.active === "boolean")
+                setAnswer(value);
+        }
+        catch { /* The next poll shows the actual state. */ }
+        finally {
+            setBusy(false);
+        }
+    };
+    const view = streamView(answer, locale);
+    return (SP_JSX.jsxs(PanelSection$1, { title: text.title, children: [SP_JSX.jsx("style", { children: style }), SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsxs(Focusable$1, { className: "core-stream", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$1, { className: `core-stream-row${view.state === "on" ? " on" : ""}`, noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-stream-title", children: text.title }), SP_JSX.jsx("span", { className: "core-stream-value", role: "status", children: view.line })] }), view.detail && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.detail }), view.audio && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.audio }), SP_JSX.jsx("div", { className: "core-stream-settings", children: SP_JSX.jsx(ToggleField$1, { label: text.keep, description: text.keepHint, bottomSeparator: "none", checked: view.forced, disabled: busy || !answer, onChange: (enabled) => void keepTvOut(enabled) }) }), view.apollo && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.apollo })] }) })] }));
+}
+
+// Eternal Core: Stream mode, Steam's half. The Gaming Mode agent cannot see Steam Remote Play (Steam
+// Link, a Steam Frame or another Steam client streaming from this PC) from outside Steam, so this
+// frontend, which runs inside Steam, watches SteamClient.RemotePlay and tells the agent through the
+// backend (core_stream_report -> POST /stream/steam) on every change and every 30 s. The agent forgets
+// a report after 90 s, so a plugin that stops loading cannot leave the TV held.
+//
+// What Steam exposes is not documented by Valve. The shape used here comes from the community typings
+// in @decky/ui (globals/steam-client/RemotePlay.ts): RegisterForDevicesChanges hands over the paired
+// devices, each with clientName, status and unStreamingSessionID, which is non-zero while that device
+// streams from this PC. Remote Play Together guests are not in that list, so a friend joining a game
+// that is played on the TV does not turn Stream mode on. To be confirmed on the PC (docs/eternal/CORE-STREAM-MODE.md).
+// Self-contained on purpose: tests/coreStreamMode.test.mjs loads this file alone.
+function cleanName(value) {
+    if (typeof value !== "string")
+        return "";
+    return Array.from(value).filter(character => character >= " " && character !== "\u007f").join("").trim().slice(0, 64);
+}
+function sessionOf(device) {
+    const session = Number(device?.unStreamingSessionID);
+    return Number.isInteger(session) && session > 0 ? session : 0;
+}
+function steamStreamReport(devices) {
+    const list = Array.isArray(devices) ? devices : [];
+    const streaming = list.find(device => sessionOf(device) > 0);
+    return streaming ? { active: true, device: cleanName(streaming.clientName) } : { active: false, device: "" };
+}
+function installSteamStreamWatch(deps) {
+    let disposed = false, timer, devices = [], registration, last = "";
+    const interval = deps.interval ?? 30000;
+    function send(force) {
+        if (disposed)
+            return;
+        const report = steamStreamReport(devices);
+        const key = `${report.active}|${report.device}`;
+        if (!force && key === last)
+            return;
+        last = key;
+        try {
+            Promise.resolve(deps.report(report)).catch(() => { });
+        }
+        catch { /* Same. */ }
+    }
+    try {
+        const remote = deps.remotePlay();
+        if (typeof remote?.RegisterForDevicesChanges === "function") {
+            registration = remote.RegisterForDevicesChanges((list) => {
+                devices = Array.isArray(list) ? list : [];
+                send(false);
+            });
+        }
+    }
+    catch {
+        registration = undefined;
+    }
+    function tick() {
+        if (disposed)
+            return;
+        send(true);
+        timer = deps.schedule(tick, interval);
+    }
+    tick();
+    return () => {
+        disposed = true;
+        deps.cancel(timer);
+        try {
+            registration?.unregister?.();
+        }
+        catch { /* Steam may already be gone. */ }
+    };
 }
 
 const { useState, useEffect, useMemo } = _global_SP_REACT;
@@ -62318,7 +62558,7 @@ function Content({ origin = "decky" }) {
         return () => { alive = false; stopStatus(); };
     }, []);
     const gameAppId = steamAppId(window.SteamUIStore?.MainRunningAppID ?? _global_DFL.Router?.MainRunningAppID);
-    return (SP_JSX.jsx(SP_JSX.Fragment, { children: SP_JSX.jsx(ControlCenter, { locale: locale, origin: origin, homeTitle: local.controlCentre, gameAppId: gameAppId, gamingMode: status?.currentMode === "Gaming", downloads: SP_JSX.jsx(StoreDownloadsQam, { locale: locale }), frameTiming: origin === "qam" && status && gameAppId !== 0 ? SP_JSX.jsx(GameFrameTiming, { appId: gameAppId, locale: locale }, gameAppId) : null, session: SP_JSX.jsxs(SP_JSX.Fragment, { children: [status && SP_JSX.jsx(VoiceSection, { locale: locale }), status && SP_JSX.jsx(UpdateNightCard, { locale: locale }), status && SP_JSX.jsx(HealthSection, { locale: locale }), !status && SP_JSX.jsx(PanelSection, { children: SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsxs("div", { role: "status", style: { margin: "8px 0 16px", padding: "16px", borderRadius: 10,
+    return (SP_JSX.jsx(SP_JSX.Fragment, { children: SP_JSX.jsx(ControlCenter, { locale: locale, origin: origin, homeTitle: local.controlCentre, gameAppId: gameAppId, gamingMode: status?.currentMode === "Gaming", downloads: SP_JSX.jsx(StoreDownloadsQam, { locale: locale }), frameTiming: origin === "qam" && status && gameAppId !== 0 ? SP_JSX.jsx(GameFrameTiming, { appId: gameAppId, locale: locale }, gameAppId) : null, session: SP_JSX.jsxs(SP_JSX.Fragment, { children: [status && SP_JSX.jsx(VoiceSection, { locale: locale }), status && SP_JSX.jsx(StreamSection, { locale: locale }), status && SP_JSX.jsx(UpdateNightCard, { locale: locale }), status && SP_JSX.jsx(HealthSection, { locale: locale }), !status && SP_JSX.jsx(PanelSection, { children: SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsxs("div", { role: "status", style: { margin: "8px 0 16px", padding: "16px", borderRadius: 10,
                                     background: "rgba(255,255,255,.055)", border: "1px solid rgba(255,255,255,.12)" }, children: [SP_JSX.jsx("div", { style: { fontSize: 16, fontWeight: 650, marginBottom: 8 }, children: optional.Title }), SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, opacity: .8 }, children: optional.AgentRequired })] }) }) }), SP_JSX.jsxs(PanelSection, { children: [SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsx(ButtonItem, { disabled: !dashboardEnabled || !status, bottomSeparator: "none", layout: "below", onClick: () => openDashboard(), children: "Core Dashboard" }) }), SP_JSX.jsxs(PanelSectionRow, { children: [SP_JSX.jsx("style", { children: `
             @keyframes phShortcutPulse { 0%,100% { opacity:.62; transform:scale(.96); } 50% { opacity:1; transform:scale(1); } }
             @keyframes phShortcutTravel { 0%,100% { transform:translateX(-3px); opacity:.35; } 50% { transform:translateX(3px); opacity:1; } }
@@ -62388,6 +62628,13 @@ var index = definePlugin(() => {
     // Mark III: prove to the agent that Decky's UI loaded, and keep a Core Repair tile in the library.
     const stopCoreHeartbeat = installOptionalHook("Core heartbeat", () => installCoreHeartbeat({
         beat: () => call("core_heartbeat"),
+        schedule: (callback, delay) => window.setTimeout(callback, delay),
+        cancel: timer => window.clearTimeout(timer),
+    }));
+    // Stream mode: tell the agent when Steam streams from this PC (Remote Play, Steam Link, a Steam Frame).
+    const stopSteamStreamWatch = installOptionalHook("Core stream watch", () => installSteamStreamWatch({
+        remotePlay: () => window.SteamClient?.RemotePlay,
+        report: report => call("core_stream_report", report.active, report.device),
         schedule: (callback, delay) => window.setTimeout(callback, delay),
         cancel: timer => window.clearTimeout(timer),
     }));
@@ -62469,7 +62716,7 @@ var index = definePlugin(() => {
             const cleanups = [
                 stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
                 stopUpdateNotice,
-                stopCoreHeartbeat, () => window.clearTimeout(coreRepairTileTimer),
+                stopCoreHeartbeat, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
                 stopDeckyIpcRecovery,
                 uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
                 uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,

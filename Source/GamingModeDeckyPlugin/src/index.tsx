@@ -47,6 +47,8 @@ import { installCoreHeartbeat, ensureCoreRepairTile, type CoreRepairShortcut } f
 import { UpdateNightCard } from "./UpdateNightCard";
 import { HealthSection } from "./HealthSection";
 import { VoiceSection } from "./VoiceSection";
+import { StreamSection } from "./StreamSection";
+import { installSteamStreamWatch } from "./streamMode";
 
 const { useState, useEffect, useMemo } = React;
 let hapticSettingsWrite = Promise.resolve();
@@ -964,6 +966,7 @@ function Content({ origin = "decky" }: { origin?: "qam" | "decky" }) {
     <><ControlCenter locale={locale} origin={origin} homeTitle={local.controlCentre} gameAppId={gameAppId} gamingMode={status?.currentMode === "Gaming"} downloads={<StoreDownloadsQam locale={locale} />}
       frameTiming={origin === "qam" && status && gameAppId !== 0 ? <GameFrameTiming key={gameAppId} appId={gameAppId} locale={locale} /> : null} session={<>
       {status && <VoiceSection locale={locale} />}
+      {status && <StreamSection locale={locale} />}
       {status && <UpdateNightCard locale={locale} />}
       {status && <HealthSection locale={locale} />}
       {!status && <PanelSection><PanelSectionRow>
@@ -1140,6 +1143,13 @@ export default definePlugin(() => {
     schedule: (callback, delay) => window.setTimeout(callback, delay),
     cancel: timer => window.clearTimeout(timer as number),
   }));
+  // Stream mode: tell the agent when Steam streams from this PC (Remote Play, Steam Link, a Steam Frame).
+  const stopSteamStreamWatch = installOptionalHook("Core stream watch", () => installSteamStreamWatch({
+    remotePlay: () => (window as any).SteamClient?.RemotePlay,
+    report: report => controlCall<[boolean, string], unknown>("core_stream_report", report.active, report.device),
+    schedule: (callback, delay) => window.setTimeout(callback, delay),
+    cancel: timer => window.clearTimeout(timer as number),
+  }));
   const coreRepairTileTimer = window.setTimeout(() => {
     void ensureCoreRepairTile({
       info: () => controlCall<[], CoreRepairShortcut>("core_repair_shortcut"),
@@ -1217,7 +1227,7 @@ export default definePlugin(() => {
       const cleanups = [
         stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
         stopUpdateNotice,
-        stopCoreHeartbeat, () => window.clearTimeout(coreRepairTileTimer),
+        stopCoreHeartbeat, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
         stopDeckyIpcRecovery,
         uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
         uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,

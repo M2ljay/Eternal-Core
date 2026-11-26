@@ -17,7 +17,8 @@ namespace GamingMode.Services;
 // Eternal Core Mark III in the agent: TV control, the Steam update hold, the Decky health
 // check, Core Repair's actions, the wake sequence and their HTTP endpoints. Core Health (the
 // Quick Access health section and its notices) is in MarkIIIHost.Health.cs; Core Voice (microphone
-// mute and the Xbox party button) in MarkIIIHost.Voice.cs.
+// mute and the Xbox party button) in MarkIIIHost.Voice.cs; Stream mode (the TV left alone while the PC
+// streams to another device) in MarkIIIHost.Stream.cs.
 //
 // Fail-safe by construction: every feature runs beside Gaming Mode, never in front of it.
 // Each loop iteration, power event and endpoint catches its own failures, logs them and
@@ -50,7 +51,7 @@ internal sealed partial class MarkIIIHost : IDisposable
 	{
 		_paths = paths; _store = store; _manager = manager; _processTools = processTools; _antiCheat = antiCheat; _logger = logger;
 		_pairing = new DpapiTvPairingStore(paths.ConfigDirectory, logger);
-		_tv = new TvController(() => _store.LoadConfig().Gaming.Tv ?? new TvSettings(), _pairing, logger.Info, NetworkMac.Resolve);
+		_tv = new TvController(() => _store.LoadConfig().Gaming.Tv ?? new TvSettings(), _pairing, logger.Info, NetworkMac.Resolve, hold: StreamHold);
 		_holdPath = Path.Combine(paths.ConfigDirectory, "steam-update-hold.json");
 		_healthPath = Path.Combine(paths.ConfigDirectory, "core-health.json");
 		_toastsPath = Path.Combine(paths.ConfigDirectory, "quiet-toasts.json");
@@ -73,7 +74,11 @@ internal sealed partial class MarkIIIHost : IDisposable
 		{
 			try
 			{
-				var controller = new TvController(() => tv, new DpapiTvPairingStore(paths.ConfigDirectory, logger), logger.Info, NetworkMac.Resolve);
+				// Stream mode: "Keep TV out of it", or a stream the agent can already see (or, after going
+				// down mid-stream, a short wait for it to come back). Checked again before the input switch.
+				(string? held, Func<string?> hold) = await StreamBootHoldAsync(paths, logger).ConfigureAwait(false);
+				if (held is not null) { logger.Info($"TV at power-on: Stream mode ({held}); nothing sent to the TV."); return; }
+				var controller = new TvController(() => tv, new DpapiTvPairingStore(paths.ConfigDirectory, logger), logger.Info, NetworkMac.Resolve, hold: hold);
 				TvResult result = await controller.WakeAndSwitchAsync(TimeSpan.FromSeconds(40), CancellationToken.None).ConfigureAwait(false);
 				logger.Info($"TV at power-on: {result.Outcome}.");
 				// The picture appears a moment after the input switch.
@@ -89,6 +94,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 	{
 		try { StartVoice(); }
 		catch (Exception error) { _logger.Error("Voice: could not start; the microphone mute and party button are unavailable.", error); }
+		try { StartStream(); }
+		catch (Exception error) { _logger.Error("Stream mode: could not start; the TV is handled as usual until the next check.", error); }
 		_ = Task.Run(() => LoopAsync(stopping));
 		// SystemEvents needs a thread it can own: subscribing from a pool (MTA) thread makes
 		// it create its own hidden window and message loop.
@@ -129,6 +136,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 			catch (Exception error) { _logger.Error("Mark III: Windows banner switch failed this round.", error); }
 			try { CheckVoice(); }
 			catch (Exception error) { _logger.Error("Voice: microphone check failed this round.", error); }
+			try { CheckStream(); }
+			catch (Exception error) { _logger.Error("Stream mode: check failed this round.", error); }
 			if (++tick % 12 != 0) continue; // once a minute
 			try { CheckSteamHold(); }
 			catch (Exception error) { _logger.Error("Mark III: Steam update hold check failed this round.", error); }
@@ -201,6 +210,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 	private void Notice(string key)
 	{
 		if (!InGamingMode() || GameRunning()) { _logger.Info($"Core notice \"{key}\" not shown: not in Big Picture or a game is running."); return; }
+		// Streaming to another device: the notice would land on a TV nobody is watching (or someone else is).
+		if (StreamHoldsNotices($"Core notice \"{key}\"")) return;
 		CoreNoticeOverlay.Show(CoreText.Get(Language(), key), TimeSpan.FromSeconds(10), () => InGamingMode() && !GameRunning(), _logger);
 	}
 
@@ -613,7 +624,11 @@ internal sealed partial class MarkIIIHost : IDisposable
 	{
 		try
 		{
-			if (e.Mode == PowerModes.Suspend) TurnTvOffIfShowingCore("sleep", TimeSpan.FromMilliseconds(1800));
+			if (e.Mode == PowerModes.Suspend)
+			{
+				try { RememberStreamAtSleep(); } catch (Exception error) { _logger.Error("Stream mode: could not note the stream before sleep.", error); }
+				TurnTvOffIfShowingCore("sleep", TimeSpan.FromMilliseconds(1800));
+			}
 			else if (e.Mode == PowerModes.Resume) OnResume();
 		}
 		catch (Exception error) { _logger.Error("Mark III power event failed.", error); }
@@ -621,6 +636,7 @@ internal sealed partial class MarkIIIHost : IDisposable
 
 	private void OnSessionEnding(object? sender, SessionEndingEventArgs e)
 	{
+		try { RememberStreamAtSleep(); } catch (Exception error) { _logger.Error("Stream mode: could not note the stream before shutdown.", error); }
 		try { TurnTvOffIfShowingCore(e.Reason == SessionEndReasons.SystemShutdown ? "shutdown" : "sign-out", TimeSpan.FromMilliseconds(2500)); }
 		catch (Exception error) { _logger.Error("Mark III shutdown handling failed.", error); }
 	}
@@ -648,18 +664,29 @@ internal sealed partial class MarkIIIHost : IDisposable
 		_logger.Info($"Mark III: resumed from sleep (Gaming Mode: {gaming}).");
 		try { ReconcileMic("resume"); }
 		catch (Exception error) { _logger.Error("Voice: microphone check after resume failed.", error); }
-		if (!gaming) return;
+		bool streamedAtSleep;
+		lock (_streamSync) streamedAtSleep = _streamSettings.StreamingAtSleep;
+		if (!gaming) { ClearStreamAtSleep(); return; }
+		StreamState streamNow = CheckStream();
 		TvSettings tv = config.Gaming.Tv ?? new TvSettings();
 		Task tvReady = tv.Enabled && tv.TurnOnWithCore
 			? Task.Run(async () =>
 			{
+				// Stream mode: a stream running now, or one that ended with the sleep and comes back within
+				// the grace period, keeps the TV as it is (the hold inside TvController checks again).
+				string? held = await StreamWakeHoldAsync().ConfigureAwait(false);
+				if (held is not null) { _logger.Info($"TV on wake: Stream mode ({held}); nothing sent to the TV."); return; }
 				TvResult result = await _tv.WakeAndSwitchAsync(TimeSpan.FromSeconds(30), CancellationToken.None).ConfigureAwait(false);
 				_logger.Info($"TV on wake: {result.Outcome}.");
 				if (result.Outcome == TvOutcome.Done) await Task.Delay(1200).ConfigureAwait(false);
 			})
 			: Task.CompletedTask;
+		// No TV wake to make the stream decision: the note from before the sleep has done its job.
+		if (!(tv.Enabled && tv.TurnOnWithCore)) ClearStreamAtSleep();
 		var decision = BootSequencePolicy.Decide(BootSequenceTrigger.Wake, config.Gaming.Splash.BootSequenceEnabled, config.Gaming.Splash.BootSoundEnabled,
 			config.Gaming.Splash.Enabled, gaming, RunningAppId() != 0, _antiCheat.Engaged);
+		if (decision.Play && (streamNow.Active || streamedAtSleep))
+			decision = decision with { Play = false, Reason = streamNow.Active ? "Stream mode is on" : "the PC slept while streaming" };
 		if (!decision.Play) { _logger.Info($"Wake sequence skipped: {decision.Reason}."); return; }
 		// A separate splash service: the boot splash's foreground guard belongs to the boot.
 		var splash = new SplashScreenService(_logger);
@@ -775,5 +802,6 @@ internal sealed partial class MarkIIIHost : IDisposable
 			Local(context) ? Tv(await _tv.TurnOffNowAsync(context.RequestAborted).ConfigureAwait(false)) : Results.StatusCode(403)));
 		MapHealth(app);
 		MapVoice(app);
+		MapStream(app);
 	}
 }

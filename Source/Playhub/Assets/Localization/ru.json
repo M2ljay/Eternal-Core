@@ -1525,5 +1525,6 @@
   "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "Короткое уведомление в Gaming Mode, когда резервное копирование не удаётся две ночи подряд, диск сервера сообщает о проблеме или сервер молчит больше полутора суток. Не чаще раза в день и никогда во время игры.",
   "Controlla ora": "Проверить сейчас",
   "Tutto a posto.": "Всё в порядке.",
-  "Cose da controllare: {0}": "Что проверить: {0}"
+  "Cose da controllare: {0}": "Что проверить: {0}",
+  "Modalità streaming attiva: Core lascia stare la TV.": "Режим трансляции включён: Core не трогает телевизор."
 }

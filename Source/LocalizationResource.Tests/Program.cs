@@ -169,7 +169,9 @@ string[] eternalMarkIII =
     "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server d\u00e0 problemi o se il server tace da pi\u00f9 di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.",
     "Controlla ora",
     "Tutto a posto.",
-    "Cose da controllare: {0}"
+    "Cose da controllare: {0}",
+    // Stream mode: the TV buttons while the PC streams elsewhere (MainWindow.MarkIII.cs, ShowTvOutcome).
+    "Modalit\u00e0 streaming attiva: Core lascia stare la TV."
 };
 foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
 {

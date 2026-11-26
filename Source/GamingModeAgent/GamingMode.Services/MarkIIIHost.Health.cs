@@ -108,7 +108,9 @@ internal sealed partial class MarkIIIHost
 		bool pending = WindowsRestartPending();
 		TvSettings tv = gaming.Tv ?? new TvSettings();
 		bool paired = _pairing.ClientKey is not null;
-		bool? tvReachable = tv.Enabled && paired ? await TvReachableAsync(tv).ConfigureAwait(false) : null;
+		// Stream mode: not even a plain connect reaches the TV while it is held.
+		var stream = StreamHealth();
+		bool? tvReachable = tv.Enabled && paired && !stream.Active ? await TvReachableAsync(tv).ConfigureAwait(false) : null;
 		string? systemDrive = Path.GetPathRoot(Environment.SystemDirectory);
 		long? free = null, total = null;
 		try { if (systemDrive is not null) { var info = new DriveInfo(systemDrive); free = info.AvailableFreeSpace; total = info.TotalSize; } }
@@ -124,6 +126,8 @@ internal sealed partial class MarkIIIHost
 			PcDrive = systemDrive, PcFreeBytes = free, PcTotalBytes = total,
 			CoreVersion = EternalRelease.Version, LatestCoreVersion = known ? update?.LatestVersion : null, CoreUpdateAvailable = updateAvailable,
 			Microphone = mic.State, CallsMicName = mic.CallsMicName, CallsMicStatus = mic.CallsMicStatus,
+			StreamActive = stream.Active, StreamForced = stream.Forced, StreamDetected = stream.Detected, StreamSource = stream.Source, StreamDevice = stream.Device,
+			StreamVirtualDisplay = stream.VirtualDisplay, TvHeld = stream.Active,
 		});
 	}
 
@@ -136,7 +140,8 @@ internal sealed partial class MarkIIIHost
 		Dictionary<string, HealthAlertEntry> before = HealthAlertPolicy.Load(_healthAlertsPath);
 		Dictionary<string, HealthAlertEntry> ledger = HealthAlertPolicy.Track(report.Problems, before);
 		IReadOnlyList<HealthProblem> due = HealthAlertPolicy.Due(report.Problems, ledger, now);
-		if (due.Count > 0 && _store.LoadConfig().Gaming.CoreHealthAlertsEnabled && InGamingMode() && !GameRunning())
+		// While streaming the notice waits (not marked shown), so it appears once Core is back on the TV.
+		if (due.Count > 0 && _store.LoadConfig().Gaming.CoreHealthAlertsEnabled && InGamingMode() && !GameRunning() && !StreamHoldsNotices("Core Health notice"))
 		{
 			string key = HealthAlertPolicy.NoticeKey(due)!;
 			_logger.Info($"Core Health notice: {string.Join(", ", due.Select(problem => problem.Id))}.");

@@ -459,3 +459,23 @@ User guide and research: `docs/eternal/CORE-VOICE.md`.
   `DashboardShortcutService.HotkeyParser`; reapplied when `micMuteHotkey` changes.
 - Top bar: `main.py` injects `_topbar_mic_script` into Steam's CEF pages with the date badge's transport
   (`Runtime.evaluate` over the local DevTools port), on each change and every 20 s while muted.
+
+### Stream mode
+
+User guide, detection research (verified vs inferred) and Apollo findings: `docs/eternal/CORE-STREAM-MODE.md`.
+
+- Rules: `CoreStreamMode.cs` (pure, `Source/CoreStreamMode.Tests`): sources (Steam Remote Play from the plugin with a
+  90 s lifetime; Sunshine/Apollo from their log while `sunshine.exe` runs; SteamVR from `vrserver.exe`), the wake
+  decision, and `StreamAudioPolicy` (default moved to Steam Streaming Speakers only for Steam Remote Play, otherwise
+  the TV's HDMI endpoint muted; record written before any change, exact release, pending restores).
+- The TV hold lives in `TvController` itself (`hold` delegate, outcome `StreamMode`), so every sending path is covered
+  in one place: boot/wake (checked again before each input switch attempt), sleep/shutdown turn-off, the page's
+  buttons and pairing. A hold that throws counts as held. `WakeTvForBootAsync` uses a probe of its own (no plugin yet)
+  and waits up to 15 s when the PC went down mid-stream (`streamingAtSleep`); `OnResume` does the same with the full
+  check. Health skips its TCP probe of the TV while held.
+- `MarkIIIHost.Stream.cs` checks every 5 s from the Mark III loop and on demand (TV hold, endpoints, Health);
+  `Notice()` and the Health alert path return early while Stream mode is on (alerts are not marked shown).
+- Endpoints: `GET /stream/state`, `POST /stream/keep-tv-out`, `POST /stream/steam`. Settings and records:
+  `stream-settings.json`, `stream-audio.json` in `%APPDATA%\GamingMode`, written only by the agent.
+- Plugin: `src/streamMode.ts` (`SteamClient.RemotePlay.RegisterForDevicesChanges`, community-typed, undocumented by
+  Valve), `src/StreamSection.tsx`, `src/streamReport.ts`; `main.py` `core_stream_*`.

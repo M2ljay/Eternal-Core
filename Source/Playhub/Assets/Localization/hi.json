@@ -1516,5 +1516,6 @@
   "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "जब बैकअप लगातार दो रात विफल हो, सर्वर की ड्राइव में समस्या हो या सर्वर डेढ़ दिन से ज़्यादा चुप रहे, तब Gaming Mode में एक छोटी सूचना। दिन में ज़्यादा से ज़्यादा एक बार, गेम के दौरान कभी नहीं।",
   "Controlla ora": "अभी जाँचें",
   "Tutto a posto.": "सब ठीक है।",
-  "Cose da controllare: {0}": "जाँचने योग्य चीज़ें: {0}"
+  "Cose da controllare: {0}": "जाँचने योग्य चीज़ें: {0}",
+  "Modalità streaming attiva: Core lascia stare la TV.": "स्ट्रीम मोड चालू है: Core टीवी को नहीं छूता।"
 }

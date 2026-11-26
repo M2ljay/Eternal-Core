@@ -15,6 +15,9 @@ namespace GamingMode.Services;
 // - Wake/boot into Gaming Mode: only a TV that was off is taken over (Wake-on-LAN, wait,
 //   switch to Core's HDMI). A TV already on is in use, so it is left on whatever it shows.
 // - Sleep/shutdown: turn the TV off only while it shows Core's HDMI (ShouldTurnOff).
+// - Stream mode (CoreStreamMode.cs): while the PC streams to another device, or "Keep TV out of it"
+//   is on, nothing at all is sent to the TV: no Wake-on-LAN, no input switch, no turn-off, no pairing
+//   prompt. Every sending entry point asks the hold first and logs why it stopped.
 // - Every step is time-boxed and failures are logged without the client key. Nothing
 //   here ever blocks Gaming Mode: callers run it beside the mode switch, not before it.
 internal interface ITvPairingStore
@@ -25,11 +28,11 @@ internal interface ITvPairingStore
 	void Clear();
 }
 
-internal enum TvOutcome { Done, Disabled, NotConfigured, NotPaired, Unreachable, PromptTimedOut, Rejected, CertificateChanged, SkippedOtherInput, LeftOnInUse, Failed }
+internal enum TvOutcome { Done, Disabled, NotConfigured, NotPaired, Unreachable, PromptTimedOut, Rejected, CertificateChanged, SkippedOtherInput, LeftOnInUse, StreamMode, Failed }
 
 internal readonly record struct TvResult(TvOutcome Outcome, string? Detail = null, string? MacAddress = null)
 {
-	internal bool Ok => Outcome is TvOutcome.Done or TvOutcome.SkippedOtherInput or TvOutcome.LeftOnInUse;
+	internal bool Ok => Outcome is TvOutcome.Done or TvOutcome.SkippedOtherInput or TvOutcome.LeftOnInUse or TvOutcome.StreamMode;
 }
 
 internal sealed class TvController
@@ -39,14 +42,29 @@ internal sealed class TvController
 	private readonly Action<string> _log;
 	private readonly Func<string, byte[]?> _resolveMac;
 	private readonly int _plainPort;
+	private readonly Func<string?> _hold;
 	private readonly SemaphoreSlim _gate = new(1, 1);
 
+	// hold: why the TV must be left alone right now (Stream mode), or null.
 	internal TvController(Func<TvSettings> settings, ITvPairingStore pairing, Action<string> log,
-		Func<string, byte[]?>? resolveMac = null, int plainPort = LgWebOsProtocol.PlainPort)
+		Func<string, byte[]?>? resolveMac = null, int plainPort = LgWebOsProtocol.PlainPort, Func<string?>? hold = null)
 	{
 		_settings = settings; _pairing = pairing; _log = log;
 		_resolveMac = resolveMac ?? (_ => null);
 		_plainPort = plainPort;
+		_hold = hold ?? (() => null);
+	}
+
+	// True (and one log line) when Stream mode holds the TV; what names the action that was skipped.
+	private bool Held(string what)
+	{
+		string? reason;
+		// A hold that cannot answer keeps the TV alone: the TV must never be disturbed by mistake.
+		try { reason = _hold(); }
+		catch { reason = "the Stream mode check failed"; }
+		if (reason is null) return false;
+		_log($"TV: Stream mode ({reason}); nothing sent to the TV ({what}).");
+		return true;
 	}
 
 	internal static string CoreInput(TvSettings settings) => LgWebOsProtocol.NormalizeInput(settings.CoreInput) ?? LgWebOsProtocol.DefaultCoreInput;
@@ -57,6 +75,7 @@ internal sealed class TvController
 	{
 		TvSettings settings = _settings();
 		if (!settings.Enabled || !settings.TurnOnWithCore) return new(TvOutcome.Disabled);
+		if (Held("wake and input switch")) return new(TvOutcome.StreamMode);
 		using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
 		deadline.CancelAfter(budget);
 		try
@@ -80,6 +99,8 @@ internal sealed class TvController
 			// The TV needs a few seconds after Wake-on-LAN before its websocket answers.
 			while (true)
 			{
+				// A stream that starts while the TV is waking still keeps the input where it is.
+				if (Held("input switch after wake")) return new(TvOutcome.StreamMode);
 				TvResult result = await SwitchCoreInputCoreAsync(settings, TimeSpan.FromSeconds(3), deadline.Token).ConfigureAwait(false);
 				if (result.Outcome != TvOutcome.Unreachable) return result;
 				await Task.Delay(1500, deadline.Token).ConfigureAwait(false);
@@ -98,6 +119,7 @@ internal sealed class TvController
 		if (!settings.Enabled || !settings.TurnOffWithCore) return new(TvOutcome.Disabled);
 		if (string.IsNullOrWhiteSpace(settings.Address)) return new(TvOutcome.NotConfigured);
 		if (_pairing.ClientKey is not { } key) return new(TvOutcome.NotPaired);
+		if (Held("turn-off on sleep/shutdown")) return new(TvOutcome.StreamMode);
 		string input = CoreInput(settings);
 		using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
 		deadline.CancelAfter(budget);
@@ -132,6 +154,8 @@ internal sealed class TvController
 	{
 		TvSettings settings = _settings();
 		if (string.IsNullOrWhiteSpace(settings.Address)) return new(TvOutcome.NotConfigured);
+		// Pairing puts a prompt on the TV's screen.
+		if (Held("pairing prompt")) return new(TvOutcome.StreamMode);
 		await _gate.WaitAsync(cancellation).ConfigureAwait(false);
 		try
 		{
@@ -164,6 +188,7 @@ internal sealed class TvController
 	{
 		TvSettings settings = _settings();
 		if (!LgWebOsProtocol.TryParseMac(settings.MacAddress, out byte[] mac)) return new(TvOutcome.NotConfigured);
+		if (Held("turn on")) return new(TvOutcome.StreamMode);
 		await LgWebOsClient.SendWakeAsync(mac, settings.Address, cancellation).ConfigureAwait(false);
 		return new(TvOutcome.Done);
 	}
@@ -173,6 +198,7 @@ internal sealed class TvController
 		TvSettings settings = _settings();
 		if (string.IsNullOrWhiteSpace(settings.Address)) return new(TvOutcome.NotConfigured);
 		if (_pairing.ClientKey is null) return new(TvOutcome.NotPaired);
+		if (Held("input switch")) return new(TvOutcome.StreamMode);
 		return await SwitchCoreInputCoreAsync(settings, TimeSpan.FromSeconds(5), cancellation).ConfigureAwait(false);
 	}
 
@@ -182,6 +208,7 @@ internal sealed class TvController
 		TvSettings settings = _settings();
 		if (string.IsNullOrWhiteSpace(settings.Address)) return new(TvOutcome.NotConfigured);
 		if (_pairing.ClientKey is not { } key) return new(TvOutcome.NotPaired);
+		if (Held("turn off")) return new(TvOutcome.StreamMode);
 		return await WithSessionAsync(settings.Address!, key, TimeSpan.FromSeconds(5), cancellation, async session =>
 		{
 			var off = await session.RequestAsync(LgWebOsProtocol.TurnOffMessage, TimeSpan.FromSeconds(5), cancellation).ConfigureAwait(false);

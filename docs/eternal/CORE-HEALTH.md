@@ -11,7 +11,8 @@ attention: 2"), then a row for each part. Press **A** on a row to show its detai
 | RomM | same | RomM did not answer the server's own check |
 | Windows restart | this PC | (information only: "Pending" when Windows wants a restart) |
 | Update night | this PC | updates are waiting and no 5:00 restart is scheduled (schedule it from the card above) |
-| TV | Core's TV control | TV control is on but the TV is not paired or does not answer (checked with a plain connection, never woken) |
+| TV | Core's TV control | TV control is on but the TV is not paired or does not answer (checked with a plain connection, never woken). While Stream mode is on it says *Left alone (Stream mode)* and is not checked at all |
+| Streaming | Stream mode | (information only: "Idle", "Streaming to <device>" or "TV kept out by you"; details show the source and Apollo's virtual display. See [CORE-STREAM-MODE.md](CORE-STREAM-MODE.md)) |
 | Microphone | this PC | "Partly muted" (one default microphone muted, the other live; in crimson). Otherwise information only: "Muted" in crimson, "Live" or "No microphone", followed by the calls mic's name or "calls mic not connected" when one is chosen. A calls mic that is not connected is never a problem (it may be on another PC): no attention, no notice. No battery level: Windows reports none for a USB audio receiver. See [CORE-VOICE.md](CORE-VOICE.md) |
 | PC disk space | this PC | under 10% or under 20 GB free on the Windows drive |
 | Core update | Core's last update check | (information only: "Core 3.4.0 available") |
@@ -24,7 +25,8 @@ With **Health alerts** on (the default), Core shows one short notice over Big Pi
 - the server's drive reports Warning or Unhealthy,
 - the server's status is older than a day and a half.
 
-At most once a day per problem, never during a game. The notice is Core's own, like the plugin notice, so
+At most once a day per problem, never during a game, and not while Core streams to another device (the notice waits
+until the stream ends). The notice is Core's own, like the plugin notice, so
 Quiet Windows' *Hide Windows notifications* does not hide it. **Dismiss alert** (under the Health rows) silences a
 problem until it changes: a new failure streak, a drive going from Warning to Unhealthy, or a new stale file alerts
 again. A problem that clears and comes back alerts again too.

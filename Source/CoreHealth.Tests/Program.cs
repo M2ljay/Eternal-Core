@@ -116,6 +116,16 @@ ServerStatus refused = status with { BackupResult = "failed", BackupMessage = to
 report = CoreHealthPolicy.Evaluate(Base(server: refused with { WrittenAt = now }));
 Check(Row(report, "server-backup") is { Level: HealthLevel.Attention, State: "failed" } row2 && (string?)row2.Data["message"] == tooOld, "verdict: Proton CLI too old is a failed backup with its message");
 
+// ---------- Stream mode ----------
+report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }));
+Check(Row(report, "streaming") is { Level: HealthLevel.Ok, State: "idle" }, "verdict: not streaming is idle");
+report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { StreamActive = true, StreamDetected = true, StreamSource = "steam", StreamDevice = "Steam Frame", TvHeld = true, TvReachable = null });
+Check(Row(report, "streaming") is { Level: HealthLevel.Info, State: "streaming" } streamRow && (string?)streamRow.Data["device"] == "Steam Frame" && (string?)streamRow.Data["source"] == "steam",
+	"verdict: streaming to a device is information");
+Check(Row(report, "tv") is { Level: HealthLevel.Info, State: "stream-mode" } && report.Attention == 0, "verdict: a held TV is not probed and not a problem");
+report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { StreamActive = true, StreamForced = true, TvHeld = true });
+Check(Row(report, "streaming").State == "kept-out" && Row(report, "streaming").Data["source"] is null, "verdict: Keep TV out of it without a stream");
+
 // ---------- alerts ----------
 var failing = new HealthProblem("backup-failing", "server-backup", "backup|2026-11-20T10:00:00.0000000+00:00", "health.backupFailing");
 var drive = new HealthProblem("server-drive", "server-drive", "drive|warning", "health.driveWarning");

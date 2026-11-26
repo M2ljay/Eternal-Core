@@ -1534,5 +1534,6 @@
   "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "Un court avis en Gaming Mode quand la sauvegarde échoue deux nuits de suite, que le disque du serveur signale un problème ou que le serveur est silencieux depuis plus d'un jour et demi. Au plus une fois par jour, jamais pendant un jeu.",
   "Controlla ora": "Vérifier maintenant",
   "Tutto a posto.": "Tout va bien.",
-  "Cose da controllare: {0}": "À vérifier : {0}"
+  "Cose da controllare: {0}": "À vérifier : {0}",
+  "Modalità streaming attiva: Core lascia stare la TV.": "Le mode streaming est actif : Core laisse la TV tranquille."
 }

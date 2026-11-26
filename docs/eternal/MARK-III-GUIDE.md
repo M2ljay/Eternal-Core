@@ -55,6 +55,15 @@ default for calls, and again whenever it is plugged back in; **Mute** chooses be
 everything (the default) and calls only. Details, what Core cannot do (party invites) and a
 checklist for the TV: [CORE-VOICE.md](CORE-VOICE.md).
 
+## Stream mode: the TV stays out of it
+
+While Core streams a game to another device (the Steam Frame, the ROG Flow Z13, the AYN handhelds through Steam
+Link or Moonlight), Core does not wake the TV, switch its input, turn it off or send it anything, keeps the PC's
+own sound off it and holds its notices, so someone watching the Shield on the TV is never disturbed. It turns on by
+itself; Quick Access > Core > **Stream mode** shows it (*On · Steam Frame*) and has **Keep TV out of it** to force
+it on. Health has a *Streaming* row. What Core can and cannot see, the sound rules, Apollo and a checklist:
+[CORE-STREAM-MODE.md](CORE-STREAM-MODE.md).
+
 ## Screensaver: Core Starfield
 
 Steam's screensaver list offers **Core Starfield** (it replaces Playhub Circles; pick it once
@@ -158,9 +167,10 @@ night.
 
 ## Test day: one pass at the TV
 
-One checklist for the combined test build (Mark III, Core Health, Voice and the Core theme), in the order you would
-do it. The per-feature checklists in [CORE-HEALTH.md](CORE-HEALTH.md#at-the-tv) and
-[CORE-VOICE.md](CORE-VOICE.md#on-the-tv-checklist) are folded in here. Logs: `%APPDATA%\GamingMode\agent.log`.
+One checklist for the combined test build (Mark III, Core Health, Voice, Stream mode and the Core theme), in the order
+you would do it. The per-feature checklists in [CORE-HEALTH.md](CORE-HEALTH.md#at-the-tv),
+[CORE-VOICE.md](CORE-VOICE.md#on-the-tv-checklist) and [CORE-STREAM-MODE.md](CORE-STREAM-MODE.md#on-the-tv-checklist)
+are folded in here. Logs: `%APPDATA%\GamingMode\agent.log`.
 
 ### Before, at the desk (mouse and keyboard)
 
@@ -180,7 +190,11 @@ do it. The per-feature checklists in [CORE-HEALTH.md](CORE-HEALTH.md#at-the-tv) 
 7. **Calls mic:** plug the DJI receiver into Core and check that Windows sound settings > Input lists it (note its
    name, for example *Wireless Microphone RX*). Install a recording app you can leave open at the TV (OBS, or Windows'
    Sound Recorder) and set it to record from the **default** microphone.
-8. Shut the PC down and turn the TV off.
+8. **Stream mode:** make sure each device can already stream from Core (Steam Link or Remote Play on the Z13 and an
+   AYN, Moonlight or Artemis paired with Sunshine or Apollo on the other AYN, the Steam Frame paired through its USB
+   adapter and SteamVR). Open Windows sound settings > Output once and note the TV's HDMI device and whether *Steam
+   Streaming Speakers* is listed. If you use Apollo, install it instead of Sunshine, not beside it.
+9. Shut the PC down and turn the TV off.
 
 ### At the TV
 
@@ -253,4 +267,22 @@ do it. The per-feature checklists in [CORE-HEALTH.md](CORE-HEALTH.md#at-the-tv) 
    *Uri (gameRunning)* (no keystroke sent). Note whether the Game Bar opens over the game.
 10. **Anti-cheat:** launch Call of Duty. No notice or boot sequence appears over it; in Quick Access > Core the party
     button says it is not available and the mic button still works.
-11. **Shutdown** from Big Picture with the TV on Core's HDMI: the TV turns off.
+11. **Stream mode** (ask for the TV to show the Shield on its own input for this part). For each device: start a
+    stream, then check that the TV **did not switch input**, plays **no sound from the PC**, the sound plays **on the
+    device**, and Quick Access > Core > Stream mode says *On · <device>* (Health: *Streaming to …*; *TV: Left alone*).
+    End the stream: *Stream mode: off* in `agent.log`, Windows' default playback device and the TV speaker's mute are
+    back as they were, and `%APPDATA%\GamingMode\stream-audio.json` is gone.
+    - **Steam Frame, PC VR** (USB adapter): *On · SteamVR*; sound in the headset.
+    - **Steam Frame, a flat game**: note whether the row says *On · Steam Frame* (Remote Play) or *On · SteamVR*.
+    - **ROG Flow Z13** (Steam Link / Remote Play): *On · <Z13's name>*.
+    - **AYN Odin 2 Portal / Thor, Moonlight or Artemis**: *On · <device>* with Apollo, *On · Moonlight* with Sunshine.
+      With Apollo, *Apollo: virtual display active* and the handheld's own resolution.
+    - **AYN with Steam Link**: as the Z13.
+    - **Sleep and wake mid-stream:** sleep the PC from the stream, wake it from the device ("wake PC"): the TV does
+      not switch to Core. With the TV off, a stream does not turn it on.
+    - **Sound with the TV on Core's HDMI:** a Moonlight stream with *Play audio on host* on: the TV stays silent and
+      the handheld keeps its sound (this is the one sound rule that could not be checked from sources).
+    - **Keep TV out of it** on, nothing streaming: *Switch to HDMI* on the LG webOS card says *Stream mode is on: Core
+      leaves the TV alone.* Switch it off again.
+    - While streaming, no Core notice appears on the TV.
+12. **Shutdown** from Big Picture with the TV on Core's HDMI: the TV turns off.

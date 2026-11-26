@@ -1517,5 +1517,6 @@
   "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "バックアップが 2 晩続けて失敗したとき、サーバーのドライブが問題を報告したとき、またはサーバーから 1 日半以上応答がないときに、Gaming Mode で短いお知らせを表示します。1 日に 1 回まで、ゲーム中は表示しません。",
   "Controlla ora": "今すぐ確認",
   "Tutto a posto.": "問題ありません。",
-  "Cose da controllare: {0}": "確認が必要な項目: {0}"
+  "Cose da controllare: {0}": "確認が必要な項目: {0}",
+  "Modalità streaming attiva: Core lascia stare la TV.": "ストリーミングモードがオンです。Core はテレビを操作しません。"
 }
