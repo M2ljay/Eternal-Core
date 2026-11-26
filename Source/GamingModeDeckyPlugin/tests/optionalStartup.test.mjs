@@ -50,6 +50,7 @@ function fixture(failing, runtime = {}) {
     './powerMenuPatch':{installPowerMenuPatch:install('power menu')},
     './deckyIpcRecovery':{installDeckyIpcRecovery:install('ipc recovery')},
     './playhubUpdateNotice':{installPlayhubUpdateNotice:install('update notice')},
+    './coreHealth':{installCoreHeartbeat:install('core heartbeat'),ensureCoreRepairTile:()=>Promise.resolve('present')},
     './steamNavigationReturn':steamNavigationReturn,
     './steamFocusEvents':steamFocusEvents,
     './steamModeCommands':steamModeCommands,
@@ -66,8 +67,8 @@ function fixture(failing, runtime = {}) {
   vm.runInNewContext(compiled,{exports:{},require:name=>modules[name]??{}, window,document:{documentElement:{lang:'en'}},navigator:{language:'en'},console:{warn:(...items)=>warnings.push(items),log:noop,debug:noop},Promise,Set,performance,Date:{now:runtime.now??Date.now}});
   return {factory,calls,disposed,warnings,tick:()=>tick()};
 }
-const integrations = ['store library','digital stores portal','store game actions','update notice','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','home news','haptics','virtual controller name','qam','power menu'];
-for (const name of ['store library','digital stores portal','store game actions','update notice','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','haptics','virtual controller name','power menu']) {
+const integrations = ['store library','digital stores portal','store game actions','update notice','core heartbeat','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','home news','haptics','virtual controller name','qam','power menu'];
+for (const name of ['store library','digital stores portal','store game actions','update notice','core heartbeat','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','haptics','virtual controller name','power menu']) {
   test(`Unavailable ${name} hook does not prevent the real plugin and QAM from loading`, async () => {
     const f = fixture(name);
     const plugin = f.factory();

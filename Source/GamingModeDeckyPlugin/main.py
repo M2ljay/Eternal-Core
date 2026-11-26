@@ -186,6 +186,24 @@ class Plugin(QuickSettingsPlugin):
             self._store_library_module = module
         return await module.request(method, args)
 
+    # Eternal Core Mark III: Decky health heartbeat and the Core Repair tile (see src/coreHealth.ts).
+    async def core_heartbeat(self):
+        return await asyncio.to_thread(self._agent_local, "POST", "/decky/heartbeat")
+
+    async def core_repair_shortcut(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/core/repair/shortcut")
+
+    @staticmethod
+    def _agent_local(method, path, *, timeout=2.5, maximum=4096):
+        try:
+            request = urllib.request.Request("http://127.0.0.1:47991" + path, data=b"" if method == "POST" else None, method=method)
+            client = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            with client.open(request, timeout=timeout) as response:
+                data = json.loads(response.read(maximum))
+            return data if isinstance(data, dict) else {}
+        except (OSError, ValueError):
+            return {}
+
     async def get_playhub_update_notice(self):
         return await asyncio.to_thread(self._native_session_post, "/playhub/update", {}, timeout=35, maximum=2048)
 

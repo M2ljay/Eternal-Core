@@ -43,6 +43,7 @@ import { installControlledQamFocus } from "./controlledQamIntegration";
 import { createSteamConfiguratorReturn, type SteamConfiguratorReturn } from "./steamConfiguratorReturn";
 import { installLivePerformance } from "./quickSettings/livePerformanceRuntime";
 import { installPlayhubUpdateNotice, updateNoticeBody, type UpdateNotice } from "./playhubUpdateNotice";
+import { installCoreHeartbeat, ensureCoreRepairTile, type CoreRepairShortcut } from "./coreHealth";
 
 const { useState, useEffect, useMemo } = React;
 let hapticSettingsWrite = Promise.resolve();
@@ -1127,6 +1128,23 @@ export default definePlugin(() => {
     schedule: (callback, delay) => window.setTimeout(callback, delay),
     cancel: timer => window.clearTimeout(timer as number),
   }));
+  // Mark III: prove to the agent that Decky's UI loaded, and keep a Core Repair tile in the library.
+  const stopCoreHeartbeat = installOptionalHook("Core heartbeat", () => installCoreHeartbeat({
+    beat: () => controlCall<[], unknown>("core_heartbeat"),
+    schedule: (callback, delay) => window.setTimeout(callback, delay),
+    cancel: timer => window.clearTimeout(timer as number),
+  }));
+  const coreRepairTileTimer = window.setTimeout(() => {
+    void ensureCoreRepairTile({
+      info: () => controlCall<[], CoreRepairShortcut>("core_repair_shortcut"),
+      apps: () => (window as any).SteamClient?.Apps,
+      overview: appId => (window as any).appStore?.GetAppOverviewByAppID?.(appId),
+      shortcuts: () => (window as any).appStore?.allApps ?? [],
+      read: () => window.localStorage.getItem("core.repair-tile.appid"),
+      write: value => window.localStorage.setItem("core.repair-tile.appid", value),
+      sleep: ms => new Promise(resolve => window.setTimeout(resolve, ms)),
+    }).then(result => { if (result !== "present") console.info(`[Core] Core Repair tile: ${result}`); });
+  }, 15000);
   const stopDeckyIpcRecovery = installOptionalHook("Decky IPC recovery", () => installDeckyIpcRecovery({
     scan: () => controlCall<[], IpcFailure[]>("get_decky_ipc_failures"),
     claim: failure => controlCall<[string, string, string], { ok: boolean; name?: string }>("claim_decky_ipc_recovery", failure.folder, failure.session, failure.log),
@@ -1193,6 +1211,7 @@ export default definePlugin(() => {
       const cleanups = [
         stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
         stopUpdateNotice,
+        stopCoreHeartbeat, () => window.clearTimeout(coreRepairTileTimer),
         stopDeckyIpcRecovery,
         uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
         uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,

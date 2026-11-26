@@ -60555,6 +60555,99 @@ function updateNoticeBody(locale, version) {
     return (copy[locale] ?? copy.en).replace("{version}", version);
 }
 
+// Eternal Core Mark III: Decky health heartbeat and the Core Repair tile.
+//
+// Heartbeat: this frontend runs inside Steam, its backend inside Decky. Every 30 s the
+// frontend asks the backend to tell the Gaming Mode agent "plugins are loaded". When the
+// beats stop (or never start) after Big Picture is up, the agent shows a calm notice and
+// points to Core Repair. Decky stays an extra: nothing here can affect Steam.
+//
+// Core Repair tile: a non-Steam shortcut to "GamingMode.exe repair", added once while
+// Decky works, so it is still in the library on the day Decky does not load.
+// Self-contained on purpose: the tests load this file alone.
+function installCoreHeartbeat(deps) {
+    let disposed = false, timer, busy = false;
+    const interval = deps.interval ?? 30000;
+    function tick() {
+        if (disposed)
+            return;
+        if (!busy) {
+            busy = true;
+            let pending;
+            try {
+                pending = Promise.resolve(deps.beat());
+            }
+            catch {
+                pending = Promise.resolve();
+            }
+            pending.catch(() => { }).finally(() => { busy = false; });
+        }
+        timer = deps.schedule(tick, interval);
+    }
+    tick();
+    return () => { disposed = true; deps.cancel(timer); };
+}
+const SHORTCUT_TYPE = 1073741824;
+const SETTERS = ["SetShortcutName", "SetShortcutExe", "SetShortcutStartDir", "SetShortcutLaunchOptions"];
+async function ensureCoreRepairTile(deps) {
+    try {
+        const info = await deps.info();
+        const name = info?.name, exe = info?.exe, startDir = info?.startDir, launch = info?.launchOptions;
+        if (name !== "Core Repair" || typeof exe !== "string" || !/^[A-Za-z]:\\.+\.exe$/i.test(exe)
+            || typeof startDir !== "string" || launch !== "repair")
+            return "unavailable";
+        let remembered;
+        try {
+            remembered = Number(deps.read() ?? "");
+        }
+        catch {
+            remembered = undefined;
+        }
+        if (remembered && Number.isInteger(remembered) && deps.overview(remembered)?.display_name === name)
+            return "present";
+        let list = [];
+        try {
+            list = deps.shortcuts() ?? [];
+        }
+        catch {
+            list = [];
+        }
+        const existing = list.find(app => app?.display_name === name && app?.app_type === SHORTCUT_TYPE && Number.isInteger(app?.appid));
+        if (existing) {
+            try {
+                deps.write(String(existing.appid));
+            }
+            catch { /* Memory is optional. */ }
+            return "present";
+        }
+        const apps = deps.apps();
+        if (!apps || typeof apps.AddShortcut !== "function" || SETTERS.some(method => typeof apps[method] !== "function"))
+            return "unavailable";
+        const created = await Promise.resolve(apps.AddShortcut(name, exe, startDir, launch));
+        if (!Number.isInteger(created) || created <= 0 || created > 0xffffffff)
+            return "failed";
+        const appId = created;
+        // Steam ignores most AddShortcut arguments until the overview exists; then set each.
+        for (let attempt = 0; attempt < 40 && !deps.overview(appId); attempt++)
+            await deps.sleep(250);
+        const values = {
+            SetShortcutName: name, SetShortcutExe: exe, SetShortcutStartDir: startDir, SetShortcutLaunchOptions: launch,
+        };
+        for (const method of SETTERS) {
+            await Promise.resolve(apps[method](appId, values[method]));
+            await deps.sleep(50);
+        }
+        try {
+            deps.write(String(appId));
+        }
+        catch { /* Memory is optional. */ }
+        return "created";
+    }
+    catch {
+        return "failed";
+    }
+}
+
 const { useState, useEffect, useMemo } = _global_SP_REACT;
 let hapticSettingsWrite = Promise.resolve();
 function saveHapticSettings(changes) {
@@ -61499,6 +61592,24 @@ var index = definePlugin(() => {
         schedule: (callback, delay) => window.setTimeout(callback, delay),
         cancel: timer => window.clearTimeout(timer),
     }));
+    // Mark III: prove to the agent that Decky's UI loaded, and keep a Core Repair tile in the library.
+    const stopCoreHeartbeat = installOptionalHook("Core heartbeat", () => installCoreHeartbeat({
+        beat: () => call("core_heartbeat"),
+        schedule: (callback, delay) => window.setTimeout(callback, delay),
+        cancel: timer => window.clearTimeout(timer),
+    }));
+    const coreRepairTileTimer = window.setTimeout(() => {
+        void ensureCoreRepairTile({
+            info: () => call("core_repair_shortcut"),
+            apps: () => window.SteamClient?.Apps,
+            overview: appId => window.appStore?.GetAppOverviewByAppID?.(appId),
+            shortcuts: () => window.appStore?.allApps ?? [],
+            read: () => window.localStorage.getItem("core.repair-tile.appid"),
+            write: value => window.localStorage.setItem("core.repair-tile.appid", value),
+            sleep: ms => new Promise(resolve => window.setTimeout(resolve, ms)),
+        }).then(result => { if (result !== "present")
+            console.info(`[Core] Core Repair tile: ${result}`); });
+    }, 15000);
     const stopDeckyIpcRecovery = installOptionalHook("Decky IPC recovery", () => installDeckyIpcRecovery({
         scan: () => call("get_decky_ipc_failures"),
         claim: failure => call("claim_decky_ipc_recovery", failure.folder, failure.session, failure.log),
@@ -61565,6 +61676,7 @@ var index = definePlugin(() => {
             const cleanups = [
                 stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
                 stopUpdateNotice,
+                stopCoreHeartbeat, () => window.clearTimeout(coreRepairTileTimer),
                 stopDeckyIpcRecovery,
                 uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
                 uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,
