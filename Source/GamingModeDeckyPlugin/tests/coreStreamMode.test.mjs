@@ -130,8 +130,8 @@ test("the section and the backend: Core palette, validated calls, wired in", () 
   assert.match(source, /ToggleField label=\{text\.keep\}/);
   assert.match(source, /"core_stream_keep_tv_out"/);
   const backend = readFileSync(new URL("../main.py", import.meta.url), "utf8");
-  assert.match(backend, /async def core_stream_keep_tv_out\(self, on\):\n\s+if not isinstance\(on, bool\):/);
-  assert.match(backend, /async def core_stream_report\(self, active, device\):\n\s+if not isinstance\(active, bool\) or not isinstance\(device, str\):/);
+  assert.match(backend, /async def core_stream_keep_tv_out\(self, on\):\r?\n\s+if not isinstance\(on, bool\):/);
+  assert.match(backend, /async def core_stream_report\(self, active, device\):\r?\n\s+if not isinstance\(active, bool\) or not isinstance\(device, str\):/);
   assert.match(backend, /character\.isprintable\(\)\)\[:64\]/, "device names are trimmed before they reach the agent");
   assert.match(backend, /"\/stream\/steam\?" \+ query/);
   const index = readFileSync(new URL("../src/index.tsx", import.meta.url), "utf8");
