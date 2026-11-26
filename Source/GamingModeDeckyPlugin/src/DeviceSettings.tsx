@@ -35,7 +35,7 @@ const style = `
 .ph-device-identity{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:12px;border-radius:9px;background:rgba(255,255,255,.07)}
 .ph-device-symbol{display:grid;place-items:center;width:42px;height:42px;border-radius:8px;background:rgba(255,255,255,.09);font-size:22px}
 .ph-device-title{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;font-size:15px;line-height:1.35}
-.ph-device-experimental{font-size:10px;font-weight:600;color:#ffe467;background:#2b2819;padding:2px 5px;border-radius:4px}
+.ph-device-experimental{font-size:10px;font-weight:600;color:#FF5A6E;background:#1A1D21;padding:2px 5px;border-radius:4px}
 .ph-device-detail,.ph-device-hint{font-size:12px;line-height:1.45;color:#c5cbd1}
 .ph-controls .ph-device-settings .ph-device-hint{margin:0;opacity:1}
 .ph-device-status{display:grid;gap:8px;margin:0}
