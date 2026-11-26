@@ -1,0 +1,33 @@
+/* Core by Eternal: tab rows (Library and the game page), styled like Quick Access.
+   Readable module names; CSS Loader translates them for the running Steam build. */
+
+/* The row: black, with a thin gunmetal rule under it. */
+.gamepadtabbedpage_TabHeaderRowWrapper::before {
+    backdrop-filter: none !important;
+    background: #000000 !important;
+}
+.gamepadtabbedpage_TabRow {
+    box-shadow: inset 0 -1px 0 #1A1D21 !important;
+}
+
+/* Tabs sit flat in steel; the open one is gunmetal with a 3px crimson underline. */
+.gamepadtabbedpage_Tab {
+    background: transparent !important;
+    color: #C9D1D9 !important;
+}
+.gamepadtabbedpage_Tab.gamepadtabbedpage_Selected {
+    background: #1A1D21 !important;
+    color: #FFFFFF !important;
+    border-radius: 6px 6px 0 0 !important;
+    box-shadow: inset 0 -3px 0 #D7263D !important;
+}
+/* A tab that has the controller's focus also gets a thin white ring, so focus and
+   "open" never look the same. */
+.gamepadtabbedpage_Tab.gpfocus {
+    background: #1A1D21 !important;
+    color: #FFFFFF !important;
+    box-shadow: inset 0 -3px 0 #D7263D, inset 0 0 0 2px #FFFFFF !important;
+}
+.gamepadtabbedpage_TabCount {
+    color: #C9D1D9 !important;
+}

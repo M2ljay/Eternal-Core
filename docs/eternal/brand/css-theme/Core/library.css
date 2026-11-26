@@ -1,0 +1,46 @@
+/* Core by Eternal: Library. Readable module names; CSS Loader translates them for the
+   running Steam build. Tab row styling is in tabs.css. */
+
+/* Black grid. */
+.gamepadlibrary_GamepadLibrary,
+.allcollections_Container {
+    background: #000000 !important;
+}
+
+/* No glow behind the focused cover. */
+.appgrid_LibraryImageBackgroundGlow {
+    opacity: 0 !important;
+}
+
+/* Group and collection headers: steel small caps; their rules gunmetal. */
+.appgrid_AppGridSectionLabel,
+.gamepadlibrary_CollectionHeader,
+.allcollections_Label {
+    color: #C9D1D9 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+}
+.appgrid_Rule,
+.allcollections_Rule {
+    background: #1A1D21 !important;
+    border-color: #1A1D21 !important;
+}
+
+/* Focused cover: thin 3px crimson ring, held still, lifted 6px, as on Home. */
+.gamepadlibrary_GamepadLibrary .appportrait_LibraryItemBox {
+    transition: translate 0.15s ease-out;
+}
+.gamepadlibrary_GamepadLibrary .appportrait_LibraryItemBox.Focusable:is(:focus, .gpfocus) {
+    outline: 3px solid #D7263D !important;
+    outline-offset: 0 !important;
+    animation: none !important;
+    translate: 0 -6px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .gamepadlibrary_GamepadLibrary .appportrait_LibraryItemBox,
+    .gamepadlibrary_GamepadLibrary .appportrait_LibraryItemBox.Focusable:is(:focus, .gpfocus) {
+        transition: none !important;
+        translate: none !important;
+    }
+}

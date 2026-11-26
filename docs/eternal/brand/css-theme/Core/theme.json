@@ -1,9 +1,9 @@
 {
   "name": "Core",
   "author": "Eternal",
-  "version": "v1.0",
+  "version": "v1.1",
   "manifest_version": 9,
-  "description": "Core by Eternal for Steam Big Picture: the Core wordmark on the Steam menu, crimson focus and tab markers, and notifications on AMOLED black with a crimson edge. Colours: crimson #D7263D, steel #C9D1D9, gunmetal #1A1D21, black #000. Tidy-ups (off by default) replace ten small themes: crimson controls, clear top bar, fewer labels, still focus, round avatar, tighter storage page.",
+  "description": "Core by Eternal for Steam Big Picture: the Core wordmark on the Steam menu, crimson focus and tab markers, and notifications on AMOLED black with a crimson edge. Screens (each on by default, each can be switched off): context menus, Home, the game page and the Library in black, gunmetal and crimson. Colours: crimson #D7263D, steel #C9D1D9, gunmetal #1A1D21, black #000. Tidy-ups (off by default) replace ten small themes: crimson controls, clear top bar, fewer labels, still focus, round avatar, tighter storage page.",
   "inject": {
     "menu.css": [
       "SP",
@@ -41,6 +41,72 @@
           ]
         }
       ]
+    },
+    "Context menus": {
+      "default": "On",
+      "type": "dropdown",
+      "values": {
+        "On": {
+          "contextmenu.css": [
+            "SP",
+            "MainMenu",
+            "QuickAccess"
+          ]
+        },
+        "Off": {}
+      }
+    },
+    "Home": {
+      "default": "On",
+      "type": "dropdown",
+      "values": {
+        "On": {
+          "home.css": [
+            "SP",
+            "MainMenu",
+            "QuickAccess"
+          ]
+        },
+        "Off": {}
+      }
+    },
+    "Game page": {
+      "default": "On",
+      "type": "dropdown",
+      "values": {
+        "On": {
+          "gamepage.css": [
+            "SP",
+            "MainMenu",
+            "QuickAccess"
+          ],
+          "tabs.css": [
+            "SP",
+            "MainMenu",
+            "QuickAccess"
+          ]
+        },
+        "Off": {}
+      }
+    },
+    "Library": {
+      "default": "On",
+      "type": "dropdown",
+      "values": {
+        "On": {
+          "library.css": [
+            "SP",
+            "MainMenu",
+            "QuickAccess"
+          ],
+          "tabs.css": [
+            "SP",
+            "MainMenu",
+            "QuickAccess"
+          ]
+        },
+        "Off": {}
+      }
     },
     "Tidy-ups": {
       "default": "Off",
