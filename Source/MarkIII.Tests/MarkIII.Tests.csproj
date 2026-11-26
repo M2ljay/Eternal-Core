@@ -10,10 +10,13 @@
     <!-- Eternal Core Mark III: the platform-neutral halves only. The Windows wiring
          (WPF, DPAPI, power events, XInput) is compiled by the agent build in CI. -->
     <Compile Include="../GamingModeAgent/GamingMode.Services/BootSequencePolicy.cs" Link="BootSequencePolicy.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Models/TvSettings.cs" Link="TvSettings.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/LgWebOsProtocol.cs" Link="LgWebOsProtocol.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/LgWebOsClient.cs" Link="LgWebOsClient.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/TvControl.cs" Link="TvControl.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="TvTests.cs" />
-    <Compile Remove="SteamHoldTests.cs" />
+    <Compile Remove="SteamHoldTests.cs" />
     <Compile Remove="DeckyTests.cs" />
   </ItemGroup>
 </Project>

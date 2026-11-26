@@ -94,5 +94,14 @@ public sealed class GamingSettings
 
 	public GamingSplashSettings Splash { get; set; } = new GamingSplashSettings();
 
+	// ---------- MARK III (Eternal Core) ----------
+	// Defaults must match the app's Playhub/Models/GamingModeConfig.cs.
+
+	// LG webOS TV control: see TvSettings and GamingMode.Services/TvControl.cs.
+	public TvSettings Tv { get; set; } = new TvSettings();
+
+	// The calm notice over Big Picture when Decky's UI did not load (DeckyHeartbeat.cs).
+	public bool DeckyHealthNoticeEnabled { get; set; } = true;
+
 	public bool ManageAudio { get; set; }
 }
