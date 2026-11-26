@@ -6,7 +6,8 @@ export type HealthLevel = "ok" | "attention" | "info" | "unknown";
 export type HealthRowData = { id: string; level: HealthLevel; state: string; data?: Record<string, unknown> };
 export type HealthAlert = { id: string; rowId: string; dismissed: boolean };
 export type HealthAnswer = { attention?: number; alertsEnabled?: boolean; rows?: HealthRowData[]; alerts?: HealthAlert[] };
-export type HealthLine = { id: string; level: HealthLevel; title: string; value: string; details: string[]; alertId?: string };
+// tone "crimson": shown in Core crimson without counting as a problem (a muted microphone).
+export type HealthLine = { id: string; level: HealthLevel; title: string; value: string; details: string[]; alertId?: string; tone?: "crimson" };
 
 type Copy = Record<string, string>;
 
@@ -21,6 +22,7 @@ const en: Copy = {
   nScheduled: "Restart at {time}", nWaiting: "Updates waiting", nNothing: "Nothing waiting",
   tOff: "TV control off", tNotPaired: "Not paired", tOk: "Paired, answering", tDown: "Not answering",
   pcOk: "{free} free", pcLow: "Only {free} free", cAvail: "Core {latest} available", cCurrent: "Up to date · {current}",
+  r_mic: "Microphone", micMuted: "Muted", micLive: "Live", micNone: "No microphone",
 };
 
 const copy: Record<string, Copy> = {
@@ -36,6 +38,7 @@ const copy: Record<string, Copy> = {
     nScheduled: "Riavvio alle {time}", nWaiting: "Aggiornamenti in attesa", nNothing: "Niente in attesa",
     tOff: "Controllo TV spento", tNotPaired: "Non abbinata", tOk: "Abbinata, risponde", tDown: "Non risponde",
     pcOk: "{free} liberi", pcLow: "Solo {free} liberi", cAvail: "Core {latest} disponibile", cCurrent: "Aggiornato · {current}",
+    r_mic: "Microfono", micMuted: "Silenziato", micLive: "Attivo", micNone: "Nessun microfono",
   },
   es: {
     title: "Estado", allGood: "Todo bien", attention: "Necesita atención: {n}", checking: "Comprobando…", agentDown: "El servicio de Core no responde.", dismiss: "Descartar aviso",
@@ -48,6 +51,7 @@ const copy: Record<string, Copy> = {
     nScheduled: "Reinicio a las {time}", nWaiting: "Actualizaciones pendientes", nNothing: "Nada pendiente",
     tOff: "Control de TV desactivado", tNotPaired: "Sin vincular", tOk: "Vinculada, responde", tDown: "No responde",
     pcOk: "{free} libres", pcLow: "Solo {free} libres", cAvail: "Core {latest} disponible", cCurrent: "Actualizado · {current}",
+    r_mic: "Micrófono", micMuted: "Silenciado", micLive: "Activo", micNone: "No hay micrófono",
   },
   fr: {
     title: "Santé", allGood: "Tout va bien", attention: "À vérifier : {n}", checking: "Vérification…", agentDown: "Le service de Core ne répond pas.", dismiss: "Ignorer l'alerte",
@@ -60,6 +64,7 @@ const copy: Record<string, Copy> = {
     nScheduled: "Redémarrage à {time}", nWaiting: "Mises à jour en attente", nNothing: "Rien en attente",
     tOff: "Contrôle de la TV désactivé", tNotPaired: "Non appairée", tOk: "Appairée, répond", tDown: "Ne répond pas",
     pcOk: "{free} libres", pcLow: "Seulement {free} libres", cAvail: "Core {latest} disponible", cCurrent: "À jour · {current}",
+    r_mic: "Micro", micMuted: "Coupé", micLive: "Actif", micNone: "Aucun micro",
   },
   de: {
     title: "Status", allGood: "Alles in Ordnung", attention: "Zu prüfen: {n}", checking: "Wird geprüft…", agentDown: "Der Core-Dienst antwortet nicht.", dismiss: "Warnung ausblenden",
@@ -72,6 +77,7 @@ const copy: Record<string, Copy> = {
     nScheduled: "Neustart um {time}", nWaiting: "Updates warten", nNothing: "Nichts ausstehend",
     tOff: "TV-Steuerung aus", tNotPaired: "Nicht gekoppelt", tOk: "Gekoppelt, antwortet", tDown: "Antwortet nicht",
     pcOk: "{free} frei", pcLow: "Nur {free} frei", cAvail: "Core {latest} verfügbar", cCurrent: "Aktuell · {current}",
+    r_mic: "Mikrofon", micMuted: "Stumm", micLive: "An", micNone: "Kein Mikrofon",
   },
   pt: {
     title: "Saúde", allGood: "Tudo certo", attention: "Precisa de atenção: {n}", checking: "Verificando…", agentDown: "O serviço do Core não responde.", dismiss: "Dispensar alerta",
@@ -84,6 +90,7 @@ const copy: Record<string, Copy> = {
     nScheduled: "Reinício às {time}", nWaiting: "Atualizações pendentes", nNothing: "Nada pendente",
     tOff: "Controle da TV desligado", tNotPaired: "Não pareada", tOk: "Pareada, responde", tDown: "Não responde",
     pcOk: "{free} livres", pcLow: "Só {free} livres", cAvail: "Core {latest} disponível", cCurrent: "Atualizado · {current}",
+    r_mic: "Microfone", micMuted: "Silenciado", micLive: "Ativo", micNone: "Sem microfone",
   },
   uk: {
     title: "Стан", allGood: "Усе гаразд", attention: "Потребує уваги: {n}", checking: "Перевірка…", agentDown: "Служба Core не відповідає.", dismiss: "Приховати сповіщення",
@@ -96,6 +103,7 @@ const copy: Record<string, Copy> = {
     nScheduled: "Перезапуск о {time}", nWaiting: "Оновлення очікують", nNothing: "Нічого не очікує",
     tOff: "Керування ТВ вимкнено", tNotPaired: "Не з'єднано", tOk: "З'єднано, відповідає", tDown: "Не відповідає",
     pcOk: "Вільно {free}", pcLow: "Вільно лише {free}", cAvail: "Доступний Core {latest}", cCurrent: "Актуальний · {current}",
+    r_mic: "Мікрофон", micMuted: "Вимкнено", micLive: "Увімкнено", micNone: "Немає мікрофона",
   },
   ru: {
     title: "Состояние", allGood: "Всё в порядке", attention: "Требует внимания: {n}", checking: "Проверка…", agentDown: "Служба Core не отвечает.", dismiss: "Скрыть оповещение",
@@ -108,6 +116,7 @@ const copy: Record<string, Copy> = {
     nScheduled: "Перезагрузка в {time}", nWaiting: "Обновления ждут", nNothing: "Ничего не ждёт",
     tOff: "Управление ТВ выключено", tNotPaired: "Не сопряжён", tOk: "Сопряжён, отвечает", tDown: "Не отвечает",
     pcOk: "Свободно {free}", pcLow: "Свободно всего {free}", cAvail: "Доступен Core {latest}", cCurrent: "Актуален · {current}",
+    r_mic: "Микрофон", micMuted: "Выключен", micLive: "Включён", micNone: "Нет микрофона",
   },
   zh: {
     title: "健康", allGood: "一切正常", attention: "需要注意：{n}", checking: "正在检查…", agentDown: "Core 服务没有响应。", dismiss: "忽略提醒",
@@ -120,6 +129,7 @@ const copy: Record<string, Copy> = {
     nScheduled: "{time} 重启", nWaiting: "有更新等待中", nNothing: "没有等待项",
     tOff: "电视控制已关闭", tNotPaired: "未配对", tOk: "已配对，有响应", tDown: "没有响应",
     pcOk: "剩余 {free}", pcLow: "仅剩 {free}", cAvail: "Core {latest} 可用", cCurrent: "已是最新 · {current}",
+    r_mic: "麦克风", micMuted: "已静音", micLive: "已开启", micNone: "没有麦克风",
   },
   ja: {
     title: "状態", allGood: "問題なし", attention: "要確認: {n}", checking: "確認中…", agentDown: "Core のサービスが応答しません。", dismiss: "お知らせを閉じる",
@@ -132,6 +142,7 @@ const copy: Record<string, Copy> = {
     nScheduled: "{time} に再起動", nWaiting: "更新が待機中", nNothing: "待機中のものなし",
     tOff: "テレビ操作はオフ", tNotPaired: "未ペアリング", tOk: "ペアリング済み・応答あり", tDown: "応答なし",
     pcOk: "空き {free}", pcLow: "空きは {free} のみ", cAvail: "Core {latest} を利用可能", cCurrent: "最新 · {current}",
+    r_mic: "マイク", micMuted: "ミュート中", micLive: "オン", micNone: "マイクなし",
   },
   ko: {
     title: "상태", allGood: "모두 정상", attention: "확인 필요: {n}", checking: "확인 중…", agentDown: "Core 서비스가 응답하지 않습니다.", dismiss: "알림 닫기",
@@ -144,6 +155,7 @@ const copy: Record<string, Copy> = {
     nScheduled: "{time}에 다시 시작", nWaiting: "업데이트 대기 중", nNothing: "대기 중인 항목 없음",
     tOff: "TV 제어 꺼짐", tNotPaired: "페어링 안 됨", tOk: "페어링됨, 응답함", tDown: "응답 없음",
     pcOk: "{free} 남음", pcLow: "{free}만 남음", cAvail: "Core {latest} 사용 가능", cCurrent: "최신 · {current}",
+    r_mic: "마이크", micMuted: "음소거됨", micLive: "켜짐", micNone: "마이크 없음",
   },
   hi: {
     title: "हेल्थ", allGood: "सब ठीक है", attention: "ध्यान चाहिए: {n}", checking: "जाँच हो रही है…", agentDown: "Core की सेवा जवाब नहीं दे रही।", dismiss: "अलर्ट हटाएँ",
@@ -156,6 +168,7 @@ const copy: Record<string, Copy> = {
     nScheduled: "{time} बजे रीस्टार्ट", nWaiting: "अपडेट इंतज़ार में", nNothing: "कुछ बाकी नहीं",
     tOff: "टीवी कंट्रोल बंद", tNotPaired: "पेयर नहीं है", tOk: "पेयर है, जवाब दे रहा है", tDown: "जवाब नहीं",
     pcOk: "{free} खाली", pcLow: "सिर्फ़ {free} खाली", cAvail: "Core {latest} उपलब्ध", cCurrent: "अप टू डेट · {current}",
+    r_mic: "माइक्रोफ़ोन", micMuted: "म्यूट", micLive: "चालू", micNone: "कोई माइक्रोफ़ोन नहीं",
   },
 };
 
@@ -201,7 +214,7 @@ function formatTime(value: unknown, locale: string, hour: unknown): string {
 
 const titles: Record<string, string> = {
   "server-backup": "r_backup", "restore-check": "r_restore", "server-drive": "r_drive", romm: "r_romm",
-  "windows-restart": "r_restart", "update-night": "r_night", tv: "r_tv", "pc-disk": "r_pc", "core-update": "r_core",
+  "windows-restart": "r_restart", "update-night": "r_night", tv: "r_tv", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
 };
 
 const serverStates: Record<string, string> = { "not-configured": "notConfigured", unreachable: "unreachable", missing: "missing", unreadable: "unreadable" };
@@ -251,6 +264,8 @@ function rowValue(row: HealthRowData, text: Copy, locale: string, now: Date): { 
         : row.state === "waiting" ? text.nWaiting : text.nNothing, details };
     case "tv":
       return { value: ({ off: text.tOff, "not-paired": text.tNotPaired, reachable: text.tOk, unreachable: text.tDown } as Record<string, string>)[row.state] ?? text.unknown, details };
+    case "microphone":
+      return { value: ({ muted: text.micMuted, live: text.micLive, none: text.micNone } as Record<string, string>)[row.state] ?? text.unknown, details };
     case "pc-disk": {
       if (typeof data.drive === "string" && data.drive) details.push(data.drive);
       const free = formatBytes(data.freeBytes, locale);
@@ -276,6 +291,8 @@ export function healthLines(answer: HealthAnswer | undefined, locale: string, no
     const { value, details } = rowValue(row, text, locale, now);
     const alert = alerts.find(item => item?.rowId === row.id && !item.dismissed);
     const level: HealthLevel = ["ok", "attention", "info", "unknown"].includes(row.level) ? row.level : "unknown";
-    return { id: row.id, level, title: text[titles[row.id]], value, details, alertId: answer?.alertsEnabled !== false ? alert?.id : undefined };
+    const line: HealthLine = { id: row.id, level, title: text[titles[row.id]], value, details, alertId: answer?.alertsEnabled !== false ? alert?.id : undefined };
+    if (row.id === "microphone" && row.state === "muted") line.tone = "crimson";
+    return line;
   });
 }

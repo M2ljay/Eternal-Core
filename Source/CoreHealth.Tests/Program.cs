@@ -96,6 +96,11 @@ report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now })
 Check(Row(report, "core-update") is { Level: HealthLevel.Info, State: "available" } && (string?)Row(report, "core-update").Data["latest"] == "3.4.0", "verdict: Core update available");
 report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { CoreUpdateAvailable = null, LatestCoreVersion = null });
 Check(Row(report, "core-update").Level == HealthLevel.Unknown, "verdict: no cached check yet");
+report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { Microphone = "muted" });
+Check(Row(report, "microphone") is { Level: HealthLevel.Info, State: "muted" } && report.Attention == 0, "verdict: a muted microphone is shown, not counted as a problem");
+Check(Row(CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { Microphone = "live" }), "microphone").Level == HealthLevel.Ok, "verdict: live microphone");
+Check(Row(CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { Microphone = "none" }), "microphone").State == "none", "verdict: no microphone");
+Check(Row(CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now })), "microphone").Level == HealthLevel.Unknown, "verdict: microphone unknown");
 
 // ---------- alerts ----------
 var failing = new HealthProblem("backup-failing", "server-backup", "backup|2026-11-20T10:00:00.0000000+00:00", "health.backupFailing");

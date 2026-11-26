@@ -22,7 +22,8 @@ permission once for the PC settings. Every value is backed up first; **Undo chan
 each one back exactly as it was (a value that did not exist is removed again).
 
 - Your user: no "Let's finish setting up" screens, no tips or ads, no "program has stopped
-  working" windows, no Sticky/Filter/Toggle Keys pop-ups.
+  working" windows, no Sticky/Filter/Toggle Keys pop-ups, and voice calls (an Xbox party,
+  Discord) no longer lower the volume of games and music.
 - The PC (admin): no update restarts while you are signed in (active hours 11:00 to 5:00),
   Windows Update leaves the graphics driver alone, no night-time maintenance wake-ups, no
   password on wake, no Edge first-run or default-browser prompts.
@@ -42,6 +43,15 @@ Quick Access > Core > **Health** shows in one place whether the home server's ni
 its drive and RomM, Windows updates, the TV, the PC's disk and Core itself are fine, and Core
 gives one quiet notice a day for serious server problems. Setup at the server and on the PC:
 [CORE-HEALTH.md](CORE-HEALTH.md).
+
+## Voice: microphone mute and Xbox party
+
+Quick Access > Core > **Voice** has a big button that mutes your microphone (both of Windows'
+default microphones when they differ, each restored exactly afterwards), with a crimson mark
+in Steam's top bar while muted and a Ctrl+Alt+M shortcut you can bind to a Steam chord. **Xbox
+party** opens the Xbox Game Bar over Big Picture, and Core brings Big Picture back when the Game
+Bar closes. Details, what Core cannot do (party invites) and a checklist for the TV:
+[CORE-VOICE.md](CORE-VOICE.md).
 
 ## Screensaver: Core Starfield
 
@@ -164,3 +174,4 @@ night.
    `steam.cfg` is back in the Steam folder. Check `Steam\logs\bootstrap_log.txt` after a new
    Steam release to confirm the hold still blocks the self-update on the 64-bit client.
 7. **Anti-cheat:** launch Call of Duty: no notice or sequence appears over it.
+8. **Voice:** the checklist in [CORE-VOICE.md](CORE-VOICE.md#on-the-tv-checklist).

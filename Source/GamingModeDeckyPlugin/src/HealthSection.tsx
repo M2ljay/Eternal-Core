@@ -4,7 +4,8 @@ import { healthCopy, healthLines, healthSummary, type HealthAnswer, type HealthL
 
 // Eternal Core: the Health section of Quick Access > Core. One line for the whole setup, then a
 // row each for the home server's backup, restore check, drive and RomM (from the server's
-// core-status.json), Windows restart, update night, the TV, the PC's disk and Core's version.
+// core-status.json), Windows restart, update night, the TV, the microphone, the PC's disk and
+// Core's version.
 // The agent does the gathering (GamingMode.Services/MarkIIIHost.Health.cs); this only renders.
 // Rows are focusable: D-pad moves between them, A shows or hides a row's details, and a row with
 // an active alert offers "Dismiss alert" (it comes back only if the problem changes).
@@ -21,13 +22,13 @@ const style = `
 .core-health-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .core-health-title{font-size:13px;color:#fff;font-weight:600;white-space:nowrap}
 .core-health-value{font-size:12px;color:${STEEL};text-align:right;overflow:hidden;text-overflow:ellipsis}
-.core-health-row.attention .core-health-value{color:${CRIMSON};font-weight:600}
+.core-health-row.attention .core-health-value,.core-health-row.crimson .core-health-value{color:${CRIMSON};font-weight:600}
 .core-health-detail{margin-top:6px;font-size:11px;line-height:1.45;color:${STEEL};word-break:break-word}
 `;
 
 function Row({ line, open, onToggle }: { line: HealthLine; open: boolean; onToggle: () => void }) {
   return (
-    <Focusable className={`core-health-row ${line.level}`} onActivate={onToggle}
+    <Focusable className={`core-health-row ${line.level}${line.tone ? " " + line.tone : ""}`} onActivate={onToggle}
       aria-expanded={open} noFocusRing={true}>
       <div className="core-health-head">
         <span className="core-health-title">{line.title}</span>

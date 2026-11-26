@@ -67,6 +67,8 @@ internal sealed record CoreHealthInputs
 	public string CoreVersion { get; init; } = "";
 	public string? LatestCoreVersion { get; init; }
 	public bool? CoreUpdateAvailable { get; init; }
+	// Core Voice: "muted", "live" or "none" (no microphone); null when Windows could not say.
+	public string? Microphone { get; init; }
 }
 
 internal sealed record HealthRow(string Id, HealthLevel Level, string State, IReadOnlyDictionary<string, object?> Data);
@@ -86,7 +88,7 @@ internal static class CoreHealthPolicy
 	internal const long PcMinFreeBytes = 20L * 1000 * 1000 * 1000;
 
 	// The order the Quick Access section shows the rows in.
-	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "tv", "pc-disk", "core-update" };
+	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "tv", "microphone", "pc-disk", "core-update" };
 
 	// "V3", "\\V3", "\\V3\CoreStatus", "\\V3\CoreStatus\core-status.json" or an IP address. The share
 	// name defaults to CoreStatus (server/backup/Install-CoreBackup.ps1).
@@ -278,6 +280,16 @@ internal static class CoreHealthPolicy
 		else if (input.TvReachable == true) rows.Add(new HealthRow("tv", HealthLevel.Ok, "reachable", tv));
 		else if (input.TvReachable == false) rows.Add(new HealthRow("tv", HealthLevel.Attention, "unreachable", tv));
 		else rows.Add(new HealthRow("tv", HealthLevel.Unknown, "unknown", tv));
+
+		// Microphone: information only. Muted is a choice, not a problem (the plugin shows it in crimson).
+		var mic = new Dictionary<string, object?> { ["state"] = input.Microphone };
+		rows.Add(input.Microphone switch
+		{
+			"muted" => new HealthRow("microphone", HealthLevel.Info, "muted", mic),
+			"live" => new HealthRow("microphone", HealthLevel.Ok, "live", mic),
+			"none" => new HealthRow("microphone", HealthLevel.Info, "none", mic),
+			_ => new HealthRow("microphone", HealthLevel.Unknown, "unknown", mic),
+		});
 
 		// PC system drive.
 		var pc = new Dictionary<string, object?> { ["drive"] = input.PcDrive, ["freeBytes"] = input.PcFreeBytes, ["totalBytes"] = input.PcTotalBytes };

@@ -1,0 +1,85 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+import vm from "node:vm";
+import ts from "typescript";
+
+// Core Voice in Quick Access: the agent's /voice answers become the microphone button, the party
+// messages and the Discord row; the section keeps the Core palette.
+const exports = {};
+vm.runInNewContext(ts.transpileModule(readFileSync(new URL("../src/voiceReport.ts", import.meta.url), "utf8"), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText, { exports });
+const { micView, partyMessage, discordInstalled, voiceCopy, voiceLanguages, DISCORD_PLUGIN_NAMES } = exports;
+
+test("microphone button follows the actual state", () => {
+  const live = micView({ mic: { state: "live", coreMuted: false, defaults: 2, hotkey: "Ctrl+Alt+M" } }, "en");
+  assert.equal(live.button, "Mute microphone");
+  assert.equal(live.line, "Microphone live");
+  assert.equal(live.muted, false);
+  assert.equal(live.detail, "Shortcut Ctrl+Alt+M: bind it to a controller chord in Steam");
+  const muted = micView({ mic: { state: "muted", coreMuted: true, hotkey: "" } }, "en");
+  assert.equal(muted.button, "Unmute microphone");
+  assert.equal(muted.muted, true);
+  assert.equal(muted.detail, "", "no hotkey: no hint");
+  assert.equal(micView({ mic: { state: "muted", coreMuted: false } }, "en").detail, "Muted outside Core");
+  assert.equal(micView({ mic: { state: "none" } }, "en").line, "No microphone");
+  assert.equal(micView(null, "en").state, "unknown");
+  assert.equal(micView({ mic: { state: "weird" } }, "it").line, "Microfono: sconosciuto");
+});
+
+test("party messages: nothing to say when the bar opened", () => {
+  assert.equal(partyMessage({ ok: true, method: "WinG", reason: "shortcut" }, "en"), "");
+  assert.equal(partyMessage({ ok: true, method: "Uri", reason: "override" }, "en"), "");
+  assert.equal(partyMessage({ ok: true, method: "AlreadyOpen", reason: "alreadyOpen" }, "en"), "The Game Bar is already open.");
+  assert.equal(partyMessage({ ok: false, method: "Unavailable", reason: "notInstalled" }, "en"), "The Xbox Game Bar is not installed.");
+  assert.equal(partyMessage({ ok: false, method: "Unavailable", reason: "protectedGame" }, "en"), "Not while a game with anti-cheat is running.");
+  assert.equal(partyMessage({ ok: false, method: "Unavailable", reason: "inputRefused" }, "en"), "Windows did not accept the Game Bar shortcut.");
+  assert.equal(partyMessage({}, "en"), "Core's service is not answering.");
+  assert.equal(partyMessage(undefined, "de"), "Der Dienst von Core antwortet nicht.");
+});
+
+test("Discord row: Eternal-Assemble keeps the Decky name Discord", () => {
+  const forks = JSON.parse(readFileSync(new URL("../../Shared/ProtectedPluginForks.json", import.meta.url), "utf8"));
+  const assemble = forks.forks.find(fork => fork.id === "eternal-assemble");
+  assert.deepEqual([...DISCORD_PLUGIN_NAMES], assemble.pluginNames, "same names as the fork list");
+  assert.equal(discordInstalled({ plugins: [{ name: "Playhub" }, { name: "Discord" }] }), true);
+  assert.equal(discordInstalled({ plugins: [], installedPlugins: ["discord"] }), true);
+  assert.equal(discordInstalled({ plugins: [{ name: "Awesome Mix" }] }), false);
+  assert.equal(discordInstalled(undefined), false);
+});
+
+test("every language has every line, with the same placeholders", () => {
+  assert.equal(voiceLanguages.length, 12);
+  const en = voiceCopy("en");
+  for (const language of voiceLanguages) {
+    const table = voiceCopy(language);
+    for (const key of Object.keys({ ...en })) {
+      const value = table[key];
+      assert.ok(typeof value === "string" && value.length > 0, `${language}/${key}`);
+      assert.deepEqual((value.match(/\{\w+\}/g) ?? []).sort(), (en[key].match(/\{\w+\}/g) ?? []).sort(), `${language}/${key} placeholders`);
+      assert.ok(!/Playhub/.test(value), `${language}/${key} says Core, not Playhub`);
+    }
+  }
+  assert.equal(voiceCopy("it-IT").title, "Voce");
+  assert.equal(voiceCopy("xx").title, "Voice");
+});
+
+test("the section: Core palette, no glow, controller-navigable, closes Quick Access before the bar", () => {
+  const source = readFileSync(new URL("../src/VoiceSection.tsx", import.meta.url), "utf8");
+  for (const colour of ["#000000", "#D7263D", "#C9D1D9", "#1A1D21"]) assert.ok(source.includes(colour), colour);
+  assert.ok(!/blur\(|drop-shadow|box-shadow:(?!none)|text-shadow:(?!none)/.test(source), "no haze or glow");
+  assert.match(source, /Focusable/);
+  assert.match(source, /DialogButton/);
+  assert.ok(source.indexOf("CloseSideMenus") < source.indexOf("core_voice_party"), "Quick Access closes before the Game Bar opens");
+});
+
+test("backend: the mic action is validated and the top-bar mark is Core crimson", () => {
+  const backend = readFileSync(new URL("../main.py", import.meta.url), "utf8");
+  assert.match(backend, /_VOICE_MIC_ACTIONS = \("mute", "unmute", "toggle"\)/);
+  assert.match(backend, /if action not in _VOICE_MIC_ACTIONS:/);
+  assert.match(backend, /color:#D7263D/);
+  assert.match(backend, /"\/voice\/party"/);
+  const index = readFileSync(new URL("../src/index.tsx", import.meta.url), "utf8");
+  assert.match(index, /<VoiceSection locale=\{locale\} \/>/);
+});

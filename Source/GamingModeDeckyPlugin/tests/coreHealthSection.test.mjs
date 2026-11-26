@@ -50,6 +50,21 @@ test("problems: count, crimson level, details and an alert to dismiss", () => {
   assert.equal(healthLines({ ...answer, alertsEnabled: false }, "en", now)[0].alertId, undefined, "alerts off: nothing to dismiss");
 });
 
+test("microphone row: muted in crimson without counting as a problem", () => {
+  const rowsFor = state => healthLines({ attention: 0, rows: [{ id: "microphone", level: state === "live" ? "ok" : "info", state, data: { state } }] }, "en", now)[0];
+  const muted = rowsFor("muted");
+  assert.equal(muted.title, "Microphone");
+  assert.equal(muted.value, "Muted");
+  assert.equal(muted.tone, "crimson");
+  assert.equal(muted.level, "info");
+  assert.equal(rowsFor("live").value, "Live");
+  assert.equal(rowsFor("live").tone, undefined);
+  assert.equal(rowsFor("none").value, "No microphone");
+  assert.equal(healthLines({ rows: [{ id: "microphone", level: "unknown", state: "unknown", data: {} }] }, "it", now)[0].value, "Sconosciuto");
+  const source = readFileSync(new URL("../src/HealthSection.tsx", import.meta.url), "utf8");
+  assert.match(source, /\.core-health-row\.crimson \.core-health-value/);
+});
+
 test("server status states are distinct", () => {
   const states = ["not-configured", "unreachable", "missing", "unreadable"].map(state =>
     healthLines({ rows: [{ id: "server-backup", level: "attention", state, data: { server: "V3" } }] }, "en", now)[0].value);

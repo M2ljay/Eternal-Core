@@ -59,6 +59,13 @@ internal static class CouchHardening
             U(@"Control Panel\Accessibility\Keyboard Response", "Flags", "122"),
             U(@"Control Panel\Accessibility\ToggleKeys", "Flags", "58"),
         }),
+        // Sound > More sound settings > Communications: "When Windows detects communications
+        // activity" = Do nothing (0 mute others, 1 reduce 80%, 2 reduce 50% (default), 3 nothing).
+        // An Xbox party or a Discord call then leaves the game and music at full volume.
+        new("ducking", "Le chiamate vocali non abbassano il volume di giochi e musica", false, new[]
+        {
+            U(@"Software\Microsoft\Multimedia\Audio", "UserDuckingPreference", 3),
+        }),
         new("update-restarts", "Nessun riavvio per gli aggiornamenti mentre sei connesso", true, new[]
         {
             M(Update, "SetActiveHours", 1), M(Update, "ActiveHoursStart", 11), M(Update, "ActiveHoursEnd", 5),

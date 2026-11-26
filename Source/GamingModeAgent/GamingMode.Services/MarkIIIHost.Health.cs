@@ -122,6 +122,7 @@ internal sealed partial class MarkIIIHost
 			TvEnabled = tv.Enabled, TvPaired = paired, TvReachable = tvReachable,
 			PcDrive = systemDrive, PcFreeBytes = free, PcTotalBytes = total,
 			CoreVersion = EternalRelease.Version, LatestCoreVersion = known ? update?.LatestVersion : null, CoreUpdateAvailable = updateAvailable,
+			Microphone = MicCode(),
 		});
 	}
 

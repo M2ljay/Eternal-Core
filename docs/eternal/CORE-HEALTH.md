@@ -12,6 +12,7 @@ attention: 2"), then a row for each part. Press **A** on a row to show its detai
 | Windows restart | this PC | (information only: "Pending" when Windows wants a restart) |
 | Update night | this PC | updates are waiting and no 5:00 restart is scheduled (schedule it from the card above) |
 | TV | Core's TV control | TV control is on but the TV is not paired or does not answer (checked with a plain connection, never woken) |
+| Microphone | this PC | (information only: "Muted" in crimson, "Live" or "No microphone"; see [CORE-VOICE.md](CORE-VOICE.md)) |
 | PC disk space | this PC | under 10% or under 20 GB free on the Windows drive |
 | Core update | Core's last update check | (information only: "Core 3.4.0 available") |
 

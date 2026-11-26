@@ -109,6 +109,7 @@ string[] eternalMarkIII =
     "Niente consigli, suggerimenti e pubblicità di Windows",
     "Niente finestre \"Il programma ha smesso di funzionare\"",
     "Niente finestre Tasti permanenti, filtro e interruttore",
+    "Le chiamate vocali non abbassano il volume di giochi e musica",
     "Nessun riavvio per gli aggiornamenti mentre sei connesso",
     "Windows Update non cambia il driver grafico",
     "Niente risvegli notturni per manutenzione",

@@ -40,6 +40,11 @@ not distributed by Quick Settings.
 The Dashboard keyboard-shortcut illustration uses the Lucide Gamepad2 path,
 with the stroke adjusted to match the keyboard keys.
 Source: https://github.com/lucide-icons/lucide/blob/main/icons/gamepad-2.svg
+Core's Voice section (Quick Access) and its "microphone muted" mark in Steam's top bar use the
+Lucide Mic, MicOff and Users paths.
+Sources: https://github.com/lucide-icons/lucide/blob/main/icons/mic.svg,
+https://github.com/lucide-icons/lucide/blob/main/icons/mic-off.svg,
+https://github.com/lucide-icons/lucide/blob/main/icons/users.svg
 
 Copyright (c) 2026 Lucide Icons and Contributors
 

@@ -440,3 +440,22 @@ endpoint catches and logs its own failures, and no Mark III feature is on the pa
   button is the fallback.
 - Core keeps working without Decky: `ModeManager.ApplyGamingMode` still launches Steam when Decky is missing or failed
   (unchanged; only a Steam launch failure aborts Gaming Mode).
+
+### Core Voice
+
+User guide and research: `docs/eternal/CORE-VOICE.md`.
+
+- Microphone: `CoreVoice.cs` (pure, `Source/CoreVoice.Tests`) decides; `CoreVoice.Windows.cs` talks to Core Audio
+  with its own `IMMDeviceEnumerator` / `IAudioEndpointVolume` declarations (the ones in `SystemVolumeKeyService.cs` and
+  `GameAudioVolumeService.cs` are private and render-only) and registers an `IMMNotificationClient`, whose callback
+  only queues a reconcile (Core Audio must not be called from inside it). Mute calls pass a Core event-context GUID.
+  `MarkIIIHost.Voice.cs` holds the state under one lock, checks every 5 s while muted and on resume, and starts before
+  the Mark III loop; a failure there is logged and never stops the agent.
+- Party: `WindowsXboxGameBar.SendShortcut` (Win+G, the same `SendInput` chord as the Xbox-game path without its session
+  check) or a configured `ms-gamebar:` URI through the shell; `WindowsGameBar.Installed` asks `PackageManager` for
+  `Microsoft.XboxGamingOverlay_8wekyb3d8bbwe` for the current user (cached 10 minutes, unknown = try anyway). The watch
+  polls `IsInputRedirected` and calls `OverlayWindowTools.ActivateSteam` (no synthetic input) after the bar closes.
+- Hotkey: `VoiceHotkey`, a `RegisterHotKey` thread like the Dashboard's (id `0x4356`), parsed by
+  `DashboardShortcutService.HotkeyParser`; reapplied when `micMuteHotkey` changes.
+- Top bar: `main.py` injects `_topbar_mic_script` into Steam's CEF pages with the date badge's transport
+  (`Runtime.evaluate` over the local DevTools port), on each change and every 20 s while muted.
