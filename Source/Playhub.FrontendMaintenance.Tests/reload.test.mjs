@@ -27,3 +27,8 @@ test('loader/plugin replacement during await cannot reload a foreign generation'
 test('rejected official reload is not an acknowledgement',async()=>{
  const f=fixture();f.window.DeckyBackend.call=async(name)=>name==='utilities/settings/get'?[]:false;assert.equal(await f.run(),'unavailable');
 });
+test('rebrand phase 2: a plugin Decky already lists as Core is reloaded as Core; a disabled Core never reloads',async()=>{
+ const f=fixture();f.plugin.name='Core';assert.equal(await f.run(),'reloaded');assert.deepEqual(JSON.parse(JSON.stringify(f.calls)).at(-1),['loader/reload_plugin','Core']);
+ const d=fixture();d.plugin.name='Core';d.window.DeckyBackend.call=async(...args)=>{d.calls.push(args);return['Core'];};assert.equal(await d.run(),'disabled');
+ const two=fixture();two.loader.plugins.push({name:'Core'});assert.equal(await two.run(),'busy');assert.equal(two.calls.length,0);
+});

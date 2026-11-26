@@ -13,7 +13,7 @@ export function replayPlayhubOnboarding() { replayGuide?.(); }
 export function refreshOnboardingLocale() { localeListeners.forEach(listener => listener()); }
 export function resolveOnboardingPlayhubTabId(host: any): number {
   const hook = host.DeckyPluginLoader?.tabsHook ?? host.__TABS_HOOK_INSTANCE;
-  const registered = hook?.tabs?.find((tab: any) => tab.__shortcutsPlugin === "Playhub");
+  const registered = hook?.tabs?.find((tab: any) => tab.__shortcutsPlugin === "Playhub" || tab.__shortcutsPlugin === "Core");
   return registered && Number.isSafeInteger(Number(registered.id)) ? Number(registered.id) : 0x50484B;
 }
 const qamDocuments = new Map<Document, number>();

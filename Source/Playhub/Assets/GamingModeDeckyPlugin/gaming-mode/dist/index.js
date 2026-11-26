@@ -355,7 +355,7 @@ function resolveOwnedGameApp(raw) {
     }
 }
 
-const manifest = {"name":"Playhub"};
+const manifest = {"name":"Core"};
 const API_VERSION = 2;
 const internalAPIConnection = window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit;
 if (!internalAPIConnection) {
@@ -406,8 +406,12 @@ function ensureControlBackend() {
                 if (typeof bridge?.call !== "function")
                     throw error;
                 // A formerly frontend-only plugin needs a backend reload after its first upgrade.
-                // Reload only Playhub, never Decky or any other installed plugin.
-                await bridge.call("loader/reload_plugin", "Playhub");
+                // Reload only this plugin, never Decky or any other installed plugin. Decky lists it as
+                // "Core" from 3.4 and as "Playhub" when the loaded copy predates the rename.
+                const loaded = window.DeckyPluginLoader?.plugins;
+                const name = Array.isArray(loaded) && !loaded.some((plugin) => plugin?.name === "Core")
+                    && loaded.some((plugin) => plugin?.name === "Playhub") ? "Playhub" : "Core";
+                await bridge.call("loader/reload_plugin", name);
             }
             for (let attempt = 0; attempt < 12; attempt++) {
                 await new Promise(resolve => window.setTimeout(resolve, 500));
@@ -2769,13 +2773,13 @@ function FaVolumeUp (props) {
   return GenIcon({"attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"},"child":[]}]})(props);
 }
 
-var epic = 'http://127.0.0.1:1337/plugins/Playhub/assets/store-epic-398a9229.png';
+var epic = 'http://127.0.0.1:1337/plugins/Core/assets/store-epic-398a9229.png';
 
-var gog = 'http://127.0.0.1:1337/plugins/Playhub/assets/store-gog-0357d4df.png';
+var gog = 'http://127.0.0.1:1337/plugins/Core/assets/store-gog-0357d4df.png';
 
-var xbox = 'http://127.0.0.1:1337/plugins/Playhub/assets/store-xbox-e37f6c59.png';
+var xbox = 'http://127.0.0.1:1337/plugins/Core/assets/store-xbox-e37f6c59.png';
 
-var amazon = 'http://127.0.0.1:1337/plugins/Playhub/assets/store-amazon-b80ebcda.png';
+var amazon = 'http://127.0.0.1:1337/plugins/Core/assets/store-amazon-b80ebcda.png';
 
 // SPDX-License-Identifier: MIT. Display projections never rename Steam shortcuts or catalog records.
 const ownedShortcut = (item) => [...readStoreLibrary().values()].find(row => row.accountCurrent && row.game?.accountRevision === item.accountRevision && sameStoreKey(row.key, item.key));
@@ -4526,11 +4530,11 @@ const storeDigitalStyle = `
 @media(prefers-reduced-motion:reduce){.ph-sd-root *{animation:none!important;transition:none!important}}
 `;
 
-var ea = 'http://127.0.0.1:1337/plugins/Playhub/assets/store-ea-ca68e470.png';
+var ea = 'http://127.0.0.1:1337/plugins/Core/assets/store-ea-ca68e470.png';
 
-var ubisoft = 'http://127.0.0.1:1337/plugins/Playhub/assets/store-ubisoft-f9fb94f2.png';
+var ubisoft = 'http://127.0.0.1:1337/plugins/Core/assets/store-ubisoft-f9fb94f2.png';
 
-var battlenet = 'http://127.0.0.1:1337/plugins/Playhub/assets/store-battlenet-3e0e5a05.png';
+var battlenet = 'http://127.0.0.1:1337/plugins/Core/assets/store-battlenet-3e0e5a05.png';
 
 const storeLogos = { epic, gog, xbox, amazon };
 const partnerIdentities = { ea: { name: "EA app", logo: ea }, ubisoft: { name: "Ubisoft Connect", logo: ubisoft }, battlenet: { name: "Battle.net", logo: battlenet } };
@@ -20940,7 +20944,8 @@ function createQamLayoutRuntime(hook, nativeRender, ownId, refresh, inventory = 
             }
             const original = [...tabs];
             for (const name of preferences.selected) {
-                if (name === "Playhub")
+                // This plugin's own tab ("Playhub" is its stored key; Decky lists it as "Core" from 3.4).
+                if (name === "Playhub" || name === "Core")
                     continue;
                 const plugin = plugins.find(p => p.name === name);
                 if (!plugin)
@@ -21029,14 +21034,14 @@ function QamSettings({ locale, children }) {
         setFailed(false);
         saving = saving.catch(() => { }).then(async () => { await call('set_qam_preferences', next); }).catch(() => { setFailed(true); });
     };
-    const integratedNames = ['Shortcuts', 'Quick Settings', 'Gaming Mode', 'Playhub Gaming Mode', 'Playhub'];
+    const integratedNames = ['Shortcuts', 'Quick Settings', 'Gaming Mode', 'Playhub Gaming Mode', 'Playhub', 'Core'];
     const entries = snapshot.plugins.filter(p => !integratedNames.includes(p.name)).map(p => ({ ...p, available: true, selected: prefs.selected.includes(p.name), iconChoice: prefs.icons[p.name] ?? 'original' }));
     for (const name of prefs.selected)
         if (!entries.some(p => p.name === name) && !integratedNames.includes(name))
             entries.push({ name, available: false, selected: true, iconChoice: prefs.icons[name] ?? 'original' });
-    const tabs = [{ key: 'shortcut:Playhub', name: 'Core', pluginName: 'Playhub', kind: 'decky', available: true, icon: snapshot.plugins.find(p => p.name === 'Playhub')?.icon },
+    const tabs = [{ key: 'shortcut:Playhub', name: 'Core', pluginName: 'Playhub', kind: 'decky', available: true, icon: snapshot.plugins.find(p => p.name === 'Core' || p.name === 'Playhub')?.icon },
         ...snapshot.native.map(n => ({ ...n, name: qamNativeLabel(n.key, n.label, locale), kind: n.key.startsWith('steam:') ? 'steam' : 'decky', available: true, hidden: prefs.hidden.includes(n.key) })),
-        ...entries.filter(p => p.selected && p.name !== 'Playhub').map(p => ({ ...p, key: `shortcut:${p.name}`, pluginName: p.name, kind: 'shortcut' }))];
+        ...entries.filter(p => p.selected && p.name !== 'Playhub' && p.name !== 'Core').map(p => ({ ...p, key: `shortcut:${p.name}`, pluginName: p.name, kind: 'shortcut' }))];
     tabs.sort((a, b) => { const x = prefs.order.indexOf(a.key), y = prefs.order.indexOf(b.key); return (x < 0 ? 1e6 : x) - (y < 0 ? 1e6 : y); });
     const viewSnapshot = { entries, tabs, selected: prefs.selected, fingerprint: JSON.stringify(prefs) };
     const current = _global_SP_REACT.useRef(viewSnapshot);
@@ -21057,7 +21062,7 @@ function QamSettings({ locale, children }) {
         },
         toggleNativeTab: (key) => { const p = getQamLayoutPreferences(); save({ ...p, hidden: p.hidden.includes(key) ? p.hidden.filter(k => k !== key) : [...p.hidden, key] }); },
         add: (name) => { const p = getQamLayoutPreferences(); save({ ...p, selected: [...new Set([...p.selected, name])] }); },
-        remove: (name) => { if (name === 'Playhub')
+        remove: (name) => { if (name === 'Playhub' || name === 'Core')
             return; const p = getQamLayoutPreferences(); save({ ...p, selected: p.selected.filter(n => n !== name) }); },
         setIcon: (name, id) => { const p = getQamLayoutPreferences(), icons = { ...p.icons }; if (id === 'original')
             delete icons[name];
@@ -29149,7 +29154,8 @@ function createLegacyShortcutsDeckyHost(hook, bridge) {
     let stopped = false;
     const ownsHook = () => !stopped && hook.render === wrapper && state.wrapper === wrapper
         && layout.wrapper === wrapper && state[Symbol.for("shortcuts.qam-tab-layout-adapter")] === layout;
-    const currentTabId = () => hook.tabs.find(tab => tab.__shortcutsPlugin === "Playhub")?.id;
+    // "Playhub" is the QAM bridge key; a host that tags tabs by Decky name uses "Core" (3.4+).
+    const currentTabId = () => hook.tabs.find(tab => tab.__shortcutsPlugin === "Playhub" || tab.__shortcutsPlugin === "Core")?.id;
     const wrapper = function (tabs, visible) {
         if (this !== hook || !Array.isArray(tabs) || Object.isFrozen(tabs))
             return previous.call(this, tabs, visible);
@@ -52294,37 +52300,37 @@ function descriptionToMarkdown(description, baseUrl) {
         .trim();
 }
 
-var launchCurtain = 'http://127.0.0.1:1337/plugins/Playhub/assets/Launch Curtain-c616bea4.jpg';
+var launchCurtain = 'http://127.0.0.1:1337/plugins/Core/assets/Launch Curtain-c616bea4.jpg';
 
-var news = 'http://127.0.0.1:1337/plugins/Playhub/assets/News-42a583b1.jpg';
+var news = 'http://127.0.0.1:1337/plugins/Core/assets/News-42a583b1.jpg';
 
-var nowPlaying = 'http://127.0.0.1:1337/plugins/Playhub/assets/Now Playing-14f32dc1.jpg';
+var nowPlaying = 'http://127.0.0.1:1337/plugins/Core/assets/Now Playing-14f32dc1.jpg';
 
-var playhubArtworks = 'http://127.0.0.1:1337/plugins/Playhub/assets/Playhub Artworks-fcdb5731.jpg';
+var playhubArtworks = 'http://127.0.0.1:1337/plugins/Core/assets/Playhub Artworks-fcdb5731.jpg';
 
-var playhubMetadata = 'http://127.0.0.1:1337/plugins/Playhub/assets/Playhub Metadata-8643c52b.jpg';
+var playhubMetadata = 'http://127.0.0.1:1337/plugins/Core/assets/Playhub Metadata-8643c52b.jpg';
 
-var playhubNotifications = 'http://127.0.0.1:1337/plugins/Playhub/assets/Playhub Notifications-52fe1e2e.jpg';
+var playhubNotifications = 'http://127.0.0.1:1337/plugins/Core/assets/Playhub Notifications-52fe1e2e.jpg';
 
-var playhubSurround = 'http://127.0.0.1:1337/plugins/Playhub/assets/Playhub Surround-22ce028c.jpg';
+var playhubSurround = 'http://127.0.0.1:1337/plugins/Core/assets/Playhub Surround-22ce028c.jpg';
 
-var protonVpn = 'http://127.0.0.1:1337/plugins/Playhub/assets/Proton VPN-8d82cc6d.jpg';
+var protonVpn = 'http://127.0.0.1:1337/plugins/Core/assets/Proton VPN-8d82cc6d.jpg';
 
-var quickSettings = 'http://127.0.0.1:1337/plugins/Playhub/assets/Quick Settings-e574e102.jpg';
+var quickSettings = 'http://127.0.0.1:1337/plugins/Core/assets/Quick Settings-e574e102.jpg';
 
-var shortcuts = 'http://127.0.0.1:1337/plugins/Playhub/assets/shortcuts-6f13ad94.jpg';
+var shortcuts = 'http://127.0.0.1:1337/plugins/Core/assets/shortcuts-6f13ad94.jpg';
 
-var themeDeck = 'http://127.0.0.1:1337/plugins/Playhub/assets/ThemeDeck-fd733ceb.jpg';
+var themeDeck = 'http://127.0.0.1:1337/plugins/Core/assets/ThemeDeck-fd733ceb.jpg';
 
-var trailerHero = 'http://127.0.0.1:1337/plugins/Playhub/assets/TrailerHero-cbdc42ea.jpg';
+var trailerHero = 'http://127.0.0.1:1337/plugins/Core/assets/TrailerHero-cbdc42ea.jpg';
 
-var weather = 'http://127.0.0.1:1337/plugins/Playhub/assets/Weather-9569570f.jpg';
+var weather = 'http://127.0.0.1:1337/plugins/Core/assets/Weather-9569570f.jpg';
 
-var discord = 'http://127.0.0.1:1337/plugins/Playhub/assets/Discord-02b6259e.png';
+var discord = 'http://127.0.0.1:1337/plugins/Core/assets/Discord-02b6259e.png';
 
-var deckyStoreBadge = 'http://127.0.0.1:1337/plugins/Playhub/assets/decky-store-68e0c389.png';
+var deckyStoreBadge = 'http://127.0.0.1:1337/plugins/Core/assets/decky-store-68e0c389.png';
 
-var playhubBadge = 'http://127.0.0.1:1337/plugins/Playhub/assets/playhub-7c02a7dc.png';
+var playhubBadge = 'http://127.0.0.1:1337/plugins/Core/assets/playhub-7c02a7dc.png';
 
 // Match MainWindow.PluginImagePath's preferred desktop artwork, not
 // Assets/PluginCovers, which still contains generated text placeholders.
@@ -53718,7 +53724,7 @@ function PlayhubIcon() {
     return (SP_JSX.jsxs("svg", { viewBox: "-80 -80 160 160", width: "1em", height: "1em", fill: "currentColor", "aria-hidden": "true", focusable: "false", children: [SP_JSX.jsx("circle", { r: "66", fill: "none", stroke: "currentColor", strokeWidth: "11" }), SP_JSX.jsx("g", { stroke: "currentColor", strokeWidth: "7", strokeLinecap: "round", children: ticks.map((angle) => SP_JSX.jsx("line", { x1: "0", y1: "-49", x2: "0", y2: "-38", transform: `rotate(${angle})` }, angle)) }), SP_JSX.jsx("path", { fillRule: "evenodd", d: "M0 -24A24 24 0 1 1 0 24A24 24 0 1 1 0 -24ZM0 -9A9 9 0 1 0 0 9A9 9 0 1 0 0 -9Z" })] }));
 }
 
-var playhubWordmark$1 = 'http://127.0.0.1:1337/plugins/Playhub/assets/playhub-wordmark-5e388308.png';
+var playhubWordmark$1 = 'http://127.0.0.1:1337/plugins/Core/assets/playhub-wordmark-5e388308.png';
 
 // Stable persisted IDs: audio is Video (third); performance is Audio (fourth).
 const CONTROL_TABS = ["home", "store", "audio", "performance", "graphics", "controller", "decky"];
@@ -53918,10 +53924,11 @@ function createScopedDeckyState(real) {
             const snapshot = real.publicState();
             if (!Array.isArray(snapshot?.plugins))
                 throw new Error("unsupported_plugin_inventory");
-            const plugins = snapshot.plugins.filter((plugin) => plugin.name !== "Playhub");
+            // This plugin itself: "Core" from 3.4, "Playhub" before.
+            const plugins = snapshot.plugins.filter((plugin) => plugin.name !== "Core" && plugin.name !== "Playhub");
             return { ...snapshot, plugins, activePlugin: visible ? plugins.find((plugin) => plugin.name === selected) ?? null : null };
         },
-        setActivePlugin(name) { selected = name === "Playhub" ? null : name; notify(); },
+        setActivePlugin(name) { selected = name === "Core" || name === "Playhub" ? null : name; notify(); },
         closeActivePlugin() { selected = null; notify(); },
     };
     for (const key of delegates)
@@ -53969,7 +53976,7 @@ function setNativeDeckyHidden(next) {
 function currentPlayhubTabId() {
     try {
         const hook = host.DeckyPluginLoader?.tabsHook ?? host.__TABS_HOOK_INSTANCE;
-        const registered = hook?.tabs?.find((tab) => tab?.__shortcutsPlugin === "Playhub");
+        const registered = hook?.tabs?.find((tab) => tab?.__shortcutsPlugin === "Playhub" || tab?.__shortcutsPlugin === "Core");
         if (registered && Number.isSafeInteger(Number(registered.id)))
             return Number(registered.id);
     }
@@ -54844,7 +54851,7 @@ function OnboardingIllustration({ view, scale = 1, height }) {
     return SP_JSX.jsxs("div", { className: "ph-oi", "aria-hidden": "true", "data-onboarding-illustration": view, style: size, children: [SP_JSX.jsx("style", { children: css$2 }), SP_JSX.jsxs("div", { className: "ph-oi-stage", children: [view === 'intro' && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("span", { className: "ph-oi-tile ph-oi-panel", children: SP_JSX.jsx(TbLayoutDashboard, {}) }), SP_JSX.jsx("span", { className: "ph-oi-tile ph-oi-panel", children: SP_JSX.jsx(TbDeviceGamepad2, {}) }), SP_JSX.jsx("span", { className: "ph-oi-tile ph-oi-panel", children: SP_JSX.jsx(TbPlugConnected, {}) }), SP_JSX.jsx("span", { className: "ph-oi-baseline" })] }), view === 'playhub' && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { className: "ph-oi-window", children: [SP_JSX.jsx("span", { className: "ph-oi-window-bar" }), SP_JSX.jsx("span", { className: "ph-oi-mini", children: SP_JSX.jsx(TbLayoutDashboard, {}) }), SP_JSX.jsx("span", { className: "ph-oi-mini", children: SP_JSX.jsx(TbWindow, {}) }), SP_JSX.jsx("span", { className: "ph-oi-mini", children: SP_JSX.jsx(TbPhoto, {}) })] }), SP_JSX.jsx("span", { className: "ph-oi-gamepad", children: SP_JSX.jsx(TbDeviceGamepad2, {}) }), SP_JSX.jsx("span", { className: "ph-oi-mode-line" })] }), (view === 'decky' || view === 'decky-off') && SP_JSX.jsx(PluginTiles, { disconnected: view === 'decky-off' }), view === 'store' && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("span", { className: "ph-oi-src ph-oi-src-a", children: SP_JSX.jsx(PlayhubIcon, {}) }), SP_JSX.jsx("span", { className: "ph-oi-src ph-oi-src-b", children: SP_JSX.jsx(TbPlugConnected, {}) }), SP_JSX.jsx("span", { className: "ph-oi-src ph-oi-src-c", children: SP_JSX.jsx(TbBrandGithub, {}) }), SP_JSX.jsx("span", { className: "ph-oi-route ph-oi-route-a" }), SP_JSX.jsx("span", { className: "ph-oi-route ph-oi-route-b" }), SP_JSX.jsx("span", { className: "ph-oi-route ph-oi-route-c" }), SP_JSX.jsx("span", { className: "ph-oi-collector" }), SP_JSX.jsx("span", { className: "ph-oi-feed" }), SP_JSX.jsxs("span", { className: "ph-oi-store-frame", children: [SP_JSX.jsx("span", { className: "ph-oi-store-bar" }), SP_JSX.jsx("span", { className: "ph-oi-store-mark", children: SP_JSX.jsx(TbBuildingStore, {}) }), SP_JSX.jsx("span", { className: "ph-oi-store-item ph-oi-store-item-a", children: SP_JSX.jsx(TbPhoto, {}) }), SP_JSX.jsx("span", { className: "ph-oi-store-item ph-oi-store-item-b", children: SP_JSX.jsx(TbMusic, {}) }), SP_JSX.jsx("span", { className: "ph-oi-store-item ph-oi-store-item-c", children: SP_JSX.jsx(TbAdjustmentsHorizontal, {}) }), SP_JSX.jsx("span", { className: "ph-oi-store-sweep" })] })] }), view === 'customize' && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("span", { className: "ph-oi-tabs-line" }), SP_JSX.jsx("span", { className: "ph-oi-tile ph-oi-tab", children: SP_JSX.jsx(TbLayoutDashboard, {}) }), SP_JSX.jsx("span", { className: "ph-oi-tile ph-oi-tab", children: SP_JSX.jsx(TbMusic, {}) }), SP_JSX.jsx("span", { className: "ph-oi-tile ph-oi-tab", children: SP_JSX.jsx(TbPhoto, {}) })] }), view === 'audio' && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("span", { className: "ph-oi-monitor", children: SP_JSX.jsx(TbDeviceDesktop, {}) }), SP_JSX.jsx("span", { className: "ph-oi-video-light" }), SP_JSX.jsx("span", { className: "ph-oi-slider" })] }), view === 'performance' && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("span", { className: "ph-oi-speaker", children: SP_JSX.jsx(TbVolume2, {}) }), SP_JSX.jsx("span", { className: "ph-oi-slider" }), SP_JSX.jsx("span", { className: "ph-oi-wave" }), SP_JSX.jsx("span", { className: "ph-oi-wave" }), SP_JSX.jsx("span", { className: "ph-oi-wave" })] }), view === 'graphics' && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("span", { className: "ph-oi-render-plane" }), SP_JSX.jsx("span", { className: "ph-oi-render-plane" }), SP_JSX.jsxs("span", { className: "ph-oi-render-image", children: [SP_JSX.jsx(TbPhoto, {}), SP_JSX.jsx("span", { className: "ph-oi-scan" })] })] }), view === 'controller' && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("span", { className: "ph-oi-pad-body", children: SP_JSX.jsx(TbDeviceGamepad2, {}) }), SP_JSX.jsx("span", { className: "ph-oi-input-orbit", children: SP_JSX.jsx("span", { className: "ph-oi-input-stick" }) }), SP_JSX.jsx("span", { className: "ph-oi-input-key" }), SP_JSX.jsx("span", { className: "ph-oi-input-link" })] })] }, view)] });
 }
 
-var playhubWordmark = 'http://127.0.0.1:1337/plugins/Playhub/assets/playhub-wordmark-large-ebf976af.png';
+var playhubWordmark = 'http://127.0.0.1:1337/plugins/Core/assets/playhub-wordmark-large-ebf976af.png';
 
 const text = {
     en: ["Your screen, adjusted", "Adjust brightness, resolution, refresh rate and HDR where supported.", "Your sound, adjusted", "Choose speakers and microphone, and adjust their volume.", "More from every frame", "Find Lossless Scaling and AMD graphics controls when available on your system.", "Controls that fit", "Select your controller and open its supported settings and Steam Input controls.", "Make Core yours", "Arrange or hide tabs, manage Core and Decky in Quick Access, and find device information and diagnostics."],
@@ -55622,7 +55629,7 @@ function replayPlayhubOnboarding() { replayGuide?.(); }
 function refreshOnboardingLocale() { localeListeners.forEach(listener => listener()); }
 function resolveOnboardingPlayhubTabId(host) {
     const hook = host.DeckyPluginLoader?.tabsHook ?? host.__TABS_HOOK_INSTANCE;
-    const registered = hook?.tabs?.find((tab) => tab.__shortcutsPlugin === "Playhub");
+    const registered = hook?.tabs?.find((tab) => tab.__shortcutsPlugin === "Playhub" || tab.__shortcutsPlugin === "Core");
     return registered && Number.isSafeInteger(Number(registered.id)) ? Number(registered.id) : 0x50484B;
 }
 const qamDocuments = new Map();
@@ -60716,6 +60723,64 @@ function UpdateNightCard({ locale }) {
     return (SP_JSX.jsxs(PanelSection$1, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, opacity: .85, margin: "0 0 8px" }, children: (state.scheduledFor ? text.scheduled : text.offer).replace("{time}", time) }) }), SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ButtonItem$1, { layout: "below", disabled: busy, onClick: () => act(state.scheduledFor ? "core_update_night_cancel" : "core_update_night_schedule"), children: state.scheduledFor ? text.cancel : text.restart.replace("{time}", time) }) })] }));
 }
 
+/**
+ * Rebrand phase 2: Decky lists this plugin as "Core" (plugin.json and definePlugin name).
+ * Before Core 3.4 it was "Playhub". Code that matches Decky's plugin name accepts both, and
+ * Decky's own plugin order and hidden list, which Decky keys by plugin name, are renamed once.
+ *
+ * Not renamed: the QAM bridge registration ("Playhub"), the saved QAM layout entry
+ * "Playhub" and the tab key "shortcut:Playhub". Those are this plugin's own stored keys,
+ * never shown, and keeping them needs no migration. The plugin folder stays "gaming-mode", so
+ * Decky's per-plugin settings, data and logs are unaffected.
+ *
+ * Self-contained on purpose: the tests load single source files.
+ */
+const PLUGIN_NAME = "Core";
+const LEGACY_PLUGIN_NAME = "Playhub";
+/**
+ * The list with "Playhub" replaced by "Core" in the same position, or null when nothing
+ * needs to change. If Decky already appended "Core" (the renamed plugin loaded once before
+ * this ran), that later entry is dropped so Core keeps the place the user gave Playhub.
+ */
+function renameOwnPlugin(list) {
+    if (!Array.isArray(list) || list.length > 1024 || !list.every(item => typeof item === "string"))
+        return null;
+    if (!list.includes(LEGACY_PLUGIN_NAME))
+        return null;
+    const next = [];
+    for (const name of list) {
+        if (name === PLUGIN_NAME)
+            continue;
+        const renamed = name === LEGACY_PLUGIN_NAME ? PLUGIN_NAME : name;
+        if (!next.includes(renamed))
+            next.push(renamed);
+    }
+    return next;
+}
+// Decky 3.3.1 setting names (frontend plugin-loader) and the matching in-memory setters.
+const DECKY_LISTS = [["pluginOrder", "setPluginOrder"], ["hiddenPlugins", "setHiddenPlugins"]];
+/** Renames this plugin in Decky's order and hidden lists. Best effort; returns the lists changed. */
+async function migrateDeckyPluginName(host = typeof window === "undefined" ? globalThis : window) {
+    const backend = host?.DeckyBackend;
+    if (typeof backend?.call !== "function")
+        return [];
+    const changed = [];
+    for (const [setting, setter] of DECKY_LISTS) {
+        try {
+            const next = renameOwnPlugin(await backend.call("utilities/settings/get", setting, []));
+            if (!next)
+                continue;
+            await backend.call("utilities/settings/set", setting, next);
+            changed.push(setting);
+            const state = host.DeckyPluginLoader?.deckyState;
+            if (typeof state?.[setter] === "function")
+                state[setter](next);
+        }
+        catch { /* Decky keeps its own order; nothing in Core depends on it. */ }
+    }
+    return changed;
+}
+
 const { useState, useEffect, useMemo } = _global_SP_REACT;
 let hapticSettingsWrite = Promise.resolve();
 function saveHapticSettings(changes) {
@@ -61735,8 +61800,13 @@ var index = definePlugin(() => {
     catch (error) {
         console.warn("Playhub Plugin Store: rotta non aggiunta", error);
     }
+    // Decky's own order and hidden lists still say "Playhub" after the rename; fix them once.
+    try {
+        void migrateDeckyPluginName().catch(() => { });
+    }
+    catch { /* Best effort. */ }
     return {
-        name: "Playhub",
+        name: "Core",
         titleView: SP_JSX.jsx("div", { className: staticClasses?.Title, children: playhubTitle }),
         content: SP_JSX.jsx(Content, {}),
         icon: SP_JSX.jsx(PlayhubIcon, {}),

@@ -29,7 +29,7 @@ export function setNativeDeckyHidden(next: boolean) {
 export function currentPlayhubTabId(): number | undefined {
   try {
     const hook = host.DeckyPluginLoader?.tabsHook ?? host.__TABS_HOOK_INSTANCE;
-    const registered = hook?.tabs?.find((tab: any) => tab?.__shortcutsPlugin === "Playhub");
+    const registered = hook?.tabs?.find((tab: any) => tab?.__shortcutsPlugin === "Playhub" || tab?.__shortcutsPlugin === "Core");
     if (registered && Number.isSafeInteger(Number(registered.id))) return Number(registered.id);
   } catch { /* Unknown owner falls back to Playhub's own identifier. */ }
   return PLAYHUB_TAB_ID;

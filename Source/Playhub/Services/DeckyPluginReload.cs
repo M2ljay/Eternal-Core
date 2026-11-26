@@ -10,13 +10,14 @@ internal static class DeckyPluginReload
     internal const string ReceiptName = ".playhub-reload-receipt";
     internal const string LoadedScript = """
         (() => {
-          if (!window.DeckyPluginLoader?.plugins?.some(p => p.name === 'Playhub')) return 0;
+          // Decky serves and names the plugin 'Core' from 3.4, 'Playhub' before.
+          if (!window.DeckyPluginLoader?.plugins?.some(p => p.name === 'Core' || p.name === 'Playhub')) return 0;
           let latest = 0;
           for (const entry of performance.getEntriesByType('resource')) {
             try {
               const url = new URL(entry.name);
               if (url.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(url.hostname)
-                  || url.port !== '1337' || decodeURIComponent(url.pathname) !== '/plugins/Playhub/dist/index.js') continue;
+                  || url.port !== '1337' || !['/plugins/Core/dist/index.js', '/plugins/Playhub/dist/index.js'].includes(decodeURIComponent(url.pathname))) continue;
               const value = url.searchParams.get('t');
               if (!/^\d{13}$/.test(value ?? '')) continue;
               const stamp = Number(value);
@@ -32,11 +33,13 @@ internal static class DeckyPluginReload
           const bridge = window.DeckyBackend;
           const loader = window.DeckyPluginLoader;
           if (typeof store?.IsAnyAppRunning !== 'function' || typeof bridge?.call !== 'function'
-              || !Array.isArray(loader?.plugins) || !loader.plugins.some(p => p.name === 'Playhub')) return 'unavailable';
+              || !Array.isArray(loader?.plugins)) return 'unavailable';
+          const own = loader.plugins.find(p => p.name === 'Core') ?? loader.plugins.find(p => p.name === 'Playhub');
+          if (!own) return 'unavailable';
           // Read the live Steam state immediately before invoking its loader.
           // Missing/unknown state must never be interpreted as an idle session.
           if (store.IsAnyAppRunning() !== false) return 'busy';
-          const result = await bridge.call('loader/reload_plugin', 'Playhub');
+          const result = await bridge.call('loader/reload_plugin', own.name);
           return result === false ? 'unavailable' : 'reloaded';
         })()
         """;

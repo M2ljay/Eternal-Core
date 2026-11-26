@@ -13,7 +13,7 @@ internal static class ActiveDeckyPluginProof
         (() => {
           const loader = window.DeckyPluginLoader;
           if (!Array.isArray(loader?.plugins)) return null;
-          const list = loader.plugins.filter(p => p.name === 'Playhub');
+          const list = loader.plugins.filter(p => p.name === 'Core' || p.name === 'Playhub');
           if (list.length !== 1 || typeof list[0].onDismount !== 'function') return null;
           return {loader, plugin:list[0], callback:list[0].onDismount};
         })()
@@ -21,7 +21,7 @@ internal static class ActiveDeckyPluginProof
     internal const string Confirm = """
         function() {
           const loader = window.DeckyPluginLoader, store = window.SteamUIStore;
-          const list = Array.isArray(loader?.plugins) ? loader.plugins.filter(p => p.name === 'Playhub') : [];
+          const list = Array.isArray(loader?.plugins) ? loader.plugins.filter(p => p.name === 'Core' || p.name === 'Playhub') : [];
           return loader === this.loader && list.length === 1 && list[0] === this.plugin
             && this.plugin.onDismount === this.callback
             && typeof store?.IsAnyAppRunning === 'function' && store.IsAnyAppRunning() === false;

@@ -60,6 +60,7 @@ function fixture(failing, runtime = {}) {
       acknowledgeSteamModeCommand:runtime.acknowledgeSteamModeCommand??(async()=>true),
       consumeOpenRequest:runtime.consumeOpenRequest??(async()=>({focusRecovery:0,steamForeground:false}))},
     './controlBackend':{call:runtime.call},
+    './deckyPluginName':{migrateDeckyPluginName:async()=>[]},
     './controlledQamFocus':{steamAppId:value=>Number(value) >>> 0},
   };
   const window = {setInterval:callback=>{tick=callback;return 1;},clearInterval:noop,setTimeout:()=>2,clearTimeout:noop,
@@ -73,7 +74,7 @@ for (const name of ['store library','digital stores portal','store game actions'
     const f = fixture(name);
     const plugin = f.factory();
     await Promise.resolve();
-    assert.equal(plugin.name,'Playhub');
+    assert.equal(plugin.name,'Core');
     assert.ok(f.calls.includes('qam'));
     assert.equal(f.warnings.length,1);
     plugin.onDismount();

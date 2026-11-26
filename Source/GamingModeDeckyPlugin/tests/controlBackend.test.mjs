@@ -4,14 +4,14 @@ import vm from 'node:vm';
 import test from 'node:test';
 import ts from 'typescript';
 
-function client(backendCall, reload) {
+function client(backendCall, reload, plugins) {
   const exports = {};
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(new URL('../src/controlBackend.ts', import.meta.url), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText, { exports, require: () => ({call:backendCall}), window: { setTimeout: fn => { fn(); return 1; }, DeckyBackend: {call:reload} } });
+  }).outputText, { exports, require: () => ({call:backendCall}), window: { setTimeout: fn => { fn(); return 1; }, DeckyBackend: {call:reload}, DeckyPluginLoader: plugins ? {plugins} : undefined } });
   return exports;
 }
-test('passive upgrade reloads only Playhub once before concurrent RPC calls', async () => {
+test('passive upgrade reloads only this plugin (Core) once before concurrent RPC calls', async () => {
   let passive = true;
   const reloaded = [];
   const api = client(async name => {
@@ -19,6 +19,16 @@ test('passive upgrade reloads only Playhub once before concurrent RPC calls', as
     return name === 'get_panel_preferences' ? {} : name;
   }, async (...args) => { reloaded.push(args); passive = false; });
   assert.deepEqual(await Promise.all([api.call('get_audio_devices'), api.call('get_capabilities')]), ['get_audio_devices', 'get_capabilities']);
+  assert.deepEqual(reloaded, [['loader/reload_plugin', 'Core']]);
+});
+test('a loaded copy older than the rename is reloaded under its old name', async () => {
+  let passive = true;
+  const reloaded = [];
+  const api = client(async name => {
+    if (passive) throw new Error('This plugin is passive (aka does not implement main.py)');
+    return name;
+  }, async (...args) => { reloaded.push(args); passive = false; }, [{name:'Music'}, {name:'Playhub'}]);
+  await api.call('get_capabilities');
   assert.deepEqual(reloaded, [['loader/reload_plugin', 'Playhub']]);
 });
 test('ordinary backend errors do not restart plugins or Decky', async () => {

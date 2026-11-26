@@ -73,7 +73,8 @@ export function createQamLayoutRuntime(hook: Hook, nativeRender: Hook["render"],
       }
       const original = [...tabs];
       for (const name of preferences.selected) {
-        if (name === "Playhub") continue;
+        // This plugin's own tab ("Playhub" is its stored key; Decky lists it as "Core" from 3.4).
+        if (name === "Playhub" || name === "Core") continue;
         const plugin = plugins.find(p => p.name === name); if (!plugin) continue;
         let entry = entries.get(name);
         const chosenIcon = preferences.icons[name] || "";

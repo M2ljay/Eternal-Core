@@ -45,12 +45,12 @@ export function QamSettings({locale,children}:{locale:string;children?:React.Rea
   next={...next,updated_at:Date.now()};setQamLayoutPreferences(next);setFailed(false);
   saving=saving.catch(()=>{}).then(async()=>{await call('set_qam_preferences',next);}).catch(()=>{setFailed(true);});
  };
- const integratedNames=['Shortcuts','Quick Settings','Gaming Mode','Playhub Gaming Mode','Playhub'];
+ const integratedNames=['Shortcuts','Quick Settings','Gaming Mode','Playhub Gaming Mode','Playhub','Core'];
  const entries=snapshot.plugins.filter(p=>!integratedNames.includes(p.name)).map(p=>({...p,available:true,selected:prefs.selected.includes(p.name),iconChoice:prefs.icons[p.name]??'original'}));
  for(const name of prefs.selected)if(!entries.some(p=>p.name===name)&&!integratedNames.includes(name))entries.push({name,available:false,selected:true,iconChoice:prefs.icons[name]??'original'} as any);
- const tabs=[{key:'shortcut:Playhub',name:'Core',pluginName:'Playhub',kind:'decky',available:true,icon:snapshot.plugins.find(p=>p.name==='Playhub')?.icon},
+ const tabs=[{key:'shortcut:Playhub',name:'Core',pluginName:'Playhub',kind:'decky',available:true,icon:snapshot.plugins.find(p=>p.name==='Core'||p.name==='Playhub')?.icon},
  ...snapshot.native.map(n=>({...n,name:qamNativeLabel(n.key,n.label,locale),kind:n.key.startsWith('steam:')?'steam':'decky',available:true,hidden:prefs.hidden.includes(n.key)})),
- ...entries.filter(p=>p.selected&&p.name!=='Playhub').map(p=>({...p,key:`shortcut:${p.name}`,pluginName:p.name,kind:'shortcut'}))];
+ ...entries.filter(p=>p.selected&&p.name!=='Playhub'&&p.name!=='Core').map(p=>({...p,key:`shortcut:${p.name}`,pluginName:p.name,kind:'shortcut'}))];
  tabs.sort((a,b)=>{const x=prefs.order.indexOf(a.key),y=prefs.order.indexOf(b.key);return(x<0?1e6:x)-(y<0?1e6:y);});
  const viewSnapshot={entries,tabs,selected:prefs.selected,fingerprint:JSON.stringify(prefs)};
  const current=React.useRef(viewSnapshot);current.current=viewSnapshot;
@@ -59,7 +59,7 @@ export function QamSettings({locale,children}:{locale:string;children?:React.Rea
    const order=[...p.order];for(const t of all)if(!order.includes(t.key))order.push(t.key);const a=order.indexOf(key),b=order.indexOf(other.key);[order[a],order[b]]=[order[b],order[a]];save({...p,order});},
   toggleNativeTab:(key:string)=>{const p=getQamLayoutPreferences();save({...p,hidden:p.hidden.includes(key)?p.hidden.filter(k=>k!==key):[...p.hidden,key]});},
   add:(name:string)=>{const p=getQamLayoutPreferences();save({...p,selected:[...new Set([...p.selected,name])]});},
-  remove:(name:string)=>{if(name==='Playhub')return;const p=getQamLayoutPreferences();save({...p,selected:p.selected.filter(n=>n!==name)});},
+  remove:(name:string)=>{if(name==='Playhub'||name==='Core')return;const p=getQamLayoutPreferences();save({...p,selected:p.selected.filter(n=>n!==name)});},
   setIcon:(name:string,id:string)=>{const p=getQamLayoutPreferences(),icons={...p.icons};if(id==='original')delete icons[name];else icons[name]=id;save({...p,icons});}
  }),[]);
  return <Focusable className="ph-qam-settings" flow-children="column" style={{width:"calc(100% + 32px)",maxWidth:"none",marginInline:-16,minWidth:0}}><div style={{paddingInline:16}}>{children}</div>

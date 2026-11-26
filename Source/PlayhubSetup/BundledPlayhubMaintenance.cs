@@ -18,15 +18,17 @@ internal static class BundledPlayhubMaintenance
           const loader = window.DeckyPluginLoader, bridge = window.DeckyBackend, store = window.SteamUIStore;
           if (!Array.isArray(loader?.plugins) || typeof bridge?.call !== 'function'
               || typeof store?.IsAnyAppRunning !== 'function') return 'unavailable';
-          const matches = loader.plugins.filter(p => p.name === 'Playhub');
+          // Decky lists the plugin as 'Core' from 3.4, as 'Playhub' while an older copy is loaded.
+          const own = p => p.name === 'Core' || p.name === 'Playhub';
+          const matches = loader.plugins.filter(own);
           if (matches.length !== 1 || store.IsAnyAppRunning() !== false) return 'busy';
           const disabled = await bridge.call('utilities/settings/get', 'disabled_plugins', []);
           if (disabled !== null && (!Array.isArray(disabled) || disabled.some(x => typeof x !== 'string'))) return 'unavailable';
-          if ((disabled ?? []).some(x => x.toLowerCase() === 'playhub')) return 'disabled';
+          if ((disabled ?? []).some(x => ['core', 'playhub'].includes(x.toLowerCase()))) return 'disabled';
           if (window.DeckyPluginLoader !== loader || window.DeckyBackend !== bridge || window.SteamUIStore !== store
-              || loader.plugins.filter(p => p.name === 'Playhub').length !== 1 || !loader.plugins.includes(matches[0])) return 'unavailable';
+              || loader.plugins.filter(own).length !== 1 || !loader.plugins.includes(matches[0])) return 'unavailable';
           if (store.IsAnyAppRunning() !== false) return 'busy';
-          const reply = await bridge.call('loader/reload_plugin', 'Playhub');
+          const reply = await bridge.call('loader/reload_plugin', matches[0].name);
           return reply === false ? 'unavailable' : 'reloaded';
         })()
         """;
@@ -125,7 +127,7 @@ internal static class BundledPlayhubMaintenance
     private static bool Identity(string directory)
     {
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "plugin.json")));
-        return doc.RootElement.GetProperty("name").GetString() == "Playhub";
+        return doc.RootElement.GetProperty("name").GetString() is "Core" or "Playhub";
     }
     private static string Digest(string path) { using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read); return Convert.ToHexString(SHA256.HashData(stream)); }
     private static bool SafePath(string path)

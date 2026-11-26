@@ -45,6 +45,7 @@ import { installLivePerformance } from "./quickSettings/livePerformanceRuntime";
 import { installPlayhubUpdateNotice, updateNoticeBody, type UpdateNotice } from "./playhubUpdateNotice";
 import { installCoreHeartbeat, ensureCoreRepairTile, type CoreRepairShortcut } from "./coreHealth";
 import { UpdateNightCard } from "./UpdateNightCard";
+import { migrateDeckyPluginName } from "./deckyPluginName";
 
 const { useState, useEffect, useMemo } = React;
 let hapticSettingsWrite = Promise.resolve();
@@ -1204,8 +1205,11 @@ export default definePlugin(() => {
     console.warn("Playhub Plugin Store: rotta non aggiunta", error);
   }
 
+  // Decky's own order and hidden lists still say "Playhub" after the rename; fix them once.
+  try { void migrateDeckyPluginName().catch(() => { /* Best effort. */ }); } catch { /* Best effort. */ }
+
   return {
-    name: "Playhub",
+    name: "Core",
     titleView: <div className={staticClasses?.Title}>{playhubTitle}</div>,
     content: <Content />,
     icon: <PlayhubIcon />,

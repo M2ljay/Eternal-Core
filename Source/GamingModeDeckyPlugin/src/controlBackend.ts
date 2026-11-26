@@ -12,8 +12,12 @@ export function ensureControlBackend(): Promise<void> {
       const bridge = (window as any).DeckyBackend;
       if (typeof bridge?.call !== "function") throw error;
       // A formerly frontend-only plugin needs a backend reload after its first upgrade.
-      // Reload only Playhub, never Decky or any other installed plugin.
-      await bridge.call("loader/reload_plugin", "Playhub");
+      // Reload only this plugin, never Decky or any other installed plugin. Decky lists it as
+      // "Core" from 3.4 and as "Playhub" when the loaded copy predates the rename.
+      const loaded = (window as any).DeckyPluginLoader?.plugins;
+      const name = Array.isArray(loaded) && !loaded.some((plugin: any) => plugin?.name === "Core")
+        && loaded.some((plugin: any) => plugin?.name === "Playhub") ? "Playhub" : "Core";
+      await bridge.call("loader/reload_plugin", name);
     }
     for (let attempt = 0; attempt < 12; attempt++) {
       await new Promise(resolve => window.setTimeout(resolve, 500));

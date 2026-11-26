@@ -275,7 +275,8 @@ export function createLegacyShortcutsDeckyHost(hook: Hook, bridge: any) {
   let stopped = false;
   const ownsHook = () => !stopped && hook.render === wrapper && state.wrapper === wrapper
     && layout.wrapper === wrapper && state[Symbol.for("shortcuts.qam-tab-layout-adapter")] === layout;
-  const currentTabId = () => hook.tabs.find(tab => tab.__shortcutsPlugin === "Playhub")?.id as number | undefined;
+  // "Playhub" is the QAM bridge key; a host that tags tabs by Decky name uses "Core" (3.4+).
+  const currentTabId = () => hook.tabs.find(tab => tab.__shortcutsPlugin === "Playhub" || tab.__shortcutsPlugin === "Core")?.id as number | undefined;
   const wrapper: Hook["render"] = function(this: Hook, tabs, visible) {
     if (this !== hook || !Array.isArray(tabs) || Object.isFrozen(tabs)) return previous.call(this, tabs, visible);
     // Same rule as the standalone hook: our own fault detaches instead of escaping into

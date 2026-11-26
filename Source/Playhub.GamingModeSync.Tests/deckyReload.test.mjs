@@ -29,3 +29,8 @@ test('game guard runs immediately before the loader call, and rejection is not s
  f.window.DeckyBackend.call=async()=>{assert.ok(checked);throw Error('loader unavailable')};
  await assert.rejects(f.run(),/loader unavailable/);
 });
+test('rebrand phase 2: the Core name and its /plugins/Core/ import are recognised; Core wins over a stale Playhub entry',async()=>{
+ const run=entries=>vm.runInNewContext(loaded,{window:{DeckyPluginLoader:{plugins:[{name:'Core'}]}},performance:{getEntriesByType:()=>entries.map(name=>({name}))},URL,Date});
+ assert.equal(run(['http://127.0.0.1:1337/plugins/Core/dist/index.js?t=1790000002000','http://127.0.0.1:1337/plugins/Playhub/dist/index.js?t=1790000001000']),1790000002000);
+ const f=fixture();f.window.DeckyPluginLoader.plugins=[{name:'Playhub'},{name:'Core'}];assert.equal(await f.run(),'reloaded');assert.deepEqual(f.calls,[['loader/reload_plugin','Core']]);
+});

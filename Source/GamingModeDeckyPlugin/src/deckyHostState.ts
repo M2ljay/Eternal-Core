@@ -21,10 +21,11 @@ export function createScopedDeckyState(real: any): ScopedDeckyState {
     publicState() {
       const snapshot = real.publicState();
       if (!Array.isArray(snapshot?.plugins)) throw new Error("unsupported_plugin_inventory");
-      const plugins = snapshot.plugins.filter((plugin: any) => plugin.name !== "Playhub");
+      // This plugin itself: "Core" from 3.4, "Playhub" before.
+      const plugins = snapshot.plugins.filter((plugin: any) => plugin.name !== "Core" && plugin.name !== "Playhub");
       return { ...snapshot, plugins, activePlugin: visible ? plugins.find((plugin: any) => plugin.name === selected) ?? null : null };
     },
-    setActivePlugin(name: string) { selected = name === "Playhub" ? null : name; notify(); },
+    setActivePlugin(name: string) { selected = name === "Core" || name === "Playhub" ? null : name; notify(); },
     closeActivePlugin() { selected = null; notify(); },
   };
   for (const key of delegates) state[key] = real[key].bind(real);
