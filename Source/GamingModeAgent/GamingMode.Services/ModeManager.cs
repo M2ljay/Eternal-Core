@@ -201,6 +201,18 @@ public sealed class ModeManager
 		}
 	}
 
+	// Mark III: Windows banners are turned off only while Gaming Mode runs (MarkIIIHost). The
+	// desktop may run without the agent, so every way into it puts the user's setting back first.
+	private void RestoreWindowsBanners()
+	{
+		try
+		{
+			if (Playhub.Shared.CouchHardening.SetGamingToasts(new Playhub.Shared.CouchRegistryWindows(), false, Path.Combine(_paths.ConfigDirectory, "quiet-toasts.json")))
+				_logger.Info("Windows banners back to the user's setting for the desktop.");
+		}
+		catch (Exception error) { _logger.Error("Windows banners could not be restored for the desktop.", error); }
+	}
+
 	public ApiResult SetDefaultMode(ModeKind mode)
 	{
 		try
@@ -229,6 +241,7 @@ public sealed class ModeManager
 
 	public ApiResult RestartInMode(ModeKind mode)
 	{
+		if (mode == ModeKind.Desktop) RestoreWindowsBanners();
 		try
 		{
 			ModeConfig modeConfig = _store.LoadConfig();
@@ -592,6 +605,7 @@ public sealed class ModeManager
 
 	private void ApplyDesktopMode(ModeConfig config, ICollection<string> messages, bool interactive, bool restoreStartupApps)
 	{
+		RestoreWindowsBanners();
 		// A healthy loader belongs to Steam in both modes. Stopping it here
 		// invalidates the outstanding native Exit readback and reloads every
 		// plugin. The owned DeckyHost health monitor handles proven EOF/hangs.

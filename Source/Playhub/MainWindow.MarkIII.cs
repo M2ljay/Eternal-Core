@@ -1,12 +1,14 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Playhub.Services;
+using Playhub.Shared;
 
 namespace Playhub;
 
@@ -83,6 +85,7 @@ public sealed partial class MainWindow
         gaming.Tv.MacAddress = EmptyToNull(_tvMacBox.Text.Trim());
         gaming.Tv.CoreInput = GetComboKey(_tvInputCombo) ?? "HDMI_2";
         gaming.DeckyHealthNoticeEnabled = GetToggle("deckyNotice");
+        gaming.QuietWindowsToasts = GetToggle("quietToasts");
     }
 
     private void WriteMarkIIIIntoControls()
@@ -95,6 +98,8 @@ public sealed partial class MainWindow
         SetToggle("tvOn", gaming.Tv.TurnOnWithCore);
         SetToggle("tvOff", gaming.Tv.TurnOffWithCore);
         SetToggle("deckyNotice", gaming.DeckyHealthNoticeEnabled);
+        SetToggle("quietToasts", gaming.QuietWindowsToasts);
+        RefreshQuietWindowsStatus();
         _tvAddressBox.Text = gaming.Tv.Address ?? "";
         _tvMacBox.Text = gaming.Tv.MacAddress ?? "";
         SelectComboKey(_tvInputCombo, string.IsNullOrWhiteSpace(gaming.Tv.CoreInput) ? "HDMI_2" : gaming.Tv.CoreInput);
@@ -209,6 +214,73 @@ public sealed partial class MainWindow
         var tv = await AgentAsync(HttpMethod.Get, "/tv/state", TimeSpan.FromSeconds(4));
         if (tv is { } tvState && tvState.TryGetProperty("paired", out var paired))
             _tvStatus.Text = T(paired.ValueKind == JsonValueKind.True ? "TV abbinata." : "Abbina prima la TV.");
+    }
+
+    // ---------- quiet Windows (couch hardening) ----------
+
+    private readonly StackPanel _quietList = new() { Spacing = 4 };
+    private readonly TextBlock _quietStatus = new() { TextWrapping = TextWrapping.Wrap, Opacity = 0.8 };
+    private static string QuietUserBackup => Path.Combine(AppPaths.LocalDataRoot, "couch-user.json");
+
+    private FluentCard BuildQuietWindowsCard()
+    {
+        var card = Card();
+        card.Children.Add(IconHeader(((char)0xE7ED).ToString(), "Windows tranquillo",
+            "Spegne le interruzioni di Windows che possono comparire sulla TV. Ogni modifica viene salvata prima e si può annullare da qui."));
+        AddExplainedToggle(card, "Nascondi gli avvisi di Windows in Gaming Mode",
+            "Niente banner di Windows sulla TV; tornano sul desktop e restano nel centro notifiche. Gli avvisi di Steam e Decky non cambiano.", "quietToasts");
+        card.Children.Add(_quietList);
+        card.Children.Add(Body("Gli aggiornamenti di Windows aspettano la notte: quando serve un riavvio, Accesso rapido > Core propone di riavviare alle 5:00."));
+        card.Children.Add(ActionRow(
+            Button("Applica", ApplyQuietWindowsAsync, primary: true),
+            Button("Annulla le modifiche", UndoQuietWindowsAsync)));
+        card.Children.Add(_quietStatus);
+        return card;
+    }
+
+    private void RefreshQuietWindowsStatus()
+    {
+        _quietList.Children.Clear();
+        if (!OperatingSystem.IsWindows()) return;
+        var registry = new CouchRegistryWindows();
+        foreach (var fix in CouchHardening.Fixes)
+            _quietList.Children.Add(new TextBlock { Text = (CouchHardening.IsApplied(registry, fix) ? "✓  " : "○  ") + T(fix.Label), TextWrapping = TextWrapping.Wrap });
+    }
+
+    private async Task ApplyQuietWindowsAsync()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        try { CouchHardening.Apply(new CouchRegistryWindows(), CouchHardening.Values(false), QuietUserBackup); }
+        catch (Exception error) { Diag.Crash("Quiet Windows apply (user)", error); _quietStatus.Text = T("Non riesco ad applicare le modifiche."); return; }
+        bool machine = await RunElevatedCouchAsync("apply");
+        _quietStatus.Text = T(machine ? "Applicato. Windows ha chiesto i permessi di amministratore per le impostazioni del PC."
+            : "Le impostazioni dell'utente sono applicate; quelle del PC richiedono i permessi di amministratore.");
+        RefreshQuietWindowsStatus();
+    }
+
+    private async Task UndoQuietWindowsAsync()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        try { CouchHardening.Undo(new CouchRegistryWindows(), false, QuietUserBackup); }
+        catch (Exception error) { Diag.Crash("Quiet Windows undo (user)", error); }
+        bool machine = await RunElevatedCouchAsync("undo");
+        _quietStatus.Text = T(machine ? "Modifiche annullate."
+            : "Le impostazioni dell'utente sono annullate; quelle del PC richiedono i permessi di amministratore.");
+        RefreshQuietWindowsStatus();
+    }
+
+    // The machine half runs in this same app, restarted elevated: one Windows prompt.
+    private static async Task<bool> RunElevatedCouchAsync(string verb)
+    {
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo(Environment.ProcessPath ?? "", "couch-harden " + verb) { UseShellExecute = true, Verb = "runas" });
+            if (process is null) return false;
+            await process.WaitForExitAsync();
+            return process.ExitCode == 0;
+        }
+        catch (System.ComponentModel.Win32Exception) { return false; } // the prompt was declined
+        catch (Exception error) { Diag.Crash("Quiet Windows elevated " + verb, error); return false; }
     }
 
     private async Task<JsonElement?> AgentAsync(HttpMethod method, string path, TimeSpan timeout)

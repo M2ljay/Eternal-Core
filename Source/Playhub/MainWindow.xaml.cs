@@ -2283,6 +2283,7 @@ public sealed partial class MainWindow : Window
         panel.Children.Add(BuildAntiCheatCard());
         panel.Children.Add(CardsRow(BuildBootSequenceCard(), BuildCoreRepairCard()));
         panel.Children.Add(BuildTvCard());
+        panel.Children.Add(BuildQuietWindowsCard());
 
         // ---------- Splash logo with live preview ----------
         _splashLogoCombo = ChoiceCombo(SplashLogoOptions);

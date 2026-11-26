@@ -5768,7 +5768,7 @@ function deviceInfoLocale(locale) {
         profile: profile[0], auto: profile[1], pc: profile[2], handheld: profile[3], experimental: profile[4], profileHint: profile[5], battery: profile[6], ac: profile[7], primaryDisplay: profile[8], video: profile[9], power: profile[10], details: profile[11], saveError: profile[12], retry: profile[13], batteryHealth: batteryHealth[language] ?? batteryHealth.en };
 }
 
-const copy$8 = {
+const copy$9 = {
     "en": {
         "StoreLibrary.WindowsManaged": "Installation managed by Microsoft Store",
         "StoreLibrary.Stores": "Digital stores",
@@ -6850,9 +6850,9 @@ const copy$8 = {
         "StoreLibrary.ConfirmCancelDownload": "Вы действительно хотите отменить загрузку?"
     }
 };
-function storeLibraryLocale(locale) { return copy$8[deviceLanguage(locale)] ?? copy$8.en; }
+function storeLibraryLocale(locale) { return copy$9[deviceLanguage(locale)] ?? copy$9.en; }
 
-const { PanelSection: PanelSection$2, PanelSectionRow: PanelSectionRow$3, DropdownItem: DropdownItem$4, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = _global_DFL;
+const { PanelSection: PanelSection$3, PanelSectionRow: PanelSectionRow$4, DropdownItem: DropdownItem$4, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = _global_DFL;
 const danger = `.ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) {
 background:#c42b1c!important;color:#fff!important}
 .ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) * {color:inherit!important}`;
@@ -6919,7 +6919,7 @@ function StoreDownloadsQam({ locale }) {
     const c = storeLibraryLocale(locale);
     if (!jobs.length)
         return null;
-    return SP_JSX.jsx(PanelSection$2, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
+    return SP_JSX.jsx(PanelSection$3, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
 }
 
 const { DialogButton: DialogButton$8 } = _global_DFL;
@@ -7309,7 +7309,7 @@ function translationController(store) {
     }
 }
 
-const { PanelSectionRow: PanelSectionRow$2, ToggleField: ToggleField$4 } = _global_DFL;
+const { PanelSectionRow: PanelSectionRow$3, ToggleField: ToggleField$4 } = _global_DFL;
 const descriptions$1 = {
     en: "Makes the Steam Controller appear as an Xbox controller.",
     it: "Fa riconoscere lo Steam Controller come un pad Xbox.",
@@ -7358,7 +7358,7 @@ function TranslationControllerToggle({ locale }) {
     }, []);
     if (!connected || enabled === null)
         return null;
-    return SP_JSX.jsx(PanelSectionRow$2, { children: SP_JSX.jsx(ToggleField$4, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
+    return SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsx(ToggleField$4, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
                 if (typeof value !== "boolean" || writing.current || !available || !mounted.current || !translationController(window.ControllerStore))
                     return;
                 writing.current = true;
@@ -7415,7 +7415,7 @@ function pollStatus(read, update) {
     return () => { stopped = true; clearTimeout(timer); controller?.abort(); };
 }
 
-const copy$7 = {
+const copy$8 = {
     "en": {
         "Title": "Gaming Mode optional",
         "Description": "Start in Big Picture, switch to the desktop and open the Core Dashboard with a controller.",
@@ -7585,7 +7585,7 @@ const copy$7 = {
         "Ready": "Gaming Mode तैयार है।"
     }
 };
-function optionalAgentCopy(locale) { return copy$7[locale] ?? copy$7.en; }
+function optionalAgentCopy(locale) { return copy$8[locale] ?? copy$8.en; }
 
 // Backend client for Quick Settings.
 //   * call(...)  -> Decky Python backend (main.py)
@@ -7748,7 +7748,7 @@ function gameSettingsLabel(_language) {
     return "Core Game Settings";
 }
 
-const copy$6 = {
+const copy$7 = {
     en: ["Session", "Audio", "Display", "Performance", "Graphics", "Controller", "System", "Settings", "Customize your panel", "Show tabs", "Move up", "Move down", "Restore defaults", "Back", "Hide a tab without changing its settings or disabling its features.", "Expand", "Collapse", "Switch tab", "Settings could not be saved. Try again."],
     it: ["Sessione", "Audio", "Schermo", "Prestazioni", "Grafica", "Controller", "Sistema", "Impostazioni", "Personalizza il pannello", "Mostra le schede", "Sposta su", "Sposta giù", "Ripristina predefiniti", "Indietro", "Nascondere una scheda non modifica le impostazioni e non disattiva le sue funzioni.", "Espandi", "Comprimi", "Cambia scheda", "Impossibile salvare le impostazioni. Riprova."],
     de: ["Sitzung", "Audio", "Bildschirm", "Leistung", "Grafik", "Controller", "System", "Einstellungen", "Panel anpassen", "Tabs anzeigen", "Nach oben", "Nach unten", "Standard wiederherstellen", "Zurück", "Das Ausblenden eines Tabs ändert keine Einstellungen und deaktiviert keine Funktionen.", "Ausklappen", "Einklappen", "Tab wechseln", "Einstellungen konnten nicht gespeichert werden. Erneut versuchen."],
@@ -7765,7 +7765,7 @@ const copy$6 = {
 function controlLocale(locale) {
     const aliases = { english: "en", italian: "it", german: "de", spanish: "es", latam: "es", french: "fr", brazilian: "pt", portuguese: "pt", russian: "ru", ukrainian: "uk", japanese: "ja", koreana: "ko", schinese: "zh", tchinese: "zh", hindi: "hi" };
     const key = aliases[locale] ?? locale.split(/[-_]/)[0];
-    const row = copy$6[key] ?? copy$6.en;
+    const row = copy$7[key] ?? copy$7.en;
     const tabs = tabCopy[key] ?? tabCopy.en;
     const video = { en: "Video", it: "Video", de: "Video", es: "Vídeo", fr: "Vidéo", pt: "Vídeo", ru: "Видео", uk: "Відео", ja: "映像", ko: "비디오", zh: "视频", hi: "वीडियो" };
     return { home: row[0], audio: video[key] ?? video.en, display: row[2], performance: row[1], graphics: row[3], controller: row[5], tools: row[6], store: 'Plugin Store', decky: 'Decky', settings: row[7], customize: tabs[1], show: tabs[4], up: tabs[2], down: tabs[3], reset: row[12], back: row[13], hint: row[14], expand: row[15], collapse: row[16], switchTab: row[17], saveError: row[18], device: tabs[5], unavailable: tabs[6], loading: tabs[7], retry: tabs[8] };
@@ -10147,7 +10147,7 @@ function bounded$1(operation) {
         operation.then(value => { window.clearTimeout(timer); resolve(value); }, error => { window.clearTimeout(timer); reject(error); });
     });
 }
-const copy$5 = {
+const copy$6 = {
     en: ["Check shader support", "Graphics requirements met", "Requirements unmet", "Needs verification", "Listed by Intel · cache unverified", "Graphics adapter unavailable"],
     it: ["Verifica supporto shader", "Requisiti grafici soddisfatti", "Fuori requisiti", "Da verificare", "Nel catalogo Intel · cache da verificare", "Scheda grafica da rilevare"],
     de: ["Shader-Unterstützung prüfen", "Grafikanforderungen erfüllt", "Nicht unterstützt", "Nicht geprüft", "Bei Intel gelistet · Cache nicht geprüft", "Keine Grafikkarte erkannt"],
@@ -10186,7 +10186,7 @@ function ShaderCompatibility({ appId, locale, renderSection }) {
         return () => { mounted.current = false; ++epoch.current; window.removeEventListener("focus", onFocus); };
     }, [appId]);
     const text = shaderCacheCopy(locale);
-    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$5[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$5.en;
+    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$6[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$6.en;
     const labels = { eligible, unsupported, unverified: unknown };
     const current = (generation) => mounted.current && epoch.current === generation;
     function accept(next, generation) {
@@ -11685,7 +11685,7 @@ function createSteamDownloadPower(read, send) {
     };
 }
 
-const copy$4 = {
+const copy$5 = {
     en: ["Finish Steam download", "Stop keeping awake", "On AC power, Windows can turn off the display while Steam finishes the current download.", "PC stays awake for this download.", "Could not start download power mode."],
     it: ["Completa il download Steam", "Termina modalità download", "Con l’alimentazione collegata, Windows può spegnere lo schermo mentre Steam completa il download.", "Il PC resta sveglio per questo download.", "Impossibile avviare la modalità download."],
     de: ["Steam-Download abschließen", "Wachhalten beenden", "Am Netz kann Windows den Bildschirm ausschalten, während Steam den Download beendet.", "Der PC bleibt für diesen Download wach.", "Downloadmodus konnte nicht gestartet werden."],
@@ -11753,7 +11753,7 @@ function SteamDownloadPower({ locale }) {
     }, []);
     if (!state.available && !state.active)
         return null;
-    const [start, stop, detail, active, failed] = copy$4[locale.split(/[-_]/)[0]] ?? copy$4.en;
+    const [start, stop, detail, active, failed] = copy$5[locale.split(/[-_]/)[0]] ?? copy$5.en;
     return SP_JSX.jsxs("div", { className: "qsCardBody", "aria-busy": state.busy, children: [SP_JSX.jsx(_global_DFL.DialogButton, { disabled: state.busy, onClick: () => void (state.active ? downloadPower.stop() : downloadPower.start()), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: state.active ? stop : start }) }), SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: state.failed ? failed : state.active ? active : detail })] });
 }
 
@@ -23928,7 +23928,7 @@ function useHistoryPhoto(url) {
     return resolved?.source === url && resolved.digest === expected?.sha256 ? resolved.url : undefined;
 }
 
-const copy$3 = {
+const copy$4 = {
     it: ['Premi', 'per approfondire', 'per richiudere', 'Visualizza immagine', 'Chiudi'],
     en: ['Press', 'to explore', 'to collapse', 'View image', 'Close'],
     de: ['Drücke', 'für mehr', 'zum Zuklappen', 'Bild ansehen', 'Schließen'],
@@ -23942,7 +23942,7 @@ const copy$3 = {
     zh: ['按', '深入閱讀', '收起內容', '查看圖片', '關閉'],
     hi: ['', 'दबाकर विस्तार से पढ़ें', 'दबाकर समेटें', 'चित्र देखें', 'बंद करें'],
 };
-const historyActionCopy = (locale) => copy$3[locale.split(/[-_]/)[0]] ?? copy$3.en;
+const historyActionCopy = (locale) => copy$4[locale.split(/[-_]/)[0]] ?? copy$4.en;
 class GlyphBoundary extends _global_SP_REACT.Component {
     constructor() {
         super(...arguments);
@@ -53839,7 +53839,7 @@ function tabEditorLocale(locale) {
 // Testi della sezione "Barra superiore" nelle impostazioni del plugin.
 // Ordine: titolo, data accanto all'ora, descrizione, sposta a sinistra,
 // descrizione, formato della data, automatico.
-const copy$2 = {
+const copy$3 = {
     en: ["Top bar", "Date next to the time", "Shows the date in Steam's top bar, before the weather and the current track.", "Move time and date to the left", "Moves the clock group, together with weather and music when shown.", "Date format", "Automatic"],
     it: ["Barra superiore", "Data accanto all'ora", "Mostra la data nella barra superiore di Steam, prima di meteo e brano corrente.", "Sposta ora e data a sinistra", "Sposta il gruppo dell’orologio, insieme a meteo e musica se presenti.", "Formato della data", "Automatico"],
     de: ["Obere Leiste", "Datum neben der Uhrzeit", "Zeigt das Datum in der oberen Leiste von Steam, vor Wetter und aktuellem Titel.", "Uhrzeit und Datum nach links", "Verschiebt die Uhrgruppe, zusammen mit Wetter und Musik, falls vorhanden.", "Datumsformat", "Automatisch"],
@@ -53858,10 +53858,10 @@ const tags = { en: "en-US", it: "it-IT", de: "de-DE", es: "es-ES", fr: "fr-FR", 
 function key(locale) {
     const lower = String(locale || "").toLowerCase();
     const k = aliases[lower] ?? lower.split(/[-_]/)[0];
-    return copy$2[k] ? k : "en";
+    return copy$3[k] ? k : "en";
 }
 function topbarDateCopy(locale) {
-    const [title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic] = copy$2[key(locale)];
+    const [title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic] = copy$3[key(locale)];
     return { title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic };
 }
 // Esempi calcolati come li scrive la barra superiore: stesse opzioni Intl e
@@ -53894,7 +53894,7 @@ function topbarDateOptions(locale, sample = new Date(2026, 8, 19)) {
             }
         }
         if (data === "auto")
-            label = `${copy$2[k][6]} (${label})`;
+            label = `${copy$3[k][6]} (${label})`;
         return { data, label };
     });
 }
@@ -54538,7 +54538,7 @@ function deckyIntegrationLocale(locale) {
     return { label: row[0], description: row[1] };
 }
 
-const copy$1 = {
+const copy$2 = {
     en: ["Discover the new Core experience", "Open Quick Access to discover Core.", "Everything is here: your Core, in Quick Access.", "Decky is available here. You can restore its Quick Access tab in Core settings.", "Decky integration is optional. You can enable it in Core settings and restore its Quick Access tab at any time.", "Continue", "Pause guide", "Finish"],
     it: ["Scopri la nuova esperienza Core", "Apri l'accesso rapido per scoprire Core.", "Trovi tutto qui: il tuo Core, nell'accesso rapido.", "Decky è accessibile qui. Puoi ripristinare la sua scheda nell'accesso rapido dalle impostazioni di Core.", "L'integrazione di Decky è facoltativa. Puoi attivarla nelle impostazioni di Core e ripristinare la sua scheda nell'accesso rapido in qualsiasi momento.", "Continua", "Sospendi la guida", "Concludi"],
     es: ["Descubre la nueva experiencia Core", "Abre el acceso rápido para descubrir Core.", "Todo está aquí: tu Core, en el acceso rápido.", "Decky está disponible aquí. Puedes restaurar su pestaña de acceso rápido en los ajustes de Core.", "La integración de Decky es opcional. Puedes activarla en los ajustes de Core y restaurar su pestaña de acceso rápido cuando quieras.", "Continuar", "Pausar la guía", "Finalizar"],
@@ -54553,7 +54553,7 @@ const copy$1 = {
     ru: ["Откройте новый Core", "Откройте быстрый доступ, чтобы познакомиться с Core.", "Всё здесь: ваш Core в быстром доступе.", "Decky доступен здесь. Его вкладку быстрого доступа можно восстановить в настройках Core.", "Интеграция Decky необязательна. Её можно включить в настройках Core и в любой момент восстановить вкладку быстрого доступа.", "Продолжить", "Приостановить руководство", "Завершить"],
 };
 function getOnboardingCopy(locale) {
-    const [, open, , decky, , next, pause, finish] = copy$1[normalizeStoreLocale(locale)];
+    const [, open, , decky, , next, pause, finish] = copy$2[normalizeStoreLocale(locale)];
     nativeDeckyCopy[normalizeStoreLocale(locale)];
     const [title] = welcome[normalizeStoreLocale(locale)];
     const text = presentation[normalizeStoreLocale(locale)];
@@ -57141,8 +57141,8 @@ function createGameFrameComparison() {
 }
 const gameFrameComparison = createGameFrameComparison();
 
-const { ButtonItem: ButtonItem$1, PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1 } = _global_DFL;
-const copy = {
+const { ButtonItem: ButtonItem$2, PanelSection: PanelSection$2, PanelSectionRow: PanelSectionRow$2 } = _global_DFL;
+const copy$1 = {
     en: ["Frame timing", "Measure FPS", "Measuring…", "Four-second sample of the current game.", "Presented FPS", "Frame time", "No game frames captured. Try during play.", "Frame measurement is unavailable.", "Windows denied access to frame data."],
     it: ["Tempi dei fotogrammi", "Misura FPS", "Misurazione…", "Campione di quattro secondi del gioco in corso.", "FPS presentati", "Tempo per fotogramma", "Nessun fotogramma rilevato. Riprova durante il gioco.", "Misurazione dei fotogrammi non disponibile.", "Windows ha negato l’accesso ai dati dei fotogrammi."],
     de: ["Framezeiten", "FPS messen", "Messung läuft…", "Vier Sekunden aus dem laufenden Spiel.", "Ausgegebene FPS", "Framezeit", "Keine Frames erfasst. Versuche es im Spiel erneut.", "Frame-Messung nicht verfügbar.", "Windows hat den Zugriff auf Frame-Daten verweigert."],
@@ -57172,7 +57172,7 @@ const comparisonCopy = {
 };
 function GameFrameTiming({ appId, locale }) {
     const language = locale.split(/[-_]/)[0];
-    const [title, , measuring, , fps, frame, empty, unavailable, denied] = copy[language] ?? copy.en;
+    const [title, , measuring, , fps, frame, empty, unavailable, denied] = copy$1[language] ?? copy$1.en;
     const [measureFirst, measureSecond, repeat, clear, hint, prepare, firstLabel, secondLabel, change, returnToGame] = comparisonCopy[language] ?? comparisonCopy.en;
     const [result, setResult] = _global_SP_REACT.useState(() => gameFrameComparison.read(appId));
     _global_SP_REACT.useEffect(() => {
@@ -57193,7 +57193,7 @@ function GameFrameTiming({ appId, locale }) {
         { label: frame, before: first.medianFrameTimeMs, after: second?.medianFrameTimeMs, unit: " ms" },
         { label: "P95", before: first.p95FrameTimeMs, after: second?.p95FrameTimeMs, unit: " ms" },
     ] : [];
-    return SP_JSX.jsxs(PanelSection$1, { title: title, children: [SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ButtonItem$1, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => void gameFrameComparison.capture(appId, id => call("measure_game_frames", id, true)), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: busy ? measuring : measure }) }) }), SP_JSX.jsxs("div", { role: "status", style: { padding: "4px 16px 12px", fontSize: 13, lineHeight: 1.5, overflowWrap: "anywhere" }, children: [SP_JSX.jsx("div", { children: message }), !busy && !error && SP_JSX.jsx("div", { style: { opacity: .74 }, children: prepare }), first && SP_JSX.jsx("dl", { style: { display: "grid", gap: 8, margin: "12px 0 0" }, children: rows.map(({ label, before, after, unit }) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { style: { fontWeight: 650 }, children: label }), SP_JSX.jsxs("dd", { style: { margin: 0, display: "flex", flexWrap: "wrap", columnGap: 12 }, children: [SP_JSX.jsxs("span", { children: [firstLabel, " \u00B7 ", format(before), unit] }), after !== undefined && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { children: [secondLabel, " \u00B7 ", format(after), unit] }), SP_JSX.jsxs("span", { children: [change, " \u00B7 ", format(Number((after - before).toFixed(2)), true), unit] })] })] })] }, label)) })] }), first && SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ButtonItem$1, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => gameFrameComparison.reset(appId), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: clear }) }) })] });
+    return SP_JSX.jsxs(PanelSection$2, { title: title, children: [SP_JSX.jsx(PanelSectionRow$2, { children: SP_JSX.jsx(ButtonItem$2, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => void gameFrameComparison.capture(appId, id => call("measure_game_frames", id, true)), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: busy ? measuring : measure }) }) }), SP_JSX.jsxs("div", { role: "status", style: { padding: "4px 16px 12px", fontSize: 13, lineHeight: 1.5, overflowWrap: "anywhere" }, children: [SP_JSX.jsx("div", { children: message }), !busy && !error && SP_JSX.jsx("div", { style: { opacity: .74 }, children: prepare }), first && SP_JSX.jsx("dl", { style: { display: "grid", gap: 8, margin: "12px 0 0" }, children: rows.map(({ label, before, after, unit }) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { style: { fontWeight: 650 }, children: label }), SP_JSX.jsxs("dd", { style: { margin: 0, display: "flex", flexWrap: "wrap", columnGap: 12 }, children: [SP_JSX.jsxs("span", { children: [firstLabel, " \u00B7 ", format(before), unit] }), after !== undefined && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { children: [secondLabel, " \u00B7 ", format(after), unit] }), SP_JSX.jsxs("span", { children: [change, " \u00B7 ", format(Number((after - before).toFixed(2)), true), unit] })] })] })] }, label)) })] }), first && SP_JSX.jsx(PanelSectionRow$2, { children: SP_JSX.jsx(ButtonItem$2, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => gameFrameComparison.reset(appId), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: clear }) }) })] });
 }
 
 const style = `
@@ -60654,6 +60654,68 @@ async function ensureCoreRepairTile(deps) {
     }
 }
 
+// Eternal Core Mark III: "update night". Couch hardening holds Windows Update restarts
+// while someone is signed in, so when Windows has a restart pending (or a month has
+// passed) this card offers to restart at 5:00. The agent does the restart, never during a
+// game (GamingMode.Services/UpdateNight.cs). Shown only when there is something to say.
+const { PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1, ButtonItem: ButtonItem$1 } = _global_DFL;
+const copy = {
+    en: { title: "Windows updates", offer: "Windows has updates waiting. Restart tonight at {time}?", restart: "Restart at {time}", scheduled: "Core will restart at {time} for Windows updates, unless a game is running.", cancel: "Cancel" },
+    it: { title: "Aggiornamenti di Windows", offer: "Windows ha degli aggiornamenti in attesa. Riavviare stanotte alle {time}?", restart: "Riavvia alle {time}", scheduled: "Core si riavvierà alle {time} per gli aggiornamenti di Windows, a meno che un gioco sia aperto.", cancel: "Annulla" },
+    es: { title: "Actualizaciones de Windows", offer: "Windows tiene actualizaciones pendientes. ¿Reiniciar esta noche a las {time}?", restart: "Reiniciar a las {time}", scheduled: "Core se reiniciará a las {time} para las actualizaciones de Windows, salvo que haya un juego abierto.", cancel: "Cancelar" },
+    fr: { title: "Mises à jour de Windows", offer: "Windows a des mises à jour en attente. Redémarrer cette nuit à {time} ?", restart: "Redémarrer à {time}", scheduled: "Core redémarrera à {time} pour les mises à jour de Windows, sauf si un jeu est ouvert.", cancel: "Annuler" },
+    de: { title: "Windows-Updates", offer: "Windows hat ausstehende Updates. Heute Nacht um {time} neu starten?", restart: "Um {time} neu starten", scheduled: "Core startet um {time} für Windows-Updates neu, außer ein Spiel läuft.", cancel: "Abbrechen" },
+    pt: { title: "Atualizações do Windows", offer: "O Windows tem atualizações pendentes. Reiniciar esta noite às {time}?", restart: "Reiniciar às {time}", scheduled: "O Core vai reiniciar às {time} para as atualizações do Windows, a menos que um jogo esteja aberto.", cancel: "Cancelar" },
+    uk: { title: "Оновлення Windows", offer: "Windows має оновлення, що очікують. Перезапустити сьогодні вночі о {time}?", restart: "Перезапустити о {time}", scheduled: "Core перезапуститься о {time} для оновлень Windows, якщо не запущено гру.", cancel: "Скасувати" },
+    ru: { title: "Обновления Windows", offer: "У Windows есть ожидающие обновления. Перезагрузить сегодня ночью в {time}?", restart: "Перезагрузить в {time}", scheduled: "Core перезагрузится в {time} для обновлений Windows, если не запущена игра.", cancel: "Отмена" },
+    zh: { title: "Windows 更新", offer: "Windows 有待安装的更新。今晚 {time} 重启吗？", restart: "{time} 重启", scheduled: "Core 将在 {time} 为 Windows 更新重启，除非有游戏在运行。", cancel: "取消" },
+    ja: { title: "Windows の更新", offer: "Windows に保留中の更新があります。今夜 {time} に再起動しますか？", restart: "{time} に再起動", scheduled: "ゲーム中でなければ、Core は Windows の更新のため {time} に再起動します。", cancel: "キャンセル" },
+    ko: { title: "Windows 업데이트", offer: "Windows에 대기 중인 업데이트가 있습니다. 오늘 밤 {time}에 다시 시작할까요?", restart: "{time}에 다시 시작", scheduled: "게임이 실행 중이 아니면 Core가 Windows 업데이트를 위해 {time}에 다시 시작합니다.", cancel: "취소" },
+    hi: { title: "Windows अपडेट", offer: "Windows के अपडेट इंतज़ार में हैं। आज रात {time} बजे रीस्टार्ट करें?", restart: "{time} बजे रीस्टार्ट करें", scheduled: "कोई गेम न चल रहा हो तो Core Windows अपडेट के लिए {time} बजे रीस्टार्ट होगा।", cancel: "रद्द करें" },
+};
+function nightTime(locale, state, now = new Date()) {
+    let when = state.scheduledFor ? new Date(state.scheduledFor) : undefined;
+    if (!when || Number.isNaN(when.getTime())) {
+        when = new Date(now);
+        when.setHours(state.hour ?? 5, 0, 0, 0);
+        if (when <= now)
+            when.setDate(when.getDate() + 1);
+    }
+    try {
+        return when.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
+    }
+    catch {
+        return `${when.getHours()}:00`;
+    }
+}
+function UpdateNightCard({ locale }) {
+    const [state, setState] = _global_SP_REACT.useState();
+    const [busy, setBusy] = _global_SP_REACT.useState(false);
+    const text = copy[locale] ?? copy.en;
+    _global_SP_REACT.useEffect(() => {
+        let alive = true;
+        const load = () => { call("core_update_night").then(value => { if (alive)
+            setState(value); }).catch(() => undefined); };
+        load();
+        const timer = window.setInterval(load, 60000);
+        return () => { alive = false; window.clearInterval(timer); };
+    }, []);
+    if (!state || (!state.offer && !state.scheduledFor))
+        return null;
+    const time = nightTime(locale, state);
+    const act = async (method) => {
+        setBusy(true);
+        try {
+            setState(await call(method));
+        }
+        catch { /* The agent may be restarting; the next poll retries. */ }
+        finally {
+            setBusy(false);
+        }
+    };
+    return (SP_JSX.jsxs(PanelSection$1, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, opacity: .85, margin: "0 0 8px" }, children: (state.scheduledFor ? text.scheduled : text.offer).replace("{time}", time) }) }), SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ButtonItem$1, { layout: "below", disabled: busy, onClick: () => act(state.scheduledFor ? "core_update_night_cancel" : "core_update_night_schedule"), children: state.scheduledFor ? text.cancel : text.restart.replace("{time}", time) }) })] }));
+}
+
 const { useState, useEffect, useMemo } = _global_SP_REACT;
 let hapticSettingsWrite = Promise.resolve();
 function saveHapticSettings(changes) {
@@ -61531,7 +61593,7 @@ function Content({ origin = "decky" }) {
         return () => { alive = false; stopStatus(); };
     }, []);
     const gameAppId = steamAppId(window.SteamUIStore?.MainRunningAppID ?? _global_DFL.Router?.MainRunningAppID);
-    return (SP_JSX.jsx(SP_JSX.Fragment, { children: SP_JSX.jsx(ControlCenter, { locale: locale, origin: origin, homeTitle: local.controlCentre, gameAppId: gameAppId, gamingMode: status?.currentMode === "Gaming", downloads: SP_JSX.jsx(StoreDownloadsQam, { locale: locale }), frameTiming: origin === "qam" && status && gameAppId !== 0 ? SP_JSX.jsx(GameFrameTiming, { appId: gameAppId, locale: locale }, gameAppId) : null, session: SP_JSX.jsxs(SP_JSX.Fragment, { children: [!status && SP_JSX.jsx(PanelSection, { children: SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsxs("div", { role: "status", style: { margin: "8px 0 16px", padding: "16px", borderRadius: 10,
+    return (SP_JSX.jsx(SP_JSX.Fragment, { children: SP_JSX.jsx(ControlCenter, { locale: locale, origin: origin, homeTitle: local.controlCentre, gameAppId: gameAppId, gamingMode: status?.currentMode === "Gaming", downloads: SP_JSX.jsx(StoreDownloadsQam, { locale: locale }), frameTiming: origin === "qam" && status && gameAppId !== 0 ? SP_JSX.jsx(GameFrameTiming, { appId: gameAppId, locale: locale }, gameAppId) : null, session: SP_JSX.jsxs(SP_JSX.Fragment, { children: [status && SP_JSX.jsx(UpdateNightCard, { locale: locale }), !status && SP_JSX.jsx(PanelSection, { children: SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsxs("div", { role: "status", style: { margin: "8px 0 16px", padding: "16px", borderRadius: 10,
                                     background: "rgba(255,255,255,.055)", border: "1px solid rgba(255,255,255,.12)" }, children: [SP_JSX.jsx("div", { style: { fontSize: 16, fontWeight: 650, marginBottom: 8 }, children: optional.Title }), SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, opacity: .8 }, children: optional.AgentRequired })] }) }) }), SP_JSX.jsxs(PanelSection, { children: [SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsx(ButtonItem, { disabled: !dashboardEnabled || !status, bottomSeparator: "none", layout: "below", onClick: () => openDashboard(), children: "Core Dashboard" }) }), SP_JSX.jsxs(PanelSectionRow, { children: [SP_JSX.jsx("style", { children: `
             @keyframes phShortcutPulse { 0%,100% { opacity:.62; transform:scale(.96); } 50% { opacity:1; transform:scale(1); } }
             @keyframes phShortcutTravel { 0%,100% { transform:translateX(-3px); opacity:.35; } 50% { transform:translateX(3px); opacity:1; } }

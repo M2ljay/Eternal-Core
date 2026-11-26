@@ -14,6 +14,28 @@ button skips it.** It plays while Steam is starting underneath, so it costs no t
 - Turn it off, or just its sound: Core > Gaming Mode > *Sequenza di avvio* /
   *Boot sequence*. It also follows the startup splash switch.
 
+## Quiet Windows
+
+Core > Gaming Mode > **Quiet Windows** turns off the Windows interruptions that can reach
+the TV. **Apply** changes your user settings at once and asks Windows for administrator
+permission once for the PC settings. Every value is backed up first; **Undo changes** puts
+each one back exactly as it was (a value that did not exist is removed again).
+
+- Your user: no "Let's finish setting up" screens, no tips or ads, no "program has stopped
+  working" windows, no Sticky/Filter/Toggle Keys pop-ups.
+- The PC (admin): no update restarts while you are signed in (active hours 11:00 to 5:00),
+  Windows Update leaves the graphics driver alone, no night-time maintenance wake-ups, no
+  password on wake, no Edge first-run or default-browser prompts.
+- **Hide Windows notifications in Gaming Mode** (on by default): Windows banners are off
+  while Gaming Mode runs and come back for the desktop. Steam and Decky notifications are
+  unaffected.
+
+**Update night.** With restarts held, updates need an outlet: when Windows has a restart
+pending, or a month has passed, Quick Access > Core shows "Windows has updates waiting.
+Restart tonight at 5:00?". One press schedules it; the agent restarts into Gaming Mode at
+5:00, never during a game (it retries until 7:00, then asks again). Cancel from the same
+card.
+
 ## Screensaver: Core Starfield
 
 Steam's screensaver list offers **Core Starfield** (it replaces Playhub Circles; pick it once

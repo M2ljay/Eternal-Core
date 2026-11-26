@@ -33,6 +33,8 @@
     <Compile Include="../Playhub.DeckyHost/DeckyProcessTree.cs" Link="DeckyProcessTree.cs" />
     <Compile Include="../Shared/UwpSessionIdentity.cs" Link="UwpSessionIdentity.cs" />
     <Compile Include="../Shared/SplashLogoScale.cs" Link="SplashLogoScale.cs" />
+    <Compile Include="../Shared/CouchHardening.cs" Link="CouchHardening.cs" />
+    <Compile Include="../Shared/CouchRegistryWindows.cs" Link="CouchRegistryWindows.cs" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <!-- Private, default-OFF HUD trial. Does not enable the mirror or input. -->

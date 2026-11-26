@@ -158,6 +158,21 @@ public partial class App : Application
             }
             return true;
         }
+        // Mark III: the machine half of "Quiet Windows", started elevated by the app itself.
+        if (parsed.Count == 2 && string.Equals(parsed[0], "couch-harden", StringComparison.OrdinalIgnoreCase))
+        {
+            int code = 1;
+            try
+            {
+                string backup = Path.Combine(AppPaths.LocalDataRoot, "couch-machine.json");
+                var registry = new Playhub.Shared.CouchRegistryWindows();
+                if (string.Equals(parsed[1], "apply", StringComparison.OrdinalIgnoreCase)) { Playhub.Shared.CouchHardening.Apply(registry, Playhub.Shared.CouchHardening.Values(true), backup); code = 0; }
+                else if (string.Equals(parsed[1], "undo", StringComparison.OrdinalIgnoreCase)) { Playhub.Shared.CouchHardening.Undo(registry, true, backup); code = 0; }
+            }
+            catch (Exception error) { Diag.Crash("Quiet Windows (machine)", error); }
+            Environment.Exit(code);
+            return true;
+        }
         // Mark III: Core Repair's "Update Decky", started headless by the Gaming Mode agent.
         if (parsed.Count > 0 && string.Equals(parsed[0], "decky-update", StringComparison.OrdinalIgnoreCase))
         {

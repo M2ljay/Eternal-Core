@@ -10,6 +10,7 @@ using GamingMode.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Win32;
+using Playhub.Shared;
 
 namespace GamingMode.Services;
 
@@ -31,7 +32,8 @@ internal sealed class MarkIIIHost : IDisposable
 	private readonly TvController _tv;
 	private readonly DeckyHeartbeatMonitor _decky = new();
 	private readonly SteamHost _steamHost;
-	private readonly string _holdPath, _healthPath;
+	private readonly string _holdPath, _healthPath, _toastsPath, _updateNightPath;
+	private bool? _toastsQuiet;
 	private readonly object _sync = new();
 	private readonly SemaphoreSlim _job = new(1, 1);
 	private readonly DateTimeOffset _started = DateTimeOffset.Now;
@@ -49,6 +51,8 @@ internal sealed class MarkIIIHost : IDisposable
 		_tv = new TvController(() => _store.LoadConfig().Gaming.Tv ?? new TvSettings(), _pairing, logger.Info, NetworkMac.Resolve);
 		_holdPath = Path.Combine(paths.ConfigDirectory, "steam-update-hold.json");
 		_healthPath = Path.Combine(paths.ConfigDirectory, "core-health.json");
+		_toastsPath = Path.Combine(paths.ConfigDirectory, "quiet-toasts.json");
+		_updateNightPath = Path.Combine(paths.ConfigDirectory, "update-night.json");
 		_steamHost = new SteamHost(this);
 		LoadHealth();
 	}
@@ -115,9 +119,13 @@ internal sealed class MarkIIIHost : IDisposable
 			catch (OperationCanceledException) { return; }
 			try { CheckDecky(); }
 			catch (Exception error) { _logger.Error("Mark III: Decky health check failed this round.", error); }
+			try { CheckToasts(); }
+			catch (Exception error) { _logger.Error("Mark III: Windows banner switch failed this round.", error); }
 			if (++tick % 12 != 0) continue; // once a minute
 			try { CheckSteamHold(); }
 			catch (Exception error) { _logger.Error("Mark III: Steam update hold check failed this round.", error); }
+			try { CheckUpdateNight(); }
+			catch (Exception error) { _logger.Error("Mark III: update night check failed this round.", error); }
 		}
 	}
 
@@ -183,6 +191,63 @@ internal sealed class MarkIIIHost : IDisposable
 	{
 		if (!InGamingMode() || GameRunning()) { _logger.Info($"Core notice \"{key}\" not shown: not in Big Picture or a game is running."); return; }
 		CoreNoticeOverlay.Show(CoreText.Get(Language(), key), TimeSpan.FromSeconds(10), () => InGamingMode() && !GameRunning(), _logger);
+	}
+
+	// ---------- quiet Windows (couch hardening) ----------
+
+	// Windows banners off while Gaming Mode runs (when the setting is on), the user's own
+	// setting back for the desktop. Applied only when the wanted state changes.
+	private void CheckToasts()
+	{
+		bool quiet = InGamingMode() && _store.LoadConfig().Gaming.QuietWindowsToasts;
+		if (_toastsQuiet == quiet) return;
+		if (CouchHardening.SetGamingToasts(new CouchRegistryWindows(), quiet, _toastsPath))
+			_logger.Info(quiet ? "Windows banners off for Gaming Mode." : "Windows banners back to the user's setting.");
+		_toastsQuiet = quiet;
+	}
+
+	// Restart-pending markers Windows Update and servicing leave in HKLM (readable without admin).
+	private static bool WindowsRestartPending()
+	{
+		foreach (string key in new[] { @"SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired",
+			@"SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending" })
+		{
+			try
+			{
+				using RegistryKey root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+				using RegistryKey? found = root.OpenSubKey(key);
+				if (found is not null) return true;
+			}
+			catch { }
+		}
+		return false;
+	}
+
+	private void CheckUpdateNight()
+	{
+		DateTimeOffset now = DateTimeOffset.Now;
+		UpdateNightState state = UpdateNightPolicy.Observe(UpdateNightPolicy.Load(_updateNightPath), now);
+		switch (UpdateNightPolicy.Decide(state, now, GameRunning()))
+		{
+			case UpdateNightAction.Restart:
+				UpdateNightPolicy.Save(_updateNightPath, state with { ScheduledFor = null, LastNight = now });
+				_logger.Info("Update night: restarting into Gaming Mode for Windows updates.");
+				_manager.RestartInMode(ModeKind.Gaming);
+				return;
+			case UpdateNightAction.GiveUp:
+				_logger.Info("Update night: a game was still running at 7:00; the restart waits for the next offer.");
+				state = state with { ScheduledFor = null };
+				break;
+		}
+		UpdateNightPolicy.Save(_updateNightPath, state);
+	}
+
+	private object UpdateNightView()
+	{
+		UpdateNightState state = UpdateNightPolicy.Load(_updateNightPath);
+		bool pending = WindowsRestartPending();
+		return new { offer = UpdateNightPolicy.ShouldOffer(UpdateNightPolicy.Observe(state, DateTimeOffset.Now), pending, DateTimeOffset.Now), pending,
+			scheduledFor = state.ScheduledFor?.ToString("o"), hour = UpdateNightPolicy.RestartHour };
 	}
 
 	// ---------- Decky health ----------
@@ -653,6 +718,23 @@ internal sealed class MarkIIIHost : IDisposable
 			return TryRunJob("update-steam") ? Results.Json(new { ok = true }, statusCode: 202) : Results.Json(new { ok = false, busy = true }, statusCode: 409);
 		}));
 
+		app.MapGet("/windows/update-night", (Func<HttpContext, IResult>)(context => Local(context) ? Results.Json(UpdateNightView()) : Results.StatusCode(403)));
+		app.MapPost("/windows/update-night/schedule", (Func<HttpContext, IResult>)(context =>
+		{
+			if (!Local(context)) return Results.StatusCode(403);
+			DateTimeOffset now = DateTimeOffset.Now;
+			UpdateNightState state = UpdateNightPolicy.Observe(UpdateNightPolicy.Load(_updateNightPath), now) with { ScheduledFor = UpdateNightPolicy.NextRestart(now) };
+			UpdateNightPolicy.Save(_updateNightPath, state);
+			_logger.Info($"Update night scheduled for {state.ScheduledFor:yyyy-MM-dd HH:mm}.");
+			return Results.Json(UpdateNightView());
+		}));
+		app.MapPost("/windows/update-night/cancel", (Func<HttpContext, IResult>)(context =>
+		{
+			if (!Local(context)) return Results.StatusCode(403);
+			UpdateNightPolicy.Save(_updateNightPath, UpdateNightPolicy.Load(_updateNightPath) with { ScheduledFor = null });
+			_logger.Info("Update night cancelled.");
+			return Results.Json(UpdateNightView());
+		}));
 		app.MapGet("/tv/state", (Func<HttpContext, IResult>)(context => Local(context) ? Results.Json(TvState()) : Results.StatusCode(403)));
 		app.MapPost("/tv/discover", (Func<HttpContext, Task<IResult>>)(async context =>
 		{

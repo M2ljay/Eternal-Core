@@ -103,5 +103,9 @@ public sealed class GamingSettings
 	// The calm notice over Big Picture when Decky's UI did not load (DeckyHeartbeat.cs).
 	public bool DeckyHealthNoticeEnabled { get; set; } = true;
 
+	// Windows notification banners off while Gaming Mode runs, back for the desktop
+	// (Shared/CouchHardening.cs, GamingToasts).
+	public bool QuietWindowsToasts { get; set; } = true;
+
 	public bool ManageAudio { get; set; }
 }

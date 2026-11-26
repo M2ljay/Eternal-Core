@@ -12,6 +12,7 @@ await BootTests.Run(Check);
 await TvTests.Run(Check);
 await SteamHoldTests.Run(Check);
 await DeckyTests.Run(Check);
+await CouchTests.Run(Check);
 
 Console.WriteLine($"ALL PASS ({passed} checks)");
 return 0;

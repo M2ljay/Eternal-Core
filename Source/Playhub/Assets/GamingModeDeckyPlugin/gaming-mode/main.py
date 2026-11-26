@@ -193,6 +193,16 @@ class Plugin(QuickSettingsPlugin):
     async def core_repair_shortcut(self):
         return await asyncio.to_thread(self._agent_local, "GET", "/core/repair/shortcut")
 
+    # Mark III: update night (src/UpdateNightCard.tsx, agent UpdateNight.cs).
+    async def core_update_night(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/windows/update-night")
+
+    async def core_update_night_schedule(self):
+        return await asyncio.to_thread(self._agent_local, "POST", "/windows/update-night/schedule")
+
+    async def core_update_night_cancel(self):
+        return await asyncio.to_thread(self._agent_local, "POST", "/windows/update-night/cancel")
+
     @staticmethod
     def _agent_local(method, path, *, timeout=2.5, maximum=4096):
         try:
