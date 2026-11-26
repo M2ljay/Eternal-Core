@@ -26,8 +26,8 @@ public sealed record InstallOptions(
 /// </summary>
 public static class Installer
 {
-    // Internal name: install folder, uninstall key, process name. Unchanged so that
-    // updates land on existing installs (see docs/eternal/REBRAND.md).
+    // Old visible name: shortcuts and folders written before the rebrand. The uninstall key
+    // keeps it (hidden identifier); see docs/eternal/REBRAND.md.
     public const string AppName = "Playhub";
     // Name the user sees in Installed apps, the Start menu and on the desktop.
     public const string DisplayName = global::Playhub.Shared.EternalRelease.DisplayName;
@@ -35,15 +35,19 @@ public static class Installer
     // Shown as "Publisher" in Installed apps only. The file metadata (Company) and the
     // copyright keep Andrea Sgarro (LoZazaMastro), the upstream author.
     public const string Publisher = global::Playhub.Shared.EternalRelease.MakerName;
-    public const string AppExeName = "Playhub.exe";
-    public const string UninstallerName = "unins-playhub.exe";
+    // Rebrand phase 2: Core.exe and unins-core.exe; an update removes the old files.
+    public const string AppExeName = global::Playhub.Shared.CoreNames.AppExe;
+    public const string UninstallerName = global::Playhub.Shared.CoreNames.UninstallerExe;
 
     private const string UninstallKey =
         @"Software\Microsoft\Windows\CurrentVersion\Uninstall\Playhub";
 
+    // A new install goes to Programs\Core; an existing Programs\Playhub install is updated in
+    // place (Steam shortcuts hold its absolute path; see CoreNames.ChooseInstallDir).
     public static string DefaultInstallDir =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Programs", AppName);
+        global::Playhub.Shared.CoreNames.ChooseInstallDir(null,
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            directory => global::Playhub.Shared.CoreNames.LooksLikeInstall(directory, File.Exists));
 
     // A shortcut's file name is the name Windows shows for it.
     private static string StartMenuShortcut =>
@@ -60,6 +64,9 @@ public static class Installer
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), AppName + ".lnk");
 
     private static string StartupShortcut =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), DisplayName + ".lnk");
+
+    private static string LegacyStartupShortcut =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), AppName + ".lnk");
 
     // ----------------------------------------------------------------- INSTALL
@@ -68,11 +75,16 @@ public static class Installer
         return await Task.Run(() =>
         {
             progress.Report((0.02, Loc.T("Preparing")));
-            StopRunningPlayhub();
+            StopRunningPlayhub(options.InstallDir);
             Directory.CreateDirectory(options.InstallDir);
             using var storeMaintenance = StoreLibraryUpdate.Quiesce(options.InstallDir);
             bool agentStopped = StopRunningGamingModeForPayload(options.InstallDir);
+            // Rebrand phase 2: %APPDATA%\Playhub and %LOCALAPPDATA%\Playhub are copied to ...\Core
+            // once, while the app and the store host are stopped. If this cannot finish, Playhub
+            // stays in use and the app retries on its next start.
+            global::Playhub.Shared.CoreNames.MigrateDataRoots(message => Debug.WriteLine(message));
             ExtractPayload(options.InstallDir, progress);
+            RemoveRetiredFiles(options.InstallDir);
             Playhub.Shared.EditorialPhotoMigration.Prune(options.InstallDir, message => Debug.WriteLine(message));
 
             var controller = ControllerDriverDependency.Ensure(options.InstallDir,
@@ -96,6 +108,12 @@ public static class Installer
             if (!File.Exists(iconPath)) iconPath = exePath;
 
             progress.Report((0.90, Loc.T("CreatingShortcuts")));
+            // Shortcuts and taskbar pins that still launch this install's Playhub.exe now launch
+            // Core.exe (same folder; arguments, hotkey and pins kept).
+            foreach (var shortcut in new[] { LegacyStartMenuShortcut, LegacyDesktopShortcut, StartMenuShortcut, DesktopShortcut, LegacyStartupShortcut, StartupShortcut })
+                Playhub.Shared.ShellIdentity.RetargetLegacyShortcut(shortcut, exePath, iconPath, message => Debug.WriteLine(message));
+            Playhub.Shared.ShellIdentity.RetargetLegacyShortcutsIn(Playhub.Shared.ShellIdentity.TaskbarPinFolder, exePath, iconPath, message => Debug.WriteLine(message));
+            Playhub.Shared.ShellIdentity.MoveOwnedShortcut(LegacyStartupShortcut, StartupShortcut, exePath, message => Debug.WriteLine(message));
             // Rename our own old "Playhub" shortcuts (arguments and pins inside them are kept).
             // A shortcut that points elsewhere is not ours and is left alone.
             Playhub.Shared.ShellIdentity.MoveOwnedShortcut(LegacyStartMenuShortcut, StartMenuShortcut, exePath, message => Debug.WriteLine(message));
@@ -309,13 +327,20 @@ public static class Installer
         }
     }
 
+    // Old file names whose renamed successor the payload just installed (Playhub.exe and its
+    // runtime files, the Playhub-named Decky and store hosts, the old uninstaller copy).
+    private static void RemoveRetiredFiles(string installDir)
+    {
+        foreach (var file in global::Playhub.Shared.CoreNames.RetiredFilesToDelete(installDir, File.Exists))
+            SafeDelete(file);
+    }
+
     private static void SetAppLanguage(string languageCode)
     {
         if (string.IsNullOrWhiteSpace(languageCode)) return;
         try
         {
-            var dir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Playhub");
+            var dir = global::Playhub.Shared.CoreNames.RoamingDataRoot();
             Directory.CreateDirectory(dir);
             var file = Path.Combine(dir, "settings.json");
 
@@ -336,9 +361,7 @@ public static class Installer
     {
         try
         {
-            var file = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "Playhub", "settings.json");
+            var file = Path.Combine(global::Playhub.Shared.CoreNames.RoamingDataRoot(), "settings.json");
             if (!File.Exists(file)) return "en";
 
             var obj = JsonNode.Parse(File.ReadAllText(file)) as JsonObject;
@@ -431,6 +454,7 @@ public static class Installer
             SafeDelete(LegacyStartMenuShortcut);
             SafeDelete(LegacyDesktopShortcut);
             SafeDelete(StartupShortcut);
+            SafeDelete(LegacyStartupShortcut);
 
             progress.Report((0.35, Loc.T("RemovingRegistration")));
             try { Registry.CurrentUser.DeleteSubKeyTree(UninstallKey, throwOnMissingSubKey: false); } catch { }
@@ -536,14 +560,20 @@ public static class Installer
         DeleteDir(Path.Combine(appData, "Microsoft", "Windows", "Start Menu", "Programs", "Gaming Mode")); // menu Start
     }
 
-    private static void StopRunningPlayhub()
+    // Stops Core.exe (or the Playhub.exe of an older version) before its files are replaced.
+    // "Core" is a common process name, so a Core process counts only when it runs from this
+    // install folder; a Playhub process is stopped as before.
+    private static void StopRunningPlayhub(string installDir)
     {
         var currentId = Environment.ProcessId;
-        foreach (var process in Process.GetProcessesByName("Playhub"))
+        foreach (var process in global::Playhub.Shared.CoreNames.ProcessNames(global::Playhub.Shared.CoreNames.AppExecutables)
+                     .SelectMany(Process.GetProcessesByName))
         {
             try
             {
                 if (process.Id == currentId) continue;
+                if (process.ProcessName.Equals(global::Playhub.Shared.CoreNames.ProcessName(global::Playhub.Shared.CoreNames.AppExe), StringComparison.OrdinalIgnoreCase)
+                    && !global::Playhub.Shared.CoreNames.IsOwnedImage(ImageOf(process), installDir, global::Playhub.Shared.CoreNames.AppExecutables)) continue;
                 process.CloseMainWindow();
                 if (!process.WaitForExit(3000))
                 {
@@ -556,6 +586,12 @@ public static class Installer
                 throw new IOException(Loc.T("FilesInUse"));
             }
         }
+    }
+
+    private static string? ImageOf(Process process)
+    {
+        try { return process.MainModule?.FileName; }
+        catch (Exception error) when (error is InvalidOperationException or System.ComponentModel.Win32Exception) { return null; }
     }
 
     private static bool StopRunningGamingModeForPayload(string installDir)
@@ -703,9 +739,13 @@ public static class Installer
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-        // Dati di Playhub (settings.json, backup, downloads/cache).
-        DeleteDir(Path.Combine(appData, "Playhub"));
-        DeleteDir(Path.Combine(localAppData, "Playhub"));
+        // Dati di Core (settings.json, backup, downloads/cache), più la copia Playhub
+        // conservata come backup dalla migrazione delle cartelle dati.
+        foreach (var name in new[] { global::Playhub.Shared.CoreNames.FolderName, global::Playhub.Shared.CoreNames.LegacyFolderName })
+        {
+            DeleteDir(Path.Combine(appData, name));
+            DeleteDir(Path.Combine(localAppData, name));
+        }
 
         // Impostazioni del Gaming Mode (l'agente è già rimosso a parte).
         DeleteDir(Path.Combine(appData, "GamingMode"));

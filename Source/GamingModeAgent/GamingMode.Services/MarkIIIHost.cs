@@ -486,15 +486,17 @@ internal sealed class MarkIIIHost : IDisposable
 
 	private static string? FindCoreAppExe()
 	{
+		// Registered folder, then Programs\Core, then Programs\Playhub; Core.exe before Playhub.exe
+		// (an install not yet updated past the rebrand still has Playhub.exe).
+		string? registered = null;
 		try
 		{
 			using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\Playhub");
-			if (key?.GetValue("InstallLocation") is string location && File.Exists(Path.Combine(location, "Playhub.exe")))
-				return Path.Combine(location, "Playhub.exe");
+			registered = key?.GetValue("InstallLocation") as string;
 		}
 		catch { }
-		string fallback = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Playhub", "Playhub.exe");
-		return File.Exists(fallback) ? fallback : null;
+		return global::Playhub.Shared.CoreNames.FindAppExecutable(registered,
+			Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), File.Exists);
 	}
 
 	// ---------- Steam host for the update and rollback jobs ----------

@@ -621,7 +621,7 @@ try {
             Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $driverPayload $file.Name)
         }
     }
-    Assert-ReleaseFlags (Join-Path $publish 'Playhub.dll')
+    Assert-ReleaseFlags (Join-Path $publish 'Core.dll')
     & dotnet publish (Join-Path $setupRoot '..\GamingModeAgent\GamingMode.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true "-p:PlayhubCurtainDisplaySha256=$curtainDisplayHash" "-p:PlayhubCurtainCallbackSha256=$(if ($CurtainDisplayNative) { $bandCallbackHash } else { '' })" "-p:PlayhubHudDisplaySha256=$hudDisplayHash" "-p:PlayhubHudDisplayCallbackSha256=$(if ($HudDisplayNative) { $bandCallbackHash } else { '' })" "-p:ShellFreeOverlayTrial=$($ShellFreeOverlayTrial.IsPresent.ToString().ToLowerInvariant())" "-p:XboxShellBootstrapTrial=$($XboxShellBootstrapTrial.IsPresent.ToString().ToLowerInvariant())" "-p:ShellFreeOverlayManifestSha256=$shellFreeOverlayManifestHash" -o $agentDir
     if ($LASTEXITCODE) { throw 'Gaming Mode agent build failed.' }
     Assert-HudDisplayMetadata (Join-Path $setupRoot '..\GamingModeAgent\bin\Release\net8.0-windows10.0.19041.0\win-x64\GamingMode.dll')
@@ -677,7 +677,7 @@ try {
     [IO.File]::WriteAllText($sourceManifestPath, $sourceManifest)
     }
     $stub = Join-Path $stubDir 'Playhub Setup.exe'
-    Assert-ReleaseFlags (Join-Path $publish 'Playhub.dll')
+    Assert-ReleaseFlags (Join-Path $publish 'Core.dll')
     # Rollup's old hashed editorial images can remain after switching to remote
     # photos. Prune only unreferenced hashed assets in this isolated payload.
     $dist = Join-Path $publish 'Assets\GamingModeDeckyPlugin\gaming-mode\dist'
@@ -695,10 +695,18 @@ try {
     [IO.Compression.ZipFile]::CreateFromDirectory($publish, $zipPath, [IO.Compression.CompressionLevel]::Optimal, $false)
     $archive = [IO.Compression.ZipFile]::OpenRead($zipPath)
     try {
-        foreach ($required in @('Playhub.exe', 'Playhub.dll', 'Assets/Brand/cube.png', 'Assets/Brand/playhub-wordmark-white.png', 'Assets/Welcome/Mascots/final-onboarding.png')) {
+        foreach ($required in @('Core.exe', 'Core.dll', 'Assets/Brand/cube.png', 'Assets/Brand/playhub-wordmark-white.png', 'Assets/Welcome/Mascots/final-onboarding.png')) {
             if ($null -eq $archive.GetEntry($required)) { throw "Missing payload entry: $required" }
         }
-        $runtimeEntries = @('StoreLibrary/store-runtime.json', 'StoreLibrary/Playhub.StoreHost.exe', 'StoreLibrary/legendary_windows_x64.exe', 'StoreLibrary/gogdl_windows_x86_64.exe', 'StoreLibrary/THIRD-PARTY-NOTICES.txt', 'StoreLibrary/source-provenance.json', 'Assets/GamingModeDeckyPlugin/gaming-mode/store_library.py', 'Plugins/Gaming Mode/gaming-mode-win-x64/GamingMode.exe', 'Assets/GamingModeDeckyPlugin/gaming-mode/main.py', 'Playhub.GameSession.exe', 'Playhub.XboxSession.exe', 'XboxSession/source/LICENSE', 'XboxSession/source/NOTICE.md', 'XboxSession/source/BUILD.md', 'XboxSession/source/Playhub.XboxSession.csproj', 'XboxSession/source/Runtime/MIT-LICENSE')
+        # Rebrand phase 2: the app is Core.exe. Its resource index must follow the exe name (or be
+        # resources.pri), and no Playhub-named copy of the app or its hosts may ship beside it.
+        if ($null -eq $archive.GetEntry('Core.pri') -and $null -eq $archive.GetEntry('resources.pri')) {
+            throw "Missing payload entry: Core.pri (found: $(@($archive.Entries | Where-Object { $_.FullName -notmatch '/' -and $_.Name -like '*.pri' } | ForEach-Object Name) -join ', '))"
+        }
+        foreach ($retired in @('Playhub.exe', 'Playhub.dll', 'Playhub.pri', 'Playhub.deps.json', 'Playhub.runtimeconfig.json', 'Assets/DeckyRuntime/Playhub-DeckyHost.exe', 'StoreLibrary/Playhub.StoreHost.exe', 'StoreLibrary/Playhub.StoreHost.dll')) {
+            if ($null -ne $archive.GetEntry($retired)) { throw "Renamed payload entry still present under its old name: $retired" }
+        }
+        $runtimeEntries = @('StoreLibrary/store-runtime.json', 'StoreLibrary/Core.StoreHost.exe', 'StoreLibrary/legendary_windows_x64.exe', 'StoreLibrary/gogdl_windows_x86_64.exe', 'StoreLibrary/THIRD-PARTY-NOTICES.txt', 'StoreLibrary/source-provenance.json', 'Assets/GamingModeDeckyPlugin/gaming-mode/store_library.py', 'Plugins/Gaming Mode/gaming-mode-win-x64/GamingMode.exe', 'Assets/GamingModeDeckyPlugin/gaming-mode/main.py', 'Playhub.GameSession.exe', 'Playhub.XboxSession.exe', 'XboxSession/source/LICENSE', 'XboxSession/source/NOTICE.md', 'XboxSession/source/BUILD.md', 'XboxSession/source/Playhub.XboxSession.csproj', 'XboxSession/source/Runtime/MIT-LICENSE')
         if ($ShellFreeOverlayTrial) {
             $runtimeEntries += 'Assets/OverlayPresentation/standalone-trial.json',
                 'Plugins/Gaming Mode/gaming-mode-win-x64/assets/OverlayPresentation/standalone-trial.json'
@@ -746,7 +754,7 @@ try {
         foreach ($required in $runtimeEntries) {
             if ($null -eq $archive.GetEntry($required)) { throw "Missing runtime payload entry: $required" }
         }
-        foreach ($required in @('Assets/DeckyRuntime/Playhub-DeckyHost.exe')) {
+        foreach ($required in @('Assets/DeckyRuntime/Core-DeckyHost.exe')) {
             if ($null -eq $archive.GetEntry($required)) { throw "Missing 2.5 runtime payload entry: $required" }
         }
         $officialDeckyAssets = @{}
@@ -755,7 +763,7 @@ try {
             $relativeAsset = [IO.Path]::GetRelativePath($officialDeckyRoot, $file.FullName).Replace('\', '/')
             $officialDeckyAssets["Assets/DeckyRuntime/Official-3.3.1/$relativeAsset"] = $file.FullName
         }
-        if (@($archive.Entries | Where-Object { $_.FullName.StartsWith('Assets/DeckyRuntime/') -and $_.FullName -ne 'Assets/DeckyRuntime/Playhub-DeckyHost.exe' -and !$officialDeckyAssets.ContainsKey($_.FullName) }).Count) {
+        if (@($archive.Entries | Where-Object { $_.FullName.StartsWith('Assets/DeckyRuntime/') -and $_.FullName -ne 'Assets/DeckyRuntime/Core-DeckyHost.exe' -and !$officialDeckyAssets.ContainsKey($_.FullName) }).Count) {
             throw 'Unrelated application files found inside the Decky lifetime runtime.'
         }
         $artwork = $archive.GetEntry('Assets/Welcome/Mascots/final-onboarding.png').Open()
@@ -770,7 +778,7 @@ try {
             'THIRD-PARTY-NOTICES.txt' = Join-Path $setupRoot '..\Playhub\THIRD-PARTY-NOTICES.txt'
             'Playhub.GameSession.exe' = Join-Path $setupRoot '..\Playhub.GameSession\bin\Release\net8.0-windows\win-x64\publish\Playhub.GameSession.exe'
             'Playhub.XboxSession.exe' = Join-Path $setupRoot '..\Playhub.XboxSession\bin\Release\net8.0-windows\win-x64\publish\Playhub.XboxSession.exe'
-            'Assets/DeckyRuntime/Playhub-DeckyHost.exe' = Join-Path $setupRoot '..\Playhub.DeckyHost\bin\Release\net8.0-windows\win-x64\publish\Playhub-DeckyHost.exe'
+            'Assets/DeckyRuntime/Core-DeckyHost.exe' = Join-Path $setupRoot '..\Playhub.DeckyHost\bin\Release\net8.0-windows\win-x64\publish\Core-DeckyHost.exe'
             'Assets/GamingModeDeckyPlugin/gaming-mode/dist/index.js' = Join-Path $setupRoot '..\GamingModeDeckyPlugin\dist\index.js'
             'Assets/GamingModeDeckyPlugin/gaming-mode/main.py' = Join-Path $setupRoot '..\GamingModeDeckyPlugin\main.py'
             'Assets/GamingModeDeckyPlugin/gaming-mode/store_library.py' = Join-Path $setupRoot '..\GamingModeDeckyPlugin\store_library.py'
@@ -824,7 +832,7 @@ try {
             $xboxSourceEntries += $entryName
         }
         $xboxSharedSourceEntries = @()
-        foreach ($name in @('EpicLaunchWindows.cs', 'EpicLaunchCatalog.cs', 'EpicLaunchPayload.cs', 'EpicProtocolLaunchRequest.cs', 'StoreGdkLaunchDefinition.cs', 'StoreLibraryModels.cs', 'StorePrivateLaunchModels.cs')) {
+        foreach ($name in @('EpicLaunchWindows.cs', 'EpicLaunchCatalog.cs', 'EpicLaunchPayload.cs', 'EpicProtocolLaunchRequest.cs', 'StoreGdkLaunchDefinition.cs', 'StoreLibraryModels.cs', 'StorePrivateLaunchModels.cs', 'CoreNames.cs')) {
             $entryName = 'XboxSession/Shared/' + $name
             $dataAssets[$entryName] = Join-Path $setupRoot ('..\Shared\' + $name)
             $xboxSharedSourceEntries += $entryName

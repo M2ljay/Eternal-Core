@@ -20,12 +20,27 @@ _ALLOWED = _ALLOWED | frozenset(("xbox-achievements", "store-achievements"))
 _MAX_RESPONSE = 8 * 1024 * 1024
 
 
+# Rebrand phase 2: Core.exe and Core.StoreHost.exe; an install not yet updated still has the
+# Playhub names. The uninstall key name is unchanged.
+_APP_EXECUTABLES = ("Core.exe", "Playhub.exe")
+_STORE_HOSTS = ("Core.StoreHost.exe", "Playhub.StoreHost.exe")
+
+
+def local_data_root(local=None):
+    """%LOCALAPPDATA%\\Core once the app has copied its data there (marker file), else Playhub."""
+    local = os.environ.get("LOCALAPPDATA", "") if local is None else local
+    current, legacy = os.path.join(local, "Core"), os.path.join(local, "Playhub")
+    if os.path.isfile(os.path.join(current, ".core-migrated.json")) or not os.path.isdir(legacy):
+        return current
+    return legacy
+
+
 def installed_root():
     import winreg
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
             r"Software\Microsoft\Windows\CurrentVersion\Uninstall\Playhub") as key:
         root = os.path.abspath(winreg.QueryValueEx(key, "InstallLocation")[0])
-    if not os.path.isfile(os.path.join(root, "Playhub.exe")):
+    if not any(os.path.isfile(os.path.join(root, name)) for name in _APP_EXECUTABLES):
         raise RuntimeError("store_runtime_missing")
     return root
 
@@ -61,7 +76,8 @@ def _sid():
 
 def _ensure_host(root):
     folder = os.path.join(root, "StoreLibrary")
-    host = os.path.join(folder, "Playhub.StoreHost.exe")
+    host = next((os.path.join(folder, name) for name in _STORE_HOSTS if os.path.isfile(os.path.join(folder, name))),
+                os.path.join(folder, _STORE_HOSTS[0]))
     with open(os.path.join(folder, "store-runtime.json"), "r", encoding="utf-8-sig") as stream:
         manifest = json.load(stream)
     with open(host, "rb") as stream:
@@ -128,7 +144,7 @@ class _Pipe:
 def _rpc(method, args):
     if method not in _ALLOWED or not isinstance(args, dict):
         raise ValueError("store_method_invalid")
-    maintenance = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Playhub", "StoreLibrary", "maintenance-v1.json")
+    maintenance = os.path.join(local_data_root(), "StoreLibrary", "maintenance-v1.json")
     try:
         with open(maintenance, "r", encoding="utf-8-sig") as stream:
             marker = json.load(stream)

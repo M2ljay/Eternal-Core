@@ -353,7 +353,7 @@ public sealed class DeckyInstallerService
         string source = Path.Combine(AppContext.BaseDirectory, "Assets", "DeckyRuntime");
         string runtime = Path.Combine(ServicesDir, "PlayhubRuntime");
         DeckyFileUpgrade.RequireOrdinaryPath(runtime);
-        if (!File.Exists(Path.Combine(source, "Playhub-DeckyHost.exe")))
+        if (!File.Exists(Path.Combine(source, global::Playhub.Shared.CoreNames.DeckyHostExe)))
             throw new IOException("Il runtime Decky di Core è mancante. Reinstalla Core per ripristinarlo.");
         string[] files = Directory.GetFiles(source).OrderBy(file => Path.GetFileName(file), StringComparer.Ordinal).ToArray();
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);

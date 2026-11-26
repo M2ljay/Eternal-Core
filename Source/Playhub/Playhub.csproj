@@ -5,6 +5,8 @@
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>Playhub</RootNamespace>
+    <!-- Rebrand phase 2: Core.exe (Task Manager, Explorer). Namespaces and resource names keep Playhub. -->
+    <AssemblyName>Core</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\Brand\Playhub.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
@@ -43,6 +45,7 @@
     <Compile Include="../Shared/EditorialPhotoMigration.cs" Link="EditorialPhotoMigration.cs" />
     <Compile Include="../Shared/SplashLogoScale.cs" Link="SplashLogoScale.cs" />
     <Compile Include="../Shared/PluginForkProtection.cs" Link="PluginForkProtection.cs" />
+    <Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" />
     <EmbeddedResource Include="../Shared/ProtectedPluginForks.json" LogicalName="Playhub.ProtectedPluginForks.json" />
     <!-- Shared artwork services used by imported PC games. -->
     <Compile Include="../ApplicationIntegrations/Native/SteamPluginBridge.cs" Link="Importing/SteamPluginBridge.cs" />
@@ -104,7 +107,7 @@
   <ItemGroup>
     <Compile Include="..\Playhub.GameSession\UwpShortcutArguments.cs" Link="Services\UwpShortcutArguments.cs" />
     <Compile Include="..\Playhub.GameSession\EpicShortcutArguments.cs" Link="Services\EpicShortcutArguments.cs" />
-    <Content Include="..\Shared\EpicLaunchWindows.cs;..\Shared\EpicLaunchCatalog.cs;..\Shared\EpicLaunchPayload.cs;..\Shared\EpicProtocolLaunchRequest.cs;..\Shared\StoreGdkLaunchDefinition.cs;..\Shared\StoreLibraryModels.cs;..\Shared\StorePrivateLaunchModels.cs"
+    <Content Include="..\Shared\EpicLaunchWindows.cs;..\Shared\EpicLaunchCatalog.cs;..\Shared\EpicLaunchPayload.cs;..\Shared\EpicProtocolLaunchRequest.cs;..\Shared\StoreGdkLaunchDefinition.cs;..\Shared\StoreLibraryModels.cs;..\Shared\StorePrivateLaunchModels.cs;..\Shared\CoreNames.cs"
              Link="XboxSession\Shared\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\Playhub.GameSession\UwpStoreCompanionBinding.cs"
@@ -151,7 +154,7 @@
              RemoveProperties="PublishDir;PublishUrl"
              Properties="Configuration=$(Configuration);Platform=AnyCPU;RuntimeIdentifier=win-x64;SelfContained=true" />
     <ItemGroup>
-      <Content Include="..\Playhub.DeckyHost\bin\$(Configuration)\net8.0-windows\win-x64\publish\Playhub-DeckyHost.exe" Link="Assets\DeckyRuntime\Playhub-DeckyHost.exe" TargetPath="Assets\DeckyRuntime\Playhub-DeckyHost.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+      <Content Include="..\Playhub.DeckyHost\bin\$(Configuration)\net8.0-windows\win-x64\publish\Core-DeckyHost.exe" Link="Assets\DeckyRuntime\Core-DeckyHost.exe" TargetPath="Assets\DeckyRuntime\Core-DeckyHost.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
   <Target Name="BuildXboxSession" BeforeTargets="PrepareForBuild">
@@ -168,7 +171,7 @@
     <MSBuild Projects="..\Playhub.StoreHost\Playhub.StoreHost.csproj" Targets="Restore;Rebuild;Publish"
              RemoveProperties="PublishDir;PublishUrl"
              Properties="Configuration=$(Configuration);Platform=AnyCPU;RuntimeIdentifier=win-x64;SelfContained=true;DebugType=None" />
-    <Error Condition="!Exists('..\Playhub.StoreHost\bin\$(Configuration)\net8.0-windows\win-x64\publish\Playhub.StoreHost.exe')" Text="Store library host was not published." />
+    <Error Condition="!Exists('..\Playhub.StoreHost\bin\$(Configuration)\net8.0-windows\win-x64\publish\Core.StoreHost.exe')" Text="Store library host was not published." />
     <Error Condition="!Exists('..\Playhub.StoreHost\bin\$(Configuration)\net8.0-windows\win-x64\publish\store-runtime.json')" Text="Store library runtime manifest was not produced." />
     <ItemGroup>
       <_StoreLibraryRuntimeFile Include="..\Playhub.StoreHost\bin\$(Configuration)\net8.0-windows\win-x64\publish\**\*" />

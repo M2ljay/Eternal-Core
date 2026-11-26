@@ -161,11 +161,9 @@ public partial class MainWindow : Window
         };
         if (dialog.ShowDialog(this) == true)
         {
-            // Installa in una sottocartella "Playhub" se l'utente sceglie una cartella generica.
-            var chosen = dialog.FolderName;
-            _installDir = chosen.TrimEnd('\\').EndsWith("Playhub", StringComparison.OrdinalIgnoreCase)
-                ? chosen
-                : System.IO.Path.Combine(chosen, "Playhub");
+            // Installa in una sottocartella "Core" se l'utente sceglie una cartella generica
+            // (una cartella che si chiama già Core o Playhub viene usata così com'è).
+            _installDir = global::Playhub.Shared.CoreNames.InstallDirForChoice(dialog.FolderName);
             PathText.Text = _installDir;
         }
     }

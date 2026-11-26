@@ -13,7 +13,7 @@ function Get-Sha256([string]$Path) {
 }
 $bundle = [IO.Path]::GetFullPath($BundleDirectory).TrimEnd('\','/')
 if (-not [IO.Directory]::Exists($bundle)) { throw 'Store runtime publish directory is missing.' }
-$hostPath = Join-Path $bundle 'Playhub.StoreHost.exe'
+$hostPath = Join-Path $bundle 'Core.StoreHost.exe'
 if (-not [IO.File]::Exists($hostPath)) { throw 'Published StoreHost is missing.' }
 $expected = @{
     'legendary_windows_x64.exe' = '6BE77857DC0A6DD33EA7442CE8B5291944EC6DA53757F81CA95B57CE794BAF5B'
@@ -27,7 +27,7 @@ $finalized = -not [string]::IsNullOrWhiteSpace($AppDirectory)
 if ($finalized) {
     $app = [IO.Path]::GetFullPath($AppDirectory).TrimEnd('\','/')
     if (-not $bundle.Equals((Join-Path $app 'StoreLibrary'), [StringComparison]::OrdinalIgnoreCase)) { throw 'Finalize only the actual app StoreLibrary directory.' }
-    foreach ($name in @('Playhub.exe', 'Playhub.GameSession.exe')) {
+    foreach ($name in @('Core.exe', 'Playhub.GameSession.exe')) {
         $path = Join-Path $app $name
         if (-not [IO.File]::Exists($path)) { throw 'Publish the app and GameSession before finalizing store clients.' }
         $clients += [ordered]@{kind='app';path=$name;sha256=(Get-Sha256 $path)}

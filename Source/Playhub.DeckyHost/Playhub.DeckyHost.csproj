@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <AssemblyName>Playhub-DeckyHost</AssemblyName>
+    <!-- Rebrand phase 2: Core-DeckyHost.exe. Namespaces keep Playhub. -->
+    <AssemblyName>Core-DeckyHost</AssemblyName>
+    <RootNamespace>Playhub.DeckyHost</RootNamespace>
     <TargetFramework>net8.0-windows</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
@@ -12,4 +14,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/CoreNames.cs" Link="CoreNames.cs" />
+  </ItemGroup>
 </Project>

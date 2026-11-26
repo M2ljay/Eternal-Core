@@ -23,9 +23,11 @@ function Get-DeckyHost([string]$Executable) {
     }
     $version = (Get-Content -LiteralPath (Join-Path $runtime 'current') -Raw -ErrorAction Stop).Trim()
     if ($version -notmatch '^[A-F0-9]{64}$') { throw 'Invalid Playhub Decky runtime version.' }
-    $hostPath = Join-Path (Join-Path $runtime $version) 'Playhub-DeckyHost.exe'
-    if (-not (Test-Path -LiteralPath $hostPath -PathType Leaf)) { throw 'The Playhub Decky runtime host is missing. Open Playhub to repair Decky startup.' }
-    return $hostPath
+    foreach ($name in @('Core-DeckyHost.exe', 'Playhub-DeckyHost.exe')) {
+        $hostPath = Join-Path (Join-Path $runtime $version) $name
+        if (Test-Path -LiteralPath $hostPath -PathType Leaf) { return $hostPath }
+    }
+    throw 'The Core Decky runtime host is missing. Open Core to repair Decky startup.'
 }
 function Protect-DeckyListener([Diagnostics.Process]$Listener) {
     $exe = $Listener.Path
@@ -146,7 +148,11 @@ try {
         string version = File.ReadAllText(Path.Combine(runtime, "current")).Trim();
         if (version.Length != 64 || !System.Linq.Enumerable.All(version, c => c is >= 'A' and <= 'F' or >= '0' and <= '9'))
             throw new IOException("Invalid Playhub Decky runtime version.");
-        return Path.Combine(runtime, version, "Playhub-DeckyHost.exe");
+        // Rebrand phase 2: Core-DeckyHost.exe; a runtime copied by an older version holds Playhub-DeckyHost.exe.
+        string folder = Path.Combine(runtime, version);
+        foreach (string name in CoreNames.DeckyHostExecutables)
+            if (File.Exists(Path.Combine(folder, name))) return Path.Combine(folder, name);
+        return Path.Combine(folder, CoreNames.DeckyHostExe);
     }
 
     internal static bool ProtectRunningLoader(Action<string>? log = null) => RunExclusive(() =>

@@ -50,7 +50,8 @@ internal static class UwpSteamSessionAssociation
             bool registered = key is not null && key.GetValueNames().Contains(InstallLocation, StringComparer.OrdinalIgnoreCase);
             string? location = registered && key!.GetValueKind(InstallLocation) == RegistryValueKind.String
                 ? key.GetValue(InstallLocation, null, RegistryValueOptions.DoNotExpandEnvironmentNames) as string : null;
-            string defaultLocation = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Playhub");
+            string defaultLocation = global::Playhub.Shared.CoreNames.ExistingDefaultInstallDir(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Directory.Exists);
             return ResolveInstalledImages(registered, location, defaultLocation);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or SecurityException)

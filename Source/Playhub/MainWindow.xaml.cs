@@ -362,7 +362,9 @@ public sealed partial class MainWindow : Window
         try
         {
             Diag.Step("LoadAsync begin");
-            try { _deckyInstaller.EnsureRuntimeHostInstalled(); Playhub.Shared.DeckyStartupGuard.UpgradeExistingAutostart(); Playhub.Shared.DeckyStartupGuard.ProtectRunningLoader(); }
+            // The startup script is refreshed before the runtime pointer moves, so a boot in between
+            // finds the host under either name (Core-DeckyHost.exe from 3.4, Playhub-DeckyHost.exe before).
+            try { Playhub.Shared.DeckyStartupGuard.UpgradeExistingAutostart(); _deckyInstaller.EnsureRuntimeHostInstalled(); Playhub.Shared.DeckyStartupGuard.ProtectRunningLoader(); }
             catch (Exception ex) { Diag.Step("Decky shutdown host: " + ex.Message); }
             _settings = await _settingsService.LoadAsync();
             InitializeLibraryDensity();
@@ -573,7 +575,7 @@ public sealed partial class MainWindow : Window
         {
             _shellIdentity?.Dispose();
             _shellIdentity = Playhub.Shared.ShellIdentity.SetMainWindow(WindowNative.GetWindowHandle(this),
-                Path.Combine(AppContext.BaseDirectory, "Playhub.exe"), icon, Diag.Step);
+                Path.Combine(AppContext.BaseDirectory, Playhub.Shared.CoreNames.AppExe), icon, Diag.Step);
         }
         catch (Exception error) { Diag.Step("Shell window identity: " + error.Message); }
     }
@@ -9423,7 +9425,7 @@ by Valve.";
             return string.Format(T("Ho aggiunto {0} giochi alla libreria Steam."), countText);
         }
 
-        const string blockedPrefix = "Windows ha impedito la scrittura del file shortcuts di Steam. Non dipende dal fatto che Steam sia aperto: è la protezione \"Accesso alle cartelle controllato\" di Sicurezza di Windows che blocca questa app (UWPHook funziona perché è già tra le app consentite). Per risolvere: Sicurezza di Windows → Protezione da virus e minacce → Gestisci protezione ransomware → Accesso alle cartelle controllato → Consenti app tramite Accesso alle cartelle controllato → Aggiungi Playhub.exe. Poi riprova.";
+        const string blockedPrefix = "Windows ha impedito la scrittura del file shortcuts di Steam. Non dipende dal fatto che Steam sia aperto: è la protezione \"Accesso alle cartelle controllato\" di Sicurezza di Windows che blocca questa app (UWPHook funziona perché è già tra le app consentite). Per risolvere: Sicurezza di Windows → Protezione da virus e minacce → Gestisci protezione ransomware → Accesso alle cartelle controllato → Consenti app tramite Accesso alle cartelle controllato → Aggiungi Core.exe. Poi riprova.";
         if (message.StartsWith(blockedPrefix, StringComparison.Ordinal))
         {
             var translated = T(blockedPrefix);

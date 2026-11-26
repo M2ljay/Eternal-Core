@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Playhub.Shared;
 using Playhub.StoreLibrary;
 
 if (args.Length == 1 && args[0] == "--protocol-version") { Console.WriteLine("playhub-store-host:1"); return; }
@@ -9,7 +10,7 @@ if (args.Length == 1 && args[0] == "--supervise") { await StoreToolProcess.RunSu
 if (args.Length == 3 && args[0] == "--launch" && args[1] is "epic" or "gog" or "amazon")
 {
     StoreMaintenance.ThrowIfActive();
-    var launchState = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Playhub", "StoreLibrary");
+    var launchState = Path.Combine(CoreNames.LocalDataRoot(), "StoreLibrary");
     StoreCredentialVault.PrivateDirectory(launchState);
     if(args[1]=="amazon")
     {
@@ -48,7 +49,7 @@ bool MethodAllowed(uint pid, string method)
     }
     catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception) { return false; }
 }
-var state = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Playhub", "StoreLibrary");
+var state = Path.Combine(CoreNames.LocalDataRoot(), "StoreLibrary");
 StoreCredentialVault.PrivateDirectory(state);
 var host = Environment.ProcessPath ?? throw new StoreOperationException("runtime_path_invalid");
 var xboxAccount = new StoreXboxAccountProvider(state);
@@ -80,7 +81,7 @@ async Task<IReadOnlyDictionary<StoreGameKey, StoreSteamNativeIdentity>> NativeSt
     }
     return result;
 }
-try { extensions.Add(new StoreSteamShortcutRegistry(engine.GetSnapshotAsync, Path.Combine(app, "Playhub.GameSession.exe"), Path.Combine(app, "Playhub.exe"),
+try { extensions.Add(new StoreSteamShortcutRegistry(engine.GetSnapshotAsync, Path.Combine(app, "Playhub.GameSession.exe"), Path.Combine(app, CoreNames.AppExe),
     nativeIdentities: NativeSteamIdentities,retainedCompletions:engine.GetRetainedCompletedInstallsAsync)); }
 catch (Exception e) when (e is not OutOfMemoryException) { /* Do not erase damaged claims or disable downloads. */ }
 using var stop = new CancellationTokenSource();

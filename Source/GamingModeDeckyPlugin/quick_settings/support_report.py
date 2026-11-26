@@ -9,17 +9,42 @@ import uuid
 _gate = threading.Lock()
 
 
-def _installed_app():
-    import winreg
+# Rebrand phase 2: Core.exe in Programs\Core for new installs; an existing install keeps its
+# folder (Programs\Playhub) and may still hold Playhub.exe until it is updated.
+_APP_EXECUTABLES = ("Core.exe", "Playhub.exe")
+
+
+def _install_candidates(local):
+    candidates = []
     try:
+        import winreg
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
                 r"Software\Microsoft\Windows\CurrentVersion\Uninstall\Playhub") as key:
             location, _ = winreg.QueryValueEx(key, "InstallLocation")
             if isinstance(location, str) and Path(location).is_absolute():
-                return Path(location) / "Playhub.exe"
-    except OSError:
+                candidates.append(Path(location))
+    except (OSError, ImportError):
         pass
-    return Path(os.environ.get("LOCALAPPDATA", "")) / "Playhub" / "Playhub.exe"
+    programs = Path(local) / "Programs"
+    candidates += [programs / "Core", programs / "Playhub"]
+    return candidates
+
+
+def _installed_app(local=None):
+    local = os.environ.get("LOCALAPPDATA", "") if local is None else local
+    candidates = _install_candidates(local)
+    for folder in candidates:
+        for name in _APP_EXECUTABLES:
+            if (folder / name).is_file():
+                return folder / name
+    return candidates[0] / _APP_EXECUTABLES[0]
+
+
+def local_data_root(local=None):
+    """%LOCALAPPDATA%\\Core once the app has copied its data there (marker file), else Playhub."""
+    local = Path(os.environ.get("LOCALAPPDATA", "") if local is None else local)
+    current, legacy = local / "Core", local / "Playhub"
+    return current if (current / ".core-migrated.json").is_file() or not legacy.is_dir() else legacy
 
 
 def generate(*, app=None, local_root=None, runner=subprocess.run):
@@ -34,7 +59,7 @@ def generate(*, app=None, local_root=None, runner=subprocess.run):
         protocol = json.loads(marker.read_text(encoding="utf-8-sig"))
         if not isinstance(protocol, dict) or protocol.get("protocol") != 1:
             return {"ok": False, "message": "Unsupported Core diagnostic protocol."}
-        root = Path(local_root) if local_root is not None else Path(os.environ["LOCALAPPDATA"]) / "Playhub"
+        root = Path(local_root) if local_root is not None else local_data_root()
         request = uuid.uuid4().hex
         receipt = root / "DiagnosticsRequests" / (request + ".json")
         result = runner([str(app), "diagnostics-report", request], cwd=str(app.parent),

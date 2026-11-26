@@ -20,7 +20,8 @@ internal static class StoreRuntimeClientPolicy
             var name = client.GetProperty(kind == "decky" ? "fileName" : "path").GetString();
             var valid = kind switch
             {
-                "app" => name is "Playhub.exe" or "Playhub.GameSession.exe",
+                // Core.exe from 3.4; Playhub.exe in a manifest written by an older build.
+                "app" => name is global::Playhub.Shared.CoreNames.AppExe or global::Playhub.Shared.CoreNames.LegacyAppExe or "Playhub.GameSession.exe",
                 "decky" => name is "PluginLoader.exe" or "PluginLoader_noconsole.exe",
                 "xbox-companion" => name == "Playhub.XboxSession.exe" && client.TryGetProperty("methods", out var methods)
                     && methods.ValueKind == JsonValueKind.Array && methods.GetArrayLength() == 1
@@ -49,7 +50,7 @@ internal static class StoreRuntimeClientPolicy
         // Unknown future same-user installers retain revocation-only quiescence.
         // Every other method still goes through pinned-image admission.
         if (identity?.Kind == "xbox-companion") return method == "launch-descriptor";
-        if (identity?.Kind == "app" && System.IO.Path.GetFileName(identity.Path).Equals("Playhub.exe", StringComparison.OrdinalIgnoreCase))
+        if (identity?.Kind == "app" && global::Playhub.Shared.CoreNames.IsAppExecutable(identity.Path))
             return method is "snapshot" or "connect-begin" or "connect-complete" or "disconnect" or "refresh" or
                 "xbox-account-status" or "xbox-account-begin" or "xbox-account-poll" or "xbox-account-cancel" or "xbox-account-disconnect" or
                 "xbox-account-owned" or "steam-sync-request" or "steam-sync-status" or "steam-migration-request" or

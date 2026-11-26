@@ -30,9 +30,13 @@ class StoreSignInLauncher:
         manifest = json.loads(manifest_path.read_text('utf-8-sig'))
         if not isinstance(manifest, dict) or not isinstance(manifest.get('allowedClients'), list):
             raise ValueError('store_runtime_unavailable')
+        # Core.exe from 3.4 (Playhub.exe in an install not yet updated); the manifest names the one shipped.
+        name = next((candidate for candidate in ('Core.exe', 'Playhub.exe') if any(
+            isinstance(entry, dict) and entry.get('kind') == 'app' and entry.get('path') == candidate
+            for entry in manifest['allowedClients'])), 'Core.exe')
         clients = [entry for entry in manifest['allowedClients']
-                   if isinstance(entry, dict) and entry.get('kind') == 'app' and entry.get('path') == 'Playhub.exe']
-        executable = root / 'Playhub.exe'
+                   if isinstance(entry, dict) and entry.get('kind') == 'app' and entry.get('path') == name]
+        executable = root / name
         if (manifest.get('protocol') != 1 or manifest.get('finalized') is not True or len(clients) != 1
                 or not executable.is_file() or executable.stat().st_size > 64 * 1024 * 1024
                 or hashlib.sha256(executable.read_bytes()).hexdigest().lower() != str(clients[0].get('sha256')).lower()):

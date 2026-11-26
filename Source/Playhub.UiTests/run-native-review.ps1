@@ -32,7 +32,7 @@ $process = $null
 try {
     $readyPath = Join-Path $output 'clock-ready.json'
     if (Test-Path -LiteralPath $readyPath) { Remove-Item -LiteralPath $readyPath }
-    $process = Start-Process -FilePath (Join-Path $AppDirectory 'Playhub.exe') -WorkingDirectory $AppDirectory -WindowStyle Hidden -PassThru
+    $process = Start-Process -FilePath (Join-Path $AppDirectory 'Core.exe') -WorkingDirectory $AppDirectory -WindowStyle Hidden -PassThru
     Write-Output "Isolated review process: $($process.Id)"
     $deadline = [DateTime]::UtcNow.AddSeconds($(if ($Full) { 300 } else { 100 }))
     $metadata = $null

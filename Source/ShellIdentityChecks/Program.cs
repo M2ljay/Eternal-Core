@@ -11,7 +11,7 @@ internal static class Program
     {
         string scratch = Path.Combine(Path.GetTempPath(), "Playhub-ShellIdentity-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(scratch);
-        string executable = Path.Combine(scratch, "Playhub.exe");
+        string executable = Path.Combine(scratch, "Core.exe");
         string icon = Path.Combine(scratch, "Playhub.ico");
         File.WriteAllBytes(executable, [1, 2, 3]);
         File.WriteAllBytes(icon, [1, 2, 3]);
@@ -24,10 +24,11 @@ internal static class Program
         Check(writes[3].Value == "LoZazaMastro.Playhub", "version-independent shared identity");
         Check(ShellIdentity.IsMainTarget(executable, executable), "same canonical main app");
         Check(ShellIdentity.IsMainTarget(executable.ToUpperInvariant(), executable), "Windows case-insensitive main app");
-        foreach (string value in new[] { "Playhub.exe", Path.Combine(scratch, "Other.exe"), "steam://open/bigpicture", "", "\"" + executable + "\" --other" })
+        foreach (string value in new[] { "Core.exe", Path.Combine(scratch, "Playhub.exe"), Path.Combine(scratch, "Other.exe"), "steam://open/bigpicture", "", "\"" + executable + "\" --other" })
             Check(!ShellIdentity.IsMainTarget(value, executable), "unrelated shortcut target refused");
         Check(!ShellIdentity.IsMainTarget(Path.Combine(scratch, "GamingMode.exe"), Path.Combine(scratch, "GamingMode.exe")), "agent never adopted as main app");
         Check(!ShellIdentity.IsMainTarget(Path.Combine(scratch, "Playhub Setup.exe"), Path.Combine(scratch, "Playhub Setup.exe")), "setup never adopted as main app");
+        Check(!ShellIdentity.IsMainTarget(Path.Combine(scratch, "Playhub.exe"), Path.Combine(scratch, "Playhub.exe")), "the old name is not the main app any more");
         Check(!ShellIdentity.UpdateOwnedShortcut(Path.Combine(scratch, "absent.lnk"), executable, icon), "missing shortcut remains absent");
         NativeShortcutChecks(scratch, executable, icon);
         Console.WriteLine($"PASS {_checks} shell-identity checks; no UI, process activation, user shortcuts, registry or cache changes.");
@@ -74,6 +75,23 @@ internal static class Program
             Check(!ShellIdentity.MoveOwnedShortcut(owned, renamed, executable), "existing destination never overwritten");
             Check(File.Exists(owned) && File.Exists(renamed), "both shortcuts kept when the new name is taken");
             Check(!ShellIdentity.MoveOwnedShortcut(Path.Combine(scratch, "absent.lnk"), Path.Combine(scratch, "x.lnk"), executable), "missing shortcut not created");
+
+            // Rebrand phase 2: a shortcut (or taskbar pin) to this install's Playhub.exe is pointed at Core.exe.
+            string pins = Path.Combine(scratch, "pins");
+            Directory.CreateDirectory(pins);
+            string legacy = Path.Combine(pins, "Playhub.lnk");
+            shortcut = ((dynamic)shell).CreateShortcut(legacy);
+            shortcut.TargetPath = Path.Combine(scratch, "Playhub.exe"); shortcut.Arguments = "--keep"; shortcut.WorkingDirectory = scratch;
+            shortcut.Save(); Marshal.ReleaseComObject(shortcut);
+            File.Copy(foreign, Path.Combine(pins, "foreign.lnk"));
+            Check(ShellIdentity.RetargetLegacyShortcutsIn(pins, executable, icon, Console.WriteLine) == 1, "only the legacy shortcut retargeted");
+            shortcut = ((dynamic)shell).CreateShortcut(legacy);
+            Check(((string)shortcut.TargetPath).Equals(executable, StringComparison.OrdinalIgnoreCase), "legacy shortcut now launches Core.exe");
+            Check((string)shortcut.Arguments == "--keep" && (string)shortcut.WorkingDirectory == scratch, "arguments and working directory kept");
+            Marshal.ReleaseComObject(shortcut);
+            Check(ReadId(legacy) == ShellIdentity.AppId, "retargeted shortcut keeps the shared identity");
+            Check(before.SequenceEqual(SHA256.HashData(File.ReadAllBytes(Path.Combine(pins, "foreign.lnk")))), "foreign pin untouched");
+            Check(ShellIdentity.RetargetLegacyShortcutsIn(pins, executable, icon) == 0, "retarget is idempotent");
         }
         finally { Marshal.ReleaseComObject(shell); }
     }

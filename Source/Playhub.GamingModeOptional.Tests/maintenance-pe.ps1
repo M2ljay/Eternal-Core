@@ -1,4 +1,4 @@
-﻿$assembly = Join-Path $PSScriptRoot '..\Playhub\bin\x64\Release\net8.0-windows10.0.19041.0\win-x64\Playhub.dll'
+﻿$assembly = Join-Path $PSScriptRoot '..\Playhub\bin\x64\Release\net8.0-windows10.0.19041.0\win-x64\Core.dll'
 $stream = [IO.File]::OpenRead([IO.Path]::GetFullPath($assembly))
 $pe = [System.Reflection.PortableExecutable.PEReader]::new($stream)
 try {

@@ -35,6 +35,7 @@ public sealed record ChainFreeEngineDescriptor(string ExecutablePath, IReadOnlyL
     public static IEnumerable<string> DefaultInstallRoots(string agentDirectory)
     {
         string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        yield return Path.Combine(local, "Programs", "Core");
         yield return Path.Combine(local, "Programs", "Playhub");
         yield return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Playhub");
         yield return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Playhub");

@@ -177,8 +177,9 @@ Check(eternalMarkIII.All(key => LocalizationService.Translate("it", key) == key)
 
 // Eternal Core rebrand (docs/eternal/REBRAND.md): the app is called Core everywhere the user reads it.
 // "Playhub" stays only where it names something that still carries that name: the upstream project in
-// the credits, the upstream Playhub-* plugin suite, and the Playhub.exe file. Any other product-name use is a missed string.
-var upstreamName = new Regex(@"(?<![A-Za-z0-9_./\\])Playhub(?!\.[A-Za-z]|[A-Za-z0-9_/\\]| (?:Metadata|Artworks?|Notifications|Surround|Discord)\b)");
+// the credits and the upstream Playhub-* plugin suite. Since rebrand phase 2 the app file is Core.exe, so
+// "Playhub.exe" counts as a missed string too. Any other product-name use is a missed string.
+var upstreamName = new Regex(@"(?<![A-Za-z0-9_./\\])Playhub(?!\.(?!exe\b)[A-Za-z]|[A-Za-z0-9_/\\]| (?:Metadata|Artworks?|Notifications|Surround|Discord)\b)");
 var keptOnPurpose = new Regex(@"plugin di Playhub|suite Playhub|plugin Playhub"
     + @"|^Core di Eternal\. Basato su Playhub di Andrea Sgarro");
 const string credit = "Core di Eternal. Basato su Playhub di Andrea Sgarro (LoZazaMastro), licenza MIT. © 2026 Andrea Sgarro (LoZazaMastro).";

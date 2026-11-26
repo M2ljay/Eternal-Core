@@ -1,9 +1,9 @@
 @echo off
 chcp 65001 >nul
 set "EXE="
-for /f "usebackq delims=" %%F in (`powershell -NoProfile -Command "Get-ChildItem -LiteralPath '%~dp0bin' -Filter 'Playhub.exe' -File -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1 -ExpandProperty FullName"`) do set "EXE=%%F"
+for /f "usebackq delims=" %%F in (`powershell -NoProfile -Command "Get-ChildItem -LiteralPath '%~dp0bin' -Filter 'Core.exe' -File -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1 -ExpandProperty FullName"`) do set "EXE=%%F"
 if not defined EXE (
-  echo Playhub.exe non trovato. Compila prima il progetto in Debug o Release.
+  echo Core.exe non trovato. Compila prima il progetto in Debug o Release.
   exit /b 1
 )
 echo Avvio Playhub e attendo qualche secondo...

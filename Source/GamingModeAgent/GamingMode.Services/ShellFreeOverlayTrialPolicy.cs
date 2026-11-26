@@ -109,7 +109,8 @@ internal static class ShellFreeOverlayTrialPolicy
         using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\Playhub");
         if (key?.GetValue("InstallLocation") is string configured && Path.IsPathFullyQualified(configured)
             && Directory.Exists(configured)) return Path.GetFullPath(configured);
-        string fallback = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Playhub");
+        string fallback = global::Playhub.Shared.CoreNames.ExistingDefaultInstallDir(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Directory.Exists);
         return Directory.Exists(fallback) ? fallback : null;
     }
     private sealed class Pins(IEnumerable<IDisposable> values) : IDisposable

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
@@ -51,7 +52,7 @@ internal static class ShellIdentity
         try
         {
             return !string.IsNullOrWhiteSpace(target) && Path.IsPathFullyQualified(target)
-                && Path.IsPathFullyQualified(expected) && Path.GetFileName(expected).Equals("Playhub.exe", StringComparison.OrdinalIgnoreCase)
+                && Path.IsPathFullyQualified(expected) && Path.GetFileName(expected).Equals(CoreNames.AppExe, StringComparison.OrdinalIgnoreCase)
                 && Path.GetFullPath(target).Equals(Path.GetFullPath(expected), StringComparison.OrdinalIgnoreCase);
         }
         catch { return false; }
@@ -80,6 +81,52 @@ internal static class ShellIdentity
         }
         catch (Exception error) { log?.Invoke("Shell shortcut identity: " + error.Message); return false; }
         finally { if (link is not null) Marshal.ReleaseComObject(link); }
+    }
+
+    // Rebrand phase 2: Playhub.exe became Core.exe in the same folder. A shortcut that launches
+    // this install's old Playhub.exe (Start, desktop, a taskbar pin) is pointed at Core.exe;
+    // arguments, working directory, hotkey and the pin itself are kept. Anything else is left alone.
+    internal static bool RetargetLegacyShortcut(string path, string executable, string icon, Action<string>? log = null)
+    {
+        object? link = null;
+        try
+        {
+            if (!File.Exists(path) || !ValidMainFiles(executable, icon)
+                || (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0) return false;
+            string legacy = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(executable))!, CoreNames.LegacyAppExe);
+            link = Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("00021401-0000-0000-C000-000000000046"), true)!)!;
+            var file = (IPersistFile)link;
+            file.Load(Path.GetFullPath(path), 2);
+            var shell = (IShellLink)link;
+            var target = new StringBuilder(32768);
+            Marshal.ThrowExceptionForHR(shell.GetPath(target, target.Capacity, 0, 4));
+            string current = Environment.ExpandEnvironmentVariables(target.ToString());
+            if (!Path.IsPathFullyQualified(current) || !Path.GetFullPath(current).Equals(legacy, StringComparison.OrdinalIgnoreCase)) return false;
+            Marshal.ThrowExceptionForHR(shell.SetPath(Path.GetFullPath(executable)));
+            Marshal.ThrowExceptionForHR(shell.SetIconLocation(Path.GetFullPath(icon), 0));
+            Set((IPropertyStore)link, 5, AppId);
+            file.Save(Path.GetFullPath(path), true);
+            return true;
+        }
+        catch (Exception error) { log?.Invoke("Shell shortcut retarget: " + error.Message); return false; }
+        finally { if (link is not null) Marshal.ReleaseComObject(link); }
+    }
+
+    // Taskbar pins are shortcut copies kept by Explorer; their file names are the user's.
+    internal static string TaskbarPinFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "Microsoft", "Internet Explorer", "Quick Launch", "User Pinned", "TaskBar");
+
+    internal static int RetargetLegacyShortcutsIn(string folder, string executable, string icon, Action<string>? log = null)
+    {
+        int changed = 0;
+        try
+        {
+            if (!Directory.Exists(folder)) return 0;
+            foreach (string shortcut in Directory.EnumerateFiles(folder, "*.lnk").Take(256))
+                if (RetargetLegacyShortcut(shortcut, executable, icon, log)) changed++;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { log?.Invoke("Shell shortcut folder: " + error.Message); }
+        return changed;
     }
 
     // Renames a shortcut only when it launches this install's main executable and the new
