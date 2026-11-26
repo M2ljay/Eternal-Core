@@ -56,9 +56,22 @@ Check ((ConvertTo-CommandLineArgument '') -eq '""') 'argv: empty'
 # ---------- Proton CLI parsing ----------
 $newHelp = "Options:`n  -f, --file-conflict-strategy <value>`n  -d, --folder-conflict-strategy <value>`n  -t, --skip-thumbnails"
 Check ((Get-ProtonConflictArguments $newHelp 'skip') -join ' ' -eq '--file-conflict-strategy skip --folder-conflict-strategy merge') 'cli: split conflict options (source 0.8+)'
-Check ((Get-ProtonConflictArguments '  --conflict-strategy <value>' 'skip') -join ' ' -eq '--conflict-strategy skip') 'cli: single option (blog example)'
-Check ($null -eq (Get-ProtonConflictArguments '  --conflict-strategy <value>' 'rename')) 'cli: rename refused with the single option'
+Check ((Get-ProtonConflictArguments $newHelp 'rename') -join ' ' -eq '--file-conflict-strategy rename --folder-conflict-strategy merge') 'cli: rename keeps folders merged'
+Check ((Get-ProtonConflictMode $newHelp) -eq 'split') 'cli: split options detected'
+Check ((Get-ProtonConflictMode '  --conflict-strategy <value>') -eq 'legacy') 'cli: single option (blog example) is the legacy CLI'
+Check ($null -eq (Get-ProtonConflictArguments '  --conflict-strategy <value>' 'skip')) 'cli: legacy CLI gets no upload arguments, not even skip'
 Check ($null -eq (Get-ProtonConflictArguments 'Usage: upload' 'skip')) 'cli: unknown help -> no upload'
+Check ($script:ProtonTooOldMessage -match '^Proton CLI too old') 'cli: too-old message'
+$defaultConfig = Get-CoreBackupDefaults
+Check ((Get-CategoryFileStrategy $defaultConfig 'saves') -eq 'rename' -and (Get-CategoryFileStrategy $defaultConfig 'romm') -eq 'rename') 'strategy: saves and RomM dump keep every version (rename)'
+Check ((Get-CategoryFileStrategy $defaultConfig 'roms') -eq 'skip' -and (Get-CategoryFileStrategy $defaultConfig 'bios') -eq 'skip') 'strategy: ROMs and BIOS skip existing files'
+$listed = ConvertFrom-ProtonListNames "[`n{""name"":""a.srm"",""type"":""file""},`n{""name"":{""ok"":true,""value"":""a (1).srm""}},`n{""uid"":""x""}`n]`n"
+Check (($listed -join '|') -eq 'a.srm|a (1).srm') 'list: names as strings and as result objects'
+Check (@(ConvertFrom-ProtonListNames 'not json').Count -eq 0) 'list: garbage gives no names'
+Check ((Select-NewestVersionName @('game.srm', 'game (1).srm', 'game (10).srm', 'game (2).srm', 'other (11).srm') 'game.srm') -eq 'game (10).srm') 'versions: newest numbered copy wins'
+Check ((Select-NewestVersionName @('game.srm') 'game.srm') -eq 'game.srm') 'versions: no copy -> the file itself'
+Check ((Select-NewestVersionName @('save', 'save (3)') 'save') -eq 'save (3)') 'versions: name without extension'
+Check ((Select-NewestVersionName @('a.b (1).c', 'a.b.c (4)') 'a.b.c') -eq 'a.b (1).c') 'versions: extension is the last dot'
 $summary = ConvertFrom-ProtonTransferSummary "noise`n{""transferredItems"":3,""transferredBytes"":1200,""skippedItems"":9,""failedItems"":0,""failures"":[]}`n"
 Check ($summary.transferredItems -eq 3 -and $summary.skippedItems -eq 9) 'cli: JSON transfer summary'
 Check (Test-GlobFreePath 'D:\RomM\library\roms\ps2') 'glob: plain folder allowed'
@@ -121,13 +134,13 @@ $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ('core-backup-test-' + [Guid]
 [void](New-Item -ItemType Directory -Path $tmp)
 try {
 	$categories = [ordered]@{ saves = (New-CategoryResult); romm = (New-CategoryResult); bios = (New-CategoryResult); roms = (New-CategoryResult) }
-	$section = New-BackupSection 'ok' 'a' 'b' 'm' 5 $state $categories @('ps2') ([ordered]@{ used_bytes = 1; total_bytes = 2 })
+	$section = New-BackupSection 'ok' 'a' 'b' 'm' 5 $state $categories @('ps2') ([ordered]@{ used_bytes = 1; total_bytes = 2 }) ([ordered]@{ ok = $true; at = 'c'; name = 'canary-x.txt'; message = 'ok' })
 	$doc = New-CoreStatusDocument 'V3' $section ([ordered]@{ label = 'Games (E:)'; health = 'healthy'; free_bytes = 1; total_bytes = 2; message = 'OK' }) ([ordered]@{ reachable = $true; checked_at = 'x'; message = 'ok' })
 	$path = Write-CoreStatus $doc $tmp
 	$path = Write-CoreStatus $doc $tmp # replaces an existing file
 	$read = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
 	Check ($read.schema -eq 1 -and $read.server -eq 'V3') 'status: schema 1 and server'
-	foreach ($key in @('result', 'started_at', 'finished_at', 'message', 'uploaded_bytes', 'consecutive_failures', 'last_success_at', 'categories', 'roms_skipped_platforms', 'pool', 'restore_check')) {
+	foreach ($key in @('result', 'started_at', 'finished_at', 'message', 'uploaded_bytes', 'consecutive_failures', 'last_success_at', 'categories', 'roms_skipped_platforms', 'pool', 'restore_check', 'canary')) {
 		Check ($read.backup.PSObject.Properties.Name -contains $key) "status: backup.$key present"
 	}
 	Check (@($read.backup.roms_skipped_platforms).Count -eq 1 -and $read.backup.roms_skipped_platforms[0] -eq 'ps2') 'status: skipped platforms is an array'
@@ -178,20 +191,44 @@ try {
 	}
 	[System.IO.File]::WriteAllText($configFile, (ConvertTo-Json $cfg -Depth 5))
 	$calls = Join-Path $tmp 'calls.txt'
+	$uploads = Join-Path $tmp 'uploads.txt'
+	$canaryNames = Join-Path $tmp 'canary-names.txt'
+	$remoteNames = Join-Path $tmp 'remote-names.txt'
+	$legacyFlag = Join-Path $tmp 'legacy.flag'
+	$loseCanary = Join-Path $tmp 'lose-canary.flag'
 	$seams = Join-Path $tmp 'seams.ps1'
 	@"
 `$script:CoreProcessRunner = {
 	param([string]`$FilePath, [string[]]`$Arguments, `$Deadline, [hashtable]`$Environment)
 	Add-Content -LiteralPath '$calls' -Value (`$Arguments -join ' | ')
 	`$joined = `$Arguments -join ' '
-	if (`$joined -eq 'filesystem upload --help') { return @{ ExitCode = 0; StdOut = '  -f, --file-conflict-strategy <s>  -d, --folder-conflict-strategy <s>'; StdErr = ''; TimedOut = `$false } }
+	if (`$joined -eq 'filesystem upload --help') {
+		if (Test-Path -LiteralPath '$legacyFlag') { return @{ ExitCode = 0; StdOut = '  --conflict-strategy <s>'; StdErr = ''; TimedOut = `$false } }
+		return @{ ExitCode = 0; StdOut = '  -f, --file-conflict-strategy <s>  -d, --folder-conflict-strategy <s>'; StdErr = ''; TimedOut = `$false }
+	}
+	if (`$joined -like 'filesystem list */canary --json') {
+		`$names = @(); if (Test-Path -LiteralPath '$canaryNames') { `$names = @(Get-Content -LiteralPath '$canaryNames') }
+		if (Test-Path -LiteralPath '$loseCanary') { `$names = @() }
+		return @{ ExitCode = 0; StdOut = ('[' + ((`$names | ForEach-Object { '{"name":"' + `$_ + '"}' }) -join ',') + ']'); StdErr = ''; TimedOut = `$false }
+	}
+	if (`$joined -like 'filesystem list */saves/*') {
+		`$out = '[]'; if (Test-Path -LiteralPath '$remoteNames') { `$out = Get-Content -LiteralPath '$remoteNames' -Raw }
+		return @{ ExitCode = 0; StdOut = `$out; StdErr = ''; TimedOut = `$false }
+	}
 	if (`$joined -like 'filesystem list*') { return @{ ExitCode = 0; StdOut = '[]'; StdErr = ''; TimedOut = `$false } }
 	if (`$joined -eq 'filesystem size /my-files --json') { return @{ ExitCode = 0; StdOut = '{"size":3000,"numberOfDescendants":4}'; StdErr = ''; TimedOut = `$false } }
 	if (`$joined -like 'filesystem size*') { return @{ ExitCode = 1; StdOut = ''; StdErr = 'not found'; TimedOut = `$false } }
-	if (`$joined -like 'filesystem upload*') { return @{ ExitCode = 0; StdOut = '{"transferredItems":1,"transferredBytes":10,"skippedItems":0,"failedItems":0,"failures":[]}'; StdErr = ''; TimedOut = `$false } }
+	if (`$joined -like 'filesystem upload*') {
+		`$local = `$Arguments[2]
+		`$files = @(Get-ChildItem -LiteralPath `$local -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { `$_.Name } | Sort-Object)
+		Add-Content -LiteralPath '$uploads' -Value ((Split-Path -Leaf `$local) + ' <- ' + `$local + ': ' + (`$files -join ','))
+		if ((Split-Path -Leaf `$local) -eq 'canary') { foreach (`$f in `$files) { Add-Content -LiteralPath '$canaryNames' -Value `$f } }
+		return @{ ExitCode = 0; StdOut = '{"transferredItems":1,"transferredBytes":10,"skippedItems":0,"failedItems":0,"failures":[]}'; StdErr = ''; TimedOut = `$false }
+	}
 	if (`$joined -like 'filesystem download*') {
 		`$target = `$Arguments[3]; `$name = `$Arguments[2].Substring(`$Arguments[2].LastIndexOf('/') + 1)
-		`$source = Get-ChildItem -LiteralPath '$tmp' -Recurse -File -Filter `$name | Where-Object { `$_.FullName -notlike '*CoreRestore*' } | Select-Object -First 1
+		`$plain = `$name -replace ' \(\d+\)', ''
+		`$source = Get-ChildItem -LiteralPath '$tmp' -Recurse -File -Filter `$plain | Where-Object { `$_.FullName -notlike '*CoreRestore*' } | Select-Object -First 1
 		Copy-Item -LiteralPath `$source.FullName -Destination (Join-Path `$target `$name)
 		return @{ ExitCode = 0; StdOut = '{"transferredItems":1}'; StdErr = ''; TimedOut = `$false }
 	}
@@ -203,28 +240,83 @@ try {
 `$script:DockerState = { param(`$Container) 'running' }
 "@ | Set-Content -LiteralPath $seams -Encoding UTF8
 	$shell = (Get-Process -Id $PID).Path
-	& $shell -NoProfile -File (Join-Path $backupDir 'Backup-Core.ps1') -ConfigPath $configFile -SeamsScript $seams | Out-Null
-	Check ($LASTEXITCODE -eq 0) 'night: Backup-Core exits 0'
-	$status = Get-Content -LiteralPath (Join-Path $statusDir 'core-status.json') -Raw | ConvertFrom-Json
+	function Invoke-Night { & $shell -NoProfile -File (Join-Path $backupDir 'Backup-Core.ps1') -ConfigPath $configFile -SeamsScript $seams | Out-Null; return $LASTEXITCODE }
+	function Read-Status { Get-Content -LiteralPath (Join-Path $statusDir 'core-status.json') -Raw | ConvertFrom-Json }
+	Check ((Invoke-Night) -eq 0) 'night: Backup-Core exits 0'
+	$status = Read-Status
 	Check ($status.server -eq 'TESTSERVER' -and $status.schema -eq 1) 'night: status written'
 	# Pool 10000, used 3000 + 2000, floor 2500: gba (100) fits, ps2 (3000) does not.
 	Check (@($status.backup.roms_skipped_platforms) -contains 'ps2' -and @($status.backup.roms_skipped_platforms) -notcontains 'gba') 'night: ps2 skipped, gba uploaded'
 	Check ($status.backup.result -eq 'ok') "night: result ok ($($status.backup.message))"
+	Check ($status.backup.canary.ok -eq $true -and $status.backup.canary.name -like 'canary-*.txt') 'night: canary uploaded and listed'
 	Check ($status.backup.pool.total_bytes -eq 10000 -and $status.backup.pool.used_bytes -eq 5000) 'night: pool reported'
 	Check ($status.drive.health -eq 'healthy' -and $status.romm.reachable -eq $true) 'night: drive and RomM'
 	$log = Get-Content -LiteralPath $calls
-	Check (@($log | Where-Object { $_ -like 'filesystem | upload*' -and $_ -notlike '*--help*' -and $_ -notmatch 'file-conflict-strategy \| skip \| --folder-conflict-strategy \| merge' }).Count -eq 0) 'night: every upload skips existing files and merges folders'
-	Check (@($log | Where-Object { $_ -notlike 'filesystem | download*' -and $_ -match 'replace|create-new-revision|trash|delete|\bmove\b|rename' }).Count -eq 0) 'night: no destructive CLI command or strategy'
+	$uploadLines = @($log | Where-Object { $_ -like 'filesystem | upload*' -and $_ -notlike '*--help*' })
+	Check (@($uploadLines | Where-Object { $_ -notmatch 'file-conflict-strategy \| (skip|rename) \| --folder-conflict-strategy \| merge' }).Count -eq 0) 'night: every upload merges folders and never replaces files'
+	Check (@($uploadLines | Where-Object { $_ -match '[\\/]assets \|' -and $_ -match 'file-conflict-strategy \| rename' }).Count -eq 1) 'night: saves keep every version (rename)'
+	Check (@($uploadLines | Where-Object { $_ -match 'romm-dumps' -and $_ -match 'file-conflict-strategy \| rename' }).Count -eq 1) 'night: RomM dump keeps every version (rename)'
+	Check (@($uploadLines | Where-Object { $_ -match 'roms.gba|bios' } | Where-Object { $_ -notmatch 'file-conflict-strategy \| skip' }).Count -eq 0) 'night: ROMs and BIOS skip existing files'
+	Check (@($log | Where-Object { $_ -notlike 'filesystem | download*' -and $_ -match 'replace|create-new-revision|trash|delete|\bmove\b|filesystem \| rename' }).Count -eq 0) 'night: no destructive CLI command or strategy'
 	Check (@($log | Where-Object { $_ -like '*upload*roms*ps2*' }).Count -eq 0) 'night: ps2 never uploaded'
 	Check (@($log | Where-Object { $_ -like 'filesystem | download*' }).Count -eq 3) 'night: first run downloads saves, RomM and ROM samples (BIOS folder empty)'
 	Check ($status.backup.restore_check.result -eq 'ok' -and $status.backup.restore_check.message -match 'bios: nothing to check') "night: restore check ok ($($status.backup.restore_check.message))"
+	Check (Test-Path -LiteralPath (Join-Path $stateDir 'saves-manifest.json')) 'night: saves manifest written after a clean upload'
+	Check (-not (Test-Path -LiteralPath (Join-Path $stateDir 'saves-staging'))) 'night: no staging folder left'
+
+	# Night 2, nothing changed: no saves upload at all (a renamed copy would duplicate every night).
+	Remove-Item -LiteralPath $uploads -Force
+	Check ((Invoke-Night) -eq 0) 'unchanged: exits 0'
+	Check (@(Get-Content -LiteralPath $uploads | Where-Object { $_ -like 'assets <-*' }).Count -eq 0) 'unchanged: saves not uploaded again'
+	# Night 3: one save changed, one new: only those two are staged and uploaded.
+	$saveDir = Join-Path $assets 'users/u1/saves/gba/1/mgba'
+	[System.IO.File]::WriteAllText((Join-Path $saveDir 'game.srm'), 'save v2')
+	[System.IO.File]::WriteAllText((Join-Path $saveDir 'other.srm'), 'new')
+	[System.IO.File]::WriteAllText((Join-Path $saveDir 'same.srm'), 'x')
+	(Get-Item -LiteralPath (Join-Path $saveDir 'same.srm')).LastWriteTime = (Get-Date).AddDays(-10)
+	Remove-Item -LiteralPath $uploads -Force
+	Check ((Invoke-Night) -eq 0) 'changed: exits 0'
+	$savesUpload = @(Get-Content -LiteralPath $uploads | Where-Object { $_ -like 'assets <-*' })
+	Check ($savesUpload.Count -eq 1 -and $savesUpload[0] -match 'saves-staging' -and $savesUpload[0] -match ': game.srm,other.srm,same.srm$') "changed: only new and changed saves staged ($savesUpload)"
+	Remove-Item -LiteralPath $uploads -Force
+	Check ((Invoke-Night) -eq 0) 'changed then unchanged: exits 0'
+	Check (@(Get-Content -LiteralPath $uploads | Where-Object { $_ -like 'assets <-*' }).Count -eq 0) 'changed then unchanged: each change uploaded once'
+
+	# Restore check against the newest renamed copy.
+	'[{"name":"game.srm"},{"name":"game (1).srm"},{"name":"game (2).srm"}]' | Set-Content -LiteralPath $remoteNames
+	$savedRunner = $script:CoreProcessRunner
+	. $seams
+	$restoreState = New-CoreBackupState
+	$restoreConfig = Get-CoreBackupConfig $configFile
+	$restoreConfig.romm.library = Join-Path $tmp 'nolibrary'
+	(Get-Item -LiteralPath (Join-Path $saveDir 'game.srm')).LastWriteTime = (Get-Date).AddDays(-5)
+	foreach ($f in @(Get-ChildItem -LiteralPath $saveDir -File)) { if ($f.Name -ne 'game.srm') { $f.LastWriteTime = (Get-Date) } }
+	$check = Invoke-CoreRestoreCheck $restoreConfig $restoreState
+	$script:CoreProcessRunner = $savedRunner
+	Check ($check.message -match 'saves: \S*game \(2\)\.srm matches') "restore: renamed category compared with the newest copy ($($check.message))"
+
+	# A missing canary fails the night even though every upload said ok.
+	New-Item -ItemType File -Path $loseCanary -Force | Out-Null
+	Check ((Invoke-Night) -eq 0) 'canary lost: run completes'
+	$status = Read-Status
+	Check ($status.backup.result -eq 'failed' -and $status.backup.canary.ok -eq $false -and $status.backup.message -match 'Canary: .*not listed') "canary lost: night failed with a message ($($status.backup.message))"
+	Remove-Item -LiteralPath $loseCanary -Force
+
+	# The legacy single-option CLI is refused: nothing is uploaded and Core is told why.
+	New-Item -ItemType File -Path $legacyFlag -Force | Out-Null
+	Remove-Item -LiteralPath $uploads -Force -ErrorAction SilentlyContinue
+	Check ((Invoke-Night) -eq 1) 'old CLI: exit 1'
+	$status = Read-Status
+	Check ($status.backup.result -eq 'failed' -and $status.backup.message -match 'Proton CLI too old') "old CLI: failed, says Proton CLI too old ($($status.backup.message))"
+	Check (-not (Test-Path -LiteralPath $uploads)) 'old CLI: nothing uploaded'
+	Remove-Item -LiteralPath $legacyFlag -Force
 
 	# A run without a Proton session fails, keeps counting and still reports health.
 	(Get-Content -LiteralPath $seams -Raw).Replace('if ($joined -like ''filesystem list*'') { return @{ ExitCode = 0', 'if ($joined -like ''filesystem list*'') { return @{ ExitCode = 1; StdErr = ''You need to login first''; StdOut = ''''; TimedOut = $false } }; if ($false) { return @{ ExitCode = 0') | Set-Content -LiteralPath $seams -Encoding UTF8
 	& $shell -NoProfile -File (Join-Path $backupDir 'Backup-Core.ps1') -ConfigPath $configFile -SeamsScript $seams | Out-Null
 	Check ($LASTEXITCODE -eq 1) 'signed out: exit 1'
 	$status = Get-Content -LiteralPath (Join-Path $statusDir 'core-status.json') -Raw | ConvertFrom-Json
-	Check ($status.backup.result -eq 'failed' -and $status.backup.consecutive_failures -eq 1 -and $status.backup.message -match 'auth login') 'signed out: failed, counted, tells the user to sign in'
+	Check ($status.backup.result -eq 'failed' -and $status.backup.consecutive_failures -eq 3 -and $status.backup.message -match 'auth login') 'signed out: failed, counted, tells the user to sign in'
 	Check ($null -ne $status.backup.last_success_at -and $status.drive.health -eq 'healthy') 'signed out: last success kept, health still checked'
 	$text = Get-Content -LiteralPath (Join-Path $statusDir 'core-status.json') -Raw
 	Check ($text -notmatch 'password|token|MYSQL_PWD') 'status: no credential words'

@@ -101,6 +101,14 @@ Check(Row(report, "microphone") is { Level: HealthLevel.Info, State: "muted" } &
 Check(Row(CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { Microphone = "live" }), "microphone").Level == HealthLevel.Ok, "verdict: live microphone");
 Check(Row(CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { Microphone = "none" }), "microphone").State == "none", "verdict: no microphone");
 Check(Row(CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now })), "microphone").Level == HealthLevel.Unknown, "verdict: microphone unknown");
+report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { Microphone = "partial" });
+Check(Row(report, "microphone") is { Level: HealthLevel.Attention, State: "partial" } && report.Attention == 1 && report.Problems.Count == 0, "verdict: a partly muted microphone is worth a look (no notice)");
+
+// The server refuses an old Proton CLI or loses the canary: a failed night whose message Core shows.
+const string tooOld = "Proton CLI too old: this proton-drive offers only --conflict-strategy, which may skip whole folders that already exist in Drive, so new saves, BIOS and ROMs would silently not upload. Nothing was uploaded. Update the Proton Drive CLI (v0.8.0 or later).";
+ServerStatus refused = status with { BackupResult = "failed", BackupMessage = tooOld, ConsecutiveFailures = 1 };
+report = CoreHealthPolicy.Evaluate(Base(server: refused with { WrittenAt = now }));
+Check(Row(report, "server-backup") is { Level: HealthLevel.Attention, State: "failed" } row2 && (string?)row2.Data["message"] == tooOld, "verdict: Proton CLI too old is a failed backup with its message");
 
 // ---------- alerts ----------
 var failing = new HealthProblem("backup-failing", "server-backup", "backup|2026-11-20T10:00:00.0000000+00:00", "health.backupFailing");

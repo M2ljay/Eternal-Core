@@ -22,11 +22,20 @@ Press the microphone button (or the keyboard shortcut, see below) to mute; press
   reports it.
 - If the microphone was muted outside Core, the section says *Muted outside Core*; the button then unmutes every
   default microphone.
-- The mute survives restarts (`%APPDATA%\GamingMode\mic-mute.json`) and sleep (Windows keeps each microphone's
-  mute itself).
+- **Unplugged while muted.** Windows keeps a microphone's mute while it is unplugged. If you unmute in Core while a
+  microphone Core had muted is unplugged, Core keeps its record and, as soon as it is plugged back in, gives it its
+  own setting back (the device notification, or the five-second check). The record goes only once that worked, so a
+  headset never comes back silently muted.
+- **Partly muted.** When one default microphone is muted and the other is live (for example a muted call headset and
+  a live webcam), the section says *Microphone partly muted* with a warning, the button is crimson, the top-bar mark
+  shows, and Health counts it as something to check. The button then goes the way of the *Communications* default,
+  the one calls use: if it is muted, the button unmutes; if it is live, the button mutes everything.
+- The mute survives restarts (`%APPDATA%\GamingMode\mic-mute.json`, which also keeps the records of unplugged
+  microphones) and sleep (Windows keeps each microphone's mute itself). Core writes the record before it mutes, so a
+  crash in between cannot lose the microphones' own settings.
 
 **Top-bar mark.** A crimson microphone-off icon appears before the clock in Steam's top bar while the default
-microphones are muted, in Big Picture (and in a game's Steam overlay wherever Steam shows its clock). It is drawn the same way as Core's date next to
+microphones are muted (or partly muted), in Big Picture (and in a game's Steam overlay wherever Steam shows its clock). It is drawn the same way as Core's date next to
 the clock (the plugin's backend asks the agent every four seconds and updates Steam's page). If the agent does not
 answer, no mark is shown rather than an old one.
 
@@ -47,15 +56,27 @@ left open. The party keeps running when the Game Bar closes.
 
 | Method | Result of research | Used |
 | ------ | ------------------ | ---- |
-| Win+G (`SendInput` from the agent) | Windows' own documented shortcut for the Game Bar. The agent already sends it for Xbox games launched from Steam (`WindowsXboxGameBar.cs`), and reads `Windows.Gaming.UI.GameBar.IsInputRedirected` to know whether the bar is open | **Yes, by default** |
-| `ms-gamebar:` URI to a widget | Microsoft documents `ms-gamebar:[//launch/]activate/<packageFamilyName>_<appId>_<appExtensionId>`, but also says the Game Bar "currently doesn't support URI activation apart from widget to widget activation", and the Xbox Social widget's id is not published | Only if you configure one (below) |
+| Win+G (`SendInput` from the agent) | Windows' own documented shortcut for the Game Bar. The agent reads `Windows.Gaming.UI.GameBar.IsInputRedirected` to know whether the bar is open | **Only with no game running** and the bar known to be closed |
+| `ms-gamebar://launch/` | Microsoft's [Game Bar URI template](https://learn.microsoft.com/gaming/game-bar/api/xgb-widgetcontrol) is `ms-gamebar:[//coreCommand/][widgetCommand]/[widgetId]`; the `launch` core command (the default) opens Game Bar normally. Launched through the shell, so no keystroke reaches any window | **Whenever a game runs, or Core cannot tell**, and when the bar's state is unknown |
+| `ms-gamebar:` URI to a widget | `ms-gamebar:[//launch/]activate/<packageFamilyName>_<appId>_<appExtensionId>`, but Microsoft also says the Game Bar "currently doesn't support URI activation apart from widget to widget activation", and the Xbox Social widget's id is not published | Only if you configure one (below) |
 | Opening the Xbox app | Leaves Big Picture for a desktop window; worse for the controller | No |
 | Controller button for the Game Bar | Core's setup turns *Open Game Bar with the controller button* off so Steam owns the Xbox button | Untouched |
 
-Core never sends the shortcut when the bar is already open (Win+G would close it), and never while a game protected
-by kernel anti-cheat runs (synthetic keystrokes into such a game are not worth the risk). If you find a widget link
-that works on your PC, put it in `voicePartyUri` in the `gaming` section of `config.json`: Core then opens that link
-instead (only `ms-gamebar:` links are accepted) and falls back to Win+G if Windows refuses it.
+**Win+G is never sent while a game runs.** Anti-cheat safe mode only recognises the games in its catalogue, and a game
+launched seconds earlier may not be detected yet, so Core does not rely on it here: a game counts as running when
+safe mode sees one, when Steam reports one (`RunningAppID`), or when Core cannot tell (Steam's value unreadable, or
+something other than Big Picture in front, which may be a game started outside Steam). Then Core launches
+`ms-gamebar://launch/` instead, and if Windows cannot open it, the button says *Windows could not open the Game Bar*
+rather than falling back to the keystroke. With no game and Big Picture in front, Win+G is used as before. While a
+game protected by kernel anti-cheat runs, the button does nothing at all and says so. Core also sends nothing when the
+bar is already open, or within two seconds of opening it (it may still be animating in), and when the bar's state is
+unknown it uses the link rather than the toggle. If a stuck key ever left only *Win* pressed, Core releases it behind
+a neutral key so the Start menu does not open over Big Picture.
+
+If you find a widget link that works on your PC, put it in `voicePartyUri` in the `gaming` section of `config.json`:
+Core then opens that link instead of `ms-gamebar://launch/` (only `ms-gamebar:` links are accepted). Whether
+`ms-gamebar://launch/` brings the Game Bar up over a full-screen game, and over Big Picture, is to be confirmed on the
+PC (checklist below).
 
 ### Coming back with the controller
 
@@ -122,17 +143,25 @@ by **Undo changes**.
 3. If your call headset is a different device from your default microphone, check both are muted (Windows sound
    settings > Input, from the desktop once) and that both come back as they were.
 4. While muted, plug in (or switch to) another headset: within a second or two it is muted too.
-5. Sleep and wake Core while muted: still muted, mark still there.
-6. Bind a Steam chord to **Ctrl+Alt+M** and try it in Big Picture and in a game.
-7. Press **Xbox party**: Quick Access closes and the Game Bar opens over Big Picture. Open *Xbox Social* if it is not
-   already open, and start or join a party.
-8. Close the Game Bar with B (or Esc from your Desktop Layout), and once with the Steam button: Big Picture is in front
-   and the controller drives it. `agent.log` shows *Voice: Game Bar closed* and, if needed, *Big Picture is back in
-   front*.
-9. In a game with anti-cheat (Call of Duty), the party button says it is not available, and the mic button still works.
-10. Core > Gaming Mode > Quiet Windows: the new line is ticked after **Apply**; during a party the game volume no
+5. While muted, unplug the headset, unmute in Core, then plug the headset back in: within a few seconds it is live
+   again (`agent.log`: *A microphone Core had muted is back*).
+6. With two different default microphones, mute only one in Windows' sound settings: the section says *Microphone
+   partly muted*, the mark shows, Health's *Microphone* row says *Partly muted*.
+7. Sleep and wake Core while muted: still muted, mark still there.
+8. Bind a Steam chord to **Ctrl+Alt+M** and try it in Big Picture and in a game.
+9. Press **Xbox party** with no game open: Quick Access closes and the Game Bar opens over Big Picture
+   (`agent.log`: *Xbox party button: WinG (shortcut)*). Open *Xbox Social* if it is not already open, and start or
+   join a party.
+10. In a game without anti-cheat, open Quick Access > Core > **Xbox party**: `agent.log` shows *Uri (gameRunning)*,
+    no keystroke is sent, and the Game Bar should open over the game. If it does not, note what happens: that is the
+    `ms-gamebar://launch/` link to confirm.
+11. Close the Game Bar with B (or Esc from your Desktop Layout), and once with the Steam button: Big Picture is in front
+    and the controller drives it. `agent.log` shows *Voice: Game Bar closed* and, if needed, *Big Picture is back in
+    front*.
+12. In a game with anti-cheat (Call of Duty), the party button says it is not available, and the mic button still works.
+13. Core > Gaming Mode > Quiet Windows: the new line is ticked after **Apply**; during a party the game volume no
     longer drops.
-11. Quick Access > Core > Health: the *Microphone* row says *Muted* in crimson or *Live*.
+14. Quick Access > Core > Health: the *Microphone* row says *Muted* in crimson, *Partly muted* or *Live*.
 
 If Win+G does not open the Game Bar over Big Picture, note what happens (nothing, the Game Bar behind Big Picture, a
 "Is this a game?" prompt) and the `agent.log` lines starting with *Voice:*.

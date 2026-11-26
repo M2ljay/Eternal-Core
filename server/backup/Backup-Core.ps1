@@ -12,9 +12,11 @@
      its SHA-256 with the original.
   4. Writes core-status.json (schema 1) atomically into the CoreStatus share for Core on the PC.
 
-  Upload-only: files that already exist in the cloud are skipped (or, with
-  proton.file_conflict_strategy = "rename", uploaded beside them under a new name). Nothing in the
-  cloud is ever deleted, trashed or overwritten. No password or token is read, stored or logged.
+  Upload-only. Saves and the RomM dump keep every changed version: a changed file is uploaded beside
+  the old one as "name (N).ext" (once per change, through saves-manifest.json). ROMs and BIOS skip files
+  that already exist (proton.file_conflict_strategy). A small dated canary file is uploaded each night
+  and must be listed afterwards, or the night is "failed". Nothing in the cloud is ever deleted,
+  trashed or overwritten. No password or token is read, stored or logged.
 
 .PARAMETER ConfigPath
   backup-config.json (default: next to this script).
@@ -56,6 +58,7 @@ $notes = New-Object System.Collections.ArrayList
 $skippedPlatforms = @()
 $pool = $null
 $fatal = $null
+$canary = $null
 $drive = $null; $romm = $null
 
 function Add-Note([string]$Text) { [void]$notes.Add($Text); Write-CoreLog $Text }
@@ -83,8 +86,12 @@ try {
 	$signIn = Test-ProtonSignedIn $config
 	if (-not $signIn.SignedIn) { throw "Proton Drive: $($signIn.Message). Sign in on the server yourself with: proton-drive auth login" }
 	$help = Invoke-ProtonCli $config @('filesystem', 'upload', '--help')
-	$conflict = Get-ProtonConflictArguments ($help.StdOut + "`n" + $help.StdErr) ([string]$config.proton.file_conflict_strategy)
-	if (-not $conflict) { throw 'Proton Drive CLI: its upload command offers no conflict strategy this script recognises; nothing was uploaded (see README, "CLI flags").' }
+	$helpText = $help.StdOut + "`n" + $help.StdErr
+	$mode = Get-ProtonConflictMode $helpText
+	if ($mode -eq 'legacy') { throw $script:ProtonTooOldMessage }
+	$conflict = Get-ProtonConflictArguments $helpText ([string]$config.proton.file_conflict_strategy)
+	$versioned = Get-ProtonConflictArguments $helpText (Get-CategoryFileStrategy $config 'saves')
+	if (-not $conflict -or -not $versioned) { throw 'Proton Drive CLI: its upload command offers no conflict strategy this script recognises; nothing was uploaded (see README, "CLI flags").' }
 
 	$layout = Get-RommLayout ([string]$config.romm.library) ([string]$config.romm.library_structure)
 	$folders = @("$root/saves", "$root/romm", "$root/bios", "$root/roms")
@@ -94,13 +101,18 @@ try {
 	}
 	if (-not (New-ProtonFolderTree $config $folders $stateFolder $conflict)) { throw "Proton Drive: could not create the backup folders under $root." }
 
-	# (1) Saves and states: RomM's assets folder (users/<id>/saves|states/<platform>/<rom>/...).
+	# Canary: a dated file that must be listed after its upload.
+	$canary = Test-ProtonCanary $config $stateFolder $conflict ([DateTimeOffset]::Now)
+	if ($canary.ok) { Write-CoreLog "Canary: $($canary.name) is in Drive." } else { Add-Note "Canary: $($canary.message)" }
+
+	# (1) Saves and states: RomM's assets folder (users/<id>/saves|states/<platform>/<rom>/...), one cloud
+	# copy per change.
 	$assets = [string]$config.romm.assets
 	if (Test-Path -LiteralPath $assets -PathType Container) {
-		$upload = Send-ProtonFolder $config $assets (Get-RemoteParentFor $root 'saves' $layout.Structure '') $conflict
+		$upload = Send-VersionedFolder $config $assets (Get-RemoteParentFor $root 'saves' $layout.Structure '') $versioned $stateFolder
 		Add-Upload $categories.saves $upload
 		$categories.saves.ok = [bool]$upload.Ok
-		if (-not $upload.Ok) { Add-Note "Saves: $($upload.Message)" } else { Write-CoreLog "Saves: $($upload.Files) uploaded, $($upload.Skipped) already there." }
+		if (-not $upload.Ok) { Add-Note "Saves: $($upload.Message)" } else { Write-CoreLog "Saves: $($upload.Changed) new or changed, $($upload.Files) uploaded, $($upload.Skipped) already there." }
 	}
 	else { Add-Note "Saves: assets folder not found ($assets)." }
 
@@ -118,7 +130,7 @@ try {
 		$configCopied = $true
 	}
 	else { Add-Note "RomM config: folder not found ($rommConfig)." }
-	$upload = Send-ProtonFolder $config $tonight (Get-RemoteParentFor $root 'romm' $layout.Structure '') $conflict
+	$upload = Send-ProtonFolder $config $tonight (Get-RemoteParentFor $root 'romm' $layout.Structure '') $versioned
 	Add-Upload $categories.romm $upload
 	$categories.romm.ok = [bool]($dump.Ok -and $configCopied -and $upload.Ok)
 	if (-not $upload.Ok) { Add-Note "RomM dump upload: $($upload.Message)" }
@@ -195,11 +207,12 @@ finally {
 		$finished = [DateTimeOffset]::Now
 		$result = Get-CoreBackupResult $categories
 		if ($fatal) { $result = 'failed' }
+		if ($null -ne $canary -and -not $canary.ok) { $result = 'failed' }
 		$state = Update-CoreBackupState $state $result $finished.ToString('o')
 		$uploadedBytes = [int64]0; foreach ($key in $categories.Keys) { $uploadedBytes += [int64]$categories[$key].bytes }
 		$message = 'All categories backed up.'
 		if ($notes.Count) { $message = ($notes -join ' | ') }
-		$backup = New-BackupSection $result $started.ToString('o') $finished.ToString('o') $message $uploadedBytes $state $categories $skippedPlatforms $pool
+		$backup = New-BackupSection $result $started.ToString('o') $finished.ToString('o') $message $uploadedBytes $state $categories $skippedPlatforms $pool $canary
 		$state.last_backup = $backup
 		try { Save-JsonFile $state $statePath } catch { Write-CoreLog "State could not be saved: $($_.Exception.Message)" }
 		if (-not $drive) { $drive = [ordered]@{ label = $null; health = 'unknown'; free_bytes = $null; total_bytes = $null; message = 'not checked' } }

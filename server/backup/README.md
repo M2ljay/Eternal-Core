@@ -35,28 +35,48 @@ Windows PowerShell 5.1 (built into Windows) is enough; PowerShell 7 works too.
    status and in Core. If the pool size is unknown (`pool.total_bytes` is `null`), no ROMs are uploaded.
    A night stops starting new ROM uploads after `schedule.max_hours` (6) and stops a running one at that limit; the
    rest continues the next night (the first full upload of a large library takes several nights).
+   Before the uploads, a **canary** proves that uploads really land: a small dated file
+   (`canary/canary-<yyyyMMdd-HHmmss>.txt`) is uploaded and must then be listed by `filesystem list`. If it is not
+   there, the night is `failed` even when every upload reported success, and Core shows the reason.
 3. **Restore check, monthly** (`restore_check.every_days`, 30): one random file per category is downloaded to a new
    temporary folder and its SHA-256 compared with the original. Only files older than the last successful run and at
-   least two days old are picked (see "Changed files" below). The temporary folder is deleted afterwards.
+   least two days old are picked. For saves and the RomM dump, which keep one copy per change, the newest copy in
+   Drive (`name (N).ext` with the highest N, or the file itself) is the one compared. The temporary folder is deleted
+   afterwards.
 4. **Status:** `core-status.json` is written into `status_folder` (shared as `\\<server>\CoreStatus`) through a
    temporary file and a rename, so Core never reads half a file.
 
 ### Never deleted, never overwritten
 
-The scripts call only `filesystem upload` (and `download`, `size` and `list` for the checks). Existing cloud files
-are skipped (`--file-conflict-strategy skip`); folders are merged. `proton.file_conflict_strategy` accepts only `skip`
-or `rename`; the scripts refuse `replace` (which trashes the cloud copy) and `create-new-revision`. Locally, the only
-things removed are the scripts' own: RomM dump folders beyond `romm.keep_local_dumps` in `state_folder\romm-dumps`,
-logs older than 60 days, and the restore check's temporary folder.
+The scripts call only `filesystem upload` (and `download`, `size` and `list` for the checks). Folders are always
+merged. Files that already exist in the cloud are never replaced: ROMs and BIOS skip them
+(`proton.file_conflict_strategy`, default `skip`); saves and the RomM dump upload a changed file beside the old one
+(see below). `proton.file_conflict_strategy` accepts only `skip` or `rename`; the scripts refuse `replace` (which
+trashes the cloud copy) and `create-new-revision`. Locally, the only things removed are the scripts' own: RomM dump
+folders beyond `romm.keep_local_dumps` in `state_folder\romm-dumps`, logs older than 60 days, the restore check's
+temporary folder, and the scratch folders `saves-staging` and `canary-upload` in `state_folder`.
 
 ### Changed files (read this once)
 
-"Skip existing" means a file that already exists in the cloud under the same name is not uploaded again, even if it
-changed locally. For RomM this matters little: RomM stores each uploaded save version as its own file. For anything
-you edit in place (a save written by an emulator into the assets folder by hand, `config.yml`), the cloud keeps the
-first copy. The RomM config is copied into a new dated folder every night, so it is always current. If you want
-changed files kept as well, set `proton.file_conflict_strategy` to `rename`: the changed file is uploaded beside the
-old one under a new name, and nothing is overwritten.
+**Saves and states keep every changed version.** RomM can rewrite a save in place under the same name (for example
+when The Collector resolves a conflict with *keep local*), and emulators that write into the assets folder do the
+same. With "skip existing" the cloud would keep the first copy forever. So saves and states use the CLI's `rename`
+strategy: a changed file is uploaded beside the old one as `name (1).ext`, then `name (2).ext`, and so on; the
+original is never touched. Identical content is never uploaded twice (the CLI skips a file whose content matches the
+cloud file of the same name).
+
+The CLI compares a file only with the cloud file of the **same** name, so after one change it would upload the same
+save again every night as another copy. The script prevents that with `state_folder\saves-manifest.json` (each
+save's size, last write and SHA-256 when it was last sent): the first night uploads the whole assets folder, later
+nights copy only new or changed files into `state_folder\saves-staging` and upload that, so each real change
+arrives once. The manifest is updated only after a clean upload; after a failed night the same files are sent again
+(at worst one extra copy). Deleting the manifest makes the next night upload the whole folder again, which adds a
+copy only of files that changed since their last upload.
+
+The RomM database dump and `config.yml` are written into a new dated folder every night, so they are always current;
+they also use `rename`, so nothing in them is ever skipped as "already there".
+
+**ROMs and BIOS** do not change, so they keep `skip`: a file that already exists in the cloud is not uploaded again.
 
 ### Credentials
 
@@ -122,7 +142,7 @@ Re-check the two numbers when the plan or your partner's usage changes; the ROM 
 | `schedule.max_hours` | `6` | ROM uploads stop at this limit; the task's own limit is 2 h longer |
 | `proton.cli_path` | `proton-drive` | Command name or full path of the CLI |
 | `proton.remote_root` | `/my-files/CoreBackup` | Backup folder in Drive (must be under `/my-files/`) |
-| `proton.file_conflict_strategy` | `skip` | `skip` or `rename` (never `replace`) |
+| `proton.file_conflict_strategy` | `skip` | ROMs and BIOS: `skip` or `rename` (never `replace`). Saves and the RomM dump always use `rename` |
 | `pool.total_bytes` | `null` | Pool size in bytes; `null` = unknown, no ROMs |
 | `pool.others_used_bytes` | `0` | Estimated usage outside your My files |
 | `pool.min_free_fraction` | `0.25` | Share of the pool that must stay free after ROM uploads |
@@ -148,13 +168,16 @@ Platform folders never contain them; rename a parent folder that does.
    "consecutive_failures":0,"last_success_at":"…",
    "categories":{"saves":{"ok":true,"files":12,"bytes":1048576},"romm":{…},"bios":{…},"roms":{…}},
    "roms_skipped_platforms":["ps2","ngc"],"pool":{"used_bytes":1310000000000,"total_bytes":2000000000000},
-   "restore_check":{"at":"…","result":"ok","message":"…"}},
+   "restore_check":{"at":"…","result":"ok","message":"…"},
+   "canary":{"ok":true,"at":"…","name":"canary-20261126-053102.txt","message":"ok"}},
  "drive":{"label":"Games (E:)","health":"healthy","free_bytes":812000000000,"total_bytes":4000000000000,"message":"OK"},
  "romm":{"reachable":true,"checked_at":"…","message":"…"}}
 ```
 
-- `result`: `ok` (every category ok), `partial` (saves ok, something else failed), `failed` (saves failed, or the run
-  could not start, for example no Proton session), `never`.
+- `result`: `ok` (every category ok), `partial` (saves ok, something else failed), `failed` (saves failed, the canary
+  was not listed, or the run could not start: no Proton session, or a Proton CLI too old), `never`. `message` says
+  why, and Core shows it under *Server backup*.
+- `canary`: tonight's canary (`null` when the run stopped before it).
 - `consecutive_failures` counts runs that were not `ok`; Core alerts from 2.
 - `files` / `bytes` per category: uploaded in this run (already-present files are not counted).
 - `pool` is `null` when the pool size or usage is unknown. `drive.health`: `healthy`, `warning`, `unhealthy`,
@@ -192,8 +215,16 @@ Sources (read 2026-11-26):
 **Not confirmed** (no Windows build was run while writing this):
 
 - The conflict option's name in the version you install. The blog shows `--conflict-strategy skip`; the source since
-  v0.8.0 ("Clarify conflict strategies") has the two options above. The scripts read `filesystem upload --help` and
-  use whichever the installed CLI offers; with neither they upload nothing and say so.
+  v0.8.0 ("Clarify conflict strategies") has the two options above. The scripts read `filesystem upload --help`.
+  A CLI that offers only the single `--conflict-strategy` is **refused**: that one option also applies to folders,
+  and with `skip` an existing folder may be skipped as a whole, so nothing new would upload after the first night
+  while every run still reported success. The night is `failed` with "Proton CLI too old"; update the CLI to v0.8.0
+  or later. With neither option the scripts upload nothing and say so.
+- The rename naming `name (N).ext`: from the SDK's `joinNameAndExtension` (`client/js/src/internal/nodes/nodeName.ts`),
+  which `getAvailableName` is assumed to use. If the CLI names copies differently, the restore check still compares
+  the original file and may report a changed save as different.
+- The JSON shape of `filesystem list --json`: a JSON array of nodes, read for their `name` (a string, or
+  `{"value": …}`). The canary and the restore check depend on it.
 - The Windows file name and install location (`proton-drive.exe` is assumed; set `proton.cli_path` if it differs).
 - That a scheduled task reaches the Credential Manager session: it should for a task that runs as your account with
   *Interactive* (default) or *Password* logon, and would not with *S4U*, which the installer never uses.
@@ -223,6 +254,7 @@ powershell -File tests\Test-CoreBackupLogic.ps1   # or: pwsh -File tests/Test-Co
 
 They cover the config guard (no `replace`), command-line quoting, CLI option detection and its JSON summary, the ROM
 plan (25% floor, skip order, unknown pool), the drive verdict, state and result rules, the status file (schema keys,
-atomic write, no BOM), both RomM structures, and two whole nights against a fake CLI (uploads always skip and merge,
-no destructive command, ps2 skipped, restore check; then a signed-out night). They also refuse PowerShell 7-only
-syntax so the scripts keep running on Windows PowerShell 5.1.
+atomic write, no BOM), both RomM structures, and whole nights against a fake CLI (folders always merged, saves and
+the dump with rename, ROMs and BIOS with skip, no destructive command, ps2 skipped, restore check), the canary, saves sent once per change through the manifest,
+the restore check against the newest renamed copy, a night whose canary is missing, a refused old CLI and a
+signed-out night. They also refuse PowerShell 7-only syntax so the scripts keep running on Windows PowerShell 5.1.

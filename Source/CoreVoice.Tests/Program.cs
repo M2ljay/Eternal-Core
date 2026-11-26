@@ -14,7 +14,8 @@ void Check(bool condition, string name)
 
 // A tiny Core Audio: endpoint id -> (muted, default).
 var audio = new Dictionary<string, (bool Muted, bool Default)>();
-List<MicEndpoint> Endpoints() => audio.Select(pair => new MicEndpoint(pair.Key, pair.Value.Muted, pair.Value.Default)).ToList();
+string? communications = null; // the Communications default, when the test sets one
+List<MicEndpoint> Endpoints() => audio.Select(pair => new MicEndpoint(pair.Key, pair.Value.Muted, pair.Value.Default, pair.Key == communications)).ToList();
 MicMuteState Apply(MicPlan plan)
 {
 	foreach (MicChange change in plan.Changes) audio[change.Id] = (change.Mute, audio[change.Id].Default);
@@ -47,7 +48,7 @@ Check(!state.CoreMuted && state.Before.Count == 0, "unmute clears Core's record"
 state = Apply(MicMutePolicy.Toggle(state, Endpoints()));
 Check(state.CoreMuted && MicMutePolicy.Observe(Endpoints()) == MicState.Muted, "toggle from live mutes");
 state = Apply(MicMutePolicy.Toggle(state, Endpoints()));
-Check(!state.CoreMuted && MicMutePolicy.Observe(Endpoints()) == MicState.Live, "toggle from muted restores");
+Check(!state.CoreMuted && MicMutePolicy.Observe(Endpoints()) == MicState.Partial, "toggle from muted restores (the user's own mute on one stays: partial)");
 
 // ---------- muted elsewhere, unmuted in Core ----------
 audio["webcam"] = (true, true);
@@ -70,8 +71,75 @@ audio.Remove("headset"); // unplugged while muted
 Check(MicMutePolicy.Observe(Endpoints()) == MicState.None, "no default left: none");
 Check(MicMutePolicy.Reconcile(state, Endpoints()).Changes.Count == 0 && MicMutePolicy.Reconcile(state, Endpoints()).Next.Before.ContainsKey("headset"), "an unplugged microphone stays remembered");
 audio["webcam"] = (true, true);
+plan = MicMutePolicy.Unmute(state, Endpoints());
+state = Apply(plan);
+Check(!audio["webcam"].Muted && !state.CoreMuted, "unmute restores what is present");
+Check(state.Pending.Count == 1 && state.Pending["headset"] == false && plan.Log is not null, "an unplugged microphone keeps its record as pending");
+
+// ---------- C1: unplugged while muted, plugged back after the unmute ----------
+Check(MicMutePolicy.Reconcile(state, Endpoints()).Changes.Count == 0 && MicMutePolicy.Reconcile(state, Endpoints()).Next == state, "pending: nothing to do while it is still unplugged");
+audio["headset"] = (true, true); // back, still muted by Windows, and a default again
+plan = MicMutePolicy.Reconcile(state, Endpoints());
+Check(plan.Changes.SequenceEqual(new[] { new MicChange("headset", false) }) && plan.Log is not null, "replugged after the unmute: gets its own (live) setting back");
+Check(MicMutePolicy.KeepUnrestored(plan.Next, state, new[] { "headset" }).Pending.ContainsKey("headset"), "pending: kept when Windows refuses the restore");
+state = Apply(plan);
+Check(state.Pending.Count == 0 && state.IsEmpty && !audio["headset"].Muted, "pending: dropped once restored");
+Check(MicMutePolicy.Observe(Endpoints()) == MicState.Live, "both back live");
+
+// A microphone the user had muted himself comes back muted (its own setting), not live.
+audio.Clear();
+audio["webcam"] = (false, true);
+audio["headset"] = (true, true);
+state = Apply(MicMutePolicy.Mute(new MicMuteState(), Endpoints()));
+audio.Remove("headset");
 state = Apply(MicMutePolicy.Unmute(state, Endpoints()));
-Check(!audio["webcam"].Muted && !state.CoreMuted, "unmute restores what is present and forgets the rest");
+audio["headset"] = (false, true); // a driver reset it while unplugged
+state = Apply(MicMutePolicy.Reconcile(state, Endpoints()));
+Check(audio["headset"].Muted && state.Pending.Count == 0, "pending: restores the user's own mute too");
+
+// Muting again while a record is pending keeps its own value for the next unmute.
+audio.Clear();
+audio["webcam"] = (false, true);
+audio["headset"] = (false, true);
+state = Apply(MicMutePolicy.Mute(new MicMuteState(), Endpoints()));
+audio.Remove("headset");
+state = Apply(MicMutePolicy.Unmute(state, Endpoints()));
+state = Apply(MicMutePolicy.Mute(state, Endpoints()));
+Check(state.CoreMuted && state.Before["headset"] == false && state.Pending.Count == 0, "mute again: the pending record moves back into Core's mute");
+audio["headset"] = (true, true);
+state = Apply(MicMutePolicy.Unmute(state, Endpoints()));
+Check(!audio["headset"].Muted && !audio["webcam"].Muted && state.IsEmpty, "and the next unmute restores it");
+
+// Unplugged while muted, plugged back while Core's mute is still on: muted, record kept.
+audio.Clear();
+audio["webcam"] = (false, true);
+audio["headset"] = (false, true);
+state = Apply(MicMutePolicy.Mute(new MicMuteState(), Endpoints()));
+audio.Remove("headset");
+state = Apply(MicMutePolicy.Reconcile(state, Endpoints()));
+audio["headset"] = (true, true);
+plan = MicMutePolicy.Reconcile(state, Endpoints());
+Check(plan.Changes.Count == 0 && plan.Next.CoreMuted && plan.Next.Before["headset"] == false, "unplug and replug while muted: still muted, record kept");
+
+// ---------- C1: partial ----------
+audio.Clear();
+audio["webcam"] = (false, true);  // Console default
+audio["headset"] = (true, true);  // Communications default, muted
+communications = "headset";
+Check(MicMutePolicy.Observe(Endpoints()) == MicState.Partial && MicMutePolicy.Code(MicState.Partial) == "partial", "one default muted, one live: partial");
+Check(MicMutePolicy.CommunicationsCode(Endpoints()) == "muted", "the Communications default is reported");
+Check(MicMutePolicy.ActsMuted(Endpoints()), "partial with the call mic muted: the button unmutes");
+state = Apply(MicMutePolicy.Toggle(new MicMuteState(), Endpoints()));
+Check(!audio["headset"].Muted && !audio["webcam"].Muted && MicMutePolicy.Observe(Endpoints()) == MicState.Live, "toggle from partial (call mic muted) gives a live microphone");
+audio["webcam"] = (true, true);
+Check(MicMutePolicy.Observe(Endpoints()) == MicState.Partial && !MicMutePolicy.ActsMuted(Endpoints()), "partial with the call mic live: the button mutes");
+state = Apply(MicMutePolicy.Toggle(new MicMuteState(), Endpoints()));
+Check(audio["headset"].Muted && audio["webcam"].Muted && state.CoreMuted, "toggle from partial (call mic live) mutes both");
+state = Apply(MicMutePolicy.Unmute(state, Endpoints()));
+Check(audio["webcam"].Muted && !audio["headset"].Muted, "and unmuting restores each one's own setting");
+communications = null;
+audio["headset"] = (false, true);
+Check(MicMutePolicy.Observe(Endpoints()) == MicState.Partial && !MicMutePolicy.ActsMuted(Endpoints()), "partial without a known Communications default: the button mutes");
 
 // ---------- unmuted outside Core while Core's mute is on ----------
 audio.Clear();
@@ -98,8 +166,13 @@ try
 	MicMutePolicy.Save(path, saved);
 	MicMuteState loaded = MicMutePolicy.Load(path);
 	Check(loaded.CoreMuted && loaded.Before.Count == 2 && loaded.Before["{0.0.1.00000000}.{def}"], "state survives a restart");
+	MicMutePolicy.Save(path, new MicMuteState { Pending = new() { ["{0.0.1.00000000}.{abc}"] = false } });
+	loaded = MicMutePolicy.Load(path);
+	Check(File.Exists(path) && !loaded.CoreMuted && loaded.Pending["{0.0.1.00000000}.{abc}"] == false, "pending records survive a restart");
 	MicMutePolicy.Save(path, new MicMuteState());
-	Check(!File.Exists(path) && !MicMutePolicy.Load(path).CoreMuted, "unmuted: the file is removed");
+	Check(!File.Exists(path) && !MicMutePolicy.Load(path).CoreMuted, "unmuted with nothing pending: the file is removed");
+	File.WriteAllText(path, "{\"coreMuted\": true, \"before\": {\"a\": false}}");
+	Check(MicMutePolicy.Load(path).Pending.Count == 0 && MicMutePolicy.Load(path).CoreMuted, "an older file without pending still reads");
 	File.WriteAllText(path, "{ not json");
 	Check(!MicMutePolicy.Load(path).CoreMuted, "a damaged file reads as unmuted");
 }
@@ -107,16 +180,30 @@ finally { try { Directory.Delete(folder, true); } catch { } }
 
 // ---------- Xbox party: launch choice ----------
 PartyLaunchChoice Choose(PartyLaunchInputs input) => PartyLaunchPolicy.Choose(input);
-Check(Choose(new() { GameBarInstalled = true, GameBarInteractive = false }) == new PartyLaunchChoice(PartyLaunchMethod.WinG, "shortcut"), "default: the Win+G shortcut");
-Check(Choose(new() { GameBarInstalled = null, GameBarInteractive = null }).Method == PartyLaunchMethod.WinG, "unknown state: still tries Win+G");
+Check(Choose(new() { GameBarInstalled = true, GameBarInteractive = false, GameRunning = false }) == new PartyLaunchChoice(PartyLaunchMethod.WinG, "shortcut"), "no game, bar closed: the Win+G shortcut");
+var withGame = Choose(new() { GameBarInstalled = true, GameBarInteractive = false, GameRunning = true });
+Check(withGame.Method == PartyLaunchMethod.Uri && withGame.Reason == "gameRunning" && withGame.Uri == PartyLaunchPolicy.DefaultUri, "C2: a game running (detected or not): the ms-gamebar: URI, never Win+G");
+var unknownGame = Choose(new() { GameBarInstalled = true, GameBarInteractive = false, GameRunning = null });
+Check(unknownGame.Method == PartyLaunchMethod.Uri && unknownGame.Reason == "gameUnknown", "C2: cannot tell whether a game runs: treated as running (URI)");
+var unknownBar = Choose(new() { GameBarInstalled = null, GameBarInteractive = null, GameRunning = false });
+Check(unknownBar.Method == PartyLaunchMethod.Uri && unknownBar.Reason == "stateUnknown", "bar state unknown: no toggle keystroke (it could close an open bar)");
+Check(PartyLaunchPolicy.ValidGameBarUri(PartyLaunchPolicy.DefaultUri) && PartyLaunchPolicy.DefaultUri == "ms-gamebar://launch/", "the default URI is Microsoft's documented launch form");
+Check(Choose(new() { GameBarInstalled = true, GameBarInteractive = false, GameRunning = false, RecentlySent = true }) == new PartyLaunchChoice(PartyLaunchMethod.AlreadyOpen, "cooldown"), "a second press right after the first sends nothing");
+Check(Choose(new() { GameBarInstalled = true, ProtectedGame = true, GameRunning = true, OverrideUri = "ms-gamebar://launch/" }).Reason == "protectedGame", "anti-cheat game: nothing at all, not even the URI");
+Check(PartyLaunchPolicy.AfterUriFailure(new() { GameBarInstalled = true, GameBarInteractive = false, GameRunning = true }) == new PartyLaunchChoice(PartyLaunchMethod.Unavailable, "uriFailed"), "C2: URI failed with a game running: a message, no keystroke");
+Check(PartyLaunchPolicy.AfterUriFailure(new() { GameBarInstalled = true, GameBarInteractive = false, GameRunning = null }).Method == PartyLaunchMethod.Unavailable, "C2: URI failed, game unknown: a message, no keystroke");
+Check(PartyLaunchPolicy.AfterUriFailure(new() { GameBarInstalled = true, GameBarInteractive = null, GameRunning = false }).Method == PartyLaunchMethod.Unavailable, "URI failed, bar state unknown: a message, no keystroke");
+Check(PartyLaunchPolicy.AfterUriFailure(new() { GameBarInstalled = true, GameBarInteractive = false, GameRunning = false }).Method == PartyLaunchMethod.WinG, "URI failed with no game and the bar closed: Win+G as before");
 Check(Choose(new() { GameBarInstalled = false }).Reason == "notInstalled", "no Game Bar: says so");
 Check(Choose(new() { GameBarInstalled = true, GameBarInteractive = true }).Method == PartyLaunchMethod.AlreadyOpen, "already open: no keystroke (Win+G would close it)");
 Check(Choose(new() { GameBarInstalled = true, ProtectedGame = true }).Reason == "protectedGame", "never sends keys into an anti-cheat game");
 var custom = Choose(new() { GameBarInstalled = true, OverrideUri = " ms-gamebar://launch/activate/Example.Widget_0000000000000_App_Widget " });
-Check(custom.Method == PartyLaunchMethod.Uri && custom.Uri!.StartsWith("ms-gamebar:", StringComparison.Ordinal), "a configured ms-gamebar: URI is used");
+Check(custom.Method == PartyLaunchMethod.Uri && custom.Reason == "override" && custom.Uri == "ms-gamebar://launch/activate/Example.Widget_0000000000000_App_Widget", "a configured ms-gamebar: URI is used");
+Check(Choose(new() { GameBarInstalled = true, GameRunning = true, OverrideUri = "ms-gamebar:activate/X_Y_Z" }).Uri == "ms-gamebar:activate/X_Y_Z", "the configured URI also replaces the default during a game");
 Check(!PartyLaunchPolicy.ValidGameBarUri("https://example.com") && !PartyLaunchPolicy.ValidGameBarUri("C:\\Windows\\notepad.exe")
 	&& !PartyLaunchPolicy.ValidGameBarUri("ms-gamebar:x\" & calc") && !PartyLaunchPolicy.ValidGameBarUri(""), "anything but ms-gamebar: is ignored");
-Check(Choose(new() { GameBarInstalled = true, OverrideUri = "ms-settings:privacy" }).Method == PartyLaunchMethod.WinG, "an invalid override falls back to Win+G");
+Check(Choose(new() { GameBarInstalled = true, GameBarInteractive = false, GameRunning = false, OverrideUri = "ms-settings:privacy" }).Method == PartyLaunchMethod.WinG, "an invalid override is ignored (no game: Win+G)");
+Check(Choose(new() { GameBarInstalled = true, GameBarInteractive = false, GameRunning = true, OverrideUri = "ms-settings:privacy" }).Uri == PartyLaunchPolicy.DefaultUri, "an invalid override is ignored (game: the default URI)");
 
 // ---------- Xbox party: back to Big Picture ----------
 DateTimeOffset t0 = new(2026, 11, 26, 22, 0, 0, TimeSpan.FromHours(-5));

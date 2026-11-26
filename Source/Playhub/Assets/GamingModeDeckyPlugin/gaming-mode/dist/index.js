@@ -60730,7 +60730,7 @@ const en$1 = {
     nScheduled: "Restart at {time}", nWaiting: "Updates waiting", nNothing: "Nothing waiting",
     tOff: "TV control off", tNotPaired: "Not paired", tOk: "Paired, answering", tDown: "Not answering",
     pcOk: "{free} free", pcLow: "Only {free} free", cAvail: "Core {latest} available", cCurrent: "Up to date · {current}",
-    r_mic: "Microphone", micMuted: "Muted", micLive: "Live", micNone: "No microphone",
+    r_mic: "Microphone", micMuted: "Muted", micLive: "Live", micNone: "No microphone", micPartial: "Partly muted",
 };
 const copy$1 = {
     en: en$1,
@@ -60745,7 +60745,7 @@ const copy$1 = {
         nScheduled: "Riavvio alle {time}", nWaiting: "Aggiornamenti in attesa", nNothing: "Niente in attesa",
         tOff: "Controllo TV spento", tNotPaired: "Non abbinata", tOk: "Abbinata, risponde", tDown: "Non risponde",
         pcOk: "{free} liberi", pcLow: "Solo {free} liberi", cAvail: "Core {latest} disponibile", cCurrent: "Aggiornato · {current}",
-        r_mic: "Microfono", micMuted: "Silenziato", micLive: "Attivo", micNone: "Nessun microfono",
+        r_mic: "Microfono", micMuted: "Silenziato", micLive: "Attivo", micNone: "Nessun microfono", micPartial: "Silenziato in parte",
     },
     es: {
         title: "Estado", allGood: "Todo bien", attention: "Necesita atención: {n}", checking: "Comprobando…", agentDown: "El servicio de Core no responde.", dismiss: "Descartar aviso",
@@ -60758,7 +60758,7 @@ const copy$1 = {
         nScheduled: "Reinicio a las {time}", nWaiting: "Actualizaciones pendientes", nNothing: "Nada pendiente",
         tOff: "Control de TV desactivado", tNotPaired: "Sin vincular", tOk: "Vinculada, responde", tDown: "No responde",
         pcOk: "{free} libres", pcLow: "Solo {free} libres", cAvail: "Core {latest} disponible", cCurrent: "Actualizado · {current}",
-        r_mic: "Micrófono", micMuted: "Silenciado", micLive: "Activo", micNone: "No hay micrófono",
+        r_mic: "Micrófono", micMuted: "Silenciado", micLive: "Activo", micNone: "No hay micrófono", micPartial: "Silenciado en parte",
     },
     fr: {
         title: "Santé", allGood: "Tout va bien", attention: "À vérifier : {n}", checking: "Vérification…", agentDown: "Le service de Core ne répond pas.", dismiss: "Ignorer l'alerte",
@@ -60771,7 +60771,7 @@ const copy$1 = {
         nScheduled: "Redémarrage à {time}", nWaiting: "Mises à jour en attente", nNothing: "Rien en attente",
         tOff: "Contrôle de la TV désactivé", tNotPaired: "Non appairée", tOk: "Appairée, répond", tDown: "Ne répond pas",
         pcOk: "{free} libres", pcLow: "Seulement {free} libres", cAvail: "Core {latest} disponible", cCurrent: "À jour · {current}",
-        r_mic: "Micro", micMuted: "Coupé", micLive: "Actif", micNone: "Aucun micro",
+        r_mic: "Micro", micMuted: "Coupé", micLive: "Actif", micNone: "Aucun micro", micPartial: "Coupé en partie",
     },
     de: {
         title: "Status", allGood: "Alles in Ordnung", attention: "Zu prüfen: {n}", checking: "Wird geprüft…", agentDown: "Der Core-Dienst antwortet nicht.", dismiss: "Warnung ausblenden",
@@ -60784,7 +60784,7 @@ const copy$1 = {
         nScheduled: "Neustart um {time}", nWaiting: "Updates warten", nNothing: "Nichts ausstehend",
         tOff: "TV-Steuerung aus", tNotPaired: "Nicht gekoppelt", tOk: "Gekoppelt, antwortet", tDown: "Antwortet nicht",
         pcOk: "{free} frei", pcLow: "Nur {free} frei", cAvail: "Core {latest} verfügbar", cCurrent: "Aktuell · {current}",
-        r_mic: "Mikrofon", micMuted: "Stumm", micLive: "An", micNone: "Kein Mikrofon",
+        r_mic: "Mikrofon", micMuted: "Stumm", micLive: "An", micNone: "Kein Mikrofon", micPartial: "Teilweise stumm",
     },
     pt: {
         title: "Saúde", allGood: "Tudo certo", attention: "Precisa de atenção: {n}", checking: "Verificando…", agentDown: "O serviço do Core não responde.", dismiss: "Dispensar alerta",
@@ -60797,7 +60797,7 @@ const copy$1 = {
         nScheduled: "Reinício às {time}", nWaiting: "Atualizações pendentes", nNothing: "Nada pendente",
         tOff: "Controle da TV desligado", tNotPaired: "Não pareada", tOk: "Pareada, responde", tDown: "Não responde",
         pcOk: "{free} livres", pcLow: "Só {free} livres", cAvail: "Core {latest} disponível", cCurrent: "Atualizado · {current}",
-        r_mic: "Microfone", micMuted: "Silenciado", micLive: "Ativo", micNone: "Sem microfone",
+        r_mic: "Microfone", micMuted: "Silenciado", micLive: "Ativo", micNone: "Sem microfone", micPartial: "Silenciado em parte",
     },
     uk: {
         title: "Стан", allGood: "Усе гаразд", attention: "Потребує уваги: {n}", checking: "Перевірка…", agentDown: "Служба Core не відповідає.", dismiss: "Приховати сповіщення",
@@ -60810,7 +60810,7 @@ const copy$1 = {
         nScheduled: "Перезапуск о {time}", nWaiting: "Оновлення очікують", nNothing: "Нічого не очікує",
         tOff: "Керування ТВ вимкнено", tNotPaired: "Не з'єднано", tOk: "З'єднано, відповідає", tDown: "Не відповідає",
         pcOk: "Вільно {free}", pcLow: "Вільно лише {free}", cAvail: "Доступний Core {latest}", cCurrent: "Актуальний · {current}",
-        r_mic: "Мікрофон", micMuted: "Вимкнено", micLive: "Увімкнено", micNone: "Немає мікрофона",
+        r_mic: "Мікрофон", micMuted: "Вимкнено", micLive: "Увімкнено", micNone: "Немає мікрофона", micPartial: "Вимкнено частково",
     },
     ru: {
         title: "Состояние", allGood: "Всё в порядке", attention: "Требует внимания: {n}", checking: "Проверка…", agentDown: "Служба Core не отвечает.", dismiss: "Скрыть оповещение",
@@ -60823,7 +60823,7 @@ const copy$1 = {
         nScheduled: "Перезагрузка в {time}", nWaiting: "Обновления ждут", nNothing: "Ничего не ждёт",
         tOff: "Управление ТВ выключено", tNotPaired: "Не сопряжён", tOk: "Сопряжён, отвечает", tDown: "Не отвечает",
         pcOk: "Свободно {free}", pcLow: "Свободно всего {free}", cAvail: "Доступен Core {latest}", cCurrent: "Актуален · {current}",
-        r_mic: "Микрофон", micMuted: "Выключен", micLive: "Включён", micNone: "Нет микрофона",
+        r_mic: "Микрофон", micMuted: "Выключен", micLive: "Включён", micNone: "Нет микрофона", micPartial: "Выключен частично",
     },
     zh: {
         title: "健康", allGood: "一切正常", attention: "需要注意：{n}", checking: "正在检查…", agentDown: "Core 服务没有响应。", dismiss: "忽略提醒",
@@ -60836,7 +60836,7 @@ const copy$1 = {
         nScheduled: "{time} 重启", nWaiting: "有更新等待中", nNothing: "没有等待项",
         tOff: "电视控制已关闭", tNotPaired: "未配对", tOk: "已配对，有响应", tDown: "没有响应",
         pcOk: "剩余 {free}", pcLow: "仅剩 {free}", cAvail: "Core {latest} 可用", cCurrent: "已是最新 · {current}",
-        r_mic: "麦克风", micMuted: "已静音", micLive: "已开启", micNone: "没有麦克风",
+        r_mic: "麦克风", micMuted: "已静音", micLive: "已开启", micNone: "没有麦克风", micPartial: "部分静音",
     },
     ja: {
         title: "状態", allGood: "問題なし", attention: "要確認: {n}", checking: "確認中…", agentDown: "Core のサービスが応答しません。", dismiss: "お知らせを閉じる",
@@ -60849,7 +60849,7 @@ const copy$1 = {
         nScheduled: "{time} に再起動", nWaiting: "更新が待機中", nNothing: "待機中のものなし",
         tOff: "テレビ操作はオフ", tNotPaired: "未ペアリング", tOk: "ペアリング済み・応答あり", tDown: "応答なし",
         pcOk: "空き {free}", pcLow: "空きは {free} のみ", cAvail: "Core {latest} を利用可能", cCurrent: "最新 · {current}",
-        r_mic: "マイク", micMuted: "ミュート中", micLive: "オン", micNone: "マイクなし",
+        r_mic: "マイク", micMuted: "ミュート中", micLive: "オン", micNone: "マイクなし", micPartial: "一部ミュート中",
     },
     ko: {
         title: "상태", allGood: "모두 정상", attention: "확인 필요: {n}", checking: "확인 중…", agentDown: "Core 서비스가 응답하지 않습니다.", dismiss: "알림 닫기",
@@ -60862,7 +60862,7 @@ const copy$1 = {
         nScheduled: "{time}에 다시 시작", nWaiting: "업데이트 대기 중", nNothing: "대기 중인 항목 없음",
         tOff: "TV 제어 꺼짐", tNotPaired: "페어링 안 됨", tOk: "페어링됨, 응답함", tDown: "응답 없음",
         pcOk: "{free} 남음", pcLow: "{free}만 남음", cAvail: "Core {latest} 사용 가능", cCurrent: "최신 · {current}",
-        r_mic: "마이크", micMuted: "음소거됨", micLive: "켜짐", micNone: "마이크 없음",
+        r_mic: "마이크", micMuted: "음소거됨", micLive: "켜짐", micNone: "마이크 없음", micPartial: "일부 음소거됨",
     },
     hi: {
         title: "हेल्थ", allGood: "सब ठीक है", attention: "ध्यान चाहिए: {n}", checking: "जाँच हो रही है…", agentDown: "Core की सेवा जवाब नहीं दे रही।", dismiss: "अलर्ट हटाएँ",
@@ -60875,7 +60875,7 @@ const copy$1 = {
         nScheduled: "{time} बजे रीस्टार्ट", nWaiting: "अपडेट इंतज़ार में", nNothing: "कुछ बाकी नहीं",
         tOff: "टीवी कंट्रोल बंद", tNotPaired: "पेयर नहीं है", tOk: "पेयर है, जवाब दे रहा है", tDown: "जवाब नहीं",
         pcOk: "{free} खाली", pcLow: "सिर्फ़ {free} खाली", cAvail: "Core {latest} उपलब्ध", cCurrent: "अप टू डेट · {current}",
-        r_mic: "माइक्रोफ़ोन", micMuted: "म्यूट", micLive: "चालू", micNone: "कोई माइक्रोफ़ोन नहीं",
+        r_mic: "माइक्रोफ़ोन", micMuted: "म्यूट", micLive: "चालू", micNone: "कोई माइक्रोफ़ोन नहीं", micPartial: "आंशिक रूप से म्यूट",
     },
 };
 function healthCopy(locale) {
@@ -60989,7 +60989,7 @@ function rowValue(row, text, locale, now) {
         case "tv":
             return { value: { off: text.tOff, "not-paired": text.tNotPaired, reachable: text.tOk, unreachable: text.tDown }[row.state] ?? text.unknown, details };
         case "microphone":
-            return { value: { muted: text.micMuted, live: text.micLive, none: text.micNone }[row.state] ?? text.unknown, details };
+            return { value: { muted: text.micMuted, live: text.micLive, partial: text.micPartial, none: text.micNone }[row.state] ?? text.unknown, details };
         case "pc-disk": {
             if (typeof data.drive === "string" && data.drive)
                 details.push(data.drive);
@@ -61015,7 +61015,7 @@ function healthLines(answer, locale, now = new Date()) {
         const alert = alerts.find(item => item?.rowId === row.id && !item.dismissed);
         const level = ["ok", "attention", "info", "unknown"].includes(row.level) ? row.level : "unknown";
         const line = { id: row.id, level, title: text[titles[row.id]], value, details, alertId: answer?.alertsEnabled !== false ? alert?.id : undefined };
-        if (row.id === "microphone" && row.state === "muted")
+        if (row.id === "microphone" && (row.state === "muted" || row.state === "partial"))
             line.tone = "crimson";
         return line;
     });
@@ -61086,100 +61086,100 @@ function HealthSection({ locale }) {
 // this file alone.
 const en = {
     title: "Voice", agentDown: "Core's service is not answering.",
-    mute: "Mute microphone", unmute: "Unmute microphone", live: "Microphone live", muted: "Microphone muted", none: "No microphone", unknown: "Microphone: unknown",
+    mute: "Mute microphone", unmute: "Unmute microphone", live: "Microphone live", muted: "Microphone muted", none: "No microphone", unknown: "Microphone: unknown", partial: "Microphone partly muted", partialDetail: "One default microphone is muted, the other is live. Check which one your call uses.",
     mutedElsewhere: "Muted outside Core", hotkey: "Shortcut {keys}: bind it to a controller chord in Steam",
     party: "Xbox party", partyHint: "Opens the Xbox Game Bar over Big Picture. Close it with B or Esc, or press the Steam button, to come back.",
-    notInstalled: "The Xbox Game Bar is not installed.", protectedGame: "Not while a game with anti-cheat is running.", alreadyOpen: "The Game Bar is already open.", inputRefused: "Windows did not accept the Game Bar shortcut.",
+    notInstalled: "The Xbox Game Bar is not installed.", protectedGame: "Not while a game with anti-cheat is running.", alreadyOpen: "The Game Bar is already open.", inputRefused: "Windows did not accept the Game Bar shortcut.", uriFailed: "Windows could not open the Game Bar.",
     discord: "Discord", discordInstalled: "Installed: open it from Decky's tab", discordMissing: "Plugin not installed",
 };
 const copy = {
     en,
     it: {
         title: "Voce", agentDown: "Il servizio di Core non risponde.",
-        mute: "Silenzia il microfono", unmute: "Riattiva il microfono", live: "Microfono attivo", muted: "Microfono silenziato", none: "Nessun microfono", unknown: "Microfono: sconosciuto",
+        mute: "Silenzia il microfono", unmute: "Riattiva il microfono", live: "Microfono attivo", muted: "Microfono silenziato", none: "Nessun microfono", unknown: "Microfono: sconosciuto", partial: "Microfono silenziato in parte", partialDetail: "Un microfono predefinito è silenziato, l'altro è attivo. Controlla quale usa la chiamata.",
         mutedElsewhere: "Silenziato fuori da Core", hotkey: "Scorciatoia {keys}: legala a una combinazione del controller in Steam",
         party: "Party Xbox", partyHint: "Apre la Xbox Game Bar sopra la Big Picture. Chiudila con B o Esc, oppure premi il tasto Steam, per tornare.",
-        notInstalled: "La Xbox Game Bar non è installata.", protectedGame: "Non mentre è aperto un gioco con anti-cheat.", alreadyOpen: "La Game Bar è già aperta.", inputRefused: "Windows non ha accettato la scorciatoia della Game Bar.",
+        notInstalled: "La Xbox Game Bar non è installata.", protectedGame: "Non mentre è aperto un gioco con anti-cheat.", alreadyOpen: "La Game Bar è già aperta.", inputRefused: "Windows non ha accettato la scorciatoia della Game Bar.", uriFailed: "Windows non è riuscito ad aprire la Game Bar.",
         discord: "Discord", discordInstalled: "Installato: aprilo dalla scheda di Decky", discordMissing: "Plugin non installato",
     },
     es: {
         title: "Voz", agentDown: "El servicio de Core no responde.",
-        mute: "Silenciar micrófono", unmute: "Activar micrófono", live: "Micrófono activo", muted: "Micrófono silenciado", none: "No hay micrófono", unknown: "Micrófono: desconocido",
+        mute: "Silenciar micrófono", unmute: "Activar micrófono", live: "Micrófono activo", muted: "Micrófono silenciado", none: "No hay micrófono", unknown: "Micrófono: desconocido", partial: "Micrófono silenciado en parte", partialDetail: "Un micrófono predeterminado está silenciado y el otro activo. Comprueba cuál usa la llamada.",
         mutedElsewhere: "Silenciado fuera de Core", hotkey: "Atajo {keys}: asígnalo a una combinación del mando en Steam",
         party: "Grupo de Xbox", partyHint: "Abre la Xbox Game Bar sobre Big Picture. Ciérrala con B o Esc, o pulsa el botón Steam, para volver.",
-        notInstalled: "La Xbox Game Bar no está instalada.", protectedGame: "No mientras haya un juego con antitrampas abierto.", alreadyOpen: "La Game Bar ya está abierta.", inputRefused: "Windows no aceptó el atajo de la Game Bar.",
+        notInstalled: "La Xbox Game Bar no está instalada.", protectedGame: "No mientras haya un juego con antitrampas abierto.", alreadyOpen: "La Game Bar ya está abierta.", inputRefused: "Windows no aceptó el atajo de la Game Bar.", uriFailed: "Windows no pudo abrir la Game Bar.",
         discord: "Discord", discordInstalled: "Instalado: ábrelo desde la pestaña de Decky", discordMissing: "Plugin no instalado",
     },
     fr: {
         title: "Voix", agentDown: "Le service de Core ne répond pas.",
-        mute: "Couper le micro", unmute: "Réactiver le micro", live: "Micro actif", muted: "Micro coupé", none: "Aucun micro", unknown: "Micro : inconnu",
+        mute: "Couper le micro", unmute: "Réactiver le micro", live: "Micro actif", muted: "Micro coupé", none: "Aucun micro", unknown: "Micro : inconnu", partial: "Micro coupé en partie", partialDetail: "Un micro par défaut est coupé, l'autre est actif. Vérifiez celui qu'utilise l'appel.",
         mutedElsewhere: "Coupé en dehors de Core", hotkey: "Raccourci {keys} : associez-le à une combinaison de la manette dans Steam",
         party: "Groupe Xbox", partyHint: "Ouvre la Xbox Game Bar par-dessus Big Picture. Fermez-la avec B ou Échap, ou appuyez sur le bouton Steam, pour revenir.",
-        notInstalled: "La Xbox Game Bar n'est pas installée.", protectedGame: "Pas pendant un jeu protégé par un anti-triche.", alreadyOpen: "La Game Bar est déjà ouverte.", inputRefused: "Windows a refusé le raccourci de la Game Bar.",
+        notInstalled: "La Xbox Game Bar n'est pas installée.", protectedGame: "Pas pendant un jeu protégé par un anti-triche.", alreadyOpen: "La Game Bar est déjà ouverte.", inputRefused: "Windows a refusé le raccourci de la Game Bar.", uriFailed: "Windows n'a pas pu ouvrir la Game Bar.",
         discord: "Discord", discordInstalled: "Installé : ouvrez-le depuis l'onglet Decky", discordMissing: "Plugin non installé",
     },
     de: {
         title: "Sprache", agentDown: "Der Dienst von Core antwortet nicht.",
-        mute: "Mikrofon stummschalten", unmute: "Mikrofon einschalten", live: "Mikrofon an", muted: "Mikrofon stumm", none: "Kein Mikrofon", unknown: "Mikrofon: unbekannt",
+        mute: "Mikrofon stummschalten", unmute: "Mikrofon einschalten", live: "Mikrofon an", muted: "Mikrofon stumm", none: "Kein Mikrofon", unknown: "Mikrofon: unbekannt", partial: "Mikrofon teilweise stumm", partialDetail: "Ein Standardmikrofon ist stumm, das andere an. Prüfe, welches der Anruf nutzt.",
         mutedElsewhere: "Außerhalb von Core stummgeschaltet", hotkey: "Tastenkürzel {keys}: lege es in Steam auf eine Controller-Kombination",
         party: "Xbox-Party", partyHint: "Öffnet die Xbox Game Bar über Big Picture. Schließe sie mit B oder Esc oder drücke die Steam-Taste, um zurückzukehren.",
-        notInstalled: "Die Xbox Game Bar ist nicht installiert.", protectedGame: "Nicht während ein Spiel mit Anti-Cheat läuft.", alreadyOpen: "Die Game Bar ist schon offen.", inputRefused: "Windows hat das Game-Bar-Kürzel nicht angenommen.",
+        notInstalled: "Die Xbox Game Bar ist nicht installiert.", protectedGame: "Nicht während ein Spiel mit Anti-Cheat läuft.", alreadyOpen: "Die Game Bar ist schon offen.", inputRefused: "Windows hat das Game-Bar-Kürzel nicht angenommen.", uriFailed: "Windows konnte die Game Bar nicht öffnen.",
         discord: "Discord", discordInstalled: "Installiert: öffne es über den Decky-Tab", discordMissing: "Plugin nicht installiert",
     },
     pt: {
         title: "Voz", agentDown: "O serviço do Core não responde.",
-        mute: "Silenciar microfone", unmute: "Ativar microfone", live: "Microfone ativo", muted: "Microfone silenciado", none: "Sem microfone", unknown: "Microfone: desconhecido",
+        mute: "Silenciar microfone", unmute: "Ativar microfone", live: "Microfone ativo", muted: "Microfone silenciado", none: "Sem microfone", unknown: "Microfone: desconhecido", partial: "Microfone silenciado em parte", partialDetail: "Um microfone padrão está silenciado e o outro ativo. Veja qual a chamada usa.",
         mutedElsewhere: "Silenciado fora do Core", hotkey: "Atalho {keys}: associe-o a uma combinação do controle no Steam",
         party: "Grupo Xbox", partyHint: "Abre a Xbox Game Bar sobre o Big Picture. Feche-a com B ou Esc, ou aperte o botão Steam, para voltar.",
-        notInstalled: "A Xbox Game Bar não está instalada.", protectedGame: "Não enquanto um jogo com antitrapaça estiver aberto.", alreadyOpen: "A Game Bar já está aberta.", inputRefused: "O Windows não aceitou o atalho da Game Bar.",
+        notInstalled: "A Xbox Game Bar não está instalada.", protectedGame: "Não enquanto um jogo com antitrapaça estiver aberto.", alreadyOpen: "A Game Bar já está aberta.", inputRefused: "O Windows não aceitou o atalho da Game Bar.", uriFailed: "O Windows não conseguiu abrir a Game Bar.",
         discord: "Discord", discordInstalled: "Instalado: abra-o pela aba do Decky", discordMissing: "Plugin não instalado",
     },
     uk: {
         title: "Голос", agentDown: "Служба Core не відповідає.",
-        mute: "Вимкнути мікрофон", unmute: "Увімкнути мікрофон", live: "Мікрофон увімкнено", muted: "Мікрофон вимкнено", none: "Немає мікрофона", unknown: "Мікрофон: невідомо",
+        mute: "Вимкнути мікрофон", unmute: "Увімкнути мікрофон", live: "Мікрофон увімкнено", muted: "Мікрофон вимкнено", none: "Немає мікрофона", unknown: "Мікрофон: невідомо", partial: "Мікрофон вимкнено частково", partialDetail: "Один мікрофон за замовчуванням вимкнено, інший увімкнено. Перевірте, який використовує дзвінок.",
         mutedElsewhere: "Вимкнено поза Core", hotkey: "Скорочення {keys}: призначте його комбінації контролера в Steam",
         party: "Група Xbox", partyHint: "Відкриває Xbox Game Bar поверх Big Picture. Щоб повернутися, закрийте її кнопкою B чи Esc або натисніть кнопку Steam.",
-        notInstalled: "Xbox Game Bar не встановлено.", protectedGame: "Не під час гри з античитом.", alreadyOpen: "Game Bar уже відкрито.", inputRefused: "Windows не прийняла скорочення Game Bar.",
+        notInstalled: "Xbox Game Bar не встановлено.", protectedGame: "Не під час гри з античитом.", alreadyOpen: "Game Bar уже відкрито.", inputRefused: "Windows не прийняла скорочення Game Bar.", uriFailed: "Windows не вдалося відкрити Game Bar.",
         discord: "Discord", discordInstalled: "Встановлено: відкрийте його на вкладці Decky", discordMissing: "Плагін не встановлено",
     },
     ru: {
         title: "Голос", agentDown: "Служба Core не отвечает.",
-        mute: "Выключить микрофон", unmute: "Включить микрофон", live: "Микрофон включён", muted: "Микрофон выключен", none: "Нет микрофона", unknown: "Микрофон: неизвестно",
+        mute: "Выключить микрофон", unmute: "Включить микрофон", live: "Микрофон включён", muted: "Микрофон выключен", none: "Нет микрофона", unknown: "Микрофон: неизвестно", partial: "Микрофон выключен частично", partialDetail: "Один микрофон по умолчанию выключен, другой включён. Проверьте, какой использует звонок.",
         mutedElsewhere: "Выключен вне Core", hotkey: "Сочетание {keys}: назначьте его комбинации контроллера в Steam",
         party: "Группа Xbox", partyHint: "Открывает Xbox Game Bar поверх Big Picture. Чтобы вернуться, закройте её кнопкой B или Esc либо нажмите кнопку Steam.",
-        notInstalled: "Xbox Game Bar не установлена.", protectedGame: "Не во время игры с античитом.", alreadyOpen: "Game Bar уже открыта.", inputRefused: "Windows не приняла сочетание Game Bar.",
+        notInstalled: "Xbox Game Bar не установлена.", protectedGame: "Не во время игры с античитом.", alreadyOpen: "Game Bar уже открыта.", inputRefused: "Windows не приняла сочетание Game Bar.", uriFailed: "Windows не удалось открыть Game Bar.",
         discord: "Discord", discordInstalled: "Установлен: откройте его на вкладке Decky", discordMissing: "Плагин не установлен",
     },
     zh: {
         title: "语音", agentDown: "Core 的服务没有响应。",
-        mute: "关闭麦克风", unmute: "打开麦克风", live: "麦克风已开启", muted: "麦克风已静音", none: "没有麦克风", unknown: "麦克风：未知",
+        mute: "关闭麦克风", unmute: "打开麦克风", live: "麦克风已开启", muted: "麦克风已静音", none: "没有麦克风", unknown: "麦克风：未知", partial: "麦克风部分静音", partialDetail: "一个默认麦克风已静音，另一个已开启。请检查通话使用的是哪一个。",
         mutedElsewhere: "已在 Core 之外静音", hotkey: "快捷键 {keys}：在 Steam 中将其绑定到手柄组合键",
         party: "Xbox 派对", partyHint: "在 Big Picture 上打开 Xbox Game Bar。按 B 或 Esc 关闭它，或按 Steam 键返回。",
-        notInstalled: "未安装 Xbox Game Bar。", protectedGame: "运行带反作弊的游戏时不可用。", alreadyOpen: "Game Bar 已打开。", inputRefused: "Windows 未接受 Game Bar 快捷键。",
+        notInstalled: "未安装 Xbox Game Bar。", protectedGame: "运行带反作弊的游戏时不可用。", alreadyOpen: "Game Bar 已打开。", inputRefused: "Windows 未接受 Game Bar 快捷键。", uriFailed: "Windows 无法打开 Game Bar。",
         discord: "Discord", discordInstalled: "已安装：从 Decky 标签页打开", discordMissing: "未安装插件",
     },
     ja: {
         title: "ボイス", agentDown: "Core のサービスが応答しません。",
-        mute: "マイクをミュート", unmute: "マイクのミュートを解除", live: "マイクはオン", muted: "マイクはミュート中", none: "マイクがありません", unknown: "マイク：不明",
+        mute: "マイクをミュート", unmute: "マイクのミュートを解除", live: "マイクはオン", muted: "マイクはミュート中", none: "マイクがありません", unknown: "マイク：不明", partial: "マイクは一部ミュート中", partialDetail: "既定のマイクの一方はミュート、もう一方はオンです。通話がどちらを使うか確認してください。",
         mutedElsewhere: "Core 以外でミュート", hotkey: "ショートカット {keys}：Steam でコントローラーのコードに割り当ててください",
         party: "Xbox パーティー", partyHint: "Big Picture の上に Xbox Game Bar を開きます。戻るには B か Esc で閉じるか、Steam ボタンを押します。",
-        notInstalled: "Xbox Game Bar がインストールされていません。", protectedGame: "アンチチート付きのゲーム中は使えません。", alreadyOpen: "Game Bar はすでに開いています。", inputRefused: "Windows が Game Bar のショートカットを受け付けませんでした。",
+        notInstalled: "Xbox Game Bar がインストールされていません。", protectedGame: "アンチチート付きのゲーム中は使えません。", alreadyOpen: "Game Bar はすでに開いています。", inputRefused: "Windows が Game Bar のショートカットを受け付けませんでした。", uriFailed: "Windows で Game Bar を開けませんでした。",
         discord: "Discord", discordInstalled: "インストール済み：Decky のタブから開きます", discordMissing: "プラグイン未インストール",
     },
     ko: {
         title: "음성", agentDown: "Core 서비스가 응답하지 않습니다.",
-        mute: "마이크 음소거", unmute: "마이크 음소거 해제", live: "마이크 켜짐", muted: "마이크 음소거됨", none: "마이크 없음", unknown: "마이크: 알 수 없음",
+        mute: "마이크 음소거", unmute: "마이크 음소거 해제", live: "마이크 켜짐", muted: "마이크 음소거됨", none: "마이크 없음", unknown: "마이크: 알 수 없음", partial: "마이크 일부 음소거됨", partialDetail: "기본 마이크 하나는 음소거되어 있고 다른 하나는 켜져 있습니다. 통화에 쓰이는 마이크를 확인하세요.",
         mutedElsewhere: "Core 밖에서 음소거됨", hotkey: "단축키 {keys}: Steam에서 컨트롤러 조합에 연결하세요",
         party: "Xbox 파티", partyHint: "Big Picture 위에 Xbox Game Bar를 엽니다. 돌아오려면 B나 Esc로 닫거나 Steam 버튼을 누르세요.",
-        notInstalled: "Xbox Game Bar가 설치되어 있지 않습니다.", protectedGame: "안티치트 게임 실행 중에는 사용할 수 없습니다.", alreadyOpen: "Game Bar가 이미 열려 있습니다.", inputRefused: "Windows가 Game Bar 단축키를 받아들이지 않았습니다.",
+        notInstalled: "Xbox Game Bar가 설치되어 있지 않습니다.", protectedGame: "안티치트 게임 실행 중에는 사용할 수 없습니다.", alreadyOpen: "Game Bar가 이미 열려 있습니다.", inputRefused: "Windows가 Game Bar 단축키를 받아들이지 않았습니다.", uriFailed: "Windows에서 Game Bar를 열지 못했습니다.",
         discord: "Discord", discordInstalled: "설치됨: Decky 탭에서 여세요", discordMissing: "플러그인 미설치",
     },
     hi: {
         title: "आवाज़", agentDown: "Core की सेवा जवाब नहीं दे रही है।",
-        mute: "माइक्रोफ़ोन म्यूट करें", unmute: "माइक्रोफ़ोन अनम्यूट करें", live: "माइक्रोफ़ोन चालू", muted: "माइक्रोफ़ोन म्यूट", none: "कोई माइक्रोफ़ोन नहीं", unknown: "माइक्रोफ़ोन: अज्ञात",
+        mute: "माइक्रोफ़ोन म्यूट करें", unmute: "माइक्रोफ़ोन अनम्यूट करें", live: "माइक्रोफ़ोन चालू", muted: "माइक्रोफ़ोन म्यूट", none: "कोई माइक्रोफ़ोन नहीं", unknown: "माइक्रोफ़ोन: अज्ञात", partial: "माइक्रोफ़ोन आंशिक रूप से म्यूट", partialDetail: "एक डिफ़ॉल्ट माइक्रोफ़ोन म्यूट है, दूसरा चालू है। देखें कि कॉल कौन-सा इस्तेमाल करती है।",
         mutedElsewhere: "Core के बाहर म्यूट किया गया", hotkey: "शॉर्टकट {keys}: इसे Steam में कंट्रोलर कॉम्बिनेशन से जोड़ें",
         party: "Xbox पार्टी", partyHint: "Big Picture के ऊपर Xbox Game Bar खोलता है। लौटने के लिए इसे B या Esc से बंद करें, या Steam बटन दबाएँ।",
-        notInstalled: "Xbox Game Bar इंस्टॉल नहीं है।", protectedGame: "एंटी-चीट वाला गेम चलते समय नहीं।", alreadyOpen: "Game Bar पहले से खुला है।", inputRefused: "Windows ने Game Bar का शॉर्टकट स्वीकार नहीं किया।",
+        notInstalled: "Xbox Game Bar इंस्टॉल नहीं है।", protectedGame: "एंटी-चीट वाला गेम चलते समय नहीं।", alreadyOpen: "Game Bar पहले से खुला है।", inputRefused: "Windows ने Game Bar का शॉर्टकट स्वीकार नहीं किया।", uriFailed: "Windows Game Bar नहीं खोल सका।",
         discord: "Discord", discordInstalled: "इंस्टॉल है: इसे Decky टैब से खोलें", discordMissing: "प्लगइन इंस्टॉल नहीं है",
     },
 };
@@ -61194,11 +61194,14 @@ function fill(template, values) {
 function micView(answer, locale) {
     const text = voiceCopy(locale);
     const mic = answer?.mic;
-    const state = mic?.state === "muted" || mic?.state === "live" || mic?.state === "none" ? mic.state : "unknown";
-    const muted = state === "muted";
+    const state = mic?.state === "muted" || mic?.state === "live" || mic?.state === "partial" || mic?.state === "none" ? mic.state : "unknown";
+    // Partial (one default microphone muted, the other live) is shown like muted, with a warning. The
+    // button goes the way the agent's toggle does: the Communications default (the call mic) decides.
+    const muted = state === "muted" || state === "partial";
+    const unmutes = state === "muted" || (state === "partial" && mic?.communications === "muted");
     const hotkey = typeof mic?.hotkey === "string" && mic.hotkey.trim() && mic.hotkey.length <= 40 ? fill(text.hotkey, { keys: mic.hotkey.trim() }) : "";
-    const detail = muted && mic?.coreMuted === false ? text.mutedElsewhere : hotkey;
-    return { state, muted, line: text[state], button: muted ? text.unmute : text.mute, detail };
+    const detail = state === "partial" ? text.partialDetail : muted && mic?.coreMuted === false ? text.mutedElsewhere : hotkey;
+    return { state, muted, line: text[state], button: unmutes ? text.unmute : text.mute, detail };
 }
 // Empty when the bar was opened: Quick Access is already closed by then.
 function partyMessage(answer, locale) {
@@ -61207,7 +61210,7 @@ function partyMessage(answer, locale) {
         return text.agentDown;
     if (answer.ok)
         return answer.reason === "alreadyOpen" ? text.alreadyOpen : "";
-    return { notInstalled: text.notInstalled, protectedGame: text.protectedGame, inputRefused: text.inputRefused }[answer.reason ?? ""] ?? text.inputRefused;
+    return { notInstalled: text.notInstalled, protectedGame: text.protectedGame, inputRefused: text.inputRefused, uriFailed: text.uriFailed }[answer.reason ?? ""] ?? text.inputRefused;
 }
 // Eternal-Assemble keeps upstream's Decky name "Discord" (Source/Shared/ProtectedPluginForks.json).
 const DISCORD_PLUGIN_NAMES = ["Discord"];

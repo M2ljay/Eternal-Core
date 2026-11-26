@@ -28,9 +28,24 @@ test("microphone button follows the actual state", () => {
   assert.equal(micView({ mic: { state: "weird" } }, "it").line, "Microfono: sconosciuto");
 });
 
+test("partly muted: shown like muted with a warning; the call mic decides the button", () => {
+  const callMuted = micView({ mic: { state: "partial", coreMuted: false, communications: "muted", hotkey: "Ctrl+Alt+M" } }, "en");
+  assert.equal(callMuted.muted, true, "crimson like muted");
+  assert.equal(callMuted.line, "Microphone partly muted");
+  assert.equal(callMuted.button, "Unmute microphone");
+  assert.match(callMuted.detail, /One default microphone is muted/);
+  const callLive = micView({ mic: { state: "partial", coreMuted: false, communications: "live" } }, "en");
+  assert.equal(callLive.muted, true);
+  assert.equal(callLive.button, "Mute microphone");
+  assert.equal(micView({ mic: { state: "partial" } }, "en").button, "Mute microphone", "no Communications default known: mute everything");
+});
+
 test("party messages: nothing to say when the bar opened", () => {
   assert.equal(partyMessage({ ok: true, method: "WinG", reason: "shortcut" }, "en"), "");
   assert.equal(partyMessage({ ok: true, method: "Uri", reason: "override" }, "en"), "");
+  assert.equal(partyMessage({ ok: true, method: "Uri", reason: "gameRunning" }, "en"), "", "opened by URI during a game");
+  assert.equal(partyMessage({ ok: true, method: "AlreadyOpen", reason: "cooldown" }, "en"), "", "a second press right after: nothing to say");
+  assert.equal(partyMessage({ ok: false, method: "Unavailable", reason: "uriFailed" }, "en"), "Windows could not open the Game Bar.");
   assert.equal(partyMessage({ ok: true, method: "AlreadyOpen", reason: "alreadyOpen" }, "en"), "The Game Bar is already open.");
   assert.equal(partyMessage({ ok: false, method: "Unavailable", reason: "notInstalled" }, "en"), "The Xbox Game Bar is not installed.");
   assert.equal(partyMessage({ ok: false, method: "Unavailable", reason: "protectedGame" }, "en"), "Not while a game with anti-cheat is running.");
@@ -79,6 +94,7 @@ test("backend: the mic action is validated and the top-bar mark is Core crimson"
   assert.match(backend, /_VOICE_MIC_ACTIONS = \("mute", "unmute", "toggle"\)/);
   assert.match(backend, /if action not in _VOICE_MIC_ACTIONS:/);
   assert.match(backend, /color:#D7263D/);
+  assert.match(backend, /mic\.get\("state"\) in \("muted", "partial"\)/, "the mark shows a partly muted microphone too");
   assert.match(backend, /"\/voice\/party"/);
   const index = readFileSync(new URL("../src/index.tsx", import.meta.url), "utf8");
   assert.match(index, /<VoiceSection locale=\{locale\} \/>/);

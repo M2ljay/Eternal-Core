@@ -60,6 +60,10 @@ test("microphone row: muted in crimson without counting as a problem", () => {
   assert.equal(rowsFor("live").value, "Live");
   assert.equal(rowsFor("live").tone, undefined);
   assert.equal(rowsFor("none").value, "No microphone");
+  const partial = healthLines({ attention: 1, rows: [{ id: "microphone", level: "attention", state: "partial", data: { state: "partial" } }] }, "en", now)[0];
+  assert.equal(partial.value, "Partly muted");
+  assert.equal(partial.level, "attention", "partly muted: muted with a warning");
+  assert.equal(partial.tone, "crimson");
   assert.equal(healthLines({ rows: [{ id: "microphone", level: "unknown", state: "unknown", data: {} }] }, "it", now)[0].value, "Sconosciuto");
   const source = readFileSync(new URL("../src/HealthSection.tsx", import.meta.url), "utf8");
   assert.match(source, /\.core-health-row\.crimson \.core-health-value/);

@@ -7,7 +7,7 @@
   Backup-Core.ps1 runs the same check once a month (restore_check.every_days). Run this script to do it
   now. Files are downloaded to a new temporary folder that is deleted afterwards; nothing local or in
   the cloud is changed. Only files older than the last successful backup (and at least two days old)
-  are picked, because a file changed after its upload keeps its first copy in the cloud.
+  are picked. Saves and the RomM dump keep one copy per change: the newest copy is compared.
   The result is stored for the next core-status.json, which this script also rewrites.
 #>
 [CmdletBinding()]

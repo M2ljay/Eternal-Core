@@ -155,7 +155,7 @@ $script:CoreProcessRunner = {
 #   filesystem upload <localPath...> <parentPath> --file-conflict-strategy <skip|rename> --folder-conflict-strategy merge --skip-thumbnails --json
 #   filesystem download <path...> <localFolder> --file-conflict-strategy rename --json
 #   filesystem size <path> --json         -> {"size":n,"numberOfDescendants":n}
-#   filesystem list <path> --json         (used only to test that a session exists)
+#   filesystem list <path> --json         (session test, the nightly canary, the restore check's newest version)
 # Exit codes: 0 ok, 1 error (also "You need to login first"), 2 usage error.
 
 $script:ProtonEnvironment = @{ PROTON_DRIVE_LOG_LEVEL = 'WARNING' }
@@ -166,18 +166,67 @@ function Invoke-ProtonCli {
 }
 
 # The CLI's own documentation shows "--conflict-strategy skip" (blog, June 2026); its source since
-# v0.8.0 ("Clarify conflict strategies") has separate file and folder options. Read the installed
-# version's help and use what it offers; refuse to upload if neither is there.
+# v0.8.0 ("Clarify conflict strategies") has separate file and folder options. 'split': the installed
+# CLI has both. 'legacy': only the single option, which applies to folders too: with skip, a folder
+# that already exists in Drive may be skipped as a unit, so from the second night nothing new would
+# upload while every category still reports ok. A legacy CLI is refused (Backup-Core.ps1 says
+# "Proton CLI too old"). $null: neither option.
+function Get-ProtonConflictMode {
+	param([string]$UploadHelp)
+	if ($UploadHelp -match '--file-conflict-strategy' -and $UploadHelp -match '--folder-conflict-strategy') { return 'split' }
+	if ($UploadHelp -match '--conflict-strategy') { return 'legacy' }
+	return $null
+}
+
+$script:ProtonTooOldMessage = 'Proton CLI too old: this proton-drive offers only --conflict-strategy, which may skip whole folders that already exist in Drive, so new saves, BIOS and ROMs would silently not upload. Nothing was uploaded. Update the Proton Drive CLI (v0.8.0 or later).'
+
 function Get-ProtonConflictArguments {
 	param([string]$UploadHelp, [string]$FileStrategy)
-	if ($UploadHelp -match '--file-conflict-strategy' -and $UploadHelp -match '--folder-conflict-strategy') {
-		return @('--file-conflict-strategy', $FileStrategy, '--folder-conflict-strategy', 'merge')
+	if ((Get-ProtonConflictMode $UploadHelp) -ne 'split') { return $null }
+	return @('--file-conflict-strategy', $FileStrategy, '--folder-conflict-strategy', 'merge')
+}
+
+# Saves and states, and the RomM dump and config, keep every changed version: a file whose name already
+# exists in Drive with different content is uploaded beside it as "name (N).ext" (the CLI's rename;
+# identical content is skipped by the CLI itself). ROMs and BIOS do not change, so they use the
+# configured strategy (skip by default).
+function Get-CategoryFileStrategy {
+	param($Config, [string]$Category)
+	if (@('saves', 'romm') -contains $Category) { return 'rename' }
+	return [string]$Config.proton.file_conflict_strategy
+}
+
+# Names in the JSON array printed by "filesystem list --json". A node's name is a string, or a result
+# object ({"ok":true,"value":"..."}) in SDK builds that wrap decrypted names.
+function ConvertFrom-ProtonListNames {
+	param([string]$StdOut)
+	$start = $StdOut.IndexOf('[')
+	if ($start -lt 0) { return @() }
+	try { $items = @($StdOut.Substring($start) | ConvertFrom-Json) } catch { return @() }
+	$names = New-Object System.Collections.ArrayList
+	foreach ($item in $items) {
+		if ($null -eq $item -or -not ($item.PSObject.Properties.Name -contains 'name')) { continue }
+		$name = $item.name
+		if ($name -is [string]) { [void]$names.Add($name); continue }
+		if ($null -ne $name -and $name.PSObject.Properties.Name -contains 'value' -and $name.value -is [string]) { [void]$names.Add($name.value) }
 	}
-	if ($UploadHelp -match '--conflict-strategy') {
-		if ($FileStrategy -ne 'skip') { return $null } # a single strategy would also rename folders
-		return @('--conflict-strategy', 'skip')
+	return @($names)
+}
+
+# The newest version of a file kept with the rename strategy: "name.ext", then "name (1).ext",
+# "name (2).ext", ... (the SDK's joinNameAndExtension). Returns the leaf itself when no numbered copy exists.
+function Select-NewestVersionName {
+	param([string[]]$Names, [string]$Leaf)
+	$dot = $Leaf.LastIndexOf('.')
+	$base = $Leaf; $extension = ''
+	if ($dot -gt 0 -and $dot -lt $Leaf.Length - 1) { $base = $Leaf.Substring(0, $dot); $extension = $Leaf.Substring($dot) }
+	$pattern = '^' + [regex]::Escape($base) + ' \((\d+)\)' + [regex]::Escape($extension) + '$'
+	$best = $Leaf; $bestIndex = 0
+	foreach ($name in @($Names)) {
+		$match = [regex]::Match([string]$name, $pattern)
+		if ($match.Success) { $index = [int64]$match.Groups[1].Value; if ($index -gt $bestIndex) { $best = [string]$name; $bestIndex = $index } }
 	}
-	return $null
+	return $best
 }
 
 function Test-ProtonSignedIn {
@@ -277,6 +326,113 @@ function Send-ProtonFolder {
 		$message = ('upload failed (exit {0}, {1} failed) {2}' -f $result.ExitCode, $failed, $detail).Trim()
 	}
 	return @{ Ok = $ok; Files = $files; Bytes = $bytes; Skipped = $skipped; Failed = $failed; TimedOut = [bool]$result.TimedOut; Message = $message }
+}
+
+# ---------- saves: one cloud copy per change ----------
+# With the rename strategy the CLI compares a file only with the cloud file of the same name. A save that
+# changed once would then be uploaded again every night as a new "name (N)" copy, although it did not
+# change again. So saves are uploaded through a manifest (state_folder\saves-manifest.json: relative
+# path -> length, last write, SHA-256 of the copy last sent): the first night uploads the whole folder;
+# later nights stage only new or changed files (state_folder\saves-staging) and upload that tree, which
+# merges into the same cloud folder. Each real change lands once, as "name (N).ext".
+
+function Read-SaveManifest {
+	param([string]$Path)
+	if (-not (Test-Path -LiteralPath $Path)) { return $null }
+	try { $parsed = Get-Content -LiteralPath $Path -Raw -Encoding UTF8 | ConvertFrom-Json } catch { return $null }
+	if ($null -eq $parsed -or -not ($parsed.PSObject.Properties.Name -contains 'files') -or $null -eq $parsed.files) { return $null }
+	$files = @{}
+	foreach ($property in $parsed.files.PSObject.Properties) {
+		$entry = $property.Value
+		$files[$property.Name] = @{ length = [int64]$entry.length; ticks = [int64]$entry.ticks; sha256 = [string]$entry.sha256 }
+	}
+	return $files
+}
+
+function Save-SaveManifest {
+	param($Files, [string]$Path)
+	$ordered = [ordered]@{}
+	foreach ($key in @($Files.Keys | Sort-Object)) { $ordered[$key] = [ordered]@{ length = $Files[$key].length; ticks = $Files[$key].ticks; sha256 = $Files[$key].sha256 } }
+	Save-JsonFile ([ordered]@{ version = 1; files = $ordered }) $Path
+}
+
+# Pure apart from reading the folder: the current manifest and the relative paths that are new or
+# changed since $Previous ($null: everything). A file whose length and last write are unchanged keeps
+# its recorded hash without being read again.
+function Get-SaveChanges {
+	param([string]$Folder, $Previous)
+	$root = $Folder.TrimEnd('\', '/')
+	$current = @{}
+	$changed = New-Object System.Collections.ArrayList
+	foreach ($file in @(Get-ChildItem -LiteralPath $root -File -Recurse -Force -ErrorAction SilentlyContinue | Sort-Object FullName)) {
+		$relative = $file.FullName.Substring($root.Length).TrimStart('\', '/') -replace '\\', '/'
+		$length = [int64]$file.Length; $ticks = [int64]$file.LastWriteTimeUtc.Ticks
+		$known = $null
+		if ($null -ne $Previous -and $Previous.ContainsKey($relative)) { $known = $Previous[$relative] }
+		if ($null -ne $known -and $known.length -eq $length -and $known.ticks -eq $ticks -and $known.sha256) { $sha = $known.sha256 }
+		else { $sha = Get-FileSha256 $file.FullName }
+		$current[$relative] = @{ length = $length; ticks = $ticks; sha256 = $sha }
+		if ($null -eq $known -or $known.sha256 -ne $sha) { [void]$changed.Add($relative) }
+	}
+	return @{ Current = $current; Changed = @($changed) }
+}
+
+# Uploads $LocalFolder into $RemoteParent keeping one copy per change (see above). The manifest is saved
+# only after a clean upload; after a failure the same files are staged again the next night.
+function Send-VersionedFolder {
+	param($Config, [string]$LocalFolder, [string]$RemoteParent, [string[]]$ConflictArguments, [string]$StateFolder, $Deadline = $null)
+	$manifestPath = Join-Path $StateFolder 'saves-manifest.json'
+	$previous = Read-SaveManifest $manifestPath
+	$changes = Get-SaveChanges $LocalFolder $previous
+	if ($null -eq $previous) {
+		$upload = Send-ProtonFolder $Config $LocalFolder $RemoteParent $ConflictArguments $Deadline
+	}
+	elseif ($changes.Changed.Count -eq 0) {
+		$upload = @{ Ok = $true; Files = 0; Bytes = [int64]0; Skipped = 0; Failed = 0; TimedOut = $false; Message = 'ok' }
+	}
+	else {
+		$staging = Join-Path $StateFolder 'saves-staging'
+		if (Test-Path -LiteralPath $staging) { Remove-Item -LiteralPath $staging -Recurse -Force }
+		$top = Join-Path $staging (Get-LeafName $LocalFolder)
+		try {
+			foreach ($relative in $changes.Changed) {
+				$native = $relative -replace '/', [string][System.IO.Path]::DirectorySeparatorChar
+				$target = Join-Path $top $native
+				[void](New-Item -ItemType Directory -Path (Split-Path -Parent $target) -Force)
+				Copy-Item -LiteralPath (Join-Path $LocalFolder $native) -Destination $target -Force
+			}
+			$upload = Send-ProtonFolder $Config $top $RemoteParent $ConflictArguments $Deadline
+		}
+		finally { Remove-Item -LiteralPath $staging -Recurse -Force -ErrorAction SilentlyContinue }
+	}
+	if ($upload.Ok) { Save-SaveManifest $changes.Current $manifestPath }
+	$upload.Changed = $changes.Changed.Count
+	return $upload
+}
+
+# ---------- nightly canary ----------
+# Proves that an upload really lands: a small dated file goes into <remote_root>/canary and must be listed
+# there afterwards. The CLI can exit 0 and report nothing failed while skipping (an older CLI skipping a
+# whole folder, for example); a missing canary makes the night "failed".
+function Test-ProtonCanary {
+	param($Config, [string]$ScratchRoot, [string[]]$ConflictArguments, [DateTimeOffset]$Now)
+	$root = ([string]$Config.proton.remote_root).TrimEnd('/')
+	$name = 'canary-' + $Now.ToString('yyyyMMdd-HHmmss') + '.txt'
+	$scratch = Join-Path $ScratchRoot 'canary-upload'
+	$folder = Join-Path $scratch 'canary'
+	try {
+		if (Test-Path -LiteralPath $scratch) { Remove-Item -LiteralPath $scratch -Recurse -Force }
+		[void](New-Item -ItemType Directory -Path $folder -Force)
+		[System.IO.File]::WriteAllText((Join-Path $folder $name), ('Core backup canary ' + $Now.ToString('o')), (New-Object System.Text.UTF8Encoding($false)))
+		$upload = Send-ProtonFolder $Config $folder $root $ConflictArguments
+		if (-not $upload.Ok) { return @{ ok = $false; at = $Now.ToString('o'); name = $name; message = "canary upload failed: $($upload.Message)" } }
+		$list = Invoke-ProtonCli $Config @('filesystem', 'list', "$root/canary", '--json')
+		$names = @()
+		if ($list.ExitCode -eq 0) { $names = @(ConvertFrom-ProtonListNames $list.StdOut) }
+		if ($names -contains $name) { return @{ ok = $true; at = $Now.ToString('o'); name = $name; message = 'ok' } }
+		return @{ ok = $false; at = $Now.ToString('o'); name = $name; message = "canary $name was uploaded but is not listed in $root/canary: uploads may not be reaching Proton Drive" }
+	}
+	finally { Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue }
 }
 
 # ---------- RomM layout ----------
@@ -569,7 +725,7 @@ function New-CoreStatusDocument {
 }
 
 function New-BackupSection {
-	param([string]$Result, [string]$StartedAt, [string]$FinishedAt, [string]$Message, [int64]$UploadedBytes, $State, $Categories, [string[]]$SkippedPlatforms, $Pool)
+	param([string]$Result, [string]$StartedAt, [string]$FinishedAt, [string]$Message, [int64]$UploadedBytes, $State, $Categories, [string[]]$SkippedPlatforms, $Pool, $Canary = $null)
 	return [ordered]@{
 		result = $Result; started_at = $StartedAt; finished_at = $FinishedAt; message = $Message
 		uploaded_bytes = $UploadedBytes
@@ -579,6 +735,7 @@ function New-BackupSection {
 		roms_skipped_platforms = @($SkippedPlatforms)
 		pool = $Pool
 		restore_check = $State.restore_check
+		canary = $Canary
 	}
 }
 
@@ -628,7 +785,7 @@ function Get-RemoteFilePath {
 }
 
 # Picks a random file that should already be in the cloud: older than the last successful run and not
-# touched for two days (a file changed after its upload keeps the old copy in the cloud, by design).
+# touched for two days.
 function Select-RestoreSample {
 	param([string[]]$Folders, $Before, [System.Random]$Random)
 	$pool = New-Object System.Collections.ArrayList
@@ -651,8 +808,8 @@ function Invoke-CoreRestoreCheck {
 	if ($State.last_success_at) { try { $last = [DateTimeOffset]::Parse([string]$State.last_success_at, [Globalization.CultureInfo]::InvariantCulture).LocalDateTime; if ($last -lt $before) { $before = $last } } catch { } }
 	$staging = Join-Path ([string]$Config.state_folder) 'romm-dumps'
 	$sources = [ordered]@{
-		saves = @(@{ Folders = @([string]$Config.romm.assets); Parent = { param($f) Get-RemoteParentFor $root 'saves' $layout.Structure '' } })
-		romm  = @(@{ Folders = @(Get-ChildItem -LiteralPath $staging -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }); Parent = { param($f) Get-RemoteParentFor $root 'romm' $layout.Structure '' } })
+		saves = @(@{ Versioned = $true; Folders = @([string]$Config.romm.assets); Parent = { param($f) Get-RemoteParentFor $root 'saves' $layout.Structure '' } })
+		romm  = @(@{ Versioned = $true; Folders = @(Get-ChildItem -LiteralPath $staging -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }); Parent = { param($f) Get-RemoteParentFor $root 'romm' $layout.Structure '' } })
 		bios  = @(@{ Folders = @($layout.Bios.Values); Parent = { param($f) $p = ''; foreach ($k in $layout.Bios.Keys) { if ($layout.Bios[$k] -eq $f) { $p = $k } }; Get-RemoteParentFor $root 'bios' $layout.Structure $p } })
 		roms  = @(@{ Folders = @($layout.Roms.Keys | Where-Object { @($State.roms_uploaded_platforms) -contains $_ } | ForEach-Object { $layout.Roms[$_] }); Parent = { param($f) $p = ''; foreach ($k in $layout.Roms.Keys) { if ($layout.Roms[$k] -eq $f) { $p = $k } }; Get-RemoteParentFor $root 'roms' $layout.Structure $p } })
 	}
@@ -666,10 +823,20 @@ function Invoke-CoreRestoreCheck {
 			$sample = Select-RestoreSample -Folders $source.Folders -Before $before -Random $Random
 			if (-not $sample) { [void]$lines.Add("${category}: nothing to check yet"); continue }
 			$remote = Get-RemoteFilePath $sample.Folder (& $source.Parent $sample.Folder) $sample.File
+			$leaf = Split-Path -Leaf $sample.File
+			# Categories kept with rename hold one copy per change: compare with the newest one.
+			if ($source.ContainsKey('Versioned') -and $source.Versioned) {
+				$remoteFolder = $remote.Substring(0, $remote.LastIndexOf('/'))
+				$list = Invoke-ProtonCli $Config @('filesystem', 'list', $remoteFolder, '--json')
+				if ($list.ExitCode -eq 0) {
+					$newest = Select-NewestVersionName @(ConvertFrom-ProtonListNames $list.StdOut) $leaf
+					if ($newest -ne $leaf) { $leaf = $newest; $remote = Join-RemotePath $remoteFolder $newest }
+				}
+			}
 			$target = Join-Path $temp $category
 			[void](New-Item -ItemType Directory -Path $target -Force)
 			$result = Invoke-ProtonCli $Config @('filesystem', 'download', $remote, $target, '--file-conflict-strategy', 'rename', '--json')
-			$downloaded = Join-Path $target (Split-Path -Leaf $sample.File)
+			$downloaded = Join-Path $target $leaf
 			if ($result.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $downloaded)) {
 				$failed = $true; [void]$lines.Add("${category}: download of $remote failed (exit $($result.ExitCode))"); continue
 			}

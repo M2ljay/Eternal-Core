@@ -165,7 +165,9 @@ do it. The per-feature checklists in [CORE-HEALTH.md](CORE-HEALTH.md#at-the-tv) 
 1. **Install** the test build's `Core-Setup.exe` over the current Core. Settings and data are kept.
 2. **Core Health, server side** (once): [CORE-HEALTH.md](CORE-HEALTH.md#at-the-server-once). Then on the PC: Core >
    Gaming Mode > **Core Health**, type the server name, leave **Health alerts** on, press **Check now**: "All good" or
-   "Things to check: N".
+   "Things to check: N". After the server scripts are updated, run `.\Backup-Core.ps1` once on the server: its log
+   shows *Canary: canary-… is in Drive*. A night that says *Proton CLI too old* needs Proton Drive CLI v0.8.0 or
+   later; the first night also writes `saves-manifest.json` (saves now keep one cloud copy per change).
 3. **Quiet Windows:** Core > Gaming Mode > Quiet Windows > **Apply**. The line *Voice calls do not lower the volume of
    games and music* is ticked afterwards.
 4. **TV control** (once, if not paired yet): the TV settings and **Pair** steps in [TV control](#tv-control-lg-webos-for-example-the-c9).
@@ -199,11 +201,15 @@ do it. The per-feature checklists in [CORE-HEALTH.md](CORE-HEALTH.md#at-the-tv) 
      in the top bar. Health's *Microphone* row says *Muted*. Press again: mark gone, row says *Live*.
    - With a separate call headset: both devices are muted, and both come back as they were.
    - While muted, plug in or switch to another headset: it is muted too within a second or two.
+   - While muted, unplug the headset, unmute in Core, plug it back: it comes back live within a few seconds.
+   - With two different default microphones, mute only one in Windows: *Microphone partly muted*, the mark shows,
+     Health says *Partly muted*.
    - Bind a Steam chord to **Ctrl+Alt+M** and try it in Big Picture and in a game.
 6. **Voice, Xbox party:** press **Xbox party**: Quick Access closes and the Game Bar opens over Big Picture. Open
    *Xbox Social* if needed and start or join a party (or a Discord call). Check that nobody hears you while muted, and
    that game volume no longer drops during the call. Close the Game Bar with **B** (or Esc), and once with the Steam
-   button: Big Picture is in front and the controller drives it (`agent.log`: *Voice: Game Bar closed*). If Win+G does
+   button: Big Picture is in front and the controller drives it (`agent.log`: *Voice: Game Bar closed*; opening it
+   with no game logs *WinG (shortcut)*). If Win+G does
    not open the Game Bar over Big Picture, note what happens and the *Voice:* lines in `agent.log`.
 7. **Sleep and wake:** mute the mic, sleep from Big Picture, wake with the controller: TV on, Core's HDMI, short
    sequence, mic still muted with the mark. Then put the TV on another input or app and sleep Core: the TV stays on.
@@ -212,6 +218,8 @@ do it. The per-feature checklists in [CORE-HEALTH.md](CORE-HEALTH.md#at-the-tv) 
    `%LOCALAPPDATA%\Playhub\backups\SteamClient`, Steam updates and comes back, the plugins load, and `steam.cfg` is
    back in the Steam folder. After a new Steam release, `Steam\logs\bootstrap_log.txt` shows whether the hold still
    blocks the self-update on the 64-bit client.
-9. **Anti-cheat:** launch Call of Duty. No notice or boot sequence appears over it; in Quick Access > Core the party
-   button says it is not available and the mic button still works.
-10. **Shutdown** from Big Picture with the TV on Core's HDMI: the TV turns off.
+9. **Xbox party during a game:** in a game without anti-cheat, Quick Access > Core > **Xbox party**: `agent.log` shows
+   *Uri (gameRunning)* (no keystroke sent). Note whether the Game Bar opens over the game.
+10. **Anti-cheat:** launch Call of Duty. No notice or boot sequence appears over it; in Quick Access > Core the party
+    button says it is not available and the mic button still works.
+11. **Shutdown** from Big Picture with the TV on Core's HDMI: the TV turns off.

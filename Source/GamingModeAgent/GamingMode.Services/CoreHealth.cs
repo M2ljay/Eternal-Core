@@ -67,7 +67,8 @@ internal sealed record CoreHealthInputs
 	public string CoreVersion { get; init; } = "";
 	public string? LatestCoreVersion { get; init; }
 	public bool? CoreUpdateAvailable { get; init; }
-	// Core Voice: "muted", "live" or "none" (no microphone); null when Windows could not say.
+	// Core Voice: "muted", "live", "partial" (some default microphones muted) or "none" (no
+	// microphone); null when Windows could not say.
 	public string? Microphone { get; init; }
 }
 
@@ -282,10 +283,12 @@ internal static class CoreHealthPolicy
 		else rows.Add(new HealthRow("tv", HealthLevel.Unknown, "unknown", tv));
 
 		// Microphone: information only. Muted is a choice, not a problem (the plugin shows it in crimson).
+		// Partly muted is worth a look: a call may use the muted one while the badge's other mic is live.
 		var mic = new Dictionary<string, object?> { ["state"] = input.Microphone };
 		rows.Add(input.Microphone switch
 		{
 			"muted" => new HealthRow("microphone", HealthLevel.Info, "muted", mic),
+			"partial" => new HealthRow("microphone", HealthLevel.Attention, "partial", mic),
 			"live" => new HealthRow("microphone", HealthLevel.Ok, "live", mic),
 			"none" => new HealthRow("microphone", HealthLevel.Info, "none", mic),
 			_ => new HealthRow("microphone", HealthLevel.Unknown, "unknown", mic),

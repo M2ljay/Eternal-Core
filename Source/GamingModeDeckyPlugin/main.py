@@ -1874,7 +1874,9 @@ ensure();
     @staticmethod
     def _mic_muted(state):
         mic = state.get("mic") if isinstance(state, dict) else None
-        return isinstance(mic, dict) and mic.get("state") == "muted"
+        # "partial": one default microphone muted, the other live. The mark shows it too, so a muted
+        # call mic is never hidden behind a live one.
+        return isinstance(mic, dict) and mic.get("state") in ("muted", "partial")
 
     def _topbar_mic_script(self, muted):
         cfg = json.dumps({"muted": bool(muted), "badge": _TOPBAR_MIC_BADGE_ID, "style": _TOPBAR_MIC_STYLE_ID,

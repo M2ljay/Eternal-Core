@@ -44,6 +44,12 @@
       "at": "2026-11-02T06:10:00.0000000-05:00",
       "result": "ok",
       "message": "saves: /my-files/CoreBackup/saves/assets/users/a/saves/gba/1/mgba/game.srm matches"
+    },
+    "canary": {
+      "ok": true,
+      "at": "2026-11-26T05:31:02.0000000-05:00",
+      "name": "canary-20261126-053102.txt",
+      "message": "ok"
     }
   },
   "drive": {

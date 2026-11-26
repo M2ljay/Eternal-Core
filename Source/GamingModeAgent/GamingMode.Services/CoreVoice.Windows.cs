@@ -32,11 +32,19 @@ internal static class WindowsMicrophone
 		{
 			enumerator = CreateEnumerator();
 			var defaults = new HashSet<string>(StringComparer.Ordinal);
+			string? communications = null;
 			foreach (int role in new[] { RoleConsole, RoleCommunications })
 			{
 				// E_NOTFOUND when there is no microphone at all.
 				if (enumerator.GetDefaultAudioEndpoint(FlowCapture, role, out IMMDevice? device) != 0 || device is null) continue;
-				try { if (device.GetId(out string? id) == 0 && !string.IsNullOrEmpty(id)) defaults.Add(id); }
+				try
+				{
+					if (device.GetId(out string? id) == 0 && !string.IsNullOrEmpty(id))
+					{
+						defaults.Add(id);
+						if (role == RoleCommunications) communications = id;
+					}
+				}
 				finally { Release(device); }
 			}
 			Marshal.ThrowExceptionForHR(enumerator.EnumAudioEndpoints(FlowCapture, DeviceStateActive, out collection));
@@ -49,7 +57,7 @@ internal static class WindowsMicrophone
 					if (device.GetId(out string? id) != 0 || string.IsNullOrEmpty(id)) continue;
 					bool? muted = null;
 					WithVolume(device, volume => { if (volume.GetMute(out bool value) == 0) muted = value; });
-					if (muted is bool known) result.Add(new MicEndpoint(id, known, defaults.Contains(id)));
+					if (muted is bool known) result.Add(new MicEndpoint(id, known, defaults.Contains(id), string.Equals(id, communications, StringComparison.Ordinal)));
 				}
 				finally { Release(device); }
 			}
