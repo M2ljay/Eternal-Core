@@ -154,24 +154,64 @@ Check once that resting the controller on the Puck to charge does not wake Core 
 TV with it). Turn off *Allow wake timers* in the power plan if Core wakes up by itself at
 night.
 
-## What to test on the PC after installing Mark III
+## Test day: one pass at the TV
 
-1. **Boot:** power on into Gaming Mode. The sequence and sound play; press A once on a
-   second boot to check skipping; Big Picture appears normally. In `agent.log`
-   (`%APPDATA%\GamingMode\agent.log`) look for *Boot sequence finished/skipped*.
-2. **Sleep and wake:** sleep from Big Picture, wake with the controller: TV on, HDMI 2,
-   short sequence. Then put the TV on another input or app, sleep Core: the TV must stay on.
-   Wake Core again while the TV shows that app: the TV must not switch to Core.
-3. **Shutdown** from Big Picture with the TV on HDMI 2: the TV turns off.
-4. **Plugins check:** with Decky working, `agent.log` shows *Decky heartbeat received* and
-   *Decky health: Healthy*. Open Core Repair > Restart plugins: it answers *Fixed*. To see the
-   notice itself you need plugins that do not load (for example after a Steam update);
-   ending *PluginLoader* in Task Manager is not a reliable test, because Core's Decky
-   watchdog starts it again within seconds.
-5. **Core Repair tile:** it is in the Steam library and opens with the controller.
-6. **Steam update:** Core Repair > Update Steam now. Steam closes, a backup appears under
-   `%LOCALAPPDATA%\Playhub\backups\SteamClient`, Steam updates and comes back, and
-   `steam.cfg` is back in the Steam folder. Check `Steam\logs\bootstrap_log.txt` after a new
-   Steam release to confirm the hold still blocks the self-update on the 64-bit client.
-7. **Anti-cheat:** launch Call of Duty: no notice or sequence appears over it.
-8. **Voice:** the checklist in [CORE-VOICE.md](CORE-VOICE.md#on-the-tv-checklist).
+One checklist for the combined test build (Mark III, Core Health, Voice and the Core theme), in the order you would
+do it. The per-feature checklists in [CORE-HEALTH.md](CORE-HEALTH.md#at-the-tv) and
+[CORE-VOICE.md](CORE-VOICE.md#on-the-tv-checklist) are folded in here. Logs: `%APPDATA%\GamingMode\agent.log`.
+
+### Before, at the desk (mouse and keyboard)
+
+1. **Install** the test build's `Core-Setup.exe` over the current Core. Settings and data are kept.
+2. **Core Health, server side** (once): [CORE-HEALTH.md](CORE-HEALTH.md#at-the-server-once). Then on the PC: Core >
+   Gaming Mode > **Core Health**, type the server name, leave **Health alerts** on, press **Check now**: "All good" or
+   "Things to check: N".
+3. **Quiet Windows:** Core > Gaming Mode > Quiet Windows > **Apply**. The line *Voice calls do not lower the volume of
+   games and music* is ticked afterwards.
+4. **TV control** (once, if not paired yet): the TV settings and **Pair** steps in [TV control](#tv-control-lg-webos-for-example-the-c9).
+5. **Theme:** copy `docs/eternal/brand/css-theme/Core` to `%USERPROFILE%\homebrew\themes\Core`. Optional:
+   `python -I check_classes.py %USERPROFILE%\homebrew\themes\css_translations.json Core` reports no *NOT FOUND*.
+6. If your call headset differs from your default microphone, open Windows sound settings > Input once and note both
+   devices (for the mute check below).
+7. Shut the PC down and turn the TV off.
+
+### At the TV
+
+1. **Boot:** power on. The TV turns on and switches to Core's HDMI; the boot sequence and sound play; Big Picture
+   appears normally. `agent.log`: *Boot sequence finished*. On a second boot press **A** during the sequence: it skips
+   (*Boot sequence skipped*).
+2. **Plugins:** `agent.log` shows *Decky heartbeat received* and *Decky health: Healthy*. The **Core Repair** tile is in
+   the Steam library and opens with the controller; **Restart plugins** answers *Fixed*. (Ending *PluginLoader* in
+   Task Manager is not a valid test: the watchdog restarts it within seconds.)
+3. **Theme:** Decky > CSS Loader: switch **Core** on (all four screen options on). Check, and switch off any option that
+   looks wrong:
+   - Steam menu: Core wordmark in line with the icons, black panel with drifting stars, gunmetal item with a crimson line.
+   - Quick Access: black tab column, gunmetal selected tab with a crimson bar.
+   - Home: black page, hero art fading into black, focused game with a crimson ring and a small lift.
+   - Library: black grid, flat steel tabs with a crimson underline on the open one, focused cover with the crimson ring.
+   - Game page: hero art fading into black, solid crimson Play (white ring when focused), translucent gunmetal play bar.
+   - Context menu (press the menu button on a game): black panel, gunmetal selected item with a crimson underline.
+   - A notification (for example a screenshot, or a download finishing): black with a crimson left edge, white title.
+4. **Health:** Quick Access > **Core** > **Health**. Check the top line, move through the rows, press **A** on any
+   crimson row for details; a row with an alert offers **Dismiss alert: <row>** below the list.
+5. **Voice, microphone:** Quick Access > Core: **Voice** is at the top.
+   - Press the mic button: it turns crimson, says *Microphone muted*, and a crimson mic mark appears before the clock
+     in the top bar. Health's *Microphone* row says *Muted*. Press again: mark gone, row says *Live*.
+   - With a separate call headset: both devices are muted, and both come back as they were.
+   - While muted, plug in or switch to another headset: it is muted too within a second or two.
+   - Bind a Steam chord to **Ctrl+Alt+M** and try it in Big Picture and in a game.
+6. **Voice, Xbox party:** press **Xbox party**: Quick Access closes and the Game Bar opens over Big Picture. Open
+   *Xbox Social* if needed and start or join a party (or a Discord call). Check that nobody hears you while muted, and
+   that game volume no longer drops during the call. Close the Game Bar with **B** (or Esc), and once with the Steam
+   button: Big Picture is in front and the controller drives it (`agent.log`: *Voice: Game Bar closed*). If Win+G does
+   not open the Game Bar over Big Picture, note what happens and the *Voice:* lines in `agent.log`.
+7. **Sleep and wake:** mute the mic, sleep from Big Picture, wake with the controller: TV on, Core's HDMI, short
+   sequence, mic still muted with the mark. Then put the TV on another input or app and sleep Core: the TV stays on.
+   Wake Core while the TV shows that app: the TV does not switch to Core.
+8. **Steam update:** Core Repair > **Update Steam now**. Steam closes, a backup appears under
+   `%LOCALAPPDATA%\Playhub\backups\SteamClient`, Steam updates and comes back, the plugins load, and `steam.cfg` is
+   back in the Steam folder. After a new Steam release, `Steam\logs\bootstrap_log.txt` shows whether the hold still
+   blocks the self-update on the 64-bit client.
+9. **Anti-cheat:** launch Call of Duty. No notice or boot sequence appears over it; in Quick Access > Core the party
+   button says it is not available and the mic button still works.
+10. **Shutdown** from Big Picture with the TV on Core's HDMI: the TV turns off.
