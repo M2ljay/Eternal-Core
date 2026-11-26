@@ -443,6 +443,22 @@ public sealed class ModeManager
 		return modeStatus;
 	}
 
+	// Mark III: while Core Repair or the Steam update job has closed Steam on purpose, the
+	// Desktop safety watchdog must not read "no Steam" as "Gaming Mode broke".
+	private int _steamMaintenance;
+	internal bool SteamMaintenanceActive => Volatile.Read(ref _steamMaintenance) > 0;
+	internal IDisposable BeginSteamMaintenance()
+	{
+		Interlocked.Increment(ref _steamMaintenance);
+		return new SteamMaintenanceLease(this);
+	}
+	private sealed class SteamMaintenanceLease : IDisposable
+	{
+		private ModeManager? _owner;
+		internal SteamMaintenanceLease(ModeManager owner) => _owner = owner;
+		public void Dispose() { if (Interlocked.Exchange(ref _owner, null) is { } owner) Interlocked.Decrement(ref owner._steamMaintenance); }
+	}
+
 	public async Task RunSafetyWatchdogAsync(CancellationToken cancellationToken)
 	{
 		int deckyCleanupTicks = 0;
@@ -451,7 +467,7 @@ public sealed class ModeManager
 		while (!cancellationToken.IsCancellationRequested)
 		{
 			await Task.Delay(TimeSpan.FromSeconds(5.0), cancellationToken);
-			if (IsSystemShuttingDown())
+			if (IsSystemShuttingDown() || SteamMaintenanceActive)
 			{
 				recovery.Reset();
 				continue;

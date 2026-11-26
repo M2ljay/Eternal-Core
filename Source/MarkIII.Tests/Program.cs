@@ -10,6 +10,7 @@ void Check(bool condition, string name)
 
 await BootTests.Run(Check);
 await TvTests.Run(Check);
+await SteamHoldTests.Run(Check);
 
 Console.WriteLine($"ALL PASS ({passed} checks)");
 return 0;

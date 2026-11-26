@@ -14,9 +14,10 @@
     <Compile Include="../GamingModeAgent/GamingMode.Services/LgWebOsProtocol.cs" Link="LgWebOsProtocol.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/LgWebOsClient.cs" Link="LgWebOsClient.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/TvControl.cs" Link="TvControl.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/SteamUpdateHold.cs" Link="SteamUpdateHold.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/SteamClientBackup.cs" Link="SteamClientBackup.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="SteamHoldTests.cs" />
-    <Compile Remove="DeckyTests.cs" />
+    <Compile Remove="DeckyTests.cs" />
   </ItemGroup>
 </Project>
