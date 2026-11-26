@@ -1,5 +1,6 @@
 """Playhub control center. Hardware controls retain the Quick Settings MIT notices."""
 import json
+import re
 import logging
 import os
 import shutil
@@ -151,6 +152,10 @@ _TOPBAR_CEF_PORT = 8080
 _TOPBAR_DATE_BADGE_ID = "playhub-topbar-date"
 _TOPBAR_DATE_STYLE_ID = "playhub-topbar-date-style"
 _TOPBAR_CLOCK_SELECTORS = ["#header ._1HhLUvHH6BZLIOyOE80TVh", "._1HhLUvHH6BZLIOyOE80TVh", '#header [class*="Clock"]', "#header time"]
+# Core Voice: a small crimson "microphone muted" mark before the clock in Steam's top bar.
+_TOPBAR_MIC_BADGE_ID = "core-topbar-mic"
+_TOPBAR_MIC_STYLE_ID = "core-topbar-mic-style"
+_VOICE_MIC_ACTIONS = ("mute", "unmute", "toggle")
 
 
 class Plugin(QuickSettingsPlugin):
@@ -202,6 +207,31 @@ class Plugin(QuickSettingsPlugin):
 
     async def core_update_night_cancel(self):
         return await asyncio.to_thread(self._agent_local, "POST", "/windows/update-night/cancel")
+
+    # Core Health (src/HealthSection.tsx, agent MarkIIIHost.Health.cs). The agent may wait up to
+    # 4 s for the home server's share, so these calls get a longer time box and a larger answer.
+    async def core_health(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/health", timeout=8, maximum=65536)
+
+    async def core_health_dismiss(self, problem_id):
+        if not isinstance(problem_id, str) or not re.fullmatch(r"[a-z-]{1,40}", problem_id):
+            return {}
+        return await asyncio.to_thread(self._agent_local, "POST", "/health/dismiss?id=" + problem_id, timeout=8, maximum=65536)
+
+    # Core Voice (src/VoiceSection.tsx, agent MarkIIIHost.Voice.cs): microphone mute and the Xbox party
+    # button. A mute change also refreshes the top-bar mark at once instead of at the next poll.
+    async def core_voice_state(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/voice/state", timeout=4)
+
+    async def core_voice_mic(self, action):
+        if action not in _VOICE_MIC_ACTIONS:
+            return {}
+        state = await asyncio.to_thread(self._agent_local, "POST", "/voice/mic?action=" + action, timeout=4)
+        await asyncio.to_thread(self._show_topbar_mic, self._mic_muted(state), True)
+        return state
+
+    async def core_voice_party(self):
+        return await asyncio.to_thread(self._agent_local, "POST", "/voice/party", timeout=6)
 
     @staticmethod
     def _agent_local(method, path, *, timeout=2.5, maximum=4096):
@@ -749,6 +779,9 @@ class Plugin(QuickSettingsPlugin):
         self._display_stopping = False
         self._topbar_date_task = None
         self._topbar_date_stopping = False
+        self._topbar_mic_task = None
+        self._topbar_mic_shown = None
+        self._topbar_mic_injected_at = 0.0
         # One-time migration; never replace profiles already saved in Playhub.
         if not os.path.exists(self._settings_path):
             root = os.path.dirname(self._settings_dir)
@@ -1173,6 +1206,7 @@ class Plugin(QuickSettingsPlugin):
                                        os.getpid(), bool(self._display_pending), bool(self._display_recovery_error))
         self._topbar_date_stopping = False
         self._topbar_date_task = asyncio.create_task(self._topbar_date_loop())
+        self._topbar_mic_task = asyncio.create_task(self._topbar_mic_loop())
         await super()._main()
 
     def _install_circles_screensaver(self):
@@ -1268,6 +1302,10 @@ class Plugin(QuickSettingsPlugin):
             self._topbar_date_task.cancel()
             self._topbar_date_task = None
         await asyncio.to_thread(self._inject_topbar_date, False, "auto", False)
+        if self._topbar_mic_task:
+            self._topbar_mic_task.cancel()
+            self._topbar_mic_task = None
+        await asyncio.to_thread(self._inject_topbar_mic, False)
         await super()._unload()
         logging.getLogger(__name__).info("Playhub backend unloaded pid=%s", os.getpid())
 
@@ -1832,6 +1870,86 @@ ensure();
     def _inject_topbar_date(self, enabled, date_format, move_left=False):
         script = self._topbar_date_script(enabled, date_format, move_left)
         for target in self._steam_browser_targets_for_date(): self._eval_date_target(target, script)
+
+    @staticmethod
+    def _mic_muted(state):
+        mic = state.get("mic") if isinstance(state, dict) else None
+        return isinstance(mic, dict) and mic.get("state") == "muted"
+
+    def _topbar_mic_script(self, muted):
+        cfg = json.dumps({"muted": bool(muted), "badge": _TOPBAR_MIC_BADGE_ID, "style": _TOPBAR_MIC_STYLE_ID,
+                          "selectors": _TOPBAR_CLOCK_SELECTORS}, ensure_ascii=False)
+        return "(function(C){" + r"""
+const key = '__coreTopbarMicRuntime';
+if (window[key]) { window[key].update(C); return; }
+// Lucide MicOff (ISC; see quick_settings/THIRD-PARTY-NOTICES.md), drawn in Core crimson.
+const icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 2l20 20"/><path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/><path d="M5 10v2a7 7 0 0 0 12 5"/><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12"/><path d="M12 19v3"/></svg>';
+let config = C, badge = null, clock = null, queued = null, stopped = false;
+function ownText(node) { return Array.from(node.childNodes).filter(child => child.nodeType === 3).map(child => child.textContent || '').join(' ').trim(); }
+function findClock() {
+  for (const selector of config.selectors) { const found = document.querySelector(selector); if (found) return found; }
+  const header = document.querySelector('#header') || document.querySelector('.BasicUIHeader_Header_1E_SL');
+  if (!header) return null;
+  return Array.from(header.querySelectorAll('div,span,button,time')).find(node => /^\d{1,2}:\d{2}(?:\s|$)/.test(ownText(node))) || null;
+}
+function remove() { (badge || document.getElementById(config.badge))?.remove(); }
+function ensure() {
+  if (stopped) return;
+  if (!config.muted) { remove(); return; }
+  const found = findClock();
+  if (!found) return;
+  clock = found;
+  if (!document.getElementById(config.style)) {
+    const style = document.createElement('style'); style.id = config.style;
+    style.textContent = '#' + config.badge + '{display:inline-flex;align-items:center;margin-right:.45em;color:#D7263D;pointer-events:none;align-self:center;line-height:0;filter:none;text-shadow:none}#' + config.badge + ' svg{width:1em;height:1em;display:block}';
+    document.head.appendChild(style);
+  }
+  badge = badge || document.getElementById(config.badge);
+  if (!badge) { badge = document.createElement('span'); badge.id = config.badge; badge.setAttribute('aria-hidden', 'true'); badge.innerHTML = icon; }
+  if (badge.parentNode !== clock || clock.firstChild !== badge) clock.insertBefore(badge, clock.firstChild);
+}
+function queue() { if (stopped || queued !== null) return; queued = window.setTimeout(() => { queued = null; ensure(); }, 120); }
+// Steam re-renders the header often: put the mark back before the next paint when its clock is
+// still there, and look for a new clock only after a short pause.
+const observer = new MutationObserver(() => {
+  if (stopped || !config.muted) return;
+  if (badge && badge.isConnected && clock && clock.isConnected && clock.firstChild === badge) return;
+  if (clock && clock.isConnected) ensure(); else queue();
+});
+function cleanup() {
+  stopped = true; observer.disconnect(); if (queued !== null) window.clearTimeout(queued);
+  remove(); document.getElementById(config.style)?.remove(); delete window[key];
+}
+window[key] = { update(next) { config = next; ensure(); }, cleanup };
+observer.observe(document.documentElement, {childList:true,subtree:true});
+ensure();
+""" + "})(" + cfg + ");"
+
+    def _inject_topbar_mic(self, muted):
+        script = self._topbar_mic_script(muted)
+        for target in self._steam_browser_targets_for_date(): self._eval_date_target(target, script)
+
+    # Inject on a change, and every 20 s while muted so a Steam window opened since gets the mark.
+    def _show_topbar_mic(self, muted, force=False):
+        now = time.monotonic()
+        if not force and muted == self._topbar_mic_shown and (not muted or now - self._topbar_mic_injected_at < 20):
+            return
+        self._inject_topbar_mic(muted)
+        self._topbar_mic_shown = muted
+        self._topbar_mic_injected_at = now
+
+    # The agent answering "muted" is the only way to show the mark: an agent that does not answer
+    # shows nothing rather than a stale state.
+    async def _topbar_mic_loop(self):
+        while True:
+            try:
+                state = await asyncio.to_thread(self._agent_local, "GET", "/voice/state", timeout=3)
+                await asyncio.to_thread(self._show_topbar_mic, self._mic_muted(state))
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logging.exception("Core top-bar microphone mark refresh failed")
+            await asyncio.sleep(4)
 
     async def _topbar_date_loop(self):
         while not self._topbar_date_stopping:

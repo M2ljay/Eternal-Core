@@ -15,12 +15,14 @@ using Playhub.Shared;
 namespace GamingMode.Services;
 
 // Eternal Core Mark III in the agent: TV control, the Steam update hold, the Decky health
-// check, Core Repair's actions, the wake sequence and their HTTP endpoints.
+// check, Core Repair's actions, the wake sequence and their HTTP endpoints. Core Health (the
+// Quick Access health section and its notices) is in MarkIIIHost.Health.cs; Core Voice (microphone
+// mute and the Xbox party button) in MarkIIIHost.Voice.cs.
 //
 // Fail-safe by construction: every feature runs beside Gaming Mode, never in front of it.
 // Each loop iteration, power event and endpoint catches its own failures, logs them and
 // carries on; none of them can stop Steam from starting or the agent from running.
-internal sealed class MarkIIIHost : IDisposable
+internal sealed partial class MarkIIIHost : IDisposable
 {
 	private readonly AppPaths _paths;
 	private readonly JsonStore _store;
@@ -53,6 +55,7 @@ internal sealed class MarkIIIHost : IDisposable
 		_healthPath = Path.Combine(paths.ConfigDirectory, "core-health.json");
 		_toastsPath = Path.Combine(paths.ConfigDirectory, "quiet-toasts.json");
 		_updateNightPath = Path.Combine(paths.ConfigDirectory, "update-night.json");
+		_healthAlertsPath = Path.Combine(paths.ConfigDirectory, "core-health-alerts.json");
 		_steamHost = new SteamHost(this);
 		LoadHealth();
 	}
@@ -84,6 +87,8 @@ internal sealed class MarkIIIHost : IDisposable
 
 	internal void Start(CancellationToken stopping)
 	{
+		try { StartVoice(); }
+		catch (Exception error) { _logger.Error("Voice: could not start; the microphone mute and party button are unavailable.", error); }
 		_ = Task.Run(() => LoopAsync(stopping));
 		// SystemEvents needs a thread it can own: subscribing from a pool (MTA) thread makes
 		// it create its own hidden window and message loop.
@@ -102,6 +107,7 @@ internal sealed class MarkIIIHost : IDisposable
 
 	public void Dispose()
 	{
+		StopVoice();
 		lock (_sync)
 		{
 			if (!_subscribed) return;
@@ -121,11 +127,16 @@ internal sealed class MarkIIIHost : IDisposable
 			catch (Exception error) { _logger.Error("Mark III: Decky health check failed this round.", error); }
 			try { CheckToasts(); }
 			catch (Exception error) { _logger.Error("Mark III: Windows banner switch failed this round.", error); }
+			try { CheckVoice(); }
+			catch (Exception error) { _logger.Error("Voice: microphone check failed this round.", error); }
 			if (++tick % 12 != 0) continue; // once a minute
 			try { CheckSteamHold(); }
 			catch (Exception error) { _logger.Error("Mark III: Steam update hold check failed this round.", error); }
 			try { CheckUpdateNight(); }
 			catch (Exception error) { _logger.Error("Mark III: update night check failed this round.", error); }
+			if (tick % 60 != 0) continue; // every five minutes
+			try { await CheckHealthAlertsAsync().ConfigureAwait(false); }
+			catch (Exception error) { _logger.Error("Core Health: alert check failed this round.", error); }
 		}
 	}
 
@@ -635,6 +646,8 @@ internal sealed class MarkIIIHost : IDisposable
 		ModeConfig config = _store.LoadConfig();
 		bool gaming = InGamingMode();
 		_logger.Info($"Mark III: resumed from sleep (Gaming Mode: {gaming}).");
+		try { ReconcileMic("resume"); }
+		catch (Exception error) { _logger.Error("Voice: microphone check after resume failed.", error); }
 		if (!gaming) return;
 		TvSettings tv = config.Gaming.Tv ?? new TvSettings();
 		Task tvReady = tv.Enabled && tv.TurnOnWithCore
@@ -760,5 +773,7 @@ internal sealed class MarkIIIHost : IDisposable
 			Local(context) ? Tv(await _tv.SwitchCoreInputAsync(context.RequestAborted).ConfigureAwait(false)) : Results.StatusCode(403)));
 		app.MapPost("/tv/off", (Func<HttpContext, Task<IResult>>)(async context =>
 			Local(context) ? Tv(await _tv.TurnOffNowAsync(context.RequestAborted).ConfigureAwait(false)) : Results.StatusCode(403)));
+		MapHealth(app);
+		MapVoice(app);
 	}
 }

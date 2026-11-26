@@ -107,5 +107,16 @@ public sealed class GamingSettings
 	// (Shared/CouchHardening.cs, GamingToasts).
 	public bool QuietWindowsToasts { get; set; } = true;
 
+	// Core Health (MarkIIIHost.Health.cs): the home server whose \\<server>\CoreStatus\core-status.json
+	// Core reads, and whether serious problems raise a Core notice in Gaming Mode.
+	public string? CoreHealthServer { get; set; }
+	public bool CoreHealthAlertsEnabled { get; set; } = true;
+
+	// Core Voice (MarkIIIHost.Voice.cs), config-only. A keyboard combination that toggles the
+	// microphone mute (bind it to a Steam Input chord); empty turns it off. An ms-gamebar: URI
+	// the Xbox party button opens instead of Win+G, for a widget link found to work on this PC.
+	public string? MicMuteHotkey { get; set; } = "Ctrl+Alt+M";
+	public string? VoicePartyUri { get; set; }
+
 	public bool ManageAudio { get; set; }
 }

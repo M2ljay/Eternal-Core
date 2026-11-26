@@ -1521,9 +1521,18 @@
   "Niente consigli, suggerimenti e pubblicità di Windows": "Sin consejos, sugerencias ni anuncios de Windows",
   "Niente finestre \"Il programma ha smesso di funzionare\"": "Sin ventanas \"El programa dejó de funcionar\"",
   "Niente finestre Tasti permanenti, filtro e interruttore": "Sin ventanas de Teclas especiales, filtro y alternancia",
+  "Le chiamate vocali non abbassano il volume di giochi e musica": "Las llamadas de voz no bajan el volumen de los juegos y la música",
   "Nessun riavvio per gli aggiornamenti mentre sei connesso": "Sin reinicios por actualizaciones mientras tienes la sesión iniciada",
   "Windows Update non cambia il driver grafico": "Windows Update no cambia el controlador gráfico",
   "Niente risvegli notturni per manutenzione": "Sin despertares nocturnos por mantenimiento",
   "Nessuna password al risveglio": "Sin contraseña al reanudar",
-  "Niente richieste di Edge al primo avvio o come browser predefinito": "Sin avisos de Edge al primer inicio ni como navegador predeterminado"
+  "Niente richieste di Edge al primo avvio o come browser predefinito": "Sin avisos de Edge al primer inicio ni como navegador predeterminado",
+  "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.": "Acceso rápido > Core muestra si las copias de seguridad, el servidor, la TV y el PC están bien.",
+  "Server di casa": "Servidor de casa",
+  "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.": "El nombre del PC servidor, por ejemplo V3. Core lee su estado de la carpeta compartida CoreStatus.",
+  "Avvisi di salute": "Avisos de estado",
+  "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "Un aviso breve en Gaming Mode cuando la copia de seguridad falla dos noches seguidas, el disco del servidor informa de un problema o el servidor lleva más de un día y medio sin dar señales. Como mucho una vez al día, nunca durante un juego.",
+  "Controlla ora": "Comprobar ahora",
+  "Tutto a posto.": "Todo bien.",
+  "Cose da controllare: {0}": "Cosas que revisar: {0}"
 }

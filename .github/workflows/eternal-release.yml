@@ -108,9 +108,21 @@ jobs:
         working-directory: Source/MarkIII.Tests
         run: dotnet run -c Release
 
-      - name: Mark III Big Picture plugin tests (heartbeat, Core Repair tile, optional startup)
+      - name: Mark III Big Picture plugin tests (heartbeat, Core Repair tile, optional startup, Health and Voice sections)
         working-directory: Source/GamingModeDeckyPlugin
-        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs
+        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs tests/coreHealthSection.test.mjs tests/coreVoiceSection.test.mjs
+
+      # Core Health: reading the home server's core-status.json, every row's verdict and the notice
+      # rules (once a day per problem; a dismissed problem returns only if it changes).
+      - name: Core Health tests
+        working-directory: Source/CoreHealth.Tests
+        run: dotnet run -c Release
+
+      # Core Voice: microphone mute (exact restore, new default devices, an unmute from outside Core),
+      # how the Xbox party button opens the Game Bar and hands the screen back, the ducking fix.
+      - name: Core Voice tests
+        working-directory: Source/CoreVoice.Tests
+        run: dotnet run -c Release
 
       # The agent's WPF and Windows code builds only here; fail fast before packaging.
       - name: Compile the Gaming Mode agent

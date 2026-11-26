@@ -1503,9 +1503,18 @@
   "Niente consigli, suggerimenti e pubblicità di Windows": "Windows के टिप्स, सुझाव और विज्ञापन नहीं",
   "Niente finestre \"Il programma ha smesso di funzionare\"": "\"प्रोग्राम ने काम करना बंद कर दिया\" विंडो नहीं",
   "Niente finestre Tasti permanenti, filtro e interruttore": "स्टिकी, फ़िल्टर और टॉगल कीज़ की विंडो नहीं",
+  "Le chiamate vocali non abbassano il volume di giochi e musica": "वॉइस कॉल गेम और संगीत की आवाज़ कम नहीं करतीं",
   "Nessun riavvio per gli aggiornamenti mentre sei connesso": "साइन इन रहते हुए अपडेट के लिए रीस्टार्ट नहीं",
   "Windows Update non cambia il driver grafico": "Windows Update ग्राफ़िक्स ड्राइवर नहीं बदलता",
   "Niente risvegli notturni per manutenzione": "रखरखाव के लिए रात में जागना नहीं",
   "Nessuna password al risveglio": "जागने पर पासवर्ड नहीं",
-  "Niente richieste di Edge al primo avvio o come browser predefinito": "Edge के पहली बार चलने या डिफ़ॉल्ट ब्राउज़र के संकेत नहीं"
+  "Niente richieste di Edge al primo avvio o come browser predefinito": "Edge के पहली बार चलने या डिफ़ॉल्ट ब्राउज़र के संकेत नहीं",
+  "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.": "क्विक एक्सेस > Core दिखाता है कि बैकअप, सर्वर, टीवी और पीसी ठीक हैं या नहीं।",
+  "Server di casa": "घर का सर्वर",
+  "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.": "सर्वर पीसी का नाम, जैसे V3। Core उसकी स्थिति साझा फ़ोल्डर CoreStatus से पढ़ता है।",
+  "Avvisi di salute": "हेल्थ अलर्ट",
+  "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "जब बैकअप लगातार दो रात विफल हो, सर्वर की ड्राइव में समस्या हो या सर्वर डेढ़ दिन से ज़्यादा चुप रहे, तब Gaming Mode में एक छोटी सूचना। दिन में ज़्यादा से ज़्यादा एक बार, गेम के दौरान कभी नहीं।",
+  "Controlla ora": "अभी जाँचें",
+  "Tutto a posto.": "सब ठीक है।",
+  "Cose da controllare: {0}": "जाँचने योग्य चीज़ें: {0}"
 }

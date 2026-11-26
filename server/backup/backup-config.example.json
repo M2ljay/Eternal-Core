@@ -1,0 +1,45 @@
+{
+  "_comment": "Copy to backup-config.json and edit. Every key is optional; missing keys use the defaults shown here. README.md explains each one.",
+  "server_name": "",
+  "status_folder": "C:\\CoreStatus",
+  "state_folder": "C:\\ProgramData\\CoreBackup",
+  "share": {
+    "name": "CoreStatus",
+    "read_account": "Everyone"
+  },
+  "schedule": {
+    "time": "05:30",
+    "max_hours": 6
+  },
+  "proton": {
+    "cli_path": "proton-drive",
+    "remote_root": "/my-files/CoreBackup",
+    "file_conflict_strategy": "skip"
+  },
+  "pool": {
+    "_comment": "No CLI command reports the Proton storage quota: enter the pool size and an estimate of what your partner uses, from the Proton Drive web dashboard. 1 TB = 1000000000000, 2 TB = 2000000000000. null means unknown: ROMs are then not uploaded.",
+    "total_bytes": null,
+    "others_used_bytes": 0,
+    "min_free_fraction": 0.25
+  },
+  "romm": {
+    "url": "http://localhost:8080",
+    "container": "romm",
+    "db_container": "romm-db",
+    "library": "D:\\RomM\\library",
+    "assets": "D:\\RomM\\assets",
+    "config": "D:\\RomM\\config",
+    "library_structure": "auto",
+    "keep_local_dumps": 14
+  },
+  "drive": {
+    "letter": ""
+  },
+  "roms": {
+    "enabled": true,
+    "skip_order": ["ps2", "ngc", "gamecube", "ps3", "wii", "psp", "saturn", "psx", "ps1"]
+  },
+  "restore_check": {
+    "every_days": 30
+  }
+}

@@ -1504,9 +1504,18 @@
   "Niente consigli, suggerimenti e pubblicità di Windows": "Windows のヒント、提案、広告を出さない",
   "Niente finestre \"Il programma ha smesso di funzionare\"": "「プログラムは動作を停止しました」ウィンドウを出さない",
   "Niente finestre Tasti permanenti, filtro e interruttore": "固定キー、フィルターキー、切り替えキーの画面を出さない",
+  "Le chiamate vocali non abbassano il volume di giochi e musica": "ボイス通話でゲームや音楽の音量を下げない",
   "Nessun riavvio per gli aggiornamenti mentre sei connesso": "サインイン中は更新のための再起動をしない",
   "Windows Update non cambia il driver grafico": "Windows Update でグラフィックドライバーを変えない",
   "Niente risvegli notturni per manutenzione": "メンテナンスのための夜間の復帰をしない",
   "Nessuna password al risveglio": "復帰時にパスワードを求めない",
-  "Niente richieste di Edge al primo avvio o come browser predefinito": "Edge の初回起動や既定のブラウザーの案内を出さない"
+  "Niente richieste di Edge al primo avvio o come browser predefinito": "Edge の初回起動や既定のブラウザーの案内を出さない",
+  "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.": "クイックアクセス > Core で、バックアップ、サーバー、テレビ、PC に問題がないか確認できます。",
+  "Server di casa": "ホームサーバー",
+  "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.": "サーバー PC の名前（例: V3）。Core は共有フォルダー CoreStatus からその状態を読み取ります。",
+  "Avvisi di salute": "状態のお知らせ",
+  "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "バックアップが 2 晩続けて失敗したとき、サーバーのドライブが問題を報告したとき、またはサーバーから 1 日半以上応答がないときに、Gaming Mode で短いお知らせを表示します。1 日に 1 回まで、ゲーム中は表示しません。",
+  "Controlla ora": "今すぐ確認",
+  "Tutto a posto.": "問題ありません。",
+  "Cose da controllare: {0}": "確認が必要な項目: {0}"
 }

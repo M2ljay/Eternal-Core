@@ -30,6 +30,17 @@ internal static class WindowsXboxGameBar
         }
         return new(true, true, "opened");
     }
+    // Core Voice (Xbox party button): the plain Win+G shortcut, with no Xbox-game session to verify.
+    // The caller has already checked that the bar is not open (Win+G toggles) and that no
+    // anti-cheat-protected game runs.
+    internal static bool SendShortcut()
+    {
+        Input[] chord = [ Key(0x5B, false), Key(0x47, false), Key(0x47, true), Key(0x5B, true) ];
+        if (SendInput((uint)chord.Length, chord, Marshal.SizeOf<Input>()) == chord.Length) return true;
+        Input[] release = [Key(0x47, true), Key(0x5B, true)];
+        SendInput(2, release, Marshal.SizeOf<Input>());
+        return false;
+    }
     private static Input Key(ushort key, bool up) => new() { Type = 1, Data = new() { Keyboard = new() { Key = key, Flags = up ? 2u : 0u } } };
     [StructLayout(LayoutKind.Sequential)] private struct Input { public uint Type; public Data Data; }
     [StructLayout(LayoutKind.Explicit)] private struct Data

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Eternal Core Voice: the pure rules (microphone mute, Game Bar launch and return) and the
+         Quiet Windows ducking fix. The agent's Windows half (Core Audio, Game Bar, hotkey,
+         endpoints) builds only in CI. -->
+    <Compile Include="../GamingModeAgent/GamingMode.Services/CoreVoice.cs" Link="CoreVoice.cs" />
+    <Compile Include="../Shared/CouchHardening.cs" Link="CouchHardening.cs" />
+  </ItemGroup>
+</Project>

@@ -1521,9 +1521,18 @@
   "Niente consigli, suggerimenti e pubblicità di Windows": "Plus de conseils, suggestions ni publicités de Windows",
   "Niente finestre \"Il programma ha smesso di funzionare\"": "Plus de fenêtres « Le programme a cessé de fonctionner »",
   "Niente finestre Tasti permanenti, filtro e interruttore": "Plus de fenêtres Touches rémanentes, filtres et bascules",
+  "Le chiamate vocali non abbassano il volume di giochi e musica": "Les appels vocaux ne baissent pas le volume des jeux et de la musique",
   "Nessun riavvio per gli aggiornamenti mentre sei connesso": "Pas de redémarrage pour les mises à jour tant que vous êtes connecté",
   "Windows Update non cambia il driver grafico": "Windows Update ne change pas le pilote graphique",
   "Niente risvegli notturni per manutenzione": "Pas de réveil nocturne pour la maintenance",
   "Nessuna password al risveglio": "Pas de mot de passe à la sortie de veille",
-  "Niente richieste di Edge al primo avvio o come browser predefinito": "Plus de demandes d'Edge au premier lancement ou comme navigateur par défaut"
+  "Niente richieste di Edge al primo avvio o come browser predefinito": "Plus de demandes d'Edge au premier lancement ou comme navigateur par défaut",
+  "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.": "Accès rapide > Core indique si les sauvegardes, le serveur, la TV et le PC vont bien.",
+  "Server di casa": "Serveur de la maison",
+  "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.": "Le nom du PC serveur, par exemple V3. Core lit son état dans le dossier partagé CoreStatus.",
+  "Avvisi di salute": "Alertes de santé",
+  "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "Un court avis en Gaming Mode quand la sauvegarde échoue deux nuits de suite, que le disque du serveur signale un problème ou que le serveur est silencieux depuis plus d'un jour et demi. Au plus une fois par jour, jamais pendant un jeu.",
+  "Controlla ora": "Vérifier maintenant",
+  "Tutto a posto.": "Tout va bien.",
+  "Cose da controllare: {0}": "À vérifier : {0}"
 }
