@@ -48,7 +48,7 @@ export function QamSettings({locale,children}:{locale:string;children?:React.Rea
  const integratedNames=['Shortcuts','Quick Settings','Gaming Mode','Playhub Gaming Mode','Playhub'];
  const entries=snapshot.plugins.filter(p=>!integratedNames.includes(p.name)).map(p=>({...p,available:true,selected:prefs.selected.includes(p.name),iconChoice:prefs.icons[p.name]??'original'}));
  for(const name of prefs.selected)if(!entries.some(p=>p.name===name)&&!integratedNames.includes(name))entries.push({name,available:false,selected:true,iconChoice:prefs.icons[name]??'original'} as any);
- const tabs=[{key:'shortcut:Playhub',name:'Playhub',pluginName:'Playhub',kind:'decky',available:true,icon:snapshot.plugins.find(p=>p.name==='Playhub')?.icon},
+ const tabs=[{key:'shortcut:Playhub',name:'Core',pluginName:'Playhub',kind:'decky',available:true,icon:snapshot.plugins.find(p=>p.name==='Playhub')?.icon},
  ...snapshot.native.map(n=>({...n,name:qamNativeLabel(n.key,n.label,locale),kind:n.key.startsWith('steam:')?'steam':'decky',available:true,hidden:prefs.hidden.includes(n.key)})),
  ...entries.filter(p=>p.selected&&p.name!=='Playhub').map(p=>({...p,key:`shortcut:${p.name}`,pluginName:p.name,kind:'shortcut'}))];
  tabs.sort((a,b)=>{const x=prefs.order.indexOf(a.key),y=prefs.order.indexOf(b.key);return(x<0?1e6:x)-(y<0?1e6:y);});

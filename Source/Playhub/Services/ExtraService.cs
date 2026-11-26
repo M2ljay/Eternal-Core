@@ -87,7 +87,7 @@ public sealed class ExtraService
         var themesDir = CssThemesDir;
         Directory.CreateDirectory(themesDir);
 
-        // Annota le cartelle di primo livello aggiunte (temi + Playhub.profile),
+        // Annota le cartelle di primo livello aggiunte (temi + Core.profile),
         // così "Rimuovi" cancella solo quelle senza toccare gli altri tuoi temi.
         string[] added;
         using (var archive = ZipFile.OpenRead(zip))
@@ -104,6 +104,11 @@ public sealed class ExtraService
         // Lo zip è già nel formato corretto: estrai direttamente in homebrew\themes.
         ZipFile.ExtractToDirectory(zip, themesDir, overwriteFiles: true);
 
+        // Core 3.3 renamed the bundled profiles and themes from Playhub to Core. Folders the
+        // previous install recorded and this one no longer ships are removed, so CSS Loader
+        // does not list both; a user's own theme is never in that record.
+        RemoveRetiredBundledThemes(themesDir, added);
+
         try
         {
             Directory.CreateDirectory(AppPaths.AppDataRoot);
@@ -113,7 +118,29 @@ public sealed class ExtraService
         {
         }
 
-        return Task.FromResult("Profili Playhub installati: Playhub e Playhub (Big Image Mode).");
+        return Task.FromResult("Profili Core installati: Core e Core (Big Image Mode).");
+    }
+
+    internal static readonly string[] RetiredBundledThemes =
+        { "Playhub.profile", "Playhub (Big Image Mode).profile", "Playhub-Design", "Playhub Collections" };
+
+    private static void RemoveRetiredBundledThemes(string themesDir, string[] added)
+    {
+        try
+        {
+            if (!File.Exists(CssThemeManifest)) return;
+            var recorded = File.ReadAllLines(CssThemeManifest);
+            foreach (var name in RetiredBundledThemes)
+            {
+                if (!recorded.Contains(name, StringComparer.OrdinalIgnoreCase) || added.Contains(name, StringComparer.OrdinalIgnoreCase)) continue;
+                var dir = Path.Combine(themesDir, name);
+                if (Directory.Exists(dir)) Directory.Delete(dir, recursive: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Diag.Crash("ExtraService.RemoveRetiredBundledThemes", ex);
+        }
     }
 
     private static string BundledThemesZip =>
@@ -125,7 +152,7 @@ public sealed class ExtraService
         {
             if (!File.Exists(CssThemeManifest))
             {
-                return Task.FromResult("Il profilo Playhub non è installato.");
+                return Task.FromResult("Il profilo Core non è installato.");
             }
 
             foreach (var name in File.ReadAllLines(CssThemeManifest))
@@ -143,12 +170,12 @@ public sealed class ExtraService
             }
 
             File.Delete(CssThemeManifest);
-            return Task.FromResult("Profili Playhub rimossi da CSS Loader.");
+            return Task.FromResult("Profili Core rimossi da CSS Loader.");
         }
         catch (Exception ex)
         {
             Diag.Crash("ExtraService.RemoveCssLoaderProfileAsync", ex);
-            return Task.FromResult("Non riesco a rimuovere il profilo Playhub. Riprova.");
+            return Task.FromResult("Non riesco a rimuovere il profilo Core. Riprova.");
         }
     }
 

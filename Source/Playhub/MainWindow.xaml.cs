@@ -3404,8 +3404,8 @@ public sealed partial class MainWindow : Window
 
         var css = Card();
         var cssText = new StackPanel { Spacing = 12, VerticalAlignment = VerticalAlignment.Center };
-        cssText.Children.Add(IconHeader(((char)0xE790).ToString(), "Tema Playhub per CSS Loader",
-            "Installa Playhub per lo stile classico e Playhub (Big Image Mode) per la modalità Big Image di Steam."));
+        cssText.Children.Add(IconHeader(((char)0xE790).ToString(), "Tema Core per CSS Loader",
+            "Installa Core per lo stile classico e Core (Big Image Mode) per la modalità Big Image di Steam."));
         var cssLoaderRow = new Grid { ColumnSpacing = 12 };
         cssLoaderRow.ColumnDefinitions.Add(new ColumnDefinition());
         cssLoaderRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -3503,8 +3503,8 @@ public sealed partial class MainWindow : Window
         var status = _cssLoaderInstaller.GetStatus(_settings.DeckyPluginsPath);
         var update = _cssLoaderInstaller.HasBundledUpdate(_settings.DeckyPluginsPath);
         _cssLoaderStatusText.Text = status.Installed
-            ? string.Format(T("CSS Loader {0} è pronto. Ora puoi applicare il profilo Playhub."), status.Version)
-            : T("Installa CSS Loader per usare il profilo Playhub.");
+            ? string.Format(T("CSS Loader {0} è pronto. Ora puoi applicare il profilo Core."), status.Version)
+            : T("Installa CSS Loader per usare il profilo Core.");
         _cssLoaderInstallButton.Content = T(update ? "Aggiorna" : "Installa");
         _cssLoaderInstallButton.Visibility = !status.Installed || update ? Visibility.Visible : Visibility.Collapsed;
         _cssLoaderRemoveButton.Visibility = status.Installed ? Visibility.Visible : Visibility.Collapsed;
@@ -3543,7 +3543,7 @@ public sealed partial class MainWindow : Window
     private async Task UninstallCssLoaderAsync()
     {
         if (_cssLoaderInstallBusy) return;
-        if (!await ConfirmAsync("Disinstallare CSS Loader?", "CSS Loader verrà rimosso. Il profilo Playhub resterà disponibile per una futura reinstallazione."))
+        if (!await ConfirmAsync("Disinstallare CSS Loader?", "CSS Loader verrà rimosso. Il profilo Core resterà disponibile per una futura reinstallazione."))
         {
             return;
         }

@@ -107,10 +107,10 @@ SOFTWARE.
      Controller Access/vendor/USBIP-Win2/LICENSE-BSD-2-Clause.txt.
 
 -------------------------------------------------------------------------------
-5) Playhub Collections  -  bundled CSS Loader theme by LoZazaMastro
+5) Core Collections (formerly Playhub Collections)  -  bundled CSS Loader theme by LoZazaMastro
    Clean implementation informed by layout concepts from Compact Collections
    by kinix and Custom Collection Layout by Charmics & Beebles. No source files
-   from those themes are redistributed in Playhub Collections.
+   from those themes are redistributed in Core Collections.
 
 Note: the bundled UWPHook.exe also embeds its own open-source dependencies
 (e.g. MaterialDesignThemes, Crc32.NET, Microsoft.PowerShell.SDK, Serilog), whose
