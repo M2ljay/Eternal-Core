@@ -1,0 +1,47 @@
+{
+  "name": "Core",
+  "author": "Eternal",
+  "version": "v1.0",
+  "manifest_version": 9,
+  "description": "Core by Eternal for Steam Big Picture: the Core wordmark on the Steam menu, crimson focus and tab markers, and notifications on AMOLED black with a crimson edge. Colours: crimson #D7263D, steel #C9D1D9, gunmetal #1A1D21, black #000.",
+  "inject": {
+    "menu.css": [
+      "SP",
+      "MainMenu",
+      "QuickAccess"
+    ],
+    "qam.css": [
+      "SP",
+      "MainMenu",
+      "QuickAccess"
+    ],
+    "notifications.css": [
+      "notificationtoasts.*"
+    ]
+  },
+  "patches": {
+    "Steam menu wordmark": {
+      "default": "Show",
+      "type": "dropdown",
+      "values": {
+        "Show": {},
+        "Hide": {}
+      },
+      "components": [
+        {
+          "name": "Wordmark image",
+          "type": "image-picker",
+          "on": "Show",
+          "default": "Core/core-wordmark.png",
+          "css_variable": "core-wordmark",
+          "tabs": [
+            "SP",
+            "MainMenu",
+            "QuickAccess"
+          ]
+        }
+      ]
+    }
+  },
+  "dependencies": {}
+}

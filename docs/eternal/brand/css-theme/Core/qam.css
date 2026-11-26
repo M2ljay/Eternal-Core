@@ -1,0 +1,50 @@
+/* Core by Eternal: Quick Access. Class names are Steam's readable module
+   names, which CSS Loader translates for the running Steam build. */
+
+/* One black surface: the tab rail matches the panel, with a thin gunmetal
+   divider between them. */
+.quickaccessmenu_Menu,
+.quickaccessmenu_HeaderContainer,
+.quickaccessmenu_Title,
+.quickaccessmenu_TabContentColumn,
+.quickaccessmenu_AllTabContents,
+.quickaccessmenu_ContentTransition,
+.quickaccessmenu_PanelSection,
+.quickaccessmenu_Tabs,
+.quickaccessmenu_TabsWithFooter,
+.quickaccessmenu_TabGroupPanel {
+    background: #000000 !important;
+}
+.quickaccessmenu_Tabs {
+    box-shadow: inset -1px 0 0 #1A1D21 !important;
+}
+
+/* Tabs sit flat; the open one is gunmetal with a crimson bar on its left
+   edge, the side the rail is read from. */
+.quickaccessmenu_Tab {
+    position: relative !important;
+    background: transparent !important;
+}
+.quickaccessmenu_Tab.quickaccessmenu_Selected {
+    background: #1A1D21 !important;
+}
+.quickaccessmenu_Tab.quickaccessmenu_Selected::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 20% !important;
+    bottom: auto !important;
+    width: 3px !important;
+    height: 60% !important;
+    border-radius: 2px !important;
+    background: #D7263D !important;
+}
+
+/* Header buttons (back, and a plugin's own actions) in gunmetal rather
+   than Steam's grey; crimson ring when focused. */
+:is(.quickaccessmenu_HeaderContainer, .quickaccessmenu_Title) :is(.DialogButton, button) {
+    background: #1A1D21 !important;
+}
+:is(.quickaccessmenu_HeaderContainer, .quickaccessmenu_Title) :is(.DialogButton, button):is(.gpfocus, :focus-visible) {
+    background: #D7263D !important;
+}

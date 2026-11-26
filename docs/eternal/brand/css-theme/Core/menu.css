@@ -1,0 +1,37 @@
+/* Core by Eternal: Steam menu. Classes are written in Steam's older hashed
+   form; CSS Loader translates them to the running Steam build. */
+
+/* The menu panel on AMOLED black. */
+._23IDiI-F_FxXotrgpY71r8 {
+    position: relative !important;
+    background: #000000 !important;
+}
+
+/* The Core ring and wordmark above the first item. */
+._23IDiI-F_FxXotrgpY71r8::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 57px;
+    left: 3px;
+    width: 202px;
+    height: 52px;
+    background: var(--core-wordmark) left center / contain no-repeat;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* A thin crimson line under the focused item: whatever Steam marks as
+   focused inside the menu panel. */
+._23IDiI-F_FxXotrgpY71r8 .gpfocus {
+    background-color: #1A1D21 !important;
+    box-shadow: inset 0 -3px 0 #D7263D !important;
+    background-image: linear-gradient(#D7263D, #D7263D) !important;
+    background-size: 100% 3px !important;
+    background-position: left bottom !important;
+    background-repeat: no-repeat !important;
+}
+
+/* The page you are on gets a crimson dot. */
+._1uLVHdiiCg78BRnhqLxUID {
+    background-color: #D7263D !important;
+}
