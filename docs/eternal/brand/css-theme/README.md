@@ -7,7 +7,10 @@
   stars (Eternal's space look; still under reduced motion), a gunmetal selected item with a
   3px crimson line.
 - Quick Access: black tab column and header, gunmetal selected tab with a crimson bar, gunmetal header buttons.
-- Notifications: black with a crimson edge and steel text.
+- Notifications: black with a crimson edge, white titles and icons, steel text.
+- Tidy-ups (option, off by default): crimson toggles, sliders, progress bars and selected play/download buttons; a
+  clear top bar; no Home labels, Library counts, "new" banners or input icons on covers; a still focus ring; a round
+  avatar; a tighter storage page. They replace ten single-job themes, written fresh for Core.
 
 Every `inject` entry names its windows (`SP`, `MainMenu`, `QuickAccess`): with an empty list CSS Loader injects the
 file nowhere. Selectors use Steam's older hashed (`._23IDiI-F_FxXotrgpY71r8`) or readable module names

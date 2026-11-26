@@ -1,8 +1,12 @@
-/* Core by Eternal: notifications on AMOLED black with a crimson edge and
-   steel body text. */
+/* Core by Eternal: notifications on AMOLED black with a crimson edge, white titles and
+   icons, steel body text. */
 .notificationcontent_ShortTemplate_nwer8.notificationcontent_ShortTemplate_nwer8 {
     background-color: #000000 !important;
     box-shadow: inset 4px 0 0 #D7263D !important;
+}
+.notificationcontent_ShortTemplate_nwer8 .notificationcontent_Title_3qzN6,
+.notificationcontent_ShortTemplate_nwer8 .notificationcontent_Icon_opgc6 {
+    color: #FDFDFD !important;
 }
 .notificationcontent_ShortTemplate_nwer8 .notificationcontent_Body_2RpDR {
     color: #C9D1D9 !important;

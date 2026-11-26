@@ -1,0 +1,59 @@
+/* Core by Eternal: tidy-ups. Ten small jobs that used to be ten separate themes, written
+   fresh for Core: crimson controls, a clear top bar, quieter Home and Library, round avatar,
+   still focus, tighter storage page. Off until checked on screen; then the old themes go. */
+
+/* Crimson for whatever is on, active or in progress. */
+.gamepaddialog_ToggleRail_2JtC3::before,
+.gamepadslider_SliderTrack_Mq25N::before,
+.gamepadslider_SliderNotchTick_Fv1Ht.gamepadslider_TickActive_1gnUV,
+.mainmenu_Item_2w9Tp .mainmenu_ActiveDot_1uLVH,
+.appportrait_UninstalledBar_kX-tI .appportrait_UninstalledProgressBar_mA39H,
+.header_HeaderDownloadProgressBar_AK_Ax,
+.appdetailsplaysection_DetailsProgressBar_1FnTq,
+.appdetailsachievementssection_AchievementProgress_3Rm36,
+.downloads_Button_3oavR {
+    background: #D7263D !important;
+    animation: none !important;
+}
+/* Play and download buttons, and positive context-menu items, when selected. */
+.BasicUI .appactionbutton_ButtonChild_2AzIX.Focusable:focus,
+.gamepadcontextmenu_contextMenuItem_1sdvo.gamepadcontextmenu_Focused_X813r.gamepadcontextmenu_Positive {
+    background: #D7263D !important;
+    color: #FFFFFF !important;
+}
+.BasicUI .appactionbutton_ButtonChild_2AzIX.Focusable:focus > svg,
+.BasicUI .appactionbutton_ButtonChild_2AzIX.Focusable:focus .appactionbutton_ButtonText_33cnX,
+.appactionbutton_PlayButton_3ydig.gpfocus > .appactionbutton_ButtonText_33cnX {
+    color: #FFFFFF !important;
+}
+
+/* Top bar: clear, so Home's art and the black show through. */
+.header_Header_1E_SL,
+.header_Header_1E_SL::before {
+    background-color: transparent !important;
+}
+
+/* Home and Library: fewer labels. */
+.basicgamecarousel_CarouselGameLabel_3CKji { visibility: hidden !important; }
+.gamepadlibrary_GamepadLibrary_ZBBhe span.gamepadtabbedpage_TabCount_1ui4I { display: none !important; }
+.appportrait_AppPortraitBannerContainer_2jj5T { display: none !important; }
+._3BPFqWN5T-x8njyrRYM1CX { display: none !important; }
+
+/* Focus: the selection holds still instead of pulsing. */
+.BasicUI .appportrait_LibraryItemBox_WYgDg.Focusable:focus,
+.focusring_FocusRing_1IZrQ {
+    animation: none !important;
+}
+
+/* Your avatar: just the round picture, no frame or status ring. */
+#header_profile { padding-left: 6px !important; padding-right: 0 !important; }
+#header_profile .avatar { border-radius: 50% !important; box-shadow: none !important; }
+#header_profile .avatarFrame { display: none !important; }
+#header_profile .avatarStatus { width: 0 !important; }
+
+/* Storage settings: no wasted padding. */
+.BasicUI .contentmanagement_ContentManagement_3wk64,
+.BasicUI .contentmanagement_LibraryContent_ybEU2 { padding: 0 !important; }
+.BasicUI .contentmanagement_PageableCarousel_1XRwl { margin: 0 !important; }
+.DialogContent.gamepadpagedsettings_PagedSettingsDialog_PageContent_wIOLO { padding-bottom: 0 !important; }
+.contentmanagement_AppsGrid_2n6FN .contentmanagement_AppHeader_3_uaa { padding-top: 0 !important; }
