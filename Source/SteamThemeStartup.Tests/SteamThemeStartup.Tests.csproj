@@ -13,6 +13,8 @@
     <Compile Include="../GamingModeAgent/GamingMode.Services/SteamInstallationPath.cs" Link="SteamInstallationPath.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/ValveImageTrust.cs" Link="ValveImageTrust.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/SplashScreenService.cs" Link="SplashScreenService.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/BootSequencePolicy.cs" Link="BootSequencePolicy.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/BootSequenceVisual.cs" Link="BootSequenceVisual.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/GamingSplashSettings.cs" Link="GamingSplashSettings.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/ModeKind.cs" Link="ModeKind.cs" />
     <Compile Include="../Shared/SplashLogoScale.cs" Link="SplashLogoScale.cs" />

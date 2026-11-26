@@ -102,6 +102,20 @@ jobs:
         working-directory: Source/GamingModeDeckyPlugin
         run: node --test tests/steamOwnedLaunchDispatcher.test.mjs tests/controlledQamIntegration.test.mjs
 
+      # Mark III: TV protocol and policy (against a fake TV), Steam update hold and client backup,
+      # Decky heartbeat health, boot sequence decisions and the agent's 12-language text.
+      - name: Mark III tests
+        working-directory: Source/MarkIII.Tests
+        run: dotnet run -c Release
+
+      - name: Mark III Big Picture plugin tests (heartbeat, Core Repair tile, optional startup)
+        working-directory: Source/GamingModeDeckyPlugin
+        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs
+
+      # The agent's WPF and Windows code builds only here; fail fast before packaging.
+      - name: Compile the Gaming Mode agent
+        run: dotnet build Source/GamingModeAgent/GamingMode.csproj -c Release
+
       - name: Build installer
         shell: pwsh
         run: ./Source/PlayhubSetup/build-update-preview.ps1
