@@ -90,6 +90,71 @@ foreach (var language in LocalizationService.Languages.Where(language => languag
 }
 Check(eternalMarkII.All(key => LocalizationService.Translate("it", key) == key), "Mark II Italian source strings render as written");
 
+// Eternal Core Mark III: Gaming Mode page strings (MainWindow.MarkIII.cs and the Steam updates card),
+// new ones and the upstream TV-card strings they reuse, must exist in every language.
+string[] eternalMarkIII =
+{
+    "Sequenza di avvio",
+    "All'accensione e al risveglio mostra il logo Eternal e poi quello di Core prima della Big Picture. Un tasto qualsiasi del controller la salta.",
+    "Mostra la sequenza di avvio",
+    "Circa sette secondi su sfondo nero. Non ritarda mai Steam: se qualcosa non va, la Gaming Mode parte comunque.",
+    "Suono di avvio",
+    "Il suono arcade che accompagna la sequenza.",
+    "Controllo della TV",
+    "Core accende la TV e passa al suo ingresso quando entra in Gaming Mode, e la spegne quando va in sospensione o si spegne.",
+    "Spegni la TV con Core",
+    "Quando Core va in sospensione o si spegne, spegne la TV solo se sta mostrando Core. Se qualcuno guarda altro, la TV resta accesa.",
+    "Cerca la TV",
+    "Sulla TV attiva Impostazioni > Generali > Mobile TV On > Accendi tramite Wi-Fi, e Quick Start+. Al primo abbinamento accetta la richiesta sulla TV con il telecomando.",
+    "Il servizio Gaming Mode non risponde.",
+    "TV trovata: {0}",
+    "Nessuna TV LG trovata in rete. Inserisci l'indirizzo IP a mano.",
+    "Inserisci prima l'indirizzo IP della TV.",
+    "Accetta la richiesta sulla TV con il telecomando.",
+    "TV abbinata.",
+    "Fatto.",
+    "Abbina prima la TV.",
+    "Abbinamento rifiutato sulla TV.",
+    "La richiesta sulla TV non \u00e8 stata accettata in tempo.",
+    "La TV non risponde. Controlla che sia accesa e sulla stessa rete.",
+    "Non riesco a controllare la TV.",
+    "Aggiorna Steam ora",
+    "Apri Core Repair",
+    "Se i plugin di Big Picture non si caricano, Core lo dice con un breve avviso. Core Repair, nella libreria di Steam, li ripara usando il controller, anche senza Decky.",
+    "Avviso se i plugin non si caricano",
+    "Un messaggio breve sopra Big Picture, mai durante un gioco. Steam e i giochi funzionano comunque.",
+    "Un aggiornamento \u00e8 gi\u00e0 in corso.",
+    "Aggiornamento di Steam avviato. Core salva prima una copia di Steam e torna tra qualche minuto.",
+    "Steam resta a questa versione ancora per {0} giorni, o finch\u00e9 scegli di aggiornarlo.",
+    "Trenta giorni passati: Core aggiorner\u00e0 Steam la prossima volta che non stai giocando.",
+    "Steam si aggiorna da solo, come al solito.",
+    "Core tiene ferma la versione di Steam finch\u00e9 scegli tu, al massimo per 30 giorni. Prima di aggiornare salva una copia di Steam e controlla che i plugin tornino; se si rompono puoi tornare indietro.",
+    "Trattieni gli aggiornamenti di Steam",
+    "Accensione via Wake-on-LAN, spegnimento e HDMI tramite abbinamento locale webOS.",
+    "Indirizzo IP",
+    "Indirizzo MAC",
+    "Ingresso HDMI",
+    "Accendi all'avvio del PC",
+    "Passa a questo HDMI all'avvio",
+    "Abbina",
+    "Accendi ora",
+    "Passa a HDMI",
+    "Spegni"
+};
+foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
+{
+    foreach (var key in eternalMarkIII)
+    {
+        var translated = LocalizationService.Translate(language.Key, key);
+        if (string.IsNullOrWhiteSpace(translated) || translated == key)
+            throw new Exception($"Mark III string is not translated: {language.Key}/{key}");
+        if (!Tokens(translated).SequenceEqual(Tokens(key)))
+            throw new Exception($"Mark III string format token mismatch: {language.Key}/{key}");
+    }
+    Check(true, $"{language.Key}: {eternalMarkIII.Length} Mark III strings translate");
+}
+Check(eternalMarkIII.All(key => LocalizationService.Translate("it", key) == key), "Mark III Italian source strings render as written");
+
 // Eternal Core rebrand (docs/eternal/REBRAND.md): the app is called Core everywhere the user reads it.
 // "Playhub" stays only where it names something that still carries that name: the upstream project in
 // the credits, the upstream Playhub-* plugin suite, the CSS Loader profile that is

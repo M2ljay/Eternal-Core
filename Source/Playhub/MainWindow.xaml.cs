@@ -2281,6 +2281,8 @@ public sealed partial class MainWindow : Window
         panel.Children.Add(startCard);
         panel.Children.Add(CardsRow(screenCard, inputCard));
         panel.Children.Add(BuildAntiCheatCard());
+        panel.Children.Add(CardsRow(BuildBootSequenceCard(), BuildCoreRepairCard()));
+        panel.Children.Add(BuildTvCard());
 
         // ---------- Splash logo with live preview ----------
         _splashLogoCombo = ChoiceCombo(SplashLogoOptions);
@@ -3658,11 +3660,13 @@ public sealed partial class MainWindow : Window
         // Un interruttore, non due pulsanti: lo stato attuale si legge dalla presenza di
         // steam.cfg, così la card dice sempre come sta davvero il sistema.
         var steamUpdates = Card();
+        // Mark III: a hold, not a permanent block. The agent counts at most 30 days, then
+        // updates Steam at the next idle moment, after a backup and with a plugin check.
         steamUpdates.Children.Add(IconHeader(((char)0xE72E).ToString(), "Aggiornamenti di Steam",
-            "Mantieni la versione attuale di Steam. Puoi riattivare gli aggiornamenti in qualsiasi momento."));
+            "Core tiene ferma la versione di Steam finché scegli tu, al massimo per 30 giorni. Prima di aggiornare salva una copia di Steam e controlla che i plugin tornino; se si rompono puoi tornare indietro."));
         var steamUpdatesToggle = new ToggleSwitch
         {
-            Header = "Blocca gli aggiornamenti di Steam",
+            Header = "Trattieni gli aggiornamenti di Steam",
             IsOn = _extra.IsSteamUpdateBlockApplied()
         };
         _steamUpdateBlockToggle = steamUpdatesToggle;
@@ -3698,6 +3702,7 @@ public sealed partial class MainWindow : Window
             }
         };
         steamUpdates.Children.Add(steamUpdatesToggle);
+        steamUpdates.Children.Add(BuildSteamHoldActions());
         var steamClient = Card();
         steamClient.Children.Add(IconHeader(((char)0xE896).ToString(), "Backup della versione di Steam",
             "Mette da parte la versione di Steam che hai adesso, così puoi tornarci se un aggiornamento futuro rompe qualcosa. Salva solo il programma: i giochi, i salvataggi e le tue configurazioni restano dove sono."));
@@ -7099,6 +7104,7 @@ by Valve.";
         _gamingConfig.Gaming.Splash.MinVisibleMs = (int)_splashMinBox.Value;
         _gamingConfig.Gaming.Splash.MaxVisibleMs = (int)_splashMaxBox.Value;
         ReadTogglesIntoConfig();
+        ReadMarkIIIIntoConfig();
         try
         {
             await _gamingMode.SaveConfigAsync(_gamingConfig);
@@ -8204,6 +8210,7 @@ by Valve.";
         _splashMinBox.Value = _gamingConfig.Gaming.Splash.MinVisibleMs;
         _splashMaxBox.Value = _gamingConfig.Gaming.Splash.MaxVisibleMs;
         WriteConfigIntoToggles();
+        WriteMarkIIIIntoControls();
         UpdateModeTiles();
         UpdateLogoPreview();
         _loadingGaming = false;

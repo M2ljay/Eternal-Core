@@ -158,6 +158,16 @@ public partial class App : Application
             }
             return true;
         }
+        // Mark III: Core Repair's "Update Decky", started headless by the Gaming Mode agent.
+        if (parsed.Count > 0 && string.Equals(parsed[0], "decky-update", StringComparison.OrdinalIgnoreCase))
+        {
+            if (parsed.Count == 2 && Guid.TryParseExact(parsed[1], "N", out var deckyRequest))
+            {
+                try { await CoreRepairDeckyCommand.RunAsync(deckyRequest); }
+                catch (Exception error) { Diag.Crash("Core Repair Decky update receipt", error); }
+            }
+            return true;
+        }
         if (parsed.Count >= 3 && string.Equals(parsed[0], "uwp-launch", StringComparison.OrdinalIgnoreCase))
         {
             var extraArgs = parsed.Count > 3 ? string.Join(' ', parsed.GetRange(3, parsed.Count - 3)) : string.Empty;

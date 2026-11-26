@@ -63,6 +63,9 @@ public sealed class GamingOptions
     public bool DashboardEnabled { get; set; } = true;
     public bool ManageAudio { get; set; }
     public SplashOptions Splash { get; set; } = new();
+    // Mark III (Eternal Core). Defaults must match the agent's GamingMode.Models.
+    public TvOptions Tv { get; set; } = new();
+    public bool DeckyHealthNoticeEnabled { get; set; } = true;
     public List<StartupAppConfig> CustomStartupApps { get; set; } = new();
 
     // Qui finiscono le opzioni che vivono solo lato agente - fra cui le app
@@ -85,6 +88,22 @@ public sealed class SplashOptions
     public string? LogoPath { get; set; }
     public int MinVisibleMs { get; set; } = 1200;
     public int MaxVisibleMs { get; set; } = 120000;
+    // Mark III boot sequence (Eternal, then Core) and its sound.
+    public bool BootSequenceEnabled { get; set; } = true;
+    public bool BootSoundEnabled { get; set; } = true;
+}
+
+// Mark III LG webOS TV control; must match GamingModeAgent/GamingMode.Models/TvSettings.cs.
+// The pairing key is never here: the agent keeps it encrypted in its own file.
+public sealed class TvOptions
+{
+    public bool Enabled { get; set; }
+    public string Brand { get; set; } = "lg-webos";
+    public string? Address { get; set; }
+    public string? MacAddress { get; set; }
+    public string CoreInput { get; set; } = "HDMI_2";
+    public bool TurnOnWithCore { get; set; } = true;
+    public bool TurnOffWithCore { get; set; } = true;
 }
 
 public sealed class StartupAppConfig
