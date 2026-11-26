@@ -50,8 +50,10 @@ Quick Access > Core > **Voice** has a big button that mutes your microphone (bot
 default microphones when they differ, each restored exactly afterwards), with a crimson mark
 in Steam's top bar while muted and a Ctrl+Alt+M shortcut you can bind to a Steam chord. **Xbox
 party** opens the Xbox Game Bar over Big Picture, and Core brings Big Picture back when the Game
-Bar closes. Details, what Core cannot do (party invites) and a checklist for the TV:
-[CORE-VOICE.md](CORE-VOICE.md).
+Bar closes. A **Calls mic** picker makes a microphone (for example a DJI wireless receiver) Windows'
+default for calls, and again whenever it is plugged back in; **Mute** chooses between muting
+everything (the default) and calls only. Details, what Core cannot do (party invites) and a
+checklist for the TV: [CORE-VOICE.md](CORE-VOICE.md).
 
 ## Screensaver: Core Starfield
 
@@ -175,7 +177,10 @@ do it. The per-feature checklists in [CORE-HEALTH.md](CORE-HEALTH.md#at-the-tv) 
    `python -I check_classes.py %USERPROFILE%\homebrew\themes\css_translations.json Core` reports no *NOT FOUND*.
 6. If your call headset differs from your default microphone, open Windows sound settings > Input once and note both
    devices (for the mute check below).
-7. Shut the PC down and turn the TV off.
+7. **Calls mic:** plug the DJI receiver into Core and check that Windows sound settings > Input lists it (note its
+   name, for example *Wireless Microphone RX*). Install a recording app you can leave open at the TV (OBS, or Windows'
+   Sound Recorder) and set it to record from the **default** microphone.
+8. Shut the PC down and turn the TV off.
 
 ### At the TV
 
@@ -205,6 +210,32 @@ do it. The per-feature checklists in [CORE-HEALTH.md](CORE-HEALTH.md#at-the-tv) 
    - With two different default microphones, mute only one in Windows: *Microphone partly muted*, the mark shows,
      Health says *Partly muted*.
    - Bind a Steam chord to **Ctrl+Alt+M** and try it in Big Picture and in a game.
+   - **Calls mic, pick:** the **Calls mic** list shows each microphone by name, with *calls* and *games and apps* next
+     to the current Windows defaults. Pick the DJI receiver with the controller: it is marked *calls* and the line says
+     *Connected and used for calls*. Turn on **Use for everything**: it is marked *games and apps* too. Turn it off
+     again (Windows keeps it as the games and apps default; that is expected). Health's *Microphone* row says
+     *Live · <DJI name>*.
+   - **Calls mic, unplug:** unplug the receiver. Within a few seconds the line says *Not connected. Calls use Windows'
+     default microphone.*, the list shows *<DJI name> (not connected)*, Health says *Live · calls mic not connected*
+     with no crimson and no notice. `agent.log`: *Calls mic not connected* (once).
+   - **Calls mic, replug:** plug it back: within a few seconds it is marked *calls* again (`agent.log`: *The calls mic
+     is back*). Try a different USB port too: it is still found (*following it by name*).
+   - **Calls mic, changed in Windows:** from the desktop, make another microphone the default communication device in
+     Windows' Sound settings. Back in Quick Access the line says *Windows uses another microphone for calls*; unplug
+     and replug the receiver: Core does **not** take the default back. Pick the DJI again in Core: it is the calls
+     default again.
+   - **Battery:** no battery level is shown for the receiver (Windows does not report one for a USB audio receiver;
+     check it on the receiver's own screen).
+   - **Mute scope, everything:** with the DJI as calls mic and the recording app open on the webcam (or another
+     games-and-apps default), press the mic button: both are muted and the recording is silent. Unmute: both live.
+   - **Mute scope, calls only:** set **Mute** to *Mute calls only*. Press the mic button: the DJI is muted (a party
+     hears nothing), the recording app on the other microphone keeps recording sound, and the top-bar mark and Health
+     say *Muted*. Switch the recording app to the DJI itself: it is silent too (Windows mutes a microphone for every
+     app). Unmute: the DJI is live.
+   - **Mute scope, changed while muted:** mute under *Mute everything*, then switch to *Mute calls only*: the other
+     microphone comes back live and the DJI stays muted. Switch back: both muted. Unmute: both as they were.
+   - **Calls only, unplugged while muted:** mute (calls only), unplug the DJI, unmute in Core, plug it back: it comes back
+     live within a few seconds (`agent.log`: *A microphone Core had muted is back*).
 6. **Voice, Xbox party:** press **Xbox party**: Quick Access closes and the Game Bar opens over Big Picture. Open
    *Xbox Social* if needed and start or join a party (or a Discord call). Check that nobody hears you while muted, and
    that game volume no longer drops during the call. Close the Game Bar with **B** (or Esc), and once with the Steam

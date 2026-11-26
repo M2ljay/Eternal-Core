@@ -95,6 +95,22 @@ test("every language has every line, with the same placeholders", () => {
   assert.equal(healthCopy("xx").title, "Health");
 });
 
+test("microphone row: the calls mic's name and connected or not, information only, no battery", () => {
+  const row = (data, state = "live", level = "ok") => healthLines({ attention: 0, rows: [{ id: "microphone", level, state, data: { state, ...data } }] }, "en", now)[0];
+  const active = row({ callsMic: "Microphone (Wireless Microphone RX)", callsMicStatus: "active" });
+  assert.equal(active.value, "Live · Microphone (Wireless Microphone RX)");
+  assert.deepEqual([...active.details], ["Calls mic: Microphone (Wireless Microphone RX)", "Connected and used for calls."]);
+  const absent = row({ callsMic: "Microphone (Wireless Microphone RX)", callsMicStatus: "absent" });
+  assert.equal(absent.value, "Live · calls mic not connected");
+  assert.equal(absent.level, "ok", "not connected stays calm");
+  assert.equal(absent.tone, undefined);
+  assert.ok(absent.details.includes("Not connected. Calls use Windows' default microphone."));
+  assert.equal(row({ callsMicStatus: "none" }).value, "Live", "no calls mic chosen: as before");
+  assert.equal(row({}).value, "Live");
+  assert.equal(row({ callsMic: "X", callsMicStatus: "absent" }, "muted", "info").tone, "crimson", "a muted mic stays crimson");
+  assert.ok(!/battery|%/i.test(JSON.stringify(active)), "no battery shown");
+});
+
 test("sizes and times", () => {
   assert.equal(formatBytes(2e12, "en"), "2 TB");
   assert.equal(formatBytes(1.5e9, "en"), "1.5 GB");

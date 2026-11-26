@@ -115,6 +115,7 @@ internal sealed partial class MarkIIIHost
 		catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException) { }
 		(bool known, PlayhubUpdateService.UpdateInfo? update) = PlayhubUpdateNotice.Shared?.Peek() ?? (false, (PlayhubUpdateService.UpdateInfo?)null);
 		bool? updateAvailable = known && update is not null ? update.IsNewer && !string.IsNullOrWhiteSpace(update.DownloadUrl) : null;
+		(string? State, string? CallsMicName, string? CallsMicStatus) mic = MicHealth();
 		return CoreHealthPolicy.Evaluate(new CoreHealthInputs
 		{
 			Now = now, ServerName = gaming.CoreHealthServer, ServerRead = read, Server = status,
@@ -122,7 +123,7 @@ internal sealed partial class MarkIIIHost
 			TvEnabled = tv.Enabled, TvPaired = paired, TvReachable = tvReachable,
 			PcDrive = systemDrive, PcFreeBytes = free, PcTotalBytes = total,
 			CoreVersion = EternalRelease.Version, LatestCoreVersion = known ? update?.LatestVersion : null, CoreUpdateAvailable = updateAvailable,
-			Microphone = MicCode(),
+			Microphone = mic.State, CallsMicName = mic.CallsMicName, CallsMicStatus = mic.CallsMicStatus,
 		});
 	}
 

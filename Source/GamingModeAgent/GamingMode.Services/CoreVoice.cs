@@ -30,12 +30,22 @@ namespace GamingMode.Services;
 //    state is known; otherwise Core launches the documented ms-gamebar://launch/ URI (no keystroke
 //    reaches a game, anti-cheat or not), and if that fails says so instead of falling back to keys.
 //    A user-configured ms-gamebar: URI (gaming.voicePartyUri) replaces the default URI.
+// 3. Mute scope. "Mute everything" (the default) is item 1. "Mute calls only" mutes just the
+//    Communications default, so the Console default (games, apps, recording) stays live. Windows
+//    mutes an endpoint for every app at once, so any app recording from the calls mic is muted too.
+// 4. Calls mic. The user picks a capture device to be the Communications default (optionally the
+//    Console default too). Core remembers it by endpoint id and makes it the default again when it
+//    reappears, unless the user chose another default in Windows meanwhile (CallsMicPolicy).
 
 internal enum MicState { None, Live, Muted, Partial }
 
+// Which endpoints Core's mute covers: every default (All) or only the Communications default (Calls).
+internal enum MicScope { All, Calls }
+
 // One active capture endpoint. IsDefault: the default for the Console or Communications role;
-// IsCommunications: the Communications default (the one voice calls use).
-internal sealed record MicEndpoint(string Id, bool Muted, bool IsDefault, bool IsCommunications = false);
+// IsCommunications: the Communications default (the one voice calls use); IsConsole: the Console
+// default (games, apps). Name: Windows' friendly name, for the picker only.
+internal sealed record MicEndpoint(string Id, bool Muted, bool IsDefault, bool IsCommunications = false, bool IsConsole = false, string? Name = null);
 
 // What Core remembers between restarts (%APPDATA%\GamingMode\mic-mute.json).
 internal sealed record MicMuteState
@@ -67,9 +77,18 @@ internal static class MicMutePolicy
 {
 	internal const int MaxRemembered = 16;
 
-	internal static MicState Observe(IReadOnlyList<MicEndpoint> endpoints)
+	// The endpoints the mute covers. Calls scope: the Communications default; when Windows reports
+	// none, every default (so the button never does nothing while a microphone is live).
+	internal static List<MicEndpoint> Targets(IReadOnlyList<MicEndpoint> endpoints, MicScope scope = MicScope.All)
 	{
-		var defaults = Distinct(endpoints).Where(endpoint => endpoint.IsDefault).ToList();
+		List<MicEndpoint> present = Distinct(endpoints).ToList();
+		if (scope == MicScope.Calls && present.Any(endpoint => endpoint.IsCommunications)) return present.Where(endpoint => endpoint.IsCommunications).ToList();
+		return present.Where(endpoint => endpoint.IsDefault).ToList();
+	}
+
+	internal static MicState Observe(IReadOnlyList<MicEndpoint> endpoints, MicScope scope = MicScope.All)
+	{
+		var defaults = Targets(endpoints, scope);
 		if (defaults.Count == 0) return MicState.None;
 		if (defaults.All(endpoint => endpoint.Muted)) return MicState.Muted;
 		return defaults.Any(endpoint => endpoint.Muted) ? MicState.Partial : MicState.Live;
@@ -77,9 +96,9 @@ internal static class MicMutePolicy
 
 	// Which way the button goes: the Communications default decides when the defaults disagree
 	// (calls use it); without one, partial counts as live, so the button mutes everything.
-	internal static bool ActsMuted(IReadOnlyList<MicEndpoint> endpoints)
+	internal static bool ActsMuted(IReadOnlyList<MicEndpoint> endpoints, MicScope scope = MicScope.All)
 	{
-		MicState state = Observe(endpoints);
+		MicState state = Observe(endpoints, scope);
 		if (state != MicState.Partial) return state == MicState.Muted;
 		MicEndpoint? communications = Distinct(endpoints).FirstOrDefault(endpoint => endpoint.IsCommunications);
 		return communications?.Muted ?? false;
@@ -91,13 +110,13 @@ internal static class MicMutePolicy
 	internal static string? CommunicationsCode(IReadOnlyList<MicEndpoint> endpoints) =>
 		Distinct(endpoints).FirstOrDefault(endpoint => endpoint.IsCommunications) is { } communications ? communications.Muted ? "muted" : "live" : null;
 
-	internal static MicPlan Mute(MicMuteState state, IReadOnlyList<MicEndpoint> endpoints)
+	internal static MicPlan Mute(MicMuteState state, IReadOnlyList<MicEndpoint> endpoints, MicScope scope = MicScope.All)
 	{
 		var before = new Dictionary<string, bool>(state.CoreMuted ? state.Before : new Dictionary<string, bool>(), StringComparer.Ordinal);
 		// A pending endpoint (absent since the last unmute) keeps its own value as the one to restore.
 		foreach ((string id, bool wasMuted) in state.Pending) before.TryAdd(id, wasMuted);
 		var changes = new List<MicChange>();
-		foreach (MicEndpoint endpoint in Distinct(endpoints).Where(endpoint => endpoint.IsDefault))
+		foreach (MicEndpoint endpoint in Targets(endpoints, scope))
 		{
 			if (!before.ContainsKey(endpoint.Id)) before[endpoint.Id] = endpoint.Muted;
 			if (!endpoint.Muted) changes.Add(new MicChange(endpoint.Id, true));
@@ -110,7 +129,7 @@ internal static class MicMutePolicy
 	// stays recorded as pending and is restored when it reappears (Reconcile). Endpoints Core never
 	// touched keep theirs. Core's mute off (the microphone was muted elsewhere): "unmute" means a live
 	// microphone, so every muted default is unmuted.
-	internal static MicPlan Unmute(MicMuteState state, IReadOnlyList<MicEndpoint> endpoints)
+	internal static MicPlan Unmute(MicMuteState state, IReadOnlyList<MicEndpoint> endpoints, MicScope scope = MicScope.All)
 	{
 		var present = Distinct(endpoints).ToDictionary(endpoint => endpoint.Id, StringComparer.Ordinal);
 		var changes = new List<MicChange>();
@@ -125,7 +144,7 @@ internal static class MicMutePolicy
 		}
 		else
 		{
-			foreach (MicEndpoint endpoint in present.Values.Where(endpoint => endpoint.IsDefault && endpoint.Muted)) changes.Add(new MicChange(endpoint.Id, false));
+			foreach (MicEndpoint endpoint in Targets(endpoints, scope).Where(endpoint => endpoint.Muted)) changes.Add(new MicChange(endpoint.Id, false));
 		}
 		// Older pending records stay until their endpoint comes back.
 		foreach ((string id, bool wasMuted) in state.Pending)
@@ -138,26 +157,46 @@ internal static class MicMutePolicy
 		return new MicPlan(new MicMuteState { Pending = TrimPending(pending) }, changes, log);
 	}
 
-	internal static MicPlan Toggle(MicMuteState state, IReadOnlyList<MicEndpoint> endpoints) =>
-		ActsMuted(endpoints) ? Unmute(state, endpoints) : Mute(state, endpoints);
+	internal static MicPlan Toggle(MicMuteState state, IReadOnlyList<MicEndpoint> endpoints, MicScope scope = MicScope.All) =>
+		ActsMuted(endpoints, scope) ? Unmute(state, endpoints, scope) : Mute(state, endpoints, scope);
 
 	// Run on a default-device change, on resume and every few seconds while Core's mute is on or an
 	// endpoint is pending.
-	internal static MicPlan Reconcile(MicMuteState state, IReadOnlyList<MicEndpoint> endpoints)
+	internal static MicPlan Reconcile(MicMuteState state, IReadOnlyList<MicEndpoint> endpoints, MicScope scope = MicScope.All)
 	{
 		if (!state.CoreMuted) return RestorePending(state, endpoints);
-		List<MicEndpoint> present = Distinct(endpoints).ToList();
-		MicEndpoint? unmutedElsewhere = present.FirstOrDefault(endpoint => endpoint.IsDefault && !endpoint.Muted && state.Before.ContainsKey(endpoint.Id));
+		List<MicEndpoint> targets = Targets(endpoints, scope);
+		MicEndpoint? unmutedElsewhere = targets.FirstOrDefault(endpoint => !endpoint.Muted && state.Before.ContainsKey(endpoint.Id));
 		if (unmutedElsewhere is not null)
 		{
-			MicPlan restore = Unmute(state, endpoints);
+			MicPlan restore = Unmute(state, endpoints, scope);
 			return restore with { Log = "A microphone Core had muted was unmuted outside Core; Core's mute ends and the others are restored." };
 		}
-		List<MicEndpoint> fresh = present.Where(endpoint => endpoint.IsDefault && !state.Before.ContainsKey(endpoint.Id)).ToList();
+		List<MicEndpoint> fresh = targets.Where(endpoint => !state.Before.ContainsKey(endpoint.Id)).ToList();
 		if (fresh.Count == 0) return new MicPlan(state, Array.Empty<MicChange>(), null);
-		MicPlan mute = Mute(state, endpoints);
+		MicPlan mute = Mute(state, endpoints, scope);
 		return mute with { Log = fresh.Any(endpoint => !endpoint.Muted) ? "A new default microphone appeared while Core's mute is on; muted it too." : null };
 	}
+
+	// The scope changed while Core's mute is on: as if unmuted (each recorded endpoint gets its own
+	// value back, an absent one stays recorded) and muted again under the new scope, in one plan, so
+	// nothing is restored twice and no record is lost. Core's mute off: nothing to do.
+	internal static MicPlan ChangeScope(MicMuteState state, IReadOnlyList<MicEndpoint> endpoints, MicScope scope)
+	{
+		if (!state.CoreMuted) return new MicPlan(state, Array.Empty<MicChange>(), null);
+		List<MicEndpoint> present = Distinct(endpoints).ToList();
+		MicPlan unmute = Unmute(state, present);
+		var after = present.Select(endpoint => unmute.Changes.LastOrDefault(change => change.Id == endpoint.Id) is { } change ? endpoint with { Muted = change.Mute } : endpoint).ToList();
+		MicPlan mute = Mute(unmute.Next, after, scope);
+		var final = after.ToDictionary(endpoint => endpoint.Id, endpoint => endpoint.Muted, StringComparer.Ordinal);
+		foreach (MicChange change in mute.Changes) final[change.Id] = change.Mute;
+		var changes = present.Where(endpoint => final[endpoint.Id] != endpoint.Muted).Select(endpoint => new MicChange(endpoint.Id, final[endpoint.Id])).ToList();
+		return new MicPlan(mute.Next, changes, $"Mute scope is now {(scope == MicScope.Calls ? "calls only" : "everything")}; Core's mute follows it.");
+	}
+
+	internal static MicScope ParseScope(string? value) => string.Equals(value, "calls", StringComparison.OrdinalIgnoreCase) ? MicScope.Calls : MicScope.All;
+
+	internal static string ScopeCode(MicScope scope) => scope == MicScope.Calls ? "calls" : "all";
 
 	// Core's mute off: a pending endpoint that is back gets its own mute and its record is dropped.
 	private static MicPlan RestorePending(MicMuteState state, IReadOnlyList<MicEndpoint> endpoints)
@@ -189,7 +228,12 @@ internal static class MicMutePolicy
 	private static IEnumerable<MicEndpoint> Distinct(IEnumerable<MicEndpoint> endpoints) =>
 		endpoints.Where(endpoint => !string.IsNullOrEmpty(endpoint.Id))
 			.GroupBy(endpoint => endpoint.Id, StringComparer.Ordinal)
-			.Select(group => group.First() with { IsDefault = group.Any(endpoint => endpoint.IsDefault), IsCommunications = group.Any(endpoint => endpoint.IsCommunications) });
+			.Select(group => group.First() with
+			{
+				IsDefault = group.Any(endpoint => endpoint.IsDefault || endpoint.IsCommunications || endpoint.IsConsole),
+				IsCommunications = group.Any(endpoint => endpoint.IsCommunications),
+				IsConsole = group.Any(endpoint => endpoint.IsConsole),
+			});
 
 	private static Dictionary<string, bool> TrimPending(Dictionary<string, bool> pending) =>
 		pending.Count <= MaxRemembered ? pending : pending.Take(MaxRemembered).ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
@@ -229,6 +273,193 @@ internal static class MicMutePolicy
 		if (state.IsEmpty) { try { File.Delete(path); } catch (IOException) { } return; }
 		string temporary = path + ".tmp";
 		File.WriteAllText(temporary, JsonSerializer.Serialize(state, Json));
+		File.Move(temporary, path, true);
+	}
+}
+
+// ---------- calls mic: which capture device is the Communications default ----------
+
+// Windows roles Core sets (ERole): Communications for calls; with "Use for everything", Console (and
+// Multimedia with it, as Windows' own Sound panel does) for games and apps.
+internal enum MicRole { Communications, Console }
+
+internal sealed record DefaultChange(string Id, MicRole Role);
+
+internal enum DefaultSetResult { Done, Refused, Unavailable }
+
+// Setting a default device. Windows has no documented API for it; the one implementation
+// (CoreVoice.Windows.cs, PolicyConfigDefaultMic) uses the undocumented IPolicyConfig COM interface,
+// so it stays behind this seam and every failure comes back as a result, never an exception.
+internal interface IDefaultMicSetter
+{
+	DefaultSetResult SetDefault(string id, MicRole role);
+}
+
+// What Core remembers (%APPDATA%\GamingMode\voice-settings.json, written only by the agent).
+internal sealed record VoiceSettings
+{
+	public string? CallsMicId { get; init; }
+	// Last friendly name seen, shown while the device is absent and used to find it again when
+	// Windows gives it a new endpoint id (plugged into another USB port).
+	public string? CallsMicName { get; init; }
+	public bool UseForEverything { get; init; }
+	// "all" (default) or "calls".
+	public string MuteScope { get; init; } = "all";
+	// Core's choice is in force. False once the user picked another default in Windows (respected
+	// until he picks again in Core) or when Windows refused the change.
+	public bool Applied { get; init; }
+	// While the calls mic is away: role -> the default Windows fell back to ("" for none). Used to
+	// tell Windows' own fallback from a choice the user made meanwhile, and to know it was away.
+	public Dictionary<string, string> Away { get; init; } = new(StringComparer.Ordinal);
+	// Windows refused to set the default the last time Core tried.
+	public bool Failed { get; init; }
+
+	public bool Equals(VoiceSettings? other) =>
+		other is not null && CallsMicId == other.CallsMicId && CallsMicName == other.CallsMicName && UseForEverything == other.UseForEverything
+		&& MuteScope == other.MuteScope && Applied == other.Applied && Failed == other.Failed
+		&& Away.Count == other.Away.Count && Away.All(pair => other.Away.TryGetValue(pair.Key, out string? value) && value == pair.Value);
+
+	public override int GetHashCode() => HashCode.Combine(CallsMicId, UseForEverything, MuteScope, Applied, Away.Count);
+}
+
+internal sealed record CallsMicPlan(VoiceSettings Next, IReadOnlyList<DefaultChange> Changes, string? Log);
+
+internal static class CallsMicPolicy
+{
+	internal const int MaxNameLength = 120;
+
+	// "none" (no calls mic chosen), "active" (connected and the default Core set), "absent" (not
+	// connected: calls use Windows' own default; information only), "changed" (connected, but the
+	// user picked another default in Windows, which Core respects), "failed" (Windows refused).
+	internal static string Status(VoiceSettings settings, IReadOnlyList<MicEndpoint> endpoints)
+	{
+		if (string.IsNullOrEmpty(settings.CallsMicId)) return "none";
+		MicEndpoint? mic = Find(settings, endpoints);
+		if (mic is null) return "absent";
+		if (settings.Failed) return "failed";
+		return settings.Applied && Roles(settings).All(role => Holds(mic, role)) ? "active" : "changed";
+	}
+
+	internal static IReadOnlyList<MicRole> Roles(VoiceSettings settings) =>
+		settings.UseForEverything ? new[] { MicRole.Communications, MicRole.Console } : new[] { MicRole.Communications };
+
+	// By endpoint id; failing that, the one present device with the remembered name (a USB device in
+	// another port gets a new endpoint id). Two devices with that name: no guess.
+	internal static MicEndpoint? Find(VoiceSettings settings, IReadOnlyList<MicEndpoint> endpoints)
+	{
+		if (string.IsNullOrEmpty(settings.CallsMicId)) return null;
+		MicEndpoint? byId = endpoints.FirstOrDefault(endpoint => string.Equals(endpoint.Id, settings.CallsMicId, StringComparison.Ordinal));
+		if (byId is not null) return byId;
+		if (string.IsNullOrWhiteSpace(settings.CallsMicName)) return null;
+		var byName = endpoints.Where(endpoint => string.Equals(endpoint.Name, settings.CallsMicName, StringComparison.Ordinal)).GroupBy(endpoint => endpoint.Id).ToList();
+		return byName.Count == 1 ? byName[0].First() : null;
+	}
+
+	// The user picks a device in Quick Access. Null when it is not connected (only connected
+	// devices are offered). Picking again also clears "changed" and "failed".
+	internal static CallsMicPlan? Choose(VoiceSettings settings, IReadOnlyList<MicEndpoint> endpoints, string id, bool everything)
+	{
+		MicEndpoint? mic = endpoints.FirstOrDefault(endpoint => string.Equals(endpoint.Id, id, StringComparison.Ordinal));
+		if (mic is null) return null;
+		VoiceSettings next = settings with { CallsMicId = mic.Id, CallsMicName = Name(mic) ?? (mic.Id == settings.CallsMicId ? settings.CallsMicName : null), UseForEverything = everything, Applied = true, Failed = false, Away = new(StringComparer.Ordinal) };
+		var changes = Roles(next).Where(role => !Holds(mic, role)).Select(role => new DefaultChange(mic.Id, role)).ToList();
+		return new CallsMicPlan(next, changes, $"Calls mic set{(everything ? " (also for everything)" : "")}.");
+	}
+
+	// Back to Windows' own choice; Windows' defaults are left as they are.
+	internal static VoiceSettings Forget(VoiceSettings settings) =>
+		settings with { CallsMicId = null, CallsMicName = null, UseForEverything = false, Applied = false, Failed = false, Away = new(StringComparer.Ordinal) };
+
+	// Run on device changes, on resume and every few seconds while a calls mic is chosen.
+	internal static CallsMicPlan Step(VoiceSettings settings, IReadOnlyList<MicEndpoint> endpoints)
+	{
+		var none = Array.Empty<DefaultChange>();
+		if (string.IsNullOrEmpty(settings.CallsMicId)) return new CallsMicPlan(settings, none, null);
+		MicEndpoint? mic = Find(settings, endpoints);
+		IReadOnlyList<MicRole> roles = Roles(settings);
+		if (mic is null)
+		{
+			// Away. Nothing to change (calls use Windows' own default meanwhile); only note which default
+			// Windows fell back to, so a choice the user makes in Windows meanwhile can be told apart.
+			if (!settings.Applied) return new CallsMicPlan(settings, none, null);
+			var away = new Dictionary<string, string>(settings.Away, StringComparer.Ordinal);
+			foreach (MicRole role in roles)
+			{
+				string key = Key(role);
+				string current = DefaultFor(endpoints, role)?.Id ?? "";
+				if (!away.TryGetValue(key, out string? fallback)) { away[key] = current; continue; }
+				if (fallback == current) continue;
+				// The fallback device is still here, yet the default moved: the user chose it in Windows.
+				if (fallback.Length > 0 && endpoints.Any(endpoint => endpoint.Id == fallback))
+					return new CallsMicPlan(settings with { Applied = false, Away = new(StringComparer.Ordinal) }, none,
+						"The default microphone was changed in Windows while the calls mic was away; Core respects it.");
+				away[key] = current; // Windows moved on by itself (its fallback went away too)
+			}
+			VoiceSettings noted = settings with { Away = away };
+			return new CallsMicPlan(noted, none, settings.Away.Count == 0 ? "Calls mic not connected; calls use Windows' default microphone until it is back." : null);
+		}
+		VoiceSettings seen = settings with { CallsMicId = mic.Id, CallsMicName = Name(mic) ?? settings.CallsMicName };
+		string? renamed = mic.Id != settings.CallsMicId ? "The calls mic came back with a new Windows id (another USB port?); following it by name." : null;
+		var missing = roles.Where(role => !Holds(mic, role)).ToList();
+		if (!settings.Applied || settings.Failed)
+		{
+			// Respecting Windows. If the user made it the default in Windows himself, Core's choice holds again.
+			if (!settings.Failed && missing.Count == 0) return new CallsMicPlan(seen with { Applied = true }, none, "The calls mic is the default again (chosen in Windows).");
+			return new CallsMicPlan(seen, none, renamed);
+		}
+		if (missing.Count == 0) return new CallsMicPlan(seen with { Away = new(StringComparer.Ordinal) }, none, renamed ?? (settings.Away.Count > 0 ? "The calls mic is back and still the default." : null));
+		if (settings.Away.Count > 0 || renamed is not null)
+			return new CallsMicPlan(seen with { Away = new(StringComparer.Ordinal) }, missing.Select(role => new DefaultChange(mic.Id, role)).ToList(),
+				"The calls mic is back; making it the default again.");
+		// Connected all along and no longer the default: the user (or an app) chose another in Windows.
+		return new CallsMicPlan(seen with { Applied = false }, none, "The calls mic is no longer the default; it was changed in Windows. Core respects it.");
+	}
+
+	// Windows refused one or more default changes: Core stops trying (no retry loop, no notice) and
+	// Quick Access says so; picking the device again retries.
+	internal static VoiceSettings AfterApply(VoiceSettings planned, bool failed) => failed ? planned with { Failed = true } : planned;
+
+	internal static MicScope Scope(VoiceSettings settings) => MicMutePolicy.ParseScope(settings.MuteScope);
+
+	private static bool Holds(MicEndpoint mic, MicRole role) => role == MicRole.Communications ? mic.IsCommunications : mic.IsConsole;
+
+	private static MicEndpoint? DefaultFor(IReadOnlyList<MicEndpoint> endpoints, MicRole role) =>
+		endpoints.FirstOrDefault(endpoint => role == MicRole.Communications ? endpoint.IsCommunications : endpoint.IsConsole);
+
+	private static string Key(MicRole role) => role == MicRole.Communications ? "communications" : "console";
+
+	private static string? Name(MicEndpoint mic)
+	{
+		string? name = mic.Name?.Trim();
+		if (string.IsNullOrEmpty(name)) return null;
+		return name.Length > MaxNameLength ? name[..MaxNameLength] : name;
+	}
+
+	// ---------- persistence ----------
+
+	private static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+	internal static VoiceSettings Load(string path)
+	{
+		try
+		{
+			if (!File.Exists(path)) return new VoiceSettings();
+			VoiceSettings? settings = JsonSerializer.Deserialize<VoiceSettings>(File.ReadAllText(path), Json);
+			if (settings is null) return new VoiceSettings();
+			return settings with
+			{
+				MuteScope = MicMutePolicy.ScopeCode(MicMutePolicy.ParseScope(settings.MuteScope)),
+				Away = new Dictionary<string, string>(settings.Away ?? new Dictionary<string, string>(), StringComparer.Ordinal),
+			};
+		}
+		catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException) { return new VoiceSettings(); }
+	}
+
+	internal static void Save(string path, VoiceSettings settings)
+	{
+		Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
+		string temporary = path + ".tmp";
+		File.WriteAllText(temporary, JsonSerializer.Serialize(settings, Json));
 		File.Move(temporary, path, true);
 	}
 }

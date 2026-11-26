@@ -22,11 +22,22 @@ namespace GamingMode.Services;
 // Party: Microsoft offers no API to read or join parties, so Core opens the Game Bar and, when it
 // closes, brings Big Picture back if it was in front. Win+G only with no game running; with a game
 // (or when Core cannot tell) the ms-gamebar: URI, never a keystroke (PartyLaunchPolicy).
+//
+// Calls mic (POST /voice/calls-mic) and mute scope (POST /voice/mute-scope): the chosen device is
+// made the Communications default through IDefaultMicSetter (IPolicyConfig; see
+// PolicyConfigDefaultMic) and made so again when it reappears, unless the user changed the default
+// in Windows meanwhile (CallsMicPolicy). Settings in voice-settings.json, written only here. An
+// absent calls mic is information only: no notice, no Health alert.
 internal sealed partial class MarkIIIHost
 {
 	private readonly object _voiceSync = new();
 	private string _micPath = "";
+	private string _voicePath = "";
 	private MicMuteState _mic = new();
+	private VoiceSettings _voice = new();
+	private readonly IDefaultMicSetter _micSetter = new PolicyConfigDefaultMic();
+	// The last default change Windows refused ("refused" or "unavailable"), for Quick Access; not saved.
+	private string? _callsMicError;
 	private VoiceHotkey? _hotkey;
 	private WindowsMicrophone.DeviceWatcher? _deviceWatcher;
 	private int _watchGeneration;
@@ -38,7 +49,8 @@ internal sealed partial class MarkIIIHost
 	private void StartVoice()
 	{
 		_micPath = System.IO.Path.Combine(_paths.ConfigDirectory, "mic-mute.json");
-		lock (_voiceSync) _mic = MicMutePolicy.Load(_micPath);
+		_voicePath = System.IO.Path.Combine(_paths.ConfigDirectory, "voice-settings.json");
+		lock (_voiceSync) { _mic = MicMutePolicy.Load(_micPath); _voice = CallsMicPolicy.Load(_voicePath); }
 		try { _deviceWatcher = new WindowsMicrophone.DeviceWatcher(QueueMicReconcile); }
 		catch (Exception error) { _logger.Error("Voice: microphone change notifications are unavailable; Core checks every few seconds instead.", error); }
 		_hotkey = new VoiceHotkey(() => ChangeMic("toggle", "hotkey"), _logger.Info);
@@ -53,14 +65,20 @@ internal sealed partial class MarkIIIHost
 		try { _hotkey?.Dispose(); } catch { }
 	}
 
-	// Every five seconds from the Mark III loop: cheap when Core's mute is off and nothing is pending.
+	// Every five seconds from the Mark III loop: cheap when Core's mute is off, nothing is pending and
+	// no calls mic is chosen.
 	private void CheckVoice()
 	{
 		ApplyMicHotkey();
 		bool active;
-		lock (_voiceSync) active = !_mic.IsEmpty;
+		lock (_voiceSync) active = !_mic.IsEmpty || CallsMicChosen;
 		if (active) ReconcileMic("check");
 	}
+
+	// Caller holds _voiceSync.
+	private bool CallsMicChosen => !string.IsNullOrEmpty(_voice.CallsMicId);
+
+	private MicScope Scope => CallsMicPolicy.Scope(_voice);
 
 	private void ApplyMicHotkey()
 	{
@@ -84,13 +102,81 @@ internal sealed partial class MarkIIIHost
 		});
 	}
 
+	// The calls mic first (it may change the defaults), then the mute on what the defaults are now.
 	private void ReconcileMic(string why)
 	{
 		lock (_voiceSync)
 		{
-			if (_mic.IsEmpty) return;
+			if (_mic.IsEmpty && !CallsMicChosen) return;
 			IReadOnlyList<MicEndpoint> endpoints = WindowsMicrophone.Read();
-			Commit(MicMutePolicy.Reconcile(_mic, endpoints), why);
+			if (CallsMicChosen && ApplyCallsMic(CallsMicPolicy.Step(_voice, endpoints), why)) endpoints = WindowsMicrophone.Read();
+			if (!_mic.IsEmpty) Commit(MicMutePolicy.Reconcile(_mic, endpoints, Scope), why);
+		}
+	}
+
+	// Caller holds _voiceSync. Sets the planned defaults, saves the settings when they changed, and
+	// says whether any default was changed (so the caller reads the devices again).
+	private bool ApplyCallsMic(CallsMicPlan plan, string why)
+	{
+		bool failed = false;
+		foreach (DefaultChange change in plan.Changes)
+		{
+			DefaultSetResult result;
+			try { result = _micSetter.SetDefault(change.Id, change.Role); }
+			catch (Exception error) { _logger.Error("Voice: setting the default microphone failed.", error); result = DefaultSetResult.Unavailable; }
+			if (result == DefaultSetResult.Done) continue;
+			failed = true;
+			_callsMicError = result == DefaultSetResult.Unavailable ? "unavailable" : "refused";
+			_logger.Info($"Voice: Windows did not set the calls mic as the {change.Role} default ({result}, {why}); Core leaves Windows' default as it is.");
+		}
+		if (!failed && plan.Changes.Count > 0) _callsMicError = null;
+		if (plan.Log is not null) _logger.Info($"Voice ({why}): {plan.Log}");
+		VoiceSettings next = CallsMicPolicy.AfterApply(plan.Next, failed);
+		if (next != _voice) { _voice = next; PersistVoice(); }
+		return plan.Changes.Count > 0;
+	}
+
+	private void PersistVoice()
+	{
+		try { CallsMicPolicy.Save(_voicePath, _voice); }
+		catch (Exception error) { _logger.Error("Voice: voice settings could not be saved.", error); }
+	}
+
+	// Quick Access picks a calls mic (empty id: back to Windows' own choice). "ok", "notFound"
+	// (not connected), "refused" or "unavailable" (Windows did not set it; nothing crashes).
+	private string ChooseCallsMic(string id, bool everything)
+	{
+		lock (_voiceSync)
+		{
+			if (string.IsNullOrEmpty(id))
+			{
+				_voice = CallsMicPolicy.Forget(_voice);
+				_callsMicError = null;
+				PersistVoice();
+				_logger.Info("Voice: calls mic forgotten; Windows' own default is used.");
+				return "ok";
+			}
+			IReadOnlyList<MicEndpoint> endpoints = WindowsMicrophone.Read();
+			CallsMicPlan? plan = CallsMicPolicy.Choose(_voice, endpoints, id, everything);
+			if (plan is null) return "notFound";
+			_callsMicError = null;
+			bool changed = ApplyCallsMic(plan, "Quick Access");
+			// While Core's mute is on, the new default is muted too (recorded like any new default).
+			if (changed && !_mic.IsEmpty) Commit(MicMutePolicy.Reconcile(_mic, WindowsMicrophone.Read(), Scope), "calls mic");
+			return _voice.Failed ? _callsMicError ?? "refused" : "ok";
+		}
+	}
+
+	private void SetMuteScope(MicScope scope)
+	{
+		lock (_voiceSync)
+		{
+			if (Scope == scope) return;
+			_voice = _voice with { MuteScope = MicMutePolicy.ScopeCode(scope) };
+			PersistVoice();
+			MicPlan plan = MicMutePolicy.ChangeScope(_mic, WindowsMicrophone.Read(), scope);
+			Commit(plan, "mute scope");
+			_logger.Info($"Voice: mute scope set to {MicMutePolicy.ScopeCode(scope)}.");
 		}
 	}
 
@@ -99,11 +185,12 @@ internal sealed partial class MarkIIIHost
 		lock (_voiceSync)
 		{
 			IReadOnlyList<MicEndpoint> endpoints = WindowsMicrophone.Read();
+			MicScope scope = Scope;
 			MicPlan plan = action switch
 			{
-				"mute" => MicMutePolicy.Mute(_mic, endpoints),
-				"unmute" => MicMutePolicy.Unmute(_mic, endpoints),
-				_ => MicMutePolicy.Toggle(_mic, endpoints),
+				"mute" => MicMutePolicy.Mute(_mic, endpoints, scope),
+				"unmute" => MicMutePolicy.Unmute(_mic, endpoints, scope),
+				_ => MicMutePolicy.Toggle(_mic, endpoints, scope),
 			};
 			Commit(plan, from);
 			_logger.Info($"Voice: microphone {(_mic.CoreMuted ? "muted" : "unmuted")} from {from} ({plan.Changes.Count} endpoint(s) changed).");
@@ -147,18 +234,45 @@ internal sealed partial class MarkIIIHost
 
 	private (MicState State, bool CoreMuted, int Defaults, string? Communications, int Pending) MicViewFull()
 	{
+		var view = MicSnapshot();
+		return (view.State, view.CoreMuted, view.Endpoints.Count(endpoint => endpoint.IsDefault), MicMutePolicy.CommunicationsCode(view.Endpoints), view.Pending);
+	}
+
+	private (IReadOnlyList<MicEndpoint> Endpoints, MicState State, bool CoreMuted, int Pending, VoiceSettings Settings, string? Error) MicSnapshot()
+	{
 		IReadOnlyList<MicEndpoint> endpoints;
 		try { endpoints = WindowsMicrophone.Read(); }
 		catch (Exception error) { _logger.Error("Voice: microphones could not be read.", error); endpoints = Array.Empty<MicEndpoint>(); }
-		bool coreMuted; int pending;
-		lock (_voiceSync) { coreMuted = _mic.CoreMuted; pending = _mic.Pending.Count; }
-		return (MicMutePolicy.Observe(endpoints), coreMuted, endpoints.Count(endpoint => endpoint.IsDefault), MicMutePolicy.CommunicationsCode(endpoints), pending);
+		bool coreMuted; int pending; VoiceSettings settings; string? failure;
+		lock (_voiceSync) { coreMuted = _mic.CoreMuted; pending = _mic.Pending.Count; settings = _voice; failure = _callsMicError; }
+		return (endpoints, MicMutePolicy.Observe(endpoints, CallsMicPolicy.Scope(settings)), coreMuted, pending, settings, failure);
 	}
 
+	// For the top-bar mark: the state under the chosen mute scope.
 	private string? MicCode()
 	{
-		try { return MicMutePolicy.Code(MicMutePolicy.Observe(WindowsMicrophone.Read())); }
+		try
+		{
+			MicScope scope;
+			lock (_voiceSync) scope = Scope;
+			return MicMutePolicy.Code(MicMutePolicy.Observe(WindowsMicrophone.Read(), scope));
+		}
 		catch { return null; }
+	}
+
+	// For Core Health: the mute state, and the calls mic's name and status ("none", "active",
+	// "absent", "changed", "failed"). Windows exposes no battery level for a USB audio receiver
+	// (see CORE-VOICE.md), so none is reported.
+	private (string? State, string? CallsMicName, string? CallsMicStatus) MicHealth()
+	{
+		try
+		{
+			var view = MicSnapshot();
+			string status = CallsMicPolicy.Status(view.Settings, view.Endpoints);
+			string? name = CallsMicPolicy.Find(view.Settings, view.Endpoints)?.Name ?? view.Settings.CallsMicName;
+			return (MicMutePolicy.Code(view.State), status == "none" ? null : name, status);
+		}
+		catch { return (null, null, null); }
 	}
 
 	// ---------- Xbox party ----------
@@ -250,12 +364,28 @@ internal sealed partial class MarkIIIHost
 
 	// ---------- HTTP ----------
 
-	private object VoiceState()
+	private object VoiceState(string? result = null)
 	{
-		(MicState state, bool coreMuted, int defaults, string? communications, int pending) = MicViewFull();
+		var view = MicSnapshot();
+		IReadOnlyList<MicEndpoint> endpoints = view.Endpoints;
+		string status = CallsMicPolicy.Status(view.Settings, endpoints);
+		MicEndpoint? callsMic = CallsMicPolicy.Find(view.Settings, endpoints);
 		return new
 		{
-			mic = new { state = MicMutePolicy.Code(state), coreMuted, defaults, communications, pending, hotkey = _hotkey?.Combo },
+			mic = new
+			{
+				state = MicMutePolicy.Code(view.State), coreMuted = view.CoreMuted, defaults = endpoints.Count(endpoint => endpoint.IsDefault),
+				communications = MicMutePolicy.CommunicationsCode(endpoints), pending = view.Pending, hotkey = _hotkey?.Combo,
+				scope = MicMutePolicy.ScopeCode(CallsMicPolicy.Scope(view.Settings)),
+			},
+			// Every connected capture device, for the calls mic picker.
+			devices = endpoints.Take(16).Select(endpoint => new { id = endpoint.Id, name = endpoint.Name, console = endpoint.IsConsole, communications = endpoint.IsCommunications, muted = endpoint.Muted }).ToArray(),
+			callsMic = new
+			{
+				id = callsMic?.Id ?? view.Settings.CallsMicId, name = callsMic?.Name ?? view.Settings.CallsMicName, status,
+				everything = view.Settings.UseForEverything, error = status == "failed" ? view.Error ?? "refused" : null,
+			},
+			result,
 			gameBar = new { installed = WindowsGameBar.Installed(), open = WindowsGameBar.Interactive() },
 		};
 	}
@@ -269,6 +399,24 @@ internal sealed partial class MarkIIIHost
 			string action = context.Request.Query["action"].ToString();
 			if (action is not ("mute" or "unmute" or "toggle")) return Results.Json(new { ok = false }, statusCode: 400);
 			ChangeMic(action, "Quick Access");
+			return Results.Json(VoiceState());
+		}));
+		// id: an endpoint id from /voice/state's devices, or empty to go back to Windows' own choice.
+		app.MapPost("/voice/calls-mic", (Func<HttpContext, IResult>)(context =>
+		{
+			if (!Local(context)) return Results.StatusCode(403);
+			string id = context.Request.Query["id"].ToString();
+			if (id.Length > 200 || id.Any(char.IsControl)) return Results.Json(new { ok = false }, statusCode: 400);
+			bool everything = string.Equals(context.Request.Query["everything"].ToString(), "true", StringComparison.OrdinalIgnoreCase);
+			string result = ChooseCallsMic(id, everything);
+			return Results.Json(VoiceState(result));
+		}));
+		app.MapPost("/voice/mute-scope", (Func<HttpContext, IResult>)(context =>
+		{
+			if (!Local(context)) return Results.StatusCode(403);
+			string scope = context.Request.Query["scope"].ToString();
+			if (scope is not ("all" or "calls")) return Results.Json(new { ok = false }, statusCode: 400);
+			SetMuteScope(MicMutePolicy.ParseScope(scope));
 			return Results.Json(VoiceState());
 		}));
 		app.MapPost("/voice/party", (Func<HttpContext, Task<IResult>>)(async context =>

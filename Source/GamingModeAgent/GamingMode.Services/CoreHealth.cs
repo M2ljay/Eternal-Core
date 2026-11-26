@@ -70,6 +70,11 @@ internal sealed record CoreHealthInputs
 	// Core Voice: "muted", "live", "partial" (some default microphones muted) or "none" (no
 	// microphone); null when Windows could not say.
 	public string? Microphone { get; init; }
+	// The calls mic chosen in Core > Voice: its name and "active", "absent", "changed" or "failed";
+	// null when none is chosen. Information only: an absent calls mic is never a problem (it often
+	// lives on another PC), so it adds no attention and no notice.
+	public string? CallsMicName { get; init; }
+	public string? CallsMicStatus { get; init; }
 }
 
 internal sealed record HealthRow(string Id, HealthLevel Level, string State, IReadOnlyDictionary<string, object?> Data);
@@ -284,7 +289,8 @@ internal static class CoreHealthPolicy
 
 		// Microphone: information only. Muted is a choice, not a problem (the plugin shows it in crimson).
 		// Partly muted is worth a look: a call may use the muted one while the badge's other mic is live.
-		var mic = new Dictionary<string, object?> { ["state"] = input.Microphone };
+		// The calls mic's name and connected/absent ride along as data; they never change the level.
+		var mic = new Dictionary<string, object?> { ["state"] = input.Microphone, ["callsMic"] = input.CallsMicName, ["callsMicStatus"] = input.CallsMicStatus };
 		rows.Add(input.Microphone switch
 		{
 			"muted" => new HealthRow("microphone", HealthLevel.Info, "muted", mic),

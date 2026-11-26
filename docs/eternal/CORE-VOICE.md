@@ -1,7 +1,7 @@
 # Core Voice
 
-Quick Access > Core has a **Voice** section at the top: a big microphone button, an **Xbox party** button and a
-**Discord** row. Core also shows a small crimson "microphone muted" mark in Steam's top bar while the microphone is
+Quick Access > Core has a **Voice** section at the top: a big microphone button, a **Calls mic** picker with **Use for
+everything**, the **Mute** scope, an **Xbox party** button and a **Discord** row. Core also shows a small crimson "microphone muted" mark in Steam's top bar while the microphone is
 muted, adds a *Microphone* row to [Core Health](CORE-HEALTH.md), and Quiet Windows gains a fix that stops voice calls
 from lowering the game's volume.
 
@@ -33,6 +33,67 @@ Press the microphone button (or the keyboard shortcut, see below) to mute; press
 - The mute survives restarts (`%APPDATA%\GamingMode\mic-mute.json`, which also keeps the records of unplugged
   microphones) and sleep (Windows keeps each microphone's mute itself). Core writes the record before it mutes, so a
   crash in between cannot lose the microphones' own settings.
+
+## Calls mic
+
+The **Calls mic** list shows every connected microphone by its Windows name, with *calls* next to the one Windows uses
+for calls (the default *Communications* device) and *games and apps* next to the default *Console* device. Pick one
+with the controller and Core makes it Windows' default for calls (Xbox party, Discord). **Use for everything** also
+makes it the default for games and apps. Turning that off leaves Windows' games-and-apps default as it is (Core does
+not know what it was before). **Windows' choice** forgets the calls mic and changes nothing in Windows.
+
+- **Not connected.** When the calls mic is unplugged (for example the DJI receiver is on the streaming PC), the line
+  says *Not connected. Calls use Windows' default microphone.* This is information only: no notice, no Health alert,
+  nothing to do. The list keeps showing it as *(not connected)*.
+- **Back.** When it is plugged in again, Core makes it the calls default again within a few seconds (the device
+  notification, or the five-second check). Windows often does this by itself; Core only steps in when it did not. A
+  USB receiver plugged into another port can get a new Windows id: Core then finds it by its name, but only if exactly
+  one connected microphone has that name.
+- **Changed in Windows.** If you choose another default microphone for calls in Windows while the calls mic is
+  connected, or while it is away (and Windows' own fallback is still connected, so the change was yours), Core
+  respects it: it does not take the default back when the calls mic returns, and the line says *Windows uses another
+  microphone for calls. Pick it again to use it.* Picking it again in Core (or making it the default in Windows)
+  restores Core's choice. When Core starts and finds the calls mic connected but not the default, it treats that as
+  your choice too.
+- **Windows refused.** If Windows does not let Core set the default (see below), the line says so and Core does not
+  retry by itself; pick the microphone again or set it in Windows' sound settings. Nothing else is affected.
+- **Battery.** Core shows no battery level for the calls mic. Windows reports battery levels for Bluetooth devices and
+  HID power devices; a USB audio receiver like the DJI Mic receiver is a plain USB audio input and gives Windows no
+  battery reading, and DJI documents none over USB. The receiver's own screen shows it.
+
+### How Core sets the default microphone, and why
+
+Windows has no documented API for changing the default audio device. Windows' own Sound panel uses the undocumented COM
+class `CPolicyConfigClient` (`{870AF99C-171D-4F9E-AF0D-E63DF40C2BC9}`) through the `IPolicyConfig` interface
+(`{F8679F50-850A-41CF-9C72-430F290290C8}`, Windows 7 and later). It is what the widely used device switchers call:
+EarTrumpet, SoundSwitch, NirSoft's SoundVolumeView, and Sunshine
+([its PolicyConfig.h](https://docs.lizardbyte.dev/projects/sunshine/master/PolicyConfig_8h.html)). Core uses only
+its `SetDefaultEndpoint` method: the *Communications* role for calls, and *Console* plus *Multimedia* (as Windows' Sound
+panel does for "Set as default device") for **Use for everything**.
+
+Risks, and what Core does about them: the interface is undocumented, so a Windows update could change or remove it.
+Core keeps it behind one small class (`PolicyConfigDefaultMic`, behind `IDefaultMicSetter`), checks afterwards that
+Windows really reports the new default, and turns every failure (class missing, interface refused, an error code, or a
+default that did not change) into the *Windows did not let Core set the default* line. It never crashes the agent and
+never retries in a loop. Mute and everything else keep working.
+
+## Mute scope
+
+**Mute** has two settings:
+
+- **Mute everything** (the default): the microphone button mutes the calls mic and the games-and-apps microphone, as
+  described above.
+- **Mute calls only**: the button mutes only the calls microphone (Windows' *Communications* default). The
+  games-and-apps microphone stays live, so a game, an app or a recording that uses it keeps your voice. Windows mutes a
+  microphone for every app at once, though: an app that records from the calls mic itself (OBS set to that device, for
+  example) is muted too. With **Use for everything** on, both defaults are the same device, so both settings mute it.
+
+The restore rules are the same for both settings: Core notes each microphone's own mute first, a microphone unplugged
+while muted keeps its record until it is back, an unmute from outside Core ends Core's mute, and a new calls default
+while muted is muted too. With *calls only*, *Partly muted* does not appear: Core watches only the calls mic (if Windows
+reports no calls default, the button covers every default microphone, so it never does nothing). Switching the setting
+while muted applies the new one at once: switching to *calls only* gives the other microphone its own setting back,
+switching to *everything* mutes it (and records it first).
 
 **Top-bar mark.** A crimson microphone-off icon appears before the clock in Steam's top bar while the default
 microphones are muted (or partly muted), in Big Picture (and in a game's Steam overlay wherever Steam shows its clock). It is drawn the same way as Core's date next to
@@ -162,6 +223,16 @@ by **Undo changes**.
 13. Core > Gaming Mode > Quiet Windows: the new line is ticked after **Apply**; during a party the game volume no
     longer drops.
 14. Quick Access > Core > Health: the *Microphone* row says *Muted* in crimson, *Partly muted* or *Live*.
+15. **Calls mic:** pick the DJI receiver in **Calls mic**: it is marked *calls*; with **Use for everything**, also
+    *games and apps*. Health: *Live · <name>*.
+16. Unplug the receiver: *Not connected. Calls use Windows' default microphone.*, no notice, Health *Live · calls mic
+    not connected* without crimson. Plug it back (also into another port): marked *calls* again within a few seconds.
+17. Make another microphone the calls default in Windows, then replug the receiver: Core does not take the default
+    back; picking it again in Core does.
+18. **Mute calls only** with a recording app on the other microphone: the party hears nothing, the recording keeps
+    sound. With the recording app set to the DJI itself, it is silent too. Under **Mute everything** both are muted.
+19. Switch the mute setting while muted, and unplug the DJI while muted under *calls only*: everything comes back as
+    it was after the unmute.
 
 If Win+G does not open the Game Bar over Big Picture, note what happens (nothing, the Game Bar behind Big Picture, a
 "Is this a game?" prompt) and the `agent.log` lines starting with *Voice:*.
@@ -174,10 +245,19 @@ If Win+G does not open the Game Bar over Big Picture, note what happens (nothing
 - Windows half: `CoreVoice.Windows.cs`: Core Audio (`IMMDeviceEnumerator`, `IAudioEndpointVolume`, an
   `IMMNotificationClient` for device changes), the Game Bar's state (`IsInputRedirected`, the Game Bar package for the
   current user) and the `RegisterHotKey` thread. Win+G: `WindowsXboxGameBar.SendShortcut`.
-- Agent endpoints (loopback only, `MarkIIIHost.Voice.cs`): `GET /voice/state`, `POST /voice/mic?action=mute|unmute|toggle`,
-  `POST /voice/party`. The Health row reads the same state.
+- Calls mic and mute scope rules (pure, same tests): `CallsMicPolicy` (pick, not connected, back, changed in Windows,
+  found by name in another port, refused) and `MicMutePolicy` with a `MicScope` (`Targets`, `ChangeScope`). Setting
+  the default: `PolicyConfigDefaultMic` in `CoreVoice.Windows.cs`, behind `IDefaultMicSetter`. Friendly names come
+  from each endpoint's `PKEY_Device_FriendlyName`.
+- Agent endpoints (loopback only, `MarkIIIHost.Voice.cs`): `GET /voice/state` (now with `devices`, `callsMic` and
+  `mic.scope`), `POST /voice/mic?action=mute|unmute|toggle`, `POST /voice/calls-mic?id=<endpoint id or empty>&everything=true|false`,
+  `POST /voice/mute-scope?scope=all|calls`, `POST /voice/party`. The Health row reads the same state, plus the calls
+  mic's name and status (information only).
+- Settings chosen in Quick Access: `%APPDATA%\GamingMode\voice-settings.json` (calls mic id and name, *Use for
+  everything*, mute scope, and what Windows fell back to while the calls mic was away), written only by the agent.
 - Plugin: `src/VoiceSection.tsx` and `src/voiceReport.ts` (texts in 12 languages; `tests/coreVoiceSection.test.mjs`);
-  `main.py` `core_voice_state`, `core_voice_mic`, `core_voice_party` and the top-bar mark (`_topbar_mic_script`).
+  `main.py` `core_voice_state`, `core_voice_mic`, `core_voice_calls_mic` (accepts only Windows endpoint ids),
+  `core_voice_mute_scope`, `core_voice_party` and the top-bar mark (`_topbar_mic_script`).
 - Quiet Windows: the `ducking` entry in `Source/Shared/CouchHardening.cs`.
 - Config-only settings (`gaming` section of `config.json`, kept by the app when it rewrites the file):
   `micMuteHotkey` (default `Ctrl+Alt+M`), `voicePartyUri` (empty).

@@ -1,13 +1,15 @@
 import { DFL, SP_REACT as React, toaster } from "./decky";
 import { call } from "./controlBackend";
-import { discordInstalled, micView, partyMessage, voiceCopy, type PartyAnswer, type VoiceAnswer } from "./voiceReport";
+import { callsMicMessage, callsMicView, discordInstalled, micView, partyMessage, scopeView, voiceCopy, type PartyAnswer, type VoiceAnswer } from "./voiceReport";
 
 // Eternal Core: the Voice section of Quick Access > Core. A big microphone button (Core mutes the
 // default Console and Communications microphones and restores each exactly), the Xbox party button
 // (opens the Xbox Game Bar over Big Picture; Microsoft offers no party API) and a Discord row that
 // only says whether Core's Discord plugin is installed: Decky has no supported call that opens
 // another plugin's panel. The agent does the work (GamingMode.Services/MarkIIIHost.Voice.cs).
-const { PanelSection, PanelSectionRow, Focusable, DialogButton } = DFL as any;
+// Below the button: the calls mic picker (makes a device Windows' default for calls, and for
+// everything with the toggle) and the mute scope (everything, the default, or calls only).
+const { PanelSection, PanelSectionRow, Focusable, DialogButton, DropdownItem, ToggleField } = DFL as any;
 
 const BLACK = "#000000", CRIMSON = "#D7263D", STEEL = "#C9D1D9", GUNMETAL = "#1A1D21";
 
@@ -26,6 +28,7 @@ const style = `
 .core-voice-row-title{font-size:13px;color:#fff;font-weight:600}
 .core-voice-row-value{font-size:12px;color:${STEEL};text-align:right}
 .core-voice-note{padding:0 12px;font-size:12px;color:${CRIMSON}}
+.core-voice-settings{display:flex;flex-direction:column;gap:6px;padding:0 4px}
 `;
 
 // Lucide Mic and MicOff (ISC; see quick_settings/THIRD-PARTY-NOTICES.md).
@@ -60,6 +63,7 @@ export function VoiceSection({ locale }: { locale: string }) {
   const [answer, setAnswer] = React.useState<VoiceAnswer | null | undefined>(undefined);
   const [busy, setBusy] = React.useState(false);
   const [note, setNote] = React.useState("");
+  const [callsNote, setCallsNote] = React.useState("");
   const [discord, setDiscord] = React.useState(readDiscord);
   const text = voiceCopy(locale);
   React.useEffect(() => {
@@ -82,6 +86,26 @@ export function VoiceSection({ locale }: { locale: string }) {
     finally { setBusy(false); }
   };
 
+  // One change at a time; the answer is the new state, so the picker shows what Windows now uses.
+  const pickCallsMic = async (id: string, everything: boolean) => {
+    setBusy(true);
+    setCallsNote("");
+    try {
+      const value = await call<[string, boolean], VoiceAnswer>("core_voice_calls_mic", id, everything);
+      if (value && value.mic) setAnswer(value);
+      setCallsNote(callsMicMessage(value, locale));
+    }
+    catch { setCallsNote(text.agentDown); }
+    finally { setBusy(false); }
+  };
+
+  const pickScope = async (scope: string) => {
+    setBusy(true);
+    try { const value = await call<[string], VoiceAnswer>("core_voice_mute_scope", scope); if (value && value.mic) setAnswer(value); }
+    catch { /* The next poll shows the actual state. */ }
+    finally { setBusy(false); }
+  };
+
   const openParty = async () => {
     setNote("");
     if (answer?.gameBar?.installed === false) { setNote(text.notInstalled); return; }
@@ -94,6 +118,8 @@ export function VoiceSection({ locale }: { locale: string }) {
   };
 
   const mic = micView(answer, locale);
+  const calls = callsMicView(answer, locale);
+  const scope = scopeView(answer, locale);
   return (
     <PanelSection title={text.title}>
       <style>{style}</style>
@@ -108,6 +134,18 @@ export function VoiceSection({ locale }: { locale: string }) {
             </span>
           </DialogButton>
           {mic.detail && <div className="core-voice-hint">{mic.detail}</div>}
+          <div className="core-voice-settings">
+            <DropdownItem label={text.callsMic} description={text.callsMicHint} layout="below" bottomSeparator="none" disabled={busy || !answer}
+              rgOptions={calls.options} selectedOption={calls.selected}
+              onChange={(option: { data: string }) => { if (option.data !== calls.selected) void pickCallsMic(option.data, calls.everything); }} />
+            {calls.line && <div className="core-voice-hint" role="status">{calls.line}</div>}
+            {callsNote && <div className="core-voice-note" role="alert">{callsNote}</div>}
+            <ToggleField label={text.everything} description={text.everythingHint} bottomSeparator="none" checked={calls.everything}
+              disabled={busy || !answer || !calls.canToggleEverything} onChange={(enabled: boolean) => void pickCallsMic(calls.selected, enabled)} />
+            <DropdownItem label={text.scope} description={scope.hint} layout="below" bottomSeparator="none" disabled={busy || !answer}
+              rgOptions={scope.options} selectedOption={scope.selected}
+              onChange={(option: { data: string }) => { if (option.data !== scope.selected) void pickScope(option.data); }} />
+          </div>
           <DialogButton className="core-voice-button" disabled={!answer} onClick={openParty}>
             <PartyIcon />
             <span className="core-voice-text">

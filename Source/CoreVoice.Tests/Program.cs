@@ -178,6 +178,185 @@ try
 }
 finally { try { Directory.Delete(folder, true); } catch { } }
 
+// ---------- mute scope: calls only ----------
+audio.Clear();
+audio["webcam"] = (false, true);   // Console default: the stream/recording keeps it
+audio["dji"] = (false, true);      // Communications default: the calls mic
+communications = "dji";
+const MicScope Calls = MicScope.Calls;
+Check(MicMutePolicy.Targets(Endpoints(), Calls).Select(endpoint => endpoint.Id).SequenceEqual(new[] { "dji" }), "calls scope: only the Communications default is a target");
+state = Apply(MicMutePolicy.Toggle(new MicMuteState(), Endpoints(), Calls));
+Check(audio["dji"].Muted && !audio["webcam"].Muted && state.CoreMuted && !state.Before.ContainsKey("webcam"), "calls scope: mutes the calls mic only, the Console default stays live");
+Check(MicMutePolicy.Observe(Endpoints(), Calls) == MicState.Muted && MicMutePolicy.Observe(Endpoints()) == MicState.Partial, "calls scope: shows muted (not partly muted) when the calls mic is muted");
+Check(MicMutePolicy.ActsMuted(Endpoints(), Calls) && MicMutePolicy.Reconcile(state, Endpoints(), Calls).Changes.Count == 0, "calls scope: the button unmutes; a live Console default is not a new default to mute");
+state = Apply(MicMutePolicy.Toggle(state, Endpoints(), Calls));
+Check(!audio["dji"].Muted && !audio["webcam"].Muted && state.IsEmpty, "calls scope: unmute restores the calls mic");
+communications = null;
+Check(MicMutePolicy.Targets(Endpoints(), Calls).Count == 2, "calls scope without a Communications default: every default (the button never does nothing)");
+communications = "dji";
+
+// C1 under the calls scope: unplugged while muted, unmuted, plugged back: its own setting returns.
+state = Apply(MicMutePolicy.Mute(new MicMuteState(), Endpoints(), Calls));
+audio.Remove("dji");
+communications = null; // Windows falls back
+state = Apply(MicMutePolicy.Reconcile(state, Endpoints(), Calls));
+Check(state.CoreMuted && audio["webcam"].Muted && state.Before["dji"] == false, "calls scope: calls mic unplugged while muted, the fallback default is muted too and the record kept");
+state = Apply(MicMutePolicy.Unmute(state, Endpoints(), Calls));
+Check(!audio["webcam"].Muted && state.Pending.Count == 1 && state.Pending["dji"] == false, "calls scope: unmute while unplugged keeps the record until restored");
+audio["dji"] = (true, true);
+communications = "dji";
+plan = MicMutePolicy.Reconcile(state, Endpoints(), Calls);
+state = Apply(plan);
+Check(!audio["dji"].Muted && state.IsEmpty, "calls scope: plugged back, the calls mic is live again and the record goes");
+
+// C1 under the calls scope: partial state stays exact (a muted Console mic the user had muted stays so).
+audio["webcam"] = (true, true);
+state = Apply(MicMutePolicy.Mute(new MicMuteState(), Endpoints(), Calls));
+state = Apply(MicMutePolicy.Unmute(state, Endpoints(), Calls));
+Check(audio["webcam"].Muted && !audio["dji"].Muted && state.IsEmpty, "calls scope: never touches the Console mic, muted or not");
+audio["webcam"] = (false, true);
+
+// Scope changed while muted: one plan, exact restore, records kept.
+state = Apply(MicMutePolicy.Mute(new MicMuteState(), Endpoints()));
+Check(audio["webcam"].Muted && audio["dji"].Muted, "everything: both muted");
+plan = MicMutePolicy.ChangeScope(state, Endpoints(), Calls);
+state = Apply(plan);
+Check(!audio["webcam"].Muted && audio["dji"].Muted && state.CoreMuted && !state.Before.ContainsKey("webcam") && state.Before["dji"] == false && plan.Log is not null, "everything -> calls only while muted: the Console mic gets its own setting back");
+state = Apply(MicMutePolicy.ChangeScope(state, Endpoints(), MicScope.All));
+Check(audio["webcam"].Muted && audio["dji"].Muted && state.Before["webcam"] == false, "calls only -> everything while muted: the Console mic is muted and recorded");
+audio.Remove("dji");
+communications = null;
+state = Apply(MicMutePolicy.ChangeScope(state, Endpoints(), Calls));
+Check(state.Before.ContainsKey("dji") && state.Before["dji"] == false, "scope change with the calls mic unplugged: its record is kept");
+state = Apply(MicMutePolicy.Unmute(state, Endpoints(), Calls));
+Check(!audio["webcam"].Muted && state.Pending["dji"] == false, "and unmute keeps it pending until it returns");
+Check(MicMutePolicy.ChangeScope(new MicMuteState(), Endpoints(), Calls).Changes.Count == 0, "scope change without Core's mute: nothing to do");
+Check(MicMutePolicy.ParseScope("calls") == Calls && MicMutePolicy.ParseScope("weird") == MicScope.All && MicMutePolicy.ScopeCode(Calls) == "calls", "scope codes; anything unknown is everything");
+communications = null;
+
+// ---------- calls mic: picking the Communications default ----------
+// A tiny device list: id -> (name, Console default, Communications default).
+var devices = new Dictionary<string, (string Name, bool Console, bool Comm)>();
+List<MicEndpoint> Devices() => devices.Select(pair => new MicEndpoint(pair.Key, false, pair.Value.Console || pair.Value.Comm, pair.Value.Comm, pair.Value.Console, pair.Value.Name)).ToList();
+void SetDefault(string id, MicRole role)
+{
+	foreach (string key in devices.Keys.ToList())
+	{
+		var value = devices[key];
+		devices[key] = role == MicRole.Communications ? value with { Comm = key == id } : value with { Console = key == id };
+	}
+}
+VoiceSettings Run(CallsMicPlan step) { foreach (DefaultChange change in step.Changes) SetDefault(change.Id, change.Role); return step.Next; }
+const string Dji = "{0.0.1.00000000}.{11111111-1111-1111-1111-111111111111}";
+devices["webcam"] = ("Microphone (USB Webcam)", true, true);
+devices[Dji] = ("Microphone (Wireless Microphone RX)", false, false);
+var voice = new VoiceSettings();
+Check(CallsMicPolicy.Status(voice, Devices()) == "none" && CallsMicPolicy.Step(voice, Devices()).Changes.Count == 0, "no calls mic chosen: nothing to do");
+Check(CallsMicPolicy.Choose(voice, Devices(), "missing", false) is null, "a device that is not connected cannot be picked");
+CallsMicPlan pick = CallsMicPolicy.Choose(voice, Devices(), Dji, false)!;
+Check(pick.Changes.SequenceEqual(new[] { new DefaultChange(Dji, MicRole.Communications) }), "pick: sets the Communications default only");
+voice = Run(pick);
+Check(voice.CallsMicName == "Microphone (Wireless Microphone RX)" && voice.Applied && CallsMicPolicy.Status(voice, Devices()) == "active" && devices["webcam"].Console, "pick: active, the Console default untouched");
+Check(CallsMicPolicy.Step(voice, Devices()) is { Changes.Count: 0, Log: null } steady && steady.Next == voice, "steady: nothing changes, nothing logged");
+voice = Run(CallsMicPolicy.Choose(voice, Devices(), Dji, true)!);
+Check(devices[Dji].Console && devices[Dji].Comm && voice.UseForEverything && CallsMicPolicy.Status(voice, Devices()) == "active", "use for everything: also the Console default");
+voice = Run(CallsMicPolicy.Choose(voice, Devices(), Dji, false)!);
+Check(!voice.UseForEverything && devices[Dji].Console, "use for everything off: Windows' Console default is left as it is");
+
+// Unplugged (the receiver went to the other PC): information only, Windows' fallback noted.
+devices.Remove(Dji);
+SetDefault("webcam", MicRole.Communications);
+CallsMicPlan away = CallsMicPolicy.Step(voice, Devices());
+Check(away.Changes.Count == 0 && away.Next.Away["communications"] == "webcam" && away.Log is not null, "absent: nothing changed, Windows' fallback noted, logged once");
+voice = away.Next;
+Check(CallsMicPolicy.Status(voice, Devices()) == "absent" && CallsMicPolicy.Step(voice, Devices()) is { Log: null, Changes.Count: 0 }, "absent: calm (no repeated log, no change)");
+// Back: made the default again.
+devices[Dji] = ("Microphone (Wireless Microphone RX)", false, false);
+CallsMicPlan back = CallsMicPolicy.Step(voice, Devices());
+Check(back.Changes.SequenceEqual(new[] { new DefaultChange(Dji, MicRole.Communications) }) && back.Next.Away.Count == 0, "back: made the Communications default again");
+voice = Run(back);
+Check(CallsMicPolicy.Status(voice, Devices()) == "active", "back: active");
+// Back and Windows already restored it by itself: nothing to set.
+devices.Remove(Dji); SetDefault("webcam", MicRole.Communications);
+voice = CallsMicPolicy.Step(voice, Devices()).Next;
+devices[Dji] = ("Microphone (Wireless Microphone RX)", false, true); SetDefault(Dji, MicRole.Communications);
+Check(CallsMicPolicy.Step(voice, Devices()) is { Changes.Count: 0 } restored && restored.Next.Away.Count == 0, "back and already the default: nothing to set");
+voice = CallsMicPolicy.Step(voice, Devices()).Next;
+
+// Changed in Windows while connected: respected, not fought.
+SetDefault("webcam", MicRole.Communications);
+CallsMicPlan changed = CallsMicPolicy.Step(voice, Devices());
+Check(changed.Changes.Count == 0 && !changed.Next.Applied && changed.Log is not null, "changed in Windows while connected: respected");
+voice = changed.Next;
+Check(CallsMicPolicy.Status(voice, Devices()) == "changed", "status: changed");
+devices.Remove(Dji);
+voice = CallsMicPolicy.Step(voice, Devices()).Next;
+devices[Dji] = ("Microphone (Wireless Microphone RX)", false, false);
+Check(CallsMicPolicy.Step(voice, Devices()).Changes.Count == 0, "after a change in Windows, a replug does not take the default back");
+SetDefault(Dji, MicRole.Communications);
+voice = CallsMicPolicy.Step(voice, Devices()).Next;
+Check(voice.Applied && CallsMicPolicy.Status(voice, Devices()) == "active", "made the default in Windows again: Core's choice holds again");
+
+// Changed in Windows while the calls mic was away: respected when it returns.
+devices["headset"] = ("Headset Microphone", false, false);
+devices.Remove(Dji); SetDefault("webcam", MicRole.Communications);
+voice = CallsMicPolicy.Step(voice, Devices()).Next;
+SetDefault("headset", MicRole.Communications); // the user picks the headset in Windows; the webcam is still there
+CallsMicPlan whileAway = CallsMicPolicy.Step(voice, Devices());
+Check(!whileAway.Next.Applied && whileAway.Log is not null, "changed in Windows while away (fallback still connected): respected");
+voice = whileAway.Next;
+devices[Dji] = ("Microphone (Wireless Microphone RX)", false, false);
+Check(CallsMicPolicy.Step(voice, Devices()).Changes.Count == 0 && CallsMicPolicy.Status(voice, Devices()) == "changed", "and the returning calls mic does not take the default back");
+devices.Remove("headset");
+
+// Windows moving on by itself while away (its fallback unplugged too) is not a user choice.
+voice = Run(CallsMicPolicy.Choose(voice, Devices(), Dji, false)!);
+devices["headset"] = ("Headset Microphone", false, false);
+devices.Remove(Dji); SetDefault("headset", MicRole.Communications);
+voice = CallsMicPolicy.Step(voice, Devices()).Next;
+devices.Remove("headset"); SetDefault("webcam", MicRole.Communications);
+voice = CallsMicPolicy.Step(voice, Devices()).Next;
+Check(voice.Applied && voice.Away["communications"] == "webcam", "Windows' own second fallback is not a user choice");
+devices[Dji] = ("Microphone (Wireless Microphone RX)", false, false);
+Check(CallsMicPolicy.Step(voice, Devices()).Changes.Count == 1, "and the calls mic is made the default again when back");
+voice = Run(CallsMicPolicy.Step(voice, Devices()));
+
+// Another USB port: a new endpoint id, the same name. Followed by name, only when unambiguous.
+devices.Remove(Dji); SetDefault("webcam", MicRole.Communications);
+voice = CallsMicPolicy.Step(voice, Devices()).Next;
+const string DjiOtherPort = "{0.0.1.00000000}.{22222222-2222-2222-2222-222222222222}";
+devices[DjiOtherPort] = ("Microphone (Wireless Microphone RX)", false, false);
+CallsMicPlan moved = CallsMicPolicy.Step(voice, Devices());
+Check(moved.Next.CallsMicId == DjiOtherPort && moved.Changes.SequenceEqual(new[] { new DefaultChange(DjiOtherPort, MicRole.Communications) }), "new id in another port: found by name, made the default");
+voice = Run(moved);
+devices["{0.0.1.00000000}.{33333333-3333-3333-3333-333333333333}"] = ("Microphone (Wireless Microphone RX)", false, false);
+Check(CallsMicPolicy.Find(voice with { CallsMicId = "gone" }, Devices()) is null, "two devices with the remembered name: no guess");
+devices.Remove("{0.0.1.00000000}.{33333333-3333-3333-3333-333333333333}");
+
+// Windows refuses: no retry loop, says so; picking again retries.
+voice = CallsMicPolicy.AfterApply(CallsMicPolicy.Choose(voice, Devices(), "webcam", false)!.Next, failed: true);
+Check(voice.Failed && CallsMicPolicy.Status(voice, Devices()) == "failed" && CallsMicPolicy.Step(voice, Devices()).Changes.Count == 0, "Windows refused: status failed, no retry loop");
+voice = Run(CallsMicPolicy.Choose(voice, Devices(), DjiOtherPort, false)!);
+Check(!voice.Failed && CallsMicPolicy.Status(voice, Devices()) == "active", "picking again clears the failure");
+Check(CallsMicPolicy.Forget(voice) is { CallsMicId: null, Applied: false } forgot && CallsMicPolicy.Status(forgot, Devices()) == "none", "forget: back to Windows' own choice");
+Check(CallsMicPolicy.Step(CallsMicPolicy.Forget(voice) with { MuteScope = "calls" }, Devices()).Changes.Count == 0, "forgotten: nothing set");
+
+// Persistence.
+string voiceFolder = Path.Combine(Path.GetTempPath(), "core-voice-settings-" + Guid.NewGuid().ToString("N"));
+try
+{
+	string voiceFile = Path.Combine(voiceFolder, "voice-settings.json");
+	Check(CallsMicPolicy.Load(voiceFile) == new VoiceSettings() && new VoiceSettings().MuteScope == "all", "no file: no calls mic, mute everything");
+	var saved = voice with { MuteScope = "calls", Away = new() { ["communications"] = "webcam" } };
+	CallsMicPolicy.Save(voiceFile, saved);
+	Check(CallsMicPolicy.Load(voiceFile) == saved, "voice settings survive a restart");
+	File.WriteAllText(voiceFile, "{\"callsMicId\":\"x\",\"muteScope\":\"loud\"}");
+	Check(CallsMicPolicy.Load(voiceFile) is { CallsMicId: "x", MuteScope: "all", Applied: false } && CallsMicPolicy.Load(voiceFile).Away.Count == 0, "an unknown scope reads as everything");
+	File.WriteAllText(voiceFile, "nope");
+	Check(CallsMicPolicy.Load(voiceFile).CallsMicId is null, "a damaged file reads as no calls mic");
+}
+finally { try { Directory.Delete(voiceFolder, true); } catch { } }
+
 // ---------- Xbox party: launch choice ----------
 PartyLaunchChoice Choose(PartyLaunchInputs input) => PartyLaunchPolicy.Choose(input);
 Check(Choose(new() { GameBarInstalled = true, GameBarInteractive = false, GameRunning = false }) == new PartyLaunchChoice(PartyLaunchMethod.WinG, "shortcut"), "no game, bar closed: the Win+G shortcut");

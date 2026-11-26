@@ -23,6 +23,7 @@ const en: Copy = {
   tOff: "TV control off", tNotPaired: "Not paired", tOk: "Paired, answering", tDown: "Not answering",
   pcOk: "{free} free", pcLow: "Only {free} free", cAvail: "Core {latest} available", cCurrent: "Up to date · {current}",
   r_mic: "Microphone", micMuted: "Muted", micLive: "Live", micNone: "No microphone", micPartial: "Partly muted",
+  micCalls: "Calls mic: {name}", micAway: "calls mic not connected", micAwayDetail: "Not connected. Calls use Windows' default microphone.", micActiveDetail: "Connected and used for calls.", micChangedDetail: "Connected; Windows uses another microphone for calls.", micFailedDetail: "Windows did not let Core make it the default.",
 };
 
 const copy: Record<string, Copy> = {
@@ -39,6 +40,7 @@ const copy: Record<string, Copy> = {
     tOff: "Controllo TV spento", tNotPaired: "Non abbinata", tOk: "Abbinata, risponde", tDown: "Non risponde",
     pcOk: "{free} liberi", pcLow: "Solo {free} liberi", cAvail: "Core {latest} disponibile", cCurrent: "Aggiornato · {current}",
     r_mic: "Microfono", micMuted: "Silenziato", micLive: "Attivo", micNone: "Nessun microfono", micPartial: "Silenziato in parte",
+    micCalls: "Microfono per le chiamate: {name}", micAway: "microfono per le chiamate non collegato", micAwayDetail: "Non collegato. Le chiamate usano il microfono predefinito di Windows.", micActiveDetail: "Collegato e usato per le chiamate.", micChangedDetail: "Collegato; Windows usa un altro microfono per le chiamate.", micFailedDetail: "Windows non ha permesso a Core di impostarlo come predefinito.",
   },
   es: {
     title: "Estado", allGood: "Todo bien", attention: "Necesita atención: {n}", checking: "Comprobando…", agentDown: "El servicio de Core no responde.", dismiss: "Descartar aviso",
@@ -52,6 +54,7 @@ const copy: Record<string, Copy> = {
     tOff: "Control de TV desactivado", tNotPaired: "Sin vincular", tOk: "Vinculada, responde", tDown: "No responde",
     pcOk: "{free} libres", pcLow: "Solo {free} libres", cAvail: "Core {latest} disponible", cCurrent: "Actualizado · {current}",
     r_mic: "Micrófono", micMuted: "Silenciado", micLive: "Activo", micNone: "No hay micrófono", micPartial: "Silenciado en parte",
+    micCalls: "Micrófono de llamadas: {name}", micAway: "micrófono de llamadas no conectado", micAwayDetail: "No conectado. Las llamadas usan el micrófono predeterminado de Windows.", micActiveDetail: "Conectado y usado para llamadas.", micChangedDetail: "Conectado; Windows usa otro micrófono para llamadas.", micFailedDetail: "Windows no dejó que Core lo pusiera como predeterminado.",
   },
   fr: {
     title: "Santé", allGood: "Tout va bien", attention: "À vérifier : {n}", checking: "Vérification…", agentDown: "Le service de Core ne répond pas.", dismiss: "Ignorer l'alerte",
@@ -65,6 +68,7 @@ const copy: Record<string, Copy> = {
     tOff: "Contrôle de la TV désactivé", tNotPaired: "Non appairée", tOk: "Appairée, répond", tDown: "Ne répond pas",
     pcOk: "{free} libres", pcLow: "Seulement {free} libres", cAvail: "Core {latest} disponible", cCurrent: "À jour · {current}",
     r_mic: "Micro", micMuted: "Coupé", micLive: "Actif", micNone: "Aucun micro", micPartial: "Coupé en partie",
+    micCalls: "Micro des appels : {name}", micAway: "micro des appels non connecté", micAwayDetail: "Non connecté. Les appels utilisent le micro par défaut de Windows.", micActiveDetail: "Connecté et utilisé pour les appels.", micChangedDetail: "Connecté ; Windows utilise un autre micro pour les appels.", micFailedDetail: "Windows n'a pas laissé Core le définir par défaut.",
   },
   de: {
     title: "Status", allGood: "Alles in Ordnung", attention: "Zu prüfen: {n}", checking: "Wird geprüft…", agentDown: "Der Core-Dienst antwortet nicht.", dismiss: "Warnung ausblenden",
@@ -78,6 +82,7 @@ const copy: Record<string, Copy> = {
     tOff: "TV-Steuerung aus", tNotPaired: "Nicht gekoppelt", tOk: "Gekoppelt, antwortet", tDown: "Antwortet nicht",
     pcOk: "{free} frei", pcLow: "Nur {free} frei", cAvail: "Core {latest} verfügbar", cCurrent: "Aktuell · {current}",
     r_mic: "Mikrofon", micMuted: "Stumm", micLive: "An", micNone: "Kein Mikrofon", micPartial: "Teilweise stumm",
+    micCalls: "Anruf-Mikrofon: {name}", micAway: "Anruf-Mikrofon nicht verbunden", micAwayDetail: "Nicht verbunden. Anrufe nutzen das Standardmikrofon von Windows.", micActiveDetail: "Verbunden und für Anrufe genutzt.", micChangedDetail: "Verbunden; Windows nutzt ein anderes Mikrofon für Anrufe.", micFailedDetail: "Windows hat Core nicht erlaubt, es als Standard festzulegen.",
   },
   pt: {
     title: "Saúde", allGood: "Tudo certo", attention: "Precisa de atenção: {n}", checking: "Verificando…", agentDown: "O serviço do Core não responde.", dismiss: "Dispensar alerta",
@@ -91,6 +96,7 @@ const copy: Record<string, Copy> = {
     tOff: "Controle da TV desligado", tNotPaired: "Não pareada", tOk: "Pareada, responde", tDown: "Não responde",
     pcOk: "{free} livres", pcLow: "Só {free} livres", cAvail: "Core {latest} disponível", cCurrent: "Atualizado · {current}",
     r_mic: "Microfone", micMuted: "Silenciado", micLive: "Ativo", micNone: "Sem microfone", micPartial: "Silenciado em parte",
+    micCalls: "Microfone das chamadas: {name}", micAway: "microfone das chamadas não conectado", micAwayDetail: "Não conectado. As chamadas usam o microfone padrão do Windows.", micActiveDetail: "Conectado e usado nas chamadas.", micChangedDetail: "Conectado; o Windows usa outro microfone nas chamadas.", micFailedDetail: "O Windows não deixou o Core defini-lo como padrão.",
   },
   uk: {
     title: "Стан", allGood: "Усе гаразд", attention: "Потребує уваги: {n}", checking: "Перевірка…", agentDown: "Служба Core не відповідає.", dismiss: "Приховати сповіщення",
@@ -104,6 +110,7 @@ const copy: Record<string, Copy> = {
     tOff: "Керування ТВ вимкнено", tNotPaired: "Не з'єднано", tOk: "З'єднано, відповідає", tDown: "Не відповідає",
     pcOk: "Вільно {free}", pcLow: "Вільно лише {free}", cAvail: "Доступний Core {latest}", cCurrent: "Актуальний · {current}",
     r_mic: "Мікрофон", micMuted: "Вимкнено", micLive: "Увімкнено", micNone: "Немає мікрофона", micPartial: "Вимкнено частково",
+    micCalls: "Мікрофон для дзвінків: {name}", micAway: "мікрофон для дзвінків не підключено", micAwayDetail: "Не підключено. Дзвінки використовують мікрофон Windows за замовчуванням.", micActiveDetail: "Підключено й використовується для дзвінків.", micChangedDetail: "Підключено; Windows використовує інший мікрофон для дзвінків.", micFailedDetail: "Windows не дозволила Core зробити його мікрофоном за замовчуванням.",
   },
   ru: {
     title: "Состояние", allGood: "Всё в порядке", attention: "Требует внимания: {n}", checking: "Проверка…", agentDown: "Служба Core не отвечает.", dismiss: "Скрыть оповещение",
@@ -117,6 +124,7 @@ const copy: Record<string, Copy> = {
     tOff: "Управление ТВ выключено", tNotPaired: "Не сопряжён", tOk: "Сопряжён, отвечает", tDown: "Не отвечает",
     pcOk: "Свободно {free}", pcLow: "Свободно всего {free}", cAvail: "Доступен Core {latest}", cCurrent: "Актуален · {current}",
     r_mic: "Микрофон", micMuted: "Выключен", micLive: "Включён", micNone: "Нет микрофона", micPartial: "Выключен частично",
+    micCalls: "Микрофон для звонков: {name}", micAway: "микрофон для звонков не подключён", micAwayDetail: "Не подключён. Звонки используют микрофон Windows по умолчанию.", micActiveDetail: "Подключён и используется для звонков.", micChangedDetail: "Подключён; Windows использует другой микрофон для звонков.", micFailedDetail: "Windows не позволила Core сделать его микрофоном по умолчанию.",
   },
   zh: {
     title: "健康", allGood: "一切正常", attention: "需要注意：{n}", checking: "正在检查…", agentDown: "Core 服务没有响应。", dismiss: "忽略提醒",
@@ -130,6 +138,7 @@ const copy: Record<string, Copy> = {
     tOff: "电视控制已关闭", tNotPaired: "未配对", tOk: "已配对，有响应", tDown: "没有响应",
     pcOk: "剩余 {free}", pcLow: "仅剩 {free}", cAvail: "Core {latest} 可用", cCurrent: "已是最新 · {current}",
     r_mic: "麦克风", micMuted: "已静音", micLive: "已开启", micNone: "没有麦克风", micPartial: "部分静音",
+    micCalls: "通话麦克风：{name}", micAway: "通话麦克风未连接", micAwayDetail: "未连接。通话使用 Windows 的默认麦克风。", micActiveDetail: "已连接，用于通话。", micChangedDetail: "已连接；Windows 正在用另一个麦克风通话。", micFailedDetail: "Windows 不允许 Core 将其设为默认。",
   },
   ja: {
     title: "状態", allGood: "問題なし", attention: "要確認: {n}", checking: "確認中…", agentDown: "Core のサービスが応答しません。", dismiss: "お知らせを閉じる",
@@ -143,6 +152,7 @@ const copy: Record<string, Copy> = {
     tOff: "テレビ操作はオフ", tNotPaired: "未ペアリング", tOk: "ペアリング済み・応答あり", tDown: "応答なし",
     pcOk: "空き {free}", pcLow: "空きは {free} のみ", cAvail: "Core {latest} を利用可能", cCurrent: "最新 · {current}",
     r_mic: "マイク", micMuted: "ミュート中", micLive: "オン", micNone: "マイクなし", micPartial: "一部ミュート中",
+    micCalls: "通話用マイク：{name}", micAway: "通話用マイク未接続", micAwayDetail: "未接続です。通話には Windows の既定のマイクが使われます。", micActiveDetail: "接続済みで、通話に使われています。", micChangedDetail: "接続済み。Windows は通話に別のマイクを使っています。", micFailedDetail: "Windows が Core による既定の設定を許可しませんでした。",
   },
   ko: {
     title: "상태", allGood: "모두 정상", attention: "확인 필요: {n}", checking: "확인 중…", agentDown: "Core 서비스가 응답하지 않습니다.", dismiss: "알림 닫기",
@@ -156,6 +166,7 @@ const copy: Record<string, Copy> = {
     tOff: "TV 제어 꺼짐", tNotPaired: "페어링 안 됨", tOk: "페어링됨, 응답함", tDown: "응답 없음",
     pcOk: "{free} 남음", pcLow: "{free}만 남음", cAvail: "Core {latest} 사용 가능", cCurrent: "최신 · {current}",
     r_mic: "마이크", micMuted: "음소거됨", micLive: "켜짐", micNone: "마이크 없음", micPartial: "일부 음소거됨",
+    micCalls: "통화용 마이크: {name}", micAway: "통화용 마이크 연결 안 됨", micAwayDetail: "연결되지 않았습니다. 통화에는 Windows 기본 마이크가 쓰입니다.", micActiveDetail: "연결되어 통화에 쓰이고 있습니다.", micChangedDetail: "연결됨. Windows가 통화에 다른 마이크를 쓰고 있습니다.", micFailedDetail: "Windows가 Core의 기본값 설정을 허용하지 않았습니다.",
   },
   hi: {
     title: "हेल्थ", allGood: "सब ठीक है", attention: "ध्यान चाहिए: {n}", checking: "जाँच हो रही है…", agentDown: "Core की सेवा जवाब नहीं दे रही।", dismiss: "अलर्ट हटाएँ",
@@ -169,6 +180,7 @@ const copy: Record<string, Copy> = {
     tOff: "टीवी कंट्रोल बंद", tNotPaired: "पेयर नहीं है", tOk: "पेयर है, जवाब दे रहा है", tDown: "जवाब नहीं",
     pcOk: "{free} खाली", pcLow: "सिर्फ़ {free} खाली", cAvail: "Core {latest} उपलब्ध", cCurrent: "अप टू डेट · {current}",
     r_mic: "माइक्रोफ़ोन", micMuted: "म्यूट", micLive: "चालू", micNone: "कोई माइक्रोफ़ोन नहीं", micPartial: "आंशिक रूप से म्यूट",
+    micCalls: "कॉल माइक: {name}", micAway: "कॉल माइक कनेक्ट नहीं", micAwayDetail: "कनेक्ट नहीं है। कॉल Windows का डिफ़ॉल्ट माइक्रोफ़ोन इस्तेमाल करती हैं।", micActiveDetail: "कनेक्ट है और कॉल के लिए इस्तेमाल हो रहा है।", micChangedDetail: "कनेक्ट है; Windows कॉल के लिए दूसरा माइक्रोफ़ोन इस्तेमाल कर रहा है।", micFailedDetail: "Windows ने Core को इसे डिफ़ॉल्ट बनाने नहीं दिया।",
   },
 };
 
@@ -264,8 +276,17 @@ function rowValue(row: HealthRowData, text: Copy, locale: string, now: Date): { 
         : row.state === "waiting" ? text.nWaiting : text.nNothing, details };
     case "tv":
       return { value: ({ off: text.tOff, "not-paired": text.tNotPaired, reachable: text.tOk, unreachable: text.tDown } as Record<string, string>)[row.state] ?? text.unknown, details };
-    case "microphone":
-      return { value: ({ muted: text.micMuted, live: text.micLive, partial: text.micPartial, none: text.micNone } as Record<string, string>)[row.state] ?? text.unknown, details };
+    case "microphone": {
+      // The calls mic rides along as information: its name, or "not connected" (calm, never an alert;
+      // calls then use Windows' default). No battery: Windows exposes none for a USB audio receiver.
+      const state = ({ muted: text.micMuted, live: text.micLive, partial: text.micPartial, none: text.micNone } as Record<string, string>)[row.state] ?? text.unknown;
+      const status = typeof data.callsMicStatus === "string" ? data.callsMicStatus : "none";
+      const name = typeof data.callsMic === "string" && data.callsMic.trim() ? data.callsMic.trim().slice(0, 80) : "";
+      if (status === "none" || !["active", "absent", "changed", "failed"].includes(status)) return { value: state, details };
+      if (name) details.push(fill(text.micCalls, { name }));
+      details.push(({ active: text.micActiveDetail, absent: text.micAwayDetail, changed: text.micChangedDetail, failed: text.micFailedDetail } as Record<string, string>)[status]);
+      return { value: `${state} · ${status === "absent" ? text.micAway : name || text.micActiveDetail}`, details };
+    }
     case "pc-disk": {
       if (typeof data.drive === "string" && data.drive) details.push(data.drive);
       const free = formatBytes(data.freeBytes, locale);

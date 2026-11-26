@@ -156,6 +156,11 @@ _TOPBAR_CLOCK_SELECTORS = ["#header ._1HhLUvHH6BZLIOyOE80TVh", "._1HhLUvHH6BZLIO
 _TOPBAR_MIC_BADGE_ID = "core-topbar-mic"
 _TOPBAR_MIC_STYLE_ID = "core-topbar-mic-style"
 _VOICE_MIC_ACTIONS = ("mute", "unmute", "toggle")
+_VOICE_MUTE_SCOPES = ("all", "calls")
+# Windows capture endpoint ids look like {0.0.1.00000000}.{guid}; an empty id forgets the calls mic.
+_VOICE_DEVICE_ID = re.compile(r"\{[0-9.]{1,32}\}\.\{[0-9A-Fa-f-]{36}\}")
+# /voice/state lists the capture devices for the calls mic picker, so it outgrows 4 KB.
+_VOICE_STATE_MAXIMUM = 32768
 
 
 class Plugin(QuickSettingsPlugin):
@@ -221,12 +226,29 @@ class Plugin(QuickSettingsPlugin):
     # Core Voice (src/VoiceSection.tsx, agent MarkIIIHost.Voice.cs): microphone mute and the Xbox party
     # button. A mute change also refreshes the top-bar mark at once instead of at the next poll.
     async def core_voice_state(self):
-        return await asyncio.to_thread(self._agent_local, "GET", "/voice/state", timeout=4)
+        return await asyncio.to_thread(self._agent_local, "GET", "/voice/state", timeout=4, maximum=_VOICE_STATE_MAXIMUM)
 
     async def core_voice_mic(self, action):
         if action not in _VOICE_MIC_ACTIONS:
             return {}
-        state = await asyncio.to_thread(self._agent_local, "POST", "/voice/mic?action=" + action, timeout=4)
+        state = await asyncio.to_thread(self._agent_local, "POST", "/voice/mic?action=" + action, timeout=4, maximum=_VOICE_STATE_MAXIMUM)
+        await asyncio.to_thread(self._show_topbar_mic, self._mic_muted(state), True)
+        return state
+
+    # Calls mic picker: makes a capture device the Communications default (and the Console default
+    # with "Use for everything"); an empty id goes back to Windows' own choice.
+    async def core_voice_calls_mic(self, device_id, everything):
+        if not isinstance(device_id, str) or (device_id and not _VOICE_DEVICE_ID.fullmatch(device_id)):
+            return {}
+        query = urllib.parse.urlencode({"id": device_id, "everything": "true" if everything is True else "false"})
+        state = await asyncio.to_thread(self._agent_local, "POST", "/voice/calls-mic?" + query, timeout=6, maximum=_VOICE_STATE_MAXIMUM)
+        await asyncio.to_thread(self._show_topbar_mic, self._mic_muted(state), True)
+        return state
+
+    async def core_voice_mute_scope(self, scope):
+        if scope not in _VOICE_MUTE_SCOPES:
+            return {}
+        state = await asyncio.to_thread(self._agent_local, "POST", "/voice/mute-scope?scope=" + scope, timeout=4, maximum=_VOICE_STATE_MAXIMUM)
         await asyncio.to_thread(self._show_topbar_mic, self._mic_muted(state), True)
         return state
 
@@ -1945,7 +1967,7 @@ ensure();
     async def _topbar_mic_loop(self):
         while True:
             try:
-                state = await asyncio.to_thread(self._agent_local, "GET", "/voice/state", timeout=3)
+                state = await asyncio.to_thread(self._agent_local, "GET", "/voice/state", timeout=3, maximum=_VOICE_STATE_MAXIMUM)
                 await asyncio.to_thread(self._show_topbar_mic, self._mic_muted(state))
             except asyncio.CancelledError:
                 raise

@@ -103,6 +103,12 @@ Check(Row(CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }
 Check(Row(CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now })), "microphone").Level == HealthLevel.Unknown, "verdict: microphone unknown");
 report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { Microphone = "partial" });
 Check(Row(report, "microphone") is { Level: HealthLevel.Attention, State: "partial" } && report.Attention == 1 && report.Problems.Count == 0, "verdict: a partly muted microphone is worth a look (no notice)");
+report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { Microphone = "live", CallsMicName = "Microphone (Wireless Microphone RX)", CallsMicStatus = "absent" });
+Check(Row(report, "microphone") is { Level: HealthLevel.Ok, State: "live" } && report.Attention == 0 && report.Problems.Count == 0
+	&& (string?)Row(report, "microphone").Data["callsMic"] == "Microphone (Wireless Microphone RX)" && (string?)Row(report, "microphone").Data["callsMicStatus"] == "absent",
+	"verdict: an absent calls mic is information only (no attention, no notice), name and status carried");
+report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { Microphone = "live", CallsMicName = "Microphone (Wireless Microphone RX)", CallsMicStatus = "active" });
+Check(Row(report, "microphone").Level == HealthLevel.Ok && (string?)Row(report, "microphone").Data["callsMicStatus"] == "active", "verdict: connected calls mic");
 
 // The server refuses an old Proton CLI or loses the canary: a failed night whose message Core shows.
 const string tooOld = "Proton CLI too old: this proton-drive offers only --conflict-strategy, which may skip whole folders that already exist in Drive, so new saves, BIOS and ROMs would silently not upload. Nothing was uploaded. Update the Proton Drive CLI (v0.8.0 or later).";

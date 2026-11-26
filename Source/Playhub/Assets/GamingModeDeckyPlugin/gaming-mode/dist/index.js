@@ -4564,7 +4564,7 @@ function formatStoreInstallLanguage(language, locale) {
     }
 }
 
-const { ModalRoot: ModalRoot$3, TextField: TextField$3, showModal: showModal$5, ConfirmModal: ConfirmModal$3, DropdownItem: DropdownItem$5 } = _global_DFL;
+const { ModalRoot: ModalRoot$3, TextField: TextField$3, showModal: showModal$5, ConfirmModal: ConfirmModal$3, DropdownItem: DropdownItem$6 } = _global_DFL;
 function StoreDigitalDirectoryPicker({ controller, c, initialPath, onSelect, closeModal }) {
     useDigitalModalGuard();
     const [listing, setListing] = _global_SP_REACT.useState(null), [loading, setLoading] = _global_SP_REACT.useState(true), [error, setError] = _global_SP_REACT.useState(false);
@@ -4625,7 +4625,7 @@ function StoreDigitalInstallDialog({ controller, gameKey, c, onInstalled, closeM
     const browse = () => { let parent = path.replace(/[\\/][^\\/]+[\\/]?$/, ""); if (/^[a-z]:$/i.test(parent))
         parent += "\\"; openStoreDigitalDirectory(controller, c, absoluteWindowsPath(parent) ? parent : undefined, selected => void prepare(selected, true)); };
     const game = controller.game(gameKey), free = preparation?.locations.filter(location => path.toLowerCase().startsWith(location.rootPath.toLowerCase())).sort((a, b) => b.rootPath.length - a.rootPath.length)[0]?.freeBytes;
-    return SP_JSX.jsx(ModalRoot$3, { className: "ph-sd-modal-frame", onCancel: close, closeModal: close, bDisableBackgroundDismiss: true, children: SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-root ph-sd-modal", "flow-children": "column", noFocusRing: true, onCancel: (event) => { event.preventDefault(); event.stopPropagation(); close(); }, children: [SP_JSX.jsx(StoreDigitalStyles, {}), SP_JSX.jsx("h2", { children: game?.title ?? c.install }), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-modal-body", "flow-children": "column", noFocusRing: true, children: [view.busy && SP_JSX.jsx("div", { role: "status", children: c.loading }), view.error && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "alert", children: storeDigitalError(view.error, c) }), hasStoreInstallLanguageChoice(preparation?.languages) && SP_JSX.jsx(DropdownItem$5, { label: c.gameLanguage, layout: "below", bottomSeparator: "none", selectedOption: preparation?.language, disabled: view.busy, rgOptions: preparation.languages.map(data => ({ data, label: storeInstallLanguageName(data) })), onChange: (option) => { if (preparation?.languages?.includes(option.data))
+    return SP_JSX.jsx(ModalRoot$3, { className: "ph-sd-modal-frame", onCancel: close, closeModal: close, bDisableBackgroundDismiss: true, children: SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-root ph-sd-modal", "flow-children": "column", noFocusRing: true, onCancel: (event) => { event.preventDefault(); event.stopPropagation(); close(); }, children: [SP_JSX.jsx(StoreDigitalStyles, {}), SP_JSX.jsx("h2", { children: game?.title ?? c.install }), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-modal-body", "flow-children": "column", noFocusRing: true, children: [view.busy && SP_JSX.jsx("div", { role: "status", children: c.loading }), view.error && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "alert", children: storeDigitalError(view.error, c) }), hasStoreInstallLanguageChoice(preparation?.languages) && SP_JSX.jsx(DropdownItem$6, { label: c.gameLanguage, layout: "below", bottomSeparator: "none", selectedOption: preparation?.language, disabled: view.busy, rgOptions: preparation.languages.map(data => ({ data, label: storeInstallLanguageName(data) })), onChange: (option) => { if (preparation?.languages?.includes(option.data))
                                 void prepare(path || undefined, false, option.data); } }), review && preparation ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("strong", { children: c.review }), SP_JSX.jsxs("dl", { className: "ph-sd-facts", children: [SP_JSX.jsx("dt", { children: c.folder }), SP_JSX.jsx("dd", { children: preparation.confirmedPath }), SP_JSX.jsx("dt", { children: c.required }), SP_JSX.jsx("dd", { children: storeBytes(preparation.requiredBytes) }), SP_JSX.jsx("dt", { children: c.free }), SP_JSX.jsx("dd", { children: storeBytes(free) })] })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(TextField$3, { label: c.folder, value: path, disabled: view.busy, onChange: (event) => { controller.discardPreparation(); setPath(event?.target?.value ?? ""); setReview(false); } }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy, onClick: browse, children: c.chooseFolder }), preparation && SP_JSX.jsxs("div", { className: "ph-sd-muted", children: [c.required, ": ", storeBytes(preparation.requiredBytes)] })] }), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(DigitalButton, { ref: cancel.ref, navRef: cancel.navRef, className: "ph-sd-button", disabled: view.busy, onClick: close, children: c.cancel }), SP_JSX.jsx(DigitalButton, { ref: landing.ref, navRef: landing.navRef, className: "ph-sd-button ph-sd-primary", disabled: view.busy || !path.trim(), onClick: () => void (review ? install() : prepare(path)), children: review ? c.confirmInstall : c.continue })] })] })] }) });
 }
 function openStoreDigitalInstall(controller, key, c, onInstalled) { let modal; modal = showModal$5(SP_JSX.jsx(StoreDigitalInstallDialog, { controller: controller, gameKey: key, c: c, onInstalled: onInstalled, closeModal: () => modal.Close() }), undefined, { bNeverPopOut: true }); }
@@ -6852,7 +6852,7 @@ const copy$b = {
 };
 function storeLibraryLocale(locale) { return copy$b[deviceLanguage(locale)] ?? copy$b.en; }
 
-const { PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$6, DropdownItem: DropdownItem$4, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = _global_DFL;
+const { PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$6, DropdownItem: DropdownItem$5, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = _global_DFL;
 const danger = `.ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) {
 background:#c42b1c!important;color:#fff!important}
 .ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) * {color:inherit!important}`;
@@ -6905,7 +6905,7 @@ function StoreDownloadMenu({ job, locale }) {
         ...(job.canResume ? [{ data: "resume", label: c["StoreLibrary.Resume"] }] : []),
         ...(job.canRemove === true || job.canCancel ? [{ data: "cancel", strOptionClass: "ph-store-download-cancel", label: SP_JSX.jsxs("span", { children: [SP_JSX.jsx("style", { children: danger }), c["StoreLibrary.Cancel"]] }) }] : []),
     ];
-    return SP_JSX.jsx(DropdownItem$4, { label: storeDigitalDisplayTitle(job), description: c[`StoreLibrary.Job.${job.state[0].toUpperCase()}${job.state.slice(1)}`] ?? "", layout: "below", bottomSeparator: "none", selectedOption: null, strDefaultLabel: c["StoreLibrary.Actions"], disabled: busy || !options.length, rgOptions: options, onChange: (option) => {
+    return SP_JSX.jsx(DropdownItem$5, { label: storeDigitalDisplayTitle(job), description: c[`StoreLibrary.Job.${job.state[0].toUpperCase()}${job.state.slice(1)}`] ?? "", layout: "below", bottomSeparator: "none", selectedOption: null, strDefaultLabel: c["StoreLibrary.Actions"], disabled: busy || !options.length, rgOptions: options, onChange: (option) => {
             if (!options.some(available => available.data === option.data))
                 return;
             if (option.data === "cancel")
@@ -7309,7 +7309,7 @@ function translationController(store) {
     }
 }
 
-const { PanelSectionRow: PanelSectionRow$5, ToggleField: ToggleField$4 } = _global_DFL;
+const { PanelSectionRow: PanelSectionRow$5, ToggleField: ToggleField$5 } = _global_DFL;
 const descriptions$1 = {
     en: "Makes the Steam Controller appear as an Xbox controller.",
     it: "Fa riconoscere lo Steam Controller come un pad Xbox.",
@@ -7358,7 +7358,7 @@ function TranslationControllerToggle({ locale }) {
     }, []);
     if (!connected || enabled === null)
         return null;
-    return SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsx(ToggleField$4, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
+    return SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsx(ToggleField$5, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
                 if (typeof value !== "boolean" || writing.current || !available || !mounted.current || !translationController(window.ControllerStore))
                     return;
                 writing.current = true;
@@ -24277,7 +24277,7 @@ const words$2 = {
 const NEWS_COUNTRIES = ["US", "IT", "DE", "ES", "FR", "BR", "RU", "UA", "JP", "KR", "TW", "IN"];
 function newsCopy(locale) { return words$2[locale] ?? words$2.en; }
 
-const { Focusable: Focusable$8, DialogButton: DialogButton$6, DropdownItem: DropdownItem$3, ToggleField: ToggleField$3, Navigation: Navigation$3 } = _global_DFL;
+const { Focusable: Focusable$8, DialogButton: DialogButton$6, DropdownItem: DropdownItem$4, ToggleField: ToggleField$4, Navigation: Navigation$3 } = _global_DFL;
 let config$1 = { enabled: true, country: "auto" };
 let ready = false;
 const listeners$6 = new Set();
@@ -24311,7 +24311,7 @@ function HomeNewsSettings({ locale }) {
         }
     };
     const names = new Intl.DisplayNames([locale], { type: "region" });
-    return SP_JSX.jsxs(Focusable$8, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [loadFailed && SP_JSX.jsx(DialogButton$6, { onClick: () => void readConfig().then(() => setLoadFailed(false)).catch(() => { }), children: copy[4] }), SP_JSX.jsx(ToggleField$3, { label: copy[1], bottomSeparator: "none", checked: value.enabled, disabled: busy || !ready, onChange: (enabled) => void save({ ...value, enabled }) }), SP_JSX.jsx(DropdownItem$3, { label: copy[2], layout: "below", bottomSeparator: "none", selectedOption: value.country, disabled: busy || !ready, rgOptions: [{ data: "auto", label: copy[3] }, ...NEWS_COUNTRIES.map(data => ({ data, label: names.of(data) ?? data }))], onChange: (option) => void save({ ...value, country: option.data }) })] });
+    return SP_JSX.jsxs(Focusable$8, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [loadFailed && SP_JSX.jsx(DialogButton$6, { onClick: () => void readConfig().then(() => setLoadFailed(false)).catch(() => { }), children: copy[4] }), SP_JSX.jsx(ToggleField$4, { label: copy[1], bottomSeparator: "none", checked: value.enabled, disabled: busy || !ready, onChange: (enabled) => void save({ ...value, enabled }) }), SP_JSX.jsx(DropdownItem$4, { label: copy[2], layout: "below", bottomSeparator: "none", selectedOption: value.country, disabled: busy || !ready, rgOptions: [{ data: "auto", label: copy[3] }, ...NEWS_COUNTRIES.map(data => ({ data, label: names.of(data) ?? data }))], onChange: (option) => void save({ ...value, country: option.data }) })] });
 }
 function nativeNewsRows(tree) {
     const children = tree?.props?.children;
@@ -25195,7 +25195,7 @@ function SiSteam (props) {
 }
 
 const { useCallback: useCallback$1, useEffect: useEffect$2, useLayoutEffect, useMemo: useMemo$2, useRef: useRef$1, useState: useState$2 } = _global_SP_REACT;
-const { Focusable: Focusable$7, GamepadButton: GamepadButton$2, Navigation: Navigation$2, TextField: TextField$1, ToggleField: ToggleField$2 } = _global_DFL;
+const { Focusable: Focusable$7, GamepadButton: GamepadButton$2, Navigation: Navigation$2, TextField: TextField$1, ToggleField: ToggleField$3 } = _global_DFL;
 const DASHBOARD_ROUTE = "/playhub-dashboard";
 const dashboardExit = createDashboardExit({
     hideOverlay: () => { closeDashboardOverlay(); clearDashboardChrome(); },
@@ -26736,7 +26736,7 @@ function AppOptionsSheet({ shortcut, copy, extra, onCancel, onRemove, onSave }) 
         const timer = window.setTimeout(() => focusDashboard(".ph-options-field input"), 50);
         return () => window.clearTimeout(timer);
     }, []);
-    return (SP_JSX.jsx(Focusable$7, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: extra.options }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: shortcut.name }), SP_JSX.jsx("div", { className: "ph-options-field", children: SP_JSX.jsx(TextField$1, { value: name, onChange: (event) => setName(event.target.value), style: { width: "100%", minWidth: 0 } }) }), SP_JSX.jsx(ToggleField$2, { label: extra.sdl3, description: extra.sdl3Description, checked: sdl3, onChange: setSdl3 }), SP_JSX.jsxs(Focusable$7, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onRemove, children: copy.remove }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: () => { if (name.trim())
+    return (SP_JSX.jsx(Focusable$7, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: extra.options }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: shortcut.name }), SP_JSX.jsx("div", { className: "ph-options-field", children: SP_JSX.jsx(TextField$1, { value: name, onChange: (event) => setName(event.target.value), style: { width: "100%", minWidth: 0 } }) }), SP_JSX.jsx(ToggleField$3, { label: extra.sdl3, description: extra.sdl3Description, checked: sdl3, onChange: setSdl3 }), SP_JSX.jsxs(Focusable$7, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onRemove, children: copy.remove }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: () => { if (name.trim())
                                 onSave(name.trim(), sdl3); }, children: extra.save })] })] }) }));
 }
 function DashboardSurface() {
@@ -56647,7 +56647,7 @@ function GpdV1ControllerControls({ locale, deviceKey, profile, active = true }) 
                             model.current?.edit(data); } }), SP_JSX.jsxs("div", { className: "qsMeta", children: [copy[6], ": ", label(snapshot.state.rumble)] }), view.editing && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: disabled, onClick: () => void model.current?.run("apply"), children: copy[4] }), snapshot.restoreAvailable && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: view.busy || snapshot.recoveryRequired, onClick: () => void model.current?.run("restore"), children: copy[5] })] }) : SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: common.unavailable }), (view.error || snapshot?.recoveryRequired) && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: view.error === "changed" ? copy[7] : common.saveError }), (!snapshot || view.error || snapshot.recoveryRequired) && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: view.busy, onClick: () => void model.current?.refresh(), children: common.retry })] });
 }
 
-const { DialogButton: DialogButton$3, DropdownItem: DropdownItem$2, Focusable: Focusable$4 } = _global_DFL;
+const { DialogButton: DialogButton$3, DropdownItem: DropdownItem$3, Focusable: Focusable$4 } = _global_DFL;
 const style$3 = `
 .ph-device-settings{display:grid;gap:12px;min-width:0;padding:4px 4px 0;overflow-wrap:anywhere}
 .ph-device-identity{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:12px;border-radius:9px;background:rgba(255,255,255,.07)}
@@ -56766,7 +56766,7 @@ function DeviceSettings({ locale, openVideo, openPerformance, detailsOpen = fals
         ? `${copy.batteryRemaining} · ${new Intl.NumberFormat(copy.language, {
             style: "unit", unit: "minute", unitDisplay: "short", maximumFractionDigits: 0,
         }).format(Math.ceil(seconds / 60))}` : undefined;
-    return SP_JSX.jsxs(Focusable$4, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$3 }), SP_JSX.jsxs("div", { className: "ph-device-identity", children: [SP_JSX.jsx("div", { className: "ph-device-symbol", "aria-hidden": "true", children: handheld ? SP_JSX.jsx(TbDeviceGamepad2, {}) : SP_JSX.jsx(TbDeviceDesktop, {}) }), SP_JSX.jsxs("div", { children: [SP_JSX.jsxs("div", { className: "ph-device-title", children: [SP_JSX.jsx("strong", { children: names.get(profile.effective) ?? copy.pc }), handheld && SP_JSX.jsx("span", { className: "ph-device-experimental", children: copy.experimental })] }), modelLabel && SP_JSX.jsxs("div", { className: "ph-device-detail", children: [copy.model, " \u00B7 ", modelLabel] })] })] }), SP_JSX.jsx(DropdownItem$2, { label: copy.profile, layout: "below", bottomSeparator: "none", selectedOption: profile.selection, disabled: saving, rgOptions: [{ label: copy.auto, data: "auto" }, ...profileNames.map(({ id, name }) => ({ label: name, data: id }))], onChange: select }), SP_JSX.jsx("p", { className: "ph-device-hint", children: copy.profileHint }), error === "save" && SP_JSX.jsx("div", { className: "ph-device-detail", role: "alert", children: copy.saveError }), (battery || health || remaining) && SP_JSX.jsxs("div", { className: "ph-device-battery", children: [SP_JSX.jsx(TbBattery, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [battery && SP_JSX.jsx("div", { children: battery }), remaining && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: remaining }), health && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: health })] })] }), display && SP_JSX.jsx("dl", { className: "ph-device-status", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.primaryDisplay }), SP_JSX.jsxs("dd", { children: [display.width, " \u00D7 ", display.height, display.hz ? ` · ${display.hz} Hz` : ""] })] }) }), SP_JSX.jsx(DeviceCapabilities, { selection: profile.selection, effective: profile.effective, detected: profile.detected, locale: locale, openVideo: openVideo, openPerformance: openPerformance }), profile.effective === "ayaneo-3" && profile.detected === "ayaneo-3" && SP_JSX.jsx(Ayaneo3ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), profile.effective === profile.detected && ["gpd-win-4", "gpd-win-mini"].includes(profile.detected) && SP_JSX.jsx(GpdV1ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), profile: profile.detected, locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), SP_JSX.jsxs(DialogButton$3, { className: "ph-device-details", "aria-expanded": detailsOpen, onClick: onDetailsToggle, children: [SP_JSX.jsx("span", { children: copy.details }), detailsOpen ? SP_JSX.jsx(TbChevronDown, { "aria-hidden": "true" }) : SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), detailsOpen && SP_JSX.jsx(DeviceInfo, { copy: copy, model: actualModel })] });
+    return SP_JSX.jsxs(Focusable$4, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$3 }), SP_JSX.jsxs("div", { className: "ph-device-identity", children: [SP_JSX.jsx("div", { className: "ph-device-symbol", "aria-hidden": "true", children: handheld ? SP_JSX.jsx(TbDeviceGamepad2, {}) : SP_JSX.jsx(TbDeviceDesktop, {}) }), SP_JSX.jsxs("div", { children: [SP_JSX.jsxs("div", { className: "ph-device-title", children: [SP_JSX.jsx("strong", { children: names.get(profile.effective) ?? copy.pc }), handheld && SP_JSX.jsx("span", { className: "ph-device-experimental", children: copy.experimental })] }), modelLabel && SP_JSX.jsxs("div", { className: "ph-device-detail", children: [copy.model, " \u00B7 ", modelLabel] })] })] }), SP_JSX.jsx(DropdownItem$3, { label: copy.profile, layout: "below", bottomSeparator: "none", selectedOption: profile.selection, disabled: saving, rgOptions: [{ label: copy.auto, data: "auto" }, ...profileNames.map(({ id, name }) => ({ label: name, data: id }))], onChange: select }), SP_JSX.jsx("p", { className: "ph-device-hint", children: copy.profileHint }), error === "save" && SP_JSX.jsx("div", { className: "ph-device-detail", role: "alert", children: copy.saveError }), (battery || health || remaining) && SP_JSX.jsxs("div", { className: "ph-device-battery", children: [SP_JSX.jsx(TbBattery, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [battery && SP_JSX.jsx("div", { children: battery }), remaining && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: remaining }), health && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: health })] })] }), display && SP_JSX.jsx("dl", { className: "ph-device-status", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.primaryDisplay }), SP_JSX.jsxs("dd", { children: [display.width, " \u00D7 ", display.height, display.hz ? ` · ${display.hz} Hz` : ""] })] }) }), SP_JSX.jsx(DeviceCapabilities, { selection: profile.selection, effective: profile.effective, detected: profile.detected, locale: locale, openVideo: openVideo, openPerformance: openPerformance }), profile.effective === "ayaneo-3" && profile.detected === "ayaneo-3" && SP_JSX.jsx(Ayaneo3ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), profile.effective === profile.detected && ["gpd-win-4", "gpd-win-mini"].includes(profile.detected) && SP_JSX.jsx(GpdV1ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), profile: profile.detected, locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), SP_JSX.jsxs(DialogButton$3, { className: "ph-device-details", "aria-expanded": detailsOpen, onClick: onDetailsToggle, children: [SP_JSX.jsx("span", { children: copy.details }), detailsOpen ? SP_JSX.jsx(TbChevronDown, { "aria-hidden": "true" }) : SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), detailsOpen && SP_JSX.jsx(DeviceInfo, { copy: copy, model: actualModel })] });
 }
 
 // The panel preference store owns expansion across QAM openings and tab changes.
@@ -56862,7 +56862,7 @@ function MsiChargeLimit({ locale }) {
     return SP_JSX.jsxs("div", { className: "qsCardBody qsDropdownFullWidth", "aria-busy": busy, children: [SP_JSX.jsx(DFL.DropdownItem, { label: copy[0], description: `${copy[1]} · ${deviceInfoLocale(locale).experimental}`, bottomSeparator: "none", layout: "below", selectedOption: state.chargeLimit, disabled: busy, rgOptions: choices.map(percent => ({ data: percent, label: `${percent}%` })), onChange: ({ data }) => void choose(data) }), failed && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: controlLocale(locale).saveError })] });
 }
 
-const { Focusable: Focusable$3, DialogButton: DialogButton$2, ToggleField: ToggleField$1, DropdownItem: DropdownItem$1, ScrollPanel, GamepadButton } = _global_DFL;
+const { Focusable: Focusable$3, DialogButton: DialogButton$2, ToggleField: ToggleField$2, DropdownItem: DropdownItem$2, ScrollPanel, GamepadButton } = _global_DFL;
 const icons = { home: TbPower, audio: TbDeviceTv, performance: TbVolume, graphics: TbGauge, controller: TbDeviceGamepad2, store: TbShoppingBag, decky: TbPlug };
 let prefs = normalizeControlPreferences({});
 let loaded = false;
@@ -56873,7 +56873,7 @@ const listeners = new Set();
 const subscribe = (listener) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
 function TopbarDateSettings({ state, update, locale }) {
     const text = topbarDateCopy(locale);
-    return SP_JSX.jsxs(Focusable$3, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 10 }, children: [SP_JSX.jsx(ToggleField$1, { label: text.dateLabel, description: text.dateDescription, bottomSeparator: "none", checked: state.topbarDateEnabled, onChange: (enabled) => update({ ...state, topbarDateEnabled: enabled }, locale) }), SP_JSX.jsx(ToggleField$1, { bottomSeparator: "none", label: text.leftLabel, description: text.leftDescription, checked: state.topbarClockLeft, onChange: (enabled) => update({ ...state, topbarClockLeft: enabled }, locale) }), SP_JSX.jsx(DropdownItem$1, { label: text.formatLabel, layout: "below", bottomSeparator: "none", selectedOption: state.topbarDateFormat, disabled: !state.topbarDateEnabled, rgOptions: topbarDateOptions(locale), onChange: (option) => update({ ...state, topbarDateFormat: option.data }, locale) })] });
+    return SP_JSX.jsxs(Focusable$3, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 10 }, children: [SP_JSX.jsx(ToggleField$2, { label: text.dateLabel, description: text.dateDescription, bottomSeparator: "none", checked: state.topbarDateEnabled, onChange: (enabled) => update({ ...state, topbarDateEnabled: enabled }, locale) }), SP_JSX.jsx(ToggleField$2, { bottomSeparator: "none", label: text.leftLabel, description: text.leftDescription, checked: state.topbarClockLeft, onChange: (enabled) => update({ ...state, topbarClockLeft: enabled }, locale) }), SP_JSX.jsx(DropdownItem$2, { label: text.formatLabel, layout: "below", bottomSeparator: "none", selectedOption: state.topbarDateFormat, disabled: !state.topbarDateEnabled, rgOptions: topbarDateOptions(locale), onChange: (option) => update({ ...state, topbarDateFormat: option.data }, locale) })] });
 }
 function OnboardingInputCapture({ active }) {
     const root = _global_SP_REACT.useRef(null);
@@ -57061,7 +57061,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
             event.preventDefault?.();
             event.stopPropagation?.();
             step(button === GamepadButton.BUMPER_LEFT ? -1 : 1);
-        }, onCancelButton: customizing ? cancelEditor : undefined, onCancelActionDescription: customizing ? editorCopy.cancel : undefined, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: css }), customizing ? SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs(Focusable$3, { className: "ph-control-settings", "flow-children": "column", "data-playhub-onboarding-content": origin === "qam" ? "customize" : undefined, children: [SP_JSX.jsx("style", { children: `.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:rgba(0,0,0,.22);margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:rgba(255,255,255,.16)!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:#fff!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid #fff!important;outline-offset:-2px!important}` }), !showcasing && SP_JSX.jsxs(Focusable$3, { className: "ph-settings-pages", "flow-children": "row", role: "tablist", children: [SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'general', onClick: () => setSettingsPage('general'), children: qamSettingsCopy(locale)[0] }), SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'qam', onClick: () => setSettingsPage('qam'), children: "Shortcuts" })] }), settingsPage === 'qam' && !showcasing ? SP_JSX.jsxs(QamSettings, { locale: locale, children: [settings, SP_JSX.jsx(ToggleField$1, { label: integrationCopy.label, description: integrationCopy.description, bottomSeparator: "none", checked: state.deckyHostEnabled, onChange: (enabled) => update({ ...state, deckyHostEnabled: enabled }, locale) })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h2", { className: "ph-tab-editor-title", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: editorCopy.title }), SP_JSX.jsx("p", { children: editorCopy.introduction }), SP_JSX.jsx(Focusable$3, { className: "ph-control-tabs ph-tab-editor", "flow-children": "row", role: "tablist", "aria-label": copy.customize, onKeyDown: (event) => {
+        }, onCancelButton: customizing ? cancelEditor : undefined, onCancelActionDescription: customizing ? editorCopy.cancel : undefined, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: css }), customizing ? SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs(Focusable$3, { className: "ph-control-settings", "flow-children": "column", "data-playhub-onboarding-content": origin === "qam" ? "customize" : undefined, children: [SP_JSX.jsx("style", { children: `.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:rgba(0,0,0,.22);margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:rgba(255,255,255,.16)!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:#fff!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid #fff!important;outline-offset:-2px!important}` }), !showcasing && SP_JSX.jsxs(Focusable$3, { className: "ph-settings-pages", "flow-children": "row", role: "tablist", children: [SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'general', onClick: () => setSettingsPage('general'), children: qamSettingsCopy(locale)[0] }), SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'qam', onClick: () => setSettingsPage('qam'), children: "Shortcuts" })] }), settingsPage === 'qam' && !showcasing ? SP_JSX.jsxs(QamSettings, { locale: locale, children: [settings, SP_JSX.jsx(ToggleField$2, { label: integrationCopy.label, description: integrationCopy.description, bottomSeparator: "none", checked: state.deckyHostEnabled, onChange: (enabled) => update({ ...state, deckyHostEnabled: enabled }, locale) })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h2", { className: "ph-tab-editor-title", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: editorCopy.title }), SP_JSX.jsx("p", { children: editorCopy.introduction }), SP_JSX.jsx(Focusable$3, { className: "ph-control-tabs ph-tab-editor", "flow-children": "row", role: "tablist", "aria-label": copy.customize, onKeyDown: (event) => {
                                                 if (event.key === "x" || event.key === "X") {
                                                     event.preventDefault();
                                                     event.stopPropagation();
@@ -60731,6 +60731,7 @@ const en$1 = {
     tOff: "TV control off", tNotPaired: "Not paired", tOk: "Paired, answering", tDown: "Not answering",
     pcOk: "{free} free", pcLow: "Only {free} free", cAvail: "Core {latest} available", cCurrent: "Up to date · {current}",
     r_mic: "Microphone", micMuted: "Muted", micLive: "Live", micNone: "No microphone", micPartial: "Partly muted",
+    micCalls: "Calls mic: {name}", micAway: "calls mic not connected", micAwayDetail: "Not connected. Calls use Windows' default microphone.", micActiveDetail: "Connected and used for calls.", micChangedDetail: "Connected; Windows uses another microphone for calls.", micFailedDetail: "Windows did not let Core make it the default.",
 };
 const copy$1 = {
     en: en$1,
@@ -60746,6 +60747,7 @@ const copy$1 = {
         tOff: "Controllo TV spento", tNotPaired: "Non abbinata", tOk: "Abbinata, risponde", tDown: "Non risponde",
         pcOk: "{free} liberi", pcLow: "Solo {free} liberi", cAvail: "Core {latest} disponibile", cCurrent: "Aggiornato · {current}",
         r_mic: "Microfono", micMuted: "Silenziato", micLive: "Attivo", micNone: "Nessun microfono", micPartial: "Silenziato in parte",
+        micCalls: "Microfono per le chiamate: {name}", micAway: "microfono per le chiamate non collegato", micAwayDetail: "Non collegato. Le chiamate usano il microfono predefinito di Windows.", micActiveDetail: "Collegato e usato per le chiamate.", micChangedDetail: "Collegato; Windows usa un altro microfono per le chiamate.", micFailedDetail: "Windows non ha permesso a Core di impostarlo come predefinito.",
     },
     es: {
         title: "Estado", allGood: "Todo bien", attention: "Necesita atención: {n}", checking: "Comprobando…", agentDown: "El servicio de Core no responde.", dismiss: "Descartar aviso",
@@ -60759,6 +60761,7 @@ const copy$1 = {
         tOff: "Control de TV desactivado", tNotPaired: "Sin vincular", tOk: "Vinculada, responde", tDown: "No responde",
         pcOk: "{free} libres", pcLow: "Solo {free} libres", cAvail: "Core {latest} disponible", cCurrent: "Actualizado · {current}",
         r_mic: "Micrófono", micMuted: "Silenciado", micLive: "Activo", micNone: "No hay micrófono", micPartial: "Silenciado en parte",
+        micCalls: "Micrófono de llamadas: {name}", micAway: "micrófono de llamadas no conectado", micAwayDetail: "No conectado. Las llamadas usan el micrófono predeterminado de Windows.", micActiveDetail: "Conectado y usado para llamadas.", micChangedDetail: "Conectado; Windows usa otro micrófono para llamadas.", micFailedDetail: "Windows no dejó que Core lo pusiera como predeterminado.",
     },
     fr: {
         title: "Santé", allGood: "Tout va bien", attention: "À vérifier : {n}", checking: "Vérification…", agentDown: "Le service de Core ne répond pas.", dismiss: "Ignorer l'alerte",
@@ -60772,6 +60775,7 @@ const copy$1 = {
         tOff: "Contrôle de la TV désactivé", tNotPaired: "Non appairée", tOk: "Appairée, répond", tDown: "Ne répond pas",
         pcOk: "{free} libres", pcLow: "Seulement {free} libres", cAvail: "Core {latest} disponible", cCurrent: "À jour · {current}",
         r_mic: "Micro", micMuted: "Coupé", micLive: "Actif", micNone: "Aucun micro", micPartial: "Coupé en partie",
+        micCalls: "Micro des appels : {name}", micAway: "micro des appels non connecté", micAwayDetail: "Non connecté. Les appels utilisent le micro par défaut de Windows.", micActiveDetail: "Connecté et utilisé pour les appels.", micChangedDetail: "Connecté ; Windows utilise un autre micro pour les appels.", micFailedDetail: "Windows n'a pas laissé Core le définir par défaut.",
     },
     de: {
         title: "Status", allGood: "Alles in Ordnung", attention: "Zu prüfen: {n}", checking: "Wird geprüft…", agentDown: "Der Core-Dienst antwortet nicht.", dismiss: "Warnung ausblenden",
@@ -60785,6 +60789,7 @@ const copy$1 = {
         tOff: "TV-Steuerung aus", tNotPaired: "Nicht gekoppelt", tOk: "Gekoppelt, antwortet", tDown: "Antwortet nicht",
         pcOk: "{free} frei", pcLow: "Nur {free} frei", cAvail: "Core {latest} verfügbar", cCurrent: "Aktuell · {current}",
         r_mic: "Mikrofon", micMuted: "Stumm", micLive: "An", micNone: "Kein Mikrofon", micPartial: "Teilweise stumm",
+        micCalls: "Anruf-Mikrofon: {name}", micAway: "Anruf-Mikrofon nicht verbunden", micAwayDetail: "Nicht verbunden. Anrufe nutzen das Standardmikrofon von Windows.", micActiveDetail: "Verbunden und für Anrufe genutzt.", micChangedDetail: "Verbunden; Windows nutzt ein anderes Mikrofon für Anrufe.", micFailedDetail: "Windows hat Core nicht erlaubt, es als Standard festzulegen.",
     },
     pt: {
         title: "Saúde", allGood: "Tudo certo", attention: "Precisa de atenção: {n}", checking: "Verificando…", agentDown: "O serviço do Core não responde.", dismiss: "Dispensar alerta",
@@ -60798,6 +60803,7 @@ const copy$1 = {
         tOff: "Controle da TV desligado", tNotPaired: "Não pareada", tOk: "Pareada, responde", tDown: "Não responde",
         pcOk: "{free} livres", pcLow: "Só {free} livres", cAvail: "Core {latest} disponível", cCurrent: "Atualizado · {current}",
         r_mic: "Microfone", micMuted: "Silenciado", micLive: "Ativo", micNone: "Sem microfone", micPartial: "Silenciado em parte",
+        micCalls: "Microfone das chamadas: {name}", micAway: "microfone das chamadas não conectado", micAwayDetail: "Não conectado. As chamadas usam o microfone padrão do Windows.", micActiveDetail: "Conectado e usado nas chamadas.", micChangedDetail: "Conectado; o Windows usa outro microfone nas chamadas.", micFailedDetail: "O Windows não deixou o Core defini-lo como padrão.",
     },
     uk: {
         title: "Стан", allGood: "Усе гаразд", attention: "Потребує уваги: {n}", checking: "Перевірка…", agentDown: "Служба Core не відповідає.", dismiss: "Приховати сповіщення",
@@ -60811,6 +60817,7 @@ const copy$1 = {
         tOff: "Керування ТВ вимкнено", tNotPaired: "Не з'єднано", tOk: "З'єднано, відповідає", tDown: "Не відповідає",
         pcOk: "Вільно {free}", pcLow: "Вільно лише {free}", cAvail: "Доступний Core {latest}", cCurrent: "Актуальний · {current}",
         r_mic: "Мікрофон", micMuted: "Вимкнено", micLive: "Увімкнено", micNone: "Немає мікрофона", micPartial: "Вимкнено частково",
+        micCalls: "Мікрофон для дзвінків: {name}", micAway: "мікрофон для дзвінків не підключено", micAwayDetail: "Не підключено. Дзвінки використовують мікрофон Windows за замовчуванням.", micActiveDetail: "Підключено й використовується для дзвінків.", micChangedDetail: "Підключено; Windows використовує інший мікрофон для дзвінків.", micFailedDetail: "Windows не дозволила Core зробити його мікрофоном за замовчуванням.",
     },
     ru: {
         title: "Состояние", allGood: "Всё в порядке", attention: "Требует внимания: {n}", checking: "Проверка…", agentDown: "Служба Core не отвечает.", dismiss: "Скрыть оповещение",
@@ -60824,6 +60831,7 @@ const copy$1 = {
         tOff: "Управление ТВ выключено", tNotPaired: "Не сопряжён", tOk: "Сопряжён, отвечает", tDown: "Не отвечает",
         pcOk: "Свободно {free}", pcLow: "Свободно всего {free}", cAvail: "Доступен Core {latest}", cCurrent: "Актуален · {current}",
         r_mic: "Микрофон", micMuted: "Выключен", micLive: "Включён", micNone: "Нет микрофона", micPartial: "Выключен частично",
+        micCalls: "Микрофон для звонков: {name}", micAway: "микрофон для звонков не подключён", micAwayDetail: "Не подключён. Звонки используют микрофон Windows по умолчанию.", micActiveDetail: "Подключён и используется для звонков.", micChangedDetail: "Подключён; Windows использует другой микрофон для звонков.", micFailedDetail: "Windows не позволила Core сделать его микрофоном по умолчанию.",
     },
     zh: {
         title: "健康", allGood: "一切正常", attention: "需要注意：{n}", checking: "正在检查…", agentDown: "Core 服务没有响应。", dismiss: "忽略提醒",
@@ -60837,6 +60845,7 @@ const copy$1 = {
         tOff: "电视控制已关闭", tNotPaired: "未配对", tOk: "已配对，有响应", tDown: "没有响应",
         pcOk: "剩余 {free}", pcLow: "仅剩 {free}", cAvail: "Core {latest} 可用", cCurrent: "已是最新 · {current}",
         r_mic: "麦克风", micMuted: "已静音", micLive: "已开启", micNone: "没有麦克风", micPartial: "部分静音",
+        micCalls: "通话麦克风：{name}", micAway: "通话麦克风未连接", micAwayDetail: "未连接。通话使用 Windows 的默认麦克风。", micActiveDetail: "已连接，用于通话。", micChangedDetail: "已连接；Windows 正在用另一个麦克风通话。", micFailedDetail: "Windows 不允许 Core 将其设为默认。",
     },
     ja: {
         title: "状態", allGood: "問題なし", attention: "要確認: {n}", checking: "確認中…", agentDown: "Core のサービスが応答しません。", dismiss: "お知らせを閉じる",
@@ -60850,6 +60859,7 @@ const copy$1 = {
         tOff: "テレビ操作はオフ", tNotPaired: "未ペアリング", tOk: "ペアリング済み・応答あり", tDown: "応答なし",
         pcOk: "空き {free}", pcLow: "空きは {free} のみ", cAvail: "Core {latest} を利用可能", cCurrent: "最新 · {current}",
         r_mic: "マイク", micMuted: "ミュート中", micLive: "オン", micNone: "マイクなし", micPartial: "一部ミュート中",
+        micCalls: "通話用マイク：{name}", micAway: "通話用マイク未接続", micAwayDetail: "未接続です。通話には Windows の既定のマイクが使われます。", micActiveDetail: "接続済みで、通話に使われています。", micChangedDetail: "接続済み。Windows は通話に別のマイクを使っています。", micFailedDetail: "Windows が Core による既定の設定を許可しませんでした。",
     },
     ko: {
         title: "상태", allGood: "모두 정상", attention: "확인 필요: {n}", checking: "확인 중…", agentDown: "Core 서비스가 응답하지 않습니다.", dismiss: "알림 닫기",
@@ -60863,6 +60873,7 @@ const copy$1 = {
         tOff: "TV 제어 꺼짐", tNotPaired: "페어링 안 됨", tOk: "페어링됨, 응답함", tDown: "응답 없음",
         pcOk: "{free} 남음", pcLow: "{free}만 남음", cAvail: "Core {latest} 사용 가능", cCurrent: "최신 · {current}",
         r_mic: "마이크", micMuted: "음소거됨", micLive: "켜짐", micNone: "마이크 없음", micPartial: "일부 음소거됨",
+        micCalls: "통화용 마이크: {name}", micAway: "통화용 마이크 연결 안 됨", micAwayDetail: "연결되지 않았습니다. 통화에는 Windows 기본 마이크가 쓰입니다.", micActiveDetail: "연결되어 통화에 쓰이고 있습니다.", micChangedDetail: "연결됨. Windows가 통화에 다른 마이크를 쓰고 있습니다.", micFailedDetail: "Windows가 Core의 기본값 설정을 허용하지 않았습니다.",
     },
     hi: {
         title: "हेल्थ", allGood: "सब ठीक है", attention: "ध्यान चाहिए: {n}", checking: "जाँच हो रही है…", agentDown: "Core की सेवा जवाब नहीं दे रही।", dismiss: "अलर्ट हटाएँ",
@@ -60876,6 +60887,7 @@ const copy$1 = {
         tOff: "टीवी कंट्रोल बंद", tNotPaired: "पेयर नहीं है", tOk: "पेयर है, जवाब दे रहा है", tDown: "जवाब नहीं",
         pcOk: "{free} खाली", pcLow: "सिर्फ़ {free} खाली", cAvail: "Core {latest} उपलब्ध", cCurrent: "अप टू डेट · {current}",
         r_mic: "माइक्रोफ़ोन", micMuted: "म्यूट", micLive: "चालू", micNone: "कोई माइक्रोफ़ोन नहीं", micPartial: "आंशिक रूप से म्यूट",
+        micCalls: "कॉल माइक: {name}", micAway: "कॉल माइक कनेक्ट नहीं", micAwayDetail: "कनेक्ट नहीं है। कॉल Windows का डिफ़ॉल्ट माइक्रोफ़ोन इस्तेमाल करती हैं।", micActiveDetail: "कनेक्ट है और कॉल के लिए इस्तेमाल हो रहा है।", micChangedDetail: "कनेक्ट है; Windows कॉल के लिए दूसरा माइक्रोफ़ोन इस्तेमाल कर रहा है।", micFailedDetail: "Windows ने Core को इसे डिफ़ॉल्ट बनाने नहीं दिया।",
     },
 };
 function healthCopy(locale) {
@@ -60988,8 +61000,19 @@ function rowValue(row, text, locale, now) {
                     : row.state === "waiting" ? text.nWaiting : text.nNothing, details };
         case "tv":
             return { value: { off: text.tOff, "not-paired": text.tNotPaired, reachable: text.tOk, unreachable: text.tDown }[row.state] ?? text.unknown, details };
-        case "microphone":
-            return { value: { muted: text.micMuted, live: text.micLive, partial: text.micPartial, none: text.micNone }[row.state] ?? text.unknown, details };
+        case "microphone": {
+            // The calls mic rides along as information: its name, or "not connected" (calm, never an alert;
+            // calls then use Windows' default). No battery: Windows exposes none for a USB audio receiver.
+            const state = { muted: text.micMuted, live: text.micLive, partial: text.micPartial, none: text.micNone }[row.state] ?? text.unknown;
+            const status = typeof data.callsMicStatus === "string" ? data.callsMicStatus : "none";
+            const name = typeof data.callsMic === "string" && data.callsMic.trim() ? data.callsMic.trim().slice(0, 80) : "";
+            if (status === "none" || !["active", "absent", "changed", "failed"].includes(status))
+                return { value: state, details };
+            if (name)
+                details.push(fill$1(text.micCalls, { name }));
+            details.push({ active: text.micActiveDetail, absent: text.micAwayDetail, changed: text.micChangedDetail, failed: text.micFailedDetail }[status]);
+            return { value: `${state} · ${status === "absent" ? text.micAway : name || text.micActiveDetail}`, details };
+        }
         case "pc-disk": {
             if (typeof data.drive === "string" && data.drive)
                 details.push(data.drive);
@@ -61091,6 +61114,8 @@ const en = {
     party: "Xbox party", partyHint: "Opens the Xbox Game Bar over Big Picture. Close it with B or Esc, or press the Steam button, to come back.",
     notInstalled: "The Xbox Game Bar is not installed.", protectedGame: "Not while a game with anti-cheat is running.", alreadyOpen: "The Game Bar is already open.", inputRefused: "Windows did not accept the Game Bar shortcut.", uriFailed: "Windows could not open the Game Bar.",
     discord: "Discord", discordInstalled: "Installed: open it from Decky's tab", discordMissing: "Plugin not installed",
+    callsMic: "Calls mic", callsMicHint: "Windows' default microphone for calls: Xbox party, Discord.", windowsChoice: "Windows' choice", unnamed: "Microphone", tagCalls: "calls", tagApps: "games and apps", notConnected: "not connected", cmActive: "Connected and used for calls.", cmAbsent: "Not connected. Calls use Windows' default microphone.", cmChanged: "Windows uses another microphone for calls. Pick it again to use it.", cmFailed: "Windows did not let Core set the default. Pick it again, or set it in Windows' sound settings.", cmNotFound: "That microphone is no longer connected.",
+    everything: "Use for everything", everythingHint: "Also the default for games and apps.", scope: "Mute", scopeAll: "Mute everything", scopeCalls: "Mute calls only", scopeAllHint: "Mutes the calls mic and the games and apps mic.", scopeCallsHint: "Mutes only the calls mic; the games and apps mic stays live. Windows mutes a microphone for every app at once, so an app that records from the calls mic itself (like OBS) is muted too.",
 };
 const copy = {
     en,
@@ -61101,6 +61126,8 @@ const copy = {
         party: "Party Xbox", partyHint: "Apre la Xbox Game Bar sopra la Big Picture. Chiudila con B o Esc, oppure premi il tasto Steam, per tornare.",
         notInstalled: "La Xbox Game Bar non è installata.", protectedGame: "Non mentre è aperto un gioco con anti-cheat.", alreadyOpen: "La Game Bar è già aperta.", inputRefused: "Windows non ha accettato la scorciatoia della Game Bar.", uriFailed: "Windows non è riuscito ad aprire la Game Bar.",
         discord: "Discord", discordInstalled: "Installato: aprilo dalla scheda di Decky", discordMissing: "Plugin non installato",
+        callsMic: "Microfono per le chiamate", callsMicHint: "Il microfono predefinito di Windows per le chiamate: party Xbox, Discord.", windowsChoice: "Scelta di Windows", unnamed: "Microfono", tagCalls: "chiamate", tagApps: "giochi e app", notConnected: "non collegato", cmActive: "Collegato e usato per le chiamate.", cmAbsent: "Non collegato. Le chiamate usano il microfono predefinito di Windows.", cmChanged: "Windows usa un altro microfono per le chiamate. Sceglilo di nuovo per usarlo.", cmFailed: "Windows non ha permesso a Core di impostarlo come predefinito. Sceglilo di nuovo o impostalo nelle impostazioni audio di Windows.", cmNotFound: "Quel microfono non è più collegato.",
+        everything: "Usalo per tutto", everythingHint: "Predefinito anche per giochi e app.", scope: "Silenzia", scopeAll: "Silenzia tutto", scopeCalls: "Silenzia solo le chiamate", scopeAllHint: "Silenzia il microfono delle chiamate e quello di giochi e app.", scopeCallsHint: "Silenzia solo il microfono delle chiamate; quello di giochi e app resta attivo. Windows silenzia un microfono per tutte le app insieme, quindi anche un'app che registra direttamente dal microfono delle chiamate (come OBS) viene silenziata.",
     },
     es: {
         title: "Voz", agentDown: "El servicio de Core no responde.",
@@ -61109,6 +61136,8 @@ const copy = {
         party: "Grupo de Xbox", partyHint: "Abre la Xbox Game Bar sobre Big Picture. Ciérrala con B o Esc, o pulsa el botón Steam, para volver.",
         notInstalled: "La Xbox Game Bar no está instalada.", protectedGame: "No mientras haya un juego con antitrampas abierto.", alreadyOpen: "La Game Bar ya está abierta.", inputRefused: "Windows no aceptó el atajo de la Game Bar.", uriFailed: "Windows no pudo abrir la Game Bar.",
         discord: "Discord", discordInstalled: "Instalado: ábrelo desde la pestaña de Decky", discordMissing: "Plugin no instalado",
+        callsMic: "Micrófono de llamadas", callsMicHint: "El micrófono predeterminado de Windows para llamadas: grupo de Xbox, Discord.", windowsChoice: "Elección de Windows", unnamed: "Micrófono", tagCalls: "llamadas", tagApps: "juegos y apps", notConnected: "no conectado", cmActive: "Conectado y usado para llamadas.", cmAbsent: "No conectado. Las llamadas usan el micrófono predeterminado de Windows.", cmChanged: "Windows usa otro micrófono para llamadas. Elígelo de nuevo para usarlo.", cmFailed: "Windows no dejó que Core lo pusiera como predeterminado. Elígelo de nuevo o cámbialo en la configuración de sonido de Windows.", cmNotFound: "Ese micrófono ya no está conectado.",
+        everything: "Usar para todo", everythingHint: "También predeterminado para juegos y apps.", scope: "Silenciar", scopeAll: "Silenciar todo", scopeCalls: "Silenciar solo llamadas", scopeAllHint: "Silencia el micrófono de llamadas y el de juegos y apps.", scopeCallsHint: "Silencia solo el micrófono de llamadas; el de juegos y apps sigue activo. Windows silencia un micrófono para todas las apps a la vez, así que una app que grabe directamente del micrófono de llamadas (como OBS) también queda silenciada.",
     },
     fr: {
         title: "Voix", agentDown: "Le service de Core ne répond pas.",
@@ -61117,6 +61146,8 @@ const copy = {
         party: "Groupe Xbox", partyHint: "Ouvre la Xbox Game Bar par-dessus Big Picture. Fermez-la avec B ou Échap, ou appuyez sur le bouton Steam, pour revenir.",
         notInstalled: "La Xbox Game Bar n'est pas installée.", protectedGame: "Pas pendant un jeu protégé par un anti-triche.", alreadyOpen: "La Game Bar est déjà ouverte.", inputRefused: "Windows a refusé le raccourci de la Game Bar.", uriFailed: "Windows n'a pas pu ouvrir la Game Bar.",
         discord: "Discord", discordInstalled: "Installé : ouvrez-le depuis l'onglet Decky", discordMissing: "Plugin non installé",
+        callsMic: "Micro des appels", callsMicHint: "Le micro par défaut de Windows pour les appels : groupe Xbox, Discord.", windowsChoice: "Choix de Windows", unnamed: "Micro", tagCalls: "appels", tagApps: "jeux et applis", notConnected: "non connecté", cmActive: "Connecté et utilisé pour les appels.", cmAbsent: "Non connecté. Les appels utilisent le micro par défaut de Windows.", cmChanged: "Windows utilise un autre micro pour les appels. Choisissez-le à nouveau pour l'utiliser.", cmFailed: "Windows n'a pas laissé Core le définir par défaut. Choisissez-le à nouveau ou réglez-le dans les paramètres son de Windows.", cmNotFound: "Ce micro n'est plus connecté.",
+        everything: "Utiliser pour tout", everythingHint: "Aussi par défaut pour les jeux et les applis.", scope: "Couper", scopeAll: "Tout couper", scopeCalls: "Couper les appels seulement", scopeAllHint: "Coupe le micro des appels et celui des jeux et applis.", scopeCallsHint: "Coupe seulement le micro des appels ; celui des jeux et applis reste actif. Windows coupe un micro pour toutes les applis à la fois : une appli qui enregistre directement depuis le micro des appels (comme OBS) est coupée aussi.",
     },
     de: {
         title: "Sprache", agentDown: "Der Dienst von Core antwortet nicht.",
@@ -61125,6 +61156,8 @@ const copy = {
         party: "Xbox-Party", partyHint: "Öffnet die Xbox Game Bar über Big Picture. Schließe sie mit B oder Esc oder drücke die Steam-Taste, um zurückzukehren.",
         notInstalled: "Die Xbox Game Bar ist nicht installiert.", protectedGame: "Nicht während ein Spiel mit Anti-Cheat läuft.", alreadyOpen: "Die Game Bar ist schon offen.", inputRefused: "Windows hat das Game-Bar-Kürzel nicht angenommen.", uriFailed: "Windows konnte die Game Bar nicht öffnen.",
         discord: "Discord", discordInstalled: "Installiert: öffne es über den Decky-Tab", discordMissing: "Plugin nicht installiert",
+        callsMic: "Anruf-Mikrofon", callsMicHint: "Das Standardmikrofon von Windows für Anrufe: Xbox-Party, Discord.", windowsChoice: "Auswahl von Windows", unnamed: "Mikrofon", tagCalls: "Anrufe", tagApps: "Spiele und Apps", notConnected: "nicht verbunden", cmActive: "Verbunden und für Anrufe genutzt.", cmAbsent: "Nicht verbunden. Anrufe nutzen das Standardmikrofon von Windows.", cmChanged: "Windows nutzt ein anderes Mikrofon für Anrufe. Wähle es erneut, um es zu nutzen.", cmFailed: "Windows hat Core nicht erlaubt, es als Standard festzulegen. Wähle es erneut oder stelle es in den Soundeinstellungen von Windows ein.", cmNotFound: "Dieses Mikrofon ist nicht mehr verbunden.",
+        everything: "Für alles verwenden", everythingHint: "Auch Standard für Spiele und Apps.", scope: "Stummschalten", scopeAll: "Alles stummschalten", scopeCalls: "Nur Anrufe stummschalten", scopeAllHint: "Schaltet das Anruf-Mikrofon und das Mikrofon für Spiele und Apps stumm.", scopeCallsHint: "Schaltet nur das Anruf-Mikrofon stumm; das für Spiele und Apps bleibt an. Windows schaltet ein Mikrofon für alle Apps zugleich stumm, also auch eine App, die direkt vom Anruf-Mikrofon aufnimmt (etwa OBS).",
     },
     pt: {
         title: "Voz", agentDown: "O serviço do Core não responde.",
@@ -61133,6 +61166,8 @@ const copy = {
         party: "Grupo Xbox", partyHint: "Abre a Xbox Game Bar sobre o Big Picture. Feche-a com B ou Esc, ou aperte o botão Steam, para voltar.",
         notInstalled: "A Xbox Game Bar não está instalada.", protectedGame: "Não enquanto um jogo com antitrapaça estiver aberto.", alreadyOpen: "A Game Bar já está aberta.", inputRefused: "O Windows não aceitou o atalho da Game Bar.", uriFailed: "O Windows não conseguiu abrir a Game Bar.",
         discord: "Discord", discordInstalled: "Instalado: abra-o pela aba do Decky", discordMissing: "Plugin não instalado",
+        callsMic: "Microfone das chamadas", callsMicHint: "O microfone padrão do Windows para chamadas: grupo Xbox, Discord.", windowsChoice: "Escolha do Windows", unnamed: "Microfone", tagCalls: "chamadas", tagApps: "jogos e apps", notConnected: "não conectado", cmActive: "Conectado e usado nas chamadas.", cmAbsent: "Não conectado. As chamadas usam o microfone padrão do Windows.", cmChanged: "O Windows usa outro microfone nas chamadas. Escolha-o de novo para usá-lo.", cmFailed: "O Windows não deixou o Core defini-lo como padrão. Escolha-o de novo ou defina-o nas configurações de som do Windows.", cmNotFound: "Esse microfone não está mais conectado.",
+        everything: "Usar para tudo", everythingHint: "Também padrão para jogos e apps.", scope: "Silenciar", scopeAll: "Silenciar tudo", scopeCalls: "Silenciar só as chamadas", scopeAllHint: "Silencia o microfone das chamadas e o de jogos e apps.", scopeCallsHint: "Silencia só o microfone das chamadas; o de jogos e apps continua ativo. O Windows silencia um microfone para todos os apps ao mesmo tempo, então um app que grava direto do microfone das chamadas (como o OBS) também fica silenciado.",
     },
     uk: {
         title: "Голос", agentDown: "Служба Core не відповідає.",
@@ -61141,6 +61176,8 @@ const copy = {
         party: "Група Xbox", partyHint: "Відкриває Xbox Game Bar поверх Big Picture. Щоб повернутися, закрийте її кнопкою B чи Esc або натисніть кнопку Steam.",
         notInstalled: "Xbox Game Bar не встановлено.", protectedGame: "Не під час гри з античитом.", alreadyOpen: "Game Bar уже відкрито.", inputRefused: "Windows не прийняла скорочення Game Bar.", uriFailed: "Windows не вдалося відкрити Game Bar.",
         discord: "Discord", discordInstalled: "Встановлено: відкрийте його на вкладці Decky", discordMissing: "Плагін не встановлено",
+        callsMic: "Мікрофон для дзвінків", callsMicHint: "Мікрофон Windows за замовчуванням для дзвінків: група Xbox, Discord.", windowsChoice: "Вибір Windows", unnamed: "Мікрофон", tagCalls: "дзвінки", tagApps: "ігри й програми", notConnected: "не підключено", cmActive: "Підключено й використовується для дзвінків.", cmAbsent: "Не підключено. Дзвінки використовують мікрофон Windows за замовчуванням.", cmChanged: "Windows використовує інший мікрофон для дзвінків. Виберіть його знову, щоб використовувати.", cmFailed: "Windows не дозволила Core зробити його мікрофоном за замовчуванням. Виберіть його знову або налаштуйте в параметрах звуку Windows.", cmNotFound: "Цей мікрофон більше не підключено.",
+        everything: "Використовувати для всього", everythingHint: "Також за замовчуванням для ігор і програм.", scope: "Вимкнення", scopeAll: "Вимикати все", scopeCalls: "Вимикати лише дзвінки", scopeAllHint: "Вимикає мікрофон для дзвінків і мікрофон для ігор і програм.", scopeCallsHint: "Вимикає лише мікрофон для дзвінків; мікрофон для ігор і програм лишається ввімкненим. Windows вимикає мікрофон одразу для всіх програм, тож програма, що записує прямо з мікрофона для дзвінків (як OBS), теж вимикається.",
     },
     ru: {
         title: "Голос", agentDown: "Служба Core не отвечает.",
@@ -61149,6 +61186,8 @@ const copy = {
         party: "Группа Xbox", partyHint: "Открывает Xbox Game Bar поверх Big Picture. Чтобы вернуться, закройте её кнопкой B или Esc либо нажмите кнопку Steam.",
         notInstalled: "Xbox Game Bar не установлена.", protectedGame: "Не во время игры с античитом.", alreadyOpen: "Game Bar уже открыта.", inputRefused: "Windows не приняла сочетание Game Bar.", uriFailed: "Windows не удалось открыть Game Bar.",
         discord: "Discord", discordInstalled: "Установлен: откройте его на вкладке Decky", discordMissing: "Плагин не установлен",
+        callsMic: "Микрофон для звонков", callsMicHint: "Микрофон Windows по умолчанию для звонков: группа Xbox, Discord.", windowsChoice: "Выбор Windows", unnamed: "Микрофон", tagCalls: "звонки", tagApps: "игры и приложения", notConnected: "не подключён", cmActive: "Подключён и используется для звонков.", cmAbsent: "Не подключён. Звонки используют микрофон Windows по умолчанию.", cmChanged: "Windows использует другой микрофон для звонков. Выберите его снова, чтобы использовать.", cmFailed: "Windows не позволила Core сделать его микрофоном по умолчанию. Выберите его снова или настройте в параметрах звука Windows.", cmNotFound: "Этот микрофон больше не подключён.",
+        everything: "Использовать для всего", everythingHint: "Также по умолчанию для игр и приложений.", scope: "Выключение", scopeAll: "Выключать всё", scopeCalls: "Выключать только звонки", scopeAllHint: "Выключает микрофон для звонков и микрофон для игр и приложений.", scopeCallsHint: "Выключает только микрофон для звонков; микрофон для игр и приложений остаётся включённым. Windows выключает микрофон сразу для всех приложений, поэтому приложение, которое пишет прямо с микрофона для звонков (например, OBS), тоже выключается.",
     },
     zh: {
         title: "语音", agentDown: "Core 的服务没有响应。",
@@ -61157,6 +61196,8 @@ const copy = {
         party: "Xbox 派对", partyHint: "在 Big Picture 上打开 Xbox Game Bar。按 B 或 Esc 关闭它，或按 Steam 键返回。",
         notInstalled: "未安装 Xbox Game Bar。", protectedGame: "运行带反作弊的游戏时不可用。", alreadyOpen: "Game Bar 已打开。", inputRefused: "Windows 未接受 Game Bar 快捷键。", uriFailed: "Windows 无法打开 Game Bar。",
         discord: "Discord", discordInstalled: "已安装：从 Decky 标签页打开", discordMissing: "未安装插件",
+        callsMic: "通话麦克风", callsMicHint: "Windows 用于通话的默认麦克风：Xbox 派对、Discord。", windowsChoice: "由 Windows 决定", unnamed: "麦克风", tagCalls: "通话", tagApps: "游戏和应用", notConnected: "未连接", cmActive: "已连接，用于通话。", cmAbsent: "未连接。通话使用 Windows 的默认麦克风。", cmChanged: "Windows 正在用另一个麦克风通话。再次选择它即可使用。", cmFailed: "Windows 不允许 Core 将其设为默认。请再次选择，或在 Windows 声音设置中设置。", cmNotFound: "该麦克风已不再连接。",
+        everything: "用于所有用途", everythingHint: "同时设为游戏和应用的默认麦克风。", scope: "静音", scopeAll: "全部静音", scopeCalls: "仅静音通话", scopeAllHint: "静音通话麦克风以及游戏和应用的麦克风。", scopeCallsHint: "只静音通话麦克风；游戏和应用的麦克风保持开启。Windows 会对所有应用同时静音一个麦克风，所以直接从通话麦克风录音的应用（例如 OBS）也会被静音。",
     },
     ja: {
         title: "ボイス", agentDown: "Core のサービスが応答しません。",
@@ -61165,6 +61206,8 @@ const copy = {
         party: "Xbox パーティー", partyHint: "Big Picture の上に Xbox Game Bar を開きます。戻るには B か Esc で閉じるか、Steam ボタンを押します。",
         notInstalled: "Xbox Game Bar がインストールされていません。", protectedGame: "アンチチート付きのゲーム中は使えません。", alreadyOpen: "Game Bar はすでに開いています。", inputRefused: "Windows が Game Bar のショートカットを受け付けませんでした。", uriFailed: "Windows で Game Bar を開けませんでした。",
         discord: "Discord", discordInstalled: "インストール済み：Decky のタブから開きます", discordMissing: "プラグイン未インストール",
+        callsMic: "通話用マイク", callsMicHint: "通話（Xbox パーティー、Discord）に使う Windows の既定のマイクです。", windowsChoice: "Windows の選択", unnamed: "マイク", tagCalls: "通話", tagApps: "ゲームとアプリ", notConnected: "未接続", cmActive: "接続済みで、通話に使われています。", cmAbsent: "未接続です。通話には Windows の既定のマイクが使われます。", cmChanged: "Windows は通話に別のマイクを使っています。使うにはもう一度選んでください。", cmFailed: "Windows が Core による既定の設定を許可しませんでした。もう一度選ぶか、Windows のサウンド設定で設定してください。", cmNotFound: "そのマイクはもう接続されていません。",
+        everything: "すべてに使う", everythingHint: "ゲームとアプリの既定にもします。", scope: "ミュート", scopeAll: "すべてミュート", scopeCalls: "通話のみミュート", scopeAllHint: "通話用マイクと、ゲームとアプリ用のマイクをミュートします。", scopeCallsHint: "通話用マイクだけをミュートし、ゲームとアプリ用のマイクはオンのままです。Windows はマイクをすべてのアプリで同時にミュートするため、通話用マイクから直接録音するアプリ（OBS など）もミュートされます。",
     },
     ko: {
         title: "음성", agentDown: "Core 서비스가 응답하지 않습니다.",
@@ -61173,6 +61216,8 @@ const copy = {
         party: "Xbox 파티", partyHint: "Big Picture 위에 Xbox Game Bar를 엽니다. 돌아오려면 B나 Esc로 닫거나 Steam 버튼을 누르세요.",
         notInstalled: "Xbox Game Bar가 설치되어 있지 않습니다.", protectedGame: "안티치트 게임 실행 중에는 사용할 수 없습니다.", alreadyOpen: "Game Bar가 이미 열려 있습니다.", inputRefused: "Windows가 Game Bar 단축키를 받아들이지 않았습니다.", uriFailed: "Windows에서 Game Bar를 열지 못했습니다.",
         discord: "Discord", discordInstalled: "설치됨: Decky 탭에서 여세요", discordMissing: "플러그인 미설치",
+        callsMic: "통화용 마이크", callsMicHint: "통화(Xbox 파티, Discord)에 쓰는 Windows 기본 마이크입니다.", windowsChoice: "Windows 선택", unnamed: "마이크", tagCalls: "통화", tagApps: "게임 및 앱", notConnected: "연결 안 됨", cmActive: "연결되어 통화에 쓰이고 있습니다.", cmAbsent: "연결되지 않았습니다. 통화에는 Windows 기본 마이크가 쓰입니다.", cmChanged: "Windows가 통화에 다른 마이크를 쓰고 있습니다. 쓰려면 다시 선택하세요.", cmFailed: "Windows가 Core의 기본값 설정을 허용하지 않았습니다. 다시 선택하거나 Windows 소리 설정에서 설정하세요.", cmNotFound: "그 마이크는 더 이상 연결되어 있지 않습니다.",
+        everything: "모든 용도에 사용", everythingHint: "게임 및 앱의 기본값으로도 설정합니다.", scope: "음소거", scopeAll: "모두 음소거", scopeCalls: "통화만 음소거", scopeAllHint: "통화용 마이크와 게임 및 앱용 마이크를 음소거합니다.", scopeCallsHint: "통화용 마이크만 음소거하고 게임 및 앱용 마이크는 켜 둡니다. Windows는 마이크를 모든 앱에서 한꺼번에 음소거하므로, 통화용 마이크에서 직접 녹음하는 앱(OBS 등)도 음소거됩니다.",
     },
     hi: {
         title: "आवाज़", agentDown: "Core की सेवा जवाब नहीं दे रही है।",
@@ -61181,6 +61226,8 @@ const copy = {
         party: "Xbox पार्टी", partyHint: "Big Picture के ऊपर Xbox Game Bar खोलता है। लौटने के लिए इसे B या Esc से बंद करें, या Steam बटन दबाएँ।",
         notInstalled: "Xbox Game Bar इंस्टॉल नहीं है।", protectedGame: "एंटी-चीट वाला गेम चलते समय नहीं।", alreadyOpen: "Game Bar पहले से खुला है।", inputRefused: "Windows ने Game Bar का शॉर्टकट स्वीकार नहीं किया।", uriFailed: "Windows Game Bar नहीं खोल सका।",
         discord: "Discord", discordInstalled: "इंस्टॉल है: इसे Decky टैब से खोलें", discordMissing: "प्लगइन इंस्टॉल नहीं है",
+        callsMic: "कॉल माइक", callsMicHint: "कॉल (Xbox पार्टी, Discord) के लिए Windows का डिफ़ॉल्ट माइक्रोफ़ोन।", windowsChoice: "Windows की पसंद", unnamed: "माइक्रोफ़ोन", tagCalls: "कॉल", tagApps: "गेम और ऐप", notConnected: "कनेक्ट नहीं", cmActive: "कनेक्ट है और कॉल के लिए इस्तेमाल हो रहा है।", cmAbsent: "कनेक्ट नहीं है। कॉल Windows का डिफ़ॉल्ट माइक्रोफ़ोन इस्तेमाल करती हैं।", cmChanged: "Windows कॉल के लिए दूसरा माइक्रोफ़ोन इस्तेमाल कर रहा है। इसे इस्तेमाल करने के लिए फिर से चुनें।", cmFailed: "Windows ने Core को इसे डिफ़ॉल्ट बनाने नहीं दिया। फिर से चुनें, या Windows की साउंड सेटिंग में सेट करें।", cmNotFound: "वह माइक्रोफ़ोन अब कनेक्ट नहीं है।",
+        everything: "हर चीज़ के लिए इस्तेमाल करें", everythingHint: "गेम और ऐप के लिए भी डिफ़ॉल्ट।", scope: "म्यूट", scopeAll: "सब म्यूट करें", scopeCalls: "सिर्फ़ कॉल म्यूट करें", scopeAllHint: "कॉल माइक और गेम व ऐप का माइक म्यूट करता है।", scopeCallsHint: "सिर्फ़ कॉल माइक म्यूट करता है; गेम और ऐप का माइक चालू रहता है। Windows किसी माइक्रोफ़ोन को सभी ऐप के लिए एक साथ म्यूट करता है, इसलिए कॉल माइक से सीधे रिकॉर्ड करने वाला ऐप (जैसे OBS) भी म्यूट हो जाता है।",
     },
 };
 function voiceCopy(locale) {
@@ -61202,6 +61249,45 @@ function micView(answer, locale) {
     const hotkey = typeof mic?.hotkey === "string" && mic.hotkey.trim() && mic.hotkey.length <= 40 ? fill(text.hotkey, { keys: mic.hotkey.trim() }) : "";
     const detail = state === "partial" ? text.partialDetail : muted && mic?.coreMuted === false ? text.mutedElsewhere : hotkey;
     return { state, muted, line: text[state], button: unmutes ? text.unmute : text.mute, detail };
+}
+function deviceName(name, text) {
+    const value = typeof name === "string" ? name.trim() : "";
+    return value ? (value.length > 80 ? value.slice(0, 79) + "…" : value) : text.unnamed;
+}
+// Connected devices, each marked with the defaults it holds; a remembered calls mic that is not
+// connected stays listed (marked "not connected") so the picker shows what was chosen.
+function callsMicView(answer, locale) {
+    const text = voiceCopy(locale);
+    const devices = (Array.isArray(answer?.devices) ? answer.devices : []).filter(device => device && typeof device.id === "string" && device.id);
+    const options = [{ data: "", label: text.windowsChoice }];
+    for (const device of devices) {
+        const tags = [device.communications ? text.tagCalls : "", device.console ? text.tagApps : ""].filter(Boolean);
+        options.push({ data: device.id, label: tags.length ? `${deviceName(device.name, text)} · ${tags.join(", ")}` : deviceName(device.name, text) });
+    }
+    const calls = answer?.callsMic;
+    const status = typeof calls?.status === "string" ? calls.status : "none";
+    const chosen = status !== "none" && typeof calls?.id === "string" ? calls.id : "";
+    if (chosen && !options.some(option => option.data === chosen))
+        options.push({ data: chosen, label: `${deviceName(calls?.name, text)} (${text.notConnected})` });
+    const line = { active: text.cmActive, absent: text.cmAbsent, changed: text.cmChanged, failed: text.cmFailed }[status] ?? "";
+    return { options, selected: chosen, status, line, everything: calls?.everything === true, canToggleEverything: chosen !== "" && status !== "absent" };
+}
+function scopeView(answer, locale) {
+    const text = voiceCopy(locale);
+    const selected = answer?.mic?.scope === "calls" ? "calls" : "all";
+    return { options: [{ data: "all", label: text.scopeAll }, { data: "calls", label: text.scopeCalls }], selected, hint: selected === "calls" ? text.scopeCallsHint : text.scopeAllHint };
+}
+// After a pick: a message only when it did not work. A refusal by Windows is already the status
+// line ("failed"), so it is said once, there.
+function callsMicMessage(answer, locale) {
+    const text = voiceCopy(locale);
+    if (!answer || typeof answer !== "object" || !answer.mic)
+        return text.agentDown;
+    if (answer.result === "notFound")
+        return text.cmNotFound;
+    if ((answer.result === "refused" || answer.result === "unavailable") && answer.callsMic?.status !== "failed")
+        return text.cmFailed;
+    return "";
 }
 // Empty when the bar was opened: Quick Access is already closed by then.
 function partyMessage(answer, locale) {
@@ -61225,7 +61311,9 @@ function discordInstalled(inventory) {
 // (opens the Xbox Game Bar over Big Picture; Microsoft offers no party API) and a Discord row that
 // only says whether Core's Discord plugin is installed: Decky has no supported call that opens
 // another plugin's panel. The agent does the work (GamingMode.Services/MarkIIIHost.Voice.cs).
-const { PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1, Focusable: Focusable$1, DialogButton: DialogButton$1 } = _global_DFL;
+// Below the button: the calls mic picker (makes a device Windows' default for calls, and for
+// everything with the toggle) and the mute scope (everything, the default, or calls only).
+const { PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1, Focusable: Focusable$1, DialogButton: DialogButton$1, DropdownItem: DropdownItem$1, ToggleField: ToggleField$1 } = _global_DFL;
 const BLACK = "#000000", CRIMSON = "#D7263D", STEEL = "#C9D1D9", GUNMETAL = "#1A1D21";
 const style = `
 .core-voice{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
@@ -61242,6 +61330,7 @@ const style = `
 .core-voice-row-title{font-size:13px;color:#fff;font-weight:600}
 .core-voice-row-value{font-size:12px;color:${STEEL};text-align:right}
 .core-voice-note{padding:0 12px;font-size:12px;color:${CRIMSON}}
+.core-voice-settings{display:flex;flex-direction:column;gap:6px;padding:0 4px}
 `;
 // Lucide Mic and MicOff (ISC; see quick_settings/THIRD-PARTY-NOTICES.md).
 function MicIcon({ off }) {
@@ -61263,6 +61352,7 @@ function VoiceSection({ locale }) {
     const [answer, setAnswer] = _global_SP_REACT.useState(undefined);
     const [busy, setBusy] = _global_SP_REACT.useState(false);
     const [note, setNote] = _global_SP_REACT.useState("");
+    const [callsNote, setCallsNote] = _global_SP_REACT.useState("");
     const [discord, setDiscord] = _global_SP_REACT.useState(readDiscord);
     const text = voiceCopy(locale);
     _global_SP_REACT.useEffect(() => {
@@ -61284,6 +61374,35 @@ function VoiceSection({ locale }) {
         setBusy(true);
         try {
             const value = await call("core_voice_mic", "toggle");
+            if (value && value.mic)
+                setAnswer(value);
+        }
+        catch { /* The next poll shows the actual state. */ }
+        finally {
+            setBusy(false);
+        }
+    };
+    // One change at a time; the answer is the new state, so the picker shows what Windows now uses.
+    const pickCallsMic = async (id, everything) => {
+        setBusy(true);
+        setCallsNote("");
+        try {
+            const value = await call("core_voice_calls_mic", id, everything);
+            if (value && value.mic)
+                setAnswer(value);
+            setCallsNote(callsMicMessage(value, locale));
+        }
+        catch {
+            setCallsNote(text.agentDown);
+        }
+        finally {
+            setBusy(false);
+        }
+    };
+    const pickScope = async (scope) => {
+        setBusy(true);
+        try {
+            const value = await call("core_voice_mute_scope", scope);
             if (value && value.mic)
                 setAnswer(value);
         }
@@ -61315,7 +61434,11 @@ function VoiceSection({ locale }) {
             toaster.toast({ title: text.party, body: message });
     };
     const mic = micView(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$1, { title: text.title, children: [SP_JSX.jsx("style", { children: style }), SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsxs(Focusable$1, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$1, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs(DialogButton$1, { className: "core-voice-button", disabled: !answer, onClick: openParty, children: [SP_JSX.jsx(PartyIcon, {}), SP_JSX.jsx("span", { className: "core-voice-text", children: SP_JSX.jsx("span", { className: "core-voice-label", children: text.party }) })] }), SP_JSX.jsx("div", { className: "core-voice-hint", children: text.partyHint }), note && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: note }), SP_JSX.jsxs("div", { className: "core-voice-row", children: [SP_JSX.jsx("span", { className: "core-voice-row-title", children: text.discord }), SP_JSX.jsx("span", { className: "core-voice-row-value", children: discord ? text.discordInstalled : text.discordMissing })] })] }) })] }));
+    const calls = callsMicView(answer, locale);
+    const scope = scopeView(answer, locale);
+    return (SP_JSX.jsxs(PanelSection$1, { title: text.title, children: [SP_JSX.jsx("style", { children: style }), SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsxs(Focusable$1, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$1, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs("div", { className: "core-voice-settings", children: [SP_JSX.jsx(DropdownItem$1, { label: text.callsMic, description: text.callsMicHint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: calls.options, selectedOption: calls.selected, onChange: (option) => { if (option.data !== calls.selected)
+                                        void pickCallsMic(option.data, calls.everything); } }), calls.line && SP_JSX.jsx("div", { className: "core-voice-hint", role: "status", children: calls.line }), callsNote && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: callsNote }), SP_JSX.jsx(ToggleField$1, { label: text.everything, description: text.everythingHint, bottomSeparator: "none", checked: calls.everything, disabled: busy || !answer || !calls.canToggleEverything, onChange: (enabled) => void pickCallsMic(calls.selected, enabled) }), SP_JSX.jsx(DropdownItem$1, { label: text.scope, description: scope.hint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: scope.options, selectedOption: scope.selected, onChange: (option) => { if (option.data !== scope.selected)
+                                        void pickScope(option.data); } })] }), SP_JSX.jsxs(DialogButton$1, { className: "core-voice-button", disabled: !answer, onClick: openParty, children: [SP_JSX.jsx(PartyIcon, {}), SP_JSX.jsx("span", { className: "core-voice-text", children: SP_JSX.jsx("span", { className: "core-voice-label", children: text.party }) })] }), SP_JSX.jsx("div", { className: "core-voice-hint", children: text.partyHint }), note && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: note }), SP_JSX.jsxs("div", { className: "core-voice-row", children: [SP_JSX.jsx("span", { className: "core-voice-row-title", children: text.discord }), SP_JSX.jsx("span", { className: "core-voice-row-value", children: discord ? text.discordInstalled : text.discordMissing })] })] }) })] }));
 }
 
 const { useState, useEffect, useMemo } = _global_SP_REACT;

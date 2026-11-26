@@ -31,22 +31,8 @@ internal static class WindowsMicrophone
 		try
 		{
 			enumerator = CreateEnumerator();
-			var defaults = new HashSet<string>(StringComparer.Ordinal);
-			string? communications = null;
-			foreach (int role in new[] { RoleConsole, RoleCommunications })
-			{
-				// E_NOTFOUND when there is no microphone at all.
-				if (enumerator.GetDefaultAudioEndpoint(FlowCapture, role, out IMMDevice? device) != 0 || device is null) continue;
-				try
-				{
-					if (device.GetId(out string? id) == 0 && !string.IsNullOrEmpty(id))
-					{
-						defaults.Add(id);
-						if (role == RoleCommunications) communications = id;
-					}
-				}
-				finally { Release(device); }
-			}
+			string? console = DefaultId(enumerator, RoleConsole);
+			string? communications = DefaultId(enumerator, RoleCommunications);
 			Marshal.ThrowExceptionForHR(enumerator.EnumAudioEndpoints(FlowCapture, DeviceStateActive, out collection));
 			Marshal.ThrowExceptionForHR(collection!.GetCount(out uint count));
 			for (uint index = 0; index < count && index < 64; index++)
@@ -57,13 +43,67 @@ internal static class WindowsMicrophone
 					if (device.GetId(out string? id) != 0 || string.IsNullOrEmpty(id)) continue;
 					bool? muted = null;
 					WithVolume(device, volume => { if (volume.GetMute(out bool value) == 0) muted = value; });
-					if (muted is bool known) result.Add(new MicEndpoint(id, known, defaults.Contains(id), string.Equals(id, communications, StringComparison.Ordinal)));
+					if (muted is not bool known) continue;
+					bool isConsole = string.Equals(id, console, StringComparison.Ordinal);
+					bool isCommunications = string.Equals(id, communications, StringComparison.Ordinal);
+					result.Add(new MicEndpoint(id, known, isConsole || isCommunications, isCommunications, isConsole, FriendlyName(device)));
 				}
 				finally { Release(device); }
 			}
 		}
 		finally { Release(collection); Release(enumerator); }
 		return result;
+	}
+
+	// The current default capture endpoint for a role; null when there is no microphone (E_NOTFOUND).
+	private static string? DefaultId(IMMDeviceEnumerator enumerator, int role)
+	{
+		if (enumerator.GetDefaultAudioEndpoint(FlowCapture, role, out IMMDevice? device) != 0 || device is null) return null;
+		try { return device.GetId(out string? id) == 0 && !string.IsNullOrEmpty(id) ? id : null; }
+		finally { Release(device); }
+	}
+
+	internal static string? DefaultId(int role)
+	{
+		IMMDeviceEnumerator? enumerator = null;
+		try { enumerator = CreateEnumerator(); return DefaultId(enumerator, role); }
+		finally { Release(enumerator); }
+	}
+
+	// PKEY_Device_FriendlyName ("Microphone (Wireless Microphone RX)"), what Windows' Sound settings show.
+	private static readonly PropertyKey FriendlyNameKey = new() { FormatId = new Guid("A45C254E-DF1C-4EFD-8020-67D146A850E0"), PropertyId = 14 };
+	private const ushort VtLpwstr = 31;
+
+	private static string? FriendlyName(IMMDevice device)
+	{
+		IPropertyStore? store = null;
+		var value = new PropVariant();
+		try
+		{
+			if (device.OpenPropertyStore(0 /* STGM_READ */, out store) != 0 || store is null) return null;
+			PropertyKey key = FriendlyNameKey;
+			if (store.GetValue(ref key, out value) != 0 || value.Type != VtLpwstr || value.Pointer == 0) return null;
+			string? name = Marshal.PtrToStringUni(value.Pointer);
+			return string.IsNullOrWhiteSpace(name) ? null : name.Trim();
+		}
+		catch { return null; }
+		finally { try { PropVariantClear(ref value); } catch { } Release(store); }
+	}
+
+	[DllImport("ole32.dll")] private static extern int PropVariantClear(ref PropVariant value);
+
+	// PROPVARIANT: 16 bytes on x86, 24 on x64; only VT_LPWSTR is read.
+	[StructLayout(LayoutKind.Sequential)]
+	internal struct PropVariant { public ushort Type; public ushort Reserved1, Reserved2, Reserved3; public nint Pointer; public nint Pointer2; }
+
+	[ComImport, Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	internal interface IPropertyStore
+	{
+		[PreserveSig] int GetCount(out uint count);
+		[PreserveSig] int GetAt(uint index, out PropertyKey key);
+		[PreserveSig] int GetValue(ref PropertyKey key, out PropVariant value);
+		[PreserveSig] int SetValue(ref PropertyKey key, ref PropVariant value);
+		[PreserveSig] int Commit();
 	}
 
 	internal static bool SetMute(string id, bool mute)
@@ -164,7 +204,7 @@ internal static class WindowsMicrophone
 	internal interface IMMDevice
 	{
 		[PreserveSig] int Activate(ref Guid iid, uint classContext, nint activationParameters, [MarshalAs(UnmanagedType.IUnknown)] out object? instance);
-		[PreserveSig] int OpenPropertyStore(uint access, out nint properties);
+		[PreserveSig] int OpenPropertyStore(uint access, out IPropertyStore? properties);
 		[PreserveSig] int GetId([MarshalAs(UnmanagedType.LPWStr)] out string? id);
 		[PreserveSig] int GetState(out uint state);
 	}
@@ -196,6 +236,64 @@ internal static class WindowsMicrophone
 		[PreserveSig] int GetChannelVolumeLevelScalar(uint channel, out float level);
 		[PreserveSig] int SetMute([MarshalAs(UnmanagedType.Bool)] bool mute, ref Guid eventContext);
 		[PreserveSig] int GetMute([MarshalAs(UnmanagedType.Bool)] out bool mute);
+	}
+}
+
+// ---------- setting the default microphone (IPolicyConfig) ----------
+
+// Outside-world fact: Windows has no documented API to set the default audio device. Windows' own
+// Sound panel uses the undocumented COM class CPolicyConfigClient
+// ({870AF99C-171D-4F9E-AF0D-E63DF40C2BC9}) through IPolicyConfig ({F8679F50-850A-41CF-9C72-430F290290C8},
+// Windows 7 and later), and so do the widely used tools that switch devices: EarTrumpet, SoundSwitch,
+// NirSoft's SoundVolumeView and Sunshine (its PolicyConfig.h). Only SetDefaultEndpoint, the 11th
+// method, is called; the methods before it are declared so the vtable order matches and are never
+// used. Because Microsoft may change it, every failure (class missing, interface refused, error
+// HRESULT, or a default that did not actually change) comes back as a result and Quick Access says
+// so; Core never retries in a loop.
+internal sealed class PolicyConfigDefaultMic : IDefaultMicSetter
+{
+	private static readonly Guid PolicyConfigClsid = new("870AF99C-171D-4F9E-AF0D-E63DF40C2BC9");
+	private const int RoleConsole = 0, RoleMultimedia = 1, RoleCommunications = 2;
+
+	public DefaultSetResult SetDefault(string id, MicRole role)
+	{
+		object? instance = null;
+		try
+		{
+			Type? type = Type.GetTypeFromCLSID(PolicyConfigClsid, throwOnError: false);
+			if (type is null) return DefaultSetResult.Unavailable;
+			instance = Activator.CreateInstance(type);
+			if (instance is not IPolicyConfig policy) return DefaultSetResult.Unavailable;
+			// Windows' Sound panel sets Console and Multimedia together for "Set as default device".
+			int[] roles = role == MicRole.Communications ? new[] { RoleCommunications } : new[] { RoleConsole, RoleMultimedia };
+			foreach (int windowsRole in roles)
+				if (policy.SetDefaultEndpoint(id, windowsRole) < 0) return DefaultSetResult.Refused;
+			// Trust what Windows reports afterwards, not the HRESULT alone.
+			string? now = WindowsMicrophone.DefaultId(roles[0]);
+			return string.Equals(now, id, StringComparison.Ordinal) ? DefaultSetResult.Done : DefaultSetResult.Refused;
+		}
+		catch (Exception error) when (error is COMException or InvalidCastException or UnauthorizedAccessException or TypeLoadException or NotSupportedException)
+		{
+			return DefaultSetResult.Unavailable;
+		}
+		finally { WindowsMicrophone.Release(instance); }
+	}
+
+	[ComImport, Guid("F8679F50-850A-41CF-9C72-430F290290C8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	private interface IPolicyConfig
+	{
+		[PreserveSig] int GetMixFormat([MarshalAs(UnmanagedType.LPWStr)] string id, out nint format);
+		[PreserveSig] int GetDeviceFormat([MarshalAs(UnmanagedType.LPWStr)] string id, int useDefault, out nint format);
+		[PreserveSig] int ResetDeviceFormat([MarshalAs(UnmanagedType.LPWStr)] string id);
+		[PreserveSig] int SetDeviceFormat([MarshalAs(UnmanagedType.LPWStr)] string id, nint endpointFormat, nint mixFormat);
+		[PreserveSig] int GetProcessingPeriod([MarshalAs(UnmanagedType.LPWStr)] string id, int useDefault, out long defaultPeriod, out long minimumPeriod);
+		[PreserveSig] int SetProcessingPeriod([MarshalAs(UnmanagedType.LPWStr)] string id, ref long period);
+		[PreserveSig] int GetShareMode([MarshalAs(UnmanagedType.LPWStr)] string id, nint mode);
+		[PreserveSig] int SetShareMode([MarshalAs(UnmanagedType.LPWStr)] string id, nint mode);
+		[PreserveSig] int GetPropertyValue([MarshalAs(UnmanagedType.LPWStr)] string id, int fxStore, nint key, nint value);
+		[PreserveSig] int SetPropertyValue([MarshalAs(UnmanagedType.LPWStr)] string id, int fxStore, nint key, nint value);
+		[PreserveSig] int SetDefaultEndpoint([MarshalAs(UnmanagedType.LPWStr)] string id, int role);
+		[PreserveSig] int SetEndpointVisibility([MarshalAs(UnmanagedType.LPWStr)] string id, int visible);
 	}
 }
 
