@@ -63,7 +63,7 @@ internal sealed class UnrealDisplayLease : IDisposable
         Layout? layout = Resolve(executable, profile);
         if (layout is null) return null;
         RequireAbsent(gameIsAbsent);
-        string folder = Path.Combine(profile, "Playhub", "game-session", "unreal-display");
+        string folder = Path.Combine(global::Playhub.Shared.CoreNames.DataRoot(profile), "game-session", "unreal-display");
         string key = Digest(Encoding.UTF8.GetBytes(layout.Settings.ToUpperInvariant()));
         string journal = Path.Combine(folder, key + ".json"), lockPath = Path.Combine(folder, key + ".lock");
         RequireLocalPath(profile, lockPath);

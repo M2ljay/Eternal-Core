@@ -47,7 +47,7 @@ internal sealed class CupheadWindowedPreference : IDisposable
     {
         if (!Path.IsPathFullyQualified(profile)) throw new ArgumentException("The local profile is required.");
         string preferences = Path.Combine(profile, "Packages", Family, "LocalState", "playerprefs.dat");
-        string folder = Path.Combine(profile, "Playhub", "xbox-session", "cuphead-display");
+        string folder = Path.Combine(global::Playhub.Shared.CoreNames.DataRoot(profile), "xbox-session", "cuphead-display");
         string journal = Path.Combine(folder, "pending.json");
         string lockPath = Path.Combine(folder, "session.lock");
         if (!File.Exists(preferences) && !File.Exists(journal)) return null;

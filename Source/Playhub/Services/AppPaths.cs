@@ -8,15 +8,25 @@ namespace Playhub.Services;
 
 public static class AppPaths
 {
+    // %APPDATA%\Core and %LOCALAPPDATA%\Core (Playhub until the one-time copy is done, see
+    // CoreNames.MigrateDataRoot). The app makes the copy on its first start after an update if
+    // setup could not, and keeps the result for its lifetime. The agent, setup and tests that
+    // link this file resolve the root on every use, so a long-running agent follows the move.
+    public static System.Collections.Generic.List<string> DataMigrationNotes { get; } = new();
+
 #if PLAYHUB_UI_REVIEW
     public static string AppDataRoot { get; } = Path.Combine(AppContext.BaseDirectory, "ui-review-data", Environment.GetEnvironmentVariable("PLAYHUB_REVIEW_SESSION") ?? "default", "roaming");
     public static string LocalDataRoot { get; } = Path.Combine(AppContext.BaseDirectory, "ui-review-data", Environment.GetEnvironmentVariable("PLAYHUB_REVIEW_SESSION") ?? "default", "local");
 #else
-    public static string AppDataRoot { get; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Playhub");
+    public static string AppDataRoot => MigratesData ? MigratedAppDataRoot.Value : Playhub.Shared.CoreNames.RoamingDataRoot();
 
-    public static string LocalDataRoot { get; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Playhub");
+    public static string LocalDataRoot => MigratesData ? MigratedLocalDataRoot.Value : Playhub.Shared.CoreNames.LocalDataRoot();
+
+    private static readonly bool MigratesData = Playhub.Shared.CoreNames.IsAppExecutable(Environment.ProcessPath);
+    private static readonly Lazy<string> MigratedAppDataRoot = new(() => Playhub.Shared.CoreNames.MigrateDataRoot(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), DataMigrationNotes.Add).Root);
+    private static readonly Lazy<string> MigratedLocalDataRoot = new(() => Playhub.Shared.CoreNames.MigrateDataRoot(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), DataMigrationNotes.Add).Root);
 #endif
 
     public static string SettingsFile => Path.Combine(AppDataRoot, "settings.json");

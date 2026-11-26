@@ -4,8 +4,12 @@ param(
 
 $ErrorActionPreference = 'SilentlyContinue'
 
-$gameListPath = Join-Path $env:APPDATA 'Playhub\steamless-games.txt'
-$logPath = Join-Path $env:APPDATA 'Playhub\steamless-controller.log'
+# %APPDATA%\Core once Core has copied its data there (marker file), %APPDATA%\Playhub before that.
+$coreData = Join-Path $env:APPDATA 'Core'
+$legacyData = Join-Path $env:APPDATA 'Playhub'
+$dataRoot = if ((Test-Path -LiteralPath (Join-Path $coreData '.core-migrated.json')) -or -not (Test-Path -LiteralPath $legacyData)) { $coreData } else { $legacyData }
+$gameListPath = Join-Path $dataRoot 'steamless-games.txt'
+$logPath = Join-Path $dataRoot 'steamless-controller.log'
 $mutexName = 'Local\PlayhubSteamlessControllerWatcher'
 
 function Write-PlayhubLog {

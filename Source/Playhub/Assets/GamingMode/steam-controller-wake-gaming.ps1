@@ -5,7 +5,11 @@ param(
 
 $ErrorActionPreference = "SilentlyContinue"
 
-$playhubData = Join-Path $env:APPDATA "Playhub"
+# %APPDATA%\Core once Core has copied its data there (marker file), %APPDATA%\Playhub before that.
+$coreData = Join-Path $env:APPDATA 'Core'
+$legacyData = Join-Path $env:APPDATA 'Playhub'
+$dataRoot = if ((Test-Path -LiteralPath (Join-Path $coreData '.core-migrated.json')) -or -not (Test-Path -LiteralPath $legacyData)) { $coreData } else { $legacyData }
+$playhubData = $dataRoot
 New-Item -ItemType Directory -Force -Path $playhubData | Out-Null
 
 $logFile = Join-Path $playhubData "steam-controller-wake.log"

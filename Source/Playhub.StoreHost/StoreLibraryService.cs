@@ -18,7 +18,7 @@ public sealed partial class StoreLibraryService : IStoreLibraryService, IStoreDo
     private readonly string hostPath;
     private string? verifiedManifest;
     public static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) } };
-    public static StoreLibraryService CreateDefault() => new(Path.Combine(AppContext.BaseDirectory, "StoreLibrary", "Playhub.StoreHost.exe"));
+    public static StoreLibraryService CreateDefault() => new(Path.Combine(AppContext.BaseDirectory, "StoreLibrary", global::Playhub.Shared.CoreNames.StoreHostExe));
     public static string CurrentPipeName => "Playhub.StoreLibrary.v1." + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(WindowsIdentity.GetCurrent().User?.Value ?? throw new InvalidOperationException("user_missing"))))[..24];
     public StoreLibraryService(string hostPath, string? pipeName = null) { this.hostPath = Path.GetFullPath(hostPath); pipe = pipeName ?? CurrentPipeName; }
     public Task<StoreLibrarySnapshot> GetSnapshotAsync(CancellationToken cancellationToken = default) => Call<StoreLibrarySnapshot>("snapshot", new { }, cancellationToken);
@@ -96,7 +96,7 @@ public sealed partial class StoreLibraryService : IStoreLibraryService, IStoreDo
 internal static class StoreMaintenance
 {
     internal sealed record Marker(int Protocol, Guid OwnerId, DateTimeOffset ExpiresAt);
-    internal static string MarkerPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Playhub", "StoreLibrary", "maintenance-v1.json");
+    internal static string MarkerPath => Path.Combine(global::Playhub.Shared.CoreNames.LocalDataRoot(), "StoreLibrary", "maintenance-v1.json");
     internal static Marker? Current()
     {
         if (!File.Exists(MarkerPath)) return null;

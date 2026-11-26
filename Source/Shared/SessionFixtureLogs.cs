@@ -30,7 +30,7 @@ internal sealed class SessionFixtureLogs : IDisposable
         if (!File.ReadAllText(Path.Combine(_directory, "xbox-session.log")).Contains(_marker, StringComparison.Ordinal))
             throw new InvalidOperationException("The Xbox fixture did not use its owned log destination.");
 #endif
-        string original = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Playhub", "logs");
+        string original = Path.Combine(global::Playhub.Shared.CoreNames.LocalDataRoot(), "logs");
         foreach (string name in new[] { "game-session.log", "xbox-session.log" })
         {
             string path = Path.Combine(original, name);

@@ -16,8 +16,9 @@ internal static class ModeTransitionVisual
 {
     internal static string ResolveLanguage(string? fallback)
     {
-        // Playhub's language is authoritative, including changes made since agent startup.
-        string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Playhub", "settings.json");
+        // Core's language is authoritative, including changes made since agent startup.
+        // Read from %APPDATA%\Core once the app has copied its data there, Playhub before that.
+        string path = Path.Combine(global::Playhub.Shared.CoreNames.RoamingDataRoot(), "settings.json");
         foreach (string candidate in new[] { path, path + ".bak" })
         {
             try

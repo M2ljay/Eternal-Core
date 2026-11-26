@@ -16,7 +16,9 @@ internal sealed class StoreLibraryUpdate : IDisposable
     private readonly Guid lease = Guid.NewGuid();
     private StoreLibraryUpdate()
     {
-        leasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Playhub", "StoreLibrary", "maintenance-v1.json");
+        // Written where the running (possibly older) store host reads it: the data root as it is
+        // before setup's one-time Core folder copy, which leaves this lease out.
+        leasePath = Path.Combine(global::Playhub.Shared.CoreNames.LocalDataRoot(), "StoreLibrary", "maintenance-v1.json");
         Directory.CreateDirectory(Path.GetDirectoryName(leasePath)!);
         File.WriteAllText(leasePath, JsonSerializer.Serialize(new { protocol = 1, ownerId = lease, expiresAt = DateTimeOffset.UtcNow.AddMinutes(5) }));
     }
@@ -28,15 +30,16 @@ internal sealed class StoreLibraryUpdate : IDisposable
     }
     private static async Task StopAsync(string installDirectory, Guid lease)
     {
-        string expected = Path.GetFullPath(Path.Combine(installDirectory, "StoreLibrary", "Playhub.StoreHost.exe"));
+        // The running host may be an older Playhub.StoreHost.exe or the renamed Core.StoreHost.exe.
+        string folder = Path.GetFullPath(Path.Combine(installDirectory, "StoreLibrary"));
         var owners = new List<Process>();
         try
         {
-            foreach (var candidate in Process.GetProcessesByName("Playhub.StoreHost"))
+            foreach (var candidate in global::Playhub.Shared.CoreNames.ProcessNames(global::Playhub.Shared.CoreNames.StoreHostExecutables).SelectMany(Process.GetProcessesByName))
             {
                 try
                 {
-                    if (!candidate.HasExited && StringComparer.OrdinalIgnoreCase.Equals(candidate.MainModule?.FileName, expected))
+                    if (!candidate.HasExited && global::Playhub.Shared.CoreNames.IsOwnedImage(candidate.MainModule?.FileName, folder, global::Playhub.Shared.CoreNames.StoreHostExecutables))
                     { _ = candidate.Handle; owners.Add(candidate); continue; }
                 }
                 catch (Exception e) when (e is InvalidOperationException or System.ComponentModel.Win32Exception) { }

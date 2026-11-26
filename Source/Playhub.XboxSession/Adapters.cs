@@ -16,7 +16,7 @@ internal static class PackagedLaunchLog
         string? folder = FixtureDirectory;
         if (folder is null) return;
 #else
-        string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Playhub", "logs");
+        string folder = Path.Combine(global::Playhub.Shared.CoreNames.LocalDataRoot(), "logs");
 #endif
         try
         {

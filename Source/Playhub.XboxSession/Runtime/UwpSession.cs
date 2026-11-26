@@ -264,7 +264,7 @@ internal static class UwpSessionLog
             string? directory = FixtureDirectory;
             if (directory is null) return;
 #else
-            var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Playhub", "logs");
+            var directory = Path.Combine(global::Playhub.Shared.CoreNames.LocalDataRoot(), "logs");
 #endif
             Directory.CreateDirectory(directory);
             File.AppendAllText(Path.Combine(directory, "game-session.log"), $"{DateTimeOffset.Now:O} {message}\n");

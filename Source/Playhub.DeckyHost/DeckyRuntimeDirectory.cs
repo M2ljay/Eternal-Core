@@ -4,7 +4,7 @@ internal static class DeckyRuntimeDirectory
 {
     private const string Marker = ".playhub-decky-runtime";
     private const string Version = "Playhub Decky extraction v1\n";
-    internal static string BaseDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Playhub", "DeckyRuntime");
+    internal static string BaseDirectory => Path.Combine(global::Playhub.Shared.CoreNames.LocalDataRoot(), "DeckyRuntime");
 
     internal static string Create(string loader)
     {

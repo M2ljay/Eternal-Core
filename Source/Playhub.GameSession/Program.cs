@@ -58,7 +58,7 @@ internal static class Program
         }
         catch (Exception ex)
         {
-            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Playhub", "logs");
+            var folder = Path.Combine(global::Playhub.Shared.CoreNames.LocalDataRoot(), "logs");
             try
             {
                 Directory.CreateDirectory(folder);

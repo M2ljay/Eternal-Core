@@ -81,7 +81,7 @@ internal sealed class CurtainNativeDisplay:ICurtainNativeDisplay
   if(!values.TryGetValue("PlayhubCurtainDisplaySha256",out var native)||!values.TryGetValue("PlayhubCurtainCallbackSha256",out var callback)||native is null||callback is null)return null;
   string own;using(var file=File.OpenRead(Environment.ProcessPath??throw new IOException("Owner path unavailable")))own=Convert.ToHexString(SHA256.HashData(file));
   string root=AppContext.BaseDirectory;return new(new(Path.Combine(root,"PlayhubCurtainDisplayNative.dll"),native,Path.Combine(root,"PlayhubExactBand.dll"),callback,own,
-    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Playhub","CurtainDisplay")));
+    Path.Combine(global::Playhub.Shared.CoreNames.LocalDataRoot(),"CurtainDisplay")));
  }
  static byte[] Ascii(string value,int size){if(!Hex(value,size-1))throw new InvalidDataException("Curtain identifier differs");byte[] bytes=new byte[size];Encoding.ASCII.GetBytes(value,bytes);return bytes;}
  internal static WirePulse Encode(CurtainVisualAuthority a,ulong generation,ulong sequence,uint pid,ulong birth,uint session,string hash,long now,long until)

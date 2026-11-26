@@ -115,8 +115,7 @@ internal static class AppContainerTrial
         var setupTime = Stopwatch.StartNew();
         var injector = new GameInjector(new PrivilegeJournal(), (processId, handle) =>
             setupTime.ElapsedMilliseconds < 90_000 && !parent.HasExited && steam.UnchangedRoot() && target.Owns(processId, handle));
-        var leaseDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Playhub", "XboxPackageLifetime");
+        var leaseDirectory = Path.Combine(global::Playhub.Shared.CoreNames.LocalDataRoot(), "XboxPackageLifetime");
         using var lease = PackageLifetimeLease.Acquire(leaseDirectory, package, WindowsPackageLifetime.BootMarker(),
             owner, new LeaseProcess(target.Pid, target.Creation), new WindowsPackageLifetime(), WindowsPackageLifetime.Observe,
             PackagedLaunchLog.Info);

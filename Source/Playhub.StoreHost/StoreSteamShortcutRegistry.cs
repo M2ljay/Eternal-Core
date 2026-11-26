@@ -40,8 +40,7 @@ public sealed partial class StoreSteamShortcutRegistry : IStoreProtocolExtension
         if (Path.GetFileName(executable) != "Playhub.GameSession.exe" ||
             !Path.GetDirectoryName(Path.GetFullPath(appExecutable))!.Equals(startDirectory, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("steam_runtime_invalid");
-        path = registryPath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Playhub", "StoreLibrary", "steam-library-v1.json");
+        path = registryPath ?? Path.Combine(global::Playhub.Shared.CoreNames.LocalDataRoot(), "StoreLibrary", "steam-library-v1.json");
         state = File.Exists(path) ? JsonSerializer.Deserialize<State>(File.ReadAllBytes(path), Json)
             ?? throw new InvalidDataException("steam_registry_invalid") : new(1, [], []);
         if (state.Version != 1 || state.Owned.Select(x => x.AppId).Distinct().Count() != state.Owned.Length ||
