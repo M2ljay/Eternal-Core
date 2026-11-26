@@ -1,4 +1,5 @@
 import { DFL, SP_REACT as React } from "./decky";
+import { CORE } from "./corePalette";
 import { readSettings, writeSettings } from "./api";
 import { readSteamControllers } from "./controllerNative";
 
@@ -14,7 +15,7 @@ const copy = (locale: string) => /^(it|italian)([-_]|$)/i.test(locale) ? {
   enabled: "SDL3 mode",
   enabledDescription: "Launch desktop apps with SDL3 enabled. You can override this in the individual game's options.",
 };
-const css = `.ph-sdl3-controller{width:100%;padding:0 16px 14px;box-sizing:border-box}.ph-sdl3-controller *{box-sizing:border-box}.ph-sdl3-title{font-size:15px;font-weight:650;line-height:1.35;margin:0 0 5px}.ph-sdl3-copy{font-size:12px;line-height:1.45;color:rgba(255,255,255,.68);margin:0 0 12px}`;
+const css = `.ph-sdl3-controller{width:100%;padding:0 16px 14px;box-sizing:border-box}.ph-sdl3-controller *{box-sizing:border-box}.ph-sdl3-title{font-size:15px;font-weight:650;line-height:1.35;margin:0 0 5px}.ph-sdl3-copy{font-size:12px;line-height:1.45;color:${CORE.steel};margin:0 0 12px}`;
 
 export function ControllerSettings({ locale }: { locale: string }) {
   const labels = copy(locale);

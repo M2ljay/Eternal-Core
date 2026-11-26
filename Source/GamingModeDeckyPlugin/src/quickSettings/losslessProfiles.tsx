@@ -33,6 +33,7 @@ import {
   type LosslessProfileSettings,
 } from "./backend";
 import { t } from "./translations";
+import { CORE } from "../corePalette";
 
 const ROUTE = "/quick-settings/:appid";
 const LOSSLESS_APP_ID = 993090;
@@ -361,40 +362,40 @@ export function LosslessGamePage() {
       }}
     >
       <style>{`
-        .qspPage{position:fixed;inset:0 0 48px;z-index:10;width:100vw;height:auto;background:#08090a;color:#fff;padding:26px max(34px,calc((100vw - 1450px)/2)) 24px;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;scroll-padding:24px 0 24px}
+        .qspPage{position:fixed;inset:0 0 48px;z-index:10;width:100vw;height:auto;background:${CORE.black};color:${CORE.white};padding:26px max(34px,calc((100vw - 1450px)/2)) 24px;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;scroll-padding:24px 0 24px}
         .qspPage::-webkit-scrollbar{display:none;width:0;height:0}
         .qspHeader{display:grid;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:15px;margin:0 0 18px;width:100%}
         .qspBack{width:52px!important;height:52px!important;min-width:52px!important;padding:0!important;border-radius:6px!important}
         .qspBack svg{width:20px;height:20px}
-        .qspEyebrow{font-size:13px;font-weight:700;color:rgba(255,255,255,.48)}
+        .qspEyebrow{font-size:13px;font-weight:700;color:${CORE.hint}}
         .qspTitle{font-size:30px;line-height:1.12;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .qspSave{font-size:13px;color:rgba(255,255,255,.55);min-width:100px;text-align:right}
+        .qspSave{font-size:13px;color:${CORE.hint};min-width:100px;text-align:right}
         .qspGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:14px;width:100%;padding-bottom:24px}
         .qspWide{grid-column:1/-1;min-width:0}
         .qspColumns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:14px;width:100%}
         .qspColumn{display:flex;flex-direction:column;align-items:stretch;gap:14px;min-width:0;width:100%;height:100%}
-        .qspCard{align-self:start;min-width:0;width:100%;max-width:100%;padding:14px;border:1px solid rgba(255,255,255,.12);border-radius:6px;background:rgba(255,255,255,.045);box-sizing:border-box}
+        .qspCard{align-self:start;min-width:0;width:100%;max-width:100%;padding:14px;border:1px solid ${CORE.gunmetalRaised};border-radius:6px;background:${CORE.gunmetal};box-sizing:border-box}
         .qspRenderingCard{flex:1}
         .qspCardTitle{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:750;margin-bottom:6px}
-        .qspCardTitle svg{width:16px;height:16px;color:#66c0f4}
-        .qspCardDescription{font-size:12.5px;line-height:1.35;color:rgba(255,255,255,.48);margin:0 0 10px 25px;max-width:64ch}
+        .qspCardTitle svg{width:16px;height:16px;color:${CORE.steel}}
+        .qspCardDescription{font-size:12.5px;line-height:1.35;color:${CORE.hint};margin:0 0 10px 25px;max-width:64ch}
         .qspCardBody{display:flex;flex-direction:column;gap:8px}
         .qspCardBody>.DialogToggleField{padding:7px 2px!important;background:transparent!important}
-        .qspCardBody>.DialogToggleField:hover,.qspCardBody>.DialogToggleField.gpfocus{background:rgba(102,192,244,.12)!important}
-        .qspSlider{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid transparent;border-radius:5px;background:rgba(255,255,255,.045)}
-        .qspSliderFocused{border-color:rgba(102,192,244,.92)!important;background:rgba(102,192,244,.13)!important;box-shadow:0 0 0 2px rgba(102,192,244,.17)}
-        .qspSliderHeader{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:rgba(255,255,255,.78)}
-        .qspSliderHeader strong{font-weight:650;color:rgba(255,255,255,.58)}
-        .qspSlider input[type="range"]{width:100%;height:4px;margin:2px 0;appearance:none;background:linear-gradient(90deg,#1a9fff var(--qsp-fill),rgba(255,255,255,.16) var(--qsp-fill));border-radius:999px}
-        .qspSlider input[type="range"]::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.45)}
+        .qspCardBody>.DialogToggleField:hover,.qspCardBody>.DialogToggleField.gpfocus{background:${CORE.gunmetalRaised}!important;box-shadow:inset 3px 0 0 ${CORE.crimson}!important}
+        .qspSlider{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid transparent;border-radius:5px;background:${CORE.gunmetal}}
+        .qspSliderFocused{border-color:${CORE.crimson}!important;background:${CORE.gunmetalRaised}!important;box-shadow:none}
+        .qspSliderHeader{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:${CORE.text}}
+        .qspSliderHeader strong{font-weight:650;color:${CORE.steel}}
+        .qspSlider input[type="range"]{width:100%;height:4px;margin:2px 0;appearance:none;background:linear-gradient(90deg,${CORE.crimson} var(--qsp-fill),${CORE.gunmetalRaised} var(--qsp-fill));border-radius:999px}
+        .qspSlider input[type="range"]::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;background:${CORE.white};box-shadow:none}
         .qspDropdownBlock{display:flex;flex-direction:column;gap:5px}
-        .qspLabel{font-size:13px;font-weight:650;color:rgba(255,255,255,.58)}
-        .qspHint{font-size:11.5px;line-height:1.35;color:rgba(255,255,255,.42);max-width:68ch}
+        .qspLabel{font-size:13px;font-weight:650;color:${CORE.steel}}
+        .qspHint{font-size:11.5px;line-height:1.35;color:${CORE.hint};max-width:68ch}
         .qspDropdown,.qspDropdown>div,.qspDropdown button,.qspDropdown .DialogDropDown{width:100%!important;max-width:100%!important}
-        .qspDropdown button,.qspDropdown .DialogDropDown{min-height:40px!important;color:#fff!important;background:rgba(255,255,255,.09)!important;border-radius:5px!important}
-        .qspDropdown button:hover,.qspDropdown button.gpfocus,.qspDropdown .DialogDropDown.gpfocus{color:#fff!important;background:rgba(102,192,244,.16)!important;box-shadow:inset 0 0 0 1px #66c0f4!important}
+        .qspDropdown button,.qspDropdown .DialogDropDown{min-height:40px!important;color:${CORE.white}!important;background:${CORE.gunmetalRaised}!important;border-radius:5px!important}
+        .qspDropdown button:hover,.qspDropdown button.gpfocus,.qspDropdown .DialogDropDown.gpfocus{color:${CORE.white}!important;background:${CORE.gunmetalRaised}!important;box-shadow:inset 0 0 0 2px ${CORE.crimson}!important}
         .qspDropdown button *,.qspDropdown .DialogDropDown *{color:inherit!important}
-        .qspLoading{position:fixed;inset:0 0 48px;z-index:10;display:flex;align-items:center;justify-content:center;background:#08090a}
+        .qspLoading{position:fixed;inset:0 0 48px;z-index:10;display:flex;align-items:center;justify-content:center;background:${CORE.black}}
         @media(max-width:900px){.qspGrid,.qspColumns{grid-template-columns:1fr}.qspPage{padding:20px}.qspTitle{font-size:25px}}
       `}</style>
       <div className="qspHeader">

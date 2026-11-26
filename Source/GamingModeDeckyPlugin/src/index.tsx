@@ -12,6 +12,7 @@ import { disposeDisplayConfirmation } from "./quickSettings";
 import { initializeQamPreferences } from "./QamSettings";
 import { installHomeNews, notifyHomeNewsLanguageChanged } from "./HomeNews";
 import { definePlugin, routerHook, toaster, DFL, SP_REACT as React } from "./decky";
+import { CORE } from "./corePalette";
 import { acknowledgeSteamModeCommand, captureDashboardSourceFocus, confirmBigPictureForeground, consumeOpenRequest, logToAgent, readEnvironment, readSettings, writeSettings, API_BASE, requestDashboardSteamFocus, restoreDashboardSourceFocus } from "./api";
 import { createSteamKeyFocusReset, createSteamNavigationRecovery, createSteamNavigationWakeup, createSteamOverlayReturnScope, focusReturnedSteamGameAction, hasVisibleSteamNavigationFocus, isConfirmedSteamIdle, isSteamNavigationReturnApp, navigateReturnedSteamGame, recoverSteamNavigation, releaseExitedSteamOverlay, type SteamOverlayScope, type SteamReturnOverlayWindow } from "./steamNavigationReturn";
 import { activeSteamController, createSteamReturnControllerLayout } from "./steamReturnControllerLayout";
@@ -971,7 +972,7 @@ function Content({ origin = "decky" }: { origin?: "qam" | "decky" }) {
       {status && <HealthSection locale={locale} />}
       {!status && <PanelSection><PanelSectionRow>
         <div role="status" style={{ margin: "8px 0 16px", padding: "16px", borderRadius: 10,
-          background: "rgba(255,255,255,.055)", border: "1px solid rgba(255,255,255,.12)" }}>
+          background: CORE.gunmetal, border: `1px solid ${CORE.gunmetalRaised}`, borderLeft: `3px solid ${CORE.warning}` }}>
           <div style={{ fontSize: 16, fontWeight: 650, marginBottom: 8 }}>{optional.Title}</div>
           <div style={{ fontSize: 13, lineHeight: 1.5, opacity: .8 }}>{optional.AgentRequired}</div>
         </div>

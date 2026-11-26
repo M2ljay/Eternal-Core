@@ -1,13 +1,14 @@
 import { TbCheck, TbChevronRight, TbInfoCircle, TbMinus } from "react-icons/tb";
 import { DFL, SP_REACT as React } from "./decky";
 import { call } from "./controlBackend";
+import { CORE } from "./corePalette";
 import { deviceCapabilitiesLocale } from "./deviceCapabilitiesLocale";
 import { deviceInfoLocale } from "./deviceInfoLocale";
 const { DialogButton, Focusable } = DFL as any;
 type Row = {id:string;available:boolean;status:string;destination:"video"|"performance"|"device";values?:(number|null)[]};
 type Report = {status:string;selection:string;effective:string;detected:string;mismatch:boolean;coverage:"windows"|"oem";controls:Row[]};
 const ids = new Set(["windows-display","windows-power","windows-battery","presets","fans","temperatures","power-limits","charge-limit","rgb","vibration"]);
-const css = `.ph-device-capabilities{display:grid;gap:10px;min-width:0;padding:12px 0;border-top:1px solid #ffffff18}.ph-device-capability-list{display:grid;gap:10px;margin:0}.ph-device-capability-row{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;align-items:start}.ph-device-capability-row>svg{width:16px;height:16px;margin-top:2px;opacity:.65}.ph-device-capability-row[data-available=true]>svg{color:#9bd7a7;opacity:1}.ph-device-capability-row dt{font-size:13px;line-height:1.4}.ph-device-capability-row dd{margin:2px 0 0;font-size:11px;line-height:1.4;color:#c5cbd1;overflow-wrap:anywhere}.ph-device-capability-mismatch{display:flex;gap:8px;font-size:12px;line-height:1.45;color:#FF5A6E}.ph-device-capability-mismatch svg{width:16px;height:16px;flex:none;margin-top:2px}.ph-device-capabilities .ph-device-actions button{justify-content:flex-start;white-space:normal;min-width:0}.ph-device-capabilities>strong{font-size:13px}`;
+const css = `.ph-device-capabilities{display:grid;gap:10px;min-width:0;padding:12px 0;border-top:1px solid ${CORE.gunmetalRaised}}.ph-device-capability-list{display:grid;gap:10px;margin:0}.ph-device-capability-row{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;align-items:start}.ph-device-capability-row>svg{width:16px;height:16px;margin-top:2px;opacity:.65}.ph-device-capability-row[data-available=true]>svg{color:${CORE.ok};opacity:1}.ph-device-capability-row dt{font-size:13px;line-height:1.4}.ph-device-capability-row dd{margin:2px 0 0;font-size:11px;line-height:1.4;color:${CORE.steel};overflow-wrap:anywhere}.ph-device-capability-mismatch{display:flex;gap:8px;font-size:12px;line-height:1.45;color:${CORE.crimsonText}}.ph-device-capability-mismatch svg{width:16px;height:16px;flex:none;margin-top:2px}.ph-device-capabilities .ph-device-actions button{justify-content:flex-start;white-space:normal;min-width:0}.ph-device-capabilities>strong{font-size:13px}`;
 
 export function DeviceCapabilities({selection,effective,detected,locale,openVideo,openPerformance}:{selection:string;effective:string;detected:string;locale:string;openVideo?:()=>void;openPerformance?:()=>void}) {
   const copy=deviceCapabilitiesLocale(locale),device=deviceInfoLocale(locale);

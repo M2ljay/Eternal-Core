@@ -3,9 +3,10 @@ import { DFL, SP_REACT as React, toaster } from "./decky";
 import {storeDigitalDisplayTitle} from "./storeDigitalPresentation";
 import { readStoreDownloads, subscribeStoreLibrary, storeJobAction, type StoreJob } from "./storeLibraryRuntime";
 import { storeLibraryLocale } from "./storeLibraryLocale";
+import { CORE } from "./corePalette";
 const { PanelSection, PanelSectionRow, DropdownItem, ConfirmModal, showModal } = DFL as any;
 const danger = `.ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) {
-background:#c42b1c!important;color:#fff!important}
+background:${CORE.crimson}!important;color:${CORE.white}!important}
 .ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) * {color:inherit!important}`;
 const pendingStates = new Set(["queued", "blockedSteam", "starting", "downloading", "pausing", "pausedByUser", "pausedBySteam", "installing", "verifying", "canceling", "interrupted", "externalHandoff"]);
 type JobAction = "pause" | "resume" | "cancel" | "downloadNow";
@@ -27,9 +28,9 @@ export function StoreDownloadProgress({ job, locale }: { job: StoreJob; locale: 
     ? `${transferBytes(downloaded, locale)}${total !== undefined ? ` / ${transferBytes(total, locale)}` : ""}` : pending;
   const speed = !waiting && finiteCount(job.bytesPerSecond) ? `${transferBytes(job.bytesPerSecond, locale)}/s` : undefined;
   return <div className="ph-store-download-progress" style={{ width: "100%", minWidth: 0, display: "grid", gap: 7, paddingBottom: 6 }}>
-    <style>{`.ph-store-download-progress-track{height:6px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.14)}
-.ph-store-download-progress-fill{height:100%;border-radius:inherit;background:#1a9fff;transition:width .25s ease}
-.ph-store-download-progress-pending{width:32%;height:100%;border-radius:inherit;background:linear-gradient(90deg,transparent,rgba(102,192,244,.7),transparent);animation:ph-store-download-pending 1.8s ease-in-out infinite}
+    <style>{`.ph-store-download-progress-track{height:6px;overflow:hidden;border-radius:999px;background:${CORE.gunmetalRaised}}
+.ph-store-download-progress-fill{height:100%;border-radius:inherit;background:${CORE.crimson};transition:width .25s ease}
+.ph-store-download-progress-pending{width:32%;height:100%;border-radius:inherit;background:${CORE.warning};animation:ph-store-download-pending 1.8s ease-in-out infinite}
 @keyframes ph-store-download-pending{from{transform:translateX(-100%)}to{transform:translateX(420%)}}
 @media(prefers-reduced-motion:reduce){.ph-store-download-progress-pending{animation:none;transform:translateX(106%)}.ph-store-download-progress-fill{transition:none}}`}</style>
     <div role="progressbar" aria-label={storeDigitalDisplayTitle(job)} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}
@@ -37,7 +38,7 @@ export function StoreDownloadProgress({ job, locale }: { job: StoreJob; locale: 
       className="ph-store-download-progress-track">
       {percent === undefined ? <div className="ph-store-download-progress-pending" /> : <div className="ph-store-download-progress-fill" style={{ width: `${percent}%` }} />}
     </div>
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, fontSize: 12, lineHeight: "18px", color: "#b8bcbf", fontVariantNumeric: "tabular-nums" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, fontSize: 12, lineHeight: "18px", color: CORE.steel, fontVariantNumeric: "tabular-nums" }}>
       <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{amount}</span>
       <span style={{ flexShrink: 0 }}>{speed ?? (percent === undefined ? "" : `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(percent)}%`)}</span>
     </div>

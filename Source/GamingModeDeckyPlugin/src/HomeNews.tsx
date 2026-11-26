@@ -1,6 +1,7 @@
 import { SP_REACT as React, DFL, routerHook, toaster } from "./decky";
 import { createOutputPatch } from "./reactOutputPatch";
 import { call } from "./controlBackend";
+import { CORE } from "./corePalette";
 import { HistoryTabs, notifyHistoryLanguageChanged } from "./DailyHistory";
 import { newsCopy, NEWS_COUNTRIES } from "./homeNewsLocale";
 
@@ -73,7 +74,7 @@ const css = `
 .ph-news-card .ph-news-date{font-size:12px;line-height:1.4;opacity:.65;min-height:17px}
 .ph-news-card .ph-news-image{width:100%;height:100%;object-fit:cover}
 .ph-home-news .ph-news-card .ph-news-cover,.ph-home-news .ph-news-card .ph-news-image{filter:none!important;backdrop-filter:none!important;opacity:1!important}
-.ph-news-card .ph-news-cover[data-logo=true]{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#263449,#101823)}
+.ph-news-card .ph-news-cover[data-logo=true]{display:flex;align-items:center;justify-content:center;background:${CORE.gunmetal}}
 .ph-news-card .ph-news-cover[data-logo=true] .ph-news-image{width:64px;height:64px;object-fit:contain}
 .ph-news-card .ph-news-publisher-logo{object-fit:contain}
 .ph-news-status{padding:12px 0;font-size:14px;opacity:.72}
@@ -131,7 +132,7 @@ function NewsRow({ locale, country }: { locale: string; country: string }) {
       fnGetColumnWidth={columnWidth} fnGetId={(index: number) => items[index]?.url ?? `loading-${index}`}
       fnItemRenderer={(index: number, itemWidth: number, itemHeight: number) => items[index]
         ? <NewsCard key={items[index].url} item={items[index]} width={itemWidth} height={itemHeight} locale={locale} skin={skin} />
-        : <div aria-hidden="true" style={{ width: itemWidth, height: itemHeight, background: "#202a37" }} />}
+        : <div aria-hidden="true" style={{ width: itemWidth, height: itemHeight, background: CORE.gunmetal }} />}
       scrollToAlignment="center" aria-label={copy[0]} aria-busy={!feed} /></Bleed>
     {feed && !items.length && <div className="ph-news-status" role="status">{copy[4]}</div>}
   </section>;

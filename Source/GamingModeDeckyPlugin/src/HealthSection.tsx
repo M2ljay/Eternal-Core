@@ -1,5 +1,6 @@
 import { DFL, SP_REACT as React } from "./decky";
 import { call } from "./controlBackend";
+import { CORE, CORE_STATUS } from "./corePalette";
 import { healthCopy, healthLines, healthSummary, type HealthAnswer, type HealthLine } from "./healthReport";
 
 // Eternal Core: the Health section of Quick Access > Core. One line for the whole setup, then a
@@ -11,18 +12,20 @@ import { healthCopy, healthLines, healthSummary, type HealthAnswer, type HealthL
 // an active alert offers "Dismiss alert" (it comes back only if the problem changes).
 const { PanelSection, PanelSectionRow, ButtonItem, Focusable } = DFL as any;
 
-const BLACK = "#000000", CRIMSON = "#D7263D", STEEL = "#C9D1D9", GUNMETAL = "#1A1D21";
+const { black: BLACK, crimson: CRIMSON, crimsonText: CRIMSON_TEXT, steel: STEEL, gunmetal: GUNMETAL, white: WHITE } = CORE;
 
 const style = `
 .core-health{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
-.core-health-summary{padding:8px 12px;font-size:14px;font-weight:650;color:#fff}
-.core-health-summary.problem{color:${CRIMSON}}
+.core-health-summary{padding:8px 12px;font-size:14px;font-weight:650;color:${WHITE}}
+.core-health-summary.problem{color:${CRIMSON_TEXT}}
 .core-health-row{background:${GUNMETAL};border-radius:6px;padding:9px 12px;outline:none;box-shadow:none;text-shadow:none}
-.core-health-row.gpfocus,.core-health-row:focus-visible{outline:2px solid ${STEEL};outline-offset:-2px}
+.core-health-row.gpfocus,.core-health-row:focus-visible{outline:2px solid ${CRIMSON};outline-offset:-2px}
 .core-health-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.core-health-title{font-size:13px;color:#fff;font-weight:600;white-space:nowrap}
+.core-health-title{font-size:13px;color:${WHITE};font-weight:600;white-space:nowrap}
 .core-health-value{font-size:12px;color:${STEEL};text-align:right;overflow:hidden;text-overflow:ellipsis}
-.core-health-row.attention .core-health-value,.core-health-row.crimson .core-health-value{color:${CRIMSON};font-weight:600}
+.core-health-row.ok .core-health-value{color:${CORE_STATUS.ok}}
+.core-health-row.info .core-health-value{color:${CORE_STATUS.warning}}
+.core-health-row.attention .core-health-value,.core-health-row.crimson .core-health-value{color:${CORE_STATUS.error};font-weight:600}
 .core-health-detail{margin-top:6px;font-size:11px;line-height:1.45;color:${STEEL};word-break:break-word}
 `;
 

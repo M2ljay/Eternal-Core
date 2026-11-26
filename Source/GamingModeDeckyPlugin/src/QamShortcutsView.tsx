@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Original card/picker inline styles and navigation preserved from Shortcuts 1.2.2.
 import { DFL, SP_REACT as React } from './decky';
+import { CORE } from './corePalette';
 import { ICON_CATEGORIES, iconMatchesQuery, renderQamIcon } from './qamIcons';
 const h = React.createElement;
 let language = 'en';
@@ -1396,7 +1397,7 @@ function ActiveTabCard({ entry, index, total, runtime, onChooseIcon }) {
                     marginBottom: 12,
                     padding: 10,
                     borderRadius: 9,
-                    background: "rgba(255,255,255,0.055)",
+                    background: CORE.gunmetal,
                     boxSizing: "border-box",
                     overflow: "hidden"
                 }

@@ -2,6 +2,7 @@ import { registerQamVisibilityDocument } from './qamTabVisibility';
 import { HomeHistorySettings, historyTitle } from "./DailyHistory";
 import { HomeNewsSettings } from "./HomeNews";
 import { call } from "./controlBackend";
+import { CORE } from "./corePalette";
 import { DFL, SP_REACT as React, toaster } from "./decky";
 import { TbPower, TbDeviceTv, TbVolume, TbDeviceGamepad2, TbPhoto, TbSettings, TbShoppingBag, TbRestore, TbPlug, TbGauge } from "react-icons/tb";
 import { controlLocale, controlStatus } from "./controlCenterLocale";
@@ -84,8 +85,8 @@ const css = `
 .ph-controls .ph-control-tabs>.ph-control-icon{width:auto!important;max-width:none!important;flex:1 0 32px!important}
 .ph-control-nav>.ph-control-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);overflow:visible;min-width:0}
 .ph-controls .ph-control-nav .ph-control-tabs>.ph-control-icon{width:100%!important;min-width:0!important;max-width:100%!important;flex:none!important}
-.ph-controls .ph-control-icon[aria-selected=true]{border-bottom-color:#d7263d!important}
-.ph-controls .ph-control-icon.gpfocus,.ph-controls .ph-control-icon:focus-visible,.ph-controls .ph-control-icon:hover{background:#dcdedf!important;color:#171a21!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.85)!important;transform:none!important}
+.ph-controls .ph-control-icon[aria-selected=true]{border-bottom-color:${CORE.crimson}!important}
+.ph-controls .ph-control-icon.gpfocus,.ph-controls .ph-control-icon:focus-visible,.ph-controls .ph-control-icon:hover{background:${CORE.gunmetalRaised}!important;color:${CORE.white}!important;box-shadow:inset 0 0 0 2px ${CORE.crimson}!important;transform:none!important}
 .ph-control-heading{font-size:18px;font-weight:700;margin:0 18px 12px;line-height:1.35}
 .ph-control-section{width:100%;min-width:0;margin:0 0 3px;border:0!important}
 .ph-controls [class*="PanelSection"]::after,.ph-controls [class*="Field"]::after,.ph-controls [class*="Field"]::before{display:none!important}
@@ -94,7 +95,7 @@ const css = `
 .ph-controls [class*="BottomSeparator"],.ph-controls [class*="WithSeparator"]{border-top:0!important;border-bottom:0!important;box-shadow:none!important}
 .ph-controls [class*="BottomSeparator"]::before,.ph-controls [class*="BottomSeparator"]::after,.ph-controls [class*="WithSeparator"]::before,.ph-controls [class*="WithSeparator"]::after{display:none!important}
 .ph-controls .ph-control-section-title{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;min-height:42px!important;padding:10px 4px!important;display:flex!important;align-items:center;justify-content:space-between;gap:8px;border:0!important;background:transparent!important;color:inherit!important;border-radius:5px!important;transform:none!important;font-size:14px!important;white-space:normal!important}
-.ph-controls .ph-control-section-title.gpfocus,.ph-controls .ph-control-section-title:focus-visible,.ph-controls .ph-control-section-title:hover{background:rgba(255,255,255,.12)!important}
+.ph-controls .ph-control-section-title.gpfocus,.ph-controls .ph-control-section-title:focus-visible,.ph-controls .ph-control-section-title:hover{background:${CORE.gunmetalRaised}!important;box-shadow:inset 3px 0 0 ${CORE.crimson}!important}
 .ph-control-section-title strong{font-weight:600;overflow-wrap:anywhere}
 .ph-control-section-title>span{display:flex;gap:9px;align-items:center;text-align:left;min-width:0}
 .ph-control-section-title svg{width:17px;height:17px;flex:none}
@@ -227,7 +228,7 @@ export function ControlCenter({ locale, origin, session, store, controller, sett
     <OnboardingInputCapture active={origin === "qam" && showcasing} />
     <div className="ph-controls" ref={onboardingRoot}><style>{css}</style>
     {customizing ? <ScrollPanel><Focusable className="ph-control-settings" flow-children="column" data-playhub-onboarding-content={origin === "qam" ? "customize" : undefined}>
-      <style>{`.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:rgba(0,0,0,.22);margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:rgba(255,255,255,.16)!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:#fff!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid #fff!important;outline-offset:-2px!important}`}</style>
+      <style>{`.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:${CORE.gunmetal};margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:${CORE.gunmetalRaised}!important;box-shadow:inset 0 -3px 0 ${CORE.crimson}!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:${CORE.white}!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid ${CORE.crimson}!important;outline-offset:-2px!important}`}</style>
       {!showcasing&&<Focusable className="ph-settings-pages" flow-children="row" role="tablist">
         <DialogButton role="tab" onOKActionDescription={copy.switchTab} aria-selected={settingsPage==='general'} onClick={()=>setSettingsPage('general')}>{qamSettingsCopy(locale)[0]}</DialogButton>
         <DialogButton role="tab" onOKActionDescription={copy.switchTab} aria-selected={settingsPage==='qam'} onClick={()=>setSettingsPage('qam')}>Shortcuts</DialogButton>

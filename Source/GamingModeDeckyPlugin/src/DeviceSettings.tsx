@@ -1,5 +1,6 @@
 import { TbBattery, TbChevronDown, TbChevronRight, TbDeviceDesktop, TbDeviceGamepad2 } from "react-icons/tb";
 import { call } from "./controlBackend";
+import { CORE } from "./corePalette";
 import { DFL, SP_REACT as React } from "./decky";
 import { deviceInfoLocale } from "./deviceInfoLocale";
 import { DeviceCapabilities } from "./DeviceCapabilities";
@@ -32,25 +33,25 @@ type DeviceCopy = ReturnType<typeof deviceInfoLocale>;
 
 const style = `
 .ph-device-settings{display:grid;gap:12px;min-width:0;padding:4px 4px 0;overflow-wrap:anywhere}
-.ph-device-identity{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:12px;border-radius:9px;background:rgba(255,255,255,.07)}
-.ph-device-symbol{display:grid;place-items:center;width:42px;height:42px;border-radius:8px;background:rgba(255,255,255,.09);font-size:22px}
+.ph-device-identity{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:12px;border-radius:9px;background:${CORE.gunmetal}}
+.ph-device-symbol{display:grid;place-items:center;width:42px;height:42px;border-radius:8px;background:${CORE.gunmetalRaised};font-size:22px}
 .ph-device-title{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;font-size:15px;line-height:1.35}
-.ph-device-experimental{font-size:10px;font-weight:600;color:#FF5A6E;background:#1A1D21;padding:2px 5px;border-radius:4px}
-.ph-device-detail,.ph-device-hint{font-size:12px;line-height:1.45;color:#c5cbd1}
+.ph-device-experimental{font-size:10px;font-weight:600;color:${CORE.crimsonText};background:${CORE.gunmetal};padding:2px 5px;border-radius:4px}
+.ph-device-detail,.ph-device-hint{font-size:12px;line-height:1.45;color:${CORE.steel}}
 .ph-controls .ph-device-settings .ph-device-hint{margin:0;opacity:1}
 .ph-device-status{display:grid;gap:8px;margin:0}
 .ph-device-status>div{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;padding:0 4px}
 .ph-device-battery{display:flex;align-items:center;gap:8px;padding:0 4px;font-size:13px;font-weight:600}
 .ph-device-battery>svg{flex:none}
-.ph-device-battery-health{color:#c5cbd1;font-size:12px;font-weight:400;line-height:1.45}
-.ph-device-status dt{font-size:12px;color:#c5cbd1}.ph-device-status dd{margin:0;font-size:13px;font-weight:600}
+.ph-device-battery-health{color:${CORE.steel};font-size:12px;font-weight:400;line-height:1.45}
+.ph-device-status dt{font-size:12px;color:${CORE.steel}}.ph-device-status dd{margin:0;font-size:13px;font-weight:600}
 .ph-device-actions{display:grid;gap:6px}
 .ph-device-settings>.qsCardBody{display:flex;flex-direction:column;gap:10px;min-width:0;max-width:100%;overflow-wrap:anywhere}
 .ph-device-settings>.qsCardBody .qsMeta{font-size:12px;line-height:1.45;min-width:0;max-width:100%;overflow-wrap:anywhere}
 .ph-controls .ph-device-actions button,.ph-controls button.ph-device-details{display:flex!important;align-items:center;gap:8px;min-width:0;width:100%;white-space:normal!important;text-align:left}
 .ph-device-actions svg,.ph-device-details svg{flex:none;width:16px;height:16px}
 .ph-device-details span{flex:1;min-width:0}
-.ph-device-specs{margin:0 6px;display:grid;gap:9px}.ph-device-specs dt{font-size:12px;color:#c5cbd1}.ph-device-specs dd{margin:1px 0 0;font-size:13px}
+.ph-device-specs{margin:0 6px;display:grid;gap:9px}.ph-device-specs dt{font-size:12px;color:${CORE.steel}}.ph-device-specs dd{margin:1px 0 0;font-size:13px}
 `;
 
 function DeviceInfo({ copy, model }: { copy: DeviceCopy; model: string }) {

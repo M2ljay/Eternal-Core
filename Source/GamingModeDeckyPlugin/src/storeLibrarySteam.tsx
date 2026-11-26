@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT. Playhub, Copyright (c) 2026 LoZazaMastro.
 import { SP_REACT as React, DFL, routerHook } from "./decky";
+import { CORE } from "./corePalette";
 import { createOutputPatch } from "./reactOutputPatch";
 import { readStoreLibrary, readStoreDownloads, subscribeStoreLibrary, storeRequest, observeOwnedShortcut, ownedShortcutIdentity, type StoreOwnedGame, type StoreJob } from "./storeLibraryRuntime";
 import { storeLibraryLocale } from "./storeLibraryLocale";
@@ -42,9 +43,9 @@ function DownloadSection() {
   const rows = React.useSyncExternalStore(subscribeStoreLibrary, readStoreDownloads);
   const active = rows.filter(job => !terminal(job));
   if (!active.length) return null;
-  return <section style={{ padding: "24px 36px", background: "rgba(255,255,255,.045)", borderRadius: 8, marginBlock: 18 }}>
+  return <section style={{ padding: "24px 36px", background: CORE.gunmetal, borderRadius: 8, marginBlock: 18 }}>
     <h2 style={{ marginBlock: "0 16px" }}>{text().downloads}</h2>
-    {active.map(job => <div key={job.jobId} style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingBlock: 14 }}><JobControls job={job} /></div>)}
+    {active.map(job => <div key={job.jobId} style={{ borderTop: `1px solid ${CORE.gunmetalRaised}`, paddingBlock: 14 }}><JobControls job={job} /></div>)}
   </section>;
 }
 export function installStoreLibrarySteamUi(getLocale: () => string) {

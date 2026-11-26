@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import test from 'node:test';
 import vm from 'node:vm';
+import { corePalette, isCorePalette } from "./corePaletteModule.mjs";
 const require = createRequire(new URL('../package.json', import.meta.url));
 const ts = require('typescript');
 const source = process.env.STORE_DOWNLOAD_MENU_SOURCE ?? new URL('../src/storeDownloadMenu.tsx', import.meta.url);
@@ -16,6 +17,7 @@ function fixture() {
   const modules = {
     './decky': { DFL:dfl, SP_REACT:React, toaster:{toast:value=>alerts.push(value)} },
     './storeLibraryRuntime': { readStoreDownloads:()=>jobs, subscribeStoreLibrary:()=>()=>{}, storeJobAction:async(job,action)=>{commands.push({job,action});return{accepted:true};} },
+    './corePalette': corePalette,
     './storeLibraryLocale': { storeLibraryLocale:()=>new Proxy({}, {get:(_o,key)=>String(key)}) },
   };
   vm.runInNewContext(ts.transpileModule(readFileSync(source,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React}}).outputText,{exports,require:key=>modules[key]});
@@ -57,7 +59,7 @@ test('only the cancel option receives the native option class and scoped red bac
   assert.equal(options.filter(option=>option.data!=='cancel').some(option=>option.strOptionClass),false);
   const css=cancel.label.children[0].children[0];
   assert.match(css,/\.ph-store-download-cancel:is\(:hover,:focus-visible,:focus-within,\.gpfocus,\.gpfocuswithin,\[aria-selected=true\]\)/);
-  assert.match(css,/background:#c42b1c!important;color:#fff!important/);
+  assert.match(css,/background:#D7263D!important;color:#FFFFFF!important/);
   assert.doesNotMatch(css,/:has\(|\[role=option\]|\[role=menuitem\]/);
 });
 

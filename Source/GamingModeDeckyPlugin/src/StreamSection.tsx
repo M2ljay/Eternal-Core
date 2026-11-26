@@ -1,5 +1,6 @@
 import { DFL, SP_REACT as React } from "./decky";
 import { call } from "./controlBackend";
+import { CORE } from "./corePalette";
 import { streamCopy, streamView, type StreamAnswer } from "./streamReport";
 
 // Eternal Core: the Stream mode section of Quick Access > Core. One row says whether Stream mode is on
@@ -8,16 +9,16 @@ import { streamCopy, streamView, type StreamAnswer } from "./streamReport";
 // Stream mode is on, Core sends nothing to the TV (GamingMode.Services/MarkIIIHost.Stream.cs).
 const { PanelSection, PanelSectionRow, Focusable, ToggleField } = DFL as any;
 
-const BLACK = "#000000", CRIMSON = "#D7263D", STEEL = "#C9D1D9", GUNMETAL = "#1A1D21";
+const { black: BLACK, crimson: CRIMSON, crimsonText: CRIMSON_TEXT, steel: STEEL, gunmetal: GUNMETAL, white: WHITE } = CORE;
 
 const style = `
 .core-stream{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-stream-row{background:${GUNMETAL};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none;box-shadow:none;text-shadow:none}
-.core-stream-row.gpfocus,.core-stream-row:focus-visible{outline:2px solid ${STEEL};outline-offset:-2px}
+.core-stream-row.gpfocus,.core-stream-row:focus-visible{outline:2px solid ${CRIMSON};outline-offset:-2px}
 .core-stream-row.on{border-left:3px solid ${CRIMSON}}
-.core-stream-title{font-size:13px;color:#fff;font-weight:600;white-space:nowrap}
+.core-stream-title{font-size:13px;color:${WHITE};font-weight:600;white-space:nowrap}
 .core-stream-value{font-size:12px;color:${STEEL};text-align:right;overflow:hidden;text-overflow:ellipsis}
-.core-stream-row.on .core-stream-value{color:${CRIMSON};font-weight:600}
+.core-stream-row.on .core-stream-value{color:${CRIMSON_TEXT};font-weight:600}
 .core-stream-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL}}
 .core-stream-settings{display:flex;flex-direction:column;gap:6px;padding:0 4px}
 `;

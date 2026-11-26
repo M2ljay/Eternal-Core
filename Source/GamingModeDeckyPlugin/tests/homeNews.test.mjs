@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { corePalette, isCorePalette } from "./corePaletteModule.mjs";
 import test from 'node:test';
 const source=fs.readFileSync(new URL('../src/HomeNews.tsx',import.meta.url),'utf8');
-const out={};vm.runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022}}).outputText,{exports:out,require:()=>({DFL:{},SP_REACT:{Component:class {}}})});
+const out={};vm.runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022}}).outputText,{exports:out,require:name=>isCorePalette(name)?corePalette:({DFL:{},SP_REACT:{Component:class {}}})});
 test('news keeps native row objects and reorders without cloning their contents',()=>{
  const activity={props:{children:{type:()=> 'BasicHomeUpdates eventsToShow'}}};
  const updated={props:{children:{type:()=> 'RecentlyCompletedCarousel'}}};

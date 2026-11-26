@@ -121,7 +121,9 @@ test("sizes and times", () => {
 
 test("the section uses the Core palette and no glow", () => {
   const source = readFileSync(new URL("../src/HealthSection.tsx", import.meta.url), "utf8");
-  for (const colour of ["#000000", "#D7263D", "#C9D1D9", "#1A1D21"]) assert.ok(source.includes(colour), colour);
+  assert.match(source, /from "\.\/corePalette"/, "colours come from the Core palette");
+  for (const token of ["black", "crimson", "steel", "gunmetal"]) assert.match(source, new RegExp(`\\b${token}: [A-Z_]+\\b`), token);
+  assert.ok(!/#[0-9a-fA-F]{3,8}\b/.test(source), "no hard-coded colours");
   assert.ok(!/blur\(|drop-shadow|box-shadow:(?!none)|text-shadow:(?!none)/.test(source), "no haze or glow");
   assert.match(source, /Focusable/);
 });

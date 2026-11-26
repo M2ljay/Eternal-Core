@@ -1,5 +1,6 @@
 import { DFL, SP_REACT as React, toaster } from "./decky";
 import { call } from "./controlBackend";
+import { CORE } from "./corePalette";
 import { callsMicMessage, callsMicView, discordInstalled, micView, partyMessage, scopeView, voiceCopy, type PartyAnswer, type VoiceAnswer } from "./voiceReport";
 
 // Eternal Core: the Voice section of Quick Access > Core. A big microphone button (Core mutes the
@@ -11,23 +12,24 @@ import { callsMicMessage, callsMicView, discordInstalled, micView, partyMessage,
 // everything with the toggle) and the mute scope (everything, the default, or calls only).
 const { PanelSection, PanelSectionRow, Focusable, DialogButton, DropdownItem, ToggleField } = DFL as any;
 
-const BLACK = "#000000", CRIMSON = "#D7263D", STEEL = "#C9D1D9", GUNMETAL = "#1A1D21";
+const { black: BLACK, crimson: CRIMSON, crimsonText: CRIMSON_TEXT, steel: STEEL, gunmetal: GUNMETAL, white: WHITE } = CORE;
 
 const style = `
 .core-voice{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
-.core-voice .core-voice-button{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box;background:${GUNMETAL}!important;color:#fff!important;border-radius:6px!important;padding:12px 14px!important;display:flex;align-items:center;gap:12px;text-align:left;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important}
-.core-voice .core-voice-button.gpfocus,.core-voice .core-voice-button:focus-visible{outline:2px solid ${STEEL};outline-offset:-2px}
+.core-voice .core-voice-button{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box;background:${GUNMETAL}!important;color:${WHITE}!important;border-radius:6px!important;padding:12px 14px!important;display:flex;align-items:center;gap:12px;text-align:left;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important}
+.core-voice .core-voice-button.gpfocus,.core-voice .core-voice-button:focus-visible{outline:2px solid ${CRIMSON};outline-offset:-2px}
+.core-voice .core-voice-button.muted.gpfocus,.core-voice .core-voice-button.muted:focus-visible{outline-color:${WHITE}}
 .core-voice .core-voice-button.muted{background:${CRIMSON}!important}
 .core-voice-icon{width:28px;height:28px;flex:0 0 auto}
 .core-voice-text{display:flex;flex-direction:column;gap:2px;min-width:0}
 .core-voice-label{font-size:15px;font-weight:650;line-height:1.2}
 .core-voice-state{font-size:12px;color:${STEEL};line-height:1.3}
-.core-voice .muted .core-voice-state{color:#fff}
+.core-voice .muted .core-voice-state{color:${WHITE}}
 .core-voice-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL}}
 .core-voice-row{background:${GUNMETAL};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.core-voice-row-title{font-size:13px;color:#fff;font-weight:600}
+.core-voice-row-title{font-size:13px;color:${WHITE};font-weight:600}
 .core-voice-row-value{font-size:12px;color:${STEEL};text-align:right}
-.core-voice-note{padding:0 12px;font-size:12px;color:${CRIMSON}}
+.core-voice-note{padding:0 12px;font-size:12px;color:${CRIMSON_TEXT}}
 .core-voice-settings{display:flex;flex-direction:column;gap:6px;padding:0 4px}
 `;
 

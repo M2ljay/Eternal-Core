@@ -1,5 +1,6 @@
 import { DFL, SP_REACT as React } from "./decky";
 import { call } from "./controlBackend";
+import { CORE } from "./corePalette";
 
 // Eternal Core Mark III: "update night". Couch hardening holds Windows Update restarts
 // while someone is signed in, so when Windows has a restart pending (or a month has
@@ -56,7 +57,7 @@ export function UpdateNightCard({ locale }: { locale: string }) {
   return (
     <PanelSection title={text.title}>
       <PanelSectionRow>
-        <div style={{ fontSize: 13, lineHeight: 1.5, opacity: .85, margin: "0 0 8px" }}>
+        <div style={{ fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${CORE.warning}` }}>
           {(state.scheduledFor ? text.scheduled : text.offer).replace("{time}", time)}
         </div>
       </PanelSectionRow>

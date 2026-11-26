@@ -1,4 +1,5 @@
 import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';import test from 'node:test';import ts from 'typescript';
+import { corePalette, isCorePalette } from "./corePaletteModule.mjs";
 const compile=path=>ts.transpileModule(fs.readFileSync(new URL(path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React}}).outputText;
 const strings={};vm.runInNewContext(compile('../src/deviceCapabilitiesLocale.ts'),{exports:strings});
 const row=(id,available=true,status='windows',destination='performance')=>({id,available,status,destination});
@@ -7,7 +8,7 @@ const flush=()=>new Promise(r=>setImmediate(r));const deferred=()=>{let resolve;
 function fixture(first=snapshot(),initial={}){
  let props={selection:'auto',effective:'msi-claw-8-ex',detected:'msi-claw-8-ex',locale:'en',...initial},si=0,ri=0,effectDeps,cleanup,read=async()=>first,id=0;const values=[],refs=[],effects=[],timers=new Map(),calls=[];
  const React={useState(v){const n=si++;if(!(n in values))values[n]=typeof v==='function'?v():v;return[values[n],next=>{values[n]=typeof next==='function'?next(values[n]):next}]},useRef(v){return refs[ri++]??={current:v}},useEffect(fn,deps){if(!effectDeps||deps.some((v,i)=>v!==effectDeps[i])){effectDeps=deps;effects.push(()=>{cleanup?.();cleanup=fn()})}},createElement:(type,props,...children)=>({type,props:props??{},children})};
- const exports={};const deps={'react-icons/tb':{TbCheck:'check',TbChevronRight:'next',TbInfoCircle:'info',TbMinus:'minus'},'./decky':{SP_REACT:React,DFL:{DialogButton:'button',Focusable:'div'}},'./controlBackend':{async call(method,...args){calls.push([method,...args]);return read()}},'./deviceCapabilitiesLocale':strings,'./deviceInfoLocale':{deviceInfoLocale:()=>({loading:'Loading',loadError:'Unable to read controls',video:'Video controls',power:'Power controls'})}};
+ const exports={};const deps={'./corePalette':corePalette,'react-icons/tb':{TbCheck:'check',TbChevronRight:'next',TbInfoCircle:'info',TbMinus:'minus'},'./decky':{SP_REACT:React,DFL:{DialogButton:'button',Focusable:'div'}},'./controlBackend':{async call(method,...args){calls.push([method,...args]);return read()}},'./deviceCapabilitiesLocale':strings,'./deviceInfoLocale':{deviceInfoLocale:()=>({loading:'Loading',loadError:'Unable to read controls',video:'Video controls',power:'Power controls'})}};
  vm.runInNewContext(compile('../src/DeviceCapabilities.tsx'),{exports,require:name=>deps[name],window:{setTimeout(fn){timers.set(++id,fn);return id},clearTimeout(key){timers.delete(key)}}});
  const render=()=>{si=ri=0;const tree=exports.DeviceCapabilities(props);while(effects.length)effects.shift()();return tree};
  const nodes=(v,out=[])=>{if(Array.isArray(v))for(const n of v)nodes(n,out);else if(v&&typeof v==='object'){out.push(v);nodes(v.children??[],out)}return out};

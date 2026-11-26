@@ -115,13 +115,14 @@ uses lighter tints.
 | Store suite badge (app) | Gunmetal metal disc instead of the gold one; label gradient `#D7263D` to `#7A1220` (white text). |
 | Gaming Mode transition colour | Defaults `#D7263D` (app model, agent model, agent fallback). `GamingModeService.NormalizeConfig` moves a saved non-custom `#FFCB0F` to crimson once, so the agent's config follows. |
 | Installer (`App.xaml`, `MainWindow.xaml`) | Accent `#D7263D`, hover `#C11F35`, pressed `#A51A2D`, all with white text (4.96, 5.97, 7.54:1). Surfaces `#1A1D21`, strokes `#3A3F46`. Accent bar and "done" disc crimson with a white tick. |
-| Big Picture plugin | Control Center tab indicator crimson; the store's suite badge tint crimson. Digital Stores: `--sd-accent: #d7263d` for fills (focused tab with white text, progress), and `--sd-accent-line: #ff5a6e` for outlines, icons, caret and the active-tab underline on its grey surfaces (3.96 to 6.6:1, where crimson would be 2.4 to 3:1). |
+| Big Picture plugin | One token module, `Source/GamingModeDeckyPlugin/src/corePalette.ts` (`CORE`, `CORE_STATUS`, `coreAlpha`), for every screen: black backgrounds, gunmetal `#1A1D21` surfaces with `#2A2F36` for raised/focused ones, steel `#C9D1D9` and hint `#9AA4AE` text, crimson `#D7263D` for selected/focused/active (rings, underlines, left bars, toggles, sliders, progress) and for errors, `#EA5A68` for crimson as text (5:1 on gunmetal), muted green `#6FA37F` for OK and amber `#C98B4A` for pending/warning/update (black text on their fills). Covered: Quick Access (Core tabs, Health, Voice, Stream mode, update night, device settings, SDL3 hint, Lossless profiles), the Dashboard (Playhub's white-fill focus and glows become gunmetal and a crimson ring), Digital Stores (`--sd-*` variables), the Plugin Store, store downloads, On this day and Home news. Steam blue (Lossless, downloads) and the green toggles are gone. `tests/corePalette.test.mjs` checks the values, the contrast and that the restyled screens hold no colour literals. |
 
 Left as is:
 
 - The app's surfaces: Mica, Acrylic or the WinUI dark theme supply them; tinting them gunmetal would be a redesign.
-- The amber warning card (`BuildYellowWarning`) and the plugin's yellow "experimental" badge: warning semantics, not brand.
-- "On this day" (`DailyHistory.tsx`): its sepia and gold editorial look.
+- The app's amber warning card (`BuildYellowWarning`): warning semantics, not brand.
+- The Big Picture plugin's monochrome onboarding illustrations (white line art at varying opacity), the onboarding
+  overlay's dark glass over Steam, the HUD's user-chosen text colours and the Ayaneo RGB preview: not palette roles.
 - The agent's standalone settings window (`GamingMode/MainWindow.cs`, `AppBrushes.Yellow #fcba03` with ink text; shown
   only when the agent exe runs without arguments): swapping the fill to crimson would need its text inverted (ink on
   crimson is 3.8:1), which is a redesign.

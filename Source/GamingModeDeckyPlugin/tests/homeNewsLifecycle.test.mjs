@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { corePalette, isCorePalette } from "./corePaletteModule.mjs";
 const React={Component:class{},createElement:(type,props,...children)=>Object.freeze({type,key:null,props:{...props,...(children.length?{children:children.length===1?children[0]:children}:{})}}),isValidElement:node=>!!node?.type,cloneElement:(node,props,...children)=>React.createElement(node.type,{...node.props,...props},...children)};
 import test from 'node:test';
 const read = name => fs.readFileSync(new URL('../src/'+name,import.meta.url),'utf8');
@@ -10,7 +11,7 @@ test('Home editorial survives uninstall/reinstall without mutating native or ano
  const routes=new Set();const routerHook={addPatch:(_,fn)=>(routes.add(fn),fn),removePatch:(_,fn)=>routes.delete(fn)};
  const decky={SP_REACT:React,DFL:{},routerHook}; const helper={};
  vm.runInNewContext(compile(read('reactOutputPatch.ts')),{exports:helper,require:()=>decky});
- function install(){const exports={};vm.runInNewContext(compile(read('HomeNews.tsx')),{exports,window:{},console,require:path=>path==='./decky'?decky:path==='./reactOutputPatch'?helper:path==='./controlBackend'?{call:async()=>({enabled:true,country:'auto'})}:path==='./DailyHistory'?{HistoryTabs:function HistoryTabs(){},notifyHistoryLanguageChanged(){}}:{}});return exports.installHomeNews(()=> 'it');}
+ function install(){const exports={};vm.runInNewContext(compile(read('HomeNews.tsx')),{exports,window:{},console,require:path=>path==='./decky'?decky:path==='./reactOutputPatch'?helper:path==='./controlBackend'?{call:async()=>({enabled:true,country:'auto'})}:isCorePalette(path)?corePalette:path==='./DailyHistory'?{HistoryTabs:function HistoryTabs(){},notifyHistoryLanguageChanged(){}}:{}});return exports.installHomeNews(()=> 'it');}
  const Tabs = () => React.createElement('section',{tabs:[{id:'Recommended',title:'Native'}]});
  const Inner = () => React.createElement(Tabs,{strActiveTab:'Recommended',setActiveTab(){}});
  const Outer = () => React.createElement(Inner);
