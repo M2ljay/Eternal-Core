@@ -40,14 +40,15 @@ shows `3.2.0`.
 ## How updates flow
 
 1. A release on `M2ljay/Eternal-Core` that is published, not a draft and not a prerelease, has a numeric tag
-   (`v3.1.0`) and an asset named `Playhub-Setup.exe`.
+   (`v3.1.0`) and an asset named `Core-Setup.exe` (from 3.3.0; releases also carry a `Playhub-Setup.exe` copy for
+   Mark I and II updaters, which look only for that name).
 2. Core checks `releases/latest` of the fork every few minutes. Installs that still store upstream's repository in
    `settings.json` are redirected automatically.
 3. The download is checked against GitHub's SHA-256 digest of the asset, its size and the `MZ` header. Then the
    installer runs with `--update` and upgrades in place, keeping settings.
 
 **Bootstrap:** your current Playhub 3.0 still checks upstream, so it will never offer Mark I by itself. Install Mark I
-once by hand (run `Playhub-Setup.exe` from the release). It upgrades in place. From then on, updates come from the
+once by hand (run `Core-Setup.exe` from the release). It upgrades in place. From then on, updates come from the
 fork.
 
 ## How to build
@@ -58,7 +59,7 @@ fork.
 
 1. On GitHub, open the fork's **Actions** tab and enable workflows (forks have them disabled by default).
 2. Pushing `main` or a `mark-*` branch, or running the workflow manually, builds the installer and attaches
-   `Playhub-Setup.exe` and `.sha256` to the run as an artifact.
+   `Core-Setup.exe` and `.sha256` to the run as an artifact.
 3. Pushing a tag such as `v3.1.0` (it must equal `EternalRelease.Version`) also creates a **draft** release.
    Review it on GitHub and click *Publish*. Only then do installed copies see it.
 
@@ -78,7 +79,7 @@ npm install -g pnpm@9; pnpm install --frozen-lockfile
 cd ..\EternalRelease.Tests; dotnet run -c Release
 cd ..\..
 pwsh -File Source\PlayhubSetup\build-update-preview.ps1
-# -> Source\PlayhubSetup\Output\Playhub-Setup.exe (+ .sha256)
+# -> Source\PlayhubSetup\Output\Core-Setup.exe (+ .sha256, and the Playhub-Setup.exe copy)
 ```
 
 ### Linux (checks only)

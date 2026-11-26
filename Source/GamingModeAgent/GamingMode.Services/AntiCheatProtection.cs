@@ -107,7 +107,7 @@ internal static class AntiCheatCatalog
 	// Processes that own windows in Gaming Mode without being a game.
 	internal static readonly IReadOnlySet<string> InfrastructureProcesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 	{
-		"GamingMode", "GamingModeSetup", "Playhub", "Playhub Setup", "Playhub-DeckyHost", "Playhub.GameSession", "Playhub.XboxSession",
+		"GamingMode", "GamingModeSetup", "Playhub", "Playhub Setup", "Core Setup", "Core-Setup", "Playhub-DeckyHost", "Playhub.GameSession", "Playhub.XboxSession",
 		"Playhub.StoreHost", "explorer", "steam", "steamwebhelper", "sunshine", "apollo", "vibepollo", "vibeshine",
 		"PluginLoader", "PluginLoader_noconsole", "powershell", "pwsh", "cmd", "conhost", "WindowsTerminal", "OpenConsole",
 		"ApplicationFrameHost", "ShellExperienceHost", "StartMenuExperienceHost", "SearchHost", "SearchApp", "TextInputHost",

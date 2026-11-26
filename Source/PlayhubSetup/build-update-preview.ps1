@@ -895,7 +895,10 @@ try {
         }
     } finally { $archive.Dispose() }
     if ((Get-ReleaseSourceManifest) -cne $sourceManifest) { throw 'Native sources changed while packaging; freeze and rebuild.' }
-    $name = 'Playhub-Setup.exe'
+    # Core 3.3: the installer is Core-Setup.exe. A Playhub-Setup.exe copy is written beside it
+    # for the release, because Mark I/II updaters only look for that name.
+    $name = 'Core-Setup.exe'
+    $legacyName = 'Playhub-Setup.exe'
     $partial = Join-Path $stage $name
     $target = [IO.File]::Create($partial)
     try {
@@ -921,6 +924,9 @@ try {
     Move-Item -LiteralPath $partial -Destination $destination -Force
     $hash = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash.ToLowerInvariant()
     "$hash  $name" | Set-Content -LiteralPath ($destination + '.sha256') -Encoding ascii
+    $legacy = Join-Path $output $legacyName
+    Copy-Item -LiteralPath $destination -Destination $legacy -Force
+    "$hash  $legacyName" | Set-Content -LiteralPath ($legacy + '.sha256') -Encoding ascii
     Get-Item -LiteralPath $destination | Select-Object FullName, Length, LastWriteTime
 } finally {
     $resolvedStage = [IO.Path]::GetFullPath($stage)

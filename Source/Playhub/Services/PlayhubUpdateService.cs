@@ -18,7 +18,9 @@ namespace Playhub.Services;
 /// </summary>
 public sealed class PlayhubUpdateService
 {
-    private const string PublicInstallerName = "Playhub Setup.exe";
+    // Core 3.3 publishes Core-Setup.exe, plus a Playhub-Setup.exe copy for Mark I/II updaters,
+    // which only look for that name. Both are accepted; Core is preferred.
+    private const string PublicInstallerName = "Core Setup.exe";
     private static readonly TimeSpan DownloadStallTimeout = TimeSpan.FromSeconds(60);
     private static readonly HttpClient Http = CreateHttpClient();
     private readonly TimeProvider _downloadTimeProvider;
@@ -178,7 +180,7 @@ public sealed class PlayhubUpdateService
 
     private static bool IsInstallerAssetName(string? name) =>
         !string.IsNullOrWhiteSpace(name) && Regex.IsMatch(name,
-            @"^Playhub[ ._-]Setup(?:[ ._-]v?\d+(?:\.\d+){1,3})?\.exe$",
+            @"^(?:Core|Playhub)[ ._-]Setup(?:[ ._-]v?\d+(?:\.\d+){1,3})?\.exe$",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private static async Task<(string? Name, string? DownloadUrl, long Size, string? Digest)>
@@ -335,7 +337,8 @@ public sealed class PlayhubUpdateService
             })
             .Where(asset =>
                 IsInstallerAssetName(asset.Name))
-            .OrderByDescending(asset =>
+            .OrderByDescending(asset => asset.Name!.StartsWith("Core", StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(asset =>
                 string.Equals(asset.Name, PublicInstallerName, StringComparison.OrdinalIgnoreCase))
             .ThenByDescending(asset =>
                 asset.Name!.Contains(normalizedVersion, StringComparison.OrdinalIgnoreCase))

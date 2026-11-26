@@ -24,11 +24,10 @@ string Release(string tag, string assetName, string? assetDigest) => JsonSeriali
     tag_name = tag,
     html_url = $"https://github.com/{Fork}/releases/tag/{tag}",
     body = "notes",
-    assets = new[]
-    {
-        new { name = assetName, browser_download_url = $"https://github.com/{Fork}/releases/download/{tag}/{assetName}", size = (long)installer.Length, digest = assetDigest }
-    }
+    assets = assetName.Split('|').Select(name =>
+        new { name, browser_download_url = $"https://github.com/{Fork}/releases/download/{tag}/{name}", size = (long)installer.Length, digest = assetDigest }).ToArray()
 });
+
 
 var requested = new List<Uri>();
 void Serve(string tag, string assetName = "Playhub-Setup.exe", string? assetDigest = null)
@@ -40,7 +39,7 @@ void Serve(string tag, string assetName = "Playhub-Setup.exe", string? assetDige
         var path = request.RequestUri!.AbsolutePath;
         if (request.RequestUri.Host == "api.github.com" && path == $"/repos/{Fork}/releases/latest")
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Release(tag, assetName, assetDigest)) });
-        if (request.RequestUri.Host == "github.com" && path == $"/{Fork}/releases/download/{tag}/{assetName}")
+        if (request.RequestUri.Host == "github.com" && assetName.Split('|').Any(name => path == $"/{Fork}/releases/download/{tag}/{name}"))
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(installer) });
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
     };
@@ -89,6 +88,15 @@ try
         Require(requested.Count == 1 && requested[0].AbsoluteUri == $"https://api.github.com/repos/{Fork}/releases/latest", "wrong endpoint");
         Require(info is { IsNewer: true, AssetName: "Playhub-Setup.exe" } && info.LatestVersion == EternalRelease.Version, "fork release not offered");
         Require(PlayhubUpdatePolicy.ShouldOffer(info), "policy refused a newer release");
+    });
+
+    await Test("Core 3.3 releases: Core-Setup.exe is preferred over the legacy Playhub-Setup.exe copy", async () =>
+    {
+        Serve("v" + EternalRelease.Version, "Playhub-Setup.exe|Core-Setup.exe");
+        var info = await new PlayhubUpdateService().CheckAsync(Fork, "3.2.0");
+        Require(info is { IsNewer: true, AssetName: "Core-Setup.exe" }, $"picked {info?.AssetName}");
+        Serve("v" + EternalRelease.Version, "Core-Setup.exe");
+        Require((await new PlayhubUpdateService().CheckAsync(Fork, "3.2.0"))?.AssetName == "Core-Setup.exe", "Core-only release not offered");
     });
 
     await Test("the running Mark is not re-offered; the next Mark is", async () =>

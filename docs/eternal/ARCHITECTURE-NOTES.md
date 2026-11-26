@@ -34,8 +34,9 @@ WPF. The installer (`PlayhubSetup`) and the Gaming Mode agent are WPF.
      `https://github.com/{repo}/releases/expanded_assets/{tag}`.
    - "latest" means the newest non-draft, **non-prerelease** release.
 5. **Asset selection.** `:179-182` accepts only names matching `^Playhub[ ._-]Setup(?:[ ._-]v?\d+(\.\d+){1,3})?\.exe$`
-   (case-insensitive). `:318-348` prefers the exact name `Playhub Setup.exe`, then a name containing the version.
-   The release build script produces `Playhub-Setup.exe`, which matches.
+   (case-insensitive; from 3.3.0 `Core` or `Playhub`). It prefers a `Core` name, then the exact name `Core Setup.exe`,
+   then a name containing the version. The release build script produces `Core-Setup.exe` and a `Playhub-Setup.exe`
+   copy, which Mark I/II updaters (regex `^Playhub[ ._-]Setup`) still find.
 6. **Version comparison.** `:358-389` `ParseVersion`: strips a leading `v`, keeps the leading digits-and-dots
    (`3.1.0-beta` becomes `3.1.0`), pads to `System.Version`. Newer means `latest > current`. **A tag such as `mark-i`
    does not parse, so it is never offered as an update.** Tags must stay numeric (`v3.1.0`).
@@ -170,11 +171,11 @@ and the zip is **appended** to the setup exe followed by an 8-byte little-endian
 `PLHB` (`Installer.cs` reads the trailer). Scripts in `Source/PlayhubSetup/`:
 
 - `build-all.bat`: older one-shot script: checks, agent, Decky plugin, app publish, payload, stub, append →
-  `Output\Playhub-Setup.exe`.
+  `Output\Core-Setup.exe`.
 - `build-installer.bat` and `build-installer-fast.bat`: subsets of the above.
 - `build-release-verified.ps1` → `build-update-preview.ps1` (PowerShell 7): **the real release path.** Runs the update
   and catalog tests, optionally a native UI review, publishes app, agent and stub, verifies dozens of pinned hashes and
-  payload entries, writes `Output\Playhub-Setup.exe` and `Output\Playhub-Setup.exe.sha256`.
+  payload entries, writes `Output\Core-Setup.exe` and `.sha256`, plus the `Playhub-Setup.exe` copy and its `.sha256`.
 
 Needs Windows: `powershell`/`pwsh`, `Get-AuthenticodeSignature`, `robocopy`, `copy /b`, `build-plugin.bat` (Node,
 `pnpm`/`npm`), WindowsAppSDK restore, `net8.0-windows` targeting.

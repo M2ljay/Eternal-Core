@@ -96,7 +96,7 @@ Choose the plugins you want from the Plugin Store. Each card links to its projec
 ## Download and installation
 
 1. Open the [latest release](https://github.com/LoZazaMastro/Playhub/releases/latest);
-2. Download `Playhub-Setup.exe`;
+2. Download `Core-Setup.exe`;
 3. Run the installer, choose your language, and select **Install**;
 4. On first launch, let Playhub check Steam, Decky, and Gaming Mode.
 

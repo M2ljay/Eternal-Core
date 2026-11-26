@@ -8,7 +8,8 @@ Fork of Playhub v3.0.0 (`2f60fb0`). Fork docs: `docs/eternal/README.md`, `docs/e
   `dotnet run -c Release` from the project folder (exit code 0 means pass).
 - App (`Source/Playhub`, WinUI 3), setup (`Source/PlayhubSetup`, WPF) and agent (`Source/GamingModeAgent`) build only
   on Windows or in CI (NuGet: WindowsAppSDK, Windows ref packs).
-- Installer: `pwsh -File Source/PlayhubSetup/build-update-preview.ps1` produces `Source/PlayhubSetup/Output/Playhub-Setup.exe`.
+- Installer: `pwsh -File Source/PlayhubSetup/build-update-preview.ps1` produces `Source/PlayhubSetup/Output/Core-Setup.exe`
+  (plus a `Playhub-Setup.exe` copy: Mark I/II updaters only look for that name, so releases carry both).
   CI: `.github/workflows/eternal-release.yml`.
 - Linux, offline: plain `net8.0` projects run with `dotnet run -c Release -p:NuGetAudit=false`. The fork's own gate is
   `Source/EternalRelease.Tests`.

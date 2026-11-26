@@ -32,7 +32,6 @@ regex. `ShellIdentityChecks` (Windows only, not in CI) covers the shortcut renam
 | ---- | --- |
 | About credit, `README.md`, licence and copyright lines | Credit to the upstream project and author. |
 | "Playhub plugins", the store's "Playhub" source filter and category, the plugin names Playhub Artworks, Metadata, Notifications, Surround, Discord | The upstream plugin suite. Their names come from upstream's catalogue and `plugin.json` and are matched by name. |
-| CSS Loader "Playhub" profile and "Playhub (Big Image Mode)" | The theme is installed into CSS Loader under that name (`Playhub.profile`); the text matches what CSS Loader shows. |
 | "Playhub.exe" in the Controlled folder access help | The file the user has to pick is still called `Playhub.exe`. |
 | Log lines, thread names, exception messages that only reach logs | Not shown in the UI; renaming them would break log searches. |
 | Decky `plugin.json` description | Only shown by a Decky store, which does not list this bundled plugin. |
@@ -49,12 +48,11 @@ Each one is read by an installed copy, by Windows or by another component. Renam
 | Data folders `%APPDATA%\Playhub`, `%LOCALAPPDATA%\Playhub` (settings, logs, caches, `CurtainDisplay`, `HudDisplay`, `StoreLibrary`) | `AppPaths`, agent, setup | Settings, library state and logs are lost. |
 | AppUserModelID `LoZazaMastro.Playhub` | `ShellIdentity.AppId` | Taskbar pins and Start entries split from the running app. |
 | Executables and assemblies: `Playhub.exe`, `Playhub Setup.exe`, `Playhub.GameSession.exe`, `Playhub.XboxSession.exe`, `Playhub.StoreHost.exe`, `Playhub-DeckyHost.exe`, `Playhub*.dll` | csproj files, process-name checks (`Installer.StopRunningPlayhub`, anti-cheat exclusion list), release script pins | Process detection, shortcut ownership (`ShellIdentity.IsMainTarget` requires `Playhub.exe`), payload hash pins. |
-| Release asset `Playhub-Setup.exe` | `PlayhubUpdateService` asset regex, workflow | Installed copies stop finding updates. |
+| Release asset `Playhub-Setup.exe` | Mark I/II updaters' asset regex | 3.3.0 ships `Core-Setup.exe` and keeps this name as a copy, so Mark I/II still update. |
 | Update repository setting and its `LoZazaMastro/Playhub` mapping | `PlayhubUpdatePolicy`, `EternalRelease.UpstreamUpdateRepository` | 3.0 installs stop updating. |
 | Namespaces `Playhub.*`, `PlayhubSetup`, XAML style keys `Playhub*Style` | Source | Nothing for users; pure churn. |
 | Decky plugin name `Playhub`, author `LoZazaMastro`, folder `gaming-mode`, QAM tab `shortcut:Playhub` | `plugin.json`, `GamingModeService` (author check), `BundledPlayhubMaintenance`, `qam.ts`, `QamSettings.tsx`, `deckyHost*.ts`, `controlBackend.ts` | Decky reloads, the desktop app's detection and the saved QAM layout. |
 | Other plugin IDs: Playhub Metadata, Playhub-Artworks, playhub-notifications, Playhub-Discord | Catalogue, `ProtectedPluginForks.json` | Upstream updates and fork protection. |
-| CSS Loader profile `Playhub`, `Playhub (Big Image Mode)` | `ExtraService`, `Assets/CssLoaderThemes` | The user's enabled theme disappears. |
 | Steam shortcut tag `Playhub`, draft shortcut name `Playhub - <store> - <id>`, screensaver id `Playhub Circles` | `XboxSteamShortcut`, `storeLibraryRuntime.ts`, `circlesScreensaver.ts` | Steam collections and recovery of half-created shortcuts; the selected screensaver. |
 | Startup entries `Playhub Desktop Safety`, `Playhub Focus Rescue`, `Playhub Xbox Game Bar` | `MainWindow.IsPlayhubManagedStartupApp`, Gaming Mode helpers | Existing entries are no longer recognised as owned. |
 | Mutexes, pipes, events: `Global\Playhub.Decky.Start`, `Local\Playhub.DeckyHost.*`, `Playhub.XboxCompanion.*`, `Playhub.Win32Session.*`, `Global\Playhub.ControllerDriverDependency.1`, `Local\PlayhubGamingModeJsonStore`, header `X-Playhub-Shell-Token` | Agent, app, plugin | Mixed-version components stop talking during an update. |

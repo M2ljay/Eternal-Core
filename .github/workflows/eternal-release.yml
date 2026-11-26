@@ -1,4 +1,4 @@
-# Eternal Core: builds Playhub-Setup.exe on Windows.
+# Eternal Core: builds Core-Setup.exe on Windows (plus a Playhub-Setup.exe copy for Mark I/II updaters).
 # - Every push to main or a mark-* branch, and manual runs: build and upload the installer as a workflow artifact.
 # - Pushing a tag vX.Y.Z or a mark-* branch: the same, then create or refresh a DRAFT GitHub release
 #   v<EternalRelease.Version> with the installer attached (a published release is never changed).
@@ -125,8 +125,8 @@ jobs:
         with:
           name: Eternal-Core-${{ steps.release.outputs.version }}-installer
           path: |
-            Source/PlayhubSetup/Output/Playhub-Setup.exe
-            Source/PlayhubSetup/Output/Playhub-Setup.exe.sha256
+            Source/PlayhubSetup/Output/Core-Setup.exe
+            Source/PlayhubSetup/Output/Core-Setup.exe.sha256
           if-no-files-found: error
 
       # A tag push or any push to a mark-* branch leaves a DRAFT release for this version. Drafts create
@@ -139,7 +139,8 @@ jobs:
         shell: pwsh
         run: |
           $tag = 'v${{ steps.release.outputs.version }}'
-          $assets = @('Source/PlayhubSetup/Output/Playhub-Setup.exe', 'Source/PlayhubSetup/Output/Playhub-Setup.exe.sha256')
+          $assets = @('Source/PlayhubSetup/Output/Core-Setup.exe', 'Source/PlayhubSetup/Output/Core-Setup.exe.sha256',
+            'Source/PlayhubSetup/Output/Playhub-Setup.exe', 'Source/PlayhubSetup/Output/Playhub-Setup.exe.sha256')
           $isDraft = gh release view $tag --json isDraft --jq .isDraft 2>$null
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag @assets --draft --target '${{ github.sha }}' `
