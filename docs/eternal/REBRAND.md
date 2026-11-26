@@ -141,9 +141,10 @@ had no support or donation entry.
 
 ## Maker logo (Eternal): placements still open
 
-An Eternal logo and wordmark now exist as masters (`brand/eternal-logo.svg`, `brand/eternal-wake.svg`), but no image
-in the product uses them yet: no current asset is a maker spot. A boot sequence would show the Eternal logo first, then
-Core, like a console start-up. Places where a maker logo could appear:
+An Eternal logo and wordmark exist as masters (`brand/eternal-logo.svg`, `brand/eternal-wake.svg`). Since Mark III the
+Gaming Mode boot sequence (agent `BootSequenceVisual.cs`) draws `eternal-wake.svg` and then `core-logo-wake.svg` natively
+in WPF, following `brand/preview/index.html`, with `brand/sound/eternal-core-boot.ogg` (embedded as WAV). Other places
+where a maker logo could appear:
 
 - Gaming Mode boot and mode-switch splash (agent `SplashScreenService.cs` and `ModeTransitionVisual.cs`): Eternal,
   then the Core logo, before Big Picture.

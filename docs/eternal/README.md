@@ -72,7 +72,7 @@ git push origin v3.1.0
 Requires the .NET 8 SDK, Node 22, PowerShell 7, and Git with `core.autocrlf=true` (the default in Git for Windows).
 
 ```powershell
-git clone --branch mark-ii https://github.com/M2ljay/Eternal-Core
+git clone --branch mark-iii https://github.com/M2ljay/Eternal-Core
 cd Eternal-Core\Source\GamingModeDeckyPlugin
 npm install -g pnpm@9; pnpm install --frozen-lockfile
 cd ..\EternalRelease.Tests; dotnet run -c Release
@@ -85,6 +85,30 @@ pwsh -File Source\PlayhubSetup\build-update-preview.ps1
 
 The app, setup and agent target Windows and need NuGet packages, so they only build on Windows or in CI. The
 portable test projects run on Linux; see `CLAUDE.md` at the repo root.
+
+## Mark III (3.3.0)
+
+How to use it, the TV and BIOS setup, and what to test on the PC: [MARK-III-GUIDE.md](MARK-III-GUIDE.md).
+Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
+
+| Feature | What it does | If it fails |
+| ------- | ------------ | ----------- |
+| Boot sequence | Eternal, then Core, with the arcade sound, at power-on and wake; any controller button skips | Plain splash, or nothing; Steam starts regardless (time box 16 s) |
+| LG webOS TV | On + Core's HDMI at boot/wake into Gaming Mode; off on sleep/shutdown only while it shows Core | Logged; the TV is left as it is |
+| Steam update hold | Steam held until you choose, at most 30 days; update = backup, update, plugin check, rollback offer | A Steam update that bypasses `steam.cfg` starts a new hold; the plugin check judges it |
+| Decky health check | Core's plugin heartbeats; no heartbeat 90 s after Big Picture: one calm notice | Decky is optional: Steam and Core keep working |
+| Core Repair | Controller-friendly repair window from a Steam library tile, works without Decky | Every step reports *Fixed* or *Still not working* |
+| Steam Controller wake | BIOS and Device Manager steps in the guide | No code |
+
+New settings (Core > Gaming Mode, stored in `%APPDATA%\GamingMode\config.json`): `gaming.splash.bootSequenceEnabled`,
+`gaming.splash.bootSoundEnabled`, `gaming.tv` (`enabled`, `address`, `macAddress`, `coreInput`, `turnOnWithCore`,
+`turnOffWithCore`) and `gaming.deckyHealthNoticeEnabled`. The TV pairing key is not in `config.json`: it is in
+`%APPDATA%\GamingMode\tv-pairing.json`, encrypted with DPAPI for the Windows user. Agent state files next to it:
+`steam-update-hold.json`, `core-health.json`.
+
+Tests that run on Linux and in CI: `Source/MarkIII.Tests` (TV protocol and a fake TV, Steam hold and backup, Decky
+health, boot decisions, agent text) and `GamingModeDeckyPlugin/tests/coreHealth.test.mjs`; `LocalizationResource.Tests`
+checks the new app strings in all 12 languages.
 
 ## Mark II (3.2.0)
 
@@ -194,8 +218,8 @@ not open it, follow *Settings > Controller > Guide Button Chord Layout > Edit* b
 4. **Branding, Phase 2:** Phase 1 renamed every visible name to Core and replaced the logos, icons, splash and accent
    colours ([REBRAND.md](REBRAND.md); masters in [brand/](brand/)). The identifiers (AppUserModelID
    `LoZazaMastro.Playhub`, install and data folders, uninstall key, executables, plugin IDs) are unchanged. Renaming
-   them needs the migration plan sketched there. Still open: the onboarding mascots, and where the Eternal maker logo
-   appears (a boot sequence).
+   them needs the migration plan sketched there. Still open: the onboarding mascots. The Eternal maker logo now appears
+   in the Mark III boot sequence.
 5. **Release tests:** upstream's `PlayhubUpdate.Tests` is broken at v3.0.0. Fix it, or rely on `EternalRelease.Tests`?
 6. **Ricochet's exact trigger** is unknown. Once it is bisected on the PC
    ([ARCHITECTURE-NOTES.md §4](ARCHITECTURE-NOTES.md#4-mark-ii-changes)), should the pause list shrink to the

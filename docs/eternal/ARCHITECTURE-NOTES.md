@@ -361,3 +361,81 @@ Shortcuts: Windows shows a `.lnk` file's name, so the setup writes `Core.lnk` an
 `Playhub.lnk` (`ShellIdentity.MoveOwnedShortcut`: only when it targets this install's `Playhub.exe` and the new name
 is free). Everything an installed copy reads by name is unchanged; the full list, the reasons and the image inventory
 are in `docs/eternal/REBRAND.md`.
+
+## 7. Mark III
+
+Code is in `GamingModeAgent/GamingMode.Services` unless noted. The pure halves are linked into
+`Source/MarkIII.Tests` and run on Linux; the Windows halves (WPF, DPAPI, power events, XInput) compile only in CI.
+`MarkIIIHost.cs` wires everything from `AgentHost.RunAsync`, beside Gaming Mode: every loop step, power event and
+endpoint catches and logs its own failures, and no Mark III feature is on the path that starts Steam.
+
+### Boot sequence
+
+- Where: the existing cold-boot splash (`SplashScreenService.Show`, shown by `AgentHost` before any service exists and
+  held by `SteamThemeStartupCover` until Big Picture is ready). `CreateBootWindow` replaces the logo with
+  `BootSequencePlayer` (`BootSequenceVisual.cs`): a WPF `Storyboard` on a 1280x720 canvas in a `Viewbox`, reproducing
+  `docs/eternal/brand/preview/index.html` (the timeline the boot sound is cut to). WPF was chosen because the splash,
+  transitions and curtain already are WPF; the agent has no WebView2.
+- Sound: `Assets/eternal-core-boot.wav` (the brand `.ogg` as 16-bit PCM; Windows has no built-in Ogg decoder) is an
+  embedded resource, played from pinned memory with winmm `PlaySound(SND_MEMORY|SND_ASYNC)`.
+- Time boxes: start waits for the TV gate at most 6 s (`MaxStartDelay`); the themed cover, once Steam is ready, waits
+  for the sequence through `WaitForBootSequenceAsync`, never past 16 s after the splash appeared (`HardLimit`). The
+  splash's own fail-safe deadline is unchanged.
+- Skip: `BootSequenceInput` polls `XInputGetState` (xinput1_4) and `GetAsyncKeyState` every 40 ms only while the sequence
+  plays; `BootSkipDetector` ignores anything already held at the start. This reads published state only and opens no
+  device, unlike the SDL/HIDAPI drivers that upstream removed (`DashboardShortcutService.cs`).
+- Wake: `MarkIIIHost.OnResume` uses a fresh `SplashScreenService` (the boot instance keeps the boot's foreground guard)
+  and `ShowWakeSequence`, which closes itself after the sequence plus 0.6 s. `BootSequencePolicy.Decide` refuses on
+  wake when a game runs, and always when anti-cheat safe mode is engaged.
+
+### TV (LG webOS)
+
+- `LgWebOsProtocol.cs` (pure): magic packet, MAC and input parsing, SSAP messages, replies, SSDP, and the off rule
+  `ShouldTurnOff(foregroundAppId, coreInput)`: only `com.webos.app.hdmiN` for Core's input.
+- `LgWebOsClient.cs`: UDP broadcast WoL (255.255.255.255 on ports 9 and 7, plus the /24 directed broadcast), SSDP for
+  `urn:lge-com:service:webos-second-screen:1`, and a `ClientWebSocket` session: `wss://tv:3001` with the TV's self-signed
+  certificate pinned by SHA-256 at pairing; `ws://tv:3000` only if 3001 does not answer and nothing is pinned.
+- `TvControl.cs`: boot/wake (`WakeAndSwitchAsync`, retries the websocket until the budget ends), sleep/shutdown
+  (`TurnOffIfShowingCoreAsync`, budget split per step so a rejected key is recognised in time), and the page's buttons.
+- `TvControl.Windows.cs`: `DpapiTvPairingStore` (`tv-pairing.json`, CryptProtectData, current user) and `SendARP` for
+  the MAC. The key never reaches a log line, an HTTP response or `config.json`; the test suite checks the log.
+- Power events: `SystemEvents` subscribed from a pool thread (it then owns its window thread). Suspend: 1.8 s budget,
+  synchronous. SessionEnding: 2.5 s. Resume is raised for `PBT_APMRESUMESUSPEND`, a wake with user presence, so an
+  unattended wake timer does not turn the TV on.
+- Endpoints (loopback only): `GET /tv/state`, `POST /tv/discover|pair|unpair|on|input|off`.
+
+### Steam update hold
+
+- Verification of `steam.cfg` on the current client: not possible from sources. Valve does not document
+  `BootStrapperInhibitAll`; community sources predate the 64-bit client (December 2025). Treated as "probably works,
+  verify on Core" (`Steam\logs\bootstrap_log.txt`). The design does not depend on it:
+  `SteamUpdateHoldPolicy.Observe` detects a client version change while held (`package\steam_client_win64.manifest`),
+  logs it and restarts the hold; the Decky health check then judges the new version.
+- The app's toggle still writes or removes `steam.cfg` (`ExtraService`); its presence is the hold. The agent stores
+  `heldSince`/`heldVersion` in `steam-update-hold.json`, notifies once at 30 days and runs the update job at an idle
+  moment (Gaming Mode, Steam up, no game and no protected game for 10 minutes, counted from agent start too).
+- `SteamUpdateJob` (pure orchestration over `ISteamUpdateHost`) and `SteamClientBackup.cs` (same folder, layout,
+  marker and exclusions as `ExtraService`, checked by a test; keeps its own newest two backups). A hand-edited
+  `steam.cfg` is put back as it was. `ModeManager.BeginSteamMaintenance` keeps the Desktop safety watchdog quiet while
+  Steam is closed on purpose (it only acts when Explorer is also gone, i.e. the shell-free trial).
+- Endpoints: `GET /steam/update/state`, `POST /steam/update/now`.
+
+### Decky health and Core Repair
+
+- Heartbeat: `GamingModeDeckyPlugin/src/coreHealth.ts` (frontend, every 30 s) calls `core_heartbeat` in `main.py`, which
+  POSTs `/decky/heartbeat`. `DeckyHeartbeat.cs`: Big Picture up (`SteamFullscreenDetector.IsBigPictureUp`) for 90 s with
+  no heartbeat, or heartbeats stale for 90 s, is `NotLoaded`; one notice per Steam process; none in Desktop Mode, when
+  Decky is not installed or `deckyRequired` is off, during a game or a protected game, or after "Continue without
+  plugins" for the same Steam version.
+- Notice: `CoreNoticeOverlay.cs`, layered WPF window with NOACTIVATE|TRANSPARENT|TOOLWINDOW, black card, 10 s, re-checks
+  "no game" every 500 ms and disappears if one starts. It reads no input (upstream's rule).
+- Core Repair: `GamingMode.exe repair` (`CoreRepairWindow.cs`), handled in `Program.Main` before the agent mutex. It
+  calls `POST /core/repair/run?action=` and polls `/core/repair/state`; jobs run in the agent one at a time, so closing
+  the window never interrupts one. Actions that restart Steam close the window first (Steam counts it as a running
+  game) and report through a notice. "Update Decky" runs `Playhub.exe decky-update <id>` (`CoreRepairDeckyCommand.cs`),
+  i.e. the app's own verified installer, and waits for its receipt in `%LOCALAPPDATA%\Playhub\CoreRepair`.
+- Tile: the plugin reads `/core/repair/shortcut` and adds the non-Steam shortcut once (adopting an existing "Core
+  Repair"), 15 s after it loads. Decky must have worked once for the tile to exist; the desktop app's *Open Core Repair*
+  button is the fallback.
+- Core keeps working without Decky: `ModeManager.ApplyGamingMode` still launches Steam when Decky is missing or failed
+  (unchanged; only a Steam launch failure aborts Gaming Mode).
