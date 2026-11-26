@@ -69,7 +69,8 @@ static class TvTests
 			Check(tv is { Address: "192.168.1.50", Name: "[LG] webOS TV OLED55C9" }, "SSDP reply from a C9 is found with its name");
 			Check(LgWebOsProtocol.ParseSsdpReply("HTTP/1.1 200 OK\r\nST: urn:schemas-upnp-org:device:MediaRenderer:1\r\nSERVER: Linux UPnP\r\n\r\n", "192.168.1.9") is null, "other UPnP devices are ignored");
 		}
-		// TV controller against a fake TV
+		// TV controller against a fake TV. Budgets are generous: on Windows a refused loopback
+		// connection (the fake TV has no port 3001) takes about two seconds before the fallback.
 		{
 			await using var fake = new FakeTv();
 			var settings = new TvSettings { Enabled = true, Address = "127.0.0.1", MacAddress = "A8:23:FE:01:02:03", CoreInput = "HDMI_2" };
@@ -87,13 +88,13 @@ static class TvTests
 			settings.MacAddress = "A8:23:FE:01:02:03";
 
 			fake.Foreground = "netflix";
-			var keep = await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
+			var keep = await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
 			Check(keep.Outcome == TvOutcome.SkippedOtherInput && !fake.TurnedOff, "sleep: TV showing Netflix stays on");
 			fake.Foreground = "com.webos.app.hdmi1";
-			keep = await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
+			keep = await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
 			Check(keep.Outcome == TvOutcome.SkippedOtherInput && !fake.TurnedOff, "sleep: TV on another HDMI stays on");
 			fake.Foreground = "com.webos.app.hdmi2";
-			var off = await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
+			var off = await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
 			Check(off.Outcome == TvOutcome.Done && fake.TurnedOff, "sleep: TV showing Core's HDMI 2 is turned off");
 
 			fake.TurnedOff = false; fake.Foreground = "youtube.leanback.v4";
@@ -105,18 +106,18 @@ static class TvTests
 
 			settings.TurnOffWithCore = false;
 			fake.TurnedOff = false;
-			Check((await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(5), CancellationToken.None)).Outcome == TvOutcome.Disabled && !fake.TurnedOff, "turn-off setting off: nothing is sent");
+			Check((await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(10), CancellationToken.None)).Outcome == TvOutcome.Disabled && !fake.TurnedOff, "turn-off setting off: nothing is sent");
 			settings.TurnOffWithCore = true; settings.Enabled = false;
 			Check((await controller.WakeAndSwitchAsync(TimeSpan.FromSeconds(5), CancellationToken.None)).Outcome == TvOutcome.Disabled, "TV control off: wake does nothing");
 			settings.Enabled = true;
 
 			fake.AcceptKey = false;
-			var stale = await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(3), CancellationToken.None);
+			var stale = await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
 			Check(stale.Outcome == TvOutcome.NotPaired && !fake.TurnedOff, "a key the TV no longer accepts is reported as not paired");
 			fake.AcceptKey = true;
 
 			pairing.Clear();
-			Check((await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(3), CancellationToken.None)).Outcome == TvOutcome.NotPaired, "unpaired: nothing is sent");
+			Check((await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(10), CancellationToken.None)).Outcome == TvOutcome.NotPaired, "unpaired: nothing is sent");
 			settings.Address = "127.0.0.2";
 			pairing.Save(FakeTv.Key, null);
 			var unreachable = await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(2), CancellationToken.None);
