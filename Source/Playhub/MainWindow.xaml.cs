@@ -2284,6 +2284,7 @@ public sealed partial class MainWindow : Window
         panel.Children.Add(CardsRow(BuildBootSequenceCard(), BuildCoreRepairCard()));
         panel.Children.Add(BuildTvCard());
         panel.Children.Add(BuildQuietWindowsCard());
+        panel.Children.Add(BuildCoreHealthCard());
 
         // ---------- Splash logo with live preview ----------
         _splashLogoCombo = ChoiceCombo(SplashLogoOptions);

@@ -1,5 +1,6 @@
 """Playhub control center. Hardware controls retain the Quick Settings MIT notices."""
 import json
+import re
 import logging
 import os
 import shutil
@@ -202,6 +203,16 @@ class Plugin(QuickSettingsPlugin):
 
     async def core_update_night_cancel(self):
         return await asyncio.to_thread(self._agent_local, "POST", "/windows/update-night/cancel")
+
+    # Core Health (src/HealthSection.tsx, agent MarkIIIHost.Health.cs). The agent may wait up to
+    # 4 s for the home server's share, so these calls get a longer time box and a larger answer.
+    async def core_health(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/health", timeout=8, maximum=65536)
+
+    async def core_health_dismiss(self, problem_id):
+        if not isinstance(problem_id, str) or not re.fullmatch(r"[a-z-]{1,40}", problem_id):
+            return {}
+        return await asyncio.to_thread(self._agent_local, "POST", "/health/dismiss?id=" + problem_id, timeout=8, maximum=65536)
 
     @staticmethod
     def _agent_local(method, path, *, timeout=2.5, maximum=4096):

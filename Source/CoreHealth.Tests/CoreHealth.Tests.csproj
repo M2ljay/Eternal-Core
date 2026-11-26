@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Eternal Core Health: the pure verdict and alert rules. The agent's wiring
+         (MarkIIIHost.Health.cs: share read, TV probe, endpoints) builds only in CI. -->
+    <Compile Include="../GamingModeAgent/GamingMode.Services/CoreHealth.cs" Link="CoreHealth.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/UpdateNight.cs" Link="UpdateNight.cs" />
+    <!-- Written by server/backup/CoreBackup.Common.ps1 (New-CoreStatusDocument, Write-CoreStatus). -->
+    <None Include="core-status.sample.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

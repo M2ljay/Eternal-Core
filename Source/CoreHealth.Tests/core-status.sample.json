@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "written_at": "2026-11-26T05:52:11.0000000-05:00",
+  "server": "V3",
+  "backup": {
+    "result": "ok",
+    "started_at": "2026-11-26T05:30:00.0000000-05:00",
+    "finished_at": "2026-11-26T05:52:10.0000000-05:00",
+    "message": "ROMs skipped (pool would fall below the free-space floor): ps2, ngc",
+    "uploaded_bytes": 21480128512,
+    "consecutive_failures": 0,
+    "last_success_at": "2026-11-26T05:52:10.0000000-05:00",
+    "categories": {
+      "saves": {
+        "ok": true,
+        "files": 12,
+        "bytes": 1048576
+      },
+      "romm": {
+        "ok": true,
+        "files": 3,
+        "bytes": 5242880
+      },
+      "bios": {
+        "ok": true,
+        "files": 0,
+        "bytes": 0
+      },
+      "roms": {
+        "ok": true,
+        "files": 40,
+        "bytes": 21474836480
+      }
+    },
+    "roms_skipped_platforms": [
+      "ps2",
+      "ngc"
+    ],
+    "pool": {
+      "used_bytes": 1310000000000,
+      "total_bytes": 2000000000000
+    },
+    "restore_check": {
+      "at": "2026-11-02T06:10:00.0000000-05:00",
+      "result": "ok",
+      "message": "saves: /my-files/CoreBackup/saves/assets/users/a/saves/gba/1/mgba/game.srm matches"
+    }
+  },
+  "drive": {
+    "label": "Games (E:)",
+    "health": "healthy",
+    "free_bytes": 812000000000,
+    "total_bytes": 4000000000000,
+    "message": "OK"
+  },
+  "romm": {
+    "reachable": true,
+    "checked_at": "2026-11-26T05:30:04.0000000-05:00",
+    "message": "answers at http://localhost:8080; container romm: running"
+  }
+}

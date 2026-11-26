@@ -159,7 +159,16 @@ string[] eternalMarkIII =
     "Abbina",
     "Accendi ora",
     "Passa a HDMI",
-    "Spegni"
+    "Spegni",
+    // Core Health card (MainWindow.MarkIII.cs, BuildCoreHealthCard).
+    "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.",
+    "Server di casa",
+    "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.",
+    "Avvisi di salute",
+    "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server d\u00e0 problemi o se il server tace da pi\u00f9 di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.",
+    "Controlla ora",
+    "Tutto a posto.",
+    "Cose da controllare: {0}"
 };
 foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
 {

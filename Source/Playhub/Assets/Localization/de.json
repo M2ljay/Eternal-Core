@@ -1504,5 +1504,13 @@
   "Windows Update non cambia il driver grafico": "Windows Update ändert den Grafiktreiber nicht",
   "Niente risvegli notturni per manutenzione": "Kein nächtliches Aufwecken für Wartung",
   "Nessuna password al risveglio": "Kein Kennwort beim Aufwachen",
-  "Niente richieste di Edge al primo avvio o come browser predefinito": "Keine Edge-Abfragen beim ersten Start oder als Standardbrowser"
+  "Niente richieste di Edge al primo avvio o come browser predefinito": "Keine Edge-Abfragen beim ersten Start oder als Standardbrowser",
+  "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.": "Schnellzugriff > Core zeigt, ob Backups, Server, TV und PC in Ordnung sind.",
+  "Server di casa": "Heimserver",
+  "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.": "Der Name des Server-PCs, zum Beispiel V3. Core liest seinen Status aus dem freigegebenen Ordner CoreStatus.",
+  "Avvisi di salute": "Statuswarnungen",
+  "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "Ein kurzer Hinweis im Gaming Mode, wenn das Backup zwei Nächte hintereinander fehlschlägt, das Laufwerk des Servers ein Problem meldet oder der Server seit über anderthalb Tagen schweigt. Höchstens einmal am Tag, nie während eines Spiels.",
+  "Controlla ora": "Jetzt prüfen",
+  "Tutto a posto.": "Alles in Ordnung.",
+  "Cose da controllare: {0}": "Zu prüfen: {0}"
 }

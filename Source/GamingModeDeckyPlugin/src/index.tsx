@@ -45,6 +45,7 @@ import { installLivePerformance } from "./quickSettings/livePerformanceRuntime";
 import { installPlayhubUpdateNotice, updateNoticeBody, type UpdateNotice } from "./playhubUpdateNotice";
 import { installCoreHeartbeat, ensureCoreRepairTile, type CoreRepairShortcut } from "./coreHealth";
 import { UpdateNightCard } from "./UpdateNightCard";
+import { HealthSection } from "./HealthSection";
 
 const { useState, useEffect, useMemo } = React;
 let hapticSettingsWrite = Promise.resolve();
@@ -962,6 +963,7 @@ function Content({ origin = "decky" }: { origin?: "qam" | "decky" }) {
     <><ControlCenter locale={locale} origin={origin} homeTitle={local.controlCentre} gameAppId={gameAppId} gamingMode={status?.currentMode === "Gaming"} downloads={<StoreDownloadsQam locale={locale} />}
       frameTiming={origin === "qam" && status && gameAppId !== 0 ? <GameFrameTiming key={gameAppId} appId={gameAppId} locale={locale} /> : null} session={<>
       {status && <UpdateNightCard locale={locale} />}
+      {status && <HealthSection locale={locale} />}
       {!status && <PanelSection><PanelSectionRow>
         <div role="status" style={{ margin: "8px 0 16px", padding: "16px", borderRadius: 10,
           background: "rgba(255,255,255,.055)", border: "1px solid rgba(255,255,255,.12)" }}>

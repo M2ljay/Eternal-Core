@@ -108,9 +108,15 @@ jobs:
         working-directory: Source/MarkIII.Tests
         run: dotnet run -c Release
 
-      - name: Mark III Big Picture plugin tests (heartbeat, Core Repair tile, optional startup)
+      - name: Mark III Big Picture plugin tests (heartbeat, Core Repair tile, optional startup, Health section)
         working-directory: Source/GamingModeDeckyPlugin
-        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs
+        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs tests/coreHealthSection.test.mjs
+
+      # Core Health: reading the home server's core-status.json, every row's verdict and the notice
+      # rules (once a day per problem; a dismissed problem returns only if it changes).
+      - name: Core Health tests
+        working-directory: Source/CoreHealth.Tests
+        run: dotnet run -c Release
 
       # The agent's WPF and Windows code builds only here; fail fast before packaging.
       - name: Compile the Gaming Mode agent

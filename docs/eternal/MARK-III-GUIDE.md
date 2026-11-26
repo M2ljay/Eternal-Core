@@ -36,6 +36,13 @@ Restart tonight at 5:00?". One press schedules it; the agent restarts into Gamin
 5:00, never during a game (it retries until 7:00, then asks again). Cancel from the same
 card.
 
+## Core Health
+
+Quick Access > Core > **Health** shows in one place whether the home server's nightly backup,
+its drive and RomM, Windows updates, the TV, the PC's disk and Core itself are fine, and Core
+gives one quiet notice a day for serious server problems. Setup at the server and on the PC:
+[CORE-HEALTH.md](CORE-HEALTH.md).
+
 ## Screensaver: Core Starfield
 
 Steam's screensaver list offers **Core Starfield** (it replaces Playhub Circles; pick it once

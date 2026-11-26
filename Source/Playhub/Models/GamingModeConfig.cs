@@ -67,6 +67,8 @@ public sealed class GamingOptions
     public TvOptions Tv { get; set; } = new();
     public bool DeckyHealthNoticeEnabled { get; set; } = true;
     public bool QuietWindowsToasts { get; set; } = true;
+    public string? CoreHealthServer { get; set; }
+    public bool CoreHealthAlertsEnabled { get; set; } = true;
     public List<StartupAppConfig> CustomStartupApps { get; set; } = new();
 
     // Qui finiscono le opzioni che vivono solo lato agente - fra cui le app

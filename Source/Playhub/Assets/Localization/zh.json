@@ -1504,5 +1504,13 @@
   "Windows Update non cambia il driver grafico": "Windows 更新不更换显卡驱动",
   "Niente risvegli notturni per manutenzione": "不在夜间为维护而唤醒",
   "Nessuna password al risveglio": "唤醒时无需密码",
-  "Niente richieste di Edge al primo avvio o come browser predefinito": "不显示 Edge 首次运行或默认浏览器提示"
+  "Niente richieste di Edge al primo avvio o come browser predefinito": "不显示 Edge 首次运行或默认浏览器提示",
+  "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.": "快速访问 > Core 会显示备份、服务器、电视和电脑是否正常。",
+  "Server di casa": "家庭服务器",
+  "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.": "服务器电脑的名称，例如 V3。Core 从共享文件夹 CoreStatus 读取它的状态。",
+  "Avvisi di salute": "健康提醒",
+  "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "当备份连续两晚失败、服务器硬盘报告问题，或服务器超过一天半没有消息时，在 Gaming Mode 中显示简短提醒。每天最多一次，游戏中从不显示。",
+  "Controlla ora": "立即检查",
+  "Tutto a posto.": "一切正常。",
+  "Cose da controllare: {0}": "需要检查的项目：{0}"
 }

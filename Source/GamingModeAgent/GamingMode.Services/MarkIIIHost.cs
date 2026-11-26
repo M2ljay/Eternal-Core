@@ -15,12 +15,13 @@ using Playhub.Shared;
 namespace GamingMode.Services;
 
 // Eternal Core Mark III in the agent: TV control, the Steam update hold, the Decky health
-// check, Core Repair's actions, the wake sequence and their HTTP endpoints.
+// check, Core Repair's actions, the wake sequence and their HTTP endpoints. Core Health (the
+// Quick Access health section and its notices) is in MarkIIIHost.Health.cs.
 //
 // Fail-safe by construction: every feature runs beside Gaming Mode, never in front of it.
 // Each loop iteration, power event and endpoint catches its own failures, logs them and
 // carries on; none of them can stop Steam from starting or the agent from running.
-internal sealed class MarkIIIHost : IDisposable
+internal sealed partial class MarkIIIHost : IDisposable
 {
 	private readonly AppPaths _paths;
 	private readonly JsonStore _store;
@@ -53,6 +54,7 @@ internal sealed class MarkIIIHost : IDisposable
 		_healthPath = Path.Combine(paths.ConfigDirectory, "core-health.json");
 		_toastsPath = Path.Combine(paths.ConfigDirectory, "quiet-toasts.json");
 		_updateNightPath = Path.Combine(paths.ConfigDirectory, "update-night.json");
+		_healthAlertsPath = Path.Combine(paths.ConfigDirectory, "core-health-alerts.json");
 		_steamHost = new SteamHost(this);
 		LoadHealth();
 	}
@@ -126,6 +128,9 @@ internal sealed class MarkIIIHost : IDisposable
 			catch (Exception error) { _logger.Error("Mark III: Steam update hold check failed this round.", error); }
 			try { CheckUpdateNight(); }
 			catch (Exception error) { _logger.Error("Mark III: update night check failed this round.", error); }
+			if (tick % 60 != 0) continue; // every five minutes
+			try { await CheckHealthAlertsAsync().ConfigureAwait(false); }
+			catch (Exception error) { _logger.Error("Core Health: alert check failed this round.", error); }
 		}
 	}
 
@@ -760,5 +765,6 @@ internal sealed class MarkIIIHost : IDisposable
 			Local(context) ? Tv(await _tv.SwitchCoreInputAsync(context.RequestAborted).ConfigureAwait(false)) : Results.StatusCode(403)));
 		app.MapPost("/tv/off", (Func<HttpContext, Task<IResult>>)(async context =>
 			Local(context) ? Tv(await _tv.TurnOffNowAsync(context.RequestAborted).ConfigureAwait(false)) : Results.StatusCode(403)));
+		MapHealth(app);
 	}
 }

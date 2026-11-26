@@ -25,6 +25,15 @@ internal sealed class PlayhubUpdateNotice
             return pending;
         }
     }
+    // Core Health: the last finished check, without waiting. Starts a check only when Read would
+    // (none yet, or the last one is over 30 minutes old), so opening Quick Access costs no request.
+    internal (bool Known, PlayhubUpdateService.UpdateInfo? Info) Peek()
+    {
+        Task<PlayhubUpdateService.UpdateInfo?> current = Read();
+        return current.IsCompletedSuccessfully ? (true, current.Result) : (false, null);
+    }
+    // The agent's one shared instance, set by Map (Core Health reads it).
+    internal static PlayhubUpdateNotice? Shared { get; private set; }
     async Task<PlayhubUpdateService.UpdateInfo?> ReadSafe()
     { try { return await check().ConfigureAwait(false); } catch { return null; } }
     internal static void Map(WebApplication app, XboxShellBroker auth)
@@ -32,6 +41,7 @@ internal sealed class PlayhubUpdateNotice
         string current = EternalRelease.Version;
         var service = new PlayhubUpdateService();
         var notice = new PlayhubUpdateNotice(() => service.CheckAsync(EternalRelease.UpdateRepository, current), () => Environment.TickCount64);
+        Shared = notice;
         app.MapPost("/playhub/update", (Func<HttpContext, Task<IResult>>)(async context =>
         {
             if (!auth.IsAuthorized(context.Connection.RemoteIpAddress, context.Request.Headers["X-Playhub-Shell-Token"].ToString()))

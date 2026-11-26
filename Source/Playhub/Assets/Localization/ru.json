@@ -1516,5 +1516,13 @@
   "Windows Update non cambia il driver grafico": "Windows Update не меняет графический драйвер",
   "Niente risvegli notturni per manutenzione": "Никаких ночных пробуждений для обслуживания",
   "Nessuna password al risveglio": "Без пароля после пробуждения",
-  "Niente richieste di Edge al primo avvio o come browser predefinito": "Никаких запросов Edge при первом запуске или о браузере по умолчанию"
+  "Niente richieste di Edge al primo avvio o come browser predefinito": "Никаких запросов Edge при первом запуске или о браузере по умолчанию",
+  "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.": "Быстрый доступ > Core показывает, всё ли в порядке с резервными копиями, сервером, телевизором и ПК.",
+  "Server di casa": "Домашний сервер",
+  "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.": "Имя ПК-сервера, например V3. Core читает его состояние из общей папки CoreStatus.",
+  "Avvisi di salute": "Оповещения о состоянии",
+  "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "Короткое уведомление в Gaming Mode, когда резервное копирование не удаётся две ночи подряд, диск сервера сообщает о проблеме или сервер молчит больше полутора суток. Не чаще раза в день и никогда во время игры.",
+  "Controlla ora": "Проверить сейчас",
+  "Tutto a posto.": "Всё в порядке.",
+  "Cose da controllare: {0}": "Что проверить: {0}"
 }

@@ -107,5 +107,10 @@ public sealed class GamingSettings
 	// (Shared/CouchHardening.cs, GamingToasts).
 	public bool QuietWindowsToasts { get; set; } = true;
 
+	// Core Health (MarkIIIHost.Health.cs): the home server whose \\<server>\CoreStatus\core-status.json
+	// Core reads, and whether serious problems raise a Core notice in Gaming Mode.
+	public string? CoreHealthServer { get; set; }
+	public bool CoreHealthAlertsEnabled { get; set; } = true;
+
 	public bool ManageAudio { get; set; }
 }

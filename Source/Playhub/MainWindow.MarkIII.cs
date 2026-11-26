@@ -18,6 +18,8 @@ namespace Playhub;
 public sealed partial class MainWindow
 {
     private TextBox _tvAddressBox = new();
+    private TextBox _healthServerBox = new();
+    private readonly TextBlock _healthStatus = new() { TextWrapping = TextWrapping.Wrap, Opacity = 0.8 };
     private TextBox _tvMacBox = new();
     private ComboBox _tvInputCombo = new();
     private readonly TextBlock _tvStatus = new() { TextWrapping = TextWrapping.Wrap, Opacity = 0.8 };
@@ -86,6 +88,8 @@ public sealed partial class MainWindow
         gaming.Tv.CoreInput = GetComboKey(_tvInputCombo) ?? "HDMI_2";
         gaming.DeckyHealthNoticeEnabled = GetToggle("deckyNotice");
         gaming.QuietWindowsToasts = GetToggle("quietToasts");
+        gaming.CoreHealthServer = EmptyToNull(_healthServerBox.Text.Trim());
+        gaming.CoreHealthAlertsEnabled = GetToggle("healthAlerts");
     }
 
     private void WriteMarkIIIIntoControls()
@@ -99,6 +103,8 @@ public sealed partial class MainWindow
         SetToggle("tvOff", gaming.Tv.TurnOffWithCore);
         SetToggle("deckyNotice", gaming.DeckyHealthNoticeEnabled);
         SetToggle("quietToasts", gaming.QuietWindowsToasts);
+        SetToggle("healthAlerts", gaming.CoreHealthAlertsEnabled);
+        _healthServerBox.Text = gaming.CoreHealthServer ?? "";
         RefreshQuietWindowsStatus();
         _tvAddressBox.Text = gaming.Tv.Address ?? "";
         _tvMacBox.Text = gaming.Tv.MacAddress ?? "";
@@ -214,6 +220,38 @@ public sealed partial class MainWindow
         var tv = await AgentAsync(HttpMethod.Get, "/tv/state", TimeSpan.FromSeconds(4));
         if (tv is { } tvState && tvState.TryGetProperty("paired", out var paired))
             _tvStatus.Text = T(paired.ValueKind == JsonValueKind.True ? "TV abbinata." : "Abbina prima la TV.");
+    }
+
+    // ---------- Core Health ----------
+
+    // The home server's name for Quick Access > Core > Health (the agent reads
+    // \\<server>\CoreStatus\core-status.json, written by server/backup on the server).
+    private FluentCard BuildCoreHealthCard()
+    {
+        var card = Card();
+        card.Children.Add(IconHeader(((char)0xE95E).ToString(), "Core Health",
+            "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto."));
+        _healthServerBox = TextBox("V3");
+        card.Children.Add(Labeled("Server di casa", _healthServerBox));
+        card.Children.Add(Body("Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus."));
+        AddExplainedToggle(card, "Avvisi di salute",
+            "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.", "healthAlerts");
+        card.Children.Add(ActionRow(Button("Controlla ora", CheckCoreHealthAsync)));
+        card.Children.Add(_healthStatus);
+        _healthServerBox.LostFocus += (_, _) => AutoSaveGaming();
+        return card;
+    }
+
+    private async Task CheckCoreHealthAsync()
+    {
+        await SaveGamingConfigAsync();
+        var reply = await AgentAsync(HttpMethod.Get, "/health", TimeSpan.FromSeconds(8));
+        if (reply is not { } health || !health.TryGetProperty("attention", out var attention) || !attention.TryGetInt32(out int count))
+        {
+            _healthStatus.Text = T("Il servizio Gaming Mode non risponde.");
+            return;
+        }
+        _healthStatus.Text = count == 0 ? T("Tutto a posto.") : string.Format(CultureInfo.CurrentCulture, T("Cose da controllare: {0}"), count);
     }
 
     // ---------- quiet Windows (couch hardening) ----------

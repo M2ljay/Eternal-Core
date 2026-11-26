@@ -1510,5 +1510,13 @@
   "Windows Update non cambia il driver grafico": "Windows 업데이트가 그래픽 드라이버를 바꾸지 않음",
   "Niente risvegli notturni per manutenzione": "유지 관리를 위한 야간 절전 해제 안 함",
   "Nessuna password al risveglio": "절전 해제 시 암호 없음",
-  "Niente richieste di Edge al primo avvio o come browser predefinito": "Edge 첫 실행 및 기본 브라우저 요청 표시 안 함"
+  "Niente richieste di Edge al primo avvio o come browser predefinito": "Edge 첫 실행 및 기본 브라우저 요청 표시 안 함",
+  "Accesso rapido > Core mostra se backup, server, TV e PC sono a posto.": "빠른 실행 > Core에서 백업, 서버, TV, PC가 정상인지 보여 줍니다.",
+  "Server di casa": "홈 서버",
+  "Il nome del PC server, per esempio V3. Core legge il suo stato dalla cartella condivisa CoreStatus.": "서버 PC의 이름(예: V3). Core는 공유 폴더 CoreStatus에서 상태를 읽습니다.",
+  "Avvisi di salute": "상태 알림",
+  "Un breve avviso in Gaming Mode se il backup fallisce due notti di fila, se il disco del server dà problemi o se il server tace da più di un giorno e mezzo. Al massimo una volta al giorno, mai durante un gioco.": "백업이 이틀 밤 연속 실패하거나, 서버 드라이브에 문제가 보고되거나, 서버가 하루 반 이상 응답이 없을 때 Gaming Mode에서 짧은 알림을 표시합니다. 하루에 최대 한 번, 게임 중에는 표시하지 않습니다.",
+  "Controlla ora": "지금 확인",
+  "Tutto a posto.": "모두 정상입니다.",
+  "Cose da controllare: {0}": "확인할 항목: {0}"
 }
