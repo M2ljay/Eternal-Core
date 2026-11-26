@@ -1,0 +1,48 @@
+/* Core by Eternal: context menus (the menu a game's options button or a long press opens).
+   Readable module names; CSS Loader translates them for the running Steam build. */
+
+/* Black panel with a 1px gunmetal edge. The edge is an inset shadow, not a border, so the
+   menu keeps Steam's size. */
+.gamepadcontextmenu_contextMenuContents {
+    background: #000000 !important;
+    box-shadow: inset 0 0 0 1px #1A1D21, 0 24px 60px rgba(0, 0, 0, 0.9) !important;
+    filter: none !important;
+}
+.gamepadcontextmenu_BasicContextMenuHeader {
+    background: transparent !important;
+    color: #C9D1D9 !important;
+}
+.gamepadcontextmenu_ContextMenuSeparator {
+    background: #1A1D21 !important;
+}
+
+/* Items: white text on black. */
+.gamepadcontextmenu_contextMenuItem {
+    background: transparent !important;
+    color: #FFFFFF !important;
+}
+
+/* The selected item: gunmetal with the Steam menu's 3px crimson underline. The gradient
+   repeats the underline in case Steam's own focus animation takes over box-shadow. */
+.gamepadcontextmenu_contextMenuItem.gamepadcontextmenu_Focused,
+.gamepadcontextmenu_contextMenuItem.gamepadcontextmenu_SubMenu.gamepadcontextmenu_active {
+    background-color: #1A1D21 !important;
+    background-image: linear-gradient(#D7263D, #D7263D) !important;
+    background-size: 100% 3px !important;
+    background-position: left bottom !important;
+    background-repeat: no-repeat !important;
+    box-shadow: inset 0 -3px 0 #D7263D !important;
+    color: #FFFFFF !important;
+}
+.gamepadcontextmenu_contextMenuItem.gamepadcontextmenu_Focused .gamepadcontextmenu_Arrow svg {
+    fill: #FFFFFF !important;
+}
+
+/* Destructive items (the ones Steam itself marks destructive): steel until selected,
+   then crimson text. */
+.gamepadcontextmenu_contextMenuItem.gamepadcontextmenu_Destructive {
+    color: #C9D1D9 !important;
+}
+.gamepadcontextmenu_contextMenuItem.gamepadcontextmenu_Destructive.gamepadcontextmenu_Focused {
+    color: #D7263D !important;
+}

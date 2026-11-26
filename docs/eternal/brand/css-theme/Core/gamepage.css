@@ -1,0 +1,68 @@
+/* Core by Eternal: the game page. Readable module names; CSS Loader translates them for
+   the running Steam build. Glass only over the hero art; everything below is solid. */
+
+/* Black page. */
+.basicappdetailssectionstyler_AppDetailsRoot,
+.basicappdetailssectionstyler_AppDetailsContainer {
+    background: #000000 !important;
+}
+
+/* The hero art stays and fades into the black: a mask, so the black page shows through. */
+.sharedappdetailsheader_HeaderBackgroundImage {
+    -webkit-mask-image: linear-gradient(180deg, #000000 35%, transparent 100%) !important;
+    mask-image: linear-gradient(180deg, #000000 35%, transparent 100%) !important;
+}
+
+/* The play bar sits on the art: translucent gunmetal with a blur. */
+.basicappdetailssectionstyler_PlaySection {
+    background: rgba(26, 29, 33, 0.55) !important;
+    backdrop-filter: blur(12px) !important;
+}
+.appdetailsplaysection_PlayBarLabel {
+    color: #C9D1D9 !important;
+}
+
+/* Play: the one solid crimson thing on the page. Focused: a 3px white ring. */
+.BasicUI .appactionbutton_Green .appactionbutton_ButtonChild {
+    background: #D7263D !important;
+    color: #FFFFFF !important;
+}
+.BasicUI .appactionbutton_Green .appactionbutton_ButtonChild:is(:focus, .gpfocus) {
+    background: #D7263D !important;
+    box-shadow: 0 0 0 3px #FFFFFF !important;
+}
+.BasicUI .appactionbutton_Green .appactionbutton_ButtonChild .appactionbutton_ButtonText {
+    color: #FFFFFF !important;
+}
+.BasicUI .appactionbutton_Green .appactionbutton_ButtonChild svg {
+    fill: #FFFFFF !important;
+}
+
+/* The small buttons beside Play (settings, controller, favourite): glass gunmetal at
+   rest. Steam's own focus look is left alone. */
+.BasicUI .appdetailsplaysection_MenuButton:not(:focus):not(.gpfocus) {
+    background: rgba(26, 29, 33, 0.7) !important;
+}
+
+/* Panels Steam marks as sitting over the art: translucent gunmetal with a blur. */
+.appdetails_Glassy,
+.appdetailsoverview_Glassy,
+.appdetailsgameinfocontainer_Glassy {
+    background: rgba(26, 29, 33, 0.55) !important;
+    backdrop-filter: blur(12px) !important;
+}
+
+/* Panels below the art: solid near-black. */
+.BasicUI .appdetailssection_AppDetailsSectionContainer.appdetailssection_RightColumnSection,
+.BasicUI .appactivityday_Event .appactivityday_EventHeadline,
+.BasicUI .appactivityday_Event .appactivityday_EventBody {
+    background: #0E1013 !important;
+    backdrop-filter: none !important;
+}
+
+/* Section headers: steel small caps (size unchanged). */
+.BasicUI .appdetailssectionheader_Label .appdetailssectionheader_LabelText {
+    color: #C9D1D9 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+}

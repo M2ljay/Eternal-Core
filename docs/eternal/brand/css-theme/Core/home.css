@@ -1,0 +1,51 @@
+/* Core by Eternal: Home. Readable module names; CSS Loader translates them for the running
+   Steam build. Colours, edges and one 6px lift only: Steam's layout stays. */
+
+/* Pure black behind everything. */
+.gamepadui_BasicHome.gamepadui_OpaqueBackground,
+.gamepadhome_TabbedContent {
+    background: #000000 !important;
+}
+
+/* The hero art fades into the black: a mask, so whatever is under it (black) shows
+   through. */
+.gamepadhomerecentgames_RecentGamesBackgroundContainer,
+.gamepadhomerecentgames_RecentGamesBackgroundImages {
+    -webkit-mask-image: linear-gradient(180deg, #000000 40%, transparent 100%) !important;
+    mask-image: linear-gradient(180deg, #000000 40%, transparent 100%) !important;
+}
+
+/* No glow behind the focused game. */
+.basicgamecarousel_CarouselCapsuleBackgroundGlow {
+    opacity: 0 !important;
+}
+
+/* Section titles: steel small caps. Only the title elements themselves, not their rows,
+   so nothing else in a row shrinks. */
+.gamepadhomerecentgames_RecentGamesHeaderLabel,
+.gamepadhomefriends_FriendsHeader,
+.gamepadhomerecommended_PlayNextCarouselTitle {
+    color: #C9D1D9 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+}
+
+/* Focused game: a thin 3px crimson ring, held still, lifted 6px. `translate` adds to
+   any transform Steam already uses instead of replacing it. */
+:is(.gamepadhome_TabbedContent, .gamepadhomerecentgames_RecentGamesContainer) .appportrait_LibraryItemBox {
+    transition: translate 0.15s ease-out;
+}
+:is(.gamepadhome_TabbedContent, .gamepadhomerecentgames_RecentGamesContainer) .appportrait_LibraryItemBox.Focusable:is(:focus, .gpfocus) {
+    outline: 3px solid #D7263D !important;
+    outline-offset: 0 !important;
+    animation: none !important;
+    translate: 0 -6px;
+}
+@media (prefers-reduced-motion: reduce) {
+    :is(.gamepadhome_TabbedContent, .gamepadhomerecentgames_RecentGamesContainer) .appportrait_LibraryItemBox,
+    :is(.gamepadhome_TabbedContent, .gamepadhomerecentgames_RecentGamesContainer) .appportrait_LibraryItemBox.Focusable:is(:focus, .gpfocus) {
+        transition: none !important;
+        translate: none !important;
+    }
+}
