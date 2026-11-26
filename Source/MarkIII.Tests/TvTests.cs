@@ -61,6 +61,10 @@ static class TvTests
 			Check(prompt.PairingType == "PROMPT" && prompt.ReturnValue == true, "prompt reply is recognised");
 			Check(rejected.Type == "error" && rejected.Error!.Contains("403"), "rejected pairing is an error");
 			Check(foreground.AppId == "com.webos.app.hdmi2" && foreground.Id == "core_3", "foreground reply yields the app id");
+			var power = LgWebOsProtocol.ParseReply("""{"type":"response","id":"core_4","payload":{"returnValue":true,"state":"Active Standby","processing":"Request Active Standby"}}""");
+			Check(power.PowerState == "Active Standby" && LgWebOsProtocol.TvInUse(power.PowerState) == false, "power state reply: Quick Start+ standby is not in use");
+			Check(LgWebOsProtocol.TvInUse("Active") == true && LgWebOsProtocol.TvInUse("Screen Off") == true && LgWebOsProtocol.TvInUse("Suspend") == false
+				&& LgWebOsProtocol.TvInUse(null) is null && LgWebOsProtocol.TvInUse("Something New") is null, "power states map to in use / not in use / unknown");
 			Check(LgWebOsProtocol.ParseReply("not json").Type == "invalid", "garbage replies do not throw");
 
 			string search = Encoding.ASCII.GetString(LgWebOsProtocol.SsdpSearchRequest());
@@ -97,9 +101,19 @@ static class TvTests
 			var off = await controller.TurnOffIfShowingCoreAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
 			Check(off.Outcome == TvOutcome.Done && fake.TurnedOff, "sleep: TV showing Core's HDMI 2 is turned off");
 
-			fake.TurnedOff = false; fake.Foreground = "youtube.leanback.v4";
+			fake.TurnedOff = false; fake.Foreground = "youtube.leanback.v4"; fake.PowerState = "Active";
 			var wake = await controller.WakeAndSwitchAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
-			Check(wake.Outcome == TvOutcome.Done && fake.SwitchedTo == "HDMI_2", "wake: TV switched to Core's HDMI 2");
+			Check(wake.Outcome == TvOutcome.LeftOnInUse && fake.SwitchedTo is null, "wake: a TV already on (YouTube) is left alone");
+			fake.PowerState = "Screen Off";
+			wake = await controller.WakeAndSwitchAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
+			Check(wake.Outcome == TvOutcome.LeftOnInUse && fake.SwitchedTo is null, "wake: a TV playing sound with its screen off is left alone");
+			fake.PowerState = "Active Standby";
+			wake = await controller.WakeAndSwitchAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
+			Check(wake.Outcome == TvOutcome.Done && fake.SwitchedTo == "HDMI_2", "wake: a TV in standby is switched to Core's HDMI 2");
+			fake.SwitchedTo = null; fake.Foreground = "youtube.leanback.v4"; fake.PowerState = null;
+			wake = await controller.WakeAndSwitchAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
+			Check(wake.Outcome == TvOutcome.Done && fake.SwitchedTo == "HDMI_2", "wake: an unknown power state counts as off");
+			fake.PowerState = "Active Standby";
 			fake.SwitchedTo = null; fake.Foreground = "com.webos.app.hdmi2";
 			wake = await controller.WakeAndSwitchAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
 			Check(wake.Outcome == TvOutcome.Done && fake.SwitchedTo is null, "wake: no switch when the TV already shows Core");
@@ -146,6 +160,7 @@ internal sealed class FakeTv : IAsyncDisposable
 	internal volatile bool TurnedOff;
 	internal volatile string? SwitchedTo;
 	internal volatile bool AcceptKey = true;
+	internal volatile string? PowerState = "Active Standby";
 
 	internal FakeTv()
 	{
@@ -199,6 +214,11 @@ internal sealed class FakeTv : IAsyncDisposable
 				string uri = message["uri"]!.GetValue<string>();
 				JsonObject payload = new() { ["returnValue"] = true };
 				if (uri == "ssap://com.webos.applicationManager/getForegroundAppInfo") payload["appId"] = Foreground;
+				else if (uri == "ssap://com.webos.service.tvpower/power/getPowerState")
+				{
+					if (PowerState is null) { await Send(socket, new JsonObject { ["type"] = "error", ["id"] = id, ["error"] = "404 no such service or method", ["payload"] = new JsonObject() }); continue; }
+					payload["state"] = PowerState;
+				}
 				else if (uri == "ssap://system/turnOff") TurnedOff = true;
 				else if (uri == "ssap://tv/switchInput") { SwitchedTo = message["payload"]!["inputId"]!.GetValue<string>(); Foreground = "com.webos.app.hdmi" + SwitchedTo[^1]; }
 				await Send(socket, new JsonObject { ["type"] = "response", ["id"] = id, ["payload"] = payload });

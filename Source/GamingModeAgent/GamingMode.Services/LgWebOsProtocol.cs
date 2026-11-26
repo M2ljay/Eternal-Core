@@ -30,6 +30,7 @@ internal static class LgWebOsProtocol
 	internal const string SwitchInputUri = "ssap://tv/switchInput";
 	internal const string ForegroundAppUri = "ssap://com.webos.applicationManager/getForegroundAppInfo";
 	internal const string TurnOffUri = "ssap://system/turnOff";
+	internal const string PowerStateUri = "ssap://com.webos.service.tvpower/power/getPowerState";
 	internal const string SsdpAddress = "239.255.255.250";
 	internal const int SsdpPort = 1900;
 	internal const string SsdpSearchTarget = "urn:lge-com:service:webos-second-screen:1";
@@ -133,8 +134,20 @@ internal static class LgWebOsProtocol
 
 	internal static string TurnOffMessage(string id) => RequestMessage(id, TurnOffUri);
 
+	internal static string PowerStateMessage(string id) => RequestMessage(id, PowerStateUri);
+
+	// getPowerState "state": is someone using the TV? "Screen Off" (picture off, sound on)
+	// and "Screen Saver" count as in use. "Active Standby" is the Quick Start+ standby,
+	// where the TV still answers on the network. Anything unknown: null.
+	internal static bool? TvInUse(string? powerState) => powerState?.Trim().ToLowerInvariant() switch
+	{
+		"active" or "screen off" or "screen saver" => true,
+		"active standby" or "suspend" or "power off" => false,
+		_ => null
+	};
+
 	internal readonly record struct SsapReply(string Type, string? Id, string? ClientKey, string? PairingType,
-		bool? ReturnValue, string? AppId, string? Error);
+		bool? ReturnValue, string? AppId, string? Error, string? PowerState = null);
 
 	internal static SsapReply ParseReply(string json)
 	{
@@ -146,18 +159,19 @@ internal static class LgWebOsProtocol
 			string type = String(root, "type") ?? "";
 			string? id = String(root, "id");
 			string? error = String(root, "error");
-			string? clientKey = null, pairing = null, appId = null;
+			string? clientKey = null, pairing = null, appId = null, powerState = null;
 			bool? ok = null;
 			if (root.TryGetProperty("payload", out JsonElement payload) && payload.ValueKind == JsonValueKind.Object)
 			{
 				clientKey = String(payload, "client-key");
 				pairing = String(payload, "pairingType");
 				appId = String(payload, "appId");
+				powerState = String(payload, "state");
 				if (payload.TryGetProperty("returnValue", out JsonElement value) && value.ValueKind is JsonValueKind.True or JsonValueKind.False)
 					ok = value.GetBoolean();
 				error ??= String(payload, "errorText");
 			}
-			return new(type, id, clientKey, pairing, ok, appId, error);
+			return new(type, id, clientKey, pairing, ok, appId, error, powerState);
 		}
 		catch (JsonException) { return new("invalid", null, null, null, null, null, "unreadable"); }
 	}

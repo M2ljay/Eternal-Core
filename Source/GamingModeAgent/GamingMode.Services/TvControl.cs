@@ -12,7 +12,8 @@ namespace GamingMode.Services;
 // Windows pieces (DPAPI key storage, ARP lookup, power events) are injected.
 //
 // Rules:
-// - Wake/boot into Gaming Mode: Wake-on-LAN, wait for the TV, switch to Core's HDMI.
+// - Wake/boot into Gaming Mode: only a TV that was off is taken over (Wake-on-LAN, wait,
+//   switch to Core's HDMI). A TV already on is in use, so it is left on whatever it shows.
 // - Sleep/shutdown: turn the TV off only while it shows Core's HDMI (ShouldTurnOff).
 // - Every step is time-boxed and failures are logged without the client key. Nothing
 //   here ever blocks Gaming Mode: callers run it beside the mode switch, not before it.
@@ -24,11 +25,11 @@ internal interface ITvPairingStore
 	void Clear();
 }
 
-internal enum TvOutcome { Done, Disabled, NotConfigured, NotPaired, Unreachable, PromptTimedOut, Rejected, CertificateChanged, SkippedOtherInput, Failed }
+internal enum TvOutcome { Done, Disabled, NotConfigured, NotPaired, Unreachable, PromptTimedOut, Rejected, CertificateChanged, SkippedOtherInput, LeftOnInUse, Failed }
 
 internal readonly record struct TvResult(TvOutcome Outcome, string? Detail = null, string? MacAddress = null)
 {
-	internal bool Ok => Outcome is TvOutcome.Done or TvOutcome.SkippedOtherInput;
+	internal bool Ok => Outcome is TvOutcome.Done or TvOutcome.SkippedOtherInput or TvOutcome.LeftOnInUse;
 }
 
 internal sealed class TvController
@@ -60,6 +61,14 @@ internal sealed class TvController
 		deadline.CancelAfter(budget);
 		try
 		{
+			// Asked before Wake-on-LAN: a TV that is already on is someone's, and Core does not
+			// switch it away from what they are watching. Unknown (not paired, not answering,
+			// a firmware without the power API) is treated as off.
+			if (await IsInUseAsync(settings, TimeSpan.FromSeconds(3), deadline.Token).ConfigureAwait(false))
+			{
+				_log("TV: already on and in use; left as it is.");
+				return new(TvOutcome.LeftOnInUse);
+			}
 			if (LgWebOsProtocol.TryParseMac(settings.MacAddress, out byte[] mac))
 			{
 				int sent = await LgWebOsClient.SendWakeAsync(mac, settings.Address, deadline.Token).ConfigureAwait(false);
@@ -184,6 +193,23 @@ internal sealed class TvController
 		LgWebOsClient.DiscoverAsync(TimeSpan.FromSeconds(3), cancellation);
 
 	// ---------- shared ----------
+
+	private async Task<bool> IsInUseAsync(TvSettings settings, TimeSpan step, CancellationToken cancellation)
+	{
+		if (string.IsNullOrWhiteSpace(settings.Address) || _pairing.ClientKey is not { } key) return false;
+		try
+		{
+			TvResult probe = await WithSessionAsync(settings.Address!, key, step, cancellation, async session =>
+			{
+				var power = await session.RequestAsync(LgWebOsProtocol.PowerStateMessage, step, cancellation).ConfigureAwait(false);
+				bool? inUse = LgWebOsProtocol.TvInUse(power.PowerState);
+				_log($"TV: power state before wake is \"{Safe(power.PowerState)}\".");
+				return new TvResult(inUse == true ? TvOutcome.LeftOnInUse : TvOutcome.Done);
+			}).ConfigureAwait(false);
+			return probe.Outcome == TvOutcome.LeftOnInUse;
+		}
+		catch (OperationCanceledException) when (!cancellation.IsCancellationRequested) { return false; }
+	}
 
 	private async Task<TvResult> SwitchCoreInputCoreAsync(TvSettings settings, TimeSpan step, CancellationToken cancellation)
 	{

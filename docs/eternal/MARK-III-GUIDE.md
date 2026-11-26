@@ -16,9 +16,10 @@ button skips it.** It plays while Steam is starting underneath, so it costs no t
 
 ## TV control (LG webOS, for example the C9)
 
-Core turns the TV on and switches it to Core's HDMI when it starts or wakes into Gaming
-Mode, and turns it off when Core sleeps or shuts down, **only if the TV is showing Core**.
-If someone is watching something else, the TV stays on.
+When Core starts or wakes into Gaming Mode and the TV is **off**, Core turns it on and
+switches it to Core's HDMI. A TV that is already on is in use, so Core leaves it on whatever
+it shows. When Core sleeps or shuts down, it turns the TV off **only if the TV is showing
+Core**. If someone is watching something else, the TV stays as it is either way.
 
 ### Once, on the TV (with the TV remote)
 
@@ -112,6 +113,7 @@ night.
    (`%APPDATA%\GamingMode\agent.log`) look for *Boot sequence finished/skipped*.
 2. **Sleep and wake:** sleep from Big Picture, wake with the controller: TV on, HDMI 2,
    short sequence. Then put the TV on another input or app, sleep Core: the TV must stay on.
+   Wake Core again while the TV shows that app: the TV must not switch to Core.
 3. **Shutdown** from Big Picture with the TV on HDMI 2: the TV turns off.
 4. **Plugins check:** with Decky working, `agent.log` shows *Decky heartbeat received* and
    *Decky health: Healthy*. Open Core Repair > Restart plugins: it answers *Fixed*. To see the
