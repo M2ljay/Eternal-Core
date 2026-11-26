@@ -6,8 +6,10 @@ continues it.
 
 **Names.** The app is called **Core** wherever the user reads it; **Eternal** is the maker brand ("Core by Eternal",
 like PlayStation by Sony). "Eternal Core" names this repository and the docs. Internal identifiers (install and data
-folders, uninstall key, AppUserModelID, executables, plugin IDs) still say Playhub so updates keep working. Details,
-the list of what deliberately still says Playhub, and the image inventory: [REBRAND.md](REBRAND.md).
+folders, uninstall key, AppUserModelID, executables, plugin IDs) said Playhub until phase 2, which renamed the visible
+files and folders (`Core.exe`, `%APPDATA%\Core`, the Decky plugin name, ...) with a one-time data copy. Hidden
+identifiers, the game-session wrappers that Steam shortcuts point at and an existing install's folder still say
+Playhub. Details, the migration rules and the image inventory: [REBRAND.md](REBRAND.md).
 
 - **Base:** Playhub v3.0.0, commit `2f60fb0` (the fork's `main` adds only README and screenshot commits).
 - **Licence:** MIT, unchanged. The original copyright, © 2026 Andrea Sgarro (LoZazaMastro), is kept in `LICENSE`,

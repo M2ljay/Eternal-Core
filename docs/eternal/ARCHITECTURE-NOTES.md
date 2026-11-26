@@ -363,6 +363,26 @@ Shortcuts: Windows shows a `.lnk` file's name, so the setup writes `Core.lnk` an
 is free). Everything an installed copy reads by name is unchanged; the full list, the reasons and the image inventory
 are in `docs/eternal/REBRAND.md`.
 
+### Phase 2: file and folder names
+
+`Source/Shared/CoreNames.cs` is the one place for the new and old names and the pure rules (data root choice,
+the one-time data copy, install folder choice and lookups, owned-process checks, retired files). Every component
+links it; the plugin's Python and the helper scripts repeat the 3-line data-root rule (marker
+`%LOCALAPPDATA%\Core\.core-migrated.json`, else `Playhub` if it exists). Key decisions:
+
+- **Data:** copied, not moved (except the multi-gigabyte `backups`), built in a staging folder that already holds the
+  marker and then renamed, so no component ever sees a half-copied `Core` folder. Setup copies while the app and the
+  store host are stopped; the app retries on start. A long-running agent resolves the root on every use.
+- **Executables:** `AssemblyName` only (`Core`, `Core-DeckyHost`, `Core.StoreHost`); namespaces, resource names and
+  pipes are unchanged, so mixed-version components keep talking during an update. `Core` is a generic process name,
+  so a `Core` process is ours only when its image is in the install folder.
+- **Install folder:** not moved for existing installs. Steam shortcuts of imported games store the absolute
+  `Playhub.GameSession.exe` path, the store registry proves ownership by it and the store host authorises clients by
+  image path. New installs use `Programs\Core`.
+- **Decky:** the plugin's Decky name is `Core`; Decky keys its order, hidden and disabled lists and its
+  `/plugins/<name>/` URLs by that name, so every match accepts both names and `deckyPluginName.ts` renames
+  `pluginOrder`/`hiddenPlugins` once.
+
 ## 7. Mark III
 
 Code is in `GamingModeAgent/GamingMode.Services` unless noted. The pure halves are linked into
@@ -433,8 +453,9 @@ endpoint catches and logs its own failures, and no Mark III feature is on the pa
 - Core Repair: `GamingMode.exe repair` (`CoreRepairWindow.cs`), handled in `Program.Main` before the agent mutex. It
   calls `POST /core/repair/run?action=` and polls `/core/repair/state`; jobs run in the agent one at a time, so closing
   the window never interrupts one. Actions that restart Steam close the window first (Steam counts it as a running
-  game) and report through a notice. "Update Decky" runs `Playhub.exe decky-update <id>` (`CoreRepairDeckyCommand.cs`),
-  i.e. the app's own verified installer, and waits for its receipt in `%LOCALAPPDATA%\Playhub\CoreRepair`.
+  game) and report through a notice. "Update Decky" runs `Core.exe decky-update <id>` (`CoreRepairDeckyCommand.cs`; `Playhub.exe` on an install not yet
+  updated past the rename), i.e. the app's own verified installer, and waits for its receipt in the app's local data
+  root (`%LOCALAPPDATA%\Core\CoreRepair`, or `Playhub` before the data move).
 - Tile: the plugin reads `/core/repair/shortcut` and adds the non-Steam shortcut once (adopting an existing "Core
   Repair"), 15 s after it loads. Decky must have worked once for the tile to exist; the desktop app's *Open Core Repair*
   button is the fallback.

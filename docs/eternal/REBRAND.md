@@ -32,37 +32,62 @@ regex. `ShellIdentityChecks` (Windows only, not in CI) covers the shortcut renam
 | ---- | --- |
 | About credit, `README.md`, licence and copyright lines | Credit to the upstream project and author. |
 | "Playhub plugins", the store's "Playhub" source filter and category, the plugin names Playhub Artworks, Metadata, Notifications, Surround, Discord | The upstream plugin suite. Their names come from upstream's catalogue and `plugin.json` and are matched by name. |
-| "Playhub.exe" in the Controlled folder access help | The file the user has to pick is still called `Playhub.exe`. |
 | Log lines, thread names, exception messages that only reach logs | Not shown in the UI; renaming them would break log searches. |
 | Decky `plugin.json` description | Only shown by a Decky store, which does not list this bundled plugin. |
 | `ChainFreeEngine/Plugin` | Suspended plugin, not shipped. |
 
-## Identifiers kept (Phase 2 candidates)
+## Phase 2 (branch `core-names-phase2`): file and folder names
 
-Each one is read by an installed copy, by Windows or by another component. Renaming it needs a migration.
+Rule chosen: rename what the user can see or click (screen text, file and folder names); keep hidden identifiers.
+The names and the pure rules live in `Source/Shared/CoreNames.cs` (tests: `Source/CoreNames.Tests`, Linux and CI-free;
+plugin: `tests/deckyPluginName.test.mjs`, `tests/test_core_names.py`).
 
-| Identifier | Where | What breaks if renamed alone |
-| ---------- | ----- | ---------------------------- |
-| Install folder `%LOCALAPPDATA%\Programs\Playhub` | `Installer.DefaultInstallDir`, agent fallbacks (`ChainFreeEngineService`, `UwpSteamSessionAssociation`, `ShellFreeOverlayTrialPolicy`), `support_report.py` | Updates install a second copy; the agent and plugin cannot find the app. |
-| Uninstall key `HKCU\…\Uninstall\Playhub` | `Installer.UninstallKey`, agent, `support_report.py` | A second Installed apps entry; the old one is orphaned. |
-| Data folders `%APPDATA%\Playhub`, `%LOCALAPPDATA%\Playhub` (settings, logs, caches, `CurtainDisplay`, `HudDisplay`, `StoreLibrary`) | `AppPaths`, agent, setup | Settings, library state and logs are lost. |
-| AppUserModelID `LoZazaMastro.Playhub` | `ShellIdentity.AppId` | Taskbar pins and Start entries split from the running app. |
-| Executables and assemblies: `Playhub.exe`, `Playhub Setup.exe`, `Playhub.GameSession.exe`, `Playhub.XboxSession.exe`, `Playhub.StoreHost.exe`, `Playhub-DeckyHost.exe`, `Playhub*.dll` | csproj files, process-name checks (`Installer.StopRunningPlayhub`, anti-cheat exclusion list), release script pins | Process detection, shortcut ownership (`ShellIdentity.IsMainTarget` requires `Playhub.exe`), payload hash pins. |
-| Release asset `Playhub-Setup.exe` | Mark I/II updaters' asset regex | 3.3.0 ships `Core-Setup.exe` and keeps this name as a copy, so Mark I/II still update. |
-| Update repository setting and its `LoZazaMastro/Playhub` mapping | `PlayhubUpdatePolicy`, `EternalRelease.UpstreamUpdateRepository` | 3.0 installs stop updating. |
-| Namespaces `Playhub.*`, `PlayhubSetup`, XAML style keys `Playhub*Style` | Source | Nothing for users; pure churn. |
-| Decky plugin name `Playhub`, author `LoZazaMastro`, folder `gaming-mode`, QAM tab `shortcut:Playhub` | `plugin.json`, `GamingModeService` (author check), `BundledPlayhubMaintenance`, `qam.ts`, `QamSettings.tsx`, `deckyHost*.ts`, `controlBackend.ts` | Decky reloads, the desktop app's detection and the saved QAM layout. |
-| Other plugin IDs: Playhub Metadata, Playhub-Artworks, playhub-notifications, Playhub-Discord | Catalogue, `ProtectedPluginForks.json` | Upstream updates and fork protection. |
-| Steam shortcut tag `Playhub`, draft shortcut name `Playhub - <store> - <id>` | `XboxSteamShortcut`, `storeLibraryRuntime.ts`, `circlesScreensaver.ts` | Steam collections and recovery of half-created shortcuts; the selected screensaver. |
-| Startup entries `Playhub Desktop Safety`, `Playhub Focus Rescue`, `Playhub Xbox Game Bar` | `MainWindow.IsPlayhubManagedStartupApp`, Gaming Mode helpers | Existing entries are no longer recognised as owned. |
-| Mutexes, pipes, events: `Global\Playhub.Decky.Start`, `Local\Playhub.DeckyHost.*`, `Playhub.XboxCompanion.*`, `Playhub.Win32Session.*`, `Global\Playhub.ControllerDriverDependency.1`, `Local\PlayhubGamingModeJsonStore`, header `X-Playhub-Shell-Token` | Agent, app, plugin | Mixed-version components stop talking during an update. |
-| Assembly metadata keys `Playhub*Sha256`, `PlayhubControllerDriverRequired` | csproj, `build-update-preview.ps1` | The release build refuses the payload. |
-| Persisted keys and file names: `playhub.*` / `playhub-*` storage keys and element IDs in the plugin, `Playhub-Report-*`, `PlayhubSteamArtwork-*` backups, `Playhub-StartDecky.ps1` | App, plugin | Saved preferences and existing backups are not found. |
-| `Company` file metadata `Andrea Sgarro (LoZazaMastro)`, AppUserModelID owner | csproj | Kept as upstream credit; Phase 2 decides. |
-| Thread and log names (`Playhub Dashboard …`, `[Playhub]`) | Agent, plugin | Only log searches. |
+| Item | Now | Migration rule |
+| ---- | --- | -------------- |
+| App executable | `Core.exe` (`Core.dll`, `Core.pri`; `AssemblyName` only, namespaces stay `Playhub`) | Setup stops a running `Playhub.exe` or `Core.exe` (a `Core` process only when it runs from this install folder), then deletes `Playhub.exe`, `.dll`, `.pri`, `.deps.json`, `.runtimeconfig.json` once their `Core.*` successor is installed. Start, desktop and startup shortcuts and taskbar pins that launch this install's `Playhub.exe` are pointed at `Core.exe` (arguments, hotkey and the pin kept; AppUserModelID unchanged), then `Playhub.lnk` is renamed `Core.lnk` as in phase 1. The release packager requires `Core.exe`, `Core.dll` and `Core.pri` (or `resources.pri`) and refuses Playhub-named copies. |
+| Decky lifetime host | `Core-DeckyHost.exe` | The startup script (`homebrew\services\Playhub-StartDecky.ps1`) and `DeckyStartupGuard.RuntimeHostPath` look for `Core-DeckyHost.exe`, then `Playhub-DeckyHost.exe` (a runtime copied by an older version). The app refreshes the script before it moves the runtime pointer. |
+| Store host | `Core.StoreHost.exe` (`StoreLibrary\Core.StoreHost.*`) | Setup's quiesce, the plugin and the app accept either name; old `StoreLibrary\Playhub.StoreHost.*` files are deleted after the update. The store manifest pins `Core.exe` as the app client; the store host still accepts `Playhub.exe` from an older manifest. |
+| Uninstaller copy | `unins-core.exe` | Written by setup; `UninstallString` points at it; `unins-playhub.exe` is deleted. |
+| Install folder | New installs: `%LOCALAPPDATA%\Programs\Core`. Existing installs: **stay where they are** | See "Not moved" below. Every lookup from outside the install (agent, plugin, support report, UWP session association, shell-free trial, Chain Free Engine) tries the folder registered in Installed apps, then `Programs\Core`, then `Programs\Playhub`, and `Core.exe` before `Playhub.exe`. Setup's folder picker adds a `Core` subfolder to a generic folder. |
+| Data folders `%APPDATA%\Playhub`, `%LOCALAPPDATA%\Playhub` | `%APPDATA%\Core`, `%LOCALAPPDATA%\Core` | One-time copy, done by setup (app and store host stopped) or else by the app on its next start. The copy is built in `<parent>\.Core-migration`, which already holds the marker `.core-migrated.json`, then renamed, so `Core` is either absent or complete. Until the marker exists every component (app, setup, agent, store host, Decky host, session helpers, plugin Python, helper scripts) keeps using `Playhub`, so mixed versions never split their data. **Copied:** everything, caches included (imported games may point at a cached cover by path). **Moved:** `backups` (Steam artwork and Steam client backups, gigabytes, found by folder scan). **Skipped:** `downloads` (holds the running setup), `DeckyRuntime` (scratch), `DiagnosticsRequests`, `StoreLibrary\maintenance-v1.json` (per-update lease). A failed copy of anything outside `logs`/`diagnostics` aborts the attempt (retried next start; Playhub stays in use). A `Core` folder without the marker belongs to someone else: it is left alone and Playhub stays in use. The old folder stays as the backup (minus `backups`); uninstall with "remove data" deletes both. |
+| Decky plugin name | `Core` (`plugin.json`, `definePlugin`; Decky serves it at `/plugins/Core/`) | Every match on Decky's plugin name accepts `Core` and `Playhub` and reloads under the name Decky has loaded. Decky's own `pluginOrder` and `hiddenPlugins` settings are renamed once, keeping Core where Playhub was. The folder stays `gaming-mode`, so Decky's per-plugin settings, data and logs are unaffected. |
+| Controlled folder access help | "Add Core.exe" (12 languages) | `LocalizationResource.Tests` no longer allows `Playhub.exe`. |
 
-A Phase 2 migration would, per item: write the new name, keep reading the old one, move user data once with a marker
-file, and keep the old update and asset names working for at least one release.
+### Not moved: existing install folders
+
+Moving `Programs\Playhub` would break the Steam library: every shortcut Core created for an imported Xbox, Epic, GOG
+or Amazon game stores the absolute path of `Playhub.GameSession.exe` (and Xbox ones `Playhub.XboxSession.exe`), the
+store registry (`steam-library-v1.json`) proves ownership by that exact path, and the store host authorises its
+clients by image path. Steam derives a shortcut's identity (artwork, collections) from the exe path, so rewriting
+the shortcuts is a separate, PC-tested job (the plugin could do it with `SteamClient.Apps.SetShortcutExe`). A
+directory junction from the old path was considered and rejected: process image paths reported through a junction
+are inconsistent, and half the comparisons above would fail without a Windows test. So: new installs use
+`Programs\Core`; existing ones are updated in place and only their files are renamed.
+
+## Identifiers kept
+
+Hidden, or renaming them would break something for no visible gain.
+
+| Identifier | Where | Why kept |
+| ---------- | ----- | -------- |
+| `Playhub.GameSession.exe`, `Playhub.XboxSession.exe` | Steam shortcuts of imported games | Visible in Task Manager while a game runs, but Steam stores their absolute path in each shortcut (see above). Renaming needs the shortcut migration. |
+| Existing install folder `Programs\Playhub` | Installed apps `InstallLocation` | See above. |
+| `PlayhubSteamInputReader.exe`, `PlayhubWindowContentRead.exe`, `Playhub*.dll` natives | Private candidate builds only | Not in an ordinary release; native binaries pinned by hash. |
+| `Playhub Setup.exe` | Build output of `PlayhubSetup` | Never shipped under that name: the release is `Core-Setup.exe`. |
+| Release asset `Playhub-Setup.exe` | Mark I/II updaters' asset regex | Still published as a copy. |
+| Uninstall key `HKCU\…\Uninstall\Playhub` | `Installer`, agent, plugin | Hidden; renaming orphans the Installed apps entry. Its values (`InstallLocation`, `DisplayIcon`, `UninstallString`) are rewritten on every install. |
+| AppUserModelID `LoZazaMastro.Playhub` | `ShellIdentity.AppId` | Keeps taskbar pins and Start entries attached. |
+| Update repository setting and its `LoZazaMastro/Playhub` mapping | `PlayhubUpdatePolicy` | 3.0 installs stop updating otherwise. |
+| Namespaces `Playhub.*`, `PlayhubSetup`, XAML keys, resource names | Source | Hidden. |
+| Decky plugin folder `gaming-mode`, author `LoZazaMastro`, QAM bridge key and layout entry `Playhub`, tab key `shortcut:Playhub` | Plugin, `GamingModeService` | Stored keys, never shown. |
+| Other plugin IDs (Playhub Metadata, Playhub-Artworks, playhub-notifications, Playhub-Discord) | Catalogue, `ProtectedPluginForks.json` | Upstream plugin names. |
+| Steam shortcut tag `Playhub`, draft shortcut name `Playhub - <store> - <id>` | `XboxSteamShortcut`, `storeLibraryRuntime.ts` | Persisted in Steam; recovery of half-created shortcuts. |
+| Startup entries `Playhub Desktop Safety`, `Playhub Focus Rescue`, `Playhub Xbox Game Bar` | `MainWindow.IsPlayhubManagedStartupApp` | Existing entries must stay recognised. |
+| Mutexes, pipes, events, header `X-Playhub-Shell-Token` | Agent, app, plugin | Mixed-version components must keep talking during an update. |
+| Assembly metadata keys `Playhub*Sha256`, `PlayhubControllerDriverRequired` | csproj, `build-update-preview.ps1` | Hidden. |
+| `playhub.*` storage keys, `.playhub-*` marker files, `Playhub-Report-*`, `PlayhubSteamArtwork-*`, `PlayhubSteamClient-*` backups, `Playhub-StartDecky.ps1`, `Playhub-Decky-startup.log` | App, plugin, agent, `homebrew\services` | Persisted; existing ones must still be found. |
+| `Company` metadata `Andrea Sgarro (LoZazaMastro)` | csproj | Upstream credit. |
+| Thread and log names | Agent, plugin | Only log searches. |
 
 ## Images (done)
 

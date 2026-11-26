@@ -10,7 +10,7 @@ namespace GamingMode.Services;
 // Eternal Core Mark III: the agent's copy of the app's Steam client backup
 // (Playhub/Services/ExtraService.cs, "Backup della versione di Steam").
 //
-// Same folder (%LOCALAPPDATA%\Playhub\backups\SteamClient), same layout
+// Same folder (%LOCALAPPDATA%\Core\backups\SteamClient, Playhub before the data move), same layout
 // (PlayhubSteamClient-<stamp>\...) and same marker file, so the app's "Restore Steam
 // version" lists backups made here and the agent can roll back to one made there. Same
 // exclusions: only the program, never userdata, games, login config or caches, and never

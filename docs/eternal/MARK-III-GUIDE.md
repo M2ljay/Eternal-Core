@@ -153,7 +153,7 @@ night.
    watchdog starts it again within seconds.
 5. **Core Repair tile:** it is in the Steam library and opens with the controller.
 6. **Steam update:** Core Repair > Update Steam now. Steam closes, a backup appears under
-   `%LOCALAPPDATA%\Playhub\backups\SteamClient`, Steam updates and comes back, and
+   `%LOCALAPPDATA%\Core\backups\SteamClient` (`Playhub` before the Core data move), Steam updates and comes back, and
    `steam.cfg` is back in the Steam folder. Check `Steam\logs\bootstrap_log.txt` after a new
    Steam release to confirm the hold still blocks the self-update on the 64-bit client.
 7. **Anti-cheat:** launch Call of Duty: no notice or sequence appears over it.
