@@ -29,6 +29,8 @@ public sealed class SplashScreenService : IDisposable
 		internal nint Handle, EventHook;
 		internal uint NativeThread;
 		internal WinEventCallback? Callback;
+		// Mark III boot sequence on this surface, if one plays (created on the splash thread).
+		internal BootSequencePlayer? Player;
 	}
 	private Surface? _surface;
 	private Func<bool>? _foregroundGuard;
@@ -38,15 +40,70 @@ public sealed class SplashScreenService : IDisposable
 	internal void SetForegroundGuard(Func<bool> allowed) { lock (_sync) _foregroundGuard = allowed; }
 	internal void SetTargetPhysicalBounds(int left, int top, int width, int height)
 	{ if (width > 0 && height > 0) lock (_sync) _physicalBounds = (left, top, width, height); }
-	public void Show(GamingSplashSettings settings, int failSafeCloseMs = 150000)
+	// bootGate: the Mark III boot sequence waits for it (the TV switching to Core) before it
+	// starts, for at most BootSequencePolicy.MaxStartDelay. Null starts it at once.
+	public void Show(GamingSplashSettings settings, int failSafeCloseMs = 150000, Task? bootGate = null)
 	{
 		if (!settings.Enabled) return;
 		string? logoPath = ResolveLogoPath(settings.LogoPath);
-		ShowCore(() => CreateSplashWindow(logoPath, settings), failSafeCloseMs);
+		var boot = BootSequencePolicy.Decide(BootSequenceTrigger.PowerOn, settings.BootSequenceEnabled, settings.BootSoundEnabled,
+			settings.Enabled, gamingMode: true, gameRunning: false, protectedGame: false);
+		if (!boot.Play) _logger.Info($"Boot sequence skipped at power-on: {boot.Reason}.");
+		ShowCore(surface => CreateBootWindow(surface, boot.Play, boot.Sound) ?? CreateSplashWindow(logoPath, settings), failSafeCloseMs, bootGate);
+	}
+
+	// Mark III: the boot sequence on wake from sleep, as a short overlay over Big Picture.
+	// The caller has already applied BootSequencePolicy (Gaming Mode, no game, no protected
+	// game). It closes itself after the sequence, a skip, or the hard limit.
+	internal void ShowWakeSequence(bool sound, Task? gate)
+	{
+		int failSafe = (int)(BootSequencePolicy.HardLimit + BootSequencePolicy.WakeHold).TotalMilliseconds + 2000;
+		Surface? mine = ShowCore(surface => CreateBootWindow(surface, true, sound) ?? throw new InvalidOperationException("Boot sequence unavailable."), failSafe, gate);
+		if (mine is null) { _logger.Info("Wake sequence skipped: another Gaming Mode surface is on screen."); return; }
+		_ = Task.Run(async () =>
+		{
+			try
+			{
+				await WaitForBootSequenceAsync().ConfigureAwait(false);
+				await Task.Delay(BootSequencePolicy.WakeHold).ConfigureAwait(false);
+				lock (_sync) if (!ReferenceEquals(_surface, mine)) return;
+				await HideAsync(fade: true, fadeMs: 400).ConfigureAwait(false);
+			}
+			catch (Exception error) { _logger.Error("Wake sequence close failed.", error); CancelImmediately(); }
+		});
+	}
+
+	// Resolves when the boot sequence on the current surface ended, was skipped or failed,
+	// or after BootSequencePolicy.HardLimit since the surface appeared, whichever is first.
+	// No sequence: resolves at once. Never throws.
+	internal async Task WaitForBootSequenceAsync()
+	{
+		Surface? surface; lock (_sync) surface = _surface;
+		if (surface is null) return;
+		for (int i = 0; i < 40 && surface.Player is null && surface.Thread?.IsAlive == true && Environment.TickCount64 - surface.Started < 2000; i++)
+			await Task.Delay(50).ConfigureAwait(false);
+		if (surface.Player is not { } player) return;
+		long remaining = (long)BootSequencePolicy.HardLimit.TotalMilliseconds - (Environment.TickCount64 - surface.Started);
+		if (remaining <= 0) return;
+		try { await player.Completion.WaitAsync(TimeSpan.FromMilliseconds(remaining), surface.Cancellation.Token).ConfigureAwait(false); }
+		catch (TimeoutException) { _logger.Info("Boot sequence reached its time box; the splash continues without it."); }
+		catch (OperationCanceledException) { }
+	}
+
+	private Window? CreateBootWindow(Surface surface, bool play, bool sound)
+	{
+		if (!play) return null;
+		BootSequencePlayer? player = BootSequencePlayer.TryCreate(sound, _logger);
+		if (player is null) return null;
+		Window window = CreateSplashWindow(null);
+		window.Background = Brushes.Black;
+		window.Content = player.Visual;
+		surface.Player = player;
+		return window;
 	}
 	public void ShowTransition(ModeKind mode, string? language, GamingSplashSettings? settings = null, int failSafeCloseMs = 90000)
 	{
-		ShowCore(() =>
+		ShowCore(_ =>
 		{
 			Window window = CreateSplashWindow(null);
 			window.Left = 0; window.Top = 0;
@@ -55,12 +112,13 @@ public sealed class SplashScreenService : IDisposable
 			return window;
 		}, failSafeCloseMs);
 	}
-	private void ShowCore(Func<Window> createWindow, int failSafeCloseMs)
+	// Returns the surface it created, or null when another surface is already up.
+	private Surface? ShowCore(Func<Surface, Window> createWindow, int failSafeCloseMs, Task? bootGate = null)
 	{
 		Surface surface = new(); Func<bool>? allowed; (int Left,int Top,int Width,int Height)? bounds;
 		lock (_sync)
 		{
-			if (_surface?.Thread?.IsAlive == true) return;
+			if (_surface?.Thread?.IsAlive == true) return null;
 			_surface = surface; allowed = _foregroundGuard; bounds = _physicalBounds;
 		}
 		ManualResetEventSlim ready = new(false);
@@ -73,7 +131,15 @@ public sealed class SplashScreenService : IDisposable
 			{
 				var dispatcher = Dispatcher.CurrentDispatcher; surface.Dispatcher = dispatcher; surface.NativeThread = GetCurrentThreadId();
 				if (!Allowed()) { surface.Cancellation.Cancel(); ready.Set(); return; }
-				var window = createWindow(); surface.Window = window;
+				Window window;
+				try { window = createWindow(surface); }
+				catch (Exception error) when (surface.Player is null)
+				{
+					// The boot sequence could not be built: Gaming Mode goes on without a surface.
+					_logger.Error("Gaming splash surface could not be created.", error);
+					surface.Cancellation.Cancel(); ready.Set(); return;
+				}
+				surface.Window = window;
 				window.SourceInitialized += (_, _) =>
 				{
 					surface.Handle = new System.Windows.Interop.WindowInteropHelper(window).Handle;
@@ -89,10 +155,12 @@ public sealed class SplashScreenService : IDisposable
 				{
 					_logger.Info($"Gaming splash first frame rendered after {Environment.TickCount64 - surface.Started} ms.");
 					ready.Set();
+					surface.Player?.Start(dispatcher, bootGate ?? Task.CompletedTask);
 					if (!Allowed()) CancelSurface(surface);
 				};
 				window.Closed += (_, _) =>
 				{
+					surface.Player?.Stop();
 					failSafe?.Stop(); surface.Cancellation.Cancel();
 					if (surface.EventHook != 0) { UnhookWinEvent(surface.EventHook); surface.EventHook = 0; }
 					surface.Handle = 0; ready.Set(); dispatcher.BeginInvokeShutdown(DispatcherPriority.Send);
@@ -110,6 +178,7 @@ public sealed class SplashScreenService : IDisposable
 			finally
 			{
 				failSafe?.Stop();
+				surface.Player?.Stop();
 				if (surface.EventHook != 0) { UnhookWinEvent(surface.EventHook); surface.EventHook = 0; }
 				if (previousDpi != 0) SetThreadDpiAwarenessContext(previousDpi);
 				lock (_sync) if (ReferenceEquals(_surface, surface)) _surface = null;
@@ -117,6 +186,7 @@ public sealed class SplashScreenService : IDisposable
 		}) { IsBackground = true, Name = "Gaming Mode Splash" };
 		surface.Thread.SetApartmentState(ApartmentState.STA); surface.Thread.Start();
 		if (!ready.Wait(TimeSpan.FromSeconds(3))) _logger.Info("Gaming splash first frame is still pending after 3000 ms.");
+		return surface;
 	}
 	private static void CancelSurface(Surface surface)
 	{

@@ -53,6 +53,8 @@
   <ItemGroup><Compile Include="../Shared/EpicProtocolLaunchRequest.cs" Link="EpicProtocolLaunchRequest.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../Playhub/Services/PlayhubUpdateService.cs" Link="PlayhubUpdateService.cs" /><Compile Include="../Playhub/Services/AppPaths.cs" Link="PlayhubAppPaths.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../Shared/EpicLaunchPayload.cs" Link="EpicLaunchPayload.cs" /></ItemGroup>
+  <!-- Mark III boot sound (docs/eternal/brand/sound/eternal-core-boot.ogg as 16-bit PCM WAV), played by BootSequenceSound. -->
+  <ItemGroup><EmbeddedResource Include="Assets/eternal-core-boot.wav" LogicalName="GamingMode.BootSound.wav" /></ItemGroup>
   <!-- Private first-content cover is independent of HUD/menu/input and OFF without exact pins. -->
   <ItemGroup Condition="'$(PlayhubCurtainDisplaySha256)' != '' and '$(PlayhubCurtainCallbackSha256)' != ''">
     <CurtainDisplayAssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">

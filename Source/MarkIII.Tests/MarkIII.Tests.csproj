@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Eternal Core Mark III: the platform-neutral halves only. The Windows wiring
+         (WPF, DPAPI, power events, XInput) is compiled by the agent build in CI. -->
+    <Compile Include="../GamingModeAgent/GamingMode.Services/BootSequencePolicy.cs" Link="BootSequencePolicy.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="TvTests.cs" />
+    <Compile Remove="SteamHoldTests.cs" />
+    <Compile Remove="DeckyTests.cs" />
+  </ItemGroup>
+</Project>

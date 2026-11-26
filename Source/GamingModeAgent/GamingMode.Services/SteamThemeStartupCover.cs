@@ -92,7 +92,13 @@ internal sealed class SteamThemeStartupCover : IDisposable
                 if (result != SteamThemeStartupResult.Waiting)
                 {
                     _logger.Info($"Steam themed startup curtain completed: {result}; surface proof: {receipt?.Proof ?? "none"}.");
-                    if (result == SteamThemeStartupResult.Ready) await _splash.HideAsync(fade: true, fadeMs: 300).ConfigureAwait(false);
+                    if (result == SteamThemeStartupResult.Ready)
+                    {
+                        // Mark III: let the boot sequence finish (or be skipped) before Big Picture
+                        // shows. Time-boxed by BootSequencePolicy.HardLimit; Steam is already up.
+                        await _splash.WaitForBootSequenceAsync().ConfigureAwait(false);
+                        await _splash.HideAsync(fade: true, fadeMs: 300).ConfigureAwait(false);
+                    }
                     else _splash.CancelImmediately();
                     return result;
                 }

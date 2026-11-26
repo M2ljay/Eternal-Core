@@ -16,4 +16,10 @@ public sealed class GamingSplashSettings
 	public int MinVisibleMs { get; set; } = 1200;
 
 	public int MaxVisibleMs { get; set; } = 120000;
+
+	// Mark III boot sequence (BootSequenceVisual.cs) at power-on and wake. Defaults must
+	// match the app's Playhub/Models/GamingModeConfig.cs (SplashOptions).
+	public bool BootSequenceEnabled { get; set; } = true;
+
+	public bool BootSoundEnabled { get; set; } = true;
 }
