@@ -207,7 +207,7 @@ public sealed class ModeManager
 	{
 		try
 		{
-			if (Playhub.Shared.CouchHardening.SetGamingToasts(new Playhub.Shared.CouchRegistryWindows(), false, Path.Combine(_paths.ConfigDirectory, "quiet-toasts.json")))
+			if (Playhub.Shared.CouchHardening.SetGamingToasts(new Playhub.Shared.CouchRegistryWindows(), false, System.IO.Path.Combine(_paths.ConfigDirectory, "quiet-toasts.json")))
 				_logger.Info("Windows banners back to the user's setting for the desktop.");
 		}
 		catch (Exception error) { _logger.Error("Windows banners could not be restored for the desktop.", error); }
