@@ -17,6 +17,8 @@ namespace GamingMode.Services;
 // a 1280x720 canvas scaled to the screen: Eternal's line charges in from both ends and
 // drops into the key that reads as an E, glints, then Core's ring charges, the chrome
 // ticks turn and lock, the core pulses and "CORE" appears. AMOLED black background.
+// Eternal's stars: a sparse field fades in behind the key, then rushes outward and falls
+// away as Core's ring charges, so Core lands on plain black.
 //
 // The player owns everything time-based: the storyboard, the sound, and the skip
 // polling. Every part is optional: if the sound or the input polling cannot start, the
@@ -43,6 +45,7 @@ internal sealed class BootSequencePlayer
 	{
 		_sound = sound;
 		_logger = logger;
+		BuildStars();
 		BuildEternal();
 		BuildCore();
 		_storyboard.Completed += (_, _) => Finish("finished");
@@ -163,6 +166,31 @@ internal sealed class BootSequencePlayer
 		Storyboard.SetTarget(animation, target);
 		Storyboard.SetTargetProperty(animation, path);
 		_storyboard.Children.Add(animation);
+	}
+
+	private void BuildStars()
+	{
+		// Fixed seed: the same sky every boot. Steel and near-white, one in twenty crimson.
+		var random = new Random(7);
+		var field = new Canvas { Width = 1280, Height = 720, Opacity = 0, RenderTransform = new ScaleTransform(1, 1, 640, 345.6) };
+		var steel = new SolidColorBrush(Color.FromRgb(0xC9, 0xD1, 0xD9));
+		var white = new SolidColorBrush(Color.FromRgb(0xE6, 0xEC, 0xF2));
+		var crimson = new SolidColorBrush(Crimson);
+		steel.Freeze(); white.Freeze(); crimson.Freeze();
+		for (int i = 0; i < 220; i++)
+		{
+			double x = random.NextDouble() * 1280, y = random.NextDouble() * 720, size = 1 + random.NextDouble() * 2.2;
+			double pick = random.NextDouble();
+			var star = new Ellipse { Width = size, Height = size, Fill = pick < 0.05 ? crimson : pick < 0.3 ? white : steel, Opacity = 0.25 + random.NextDouble() * 0.6 };
+			Canvas.SetLeft(star, x - size / 2);
+			Canvas.SetTop(star, y - size / 2);
+			field.Children.Add(star);
+		}
+		_canvas.Children.Add(field);
+		KeyFrames(field, new PropertyPath(UIElement.OpacityProperty), 0, (0, 0), (0.8, 1), (4.3, 1), (4.9, 0));
+		var rush = new QuadraticEase { EasingMode = EasingMode.EaseIn };
+		Animate(field, new PropertyPath("RenderTransform.ScaleX"), 1, 2.6, 3.9, 0.8, rush);
+		Animate(field, new PropertyPath("RenderTransform.ScaleY"), 1, 2.6, 3.9, 0.8, rush);
 	}
 
 	private void BuildEternal()

@@ -3,7 +3,8 @@
 `Core/` is the CSS Loader theme that gives Steam Big Picture the Core look. Copy the folder to
 `%USERPROFILE%\homebrew\themes\Core`, reload CSS Loader and switch **Core** on.
 
-- Steam menu: the Core wordmark aligned with the icons, the panel on AMOLED black, a gunmetal selected item with a
+- Steam menu: the Core wordmark aligned with the icons, the panel on AMOLED black with two faint layers of drifting
+  stars (Eternal's space look; still under reduced motion), a gunmetal selected item with a
   3px crimson line.
 - Quick Access: black tab column and header, gunmetal selected tab with a crimson bar, gunmetal header buttons.
 - Notifications: black with a crimson edge and steel text.

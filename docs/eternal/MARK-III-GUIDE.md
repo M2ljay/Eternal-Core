@@ -5,8 +5,8 @@ with a controller only, and nothing in it can stop Gaming Mode or Steam from sta
 
 ## Boot sequence
 
-At power-on and when Core wakes from sleep, the Eternal logo and then Core's appear on
-black, with the arcade boot sound, before Big Picture (about 7 seconds). **Any controller
+At power-on and when Core wakes from sleep, the Eternal logo appears among faint stars,
+then the stars rush outward and Core's appears on black, with the arcade boot sound, before Big Picture (about 7 seconds). **Any controller
 button skips it.** It plays while Steam is starting underneath, so it costs no time.
 
 - On wake it does not play if a game is open, and never while anti-cheat safe mode is
