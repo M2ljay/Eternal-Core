@@ -613,7 +613,7 @@ public sealed class ModeManager
 		{
 			string? root = SteamInstallationPath.FindRoot(config.Gaming.SteamPath);
 			if (root is null) return;
-			var outcome = Playhub.Shared.SteamStartupMovie.Apply(root, Path.Combine(_paths.ConfigDirectory, Playhub.Shared.SteamStartupMovie.RecordFileName),
+			var outcome = Playhub.Shared.SteamStartupMovie.Apply(root, System.IO.Path.Combine(_paths.ConfigDirectory, Playhub.Shared.SteamStartupMovie.RecordFileName),
 				config.Gaming.Splash.SkipSteamStartupMovie, _processTools.GetState("steam").Running,
 				() => typeof(ModeManager).Assembly.GetManifestResourceStream("GamingMode.SkipStartupMovie.webm"));
 			if (outcome is not (Playhub.Shared.StartupMovieOutcome.Kept or Playhub.Shared.StartupMovieOutcome.NothingToRestore or Playhub.Shared.StartupMovieOutcome.Unchanged))
