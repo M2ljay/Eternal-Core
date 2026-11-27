@@ -180,9 +180,252 @@ _CORE_ICON_MAX = 1024 * 1024
 _CORE_ICON_TOTAL = 16 * 1024 * 1024
 
 
+def _user_appdata_candidates():
+    """The user's roaming AppData folders, best first: %APPDATA%, then <home>\\AppData\\Roaming from Decky's user home,
+    %USERPROFILE% and ~. A service account's profile (systemprofile) is never the user's, so it is skipped."""
+    found = []
+    env = os.environ.get("APPDATA")
+    if env:
+        found.append(env)
+    homes = []
+    try:
+        import decky
+        homes.append(getattr(decky, "DECKY_USER_HOME", None))
+    except Exception:
+        pass
+    homes += [os.environ.get("USERPROFILE"), os.path.expanduser("~")]
+    for home in homes:
+        if home:
+            found.append(os.path.join(home, "AppData", "Roaming"))
+    out = []
+    for path in found:
+        norm = os.path.normcase(os.path.abspath(path))
+        if "systemprofile" in norm or norm in [os.path.normcase(os.path.abspath(p)) for p in out]:
+            continue
+        out.append(path)
+    return out
+
+
+def _user_appdata():
+    candidates = _user_appdata_candidates()
+    for path in candidates:
+        if os.path.isdir(path):
+            return path
+    return candidates[0] if candidates else ""
+
+
 def _core_icon_folder():
-    base = os.environ.get("APPDATA")
-    return os.path.join(base, "GamingMode", "icons") if base else ""
+    # 3.3.4: the folder that actually holds a map.json wins, so an APPDATA Decky's backend does not share with the
+    # user's session (another profile, a service account) does not hide the user's icons.
+    candidates = [os.path.join(base, "GamingMode", "icons") for base in _user_appdata_candidates()]
+    for folder in candidates:
+        if os.path.isfile(os.path.join(folder, "map.json")):
+            return folder
+    for folder in candidates:
+        if os.path.isdir(folder):
+            return folder
+    return candidates[0] if candidates else ""
+
+
+# Eternal Core 3.3.4: the Core UI snapshot (docs/eternal/CORE-UI.md, "The snapshot"). The frontend assembles it (no text
+# beyond short labels, no user data); this writes it to the user's AppData, overwritten each time, and adds what only
+# the backend can see: CSS Loader's themes (names and on/off only) and where the icon folder resolved.
+_CORE_UI_SNAPSHOT_MAX = 2 * 1024 * 1024 + 64 * 1024
+_CORE_UI_LEGACY_THEMES = ("Core", "Core Accents")
+
+
+def _core_ui_snapshot_path(appdata=None):
+    base = appdata if appdata is not None else _user_appdata()
+    if not base:
+        return ""
+    parts = [part.lower() for part in os.path.normpath(os.path.abspath(base)).replace("\\", "/").split("/")]
+    if "appdata" not in parts or "systemprofile" in parts:
+        return ""
+    return os.path.join(base, "GamingMode", "diagnostics", "core-ui-snapshot.json")
+
+
+def _css_themes_dir():
+    homes = []
+    try:
+        import decky
+        homes.append(getattr(decky, "DECKY_USER_HOME", None))
+    except Exception:
+        pass
+    homes += [os.environ.get("USERPROFILE"), os.path.expanduser("~")]
+    for home in homes:
+        if home and os.path.isdir(os.path.join(home, "homebrew", "themes")):
+            return os.path.join(home, "homebrew", "themes")
+    return ""
+
+
+def _theme_name(folder_path):
+    try:
+        with open(os.path.join(folder_path, "theme.json"), "r", encoding="utf-8-sig") as handle:
+            data = json.load(handle)
+        name = data.get("name") if isinstance(data, dict) else None
+        return name if isinstance(name, str) and name.strip() else None
+    except Exception:
+        return None
+
+
+def _theme_config(folder_path):
+    for name in ("config_USER.json", "config_user.json"):
+        path = os.path.join(folder_path, name)
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def _read_json(path):
+    try:
+        with open(path, "r", encoding="utf-8-sig") as handle:
+            return json.load(handle)
+    except Exception:
+        return None
+
+
+def _write_json(path, value):
+    temp = path + ".core-tmp"
+    with open(temp, "w", encoding="utf-8") as handle:
+        json.dump(value, handle, ensure_ascii=False)
+    os.replace(temp, path)
+
+
+def _css_theme_listing(themes_dir):
+    """Every CSS Loader theme folder: its name and whether it is on. Names and flags only."""
+    out = []
+    if not themes_dir or not os.path.isdir(themes_dir):
+        return out
+    try:
+        entries = sorted(os.listdir(themes_dir))[:300]
+    except OSError:
+        return out
+    for folder in entries:
+        path = os.path.join(themes_dir, folder)
+        if not os.path.isdir(path):
+            continue
+        config = _theme_config(path)
+        data = _read_json(config) if config else None
+        out.append({"folder": folder[:80], "name": (_theme_name(path) or folder)[:80], "active": bool(isinstance(data, dict) and data.get("active") is True),
+                    "installed": os.path.isfile(os.path.join(path, "theme.json"))})
+    return out
+
+
+def _core_ui_legacy_themes(action, themes_dir, record_path):
+    """Switch CSS Loader's legacy Core themes off ("disable") or back on ("restore"), recording what changed so restore
+    puts back only what disable switched off. "status" changes nothing. Other themes are never written."""
+    answer = {"ok": True, "dir": themes_dir, "changed": [], "restored": [], "themes": _css_theme_listing(themes_dir)}
+    if action not in ("status", "disable", "restore"):
+        return {"ok": False, "error": "bad_action", "changed": [], "restored": []}
+    record = _read_json(record_path) if record_path and os.path.isfile(record_path) else None
+    disabled = list(record.get("disabled", [])) if isinstance(record, dict) and isinstance(record.get("disabled"), list) else []
+    if action == "status" or not themes_dir:
+        return answer
+    if action == "disable":
+        wanted = {name.lower() for name in _CORE_UI_LEGACY_THEMES}
+        for theme in answer["themes"]:
+            if theme["folder"].lower() not in wanted and theme["name"].lower() not in wanted:
+                continue
+            path = os.path.join(themes_dir, theme["folder"])
+            config = _theme_config(path)
+            data = _read_json(config) if config else None
+            if not isinstance(data, dict) or data.get("active") is not True:
+                continue
+            data["active"] = False
+            try:
+                _write_json(config, data)
+            except OSError:
+                answer["ok"] = False
+                answer["error"] = "write_failed:" + theme["folder"]
+                continue
+            theme["active"] = False
+            answer["changed"].append(theme["name"])
+            if theme["folder"] not in [item.get("folder") for item in disabled if isinstance(item, dict)]:
+                disabled.append({"folder": theme["folder"], "name": theme["name"], "at": int(time.time())})
+    else:
+        keep = []
+        for item in disabled:
+            if not isinstance(item, dict) or not isinstance(item.get("folder"), str):
+                continue
+            folder = os.path.basename(item["folder"])
+            path = os.path.join(themes_dir, folder)
+            config = _theme_config(path) if os.path.isdir(path) else None
+            data = _read_json(config) if config else None
+            if not isinstance(data, dict):
+                continue
+            if data.get("active") is not True:
+                data["active"] = True
+                try:
+                    _write_json(config, data)
+                except OSError:
+                    keep.append(item)
+                    answer["ok"] = False
+                    answer["error"] = "write_failed:" + folder
+                    continue
+            answer["restored"].append(item.get("name") or folder)
+        disabled = keep
+        for theme in answer["themes"]:
+            if theme["name"] in answer["restored"] or theme["folder"] in answer["restored"]:
+                theme["active"] = True
+    if record_path:
+        try:
+            os.makedirs(os.path.dirname(record_path), exist_ok=True)
+            if disabled:
+                _write_json(record_path, {"version": 1, "disabled": disabled})
+            elif os.path.isfile(record_path):
+                os.remove(record_path)
+        except OSError:
+            answer["ok"] = False
+            answer["error"] = "record_failed"
+    return answer
+
+
+def _core_ui_legacy_record_path():
+    base = _user_appdata()
+    return os.path.join(base, "GamingMode", "core-ui-css-themes.json") if base else ""
+
+
+def _save_core_ui_snapshot(text, appdata=None, themes_dir=None):
+    """Writes the frontend's snapshot (JSON text) with a backend section added. Answers where it went."""
+    if not isinstance(text, str) or not text:
+        return {"ok": False, "error": "empty"}
+    if len(text.encode("utf-8")) > _CORE_UI_SNAPSHOT_MAX:
+        return {"ok": False, "error": "too_large"}
+    try:
+        snapshot = json.loads(text)
+    except Exception:
+        return {"ok": False, "error": "not_json"}
+    if not isinstance(snapshot, dict) or snapshot.get("kind") != "core-ui-snapshot":
+        return {"ok": False, "error": "not_snapshot"}
+    path = _core_ui_snapshot_path(appdata)
+    if not path:
+        return {"ok": False, "error": "no_appdata"}
+    themes = themes_dir if themes_dir is not None else _css_themes_dir()
+    icon_folder = _core_icon_folder() if appdata is None else os.path.join(appdata, "GamingMode", "icons")
+    listing = _css_theme_listing(themes)
+    record = _read_json(_core_ui_legacy_record_path()) if appdata is None else _read_json(os.path.join(appdata, "GamingMode", "core-ui-css-themes.json"))
+    snapshot["backend"] = {
+        "path": path,
+        "appdataCandidates": len(_user_appdata_candidates()),
+        "icons": {"folder": icon_folder, "folderExists": bool(icon_folder and os.path.isdir(icon_folder)),
+                  "mapExists": bool(icon_folder and os.path.isfile(os.path.join(icon_folder, "map.json")))},
+        "cssLoader": {"themesDir": bool(themes), "themes": listing, "active": [theme["name"] for theme in listing if theme["active"]],
+                      "legacyActive": [theme["name"] for theme in listing if theme["active"] and (theme["name"] in _CORE_UI_LEGACY_THEMES or theme["folder"] in _CORE_UI_LEGACY_THEMES)],
+                      "legacyRecord": record.get("disabled", []) if isinstance(record, dict) else []},
+    }
+    data = json.dumps(snapshot, ensure_ascii=False, separators=(",", ":"))
+    if len(data.encode("utf-8")) > _CORE_UI_SNAPSHOT_MAX:
+        snapshot["backend"]["cssLoader"]["themes"] = []
+        data = json.dumps(snapshot, ensure_ascii=False, separators=(",", ":"))
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        temp = path + ".tmp"
+        with open(temp, "w", encoding="utf-8") as handle:
+            handle.write(data)
+        os.replace(temp, path)
+    except OSError as error:
+        return {"ok": False, "error": "write_failed", "detail": str(error)[:120]}
+    return {"ok": True, "path": path, "bytes": len(data.encode("utf-8"))}
 
 
 def _core_icon_set(folder):
@@ -1310,10 +1553,39 @@ class Plugin(QuickSettingsPlugin):
     async def get_core_icons(self):
         # Core UI's Library icons (the user's own set); an absent folder is the normal case.
         try:
-            return await asyncio.to_thread(_core_icon_set, _core_icon_folder())
+            answer = await asyncio.to_thread(_core_icon_set, _core_icon_folder())
+            summary = (answer.get("ok"), answer.get("folder"), len(answer.get("tabs", {})), len(answer.get("collections", {})), len(answer.get("keys", {})), tuple(answer.get("errors", [])[:5]))
+            if summary != getattr(self, "_core_icons_logged", None):
+                self._core_icons_logged = summary
+                logging.info("Core UI icons: ok=%s folder=%s tabs=%d collections=%d keys=%d errors=%s", *summary)
+            return answer
         except Exception:
             logging.exception("Core UI icons unavailable")
             return {"ok": False, "tabs": {}, "collections": {}, "keys": {}, "errors": ["failed"]}
+
+    async def save_core_ui_snapshot(self, text):
+        # 3.3.4: the Core UI snapshot, to %APPDATA%\GamingMode\diagnostics\core-ui-snapshot.json (overwritten).
+        try:
+            answer = await asyncio.to_thread(_save_core_ui_snapshot, text)
+            if answer.get("ok"):
+                logging.info("Core UI snapshot saved: %s (%s bytes)", answer.get("path"), answer.get("bytes"))
+            else:
+                logging.warning("Core UI snapshot not saved: %s", answer.get("error"))
+            return answer
+        except Exception:
+            logging.exception("Core UI snapshot failed")
+            return {"ok": False, "error": "failed"}
+
+    async def core_ui_legacy_themes(self, action):
+        # 3.3.4: CSS Loader's legacy Core themes off while Core UI is on, back on (only those) when it is off.
+        try:
+            answer = await asyncio.to_thread(_core_ui_legacy_themes, action, _css_themes_dir(), _core_ui_legacy_record_path())
+            if answer.get("changed") or answer.get("restored"):
+                logging.info("Core UI legacy CSS themes %s: changed=%s restored=%s", action, answer.get("changed"), answer.get("restored"))
+            return answer
+        except Exception:
+            logging.exception("Core UI legacy CSS themes failed")
+            return {"ok": False, "error": "failed", "changed": [], "restored": []}
 
     async def get_home_news(self, locale="en"):
         if self._home_news is None:

@@ -123,13 +123,33 @@ function lookup(map: Record<string, string> | undefined, name: string): string |
   return undefined;
 }
 
+// Where an icon came from (3.3.4, recorded in the Core UI snapshot): the user's map by name, by Core's key, Core's
+// original drawing, or none.
+export type IconSource = "user-name" | "user-key" | "original" | "none";
+export type IconPick = { url?: string; source: IconSource };
+
 // Order: the user's map by the exact title, then by Core's key, then Core's original drawing.
+export function tabIconPick(title: string, found: CoreMatch | undefined, set: CoreIconSet | undefined): IconPick {
+  const byName = lookup(set?.tabs, title);
+  if (byName) return { url: byName, source: "user-name" };
+  const byKey = found ? lookup(set?.keys, found.key) : undefined;
+  if (byKey) return { url: byKey, source: "user-key" };
+  const drawn = found ? original(ORIGINAL_FOR_TAB[found.key]) : undefined;
+  return drawn ? { url: drawn, source: "original" } : { source: "none" };
+}
+export function collectionIconPick(name: string, found: CoreMatch | undefined, set: CoreIconSet | undefined): IconPick {
+  const byName = lookup(set?.collections, name) ?? lookup(set?.collections, plainCollectionName(name));
+  if (byName) return { url: byName, source: "user-name" };
+  const byKey = found ? lookup(set?.keys, found.key) : undefined;
+  if (byKey) return { url: byKey, source: "user-key" };
+  const drawn = found ? original(ORIGINAL_FOR_KEY[found.key]) : undefined;
+  return drawn ? { url: drawn, source: "original" } : { source: "none" };
+}
 export function tabIcon(title: string, found: CoreMatch | undefined, set: CoreIconSet | undefined): string | undefined {
-  return lookup(set?.tabs, title) ?? (found ? lookup(set?.keys, found.key) : undefined) ?? (found ? original(ORIGINAL_FOR_TAB[found.key]) : undefined);
+  return tabIconPick(title, found, set).url;
 }
 export function collectionIcon(name: string, found: CoreMatch | undefined, set: CoreIconSet | undefined): string | undefined {
-  return lookup(set?.collections, name) ?? lookup(set?.collections, plainCollectionName(name))
-    ?? (found ? lookup(set?.keys, found.key) : undefined) ?? (found ? original(ORIGINAL_FOR_KEY[found.key]) : undefined);
+  return collectionIconPick(name, found, set).url;
 }
 
 // ---- The live page ----
@@ -138,7 +158,9 @@ export const TAB_ATTRIBUTE = "data-core-tab";
 export const TILE_ATTRIBUTE = "data-core-collection";
 export const TONE_ATTRIBUTE = "data-core-tone";
 export const ICON_ATTRIBUTE = "data-core-icon";
-const ATTRIBUTES = [TAB_ATTRIBUTE, TILE_ATTRIBUTE, TONE_ATTRIBUTE, ICON_ATTRIBUTE];
+// 3.3.4: a decorated collection tile's name, drawn under its icon (the stylesheet's attr(data-core-name)).
+export const NAME_ATTRIBUTE = "data-core-name";
+const ATTRIBUTES = [TAB_ATTRIBUTE, TILE_ATTRIBUTE, TONE_ATTRIBUTE, ICON_ATTRIBUTE, NAME_ATTRIBUTE];
 
 export type DecorateDom = { tab?: string; tabTitle?: string; library?: string };
 export type DecorateOptions = { icons: () => CoreIconSet | undefined; tileSelector?: () => string | undefined };
@@ -171,13 +193,21 @@ function apply(element: any, kind: "tab" | "tile", name: string, found: CoreMatc
 // caller's selector names.
 export const COLLECTION_TILE_SELECTOR = 'a[href*="/library/collection/"],[data-collection-id]';
 
+// What the decorator did last, for the snapshot: per tab its title (at most 30 characters), key and icon source; tiles
+// counted by source.
+export type DecoratorReport = { iconSet: { tabs: number; collections: number; keys: number } | null; tabs: Array<{ title: string; key?: string; source: IconSource }>;
+  tiles: Record<IconSource, number> & { total: number } };
+
 export function createLibraryDecorator(options: DecorateOptions) {
   const touched = new Map<any, Set<any>>();
+  let report: DecoratorReport = { iconSet: null, tabs: [], tiles: { "user-name": 0, "user-key": 0, original: 0, none: 0, total: 0 } };
   function remember(doc: any, element: any) { let set = touched.get(doc); if (!set) { set = new Set(); touched.set(doc, set); } set.add(element); }
 
   function decorate(doc: any, dom: DecorateDom) {
     let set: CoreIconSet | undefined;
     try { set = options.icons(); } catch { set = undefined; }
+    const tabReport: DecoratorReport["tabs"] = [];
+    const tileReport: DecoratorReport["tiles"] = { "user-name": 0, "user-key": 0, original: 0, none: 0, total: 0 };
     if (dom.tab) {
       let tabs: any[] = [];
       try { tabs = Array.from(doc.querySelectorAll(dom.tab)).slice(0, 60); } catch { tabs = []; }
@@ -186,7 +216,9 @@ export function createLibraryDecorator(options: DecorateOptions) {
         try { if (dom.tabTitle) label = tab.querySelector(dom.tabTitle) ?? tab; } catch { label = tab; }
         const title = text(label);
         const found = matchTab(title);
-        const icon = tabIcon(title, found, set);
+        const pick = tabIconPick(title, found, set);
+        const icon = pick.url;
+        if (tabReport.length < 40 && title) tabReport.push({ title: title.slice(0, 30), key: found?.key, source: pick.source });
         if (!found && !icon && !touched.get(doc)?.has(tab)) continue;
         apply(tab, "tab", title, found, icon);
         remember(doc, tab);
@@ -198,11 +230,16 @@ export function createLibraryDecorator(options: DecorateOptions) {
     for (const tile of tiles) {
       const name = String(tile.getAttribute?.("aria-label") || tile.getAttribute?.("title") || text(tile));
       const found = matchCollection(name);
-      const icon = collectionIcon(name, found, set);
+      const pick = collectionIconPick(name, found, set);
+      const icon = pick.url;
+      tileReport.total++; tileReport[pick.source]++;
       if (!found && !icon && !touched.get(doc)?.has(tile)) continue;
       apply(tile, "tile", name, found, icon);
+      tag(tile, NAME_ATTRIBUTE, icon ? plainCollectionName(name).slice(0, 40) || undefined : undefined);
       remember(doc, tile);
     }
+    if (tabReport.length || tileReport.total) report = { iconSet: set ? { tabs: Object.keys(set.tabs ?? {}).length, collections: Object.keys(set.collections ?? {}).length, keys: Object.keys(set.keys ?? {}).length } : null,
+      tabs: tabReport, tiles: tileReport };
   }
 
   function undecorate(doc: any) {
@@ -213,25 +250,38 @@ export function createLibraryDecorator(options: DecorateOptions) {
     touched.delete(doc);
   }
 
-  return { decorate, undecorate };
+  return { decorate, undecorate, report: () => report };
 }
 
 // ---- Loading the user's icon set ----
 
-export type IconSource = () => Promise<CoreIconSet & { ok?: boolean; errors?: string[] }>;
+export type IconLoader = () => Promise<CoreIconSet & { ok?: boolean; errors?: string[]; folder?: string }>;
 
 // Loads the set once, again on request (Core UI's setting toggled) and at most every ten minutes; failures keep the
 // last good set (or none: Core's originals).
-export function createIconStore(source: IconSource, now: () => number = Date.now) {
-  let current: CoreIconSet | undefined, loading = false, loadedAt = -Infinity;
+// 3.3.4: the last answer's facts (ok, folder, errors, counts) are kept for the snapshot, and logged once per change, so
+// "my icons are not used" can be told apart from "the backend did not find them".
+export type IconStoreStatus = { ok: boolean; folder?: string; errors: string[]; tabs: number; collections: number; keys: number; failed?: string; at?: number };
+
+export function createIconStore(source: IconLoader, now: () => number = Date.now, log: (message: string) => void = () => {}) {
+  let current: CoreIconSet | undefined, loading = false, loadedAt = -Infinity, status: IconStoreStatus | undefined, logged = "";
   const refresh = async (force = false) => {
     if (loading || (!force && now() - loadedAt < 10 * 60 * 1000)) return;
     loading = true;
     try {
       const answer = await source();
-      if (answer && typeof answer === "object") current = { tabs: answer.tabs ?? {}, collections: answer.collections ?? {}, keys: answer.keys ?? {} };
-    } catch { /* Keep the last good set. */ }
+      if (answer && typeof answer === "object") {
+        current = { tabs: answer.tabs ?? {}, collections: answer.collections ?? {}, keys: answer.keys ?? {} };
+        status = { ok: answer.ok === true, folder: typeof answer.folder === "string" ? answer.folder : undefined, errors: Array.isArray(answer.errors) ? answer.errors.slice(0, 20).map(String) : [],
+          tabs: Object.keys(current.tabs ?? {}).length, collections: Object.keys(current.collections ?? {}).length, keys: Object.keys(current.keys ?? {}).length, at: now() };
+      }
+    } catch (error) {
+      status = { ok: false, errors: [], tabs: 0, collections: 0, keys: 0, failed: String((error as any)?.message ?? error).slice(0, 120), at: now() };
+    }
     finally { loading = false; loadedAt = now(); }
+    const line = status ? (status.ok ? `[Core UI] icons loaded: ${status.tabs} tabs, ${status.collections} collections, ${status.keys} keys from ${status.folder ?? "?"}`
+      : `[Core UI] icons not loaded (${status.failed ?? (status.errors.join(", ") || "unknown")}); Core's own drawings are used`) : "";
+    if (line && line !== logged) { logged = line; try { log(line); } catch { /* Logging is best effort. */ } }
   };
-  return { get: () => { void refresh(); return current; }, refresh };
+  return { get: () => { void refresh(); return current; }, refresh, status: () => status };
 }

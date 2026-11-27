@@ -102,7 +102,9 @@ public sealed class ExtraService
         }
 
         // Lo zip è già nel formato corretto: estrai direttamente in homebrew\themes.
-        ZipFile.ExtractToDirectory(zip, themesDir, overwriteFiles: true);
+        // Core 3.3.4: a theme's config_USER.json that already exists (the user's on/off choice and options) is never
+        // overwritten, so installing the profile again cannot switch back on a theme the user (or Core UI) turned off.
+        ExtractThemesKeepingUserConfig(zip, themesDir);
 
         // Core 3.3 renamed the bundled profiles and themes from Playhub to Core. Folders the
         // previous install recorded and this one no longer ships are removed, so CSS Loader
@@ -119,6 +121,38 @@ public sealed class ExtraService
         }
 
         return Task.FromResult("Profili Core installati: Core e Core (Big Image Mode).");
+    }
+
+    internal static bool IsCssLoaderUserConfig(string fileName) =>
+        fileName.StartsWith("config_user", StringComparison.OrdinalIgnoreCase)
+        && fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
+
+    internal static void ExtractThemesKeepingUserConfig(string zip, string themesDir)
+    {
+        var root = Path.GetFullPath(themesDir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        using var archive = ZipFile.OpenRead(zip);
+        foreach (var entry in archive.Entries)
+        {
+            var target = Path.GetFullPath(Path.Combine(themesDir, entry.FullName));
+            if (!target.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (string.IsNullOrEmpty(entry.Name))
+            {
+                Directory.CreateDirectory(target);
+                continue;
+            }
+
+            if (IsCssLoaderUserConfig(entry.Name) && File.Exists(target))
+            {
+                continue;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            entry.ExtractToFile(target, overwrite: true);
+        }
     }
 
     internal static readonly string[] RetiredBundledThemes =

@@ -61,13 +61,16 @@ import { keyboardBase } from "./keyboardBase";
 import { JarvisOrbIcon, JarvisPage, JarvisSection, JarvisTab, JARVIS_ROUTE, setJarvisPresence, setJarvisRuntime } from "./JarvisSection";
 import { createPresence, jarvisMenuStore, orbState, toggleJarvisTab, JARVIS_TAB_ID } from "./jarvisPresence";
 import { jarvisRelease } from "./jarvisCombos";
-import { installCoreUi } from "./coreUi";
+import { installCoreUi, steamUiDocuments } from "./coreUi";
+import { CORE_UI_STYLE_ID } from "./coreUiStyles";
+import { createSnapshotProbe, setCoreUiSnapshotControl } from "./coreUiSnapshot";
+import { createLegacyThemeGuard, cssLoaderName } from "./coreCssLoader";
 import { coreUiSetting } from "./coreUiSetting";
 import { createIconStore, createLibraryDecorator } from "./coreLibraryIcons";
 import { corePluginGlyph } from "./corePluginLogos";
 import { setQamPluginIconFallback } from "./qamLayoutRuntime";
 import { setCoreHomeIcons } from "./coreHome";
-import { CoreUiSection, DigitalStoresEntry } from "./CoreUiSection";
+import { CoreRailIcon, CoreUiSection, DigitalStoresEntry } from "./CoreUiSection";
 import { createJarvisRuntime, type ListenMode } from "./jarvisRuntime";
 import { installJarvisCombos, type ComboKind } from "./jarvisCombos";
 
@@ -1180,14 +1183,49 @@ export default definePlugin(() => {
   // Core's plugin logos on the Quick Access rail and Core Home's console icons, all only while Core UI is on
   // (docs/eternal/CORE-UI.md). Inside the optional hook: a failure here leaves Core UI off, never the plugin.
   const stopCoreUi = installOptionalHook("Core UI", () => {
-    const coreIcons = createIconStore(() => controlCall<[], any>("get_core_icons"));
+    const coreIcons = createIconStore(() => controlCall<[], any>("get_core_icons"), Date.now, message => console.info(message));
     const library = createLibraryDecorator({ icons: coreIcons.get });
+    // 3.3.4: the Eternal plugins' glyphs at Steam's own rail size (CoreRailIcon, 30px while Core UI is on).
     const railIcon = (name: string) => {
       const glyph = coreUiSetting.get() ? corePluginGlyph(name) : undefined;
-      return glyph ? <span aria-hidden="true" style={{ display: "flex", width: "1em", height: "1em" }}
-        dangerouslySetInnerHTML={{ __html: glyph.replace("<svg ", '<svg width="100%" height="100%" ') }} /> : undefined;
+      return glyph ? <CoreRailIcon glyph={glyph} /> : undefined;
     };
-    const stopLook = installCoreUi({ ui: DFL, decorate: library.decorate, undecorate: library.undecorate, orb: {
+    // 3.3.4: CSS Loader's legacy Core themes go off while Core UI is on (coreCssLoader.ts), back on when it is off.
+    const legacyThemes = createLegacyThemeGuard({
+      backend: action => controlCall<[string], any>("core_ui_legacy_themes", action),
+      bridge: {
+        name: () => { try { return cssLoaderName((window as any).DeckyPluginLoader?.deckyState?.publicState?.()); } catch { return undefined; } },
+        call: (route, ...args) => { const bridge = (window as any).DeckyBackend; return typeof bridge?.call === "function" ? bridge.call(route, ...args) : Promise.reject(new Error("no bridge")); },
+      },
+      now: Date.now,
+      log: message => console.info(message),
+    });
+    let legacyOn = coreUiSetting.get();
+    const legacyTimer = window.setTimeout(() => { if (coreUiSetting.get()) void legacyThemes.disable(); }, 8000);
+    const stopLegacy = coreUiSetting.subscribe(() => {
+      const on = coreUiSetting.get();
+      if (on === legacyOn) return;
+      legacyOn = on;
+      void (on ? legacyThemes.disable() : legacyThemes.restore());
+    });
+    // 3.3.4: the Core UI snapshot (coreUiSnapshot.ts): written a few seconds after Core UI applies, when each surface
+    // first opens, and from Quick Access > Core > Look.
+    let runtime: any;
+    const probe = createSnapshotProbe({
+      now: Date.now, version: "", styleId: CORE_UI_STYLE_ID, main: () => window.document,
+      sheet: () => runtime?.sheet?.(),
+      extra: () => ({
+        diagnostics: runtime?.diagnostics?.(),
+        icons: { store: coreIcons.status(), library: library.report() },
+        cssLoader: { loaded: !!cssLoaderName((window as any).DeckyPluginLoader?.deckyState?.publicState?.()), legacy: legacyThemes.report(),
+          styleTags: steamUiDocuments(window, (DFL as any).Router).map(doc => { try { return doc.head.querySelectorAll("style").length; } catch { return 0; } }) },
+        settings: { coreUi: coreUiSetting.get() },
+      }),
+      write: json => controlCall<[string], any>("save_core_ui_snapshot", json),
+      log: message => console.info(message),
+    });
+    setCoreUiSnapshotControl({ saveNow: () => probe.saveNow(steamUiDocuments(window, (DFL as any).Router)) });
+    const stopLook = installCoreUi({ ui: DFL, decorate: library.decorate, undecorate: library.undecorate, probe, onRuntime: value => { runtime = value; }, orb: {
     state: () => {
       const live = jarvisLive?.snapshot();
       return orbState({ enabled: jarvisLive?.enabled() === true, listening: !!live?.listening, working: live?.working === true,
@@ -1198,7 +1236,7 @@ export default definePlugin(() => {
     setQamPluginIconFallback(railIcon);
     setCoreHomeIcons(coreIcons.get);
     const stopRailIcons = coreUiSetting.subscribe(() => { setQamPluginIconFallback(railIcon); void coreIcons.refresh(true); });
-    return () => { stopRailIcons(); setQamPluginIconFallback(undefined); stopLook(); };
+    return () => { stopRailIcons(); stopLegacy(); window.clearTimeout(legacyTimer); setCoreUiSnapshotControl(undefined); setQamPluginIconFallback(undefined); stopLook(); };
   });
   const stopStoreLibraryUi = installOptionalHook("Store game actions", () => installStoreLibrarySteamUi(() => currentLocale));
   const stopUpdateNotice = installOptionalHook("Update notice", () => installPlayhubUpdateNotice({
@@ -1402,9 +1440,9 @@ export default definePlugin(() => {
   const stopOpenRequestWatcher = startOpenRequestWatcher(configuratorReturn);
   const uninstallNavigationHaptics = installOptionalHook("Navigation haptics", installNavigationHaptics);
   const uninstallVirtualControllerName = installOptionalHook("Virtual controller name", installVirtualControllerName);
-  const uninstallPlayhubQam = initPlayhubQam({ content: <Content origin="qam" />, icon: <PlayhubIcon />, title: <div style={{ paddingInline: 16, boxSizing: "border-box" }}>{playhubTitle}</div>,
+  const uninstallPlayhubQam = initPlayhubQam({ content: <Content origin="qam" />, icon: <CoreRailIcon><PlayhubIcon /></CoreRailIcon>, title: <div style={{ paddingInline: 16, boxSizing: "border-box" }}>{playhubTitle}</div>,
     // Core UI phase 1: Jarvis's own tab, right after Core's.
-    extraTabs: [{ id: JARVIS_TAB_ID, name: "Jarvis", content: <JarvisTab locale={() => currentLocale} />, icon: <JarvisOrbIcon />,
+    extraTabs: [{ id: JARVIS_TAB_ID, name: "Jarvis", content: <JarvisTab locale={() => currentLocale} />, icon: <CoreRailIcon><JarvisOrbIcon /></CoreRailIcon>,
       title: <div style={{ paddingInline: 16, boxSizing: "border-box" }}>Jarvis</div> }] });
   const uninstallPowerMenuPatch = installOptionalHook("Power menu", () => installPowerMenuPatch(
     () => ({ gaming: t().switchGaming, desktop: t().switchDesktop }),

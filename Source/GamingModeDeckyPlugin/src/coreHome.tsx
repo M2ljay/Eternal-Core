@@ -15,6 +15,7 @@ import {
 import { matchCollection, matchTab, tabIcon, CORE_FAMILY_TONES, type CoreIconSet } from "./coreLibraryIcons";
 import { jarvisMenuStore, toggleJarvisTab } from "./jarvisPresence";
 import { clubBriefLine, clubHomeTab } from "./club";
+import { BriefBoundary, CoreBriefHero } from "./CoreBriefHero";
 
 const { Focusable, DialogButton, Navigation } = DFL as any;
 
@@ -88,7 +89,16 @@ function openJarvis() {
   });
 }
 
+// 3.3.4: the brief is a hero panel (CoreBriefHero.tsx); the 3.3.3 lines stay as its fallback.
 function JarvisBrief({ locale, native }: { locale: string; native: any }) {
+  const text = coreHomeCopy(locale);
+  return <div className="core-home"><style>{css}</style>
+    <BriefBoundary fallback={<PlainBrief locale={locale} />}><CoreBriefHero locale={locale} onTalk={openJarvis} /></BriefBoundary>
+    {native ? <><div className="core-home-label">{text.updates}</div>{native}</> : null}
+  </div>;
+}
+
+function PlainBrief({ locale }: { locale: string }) {
   const text = coreHomeCopy(locale);
   const [now, setNow] = React.useState(() => new Date());
   React.useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60 * 1000); return () => window.clearInterval(timer); }, []);
@@ -104,7 +114,6 @@ function JarvisBrief({ locale, native }: { locale: string; native: any }) {
     <Focusable className="core-home-actions" flow-children="row">
       <DialogButton onClick={openJarvis}>{text.talk}</DialogButton>
     </Focusable>
-    {native ? <><div className="core-home-label">{text.updates}</div>{native}</> : null}
   </div>;
 }
 

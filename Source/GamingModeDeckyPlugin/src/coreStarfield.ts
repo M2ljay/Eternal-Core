@@ -17,6 +17,15 @@ export const STARFIELD_COLOURS = { crimson: "215,38,61", steel: "201,209,217", w
 // Depth travelled per second (the screensaver's .035), and how many stars a surface gets.
 export const STARFIELD_SPEED = 0.035;
 export const STARFIELD_COUNT = 160;
+// 3.3.4 (TV: "stars are hard to see on full pages"): density follows the surface's area. A Steam-menu-sized panel
+// (about 400 x 1080) keeps its 160 stars; a full page gets proportionally more, up to STARFIELD_MAX_COUNT. The field
+// holds the maximum; a surface draws the first N (the seeded sequence, so the menu's stars are the same as before).
+export const STARFIELD_AREA_PER_STAR = 2700;
+export const STARFIELD_MIN_COUNT = 60;
+export const STARFIELD_MAX_COUNT = 420;
+// One star in NEAR_EVERY is "near": larger and always at the readable ceiling, so a big page has a few stars that read
+// at TV distance. No star is ever brighter than STARFIELD_MAX_ALPHA (the 4.5:1 rule for #9AA4AE text holds).
+export const STARFIELD_NEAR_EVERY = 9;
 export const STARFIELD_MAX_ALPHA = 0.24;
 export const STARFIELD_FPS = 30;
 // The longest step one frame may take (seconds). A throttled window (a popup Steam draws at a few frames a second)
@@ -53,7 +62,15 @@ export type Starfield = {
   depth(): number;
 };
 
-export function createStarfield(count = STARFIELD_COUNT): Starfield {
+// How many stars a surface of width x height draws.
+export function starsForArea(width: number, height: number): number {
+  const area = Math.max(0, width) * Math.max(0, height);
+  return Math.max(STARFIELD_MIN_COUNT, Math.min(STARFIELD_MAX_COUNT, Math.round(area / STARFIELD_AREA_PER_STAR)));
+}
+
+export const isNearStar = (index: number) => index % STARFIELD_NEAR_EVERY === 4;
+
+export function createStarfield(count = STARFIELD_MAX_COUNT): Starfield {
   const stars = makeStars(count);
   let zoff = 0, clock: number | undefined;
   const advance = (seconds: number) => {
@@ -74,14 +91,17 @@ export function createStarfield(count = STARFIELD_COUNT): Starfield {
       context.clearRect(0, 0, width, height);
       const cx = width / 2, cy = height / 2, f = Math.max(width, height) * 0.55;
       let drawn = 0;
-      for (const s of stars) {
+      const limit = Math.min(stars.length, starsForArea(width, height));
+      for (let index = 0; index < limit; index++) {
+        const s = stars[index];
         const z = Math.max(0.03, ((s.z - zoff) % 1 + 1) % 1);
         const x = cx + (s.x - 0.5) * f / z, y = cy + (s.y - 0.5) * f / z;
         if (x < 0 || x > width || y < 0 || y > height) continue;
-        const alpha = starAlpha(z);
+        const near = isNearStar(index);
+        const alpha = near ? STARFIELD_MAX_ALPHA : starAlpha(z);
         context.fillStyle = `rgba(${s.c},${alpha.toFixed(3)})`;
         context.beginPath();
-        context.arc(x, y, Math.max(0.4, (1 - z) * 1.4), 0, Math.PI * 2);
+        context.arc(x, y, near ? Math.max(1.3, (1 - z) * 2.4) : Math.max(0.5, (1 - z) * 1.5), 0, Math.PI * 2);
         context.fill();
         drawn++;
       }
@@ -95,8 +115,9 @@ let shared: Starfield | undefined;
 export function sharedStarfield(): Starfield { return shared ??= createStarfield(); }
 
 // The screensaver's fade-in with depth, scaled down to the readable ceiling.
+// 3.3.4: the curve reaches the ceiling sooner (more stars near it), the ceiling itself is unchanged.
 export function starAlpha(z: number): number {
-  return Math.max(0, Math.min(1, (1 - z) * 1.2)) * STARFIELD_MAX_ALPHA;
+  return Math.max(0, Math.min(1, (1 - z) * 1.5)) * STARFIELD_MAX_ALPHA;
 }
 
 // WCAG contrast of text colour `text` ("#RRGGBB") over the brightest possible star pixel ("r,g,b" at

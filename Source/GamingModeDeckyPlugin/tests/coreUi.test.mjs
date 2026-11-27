@@ -94,7 +94,8 @@ function splitTop(list) {
 }
 
 function checkSheet(sheet) {
-  const { css } = sheet;
+  // 3.3.4: every class target carries the id-level boost; the checks below read the selectors without it.
+  const css = sheet.css.replaceAll(styles.CORE_UI_BOOST, "");
   for (const value of Object.values(maps).flatMap(map => Object.values(map))) {
     if (["_OpenM", "_RunIcon", "_QamBat", "_CtlPst", "_CtlRow", "_FtLegend", "_HdDl", "_HdClock", "_CmPos", "_QamTab", "_GuAnchor", "_GuOpaque"].includes(value) && !css.includes("." + value)) continue;
     assert.ok(css.includes("." + value), `class ${value} used`);
@@ -122,7 +123,7 @@ function checkSheet(sheet) {
   assert.match(css, /_2w9TpItem\._2w9TpItem\{[^}]*padding-left:24px[^}]*transform:none/, "one left inset, no drift");
   assert.match(css, /_FbsMain\._FbsMain\{[^}]*background-color:#000000/, "the MENU footer is black");
   assert.match(css, /_QamTitle\._QamTitle,[^{]*_QamHead\._QamHead\{[^}]*background-color:transparent[^}]*background-image:none/, "clear title strip over the stars");
-  assert.match(css, /_QamTab\._QamTab\._QamSel\._QamSel\{[^}]*background-color:#1A1D21/, "selected tab gunmetal");
+  assert.match(css, /_QamTab\._QamTab\._QamSel\._QamSel,[^{]*\{[^}]*background-color:#1A1D21/, "selected tab gunmetal");
   assert.match(css, /_FtQam\._FtQam[^{]*\{[^}]*background-color:#000000/, "black Quick Access footer");
   assert.match(css, /_QamMenu\._QamMenu \.DialogButton:not\(\[style\*="background"\]\)[^{]*\{[^}]*background-color:#1A1D21/, "neutral buttons inside Quick Access, inline colours kept");
   assert.match(css, /_QamMenu\._QamMenu \._DdButton\._DdButton/, "neutral dropdowns inside Quick Access");
@@ -175,7 +176,7 @@ test("a missing class map skips only its rules and names them", () => {
 
 test("a class string that is not a plain class list is never written into a selector", () => {
   assert.equal(styles.classSelector({ Menu: "a{}b" }, "Menu"), undefined);
-  assert.equal(styles.classSelector({ Menu: "_a _b" }, "Menu"), "._a._b._a");
+  assert.equal(styles.classSelector({ Menu: "_a _b" }, "Menu"), "._a._b._a:not(#core-ui-boost)");
   assert.equal(styles.buildCoreUiCss({ mainmenu: { ...maps.mainmenu, Item: "x,y" } }).skipped.includes("menu-rows"), true);
   assert.doesNotMatch(styles.buildCoreUiCss({ mainmenu: maps.mainmenu }, { wordmark: "javascript:alert(1)" }).css, /javascript|url\(/);
 });

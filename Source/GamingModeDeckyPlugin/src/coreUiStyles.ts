@@ -60,7 +60,7 @@ export const CORE_MENU_LOGO_BAND = 80;
 export const CORE_MENU_LOGO_SIZE = 44;
 
 export type CoreUiMapName = "mainmenu" | "quickaccess" | "controls" | "footer" | "header" | "dropdown" | "contextmenu"
-  | "gamepadui" | "tabbedpage" | "library" | "appgrid" | "portrait" | "recentgames" | "carousel" | "home";
+  | "gamepadui" | "tabbedpage" | "library" | "appgrid" | "portrait" | "recentgames" | "carousel" | "home" | "gamepaddialog";
 export type CoreUiMaps = Partial<Record<CoreUiMapName, Record<string, string>>>;
 
 // How each class map is recognised: keys only that map has (from Steam's readable module names, e.g.
@@ -83,6 +83,8 @@ export const CORE_UI_MAP_FILTERS: Record<CoreUiMapName, (map: any) => boolean> =
   recentgames: map => has(map, "RecentGamesContainer") && has(map, "RecentGamesBackgroundContainer"),
   carousel: map => has(map, "CarouselCapsuleBackgroundGlow"),
   home: map => has(map, "TabbedContent") && !has(map, "TabRow") && !has(map, "Tab") && !has(map, "BasicHome"),
+  // 3.3.4: Steam's dialog fields (@decky/ui's gamepadDialogClasses): the rows ButtonItem draws, Decky's plugin list too.
+  gamepaddialog: map => has(map, "Field") && has(map, "FieldLabel") && has(map, "FieldChildren") && has(map, "FieldDescription"),
 };
 
 function has(map: any, key: string): boolean {
@@ -93,44 +95,122 @@ function attempt<T>(run: () => T): T | undefined {
   try { return run(); } catch { return undefined; }
 }
 
+// How a class map was found (recorded in the Core UI snapshot): Decky 3's class-map search, Decky 4's findVar or
+// findModuleScopeByVar, or not at all.
+export type CoreUiMapRoute = "classic" | "findVar" | "scope" | "missing";
+
 // One class map: the class-map search (Decky 3's findClassModule / classMap, then findModule, which on Decky 4
 // walks module scopes and variables), then Decky 4's findVar and findModuleScopeByVar directly.
-export function findCoreUiMap(ui: any, filter: (map: any) => boolean): Record<string, string> | undefined {
+export function findCoreUiMapRoute(ui: any, filter: (map: any) => boolean): { map?: Record<string, string>; route: CoreUiMapRoute } {
   const accept = (value: any) => (value && typeof value === "object" && attempt(() => filter(value)) === true ? value : undefined);
   const classic = accept(attempt(() => findClassModule(ui, filter)));
-  if (classic) return classic;
+  if (classic) return { map: classic, route: "classic" };
   const variable = typeof ui?.findVar === "function" ? accept(attempt(() => ui.findVar((value: any) => accept(value) !== undefined))) : undefined;
-  if (variable) return variable;
+  if (variable) return { map: variable, route: "findVar" };
   const scope = typeof ui?.findModuleScopeByVar === "function"
     ? attempt(() => ui.findModuleScopeByVar((value: any) => accept(value) !== undefined)) : undefined;
   if (scope && typeof scope === "object") {
-    for (const value of attempt(() => Object.values(scope)) ?? []) { const hit = accept(value); if (hit) return hit; }
+    for (const value of attempt(() => Object.values(scope)) ?? []) { const hit = accept(value); if (hit) return { map: hit, route: "scope" }; }
   }
-  return undefined;
+  return { route: "missing" };
+}
+
+export function findCoreUiMap(ui: any, filter: (map: any) => boolean): Record<string, string> | undefined {
+  return findCoreUiMapRoute(ui, filter).map;
+}
+
+export function findCoreUiMapsDetailed(ui: any): { maps: CoreUiMaps; routes: Record<string, CoreUiMapRoute> } {
+  const maps: CoreUiMaps = {}, routes: Record<string, CoreUiMapRoute> = {};
+  for (const name of Object.keys(CORE_UI_MAP_FILTERS) as CoreUiMapName[]) {
+    const found = findCoreUiMapRoute(ui, CORE_UI_MAP_FILTERS[name]);
+    routes[name] = found.route;
+    if (found.map) maps[name] = found.map;
+  }
+  return { maps, routes };
 }
 
 export function findCoreUiMaps(ui: any): CoreUiMaps {
-  const maps: CoreUiMaps = {};
-  for (const name of Object.keys(CORE_UI_MAP_FILTERS) as CoreUiMapName[]) {
-    const map = findCoreUiMap(ui, CORE_UI_MAP_FILTERS[name]);
-    if (map) maps[name] = map;
-  }
-  return maps;
+  return findCoreUiMapsDetailed(ui).maps;
 }
 
 const CLASS_NAME = /^-?[A-Za-z_][\w-]*$/;
 
-// ".hashed.hashed": the class from the map, repeated once for specificity. Undefined when the key is missing
-// or its value is not a plain class list.
+// 3.3.4: every target also carries an id-level boost, `:not(#core-ui-boost)` (no element has that id, so it matches
+// everything and adds an id's weight). A CSS Loader theme left on (the old Core theme was) used class selectors with
+// !important; with the boost Core UI's !important rules out-rank any of them, however many classes deep.
+export const CORE_UI_BOOST = ":not(#core-ui-boost)";
+
+// ".hashed.hashed:not(#core-ui-boost)": the class from the map, repeated once, plus the boost. Undefined when the key
+// is missing or its value is not a plain class list.
 export function classSelector(map: Record<string, string> | undefined, key: string): string | undefined {
   if (!has(map, key)) return undefined;
   const names = String(map![key]).trim().split(/\s+/);
   if (!names.length || !names.every(name => CLASS_NAME.test(name))) return undefined;
-  return "." + names.join(".") + "." + names[0];
+  return "." + names.join(".") + "." + names[0] + CORE_UI_BOOST;
+}
+
+// ---- The selector table (3.3.4) ----
+//
+// Every element Core UI aims at, by name, with each way of finding it, best first. A strategy is a selector
+// template: `{map.Key}` stands for that class map's class (dropped when the map or key is missing), anything else is
+// plain CSS (Steam's unhashed globals, attributes, links). Rules and the snapshot (coreUiSnapshot.ts) read this one
+// table, so fixing a selector after the snapshot is one line here.
+export const CORE_UI_TARGETS: Record<string, string[]> = {
+  header: ["{header.Header}"],
+  footer: ["{footer.BasicFooter}"],
+  menu: ["{mainmenu.Menu}"],
+  menuItem: ["{mainmenu.Item}"],
+  qamMenu: ["{quickaccess.Menu}"],
+  qamPanel: ["{quickaccess.Container}", "{quickaccess.QuickAccessMenu}", "{quickaccess.ViewPlaceholder}"],
+  qamRail: ["{quickaccess.Tabs}", "{quickaccess.TabsWithFooter}"],
+  qamTab: ["{quickaccess.Tab}"],
+  qamTabSelected: ["{quickaccess.Tab}{quickaccess.Selected}", '{quickaccess.Tab}[aria-selected="true"]', "{quickaccess.Tab}.Selected", "{quickaccess.Tab}.Active"],
+  qamTitle: ["{quickaccess.Title}", "{quickaccess.HeaderContainer}"],
+  qamContent: ["{quickaccess.TabContentColumn}", "{quickaccess.AllTabContents}", "{quickaccess.ContentTransition}"],
+  // Decky's plugin list and every ButtonItem: Steam's dialog field rows and their DialogButton.
+  qamRowField: ["{quickaccess.Menu} {gamepaddialog.Field}"],
+  qamRowButton: ['{quickaccess.Menu} .DialogButton:not([style*="background"])', "{quickaccess.Menu} {dropdown.DropDownControlButton}"],
+  qamTitleButton: ["{quickaccess.Title} .DialogButton"],
+  context: ["{contextmenu.contextMenuContents}"],
+  home: ["{gamepadui.BasicHome}"],
+  library: ["{library.GamepadLibrary}"],
+  libraryTabRow: ["{tabbedpage.TabRow}", "{tabbedpage.TabHeaderRowWrapper}"],
+  libraryTab: ["{tabbedpage.Tab}"],
+  libraryTabSelected: ["{tabbedpage.Tab}{tabbedpage.Selected}", '{tabbedpage.Tab}[aria-selected="true"]'],
+  libraryTabTitle: ["{tabbedpage.TabTitle}"],
+  libraryGrid: ["{library.GamepadLibrary} {appgrid.AppGrid}", "{library.GamepadLibrary} {appgrid.LibraryAppGrid}", "{library.GamepadLibrary}"],
+  libraryCapsule: ["{library.GamepadLibrary} {portrait.LibraryItemBox}"],
+  collectionTile: ['a[href*="/library/collection/"]', "[data-collection-id]"],
+};
+
+const TOKEN = /\{([a-z]+)\.([A-Za-z0-9_]+)\}/g;
+
+// One template against the maps: the strong form (with Core UI's specificity) and the plain form (querySelector).
+// Undefined when any {map.Key} in it is missing on this client.
+export function resolveTemplate(maps: CoreUiMaps, template: string, plain = false): string | undefined {
+  let missing = false;
+  const out = template.replace(TOKEN, (_all, map: string, key: string) => {
+    const value = plain ? plainSelector((maps as any)[map], key) : classSelector((maps as any)[map], key);
+    if (!value) missing = true;
+    return value ?? "";
+  });
+  return missing ? undefined : out;
+}
+
+// Every strategy of a target that resolves on this client, best first.
+export function targetSelectors(maps: CoreUiMaps, id: string, plain = false): string[] {
+  return (CORE_UI_TARGETS[id] ?? []).map(template => resolveTemplate(maps, template, plain)).filter((value): value is string => !!value);
+}
+
+// The whole table resolved, for the snapshot: per target, each strategy and whether it resolved.
+export function resolvedTargetTable(maps: CoreUiMaps): Record<string, Array<{ strategy: string; selector?: string }>> {
+  const out: Record<string, Array<{ strategy: string; selector?: string }>> = {};
+  for (const [id, list] of Object.entries(CORE_UI_TARGETS)) out[id] = list.map(strategy => ({ strategy, selector: resolveTemplate(maps, strategy, true) }));
+  return out;
 }
 
 type Need = [CoreUiMapName, string];
-type Rule = { id: string; needs: Need[]; css: (s: (map: CoreUiMapName, key: string) => string) => string };
+type Rule = { id: string; needs: Need[]; targets?: string[]; css: (s: (map: CoreUiMapName, key: string) => string, t: (id: string) => string[]) => string };
 
 const imp = (block: Record<string, string>) => Object.entries(block).map(([key, value]) => `${key}:${value} !important`).join(";");
 const CLEAR = { "background-color": "transparent", "background-image": "none", "box-shadow": "none" };
@@ -138,6 +218,8 @@ const CLEAR = { "background-color": "transparent", "background-image": "none", "
 const SOLID_BLACK = { "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none", filter: "none", opacity: "1" };
 
 function rules(mark: string | undefined): Rule[] {
+  // Rule-local helper: one ROOT-prefixed list for a target.
+  const under = (list: string[], tail = "") => list.map(sel => `${ROOT} ${sel}${tail}`).join(",");
   const list: Rule[] = [
     // The float radius token, inherited by everything in the page; Steam's global confirm dialogs use it.
     { id: "corners", needs: [], css: () =>
@@ -237,8 +319,15 @@ function rules(mark: string | undefined): Rule[] {
       `${ROOT} ${s("quickaccess", "Tabs")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": `inset -1px 0 0 ${C.gunmetal}` })}}` +
       `${ROOT} ${s("quickaccess", "Tab")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
       `${ROOT} ${s("quickaccess", "Tab")}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", filter: "none", "border-radius": SQUARE })}}` },
-    { id: "qam-tab-selected", needs: [["quickaccess", "Tab"], ["quickaccess", "Selected"]], css: s =>
-      `${ROOT} ${s("quickaccess", "Tab")}${s("quickaccess", "Selected")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` },
+    // The open tab: gunmetal, never Steam's grey-blue gradient (TV photo, 3.3.3). Every way Steam may mark it is in the
+    // selector table (qamTabSelected).
+    { id: "qam-tab-selected", needs: [], targets: ["qamTabSelected"], css: (_s, t) =>
+      `${under(t("qamTabSelected"))}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", filter: "none", "border-radius": SQUARE })}}` },
+    // Rail icons (3.3.4): Core's and the Eternal plugins' glyphs fill the cell like Steam's own (CORE_RAIL_ICON_PX).
+    { id: "qam-rail-icons", needs: [], targets: ["qamTab"], css: (_s, t) =>
+      `${under(t("qamTab"), " [data-core-rail-icon]")}{${imp({ display: "flex", width: `${CORE_RAIL_ICON_PX}px`, height: `${CORE_RAIL_ICON_PX}px`,
+        "min-width": `${CORE_RAIL_ICON_PX}px`, "min-height": `${CORE_RAIL_ICON_PX}px`, "align-items": "center", "justify-content": "center" })}}` +
+      `${under(t("qamTab"), " [data-core-rail-icon] svg")}{${imp({ width: "100%", height: "100%", "shape-rendering": "geometricPrecision" })}}` },
     { id: "qam-tabs-footer", needs: [["quickaccess", "TabsWithFooter"]], css: s =>
       `${ROOT} ${s("quickaccess", "TabsWithFooter")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` },
     // The footer bar: black.
@@ -248,15 +337,10 @@ function rules(mark: string | undefined): Rule[] {
       `${ROOT} ${s("quickaccess", "FooterBoxShadow")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
     // Plugin content: Steam's buttons and dropdowns inside Quick Access lose the grey-blue gradient. Gunmetal,
     // raised plus a 2px crimson ring when focused. DialogButton and gpfocus are Steam's unhashed global classes.
-    { id: "qam-controls", needs: [["quickaccess", "Menu"]], css: s => {
-      const scope = `${ROOT} ${s("quickaccess", "Menu")}`;
-      const dropdown = s("dropdown", "DropDownControlButton");
-      // A button that sets its own background inline (Jarvis's crimson "listening" buttons) keeps it.
-      const buttons = [`${scope} .DialogButton:not([style*="background"])`, ...(dropdown ? [`${scope} ${dropdown}`] : [])];
-      const focused = buttons.map(sel => `${sel}:is(.gpfocus,:focus-visible)`);
-      return `${buttons.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.text, "box-shadow": "none", "text-shadow": "none" })}}` +
-        `${focused.join(",")}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 0 0 0 2px ${C.crimson}`, filter: "none", animation: "none", "border-radius": SQUARE })}}`;
-    } },
+    // 3.3.4 (TV photo of Decky's main page): rows are gunmetal with steel text, a focused row raised gunmetal with the
+    // square crimson left bar (never Steam's white); the title's Store / Settings buttons gunmetal with the same bar.
+    // A button that sets its own background inline (Jarvis's crimson "listening" buttons) keeps it.
+    { id: "qam-controls", needs: [["quickaccess", "Menu"]], targets: ["qamRowButton"], css: (_s, t) => qamRowCss(t("qamRowButton"), t("qamRowField")) },
 
     // Context menus and their submenus (a game's Options / "..." menu, Manage, and the menus the Steam menu and
     // Quick Access open). The Context board: black panel with a 1px gunmetal edge and 10px corners, 8px top and
@@ -328,55 +412,107 @@ function rules(mark: string | undefined): Rule[] {
         `${focused.join(",")}{${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "0", animation: "none", filter: "none", translate: "0 -6px" })}}` +
         `@media (prefers-reduced-motion: reduce){${[...items, ...focused].join(",")}{${imp({ transition: "none", translate: "none" })}}}`;
     } },
-    // The tab bar (Library only; the game page keeps Steam's tabs in this phase): black row, steel tabs, the open one
-    // gunmetal with a 3px crimson underline, a focused one also gets a 2px crimson ring.
-    { id: "library-tabs", needs: [["tabbedpage", "Tab"], ["library", "GamepadLibrary"]], css: s => {
+    // The tab bar (Library only; the game page keeps Steam's tabs in this phase). 3.3.4, from the TV photos: one marker
+    // per tab and no more. Built by libraryTabCss (below), from the selector table.
+    { id: "library-tabs", needs: [["library", "GamepadLibrary"]], targets: ["libraryTab"], css: (s, t) => {
       const lib = s("library", "GamepadLibrary");
       const page = s("tabbedpage", "GamepadTabbedPage");
-      const scope = (inner: string) => [`${ROOT} ${lib} ${inner}`, ...(page ? [`${ROOT} ${page}:has(${lib}) ${inner}`] : [])].join(",");
-      const tab = s("tabbedpage", "Tab");
-      const selected = s("tabbedpage", "Selected");
-      const wrapper = s("tabbedpage", "TabHeaderRowWrapper");
-      return (wrapper ? `${scope(wrapper)},${scope(`${wrapper}::before`)}{${imp({ "background-color": C.black, "background-image": "none", "backdrop-filter": "none" })}}` : "") +
-        `${scope(s("tabbedpage", "TabRow"))}{${imp({ "box-shadow": `inset 0 -1px 0 ${C.gunmetal}` })}}` +
-        `${scope(tab)}{${imp({ position: "relative", "background-color": "transparent", "background-image": "none", color: C.steel, "box-shadow": "none" })}}` +
-        (selected ? `${scope(`${tab}${selected}`)}{${imp({ "background-color": C.gunmetal, color: C.white, "border-radius": SQUARE, "box-shadow": `inset 0 -3px 0 ${C.crimson}` })}}` : "") +
-        `${scope(`${tab}.gpfocus`)}{${imp({ "background-color": C.gunmetal, color: C.white, "border-radius": SQUARE, "box-shadow": `inset 0 -3px 0 ${C.crimson}, inset 0 0 0 2px ${C.crimson}` })}}` +
-        (s("tabbedpage", "TabCount") ? `${scope(s("tabbedpage", "TabCount"))}{${imp({ display: "none" })}}` : "");
+      const scopes = [`${ROOT} ${lib}`, ...(page ? [`${ROOT} ${page}:has(${lib})`] : [])];
+      return libraryTabCss({ scopes, tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"),
+        row: t("libraryTabRow"), count: s("tabbedpage", "TabCount") || undefined });
     } },
-    // Library tab icons and family tones, keyed by tab title (coreLibraryIcons.ts sets data-core-tab, data-core-tone
-    // and --core-icon on each matched tab). The icon sits before the label; the tone is a short 24px marker under
-    // it, above the active tab's crimson underline.
-    { id: "library-tab-icons", needs: [["tabbedpage", "Tab"]], css: s => {
-      const tab = `${ROOT} ${s("tabbedpage", "Tab")}[${CORE_UI_TAB_ATTRIBUTE}]`;
-      const title = s("tabbedpage", "TabTitle");
-      const icon = title ? `${tab}[${CORE_UI_ICON_ATTRIBUTE}] ${title}::before` : `${tab}[${CORE_UI_ICON_ATTRIBUTE}]::before`;
-      return `${icon}{${imp({ content: '""', display: "inline-block", width: "26px", height: "26px", margin: "0 8px 0 0", "vertical-align": "-7px",
-          background: "var(--core-icon) center / contain no-repeat" })}}` +
-        `${tab}[${CORE_UI_TONE_ATTRIBUTE}]::after{${imp({ content: '""', position: "absolute", left: "50%", bottom: "6px", width: "24px", height: "3px", "margin-left": "-12px",
-          "border-radius": "2px", "background-color": "var(--core-tone)", "background-image": "none", "pointer-events": "none" })}}` + toneVariables(tab);
-    } },
+    // Library grid (3.3.4): capsules drawn about 16% smaller inside their slots, so even black gutters (and the stars)
+    // show between them. Steam's slots and focus order are untouched; art stays art (no stars behind it).
+    { id: "library-capsules", needs: [], targets: ["libraryCapsule"], css: (_s, t) => libraryCapsuleCss(t("libraryCapsule")) },
   ];
   return list;
 }
 
-// --core-tone per family, on any element the runtime tagged with data-core-tone.
-function toneVariables(prefix: string): string {
-  return Object.entries(CORE_FAMILY_TONES).map(([family, tone]) => `${prefix}[${CORE_UI_TONE_ATTRIBUTE}="${family}"]{${imp({ "--core-tone": tone })}}`).join("");
+// ---- Builders (pure; tests call them directly) ----
+
+export const CORE_RAIL_ICON_PX = 30;
+export const CORE_LIBRARY_CAPSULE_SCALE = 0.84;
+export const CORE_TAB_ICON_PX = 24;
+
+// Quick Access rows (Decky's plugin list, every ButtonItem, dropdowns) and their dialog fields.
+export function qamRowCss(buttons: string[], fields: string[] = []): string {
+  if (!buttons.length) return "";
+  const at = (list: string[], tail = "") => list.map(sel => `${ROOT} ${sel}${tail}`).join(",");
+  const focus = ":is(.gpfocus,:focus-visible,:focus)";
+  return `${at(buttons)}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "box-shadow": "none", "text-shadow": "none", "border-radius": SQUARE, filter: "none" })}}` +
+    `${at(buttons, focus)}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", animation: "none", "border-radius": SQUARE, outline: "none" })}}` +
+    `${at(buttons, `${focus} *`)}{${imp({ color: C.white })}}` +
+    (fields.length ? `${at(fields)},${at(fields, "::before")},${at(fields, "::after")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
+      `${at(fields, ":is(.gpfocuswithin,:focus-within)")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` : "");
 }
 
-// Collection tiles in Steam's Collections view (tagged by coreLibraryIcons.ts by collection name): the console's
-// icon over a gunmetal tile, Steam's collage hidden, the family tone as a short bar, a crimson ring on focus.
-function collectionTileCss(): string {
-  const tile = `${ROOT} [${CORE_UI_TILE_ATTRIBUTE}]`;
-  return `/* library-collection-tiles */${tile}{${imp({ position: "relative", "border-radius": FLOAT, overflow: "hidden", "box-shadow": "none" })}}` +
-    `${tile}[${CORE_UI_ICON_ATTRIBUTE}]{${imp({ "background-color": C.gunmetal, "background-image": "none" })}}` +
-    `${tile}[${CORE_UI_ICON_ATTRIBUTE}] img{${imp({ opacity: "0" })}}` +
-    `${tile}[${CORE_UI_ICON_ATTRIBUTE}]::before{${imp({ content: '""', position: "absolute", left: "18%", right: "18%", top: "10%", bottom: "24%", background: "var(--core-icon) center / contain no-repeat",
-      "pointer-events": "none", "z-index": "2" })}}` +
-    `${tile}[${CORE_UI_TONE_ATTRIBUTE}]::after{${imp({ content: '""', position: "absolute", left: "50%", bottom: "10px", width: "40px", height: "3px", "margin-left": "-20px",
-      "border-radius": "2px", "background-color": "var(--core-tone)", "pointer-events": "none", "z-index": "2" })}}` +
-    `${tile}:is(.gpfocus,:focus){${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "0", filter: "none", animation: "none" })}}` + toneVariables(tile);
+// The Library's tab bar: icon (24px) and label on one line with even spacing; transparent tabs in steel; one marker
+// per tab, a short 3px underline centred under the label, shown only on hover or focus (the family's tone) and on
+// the open tab (crimson, which wins). Steam's or another theme's own underlines and markers on the tab are removed.
+export function libraryTabCss(parts: { scopes: string[]; tab: string[]; selected?: string[]; title?: string[]; row?: string[]; count?: string }): string {
+  const { scopes, tab } = parts;
+  if (!scopes.length || !tab.length) return "";
+  const each = (inner: string[], tail = "") => scopes.flatMap(scope => inner.map(sel => `${scope} ${sel}${tail}`)).join(",");
+  const title = parts.title ?? [], selected = parts.selected ?? [], row = parts.row ?? [];
+  const tagged = tab.map(sel => `${sel}[${CORE_UI_TAB_ATTRIBUTE}]`);
+  const label = title.length ? tab.flatMap(sel => title.map(inner => `${sel} ${inner}`)) : tab;
+  const hover = tab.map(sel => `${sel}:is(:hover,.gpfocus,:focus-visible)`);
+  const hoverLabel = title.length ? hover.flatMap(sel => title.map(inner => `${sel} ${inner}`)) : hover;
+  const activeLabel = title.length ? selected.flatMap(sel => title.map(inner => `${sel} ${inner}`)) : selected;
+  const marker = { content: '""', position: "absolute", left: "50%", bottom: "-8px", width: "28px", height: "3px", "margin-left": "-14px", "border-radius": SQUARE,
+    "background-image": "none", "pointer-events": "none", opacity: "0" };
+  return (row.length ? `${each(row)},${each(row, "::before")},${each(row, "::after")}{${imp({ "background-color": C.black, "background-image": "none", "backdrop-filter": "none", "box-shadow": "none" })}}` : "") +
+    `${each(tab)}{${imp({ position: "relative", "background-color": "transparent", "background-image": "none", color: C.steel, "box-shadow": "none",
+      "border-radius": SQUARE, "border-bottom-color": "transparent", "text-decoration": "none" })}}` +
+    // Nothing else draws on the tab: no second underline, no per-icon marker.
+    `${each(tab, "::before")},${each(tab, "::after")}{${imp({ content: "none", display: "none" })}}` +
+    `${each(label)}{${imp({ position: "relative", display: "inline-flex", "align-items": "center", gap: "8px", "line-height": `${CORE_TAB_ICON_PX}px`, "vertical-align": "middle",
+      "border-bottom-color": "transparent", "text-decoration": "none", "box-shadow": "none", "background-image": "none" })}}` +
+    `${each(label, "::after")}{${imp({ ...marker, "background-color": `var(--core-tone, ${C.steel})` })}}` +
+    `${each(hoverLabel, "::after")}{${imp({ opacity: "1" })}}` +
+    `${each(hover)}{${imp({ "background-color": C.gunmetal, color: C.white })}}` +
+    (activeLabel.length ? `${each(selected)}{${imp({ "background-color": "transparent", "background-image": "none", color: C.steel, "box-shadow": "none" })}}` +
+      `${each(activeLabel, "::after")}{${imp({ opacity: "1", "background-color": C.crimson })}}` : "") +
+    // The icon (the tagged tab's --core-icon) before the label, on the same line.
+    (title.length ? `${each(tagged.flatMap(sel => title.map(inner => `${sel}[${CORE_UI_ICON_ATTRIBUTE}] ${inner}::before`)))}` : `${each(tagged.map(sel => `${sel}[${CORE_UI_ICON_ATTRIBUTE}]::before`))}`) +
+    `{${imp({ content: '""', display: "inline-block", flex: `0 0 ${CORE_TAB_ICON_PX}px`, width: `${CORE_TAB_ICON_PX}px`, height: `${CORE_TAB_ICON_PX}px`, margin: "0", position: "static",
+      background: "var(--core-icon) center / contain no-repeat" })}}` +
+    toneVariables(scopes.flatMap(scope => tagged.map(sel => `${scope} ${sel}`))) +
+    (parts.count ? `${each([parts.count])}{${imp({ display: "none" })}}` : "");
+}
+
+// Library capsules drawn smaller inside Steam's slots (about 16%), so the gutters are even and black.
+export function libraryCapsuleCss(capsules: string[], factor = CORE_LIBRARY_CAPSULE_SCALE): string {
+  if (!capsules.length) return "";
+  const list = capsules.map(sel => `${ROOT} ${sel}`).join(",");
+  return `${list}{${imp({ scale: String(factor), "transform-origin": "50% 50%" })}}`;
+}
+
+// --core-tone per family, on any element the runtime tagged with data-core-tone.
+function toneVariables(prefix: string | string[]): string {
+  const prefixes = Array.isArray(prefix) ? prefix : [prefix];
+  if (!prefixes.length) return "";
+  return Object.entries(CORE_FAMILY_TONES).map(([family, tone]) => `${prefixes.map(p => `${p}[${CORE_UI_TONE_ATTRIBUTE}="${family}"]`).join(",")}{${imp({ "--core-tone": tone })}}`).join("");
+}
+
+// Collection tiles in Steam's Collections view (tagged by coreLibraryIcons.ts by collection name). 3.3.4: one card shape
+// for every console tile: gunmetal, the console's icon centred, its name below (data-core-name, set by the decorator),
+// the family tone as a short bar along the bottom, a crimson ring on focus. Steam's collage and its own label are
+// hidden only on a tile Core draws an icon for; a tile without one keeps Steam's look plus the tone bar.
+export function collectionTileCss(tiles: string[] = [""]): string {
+  const all = (tail = "") => tiles.map(sel => `${ROOT} ${sel}[${CORE_UI_TILE_ATTRIBUTE}]${CORE_UI_BOOST}${tail}`).join(",");
+  const iconed = (tail = "") => tiles.map(sel => `${ROOT} ${sel}[${CORE_UI_TILE_ATTRIBUTE}][${CORE_UI_ICON_ATTRIBUTE}]${CORE_UI_BOOST}${tail}`).join(",");
+  const toned = tiles.map(sel => `${ROOT} ${sel}[${CORE_UI_TILE_ATTRIBUTE}]${CORE_UI_BOOST}`);
+  return `/* library-collection-tiles */${all()}{${imp({ position: "relative", "border-radius": FLOAT, overflow: "hidden", "box-shadow": "none" })}}` +
+    `${iconed()}{${imp({ "background-color": C.gunmetal, "background-image": "none", "min-height": "160px" })}}` +
+    `${iconed(" > *")}{${imp({ opacity: "0" })}}` +
+    `${iconed("::before")}{${imp({ content: '""', position: "absolute", left: "50%", top: "18%", width: "44%", height: "44%", "max-width": "112px", "max-height": "112px", translate: "-50% 0",
+      background: "var(--core-icon) center / contain no-repeat", "pointer-events": "none", "z-index": "2" })}}` +
+    `${iconed("[data-core-name]::after")}{${imp({ content: "attr(data-core-name)", position: "absolute", left: "8px", right: "8px", top: "68%", "text-align": "center", color: C.steel,
+      "font-size": "15px", "line-height": "20px", "white-space": "nowrap", overflow: "hidden", "text-overflow": "ellipsis", "pointer-events": "none", "z-index": "2" })}}` +
+    // The tone: a 3px bar along the bottom edge (a background layer, so ::before and ::after stay free for icon and name).
+    `${toned.map(sel => `${sel}[${CORE_UI_TONE_ATTRIBUTE}]`).join(",")}{${imp({ "box-shadow": "inset 0 -3px 0 var(--core-tone)" })}}` +
+    `${all(":is(.gpfocus,:focus)")}{${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "0", filter: "none", animation: "none" })}}` + toneVariables(toned);
 }
 
 // Every surface Core UI paints black, and so gets the Starfield. Footers and the opaque top bar are thin:
@@ -405,6 +541,8 @@ export const CORE_UI_HOSTS: Array<{ id: string; map: CoreUiMapName; key: string;
 export type CoreUiHost = { id: string; selector: string; minArea: number; fullHeight: boolean; panel: boolean; page: boolean };
 export type CoreUiSheet = {
   css: string; applied: string[]; skipped: string[]; hosts: CoreUiHost[]; clock?: string;
+  // 3.3.4, for the snapshot: the maps found, how each was found, and per rule the plain selectors it targets.
+  maps?: CoreUiMaps; routes?: Record<string, CoreUiMapRoute>; ruleTargets?: Record<string, string>;
   // Selectors the runtime needs (plain, no specificity repeat).
   dom: { header?: string; footer?: string; menu?: string; menuItem?: string; qamTab?: string; tab?: string; tabTitle?: string; tabSelected?: string; library?: string; tabbedPage?: string };
 };
@@ -431,11 +569,12 @@ export function buildCoreUiCss(maps: CoreUiMaps, options: { mark?: string; wordm
   const applied: string[] = [], skipped: string[] = [], parts: string[] = [];
   const candidate = options.mark ?? options.wordmark ?? CORE_RING_MARK;
   const mark = typeof candidate === "string" && /^(https?:|data:image\/)/.test(candidate) ? candidate : undefined;
+  const target = (id: string) => targetSelectors(maps, id);
   for (const rule of rules(mark)) {
-    if (!rule.needs.every(([map, key]) => classSelector(maps[map], key))) { skipped.push(rule.id); continue; }
+    if (!rule.needs.every(([map, key]) => classSelector(maps[map], key)) || !(rule.targets ?? []).every(id => target(id).length > 0)) { skipped.push(rule.id); continue; }
     const select = (map: CoreUiMapName, key: string) => classSelector(maps[map], key) ?? "";
     let css: string | undefined;
-    try { css = rule.css(select); } catch { css = undefined; }
+    try { css = rule.css(select, target); } catch { css = undefined; }
     if (!css) { skipped.push(rule.id); continue; }
     parts.push(`/* ${rule.id} */${css}`);
     applied.push(rule.id);
@@ -473,7 +612,53 @@ export function buildCoreUiCss(maps: CoreUiMaps, options: { mark?: string; wordm
     tab: plainSelector(maps.tabbedpage, "Tab"), tabTitle: plainSelector(maps.tabbedpage, "TabTitle"), tabSelected: plainSelector(maps.tabbedpage, "Selected"),
     library: plainSelector(maps.library, "GamepadLibrary"), tabbedPage: plainSelector(maps.tabbedpage, "GamepadTabbedPage"),
   };
-  return { css: parts.join("\n"), applied, skipped, hosts, clock, dom };
+  const css = parts.join("\n");
+  return { css, applied, skipped, hosts, clock, dom, maps, ruleTargets: ruleTargetsFromCss(css) };
+}
+
+const STATE = /^(\.gpfocus|\.gpfocuswithin|:hover|:focus|:focus-visible|:focus-within)$/;
+
+// Splits a selector list on its top-level commas (not those inside :is(), :not() or :has()).
+export function splitTopLevel(list: string): string[] {
+  const out: string[] = [];
+  let depth = 0, current = "";
+  for (const ch of list) {
+    if (ch === "(") depth++;
+    else if (ch === ")") depth = Math.max(0, depth - 1);
+    if (ch === "," && depth === 0) { out.push(current); current = ""; } else current += ch;
+  }
+  if (current.trim()) out.push(current);
+  return out;
+}
+
+// Per rule (the `/* id */` that starts each part of the stylesheet), one selector list Element.matches can test:
+// pseudo-elements and the state pseudo-classes dropped, @media / @keyframes skipped. For the snapshot only.
+export function ruleTargetsFromCss(css: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const part of String(css).split("\n")) {
+    const head = /^\/\* ([\w-]+) \*\//.exec(part);
+    if (!head) continue;
+    const found = new Set<string>();
+    let depth = 0, selector = "";
+    const body = part.slice(head[0].length);
+    for (let i = 0; i < body.length; i++) {
+      const ch = body[i];
+      if (ch === "{") {
+        if (depth === 0 && !selector.trim().startsWith("@")) {
+          for (const one of splitTopLevel(selector)) {
+            const clean = one.replace(/::?(before|after|placeholder|-webkit-[\w-]+)/g, "")
+              .replace(/:is\(([^()]*)\)/g, (all, inner: string) => inner.split(",").every(part => STATE.test(part.trim())) ? "" : all)
+              .replace(/:(hover|focus|focus-visible|focus-within)(?![\w-])/g, "").trim();
+            if (clean && !clean.startsWith("@")) found.add(clean);
+          }
+        }
+        depth++; selector = "";
+      } else if (ch === "}") { depth = Math.max(0, depth - 1); selector = ""; }
+      else if (depth === 0) selector += ch;
+    }
+    if (found.size) out[head[1]] = [...found].join(",");
+  }
+  return out;
 }
 
 // The same class without the specificity repeat, for querySelector.

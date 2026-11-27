@@ -12,7 +12,7 @@
 // Nothing here throws into Steam: a lookup that fails leaves that part of Steam as it was.
 
 import {
-  buildCoreUiCss, findCoreUiMaps, CORE_UI_ATTRIBUTE, CORE_UI_HOST_ATTRIBUTE, CORE_UI_ORB_ID, CORE_UI_STARS_ATTRIBUTE, CORE_UI_STYLE_ID,
+  buildCoreUiCss, findCoreUiMapsDetailed, CORE_UI_ATTRIBUTE, CORE_UI_HOST_ATTRIBUTE, CORE_UI_ORB_ID, CORE_UI_STARS_ATTRIBUTE, CORE_UI_STYLE_ID,
   CORE_UI_CHROME_ATTRIBUTE, CORE_UI_CLEAR_ATTRIBUTE, CORE_MENU_LOGO_BAND,
   type CoreUiHost, type CoreUiSheet,
 } from "./coreUiStyles";
@@ -49,10 +49,14 @@ export type CoreUiDeps = {
   // Phase 2: the Library's tab icons, tones and collection tiles (coreLibraryIcons.ts), once a second per document.
   decorate?: (doc: Document, dom: CoreUiSheet["dom"]) => void;
   undecorate?: (doc: Document) => void;
+  // 3.3.4: the snapshot's scheduler (coreUiSnapshot.ts), told about Steam's documents once a second.
+  probe?: { tick(docs: Document[]): void };
 };
 
 // What the Starfield is doing, for the TV checklist (window[Symbol.for("core.ui.diagnostics")]).
-export type CoreUiDiagnostics = { surfaces: number; shown: number; state: "off" | "idle" | "moving" | "still-game" | "still-reduced"; frames: number; full: Record<string, string> };
+export type CoreUiDiagnostics = { surfaces: number; shown: number; state: "off" | "idle" | "moving" | "still-game" | "still-reduced"; frames: number; full: Record<string, string>;
+  // 3.3.4: how often Core UI's stylesheet was moved back to the end of <head> (after CSS Loader's or another's).
+  restyled: number };
 
 type Surface = { element: HTMLElement; canvas: HTMLCanvasElement; host: CoreUiHost; doc: Document; position?: string; still: boolean; top: number; bottom: number; scroll: number; pageHeight: number };
 
@@ -70,7 +74,7 @@ export function createCoreUi(deps: CoreUiDeps) {
   const edits = new InlineEdits();
   const fullHeight = createFullHeight(edits);
   const chromes = new Set<Element>();
-  const diagnostics: CoreUiDiagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {} };
+  const diagnostics: CoreUiDiagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {}, restyled: 0 };
 
   function orbState(): string {
     try { return deps.orb?.state() ?? "hidden"; } catch { return "hidden"; }
@@ -111,7 +115,11 @@ export function createCoreUi(deps: CoreUiDeps) {
     if (sheet && (sheet.skipped.length === 0 || builds >= MAX_BUILDS)) return sheet;
     builds++;
     let next: CoreUiSheet | undefined;
-    try { next = buildCoreUiCss(findCoreUiMaps(deps.ui), { mark: deps.mark ?? deps.wordmark }); } catch { next = undefined; }
+    try {
+      const found = findCoreUiMapsDetailed(deps.ui);
+      next = buildCoreUiCss(found.maps, { mark: deps.mark ?? deps.wordmark });
+      next.routes = found.routes;
+    } catch { next = undefined; }
     if (next && (!sheet || next.applied.length >= sheet.applied.length)) sheet = next;
     if (sheet && (sheet.skipped.length === 0 || builds >= MAX_BUILDS)) {
       for (const id of sheet.skipped) logOnce(`skip:${id}`, `[Core UI] ${id}: Steam class map not found on this client; that part keeps Steam's look`);
@@ -335,6 +343,9 @@ export function createCoreUi(deps: CoreUiDeps) {
           styles.set(doc, style);
         }
         if (style.textContent !== current.css) style.textContent = current.css;
+        // Last in <head>: a stylesheet CSS Loader (or anything else) adds later would otherwise win ties. Moved back
+        // only when a stylesheet actually follows it.
+        if (laterStylesheet(style)) { doc.head.appendChild(style); diagnostics.restyled++; }
         if (doc.documentElement.getAttribute(CORE_UI_ATTRIBUTE) !== "1") doc.documentElement.setAttribute(CORE_UI_ATTRIBUTE, "1");
         attach(doc, current.hosts);
         const dom = current.dom ?? {};
@@ -345,6 +356,7 @@ export function createCoreUi(deps: CoreUiDeps) {
       } catch { /* A Steam popup may close while it is being styled. */ }
     }
     updateOrbs();
+    try { deps.probe?.tick(docs); } catch { /* The snapshot is diagnostics only. */ }
     if (!unpin && deps.pinPrompts && pinTries < 120) {
       pinTries++;
       try { unpin = deps.pinPrompts(); } catch { unpin = undefined; }
@@ -399,6 +411,17 @@ export function createCoreUi(deps: CoreUiDeps) {
   };
 }
 
+// Whether a stylesheet (a <style> or a stylesheet <link>) comes after `style` in its parent.
+export function laterStylesheet(style: any): boolean {
+  let next = style?.nextElementSibling;
+  while (next) {
+    const tag = String(next.tagName ?? "").toUpperCase();
+    if (tag === "STYLE" || (tag === "LINK" && /\bstylesheet\b/i.test(String(next.getAttribute?.("rel") ?? "")))) return true;
+    next = next.nextElementSibling;
+  }
+  return false;
+}
+
 // Steam's UI documents: the Big Picture window, every Steam UI window and their popups (the Steam menu and
 // Quick Access are popups on some clients).
 export function steamUiDocuments(host: any, router: any): Document[] {
@@ -436,7 +459,8 @@ export function frameIn(host: any, view: any, callback: (time: number) => void, 
 
 export function installCoreUi(options: {
   ui: any; mark?: string; wordmark?: string; setting?: CoreUiSetting; orb?: CoreUiDeps["orb"];
-  decorate?: CoreUiDeps["decorate"]; undecorate?: CoreUiDeps["undecorate"];
+  decorate?: CoreUiDeps["decorate"]; undecorate?: CoreUiDeps["undecorate"]; probe?: CoreUiDeps["probe"];
+  onRuntime?: (runtime: ReturnType<typeof createCoreUi>) => void;
 }): () => void {
   const host: any = window;
   const runtime = createCoreUi({
@@ -447,6 +471,7 @@ export function installCoreUi(options: {
     wordmark: options.wordmark,
     decorate: options.decorate,
     undecorate: options.undecorate,
+    probe: options.probe,
     running: () => {
       const id = Number(host.SteamUIStore?.MainRunningAppID ?? options.ui?.Router?.MainRunningAppID ?? 0);
       return Number.isFinite(id) && id > 0;
@@ -459,5 +484,6 @@ export function installCoreUi(options: {
     pinPrompts: () => pinControllerPrompts(host, promptsMemory(storage()), message => console.info(message)),
   });
   try { host[Symbol.for("core.ui.diagnostics")] = runtime.diagnostics; } catch { /* Diagnostics are optional. */ }
+  try { options.onRuntime?.(runtime); } catch { /* Diagnostics are optional. */ }
   return () => runtime.dispose();
 }

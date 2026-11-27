@@ -45,7 +45,8 @@ const maps = {
   library: { GamepadLibrary: "_LbLib", CollectionHeader: "_LbHead" },
 };
 const sheet = styles.buildCoreUiCss(styles.findCoreUiMaps({ classMap: Object.values(maps), findClassModule: f => Object.values(maps).find(m => f(m)) }));
-const rule = id => (sheet.css.split("\n").find(line => line.startsWith(`/* ${id} */`)) ?? "");
+// 3.3.4: rules are read without the id-level boost every class target carries.
+const rule = id => (sheet.css.split("\n").find(line => line.startsWith(`/* ${id} */`)) ?? "").replaceAll(styles.CORE_UI_BOOST, "");
 
 test("corner rule: square panels, bars and focus; one float token for menus and cards", () => {
   assert.equal(styles.CORE_RADIUS_FLOAT, "10px");
@@ -197,10 +198,11 @@ test("Library tabs: matched by title, family tones, steel for the rest", () => {
   assert.equal(icons.matchTab("Soundtracks"), undefined, "unknown tabs keep Steam's look");
   assert.equal(icons.matchTab(""), undefined);
   assert.deepEqual({ ...styles.CORE_FAMILY_TONES }, { ...icons.CORE_FAMILY_TONES }, "the stylesheet and the matcher agree");
-  const css = rule("library-tab-icons");
+  // 3.3.4: icons and tones are part of the one tab rule (libraryTabCss; its own test is in coreUiSnapshot.test.mjs).
+  const css = rule("library-tabs");
   assert.match(css, /\[data-core-tab\]\[data-core-icon\] \._TpTitle\._TpTitle::before\{[^}]*var\(--core-icon\)/, "the icon before the label");
   for (const [family, tone] of Object.entries(icons.CORE_FAMILY_TONES)) assert.ok(css.includes(`[data-core-tone="${family}"]{--core-tone:${tone} !important}`), family);
-  assert.match(rule("library-tabs"), /_TpTab\._TpTab\._TpSel\._TpSel\{[^}]*border-radius:0[^}]*inset 0 -3px 0 #D7263D/, "the active tab: crimson underline, square");
+  assert.match(css, /_TpTab\._TpTab\._TpSel\._TpSel \._TpTitle\._TpTitle::after[^{]*\{opacity:1 !important;background-color:#D7263D/, "the active tab: one crimson underline under the label");
 });
 
 test("collections: matched by name (plain and RomM's prefixed form), with families", () => {
