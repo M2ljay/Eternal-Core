@@ -113,7 +113,7 @@ uses lighter tints.
 | ---- | ------ |
 | App accent (`PlayhubSettings.AccentColor`, `AccentPalette`) | Default and first swatch `#D7263D`. A saved `#FFCB0F` (no longer offered) moves to crimson once, like the older `#4CC2FF`/`#FFB454` defaults. White text on the accent (`NeedsLightForeground`). Hover on a dark accent now darkens (`AccentHover`; lightening put white text at 4.05:1). Accent-coloured text (release-notes "Novità" and version) uses the Light2 tint `#E67887`, 5.96:1 on gunmetal (`AccentText`). Icons and progress keep the accent (3:1 for graphics). |
 | Store suite badge (app) | Gunmetal metal disc instead of the gold one; label gradient `#D7263D` to `#7A1220` (white text). |
-| Gaming Mode transition colour | Defaults `#D7263D` (app model, agent model, agent fallback). `GamingModeService.NormalizeConfig` moves a saved non-custom `#FFCB0F` to crimson once, so the agent's config follows. |
+| Gaming Mode transition colour | Defaults `#D7263D` (app model, agent model, agent fallback). `GamingModeService.NormalizeConfig` moves a saved non-custom `#FFCB0F` to crimson once, so the agent's config follows. Since `core-transitions` the mode-switch screens no longer use it (they are drawn in the brand palette, see below); it still tints the plain startup splash. |
 | Installer (`App.xaml`, `MainWindow.xaml`) | Accent `#D7263D`, hover `#C11F35`, pressed `#A51A2D`, all with white text (4.96, 5.97, 7.54:1). Surfaces `#1A1D21`, strokes `#3A3F46`. Accent bar and "done" disc crimson with a white tick. |
 | Big Picture plugin | One token module, `Source/GamingModeDeckyPlugin/src/corePalette.ts` (`CORE`, `CORE_STATUS`, `coreAlpha`), for every screen: black backgrounds, gunmetal `#1A1D21` surfaces with `#2A2F36` for raised/focused ones, steel `#C9D1D9` and hint `#9AA4AE` text, crimson `#D7263D` for selected/focused/active (rings, underlines, left bars, toggles, sliders, progress) and for errors, `#EA5A68` for crimson as text (5:1 on gunmetal), muted green `#6FA37F` for OK and amber `#C98B4A` for pending/warning/update (black text on their fills). Covered: Quick Access (Core tabs, Health, Voice, Stream mode, update night, device settings, SDL3 hint, Lossless profiles), the Dashboard (Playhub's white-fill focus and glows become gunmetal and a crimson ring), Digital Stores (`--sd-*` variables), the Plugin Store, store downloads, On this day and Home news. Steam blue (Lossless, downloads) and the green toggles are gone. `tests/corePalette.test.mjs` checks the values, the contrast and that the restyled screens hold no colour literals. |
 
@@ -145,7 +145,11 @@ Gaming Mode boot sequence (agent `BootSequenceVisual.cs`) draws `eternal-wake.sv
 in WPF, following `brand/preview/index.html`, with `brand/sound/eternal-core-boot.ogg` (embedded as WAV). Other places
 where a maker logo could appear:
 
-- Gaming Mode boot and mode-switch splash (agent `SplashScreenService.cs` and `ModeTransitionVisual.cs`): Eternal,
+- Mode-switch transitions: Core only, no Eternal, by design (branch `core-transitions`): `ModeTransitionVisual.cs` draws the boot's stars and Core's
+  mark natively, powering up into Gaming Mode and down to Desktop, with "CORE" and a steel line; timing and the
+  reduced-motion rule in `ModeTransitionTimeline.cs` (tested in `MarkIII.Tests/TransitionTests.cs`), the shared
+  drawing in `CoreMarkDrawing.cs`. Playhub's "Switching to …" title and crimson circles are gone from them.
+- Gaming Mode plain startup splash (agent `SplashScreenService.cs`, shown when the boot sequence is off): Eternal,
   then the Core logo, before Big Picture.
 - Desktop app start (`MainWindow` first frame) and the onboarding's first and last slides.
 - About card in Settings, next to "Core by Eternal".

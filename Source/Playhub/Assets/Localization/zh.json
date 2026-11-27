@@ -1454,6 +1454,8 @@
   "Circa sette secondi su sfondo nero. Non ritarda mai Steam: se qualcosa non va, la Gaming Mode parte comunque.": "黑色背景上约七秒。绝不会拖慢 Steam：即使出现问题，Gaming Mode 也照常启动。",
   "Suono di avvio": "启动音效",
   "Il suono arcade che accompagna la sequenza.": "伴随启动动画的街机音效。",
+  "Salta l'animazione di avvio di Steam": "跳过 Steam 的启动动画",
+  "Al posto del filmato di avvio della Big Picture Steam mostra un istante di nero, così la sequenza di Core passa subito alla Big Picture. Se la spegni torna il filmato che avevi scelto.": "Steam 不再播放 Big Picture 的启动影片，而是显示一瞬间的黑屏，Core 的启动动画直接进入 Big Picture。关闭后会恢复你之前选择的影片。",
   "Controllo della TV": "电视控制",
   "Core accende la TV e passa al suo ingresso quando entra in Gaming Mode, e la spegne quando va in sospensione o si spegne.": "Core 进入 Gaming Mode 时打开电视并切换到它的输入源，进入睡眠或关机时关闭电视。",
   "Spegni la TV con Core": "随 Core 关闭电视",

@@ -106,6 +106,8 @@ Jarvis (chat in Quick Access, the screen-aware game helper, push-to-talk dictati
 the combos): [JARVIS.md](JARVIS.md).
 Core UI (3.3.1, phase 1: Core's own look for the Steam menu, Quick Access, context menus and the top and bottom bars,
 built into Core's plugin instead of a CSS Loader theme; Jarvis's tab and presence orb): [CORE-UI.md](CORE-UI.md).
+Core transitions (3.3.2: the mode switch powers Core's mark up into Gaming Mode and down to Desktop over the boot's
+stars; Steam's own startup movie is skipped): [MARK-III-GUIDE.md](MARK-III-GUIDE.md#switching-modes).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

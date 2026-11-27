@@ -594,6 +594,7 @@ public sealed class ModeManager
 		}
 		if (StartupForegroundGuard?.Invoke() == false)
 			throw new OperationCanceledException("Gaming Mode opening was cancelled after the foreground window changed.");
+		SyncSteamStartupMovie(config);
 		bool flag4 = _processTools.LaunchOrFocusSteamGamepad(config.Gaming.SteamPath, _processTools.GetSteamFallbackPaths(), config.Gaming.SteamArguments);
 		messages.Add(flag4 ? "Steam is running in gamepad mode." : "Steam was not found. Configure SteamPath in config.json if needed.");
 		if (!flag4)
@@ -601,6 +602,24 @@ public sealed class ModeManager
 			throw new InvalidOperationException("Steam could not be opened; Gaming Mode was not applied.");
 		}
 
+	}
+
+	// Eternal Core: "Skip Steam's startup animation" (Shared/SteamStartupMovie.cs). Applied
+	// just before Steam starts, while it is not running (Steam rewrites config.vdf from
+	// memory); with Steam already up it takes effect at its next start. Never blocks Steam.
+	private void SyncSteamStartupMovie(ModeConfig config)
+	{
+		try
+		{
+			string? root = SteamInstallationPath.FindRoot(config.Gaming.SteamPath);
+			if (root is null) return;
+			var outcome = Playhub.Shared.SteamStartupMovie.Apply(root, Path.Combine(_paths.ConfigDirectory, Playhub.Shared.SteamStartupMovie.RecordFileName),
+				config.Gaming.Splash.SkipSteamStartupMovie, _processTools.GetState("steam").Running,
+				() => typeof(ModeManager).Assembly.GetManifestResourceStream("GamingMode.SkipStartupMovie.webm"));
+			if (outcome is not (Playhub.Shared.StartupMovieOutcome.Kept or Playhub.Shared.StartupMovieOutcome.NothingToRestore or Playhub.Shared.StartupMovieOutcome.Unchanged))
+				_logger.Info($"Steam startup movie: {outcome}.");
+		}
+		catch (Exception error) { _logger.Error("Steam startup movie setting could not be applied; Steam starts as usual.", error); }
 	}
 
 	private void ApplyDesktopMode(ModeConfig config, ICollection<string> messages, bool interactive, bool restoreStartupApps)

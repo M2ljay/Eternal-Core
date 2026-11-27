@@ -1460,6 +1460,8 @@
   "Circa sette secondi su sfondo nero. Non ritarda mai Steam: se qualcosa non va, la Gaming Mode parte comunque.": "검은 배경에서 약 7초 동안 표시됩니다. Steam을 늦추지 않으며, 문제가 생겨도 Gaming Mode는 그대로 시작됩니다.",
   "Suono di avvio": "부팅 사운드",
   "Il suono arcade che accompagna la sequenza.": "시퀀스와 함께 나오는 아케이드 사운드입니다.",
+  "Salta l'animazione di avvio di Steam": "Steam 시작 애니메이션 건너뛰기",
+  "Al posto del filmato di avvio della Big Picture Steam mostra un istante di nero, così la sequenza di Core passa subito alla Big Picture. Se la spegni torna il filmato che avevi scelto.": "Big Picture 시작 동영상 대신 Steam이 잠깐 검은 화면을 보여 주어 Core의 시퀀스가 바로 Big Picture로 이어집니다. 끄면 이전에 고른 동영상이 돌아옵니다.",
   "Controllo della TV": "TV 제어",
   "Core accende la TV e passa al suo ingresso quando entra in Gaming Mode, e la spegne quando va in sospensione o si spegne.": "Core가 Gaming Mode로 들어갈 때 TV를 켜고 자신의 입력으로 전환하며, 절전 또는 종료될 때 TV를 끕니다.",
   "Spegni la TV con Core": "Core와 함께 TV 끄기",

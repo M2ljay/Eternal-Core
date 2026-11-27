@@ -20,5 +20,6 @@
     <Compile Include="..\PlayhubSetup\SetupSession.cs" Link="SetupSession.cs" />
     <Compile Include="..\Shared\EditorialPhotoMigration.cs" Link="EditorialPhotoMigration.cs" />
     <Compile Include="..\Shared\GamingModeInstallationPolicy.cs" Link="GamingModeInstallationPolicy.cs" />
+    <Compile Include="..\Shared\SteamStartupMovie.cs" Link="SteamStartupMovie.cs" />
   </ItemGroup>
 </Project>

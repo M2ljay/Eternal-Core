@@ -13,6 +13,10 @@
     <Compile Include="../GamingModeAgent/GamingMode.Services/ReactiveCircleBackground.cs" Link="ReactiveCircleBackground.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/GamingSplashSettings.cs" Link="GamingSplashSettings.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/ModeTransitionVisual.cs" Link="ModeTransitionVisual.cs" />
+    <!-- Eternal Core: the transition scene shares the boot's drawing and the agent's 12-language text. -->
+    <Compile Include="../GamingModeAgent/GamingMode.Services/ModeTransitionTimeline.cs" Link="ModeTransitionTimeline.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/CoreMarkDrawing.cs" Link="CoreMarkDrawing.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/CoreText.cs" Link="CoreText.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/ModeKind.cs" Link="ModeKind.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/ModeConfig.cs" Link="ModeConfig.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/GamingSettings.cs" Link="GamingSettings.cs" />

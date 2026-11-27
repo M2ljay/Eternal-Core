@@ -40,22 +40,24 @@ internal static class Program
         }
         if (ModeTransitionVisual.Title(ModeKind.Gaming, "it-IT") != "Passaggio a Gaming Mode")
             throw new Exception("Regional language mismatch");
+        // Eternal Core: Core's scene (stars, the Core mark, "CORE" and a steel line), no circles.
         var root = (Grid)ModeTransitionVisual.Create(ModeKind.Gaming, "it");
         var size = new Size(SystemParameters.PrimaryScreenWidth, SystemParameters.PrimaryScreenHeight);
         root.Measure(size);
         root.Arrange(new Rect(size));
         root.UpdateLayout();
-        var label = root.Children.OfType<TextBlock>().Single();
-        if (root.Children.OfType<ReactiveCircleBackground>().Count() != 1)
-            throw new Exception("Missing circle animation");
-        if (root.Children.OfType<ReactiveCircleBackground>().Single().Opacity != 1)
-            throw new Exception("Default animation opacity must be 100 percent");
-        foreach (double percentage in new[] { 0d, 20d, 64d, 100d })
-        {
-            var visual = (Grid)ModeTransitionVisual.Create(ModeKind.Gaming, "en", new GamingSplashSettings { AnimationOpacity = percentage });
-            if (Math.Abs(visual.Children.OfType<ReactiveCircleBackground>().Single().Opacity - percentage / 100) > .001)
-                throw new Exception("Animation opacity mismatch");
-        }
+        if (root.Background != Brushes.Black || root.Children.OfType<Viewbox>().Count() != 2)
+            throw new Exception("Transition must be the starfield and the Core mark on black");
+        if (System.Windows.Automation.AutomationProperties.GetName(root) != "Passaggio a Gaming Mode")
+            throw new Exception("Transition must keep its sentence as the screen-reader name");
+        string[] texts = Descendants(root).OfType<TextBlock>().Select(text => text.Text).ToArray();
+        if (string.Concat(texts.Where(text => text.Length == 1)) != "CORE" || !texts.Contains("Gaming Mode"))
+            throw new Exception("Transition must show CORE and the Gaming Mode line");
+        if (texts.Any(text => text.Contains("Playhub", StringComparison.OrdinalIgnoreCase)) || Descendants(root).OfType<ReactiveCircleBackground>().Any())
+            throw new Exception("Transition must not show Playhub's look");
+        var desktop = (Grid)ModeTransitionVisual.Create(ModeKind.Desktop, "fr");
+        if (!Descendants(desktop).OfType<TextBlock>().Any(text => text.Text == "Bureau"))
+            throw new Exception("Desktop line must follow the language");
         var appSettings = new Playhub.Models.SplashOptions
         {
             AnimationColor = "#107C10", AnimationUseCustomColor = false,
@@ -69,24 +71,29 @@ internal static class Program
             appRestored.AnimationCustomBlackness != 27 || appRestored.AnimationOpacity != 53)
             throw new Exception("App/agent must preserve custom settings while a preset is selected");
         var disabled = (Grid)ModeTransitionVisual.Create(ModeKind.Desktop, "en", new GamingSplashSettings { AnimationEnabled = false });
-        if (disabled.Children.Count != 1 || disabled.Children[0] is not TextBlock)
-            throw new Exception("Animation toggle must preserve the title only");
+        if (!Descendants(disabled).OfType<TextBlock>().Any(text => text.Text == "Desktop"))
+            throw new Exception("Animation toggle off must still show the still logo and its line");
         var config = new GamingSplashSettings { AnimationEnabled = false, AnimationColor = "#73BCEB" };
         var restored = System.Text.Json.JsonSerializer.Deserialize<GamingSplashSettings>(System.Text.Json.JsonSerializer.Serialize(config))!;
         if (restored.AnimationEnabled || restored.AnimationColor != config.AnimationColor)
             throw new Exception("Animation preferences did not round-trip");
-        if (label.FontWeight != FontWeights.Light || label.FontFamily.Source != "Segoe UI Light")
-            throw new Exception("Transition font does not match Segoe UI Light");
-        Point location = label.TranslatePoint(new Point(), root);
-        if (Math.Abs(location.Y + label.ActualHeight / 2 - size.Height / 2) > 1)
-            throw new Exception("Transition title is not vertically centered");
         var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32);
         bitmap.Render(root);
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
         string preview = Path.Combine(AppContext.BaseDirectory, "transition-preview.png");
         using (var stream = File.Create(preview)) encoder.Save(stream);
-        Console.WriteLine("PASS: 12 locales, regional locale, centered title and offscreen render. " + preview);
+        Console.WriteLine("PASS: 12 locales, regional locale, Core scene and offscreen render. " + preview);
+    }
+
+    private static IEnumerable<DependencyObject> Descendants(DependencyObject parent)
+    {
+        foreach (object child in LogicalTreeHelper.GetChildren(parent))
+            if (child is DependencyObject element)
+            {
+                yield return element;
+                foreach (var nested in Descendants(element)) yield return nested;
+            }
     }
 
     private static void ShowWidePreview(bool circles, bool untilEscape, bool bootLogo)
