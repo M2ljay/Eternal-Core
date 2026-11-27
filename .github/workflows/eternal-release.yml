@@ -117,6 +117,16 @@ jobs:
         working-directory: Source/GamingModeDeckyPlugin
         run: python -m unittest tests.test_core_icons
 
+      # The Club tab: Play Retro Games Club's public pages parsed from saved fixtures, robots.txt, the 6-hour /
+      # 10-minute fetch limits with backoff and stale data, library matching, days left and Jarvis's brief line.
+      - name: Club tab tests (Decky plugin)
+        working-directory: Source/GamingModeDeckyPlugin
+        run: |
+          node --test tests/club.test.mjs
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python -m unittest tests.test_club_feed -v
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
       # Core Health: reading the home server's core-status.json, every row's verdict and the notice
       # rules (once a day per problem; a dismissed problem returns only if it changes), plus the console
       # guards (BitLocker, sign-ins, display, sound, controllers, update policy, launchers, wake checks)

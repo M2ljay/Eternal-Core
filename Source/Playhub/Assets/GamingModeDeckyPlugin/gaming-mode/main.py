@@ -1172,6 +1172,15 @@ class Plugin(QuickSettingsPlugin):
             self._home_news = news_module.HomeNews(self._settings_dir)
         except Exception:
             logging.exception("Playhub News unavailable; core controls remain active")
+        # The Club tab (Play Retro Games Club) is optional in the same way.
+        self._club_feed = None
+        try:
+            club_spec = importlib.util.spec_from_file_location("playhub_club_feed", os.path.join(os.path.dirname(__file__), "quick_settings", "club_feed.py"))
+            club_module = importlib.util.module_from_spec(club_spec)
+            club_spec.loader.exec_module(club_module)
+            self._club_feed = club_module.ClubFeed(self._settings_dir)
+        except Exception:
+            logging.exception("Core Club feed unavailable; core controls remain active")
         self._daily_history = None
         try:
             history_spec = importlib.util.spec_from_file_location("playhub_daily_history", os.path.join(os.path.dirname(__file__), "quick_settings", "daily_history.py"))
@@ -1275,6 +1284,18 @@ class Plugin(QuickSettingsPlugin):
         if self._daily_history is None:
             raise RuntimeError("Daily history unavailable")
         return await asyncio.to_thread(self._daily_history.get, locale, offset)
+
+    async def get_club_settings(self):
+        if self._club_feed is None: raise RuntimeError("Club feed unavailable")
+        return await asyncio.to_thread(self._club_feed.settings)
+
+    async def set_club_settings(self, enabled, display_name):
+        if self._club_feed is None: raise RuntimeError("Club feed unavailable")
+        return await asyncio.to_thread(self._club_feed.save, enabled, display_name)
+
+    async def get_club_feed(self, force=False):
+        if self._club_feed is None: return {"enabled": False, "snapshot": None, "error": "unavailable"}
+        return await asyncio.to_thread(self._club_feed.get, force is True)
 
     async def get_home_news_settings(self):
         if self._home_news is None:
