@@ -13,7 +13,100 @@ kept for reference) because:
 
 First shipped in **3.3.1** (Mark III). The Gaming Mode agent's file version rose with it, so Core re-copies its Decky
 plugin on the next start. **3.3.3** adds the fixes from the first TV pass (numbered as on the TV list, below) and phase 2
-(Home and the Library).
+(Home and the Library). **3.3.4** adds the snapshot (ground truth for every selector, below), switches CSS Loader's legacy
+Core themes off while Core UI is on, and answers the second TV pass (Quick Access rows and icons, the Library's tabs,
+tiles and grid, the stars, the Jarvis brief hero).
+
+## 3.3.4: what the second TV pass found, and what changed
+
+The TV showed most phase 1 rules not taking effect. Two causes:
+
+1. **CSS Loader's old "Core" theme was still active** (its wordmark, grey-blue focus and grey "MENU" footer) and won over
+   Core UI. Nothing in Core installs that theme; the app's *Core profile* button did re-extract `themes.zip` over the
+   user's `config_USER.json` files, which can switch bundled themes back on. Now (`ExtraService.ExtractThemesKeepingUserConfig`)
+   an existing `config_USER.json` is never overwritten. With Core UI on, Core also switches the legacy themes `Core` and
+   `Core Accents` off once per start and whenever Core UI is switched on (`src/coreCssLoader.ts`, `core_ui_legacy_themes`
+   in `main.py`): `"active": false` in their `config_USER.json`, recorded in `%APPDATA%\GamingMode\core-ui-css-themes.json`,
+   then CSS Loader is told through its own `set_theme_state` (Decky's plugin-call route, legacy route as fallback) or
+   reloaded. Core UI off switches back on exactly the themes Core switched off. The user's other themes are never
+   touched; the snapshot lists every theme and whether it is on.
+2. **Every selector was inferred, never observed.** The snapshot below records the real DOM so the next fixes are exact.
+
+Core UI's rules now win regardless: every class target carries `:not(#core-ui-boost)` (an id's weight; no element has
+that id), and Core UI's `<style>` is moved back to the end of `<head>` whenever another stylesheet (CSS Loader's) is
+appended after it (`laterStylesheet`, counted in diagnostics as `restyled`).
+
+### The selector table
+
+`CORE_UI_TARGETS` in `src/coreUiStyles.ts` lists every element Core UI aims at by name, with each way of finding it,
+best first. A strategy is a template: `{map.Key}` stands for that class map's class (the strategy is dropped when the map
+or key is missing), anything else is plain CSS. The 3.3.4 rules (Quick Access selected tab and rows, the Library's tabs and
+capsules) and the snapshot read this table, so a fix after the snapshot is one line there.
+
+### The snapshot
+
+Written by the plugin backend to:
+
+    %APPDATA%\GamingMode\diagnostics\core-ui-snapshot.json
+
+(the user's roaming AppData; a service account's `systemprofile` is never used), overwritten each time, at most about
+2 MB. It is captured 5 seconds after Core UI applies, then 1.5 seconds after each surface is first seen (at most one
+write every 3 seconds), and on demand from Quick Access > Core > Look > **Save Core UI snapshot** (`src/coreUiSnapshot.ts`).
+
+Format (JSON, `kind: "core-ui-snapshot"`, `format: 1`):
+
+- `reason` (`start`, `opened: <surfaces>`, `manual`), `capturedAt`, `screen` (`width`, `height`, `dpr`, screen size).
+- `coreUi`: `applied` and `skipped` rule ids, `mapRoutes` (per class map: `classic`, `findVar`, `scope` or `missing`),
+  `selectors` (the selector table resolved: each strategy and the selector it gave, or none).
+- `documents`: per Steam document, `main` (the Big Picture window) or a popup, its path, size, DPR, and where Core UI's
+  stylesheet sits (`coreStyleLast`, `stylesAfterCore`).
+- `surfaces`: one record per surface key: `steam-menu`, `qam`, `qam-rail`, `qam-title`, `qam-content:<tab index>:<label>`
+  (one per Quick Access tab opened), `context-menu`, `library-tabs`, `library-collection-tile`, `library-grid`, `home`,
+  `footer`, `top-bar`. Each has `doc` (index into `documents`), `via` (the target and selector that found it), `rect`,
+  `ancestors` (six levels up) and `tree`: at most 6 levels and 400 nodes, breadth first. A node is `t` (tag), `c`
+  (classes), `d` (data-* attribute names), `r` ([x, y, w, h]), `s` (computed styles that differ from the default: `bg`,
+  `img` as a type only (`url`, `linear-gradient`), `op`, `pos`, `top`, `bot`, `mh`, `ov`, `z`, `br`), `m` (the Core UI
+  rule ids whose selectors match it), `cover: 1` (opaque and over 30% of the surface), `l` (a label of at most 30
+  characters; never on the grid, Home or the top bar), `k` (children) and `more` (children left out).
+- `diagnostics` (the Starfield's state, full height, `restyled`), `icons` (the icon store's last answer: `ok`, `folder`,
+  `errors`, counts; and per Library tab its title, key and icon source: `user-name`, `user-key`, `original` or `none`),
+  `cssLoader` (loaded, the legacy guard's last result, `<style>` counts per document).
+- `backend` (added by `main.py`): the file path, the icon folder (`folderExists`, `mapExists`) and CSS Loader's themes
+  (`themes`: folder, name, active, installed; `active`; `legacyActive`; `legacyRecord`).
+
+No text beyond those short labels, no input values, no URLs with queries, nothing the user typed.
+
+### The user's icons (3.3.4)
+
+`get_core_icons` now looks in every candidate AppData folder (`%APPDATA%`, then `<home>\AppData\Roaming` from Decky's
+user home, `%USERPROFILE%` and `~`, never `systemprofile`) and takes the one holding `map.json`. The backend logs
+`Core UI icons: ok=... folder=... tabs=...` and the frontend logs `[Core UI] icons loaded` or `icons not loaded (...)`
+once per change; the snapshot shows which source each tab used.
+
+### Other 3.3.4 changes
+
+- **Quick Access:** rail icons 30px (`CORE_RAIL_ICON_PX`, `src/coreRailIcons.ts`) for Core, Jarvis and the Eternal
+  plugins; the glyphs were redrawn for that size (one fill colour, cut-outs as holes, no hairlines, tight square boxes).
+  The selected tab is gunmetal through every way Steam may mark it (`qamTabSelected`). Decky's plugin list and every
+  `ButtonItem`: gunmetal rows, steel text, focus raised gunmetal with the square crimson left bar (never Steam's white);
+  dialog field wrappers clear.
+- **Library tabs:** icon (24px) and label on one line with an 8px gap; tabs transparent in steel; **one** marker per tab,
+  a 28 x 3px underline centred under the label, shown only on hover or focus (the family tone) and on the open tab
+  (crimson); every other underline or marker on the tab is removed (`libraryTabCss`).
+- **Collection tiles:** gunmetal cards, at least 160px tall, the icon centred, the collection's name below
+  (`data-core-name`), the tone as a 3px bar along the bottom edge; Steam's collage and label hidden only on tiles Core
+  draws an icon for (`collectionTileCss`).
+- **Library grid:** capsules drawn at 84% inside Steam's slots (`CORE_LIBRARY_CAPSULE_SCALE`), so even black gutters
+  show; Steam's slots, columns and focus order are unchanged (more columns needs the snapshot).
+- **Stars:** density follows the surface's area (`starsForArea`: the Steam menu keeps 160, a full page up to 420), one
+  star in nine is a larger "near" star at the ceiling, and the fade reaches the ceiling sooner. The ceiling (24%) is
+  unchanged, so `#9AA4AE` text keeps 4.5:1.
+- **Jarvis brief:** a hero panel (`src/CoreBriefHero.tsx`, data in `src/coreBrief.ts`, text in `src/coreBriefLocale.ts`):
+  greeting, date, time and the Decky weather plugin's line (`window.__deckyWeatherTopbarState`), a Continue card (the
+  last game's hero art, title and time played; A plays it, X opens its page), the Club's pick (art and days left), chips
+  (Steam update waiting, downloads in progress, Forge mod updates; achievements nearly done is wired but has no source
+  yet), and Jarvis's orb (slow opacity pulse, still under reduced motion) with **Talk to Jarvis**. Inside its own error
+  boundary; the 3.3.3 lines are the fallback.
 
 ## Phases
 
@@ -327,9 +420,9 @@ depend on it.
 
 Core UI does not use CSS Loader and does not need it. If a CSS Loader theme is switched back on, Core UI wins on the
 areas it styles: every selector starts with `html[data-core-ui]`, repeats its target class (Steam's class map value
-twice), and every declaration is `!important`, so Core UI's rules out-rank a theme's ordinary rules and its
-`!important` rules up to three classes deep. A theme with deeper selectors can still win on a property it sets; switch
-that part of the theme off. Areas Core UI does not style (the game page, Settings) keep the
+twice) plus `:not(#core-ui-boost)` (an id's weight, 3.3.4), every declaration is `!important`, and Core UI's stylesheet
+stays last in `<head>`, so Core UI's rules out-rank any class-based theme rule, `!important` included. The legacy Core
+themes are switched off while Core UI is on (see "3.3.4" above). Areas Core UI does not style (the game page, Settings) keep the
 theme. Enhanced Library and Enhanced Collection are no longer needed: Core UI draws the Library's icons itself. The old Core theme should stay off: its menu, Quick Access and context-menu files duplicate Core UI.
 
 ## How it works
@@ -355,7 +448,11 @@ Tests (Linux and CI): `tests/coreUi.test.mjs` (selectors from fake Decky 3 and D
 brand checks, context menus, full height, the Starfield, the Awesome Mix swap, the setting on and off, the orb, the
 controller-prompt pin), `tests/coreUiPhase2.test.mjs` (3.3.3: full height on Steam-shaped fake DOMs, the logo band,
 black chrome, clear layers, corners, tab and collection matching, tones, icon fallbacks, the decorator, plugin logos,
-Home's tabs and registry, the screensaver default, frames per window), `tests/test_core_icons.py` (the icon folder) and
+Home's tabs and registry, the screensaver default, frames per window), `tests/coreUiSnapshot.test.mjs` (3.3.4: snapshot
+pruning, the size cap and scheduling, the selector table, stylesheet order, rail icons, tab, row, tile and capsule
+builders, the Starfield's density, the brief's data, the legacy CSS Loader guard), `tests/test_core_ui_snapshot.py`
+(3.3.4: the snapshot file, legacy themes off and back on, the AppData and icon folder choice),
+`tests/test_core_icons.py` (the icon folder) and
 `tests/coreJarvisTab.test.mjs` (tap/hold split, opening and closing the Jarvis tab, the tab
 after Core's, the orb states, defaults, text).
 
@@ -414,3 +511,21 @@ Same setup, Core 3.3.3, Enhanced Library and Enhanced Collection off. Numbers fo
 10. Home: Jarvis brief (greeting, last game, Talk opens Jarvis), Consoles shelves, On this day; no What's new or Friends.
 11. Screensaver: after the first start, Steam's screensaver is Core Starfield; pick another in Steam, restart Core: it
     stays. The Look switch selects and deselects it.
+
+## TV checklist (3.3.4)
+
+Same setup, Core 3.3.4.
+
+1. After start: `%APPDATA%\GamingMode\diagnostics\core-ui-snapshot.json` exists (reason `start`); open the Steam menu,
+   Quick Access (a few tabs), a context menu, the Library (tabs, Collections) and Home: the file is rewritten with those
+   surfaces. Quick Access > Core > Look > **Save Core UI snapshot** writes it at once and shows the path.
+2. CSS Loader: the `Core` theme is off after start (its `config_USER.json` reads `"active": false`); Core UI off switches
+   it back on; the user's other themes keep their state.
+3. Steam menu: Core UI's look (ring mark only, gunmetal focus with the square crimson bar, crimson Home marker, black
+   MENU footer), not the old theme's.
+4. Quick Access: rail icons as large as Steam's own; the open tab gunmetal; Decky's plugin list gunmetal rows with the
+   crimson left bar on focus, no white row, no grey-blue band under the title.
+5. Library: one short underline per tab, only on focus (tone) and the open tab (crimson); the user's PB-line icons on the
+   tabs (the snapshot's `icons.library.tabs` says `user-name`); collection tiles with the icon centred and the name below;
+   smaller capsules with black gutters.
+6. Home: the Jarvis brief hero (greeting, date, time, weather, Continue with art, the Club's pick, chips, orb, Talk).
