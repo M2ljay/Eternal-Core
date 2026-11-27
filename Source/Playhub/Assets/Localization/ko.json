@@ -1555,5 +1555,17 @@
   "Serve il permesso di amministratore.": "관리자 권한이 필요합니다.",
   "Schermo, audio e controller normali dimenticati.": "기본 화면, 소리, 컨트롤러를 잊었습니다.",
   "Windows Home: nessun driver da Windows Update per i dispositivi": "Windows Home: Windows 업데이트에서 장치 드라이버 받지 않기",
-  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Windows 기능 업데이트를 현재 버전으로 유지"
+  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Windows 기능 업데이트를 현재 버전으로 유지",
+  "Prima di dormire": "잠들기 전",
+  "Backup dei salvataggi prima degli aggiornamenti notturni, un promemoria per salvare prima di andare a letto e la raccolta Completed di Steam.": "야간 업데이트 전 세이브 백업, 잠들기 전 저장 알림, Steam 컬렉션 Completed.",
+  "Backup dei salvataggi prima degli aggiornamenti": "업데이트 전에 세이브 백업",
+  "Prima del riavvio della notte degli aggiornamenti e prima di un aggiornamento automatico di Steam, Ludusavi fa il backup dei salvataggi di tutti i giochi. Serve Ludusavi (winget install -e --id mtkennerly.ludusavi). Se il backup non riesce, l'aggiornamento parte comunque.": "업데이트의 밤 재시작 전과 Steam 자동 업데이트 전에 Ludusavi가 모든 게임의 세이브를 백업합니다. Ludusavi가 필요합니다(winget install -e --id mtkennerly.ludusavi). 백업에 실패해도 업데이트는 진행됩니다.",
+  "Promemoria per salvare prima di dormire": "잠들기 전 저장 알림",
+  "Mentre giochi, un avviso di Steam ricorda di salvare poco prima dell'ora di andare a letto. È solo un avviso: Core non chiude mai il gioco.": "게임 중 취침 시간 직전에 Steam 알림이 저장하라고 알려 줍니다. 알림일 뿐이며 Core는 게임을 절대 종료하지 않습니다.",
+  "Ora di andare a letto": "취침 시간",
+  "Minuti prima (separati da virgole)": "몇 분 전(쉼표로 구분)",
+  "Aggiungi i giochi completati alla raccolta Completed": "완료한 게임을 Completed 컬렉션에 추가",
+  "Quando un gioco di Steam arriva al 100% degli obiettivi, Core lo aggiunge alla tua raccolta di Steam chiamata Completed. Non toglie mai giochi dalla raccolta.": "Steam 게임의 도전 과제가 100%가 되면 Core가 Completed라는 이름의 Steam 컬렉션에 추가합니다. 컬렉션에서 게임을 빼지는 않습니다.",
+  "Crea la raccolta Completed se manca": "Completed 컬렉션이 없으면 만들기",
+  "Senza questa opzione Core usa solo una raccolta Completed che esiste già.": "이 옵션이 꺼져 있으면 Core는 이미 있는 Completed 컬렉션만 사용합니다."
 }

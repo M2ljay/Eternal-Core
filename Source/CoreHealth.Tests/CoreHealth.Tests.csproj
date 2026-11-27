@@ -14,6 +14,10 @@
     <!-- Console guards: the pure rules and the BitLocker guard's task XML, script and check file. -->
     <Compile Include="../GamingModeAgent/GamingMode.Services/ConsoleGuards.cs" Link="ConsoleGuards.cs" />
     <Compile Include="../Shared/BitLockerGuard.cs" Link="BitLockerGuard.cs" />
+    <!-- Batch 1: save backup (Ludusavi), Decky plugin logs, bedtime wind-down. -->
+    <Compile Include="../GamingModeAgent/GamingMode.Services/SaveBackup.cs" Link="SaveBackup.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/DeckyPluginLogs.cs" Link="DeckyPluginLogs.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/WindDown.cs" Link="WindDown.cs" />
     <!-- The full schema 1 shape (every optional section filled). -->
     <None Include="core-status.sample.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- Exactly what Aincrad's scripts/backup.sh writes. -->

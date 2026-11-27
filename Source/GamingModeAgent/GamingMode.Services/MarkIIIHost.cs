@@ -146,8 +146,10 @@ internal sealed partial class MarkIIIHost : IDisposable
 			if (++tick % 12 != 0) continue; // once a minute
 			try { await CheckSteamHoldAsync().ConfigureAwait(false); }
 			catch (Exception error) { _logger.Error("Mark III: Steam update hold check failed this round.", error); }
-			try { CheckUpdateNight(); }
+			try { await CheckUpdateNightAsync().ConfigureAwait(false); }
 			catch (Exception error) { _logger.Error("Mark III: update night check failed this round.", error); }
+			try { CheckWindDown(); }
+			catch (Exception error) { _logger.Error("Wind-down: check failed this round.", error); }
 			if (tick % 60 != 0) continue; // every five minutes
 			try { await CheckHealthAlertsAsync().ConfigureAwait(false); }
 			catch (Exception error) { _logger.Error("Core Health: alert check failed this round.", error); }
@@ -212,12 +214,15 @@ internal sealed partial class MarkIIIHost : IDisposable
 
 	private string Language() => _store.LoadConfig().Language ?? "auto";
 
-	private void Notice(string key)
+	// argument fills the text's {0}; extra is a sentence added after it (the plugins that reported errors).
+	private void Notice(string key, string? argument = null, string? extra = null)
 	{
 		if (!InGamingMode() || GameRunning()) { _logger.Info($"Core notice \"{key}\" not shown: not in Big Picture or a game is running."); return; }
 		// Streaming to another device: the notice would land on a TV nobody is watching (or someone else is).
 		if (StreamHoldsNotices($"Core notice \"{key}\"")) return;
-		CoreNoticeOverlay.Show(CoreText.Get(Language(), key), TimeSpan.FromSeconds(10), () => InGamingMode() && !GameRunning(), _logger);
+		string text = argument is null ? CoreText.Get(Language(), key) : CoreText.Format(Language(), key, argument);
+		if (!string.IsNullOrEmpty(extra)) text += " " + extra;
+		CoreNoticeOverlay.Show(text, TimeSpan.FromSeconds(10), () => InGamingMode() && !GameRunning(), _logger);
 	}
 
 	// ---------- quiet Windows (couch hardening) ----------
@@ -250,13 +255,18 @@ internal sealed partial class MarkIIIHost : IDisposable
 		return false;
 	}
 
-	private void CheckUpdateNight()
+	private async Task CheckUpdateNightAsync()
 	{
 		DateTimeOffset now = DateTimeOffset.Now;
 		UpdateNightState state = UpdateNightPolicy.Observe(UpdateNightPolicy.Load(_updateNightPath), now);
 		switch (UpdateNightPolicy.Decide(state, now, GameRunning()))
 		{
 			case UpdateNightAction.Restart:
+				// Batch 1: Ludusavi backs up every game's saves first (time-boxed, once a night; a failure never stops the restart).
+				await BackupSavesAsync("update night").ConfigureAwait(false);
+				// A game started during the backup: the restart waits (Decide retries until 7:00).
+				if (GameRunning()) { _logger.Info("Update night: a game started during the save backup; the restart waits."); return; }
+				now = DateTimeOffset.Now;
 				UpdateNightPolicy.Save(_updateNightPath, state with { ScheduledFor = null, LastNight = now });
 				// Console guards: a staged firmware update with BitLocker on would ask for the recovery key.
 				SuspendBitLockerForFirmware("update night");
@@ -293,7 +303,11 @@ internal sealed partial class MarkIIIHost : IDisposable
 			_logger.Info($"Decky health: {_decky.Verdict} (Steam client {version ?? "unknown"}).");
 		if (!notice) return;
 		if (!_store.LoadConfig().Gaming.DeckyHealthNoticeEnabled) { _logger.Info("Decky UI did not load; the notice is turned off in settings."); return; }
-		Notice(_decky.AfterSteamUpdate(version) ? "notice.pluginsAfterUpdate" : "notice.plugins");
+		// Batch 1 (B11): name the plugins whose logs reported errors lately.
+		string? failing = null;
+		try { failing = FailingPluginsSentence(); }
+		catch (Exception error) { _logger.Error("Decky health: plugin logs could not be read for the notice.", error); }
+		Notice(_decky.AfterSteamUpdate(version) ? "notice.pluginsAfterUpdate" : "notice.plugins", extra: failing);
 	}
 
 	private void Heartbeat()
@@ -665,7 +679,13 @@ internal sealed partial class MarkIIIHost : IDisposable
 			{
 				await WaitForNoGameAsync(TimeSpan.FromSeconds(15)).ConfigureAwait(false);
 				if (GameRunning()) return ("repair.notWhilePlaying", null);
-				if (automatic && action == "update-steam") Notice("notice.steamUpdating");
+				if (automatic && action == "update-steam")
+				{
+					// Batch 1: Ludusavi backs up every game's saves first (time-boxed, once a night; a failure never stops the update).
+					await BackupSavesAsync("Steam update").ConfigureAwait(false);
+					if (GameRunning()) return ("repair.notWhilePlaying", null);
+					Notice("notice.steamUpdating");
+				}
 				return await SteamUpdateJobAsync(action == "verify-steam", automatic, cancellation).ConfigureAwait(false);
 			}
 			case "continue":
@@ -943,7 +963,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 		{
 			if (!Local(context)) return Results.StatusCode(403);
 			Heartbeat();
-			return Results.Json(new { ok = true });
+			// Batch 1: a waiting wind-down reminder rides on the answer once (shown with Steam's toaster, over games).
+			return Results.Json(new { ok = true, toast = TakeToast() });
 		}));
 		app.MapGet("/decky/health", (Func<HttpContext, IResult>)(context =>
 			Local(context) ? Results.Json(new { verdict = _decky.Verdict.ToString(), everHealthy = _decky.EverHealthy, lastHeartbeat = _decky.LastHeartbeat }) : Results.StatusCode(403)));
@@ -1013,5 +1034,6 @@ internal sealed partial class MarkIIIHost : IDisposable
 		MapVoice(app);
 		MapStream(app);
 		MapConsole(app);
+		MapBatch(app);
 	}
 }

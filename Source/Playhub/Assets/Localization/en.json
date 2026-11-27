@@ -1570,5 +1570,17 @@
   "Serve il permesso di amministratore.": "Administrator permission is needed.",
   "Schermo, audio e controller normali dimenticati.": "Normal display, sound and controllers forgotten.",
   "Windows Home: nessun driver da Windows Update per i dispositivi": "Windows Home: no device drivers from Windows Update",
-  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Windows feature updates stay on the current version"
+  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Windows feature updates stay on the current version",
+  "Prima di dormire": "Before bed",
+  "Backup dei salvataggi prima degli aggiornamenti notturni, un promemoria per salvare prima di andare a letto e la raccolta Completed di Steam.": "Save backup before the overnight updates, a reminder to save before bedtime, and the Steam collection Completed.",
+  "Backup dei salvataggi prima degli aggiornamenti": "Back up saves before updates",
+  "Prima del riavvio della notte degli aggiornamenti e prima di un aggiornamento automatico di Steam, Ludusavi fa il backup dei salvataggi di tutti i giochi. Serve Ludusavi (winget install -e --id mtkennerly.ludusavi). Se il backup non riesce, l'aggiornamento parte comunque.": "Before the update-night restart and before an automatic Steam update, Ludusavi backs up every game's saves. Needs Ludusavi (winget install -e --id mtkennerly.ludusavi). If the backup fails, the update goes ahead anyway.",
+  "Promemoria per salvare prima di dormire": "Reminders to save before bed",
+  "Mentre giochi, un avviso di Steam ricorda di salvare poco prima dell'ora di andare a letto. È solo un avviso: Core non chiude mai il gioco.": "While you play, a Steam notification reminds you to save shortly before bedtime. Only a reminder: Core never closes the game.",
+  "Ora di andare a letto": "Bedtime",
+  "Minuti prima (separati da virgole)": "Minutes before (comma-separated)",
+  "Aggiungi i giochi completati alla raccolta Completed": "Add completed games to the Completed collection",
+  "Quando un gioco di Steam arriva al 100% degli obiettivi, Core lo aggiunge alla tua raccolta di Steam chiamata Completed. Non toglie mai giochi dalla raccolta.": "When a Steam game reaches 100% of its achievements, Core adds it to your Steam collection named Completed. It never removes games from the collection.",
+  "Crea la raccolta Completed se manca": "Create the Completed collection if it's missing",
+  "Senza questa opzione Core usa solo una raccolta Completed che esiste già.": "Without this option Core only uses a Completed collection that already exists."
 }

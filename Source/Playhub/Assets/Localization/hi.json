@@ -1552,5 +1552,17 @@
   "Serve il permesso di amministratore.": "एडमिनिस्ट्रेटर अनुमति चाहिए।",
   "Schermo, audio e controller normali dimenticati.": "सामान्य डिस्प्ले, आवाज़ और कंट्रोलर भुला दिए गए।",
   "Windows Home: nessun driver da Windows Update per i dispositivi": "Windows Home: Windows Update से डिवाइस ड्राइवर नहीं",
-  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Windows के फ़ीचर अपडेट मौजूदा वर्ज़न पर ही रहें"
+  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Windows के फ़ीचर अपडेट मौजूदा वर्ज़न पर ही रहें",
+  "Prima di dormire": "सोने से पहले",
+  "Backup dei salvataggi prima degli aggiornamenti notturni, un promemoria per salvare prima di andare a letto e la raccolta Completed di Steam.": "रात के अपडेट से पहले सेव का बैकअप, सोने से पहले सेव करने की याद, और Steam कलेक्शन Completed।",
+  "Backup dei salvataggi prima degli aggiornamenti": "अपडेट से पहले सेव का बैकअप लें",
+  "Prima del riavvio della notte degli aggiornamenti e prima di un aggiornamento automatico di Steam, Ludusavi fa il backup dei salvataggi di tutti i giochi. Serve Ludusavi (winget install -e --id mtkennerly.ludusavi). Se il backup non riesce, l'aggiornamento parte comunque.": "अपडेट की रात के रीस्टार्ट से पहले और Steam के अपने-आप अपडेट से पहले, Ludusavi सभी गेम के सेव का बैकअप लेता है। Ludusavi चाहिए (winget install -e --id mtkennerly.ludusavi)। बैकअप न हो पाए तो भी अपडेट होता है।",
+  "Promemoria per salvare prima di dormire": "सोने से पहले सेव करने की याद",
+  "Mentre giochi, un avviso di Steam ricorda di salvare poco prima dell'ora di andare a letto. È solo un avviso: Core non chiude mai il gioco.": "खेलते समय, सोने के समय से थोड़ा पहले Steam की सूचना सेव करने की याद दिलाती है। यह सिर्फ़ याद दिलाना है: Core गेम कभी बंद नहीं करता।",
+  "Ora di andare a letto": "सोने का समय",
+  "Minuti prima (separati da virgole)": "कितने मिनट पहले (कॉमा से अलग)",
+  "Aggiungi i giochi completati alla raccolta Completed": "पूरे किए गए गेम Completed कलेक्शन में जोड़ें",
+  "Quando un gioco di Steam arriva al 100% degli obiettivi, Core lo aggiunge alla tua raccolta di Steam chiamata Completed. Non toglie mai giochi dalla raccolta.": "जब कोई Steam गेम 100% उपलब्धियों तक पहुँचता है, Core उसे आपके Completed नाम के Steam कलेक्शन में जोड़ देता है। यह कलेक्शन से गेम कभी नहीं हटाता।",
+  "Crea la raccolta Completed se manca": "Completed कलेक्शन न हो तो बनाएँ",
+  "Senza questa opzione Core usa solo una raccolta Completed che esiste già.": "यह विकल्प बंद हो तो Core सिर्फ़ पहले से मौजूद Completed कलेक्शन का इस्तेमाल करता है।"
 }

@@ -149,6 +149,9 @@ internal sealed partial class MarkIIIHost
 			SteamPostponedReason = steamReason, SteamFailedCheck = steamReason == "rolled-back" ? steamHold.FailedCheck : null, SteamPendingVersion = steamHold.PendingVersion,
 			SteamPostponedSince = steamHold.PostponedSince ?? steamHold.LastUpdateAt, SteamPostponedAttention = steamView.Attention,
 			Guards = guards,
+			// Batch 1: the save backup before update night, and Decky with the plugins whose logs report errors.
+			SaveBackup = SaveBackupHealth(),
+			DeckyPlugins = new DeckyPluginInputs(_decky.Verdict.ToString(), DeckyLogs()),
 		});
 	}
 
@@ -166,7 +169,8 @@ internal sealed partial class MarkIIIHost
 		{
 			string key = HealthAlertPolicy.NoticeKey(due)!;
 			_logger.Info($"Core Health notice: {string.Join(", ", due.Select(problem => problem.Id))}.");
-			Notice(key);
+			// One problem with names to say ("Decky: Forge is reporting errors"): its own text, filled in.
+			Notice(key, due.Count == 1 ? due[0].Argument : null);
 			ledger = HealthAlertPolicy.MarkShown(ledger, due, now);
 		}
 		if (!SameLedger(before, ledger)) HealthAlertPolicy.Save(_healthAlertsPath, ledger);

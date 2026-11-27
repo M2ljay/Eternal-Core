@@ -1561,5 +1561,17 @@
   "Serve il permesso di amministratore.": "Нужно разрешение администратора.",
   "Schermo, audio e controller normali dimenticati.": "Обычные экран, звук и контроллеры забыты.",
   "Windows Home: nessun driver da Windows Update per i dispositivi": "Windows Home: никаких драйверов устройств через Центр обновления Windows",
-  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Обновления компонентов Windows остаются на текущей версии"
+  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Обновления компонентов Windows остаются на текущей версии",
+  "Prima di dormire": "Перед сном",
+  "Backup dei salvataggi prima degli aggiornamenti notturni, un promemoria per salvare prima di andare a letto e la raccolta Completed di Steam.": "Резервная копия сохранений перед ночными обновлениями, напоминание сохраниться перед сном и коллекция Steam Completed.",
+  "Backup dei salvataggi prima degli aggiornamenti": "Резервная копия сохранений перед обновлениями",
+  "Prima del riavvio della notte degli aggiornamenti e prima di un aggiornamento automatico di Steam, Ludusavi fa il backup dei salvataggi di tutti i giochi. Serve Ludusavi (winget install -e --id mtkennerly.ludusavi). Se il backup non riesce, l'aggiornamento parte comunque.": "Перед перезагрузкой в ночь обновлений и перед автоматическим обновлением Steam Ludusavi делает резервную копию сохранений всех игр. Нужен Ludusavi (winget install -e --id mtkennerly.ludusavi). Если копия не удалась, обновление всё равно пройдёт.",
+  "Promemoria per salvare prima di dormire": "Напоминания сохраниться перед сном",
+  "Mentre giochi, un avviso di Steam ricorda di salvare poco prima dell'ora di andare a letto. È solo un avviso: Core non chiude mai il gioco.": "Пока вы играете, уведомление Steam напоминает сохраниться незадолго до сна. Это только напоминание: Core никогда не закрывает игру.",
+  "Ora di andare a letto": "Время сна",
+  "Minuti prima (separati da virgole)": "За сколько минут (через запятую)",
+  "Aggiungi i giochi completati alla raccolta Completed": "Добавлять пройденные игры в коллекцию Completed",
+  "Quando un gioco di Steam arriva al 100% degli obiettivi, Core lo aggiunge alla tua raccolta di Steam chiamata Completed. Non toglie mai giochi dalla raccolta.": "Когда игра Steam достигает 100% достижений, Core добавляет её в вашу коллекцию Steam под названием Completed. Игры из коллекции никогда не удаляются.",
+  "Crea la raccolta Completed se manca": "Создать коллекцию Completed, если её нет",
+  "Senza questa opzione Core usa solo una raccolta Completed che esiste già.": "Без этого параметра Core использует только уже существующую коллекцию Completed."
 }

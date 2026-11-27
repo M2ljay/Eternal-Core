@@ -19,6 +19,8 @@ public sealed partial class MainWindow
 {
     private TextBox _tvAddressBox = new();
     private TextBox _healthServerBox = new();
+    private TextBox _bedtimeBox = new();
+    private TextBox _windDownMinutesBox = new();
     private readonly TextBlock _healthStatus = new() { TextWrapping = TextWrapping.Wrap, Opacity = 0.8 };
     private TextBox _tvMacBox = new();
     private ComboBox _tvInputCombo = new();
@@ -102,6 +104,12 @@ public sealed partial class MainWindow
         gaming.CoreHealthAlertsEnabled = GetToggle("healthAlerts");
         gaming.ConsoleLauncherFocusGuard = GetToggle("consoleLauncherFocus");
         gaming.ConsoleWakeChecks = GetToggle("consoleWakeChecks");
+        gaming.SaveBackupBeforeUpdates = GetToggle("saveBackup");
+        gaming.WindDownEnabled = GetToggle("windDown");
+        gaming.WindDownBedtime = string.IsNullOrWhiteSpace(_bedtimeBox.Text) ? "04:00" : _bedtimeBox.Text.Trim();
+        gaming.WindDownMinutes = string.IsNullOrWhiteSpace(_windDownMinutesBox.Text) ? "30, 10" : _windDownMinutesBox.Text.Trim();
+        gaming.AutoCompletedEnabled = GetToggle("autoCompleted");
+        gaming.AutoCompletedCreate = GetToggle("autoCompletedCreate");
         if (int.TryParse(GetComboKey(_steamSoakCombo), NumberStyles.None, CultureInfo.InvariantCulture, out int soak)) gaming.SteamUpdateSoakDays = soak;
     }
 
@@ -119,6 +127,12 @@ public sealed partial class MainWindow
         SetToggle("healthAlerts", gaming.CoreHealthAlertsEnabled);
         SetToggle("consoleLauncherFocus", gaming.ConsoleLauncherFocusGuard);
         SetToggle("consoleWakeChecks", gaming.ConsoleWakeChecks);
+        SetToggle("saveBackup", gaming.SaveBackupBeforeUpdates);
+        SetToggle("windDown", gaming.WindDownEnabled);
+        SetToggle("autoCompleted", gaming.AutoCompletedEnabled);
+        SetToggle("autoCompletedCreate", gaming.AutoCompletedCreate);
+        _bedtimeBox.Text = string.IsNullOrWhiteSpace(gaming.WindDownBedtime) ? "04:00" : gaming.WindDownBedtime;
+        _windDownMinutesBox.Text = string.IsNullOrWhiteSpace(gaming.WindDownMinutes) ? "30, 10" : gaming.WindDownMinutes;
         _healthServerBox.Text = gaming.CoreHealthServer ?? "";
         int soakDays = gaming.SteamUpdateSoakDays is >= 1 and <= 60 ? gaming.SteamUpdateSoakDays : 10;
         string soakKey = SteamSoakOptions.Select(option => option.Key).OrderBy(key => Math.Abs(int.Parse(key, CultureInfo.InvariantCulture) - soakDays)).First();
@@ -301,6 +315,30 @@ public sealed partial class MainWindow
             return;
         }
         _healthStatus.Text = count == 0 ? T("Tutto a posto.") : string.Format(CultureInfo.CurrentCulture, T("Cose da controllare: {0}"), count);
+    }
+
+    // ---------- batch 1: before bed (agent SaveBackup.cs, WindDown.cs; Decky plugin autoCompleted.ts) ----------
+
+    // The save backup before update night (Ludusavi), the bedtime reminders and the Steam collection "Completed".
+    // The agent and Core's Decky plugin do the work; this card only edits config.json. docs/eternal/BATCH-1.md.
+    private FluentCard BuildBeforeBedCard()
+    {
+        var card = Card();
+        card.Children.Add(IconHeader(((char)0xE708).ToString(), "Prima di dormire",
+            "Backup dei salvataggi prima degli aggiornamenti notturni, un promemoria per salvare prima di andare a letto e la raccolta Completed di Steam."));
+        AddExplainedToggle(card, "Backup dei salvataggi prima degli aggiornamenti",
+            "Prima del riavvio della notte degli aggiornamenti e prima di un aggiornamento automatico di Steam, Ludusavi fa il backup dei salvataggi di tutti i giochi. Serve Ludusavi (winget install -e --id mtkennerly.ludusavi). Se il backup non riesce, l'aggiornamento parte comunque.", "saveBackup");
+        AddExplainedToggle(card, "Promemoria per salvare prima di dormire",
+            "Mentre giochi, un avviso di Steam ricorda di salvare poco prima dell'ora di andare a letto. È solo un avviso: Core non chiude mai il gioco.", "windDown");
+        _bedtimeBox = TextBox("04:00");
+        _windDownMinutesBox = TextBox("30, 10");
+        card.Children.Add(TwoColumn(Labeled("Ora di andare a letto", _bedtimeBox), Labeled("Minuti prima (separati da virgole)", _windDownMinutesBox)));
+        AddExplainedToggle(card, "Aggiungi i giochi completati alla raccolta Completed",
+            "Quando un gioco di Steam arriva al 100% degli obiettivi, Core lo aggiunge alla tua raccolta di Steam chiamata Completed. Non toglie mai giochi dalla raccolta.", "autoCompleted");
+        AddExplainedToggle(card, "Crea la raccolta Completed se manca",
+            "Senza questa opzione Core usa solo una raccolta Completed che esiste già.", "autoCompletedCreate");
+        foreach (var box in new[] { _bedtimeBox, _windDownMinutesBox }) box.LostFocus += (_, _) => AutoSaveGaming();
+        return card;
     }
 
     // ---------- quiet Windows (couch hardening) ----------

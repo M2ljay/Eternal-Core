@@ -294,6 +294,19 @@ class Plugin(QuickSettingsPlugin):
         query = urllib.parse.urlencode({"active": "true" if active else "false", "device": device})
         return await asyncio.to_thread(self._agent_local, "POST", "/stream/steam?" + query, timeout=3)
 
+    # Batch 1: Auto-Completed (src/autoCompleted.ts, agent MarkIIIHost.Batch.cs). The settings come from Core's
+    # config.json through the agent; the report is one agent log line (app id and outcome only).
+    async def core_completed_settings(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/core/completed", timeout=3)
+
+    async def core_completed_report(self, app_id, outcome):
+        if isinstance(app_id, bool) or not isinstance(app_id, int) or app_id <= 0 or app_id > 0xFFFFFFFF:
+            return {}
+        if outcome not in ("added", "created", "missing-collection", "failed"):
+            return {}
+        query = urllib.parse.urlencode({"appId": str(app_id), "outcome": outcome})
+        return await asyncio.to_thread(self._agent_local, "POST", "/core/completed/report?" + query, timeout=3)
+
     @staticmethod
     def _agent_local(method, path, *, timeout=2.5, maximum=4096):
         try:

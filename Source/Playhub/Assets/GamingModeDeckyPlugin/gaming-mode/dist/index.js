@@ -11634,16 +11634,16 @@ const words$5 = {
     hi: ["निरंतर पावर", "छोटा बूस्ट", "पीक बूस्ट", "लागू करें", "पिछली सीमाएँ बहाल करें"],
 };
 const rails = ["spl", "sppt", "fppt"];
-const integer = (value, minimum, maximum) => typeof value === "number" && Number.isInteger(value) && value >= minimum && value <= maximum;
+const integer$1 = (value, minimum, maximum) => typeof value === "number" && Number.isInteger(value) && value >= minimum && value <= maximum;
 const ordered = (limits) => limits.spl <= limits.sppt && limits.sppt <= limits.fppt;
-const aligned = (value, bound) => integer(value, bound.minimum, bound.maximum) && (value - bound.minimum) % bound.step === 0;
+const aligned = (value, bound) => integer$1(value, bound.minimum, bound.maximum) && (value - bound.minimum) % bound.step === 0;
 const sameBounds = (first, last) => first.tdpAvailable === last.tdpAvailable && (!first.tdpAvailable
     || last.tdpAvailable && rails.every(rail => ["minimum", "maximum", "step", "default"].every(key => first.boundsWatts[rail][key] === last.boundsWatts[rail][key])));
 function validLenovoPowerState(value) {
     if (value?.ok !== true || value.available !== true || value.provider !== "lenovo-other-tdp"
         || value.nativeUnit !== "W"
         || ![value.token, value.deviceToken].every(token => typeof token === "string" && /^[a-f0-9]{64}$/.test(token))
-        || !integer(value.mode, 1, 255) || !integer(value.realMode, 1, 255)
+        || !integer$1(value.mode, 1, 255) || !integer$1(value.realMode, 1, 255)
         || ![1, 2, 3, 224, 255].includes(value.mode) || ![1, 2, 3, 224, 255].includes(value.realMode)
         || ![value.writable, value.customModeAvailable, value.modeControlAvailable, value.restoreAvailable, value.manualRecoveryRequired].every(flag => typeof flag === "boolean")
         || (typeof value.externalPower !== "boolean" && value.externalPower !== null))
@@ -11658,8 +11658,8 @@ function validLenovoPowerState(value) {
         return false;
     for (const rail of rails) {
         const bound = value.boundsWatts[rail];
-        if (!bound || !integer(bound.minimum, 1, 255) || !integer(bound.maximum, bound.minimum, 255)
-            || !integer(bound.step, 1, 255) || !aligned(bound.default, bound) || !integer(value.limitsWatts[rail], 1, 255))
+        if (!bound || !integer$1(bound.minimum, 1, 255) || !integer$1(bound.maximum, bound.minimum, 255)
+            || !integer$1(bound.step, 1, 255) || !aligned(bound.default, bound) || !integer$1(value.limitsWatts[rail], 1, 255))
             return false;
     }
     return ordered(value.limitsWatts)
@@ -58307,7 +58307,7 @@ function steamNativeVisibleNavigation(proof, navigation, windows, current, now) 
 
 const number64 = (v, zero = false) => typeof v === "string" && (zero ? /^(0|[1-9]\d{0,19})$/ : /^[1-9]\d{0,19}$/).test(v) && BigInt(v) <= 0xffffffffffffffffn;
 const nativePid = (v) => typeof v === "number" && Number.isInteger(v) && v > 0 && v <= 0xffffffff;
-const count = (v) => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 2304;
+const count$1 = (v) => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 2304;
 // This produces NO MirrorPresentation, input proof, navigation lease or Shown.
 function nativeVisibleRecord(reply, parent, phase = 1) {
     const n = reply?.nativeVisible;
@@ -58336,7 +58336,7 @@ function nativeVisibleRecord(reply, parent, phase = 1) {
         if (!n.valveOpen || physical <= 0n || physical > seen || read - physical > 250n || end <= read || end - physical > 250n || end > lease
             || lease <= read || lease - read > 5000n || BigInt(n.sourceFrame) <= BigInt(n.receiptFrame))
             return;
-        if (![n.baselineSamples, n.baselineMatched, n.outputSamples, n.outputMatched].every(count)
+        if (![n.baselineSamples, n.baselineMatched, n.outputSamples, n.outputMatched].every(count$1)
             || n.baselineSamples < 16 || n.outputSamples < 16 || n.baselineMatched > n.baselineSamples || n.outputMatched > n.outputSamples
             || n.baselineMatched * 100 < n.baselineSamples * 95 || n.outputMatched * 100 < n.outputSamples * 95)
             return;
@@ -60804,7 +60804,11 @@ function installCoreHeartbeat(deps) {
             catch {
                 pending = Promise.resolve();
             }
-            pending.catch(() => { }).finally(() => { busy = false; });
+            pending.then(answer => { try {
+                deps.onAnswer?.(answer);
+            }
+            catch { /* A bad answer is ignored. */ } })
+                .catch(() => { }).finally(() => { busy = false; });
         }
         timer = deps.schedule(tick, interval);
     }
@@ -60870,6 +60874,299 @@ async function ensureCoreRepairTile(deps) {
     catch {
         return "failed";
     }
+}
+function heartbeatToast(answer, seen) {
+    try {
+        const toast = answer?.toast;
+        if (!toast || typeof toast !== "object")
+            return undefined;
+        const id = toast.id, body = toast.body;
+        if (typeof id !== "string" || !/^[a-z0-9-]{1,40}$/.test(id) || seen.has(id))
+            return undefined;
+        if (typeof body !== "string")
+            return undefined;
+        const text = body.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 200);
+        if (!text)
+            return undefined;
+        seen.add(id);
+        if (seen.size > 32)
+            seen.delete(seen.values().next().value);
+        return { id, title: "Core", body: text, quiet: toast.quiet === true };
+    }
+    catch {
+        return undefined;
+    }
+}
+
+// Eternal Core batch 1 (B9): Auto-Completed. When a Steam game reaches 100% of its achievements, Core adds it to
+// the user's Steam collection named "Completed" (matched by name, ignoring case). The collection is created only
+// when "Create the Completed collection if it's missing" is on (Core > Gaming Mode > Before bed). Core never
+// removes a game from the collection and skips games with no achievements. It runs when Steam reports an
+// achievement unlock, and once a day over recently played games.
+//
+// Steam's stores are reached through the caller (index.tsx), which looks them up with the Decky 3/4 compat
+// helpers (steamModules.ts); everything here fails soft: a store or method that is not there means "not now",
+// never an error over Big Picture. Self-contained on purpose: tests/autoCompleted.test.mjs loads this file alone.
+//
+// Ideas from Completionist and Deck Progress Tracker (both BSD-3-Clause): Steam's achievement progress cache as
+// the source of "100%", and collectionStore for the collection. No code was copied from either.
+const DEFAULT_COLLECTION = "Completed";
+const GAME_TYPE = 1;
+const DAY = 24 * 3600 * 1000;
+function count(value) {
+    if (Array.isArray(value))
+        return value.length;
+    if (value && typeof value === "object")
+        return Object.keys(value).length;
+    return 0;
+}
+function integer(value) {
+    const number = Number(value);
+    return Number.isInteger(number) && number >= 0 && number <= 100000 ? number : undefined;
+}
+// Achievement progress from what Steam hands out: the progress cache's entry ({ unlocked, total, all_unlocked }),
+// GetMyAchievementsForApp's answer ({ result, data: { achieved, unachieved, hidden } }, also as a JSON string),
+// or a plain list of achievements with bAchieved. Undefined when none of these.
+function progressFrom(entry) {
+    try {
+        let value = entry;
+        if (typeof value === "string")
+            value = JSON.parse(value);
+        if (!value || typeof value !== "object")
+            return undefined;
+        if (value.data && typeof value.data === "object" && !Array.isArray(value.data))
+            value = value.data;
+        if (Array.isArray(value)) {
+            const list = value.filter(item => item && typeof item === "object");
+            return { unlocked: list.filter(item => item.bAchieved === true || item.achieved === true).length, total: list.length };
+        }
+        const unlocked = integer(value.unlocked ?? value.nAchieved), total = integer(value.total ?? value.nTotal);
+        if (unlocked !== undefined && total !== undefined)
+            return { unlocked: Math.min(unlocked, total), total };
+        if ("achieved" in value || "unachieved" in value) {
+            // Hidden achievements still locked count against 100%: never call a game complete too early.
+            const achieved = count(value.achieved), locked = count(value.unachieved) + count(value.hidden);
+            return { unlocked: achieved, total: achieved + locked };
+        }
+    }
+    catch { /* Unreadable progress is no progress. */ }
+    return undefined;
+}
+function isComplete(progress) {
+    return !!progress && progress.total > 0 && progress.unlocked >= progress.total;
+}
+function settingsFrom(answer) {
+    const value = (answer ?? {});
+    const name = typeof value.collection === "string" ? value.collection.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 64) : "";
+    return { enabled: value.enabled === true, create: value.create === true, collection: name || DEFAULT_COLLECTION };
+}
+function name(collection) {
+    try {
+        const value = collection?.displayName ?? collection?.strName ?? collection?.m_strName;
+        return typeof value === "string" ? value.trim() : "";
+    }
+    catch {
+        return "";
+    }
+}
+function collectionsOf(store) {
+    try {
+        const list = store?.userCollections;
+        if (Array.isArray(list))
+            return list;
+        if (list && typeof list.values === "function")
+            return Array.from(list.values());
+    }
+    catch { /* fall through */ }
+    return [];
+}
+// The user's collection with this name, ignoring case and surrounding spaces. Steam's own lookup by tag is the
+// fallback (it is exact, so it only adds a collection the list did not show).
+function findCollection(store, wanted) {
+    const target = wanted.trim().toLocaleLowerCase();
+    if (!target)
+        return undefined;
+    const hit = collectionsOf(store).find(collection => name(collection).toLocaleLowerCase() === target);
+    if (hit)
+        return hit;
+    try {
+        if (typeof store?.GetCollectionIDByUserTag === "function" && typeof store?.GetCollection === "function") {
+            const id = store.GetCollectionIDByUserTag(wanted);
+            const found = typeof id === "string" && id ? store.GetCollection(id) : undefined;
+            if (found && name(found).toLocaleLowerCase() === target)
+                return found;
+        }
+    }
+    catch { /* Not found. */ }
+    return undefined;
+}
+function contains(collection, appId) {
+    try {
+        if (typeof collection?.apps?.has === "function" && collection.apps.has(appId))
+            return true;
+        return Array.isArray(collection?.allApps) && collection.allApps.some((app) => Number(app?.appid) === appId);
+    }
+    catch {
+        return false;
+    }
+}
+// Steam games played in the last `days` days, newest first: what the daily sweep looks at.
+function recentGames(overviews, nowMs, days = 14, limit = 60) {
+    const since = nowMs / 1000 - days * 86400;
+    const list = [];
+    try {
+        for (const app of overviews ?? []) {
+            const appId = Number(app?.appid), played = Number(app?.rt_last_time_played);
+            if (!Number.isInteger(appId) || appId <= 0 || appId > 0xffffffff || app?.app_type !== GAME_TYPE)
+                continue;
+            if (Number.isFinite(played) && played >= since)
+                list.push({ appId, played });
+        }
+    }
+    catch {
+        return [];
+    }
+    return list.sort((a, b) => b.played - a.played).slice(0, limit).map(item => item.appId);
+}
+// One game: add it to "Completed" when it is a Steam game at 100%. Never removes anything.
+async function addIfCompleted(deps, appId) {
+    try {
+        if (!Number.isInteger(appId) || appId <= 0 || appId > 0xffffffff)
+            return "unavailable";
+        const settings = await deps.settings();
+        if (!settings.enabled)
+            return "off";
+        const overview = deps.overview(appId);
+        if (!overview || Number(overview.appid) !== appId || overview.app_type !== GAME_TYPE)
+            return "unavailable";
+        const progress = await deps.progress(appId);
+        if (!progress)
+            return "unavailable";
+        if (progress.total <= 0)
+            return "no-achievements";
+        if (!isComplete(progress))
+            return "incomplete";
+        const store = deps.collections();
+        if (!store)
+            return "unavailable";
+        const existing = findCollection(store, settings.collection);
+        if (existing) {
+            if (contains(existing, appId))
+                return "present";
+            const editable = existing.AsDragDropCollection?.();
+            if (typeof editable?.AddApps !== "function" || typeof existing.Save !== "function")
+                return "unavailable";
+            editable.AddApps([overview]);
+            await existing.Save();
+            return contains(existing, appId) ? "added" : "failed";
+        }
+        if (!settings.create)
+            return "missing-collection";
+        if (typeof store.NewUnsavedCollection !== "function")
+            return "unavailable";
+        const created = store.NewUnsavedCollection(settings.collection, undefined, [overview]);
+        if (!created || typeof created.Save !== "function")
+            return "unavailable";
+        await created.Save();
+        return "created";
+    }
+    catch {
+        return "failed";
+    }
+}
+// Wires it up: unlock notifications (per game, one check at a time, a moment after the unlock) and the daily sweep.
+function installAutoCompleted(deps) {
+    let disposed = false, sweepTimer, sweeping = false;
+    const pending = new Map(), busy = new Set();
+    const unlockDelay = deps.unlockDelay ?? 4000, sweepCheck = deps.sweepCheck ?? 3600000;
+    async function check(appId) {
+        if (disposed || busy.has(appId))
+            return;
+        busy.add(appId);
+        try {
+            const outcome = await addIfCompleted(deps, appId);
+            if (["added", "created", "missing-collection", "failed"].includes(outcome)) {
+                try {
+                    deps.report(appId, outcome);
+                }
+                catch { /* Logging is optional. */ }
+            }
+        }
+        finally {
+            busy.delete(appId);
+        }
+    }
+    let unregister;
+    try {
+        unregister = deps.register(notification => {
+            if (disposed)
+                return;
+            const appId = Number(notification?.unAppID ?? notification?.appid);
+            if (!Number.isInteger(appId) || appId <= 0 || appId > 0xffffffff)
+                return;
+            if (pending.has(appId))
+                deps.cancel(pending.get(appId));
+            pending.set(appId, deps.schedule(() => { pending.delete(appId); void check(appId); }, unlockDelay));
+        });
+    }
+    catch {
+        unregister = undefined;
+    }
+    async function sweep() {
+        if (disposed || sweeping)
+            return;
+        let last = 0;
+        try {
+            last = Number(deps.readSweep()) || 0;
+        }
+        catch {
+            last = 0;
+        }
+        const now = deps.now();
+        if (now - last < DAY && now >= last)
+            return;
+        sweeping = true;
+        try {
+            try {
+                deps.writeSweep(now);
+            }
+            catch { /* Memory is optional. */ }
+            let apps = [];
+            try {
+                apps = deps.recent();
+            }
+            catch {
+                apps = [];
+            }
+            for (const appId of apps) {
+                if (disposed)
+                    break;
+                await check(appId);
+            }
+        }
+        finally {
+            sweeping = false;
+        }
+    }
+    function tick() {
+        if (disposed)
+            return;
+        void sweep();
+        sweepTimer = deps.schedule(tick, sweepCheck);
+    }
+    // The first sweep waits a minute: Big Picture is busy starting.
+    sweepTimer = deps.schedule(tick, Math.min(60000, sweepCheck));
+    return () => {
+        disposed = true;
+        deps.cancel(sweepTimer);
+        for (const timer of pending.values())
+            deps.cancel(timer);
+        pending.clear();
+        try {
+            unregister?.();
+        }
+        catch { /* Steam may already be gone. */ }
+    };
 }
 
 // Eternal Core Mark III: "update night". Couch hardening holds Windows Update restarts
@@ -61486,6 +61783,47 @@ const consoleCopy = {
 };
 for (const [language, table] of Object.entries(consoleCopy))
     Object.assign(copy$3[language] ?? {}, table);
+// Batch 1 (BATCH-1.md): the save backup before update night and Decky with the plugins that report errors.
+const batchCopy = {
+    en: {
+        r_saves: "Save backup", svOkNight: "Last night OK", svOkWhen: "OK {when}", svFailedNight: "Last night failed", svFailedWhen: "Failed {when}", svNone: "Ludusavi not installed", svOff: "Off", svNever: "Not run yet", svGames: "{n} games backed up", svLimit: "Took longer than 10 minutes and was stopped", svSome: "Some games' saves could not be copied", svNoAnswer: "Ludusavi gave no answer", svExit: "Ludusavi stopped with code {code}", svNotStarted: "Ludusavi could not start", svInstall: "Install it on the desktop: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugins loaded", dkWaiting: "Waiting for plugins", dkNa: "Not in Gaming Mode", dkNotLoaded: "Plugins not loaded", dkErrOne: "{name} is reporting errors", dkErrMany: "{names} are reporting errors", dkLast: "Last error: {line}", dkCount: "{n} errors in the last 6 hours", dkFrom: "Errors from: {names}",
+    },
+    it: {
+        r_saves: "Backup dei salvataggi", svOkNight: "Stanotte OK", svOkWhen: "OK {when}", svFailedNight: "Stanotte non riuscito", svFailedWhen: "Non riuscito {when}", svNone: "Ludusavi non installato", svOff: "Spento", svNever: "Non ancora eseguito", svGames: "Backup di {n} giochi", svLimit: "Ci ha messo più di 10 minuti ed è stato fermato", svSome: "Non è stato possibile copiare i salvataggi di alcuni giochi", svNoAnswer: "Ludusavi non ha risposto", svExit: "Ludusavi si è fermato con il codice {code}", svNotStarted: "Ludusavi non è partito", svInstall: "Installalo sul desktop: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugin caricati", dkWaiting: "In attesa dei plugin", dkNa: "Non in Gaming Mode", dkNotLoaded: "Plugin non caricati", dkErrOne: "{name} segnala errori", dkErrMany: "{names} segnalano errori", dkLast: "Ultimo errore: {line}", dkCount: "{n} errori nelle ultime 6 ore", dkFrom: "Errori da: {names}",
+    },
+    es: {
+        r_saves: "Copia de partidas", svOkNight: "Anoche OK", svOkWhen: "OK {when}", svFailedNight: "Anoche falló", svFailedWhen: "Falló {when}", svNone: "Ludusavi no está instalado", svOff: "Desactivado", svNever: "Aún no se ha hecho", svGames: "Copia de {n} juegos", svLimit: "Tardó más de 10 minutos y se detuvo", svSome: "No se pudieron copiar las partidas de algunos juegos", svNoAnswer: "Ludusavi no respondió", svExit: "Ludusavi se detuvo con el código {code}", svNotStarted: "Ludusavi no pudo iniciarse", svInstall: "Instálalo en el escritorio: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugins cargados", dkWaiting: "Esperando a los plugins", dkNa: "Fuera de Gaming Mode", dkNotLoaded: "Plugins no cargados", dkErrOne: "{name} informa de errores", dkErrMany: "{names} informan de errores", dkLast: "Último error: {line}", dkCount: "{n} errores en las últimas 6 horas", dkFrom: "Errores de: {names}",
+    },
+    fr: {
+        r_saves: "Sauvegarde des parties", svOkNight: "Cette nuit OK", svOkWhen: "OK {when}", svFailedNight: "Échec cette nuit", svFailedWhen: "Échec {when}", svNone: "Ludusavi n'est pas installé", svOff: "Désactivé", svNever: "Pas encore lancé", svGames: "{n} jeux sauvegardés", svLimit: "A duré plus de 10 minutes et a été arrêté", svSome: "Les parties de certains jeux n'ont pas pu être copiées", svNoAnswer: "Ludusavi n'a pas répondu", svExit: "Ludusavi s'est arrêté avec le code {code}", svNotStarted: "Ludusavi n'a pas pu démarrer", svInstall: "Installe-le sur le bureau : winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugins chargés", dkWaiting: "En attente des plugins", dkNa: "Hors Gaming Mode", dkNotLoaded: "Plugins non chargés", dkErrOne: "{name} signale des erreurs", dkErrMany: "{names} signalent des erreurs", dkLast: "Dernière erreur : {line}", dkCount: "{n} erreurs ces 6 dernières heures", dkFrom: "Erreurs de : {names}",
+    },
+    de: {
+        r_saves: "Spielstand-Backup", svOkNight: "Letzte Nacht OK", svOkWhen: "OK {when}", svFailedNight: "Letzte Nacht fehlgeschlagen", svFailedWhen: "Fehlgeschlagen {when}", svNone: "Ludusavi nicht installiert", svOff: "Aus", svNever: "Noch nicht gelaufen", svGames: "{n} Spiele gesichert", svLimit: "Dauerte länger als 10 Minuten und wurde gestoppt", svSome: "Die Spielstände einiger Spiele konnten nicht kopiert werden", svNoAnswer: "Ludusavi hat nicht geantwortet", svExit: "Ludusavi wurde mit Code {code} beendet", svNotStarted: "Ludusavi konnte nicht starten", svInstall: "Auf dem Desktop installieren: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugins geladen", dkWaiting: "Warte auf Plugins", dkNa: "Nicht im Gaming Mode", dkNotLoaded: "Plugins nicht geladen", dkErrOne: "{name} meldet Fehler", dkErrMany: "{names} melden Fehler", dkLast: "Letzter Fehler: {line}", dkCount: "{n} Fehler in den letzten 6 Stunden", dkFrom: "Fehler von: {names}",
+    },
+    pt: {
+        r_saves: "Backup dos jogos salvos", svOkNight: "Ontem à noite OK", svOkWhen: "OK {when}", svFailedNight: "Falhou ontem à noite", svFailedWhen: "Falhou {when}", svNone: "Ludusavi não instalado", svOff: "Desligado", svNever: "Ainda não executado", svGames: "Backup de {n} jogos", svLimit: "Demorou mais de 10 minutos e foi parado", svSome: "Não foi possível copiar os jogos salvos de alguns jogos", svNoAnswer: "O Ludusavi não respondeu", svExit: "O Ludusavi parou com o código {code}", svNotStarted: "O Ludusavi não conseguiu iniciar", svInstall: "Instale-o na área de trabalho: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugins carregados", dkWaiting: "Aguardando os plugins", dkNa: "Fora do Gaming Mode", dkNotLoaded: "Plugins não carregados", dkErrOne: "{name} está relatando erros", dkErrMany: "{names} estão relatando erros", dkLast: "Último erro: {line}", dkCount: "{n} erros nas últimas 6 horas", dkFrom: "Erros de: {names}",
+    },
+    uk: {
+        r_saves: "Резервна копія збережень", svOkNight: "Минулої ночі OK", svOkWhen: "OK {when}", svFailedNight: "Минулої ночі не вдалося", svFailedWhen: "Не вдалося {when}", svNone: "Ludusavi не встановлено", svOff: "Вимкнено", svNever: "Ще не запускалося", svGames: "Збережено {n} ігор", svLimit: "Тривало понад 10 хвилин і було зупинено", svSome: "Збереження деяких ігор не вдалося скопіювати", svNoAnswer: "Ludusavi не відповів", svExit: "Ludusavi зупинився з кодом {code}", svNotStarted: "Ludusavi не запустився", svInstall: "Установіть його на робочому столі: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Плагіни завантажено", dkWaiting: "Очікування плагінів", dkNa: "Не в Gaming Mode", dkNotLoaded: "Плагіни не завантажено", dkErrOne: "{name} повідомляє про помилки", dkErrMany: "{names} повідомляють про помилки", dkLast: "Остання помилка: {line}", dkCount: "{n} помилок за останні 6 годин", dkFrom: "Помилки від: {names}",
+    },
+    ru: {
+        r_saves: "Резервная копия сохранений", svOkNight: "Прошлой ночью OK", svOkWhen: "OK {when}", svFailedNight: "Прошлой ночью не удалось", svFailedWhen: "Не удалось {when}", svNone: "Ludusavi не установлен", svOff: "Выключено", svNever: "Ещё не запускалось", svGames: "Сохранено игр: {n}", svLimit: "Длилось больше 10 минут и было остановлено", svSome: "Сохранения некоторых игр не удалось скопировать", svNoAnswer: "Ludusavi не ответил", svExit: "Ludusavi остановился с кодом {code}", svNotStarted: "Ludusavi не запустился", svInstall: "Установите его на рабочем столе: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Плагины загружены", dkWaiting: "Ожидание плагинов", dkNa: "Не в Gaming Mode", dkNotLoaded: "Плагины не загружены", dkErrOne: "{name} сообщает об ошибках", dkErrMany: "{names} сообщают об ошибках", dkLast: "Последняя ошибка: {line}", dkCount: "Ошибок за последние 6 часов: {n}", dkFrom: "Ошибки от: {names}",
+    },
+    zh: {
+        r_saves: "存档备份", svOkNight: "昨晚成功", svOkWhen: "成功 {when}", svFailedNight: "昨晚失败", svFailedWhen: "失败 {when}", svNone: "未安装 Ludusavi", svOff: "已关闭", svNever: "尚未运行", svGames: "已备份 {n} 个游戏", svLimit: "超过 10 分钟，已停止", svSome: "部分游戏的存档无法复制", svNoAnswer: "Ludusavi 没有响应", svExit: "Ludusavi 以代码 {code} 退出", svNotStarted: "Ludusavi 无法启动", svInstall: "请在桌面安装：winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "插件已加载", dkWaiting: "正在等待插件", dkNa: "不在 Gaming Mode", dkNotLoaded: "插件未加载", dkErrOne: "{name} 正在报告错误", dkErrMany: "{names} 正在报告错误", dkLast: "最近的错误：{line}", dkCount: "过去 6 小时 {n} 个错误", dkFrom: "错误来自：{names}",
+    },
+    ja: {
+        r_saves: "セーブのバックアップ", svOkNight: "昨夜 OK", svOkWhen: "OK {when}", svFailedNight: "昨夜は失敗", svFailedWhen: "失敗 {when}", svNone: "Ludusavi 未インストール", svOff: "オフ", svNever: "まだ実行していません", svGames: "{n} 本のゲームをバックアップ", svLimit: "10 分を超えたため停止しました", svSome: "一部のゲームのセーブをコピーできませんでした", svNoAnswer: "Ludusavi が応答しませんでした", svExit: "Ludusavi がコード {code} で終了しました", svNotStarted: "Ludusavi を起動できませんでした", svInstall: "デスクトップでインストール: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "プラグイン読み込み済み", dkWaiting: "プラグインを待っています", dkNa: "Gaming Mode ではありません", dkNotLoaded: "プラグイン未読み込み", dkErrOne: "{name} がエラーを報告しています", dkErrMany: "{names} がエラーを報告しています", dkLast: "最新のエラー: {line}", dkCount: "過去 6 時間のエラー: {n}", dkFrom: "エラーの発生元: {names}",
+    },
+    ko: {
+        r_saves: "세이브 백업", svOkNight: "어젯밤 정상", svOkWhen: "정상 {when}", svFailedNight: "어젯밤 실패", svFailedWhen: "실패 {when}", svNone: "Ludusavi 미설치", svOff: "꺼짐", svNever: "아직 실행 안 함", svGames: "게임 {n}개 백업", svLimit: "10분이 넘게 걸려 중지됨", svSome: "일부 게임의 세이브를 복사하지 못함", svNoAnswer: "Ludusavi가 응답하지 않음", svExit: "Ludusavi가 코드 {code}로 종료됨", svNotStarted: "Ludusavi를 시작하지 못함", svInstall: "데스크톱에서 설치: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "플러그인 로드됨", dkWaiting: "플러그인 기다리는 중", dkNa: "Gaming Mode 아님", dkNotLoaded: "플러그인 로드 안 됨", dkErrOne: "{name}에서 오류 보고 중", dkErrMany: "{names}에서 오류 보고 중", dkLast: "마지막 오류: {line}", dkCount: "최근 6시간 오류 {n}개", dkFrom: "오류 출처: {names}",
+    },
+    hi: {
+        r_saves: "सेव बैकअप", svOkNight: "कल रात ठीक", svOkWhen: "ठीक {when}", svFailedNight: "कल रात विफल", svFailedWhen: "विफल {when}", svNone: "Ludusavi इंस्टॉल नहीं है", svOff: "बंद", svNever: "अभी तक नहीं चला", svGames: "{n} गेम का बैकअप", svLimit: "10 मिनट से ज़्यादा लगा और रोक दिया गया", svSome: "कुछ गेम के सेव कॉपी नहीं हो सके", svNoAnswer: "Ludusavi ने जवाब नहीं दिया", svExit: "Ludusavi कोड {code} के साथ रुका", svNotStarted: "Ludusavi शुरू नहीं हो सका", svInstall: "डेस्कटॉप पर इंस्टॉल करें: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "प्लगइन लोड हैं", dkWaiting: "प्लगइन का इंतज़ार", dkNa: "Gaming Mode में नहीं", dkNotLoaded: "प्लगइन लोड नहीं हुए", dkErrOne: "{name} त्रुटियाँ बता रहा है", dkErrMany: "{names} त्रुटियाँ बता रहे हैं", dkLast: "आख़िरी त्रुटि: {line}", dkCount: "पिछले 6 घंटों में {n} त्रुटियाँ", dkFrom: "त्रुटियाँ इनसे: {names}",
+    },
+};
+for (const [language, table] of Object.entries(batchCopy))
+    Object.assign(copy$3[language] ?? {}, table);
 function healthCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
     const table = copy$3[language === "ua" ? "uk" : language] ?? en$2;
@@ -61538,7 +61876,7 @@ function formatTime(value, locale, hour) {
 }
 const titles = {
     "server-backup": "r_backup", "restore-check": "r_restore", "server-drive": "r_drive", romm: "r_romm",
-    "windows-restart": "r_restart", "update-night": "r_night", "steam-update": "r_steam", tv: "r_tv", streaming: "r_stream", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
+    "windows-restart": "r_restart", "update-night": "r_night", "save-backup": "r_saves", "steam-update": "r_steam", "decky-plugins": "r_decky", tv: "r_tv", streaming: "r_stream", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
     // Console guards (ConsoleGuards.cs).
     display: "r_display", "sound-output": "r_sound", controllers: "r_controllers", "steam-sign-in": "r_steamSign", "auto-sign-in": "r_autoSign", bitlocker: "r_bitlocker",
     "windows-prompts": "r_prompts", "update-policy": "r_updPolicy", "launcher-updates": "r_launchUpd", "launcher-focus": "r_launchFocus", "wake-check": "r_wake",
@@ -61651,6 +61989,43 @@ function rowValue(row, text, locale, now) {
             if (typeof data.failedCheck === "string" && /^[a-z-]{1,20}$/.test(data.failedCheck))
                 details.push(data.failedCheck);
             return { value: fill$2(text.stPostponed, { reason }), details };
+        }
+        case "save-backup": {
+            // Batch 1: Ludusavi before update night. One reason line, never Ludusavi's output.
+            const recent = data.recent === true, games = Number(data.games) || 0;
+            const reason = String(data.reason ?? "");
+            const exit = /^exit-(-?\d{1,6})$/.exec(reason);
+            if (row.state === "ok" && games > 0)
+                details.push(fill$2(text.svGames, { n: games }));
+            if (row.state === "failed") {
+                const why = reason === "time-limit" ? text.svLimit : reason === "some-games-failed" ? text.svSome : reason === "no-answer" ? text.svNoAnswer
+                    : reason === "not-started" ? text.svNotStarted : exit ? fill$2(text.svExit, { code: exit[1] }) : "";
+                if (why)
+                    details.push(why);
+            }
+            if (row.state === "not-installed")
+                details.push(text.svInstall);
+            const value = row.state === "ok" ? (recent ? text.svOkNight : fill$2(text.svOkWhen, { when: when("at") }))
+                : row.state === "failed" ? (recent ? text.svFailedNight : fill$2(text.svFailedWhen, { when: when("at") }))
+                    : row.state === "not-installed" ? text.svNone : row.state === "off" ? text.svOff : row.state === "never" ? text.svNever : text.unknown;
+            return { value, details };
+        }
+        case "decky-plugins": {
+            // Batch 1 (B11): the heartbeat's verdict and the plugins whose logs report errors. The agent masks the one line.
+            const names = (Array.isArray(data.plugins) ? data.plugins : []).map(item => clean$1(item, 40)).filter(Boolean).slice(0, 6);
+            const line = clean$1(data.line, 120), errors = Number(data.errors) || 0;
+            if (row.state === "errors" || row.state === "not-loaded") {
+                if (row.state === "not-loaded" && names.length)
+                    details.push(fill$2(text.dkFrom, { names: names.join(", ") }));
+                if (errors > 0 && names.length)
+                    details.push(fill$2(text.dkCount, { n: errors }));
+                if (line && names.length)
+                    details.push(fill$2(text.dkLast, { line }));
+            }
+            if (row.state === "errors" && names.length)
+                return { value: names.length === 1 ? fill$2(text.dkErrOne, { name: names[0] }) : fill$2(text.dkErrMany, { names: names.join(", ") }), details };
+            const states = { healthy: text.dkOk, waiting: text.dkWaiting, "not-applicable": text.dkNa, "not-loaded": text.dkNotLoaded };
+            return { value: states[row.state] ?? text.unknown, details };
         }
         case "core-update":
             return { value: row.state === "available" ? fill$2(text.cAvail, { latest: String(data.latest ?? "?") })
@@ -61962,8 +62337,9 @@ function SteamUpdateCard({ locale }) {
 
 // Eternal Core: the Health section of Quick Access > Core. One line for the whole setup, then a
 // row each for the home server's backup, restore check, drive and RomM (from the server's
-// core-status.json), Windows restart, update night, the TV, streaming (Stream mode), the microphone,
-// the PC's disk and Core's version.
+// core-status.json), Windows restart, update night, the save backup before it (Ludusavi), Decky and the
+// plugins whose logs report errors, the TV, streaming (Stream mode), the microphone, the PC's disk and
+// Core's version (batch 1: docs/eternal/BATCH-1.md).
 // The agent does the gathering (GamingMode.Services/MarkIIIHost.Health.cs); this only renders.
 // Rows are focusable: D-pad moves between them, A shows or hides a row's details, and a row with
 // an active alert offers "Dismiss alert" (it comes back only if the problem changes).
@@ -63509,6 +63885,41 @@ function Content({ origin = "decky" }) {
 }
 const EWindowBringToFront_AndForceOS = 1;
 // ---------------------------------------------------------------------------
+// Batch 1 (Auto-Completed): a Steam store by its global name (Decky 3, stable Steam), else through the Decky 3/4
+// module lookups (steamModules.ts). Undefined when neither finds it; the feature then waits for the next try.
+function steamStore(globalName, is) {
+    const check = (value) => { try {
+        return !!value && typeof value === "object" && is(value);
+    }
+    catch {
+        return false;
+    } };
+    try {
+        const value = window[globalName];
+        if (check(value))
+            return value;
+    }
+    catch { /* fall through */ }
+    const module = findModule(CompatUI, (candidate) => {
+        try {
+            return check(candidate) || (!!candidate && typeof candidate === "object" && Object.values(candidate).some(check));
+        }
+        catch {
+            return false;
+        }
+    });
+    if (check(module))
+        return module;
+    try {
+        return module && typeof module === "object" ? Object.values(module).find(check) : undefined;
+    }
+    catch {
+        return undefined;
+    }
+}
+function withTimeout(work, ms) {
+    return Promise.race([work, new Promise(resolve => window.setTimeout(() => resolve(undefined), ms))]);
+}
 function installOptionalHook(name, install) {
     try {
         return install();
@@ -63546,10 +63957,57 @@ var index = definePlugin(() => {
         cancel: timer => window.clearTimeout(timer),
     }));
     // Mark III: prove to the agent that Decky's UI loaded, and keep a Core Repair tile in the library.
+    // Batch 1: the beat's answer may carry a bedtime reminder, shown once with Steam's toaster (it appears over games).
+    const seenToasts = new Set();
     const stopCoreHeartbeat = installOptionalHook("Core heartbeat", () => installCoreHeartbeat({
         beat: () => call("core_heartbeat"),
         schedule: (callback, delay) => window.setTimeout(callback, delay),
         cancel: timer => window.clearTimeout(timer),
+        onAnswer: answer => {
+            const toast = heartbeatToast(answer, seenToasts);
+            if (toast)
+                toaster.toast({ title: toast.title, body: toast.body, playSound: !toast.quiet, duration: 8000 });
+        },
+    }));
+    // Batch 1 (B9): games at 100% achievements join the Steam collection "Completed" (src/autoCompleted.ts).
+    let completedSettings;
+    const stopAutoCompleted = installOptionalHook("Auto-Completed", () => installAutoCompleted({
+        settings: async () => {
+            if (completedSettings && Date.now() - completedSettings.at < 300000)
+                return completedSettings.value;
+            const value = settingsFrom(await call("core_completed_settings").catch(() => undefined));
+            completedSettings = { at: Date.now(), value };
+            return value;
+        },
+        progress: async (appId) => {
+            const cache = steamStore("appAchievementProgressCache", value => !!value.m_achievementProgress);
+            let progress = progressFrom(cache?.m_achievementProgress?.mapCache?.get?.(appId));
+            if (!isComplete(progress)) {
+                const apps = window.SteamClient?.Apps;
+                if (typeof apps?.GetMyAchievementsForApp === "function") {
+                    const answer = progressFrom(await withTimeout(Promise.resolve(apps.GetMyAchievementsForApp(String(appId))), 5000).catch(() => undefined));
+                    if (answer)
+                        progress = answer;
+                }
+            }
+            return progress;
+        },
+        collections: () => steamStore("collectionStore", value => typeof value.GetCollection === "function" && "userCollections" in value),
+        overview: appId => steamStore("appStore", value => typeof value.GetAppOverviewByAppID === "function")?.GetAppOverviewByAppID?.(appId),
+        register: callback => {
+            const sessions = window.SteamClient?.GameSessions;
+            if (typeof sessions?.RegisterForAchievementNotification !== "function")
+                return undefined;
+            const registration = sessions.RegisterForAchievementNotification(callback);
+            return () => registration?.unregister?.();
+        },
+        recent: () => recentGames(steamStore("appStore", value => typeof value.GetAppOverviewByAppID === "function")?.allApps, Date.now()),
+        schedule: (callback, delay) => window.setTimeout(callback, delay),
+        cancel: timer => window.clearTimeout(timer),
+        now: () => Date.now(),
+        readSweep: () => Number(window.localStorage.getItem("core.completed.sweep") ?? 0),
+        writeSweep: at => window.localStorage.setItem("core.completed.sweep", String(at)),
+        report: (appId, outcome) => { void call("core_completed_report", appId, outcome).catch(() => undefined); },
     }));
     // Stream mode: tell the agent when Steam streams from this PC (Remote Play, Steam Link, a Steam Frame).
     const stopSteamStreamWatch = installOptionalHook("Core stream watch", () => installSteamStreamWatch({
@@ -63636,7 +64094,7 @@ var index = definePlugin(() => {
             const cleanups = [
                 stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
                 stopUpdateNotice,
-                stopCoreHeartbeat, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
+                stopCoreHeartbeat, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
                 stopDeckyIpcRecovery,
                 uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
                 uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,

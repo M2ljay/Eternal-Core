@@ -15,10 +15,12 @@ shows its other actions (for example **Save current display as normal**).
 | RomM | same | RomM did not answer the server's own check |
 | Windows restart | this PC | (information only: "Pending" when Windows wants a restart) |
 | Update night | this PC | updates are waiting and no 5:00 restart is scheduled (schedule it from the card above) |
+| Save backup | Ludusavi before update night | the last run failed or was stopped after 10 minutes (no notice: the update went ahead). Amber when Ludusavi is not installed. See [BATCH-1.md](BATCH-1.md) |
 | TV | Core's TV control | TV control is on but the TV is not paired or does not answer (checked with a plain connection, never woken). While Stream mode is on it says *Left alone (Stream mode)* and is not checked at all |
 | Streaming | Stream mode | (information only: "Idle", "Streaming to <device>" or "TV kept out by you"; details show the source and Apollo's virtual display. See [CORE-STREAM-MODE.md](CORE-STREAM-MODE.md)) |
 | Microphone | this PC | "Partly muted" (one default microphone muted, the other live; in crimson). Otherwise information only: "Muted" in crimson, "Live" or "No microphone", followed by the calls mic's name or "calls mic not connected" when one is chosen. A calls mic that is not connected is never a problem (it may be on another PC): no attention, no notice. No battery level: Windows reports none for a USB audio receiver. See [CORE-VOICE.md](CORE-VOICE.md) |
 | Steam update | Steam updates | (only while an automatic Steam update is postponed; amber after 21 days past the soak. See [STEAM-UPDATES.md](STEAM-UPDATES.md)) |
+| Decky | Core's heartbeat and Decky's plugin logs | plugins did not load, or a plugin's log reported errors in the last 6 hours ("Forge is reporting errors", with one masked line). See [BATCH-1.md](BATCH-1.md) |
 | Display | console guards | the display differs from the one saved as normal (resolution, refresh rate, HDR, main display, Windows' variable refresh switch). **Restore display settings** |
 | Sound output | console guards | the default playback device is not the one saved as normal. **Switch sound back** |
 | Controllers | console guards | never (information only; an expected controller that is not seen is amber) |
@@ -44,6 +46,7 @@ With **Health alerts** on (the default), Core shows one short notice over Big Pi
 - Windows' automatic sign-in is off,
 - a firmware update is staged while BitLocker is on and the BitLocker guard is not installed,
 - the Ethernet cable is unplugged.
+- a Decky plugin's log reports errors ("Decky: Forge is reporting errors"), again when the set of plugins changes.
 
 Several at once share one notice ("A few things need attention").
 

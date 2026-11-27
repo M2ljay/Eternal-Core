@@ -565,6 +565,47 @@ const consoleCopy: Record<string, Copy> = {
 };
 for (const [language, table] of Object.entries(consoleCopy)) Object.assign(copy[language] ?? {}, table);
 
+// Batch 1 (BATCH-1.md): the save backup before update night and Decky with the plugins that report errors.
+const batchCopy: Record<string, Copy> = {
+  en: {
+    r_saves: "Save backup", svOkNight: "Last night OK", svOkWhen: "OK {when}", svFailedNight: "Last night failed", svFailedWhen: "Failed {when}", svNone: "Ludusavi not installed", svOff: "Off", svNever: "Not run yet", svGames: "{n} games backed up", svLimit: "Took longer than 10 minutes and was stopped", svSome: "Some games' saves could not be copied", svNoAnswer: "Ludusavi gave no answer", svExit: "Ludusavi stopped with code {code}", svNotStarted: "Ludusavi could not start", svInstall: "Install it on the desktop: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugins loaded", dkWaiting: "Waiting for plugins", dkNa: "Not in Gaming Mode", dkNotLoaded: "Plugins not loaded", dkErrOne: "{name} is reporting errors", dkErrMany: "{names} are reporting errors", dkLast: "Last error: {line}", dkCount: "{n} errors in the last 6 hours", dkFrom: "Errors from: {names}",
+  },
+  it: {
+    r_saves: "Backup dei salvataggi", svOkNight: "Stanotte OK", svOkWhen: "OK {when}", svFailedNight: "Stanotte non riuscito", svFailedWhen: "Non riuscito {when}", svNone: "Ludusavi non installato", svOff: "Spento", svNever: "Non ancora eseguito", svGames: "Backup di {n} giochi", svLimit: "Ci ha messo più di 10 minuti ed è stato fermato", svSome: "Non è stato possibile copiare i salvataggi di alcuni giochi", svNoAnswer: "Ludusavi non ha risposto", svExit: "Ludusavi si è fermato con il codice {code}", svNotStarted: "Ludusavi non è partito", svInstall: "Installalo sul desktop: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugin caricati", dkWaiting: "In attesa dei plugin", dkNa: "Non in Gaming Mode", dkNotLoaded: "Plugin non caricati", dkErrOne: "{name} segnala errori", dkErrMany: "{names} segnalano errori", dkLast: "Ultimo errore: {line}", dkCount: "{n} errori nelle ultime 6 ore", dkFrom: "Errori da: {names}",
+  },
+  es: {
+    r_saves: "Copia de partidas", svOkNight: "Anoche OK", svOkWhen: "OK {when}", svFailedNight: "Anoche falló", svFailedWhen: "Falló {when}", svNone: "Ludusavi no está instalado", svOff: "Desactivado", svNever: "Aún no se ha hecho", svGames: "Copia de {n} juegos", svLimit: "Tardó más de 10 minutos y se detuvo", svSome: "No se pudieron copiar las partidas de algunos juegos", svNoAnswer: "Ludusavi no respondió", svExit: "Ludusavi se detuvo con el código {code}", svNotStarted: "Ludusavi no pudo iniciarse", svInstall: "Instálalo en el escritorio: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugins cargados", dkWaiting: "Esperando a los plugins", dkNa: "Fuera de Gaming Mode", dkNotLoaded: "Plugins no cargados", dkErrOne: "{name} informa de errores", dkErrMany: "{names} informan de errores", dkLast: "Último error: {line}", dkCount: "{n} errores en las últimas 6 horas", dkFrom: "Errores de: {names}",
+  },
+  fr: {
+    r_saves: "Sauvegarde des parties", svOkNight: "Cette nuit OK", svOkWhen: "OK {when}", svFailedNight: "Échec cette nuit", svFailedWhen: "Échec {when}", svNone: "Ludusavi n'est pas installé", svOff: "Désactivé", svNever: "Pas encore lancé", svGames: "{n} jeux sauvegardés", svLimit: "A duré plus de 10 minutes et a été arrêté", svSome: "Les parties de certains jeux n'ont pas pu être copiées", svNoAnswer: "Ludusavi n'a pas répondu", svExit: "Ludusavi s'est arrêté avec le code {code}", svNotStarted: "Ludusavi n'a pas pu démarrer", svInstall: "Installe-le sur le bureau : winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugins chargés", dkWaiting: "En attente des plugins", dkNa: "Hors Gaming Mode", dkNotLoaded: "Plugins non chargés", dkErrOne: "{name} signale des erreurs", dkErrMany: "{names} signalent des erreurs", dkLast: "Dernière erreur : {line}", dkCount: "{n} erreurs ces 6 dernières heures", dkFrom: "Erreurs de : {names}",
+  },
+  de: {
+    r_saves: "Spielstand-Backup", svOkNight: "Letzte Nacht OK", svOkWhen: "OK {when}", svFailedNight: "Letzte Nacht fehlgeschlagen", svFailedWhen: "Fehlgeschlagen {when}", svNone: "Ludusavi nicht installiert", svOff: "Aus", svNever: "Noch nicht gelaufen", svGames: "{n} Spiele gesichert", svLimit: "Dauerte länger als 10 Minuten und wurde gestoppt", svSome: "Die Spielstände einiger Spiele konnten nicht kopiert werden", svNoAnswer: "Ludusavi hat nicht geantwortet", svExit: "Ludusavi wurde mit Code {code} beendet", svNotStarted: "Ludusavi konnte nicht starten", svInstall: "Auf dem Desktop installieren: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugins geladen", dkWaiting: "Warte auf Plugins", dkNa: "Nicht im Gaming Mode", dkNotLoaded: "Plugins nicht geladen", dkErrOne: "{name} meldet Fehler", dkErrMany: "{names} melden Fehler", dkLast: "Letzter Fehler: {line}", dkCount: "{n} Fehler in den letzten 6 Stunden", dkFrom: "Fehler von: {names}",
+  },
+  pt: {
+    r_saves: "Backup dos jogos salvos", svOkNight: "Ontem à noite OK", svOkWhen: "OK {when}", svFailedNight: "Falhou ontem à noite", svFailedWhen: "Falhou {when}", svNone: "Ludusavi não instalado", svOff: "Desligado", svNever: "Ainda não executado", svGames: "Backup de {n} jogos", svLimit: "Demorou mais de 10 minutos e foi parado", svSome: "Não foi possível copiar os jogos salvos de alguns jogos", svNoAnswer: "O Ludusavi não respondeu", svExit: "O Ludusavi parou com o código {code}", svNotStarted: "O Ludusavi não conseguiu iniciar", svInstall: "Instale-o na área de trabalho: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Plugins carregados", dkWaiting: "Aguardando os plugins", dkNa: "Fora do Gaming Mode", dkNotLoaded: "Plugins não carregados", dkErrOne: "{name} está relatando erros", dkErrMany: "{names} estão relatando erros", dkLast: "Último erro: {line}", dkCount: "{n} erros nas últimas 6 horas", dkFrom: "Erros de: {names}",
+  },
+  uk: {
+    r_saves: "Резервна копія збережень", svOkNight: "Минулої ночі OK", svOkWhen: "OK {when}", svFailedNight: "Минулої ночі не вдалося", svFailedWhen: "Не вдалося {when}", svNone: "Ludusavi не встановлено", svOff: "Вимкнено", svNever: "Ще не запускалося", svGames: "Збережено {n} ігор", svLimit: "Тривало понад 10 хвилин і було зупинено", svSome: "Збереження деяких ігор не вдалося скопіювати", svNoAnswer: "Ludusavi не відповів", svExit: "Ludusavi зупинився з кодом {code}", svNotStarted: "Ludusavi не запустився", svInstall: "Установіть його на робочому столі: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Плагіни завантажено", dkWaiting: "Очікування плагінів", dkNa: "Не в Gaming Mode", dkNotLoaded: "Плагіни не завантажено", dkErrOne: "{name} повідомляє про помилки", dkErrMany: "{names} повідомляють про помилки", dkLast: "Остання помилка: {line}", dkCount: "{n} помилок за останні 6 годин", dkFrom: "Помилки від: {names}",
+  },
+  ru: {
+    r_saves: "Резервная копия сохранений", svOkNight: "Прошлой ночью OK", svOkWhen: "OK {when}", svFailedNight: "Прошлой ночью не удалось", svFailedWhen: "Не удалось {when}", svNone: "Ludusavi не установлен", svOff: "Выключено", svNever: "Ещё не запускалось", svGames: "Сохранено игр: {n}", svLimit: "Длилось больше 10 минут и было остановлено", svSome: "Сохранения некоторых игр не удалось скопировать", svNoAnswer: "Ludusavi не ответил", svExit: "Ludusavi остановился с кодом {code}", svNotStarted: "Ludusavi не запустился", svInstall: "Установите его на рабочем столе: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "Плагины загружены", dkWaiting: "Ожидание плагинов", dkNa: "Не в Gaming Mode", dkNotLoaded: "Плагины не загружены", dkErrOne: "{name} сообщает об ошибках", dkErrMany: "{names} сообщают об ошибках", dkLast: "Последняя ошибка: {line}", dkCount: "Ошибок за последние 6 часов: {n}", dkFrom: "Ошибки от: {names}",
+  },
+  zh: {
+    r_saves: "存档备份", svOkNight: "昨晚成功", svOkWhen: "成功 {when}", svFailedNight: "昨晚失败", svFailedWhen: "失败 {when}", svNone: "未安装 Ludusavi", svOff: "已关闭", svNever: "尚未运行", svGames: "已备份 {n} 个游戏", svLimit: "超过 10 分钟，已停止", svSome: "部分游戏的存档无法复制", svNoAnswer: "Ludusavi 没有响应", svExit: "Ludusavi 以代码 {code} 退出", svNotStarted: "Ludusavi 无法启动", svInstall: "请在桌面安装：winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "插件已加载", dkWaiting: "正在等待插件", dkNa: "不在 Gaming Mode", dkNotLoaded: "插件未加载", dkErrOne: "{name} 正在报告错误", dkErrMany: "{names} 正在报告错误", dkLast: "最近的错误：{line}", dkCount: "过去 6 小时 {n} 个错误", dkFrom: "错误来自：{names}",
+  },
+  ja: {
+    r_saves: "セーブのバックアップ", svOkNight: "昨夜 OK", svOkWhen: "OK {when}", svFailedNight: "昨夜は失敗", svFailedWhen: "失敗 {when}", svNone: "Ludusavi 未インストール", svOff: "オフ", svNever: "まだ実行していません", svGames: "{n} 本のゲームをバックアップ", svLimit: "10 分を超えたため停止しました", svSome: "一部のゲームのセーブをコピーできませんでした", svNoAnswer: "Ludusavi が応答しませんでした", svExit: "Ludusavi がコード {code} で終了しました", svNotStarted: "Ludusavi を起動できませんでした", svInstall: "デスクトップでインストール: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "プラグイン読み込み済み", dkWaiting: "プラグインを待っています", dkNa: "Gaming Mode ではありません", dkNotLoaded: "プラグイン未読み込み", dkErrOne: "{name} がエラーを報告しています", dkErrMany: "{names} がエラーを報告しています", dkLast: "最新のエラー: {line}", dkCount: "過去 6 時間のエラー: {n}", dkFrom: "エラーの発生元: {names}",
+  },
+  ko: {
+    r_saves: "세이브 백업", svOkNight: "어젯밤 정상", svOkWhen: "정상 {when}", svFailedNight: "어젯밤 실패", svFailedWhen: "실패 {when}", svNone: "Ludusavi 미설치", svOff: "꺼짐", svNever: "아직 실행 안 함", svGames: "게임 {n}개 백업", svLimit: "10분이 넘게 걸려 중지됨", svSome: "일부 게임의 세이브를 복사하지 못함", svNoAnswer: "Ludusavi가 응답하지 않음", svExit: "Ludusavi가 코드 {code}로 종료됨", svNotStarted: "Ludusavi를 시작하지 못함", svInstall: "데스크톱에서 설치: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "플러그인 로드됨", dkWaiting: "플러그인 기다리는 중", dkNa: "Gaming Mode 아님", dkNotLoaded: "플러그인 로드 안 됨", dkErrOne: "{name}에서 오류 보고 중", dkErrMany: "{names}에서 오류 보고 중", dkLast: "마지막 오류: {line}", dkCount: "최근 6시간 오류 {n}개", dkFrom: "오류 출처: {names}",
+  },
+  hi: {
+    r_saves: "सेव बैकअप", svOkNight: "कल रात ठीक", svOkWhen: "ठीक {when}", svFailedNight: "कल रात विफल", svFailedWhen: "विफल {when}", svNone: "Ludusavi इंस्टॉल नहीं है", svOff: "बंद", svNever: "अभी तक नहीं चला", svGames: "{n} गेम का बैकअप", svLimit: "10 मिनट से ज़्यादा लगा और रोक दिया गया", svSome: "कुछ गेम के सेव कॉपी नहीं हो सके", svNoAnswer: "Ludusavi ने जवाब नहीं दिया", svExit: "Ludusavi कोड {code} के साथ रुका", svNotStarted: "Ludusavi शुरू नहीं हो सका", svInstall: "डेस्कटॉप पर इंस्टॉल करें: winget install -e --id mtkennerly.ludusavi", r_decky: "Decky", dkOk: "प्लगइन लोड हैं", dkWaiting: "प्लगइन का इंतज़ार", dkNa: "Gaming Mode में नहीं", dkNotLoaded: "प्लगइन लोड नहीं हुए", dkErrOne: "{name} त्रुटियाँ बता रहा है", dkErrMany: "{names} त्रुटियाँ बता रहे हैं", dkLast: "आख़िरी त्रुटि: {line}", dkCount: "पिछले 6 घंटों में {n} त्रुटियाँ", dkFrom: "त्रुटियाँ इनसे: {names}",
+  },
+};
+for (const [language, table] of Object.entries(batchCopy)) Object.assign(copy[language] ?? {}, table);
+
 export const healthLanguages = Object.keys(copy);
 
 export function healthCopy(locale: string): Copy {
@@ -607,7 +648,7 @@ function formatTime(value: unknown, locale: string, hour: unknown): string {
 
 const titles: Record<string, string> = {
   "server-backup": "r_backup", "restore-check": "r_restore", "server-drive": "r_drive", romm: "r_romm",
-  "windows-restart": "r_restart", "update-night": "r_night", "steam-update": "r_steam", tv: "r_tv", streaming: "r_stream", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
+  "windows-restart": "r_restart", "update-night": "r_night", "save-backup": "r_saves", "steam-update": "r_steam", "decky-plugins": "r_decky", tv: "r_tv", streaming: "r_stream", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
   // Console guards (ConsoleGuards.cs).
   display: "r_display", "sound-output": "r_sound", controllers: "r_controllers", "steam-sign-in": "r_steamSign", "auto-sign-in": "r_autoSign", bitlocker: "r_bitlocker",
   "windows-prompts": "r_prompts", "update-policy": "r_updPolicy", "launcher-updates": "r_launchUpd", "launcher-focus": "r_launchFocus", "wake-check": "r_wake",
@@ -705,6 +746,37 @@ function rowValue(row: HealthRowData, text: Copy, locale: string, now: Date): { 
       if (typeof data.pending === "string" && /^\d{1,20}$/.test(data.pending)) details.push(fill(text.stPending, { version: data.pending }));
       if (typeof data.failedCheck === "string" && /^[a-z-]{1,20}$/.test(data.failedCheck)) details.push(data.failedCheck);
       return { value: fill(text.stPostponed, { reason }), details };
+    }
+    case "save-backup": {
+      // Batch 1: Ludusavi before update night. One reason line, never Ludusavi's output.
+      const recent = data.recent === true, games = Number(data.games) || 0;
+      const reason = String(data.reason ?? "");
+      const exit = /^exit-(-?\d{1,6})$/.exec(reason);
+      if (row.state === "ok" && games > 0) details.push(fill(text.svGames, { n: games }));
+      if (row.state === "failed") {
+        const why = reason === "time-limit" ? text.svLimit : reason === "some-games-failed" ? text.svSome : reason === "no-answer" ? text.svNoAnswer
+          : reason === "not-started" ? text.svNotStarted : exit ? fill(text.svExit, { code: exit[1] }) : "";
+        if (why) details.push(why);
+      }
+      if (row.state === "not-installed") details.push(text.svInstall);
+      const value = row.state === "ok" ? (recent ? text.svOkNight : fill(text.svOkWhen, { when: when("at") }))
+        : row.state === "failed" ? (recent ? text.svFailedNight : fill(text.svFailedWhen, { when: when("at") }))
+        : row.state === "not-installed" ? text.svNone : row.state === "off" ? text.svOff : row.state === "never" ? text.svNever : text.unknown;
+      return { value, details };
+    }
+    case "decky-plugins": {
+      // Batch 1 (B11): the heartbeat's verdict and the plugins whose logs report errors. The agent masks the one line.
+      const names = (Array.isArray(data.plugins) ? data.plugins : []).map(item => clean(item, 40)).filter(Boolean).slice(0, 6);
+      const line = clean(data.line, 120), errors = Number(data.errors) || 0;
+      if (row.state === "errors" || row.state === "not-loaded") {
+        if (row.state === "not-loaded" && names.length) details.push(fill(text.dkFrom, { names: names.join(", ") }));
+        if (errors > 0 && names.length) details.push(fill(text.dkCount, { n: errors }));
+        if (line && names.length) details.push(fill(text.dkLast, { line }));
+      }
+      if (row.state === "errors" && names.length)
+        return { value: names.length === 1 ? fill(text.dkErrOne, { name: names[0] }) : fill(text.dkErrMany, { names: names.join(", ") }), details };
+      const states: Record<string, string> = { healthy: text.dkOk, waiting: text.dkWaiting, "not-applicable": text.dkNa, "not-loaded": text.dkNotLoaded };
+      return { value: states[row.state] ?? text.unknown, details };
     }
     case "core-update":
       return { value: row.state === "available" ? fill(text.cAvail, { latest: String(data.latest ?? "?") })

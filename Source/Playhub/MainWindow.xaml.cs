@@ -2286,6 +2286,7 @@ public sealed partial class MainWindow : Window
         panel.Children.Add(BuildQuietWindowsCard());
         panel.Children.Add(BuildCoreHealthCard());
         panel.Children.Add(BuildConsoleGuardsCard());
+        panel.Children.Add(BuildBeforeBedCard());
 
         // ---------- Splash logo with live preview ----------
         _splashLogoCombo = ChoiceCombo(SplashLogoOptions);

@@ -98,6 +98,8 @@ Core Health (the Quick Access health section and the home server's nightly backu
 [CORE-HEALTH.md](CORE-HEALTH.md). Core Voice: [CORE-VOICE.md](CORE-VOICE.md). Stream mode (the TV left alone while
 the PC streams to another device): [CORE-STREAM-MODE.md](CORE-STREAM-MODE.md). Console guards (nothing asks for a
 keyboard, mouse or password; nothing quietly breaks the TV): [CONSOLE-GUARDS.md](CONSOLE-GUARDS.md).
+Batch 1 (save backup before update night, Decky naming the failing plugin, the 4 a.m. wind-down, Auto-Completed):
+[BATCH-1.md](BATCH-1.md).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

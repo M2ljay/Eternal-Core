@@ -1549,5 +1549,17 @@
   "Serve il permesso di amministratore.": "需要管理员权限。",
   "Schermo, audio e controller normali dimenticati.": "已忘记常用的显示、声音和控制器。",
   "Windows Home: nessun driver da Windows Update per i dispositivi": "Windows 家庭版：不从 Windows 更新获取设备驱动",
-  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Windows 功能更新保持在当前版本"
+  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Windows 功能更新保持在当前版本",
+  "Prima di dormire": "睡前",
+  "Backup dei salvataggi prima degli aggiornamenti notturni, un promemoria per salvare prima di andare a letto e la raccolta Completed di Steam.": "夜间更新前备份存档、睡前提醒存档，以及 Steam 收藏夹 Completed。",
+  "Backup dei salvataggi prima degli aggiornamenti": "更新前备份存档",
+  "Prima del riavvio della notte degli aggiornamenti e prima di un aggiornamento automatico di Steam, Ludusavi fa il backup dei salvataggi di tutti i giochi. Serve Ludusavi (winget install -e --id mtkennerly.ludusavi). Se il backup non riesce, l'aggiornamento parte comunque.": "在更新之夜重启前和 Steam 自动更新前，Ludusavi 会备份所有游戏的存档。需要安装 Ludusavi（winget install -e --id mtkennerly.ludusavi）。备份失败时，更新仍会照常进行。",
+  "Promemoria per salvare prima di dormire": "睡前存档提醒",
+  "Mentre giochi, un avviso di Steam ricorda di salvare poco prima dell'ora di andare a letto. È solo un avviso: Core non chiude mai il gioco.": "游戏时，Steam 通知会在睡觉时间前不久提醒你存档。只是提醒：Core 绝不会关闭游戏。",
+  "Ora di andare a letto": "睡觉时间",
+  "Minuti prima (separati da virgole)": "提前分钟数（用逗号分隔）",
+  "Aggiungi i giochi completati alla raccolta Completed": "将已完成的游戏加入 Completed 收藏夹",
+  "Quando un gioco di Steam arriva al 100% degli obiettivi, Core lo aggiunge alla tua raccolta di Steam chiamata Completed. Non toglie mai giochi dalla raccolta.": "当 Steam 游戏达成 100% 成就时，Core 会把它加入你名为 Completed 的 Steam 收藏夹。绝不会从收藏夹中移除游戏。",
+  "Crea la raccolta Completed se manca": "缺少 Completed 收藏夹时创建",
+  "Senza questa opzione Core usa solo una raccolta Completed che esiste già.": "不开启此选项时，Core 只使用已存在的 Completed 收藏夹。"
 }

@@ -121,6 +121,18 @@ public sealed class GamingSettings
 	public bool ConsoleLauncherFocusGuard { get; set; } = true;
 	public bool ConsoleWakeChecks { get; set; } = true;
 
+	// Batch 1 (docs/eternal/BATCH-1.md). Save backup: before the update-night restart and an automatic Steam update,
+	// Ludusavi backs up every game's saves (only when Ludusavi is installed; a failure never blocks the update).
+	// Wind-down: calm "good moment to save" reminders while a game runs, MinutesBefore (comma-separated) before
+	// Bedtime (HH:mm). Completed: games at 100% achievements join the Steam collection "Completed"; Create makes
+	// that collection when it does not exist yet (otherwise nothing is created).
+	public bool SaveBackupBeforeUpdates { get; set; } = true;
+	public bool WindDownEnabled { get; set; } = true;
+	public string WindDownBedtime { get; set; } = "04:00";
+	public string WindDownMinutes { get; set; } = "30, 10";
+	public bool AutoCompletedEnabled { get; set; } = true;
+	public bool AutoCompletedCreate { get; set; }
+
 	// Core Voice (MarkIIIHost.Voice.cs), config-only. A keyboard combination that toggles the
 	// microphone mute (bind it to a Steam Input chord); empty turns it off. An ms-gamebar: URI
 	// the Xbox party button opens instead of Win+G, for a widget link found to work on this PC.

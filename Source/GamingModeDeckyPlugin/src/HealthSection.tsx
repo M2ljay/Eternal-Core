@@ -5,8 +5,9 @@ import { healthCopy, healthLines, healthSummary, type HealthAction, type HealthA
 
 // Eternal Core: the Health section of Quick Access > Core. One line for the whole setup, then a
 // row each for the home server's backup, restore check, drive and RomM (from the server's
-// core-status.json), Windows restart, update night, the TV, streaming (Stream mode), the microphone,
-// the PC's disk and Core's version.
+// core-status.json), Windows restart, update night, the save backup before it (Ludusavi), Decky and the
+// plugins whose logs report errors, the TV, streaming (Stream mode), the microphone, the PC's disk and
+// Core's version (batch 1: docs/eternal/BATCH-1.md).
 // The agent does the gathering (GamingMode.Services/MarkIIIHost.Health.cs); this only renders.
 // Rows are focusable: D-pad moves between them, A shows or hides a row's details, and a row with
 // an active alert offers "Dismiss alert" (it comes back only if the problem changes).

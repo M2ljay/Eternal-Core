@@ -44,7 +44,9 @@ import { installControlledQamFocus } from "./controlledQamIntegration";
 import { createSteamConfiguratorReturn, type SteamConfiguratorReturn } from "./steamConfiguratorReturn";
 import { installLivePerformance } from "./quickSettings/livePerformanceRuntime";
 import { installPlayhubUpdateNotice, updateNoticeBody, type UpdateNotice } from "./playhubUpdateNotice";
-import { installCoreHeartbeat, ensureCoreRepairTile, type CoreRepairShortcut } from "./coreHealth";
+import { installCoreHeartbeat, ensureCoreRepairTile, heartbeatToast, type CoreRepairShortcut } from "./coreHealth";
+import { installAutoCompleted, isComplete, progressFrom, recentGames, settingsFrom, type CompletedOutcome, type CompletedSettings } from "./autoCompleted";
+import { findModule } from "./steamModules";
 import { UpdateNightCard } from "./UpdateNightCard";
 import { SteamUpdateCard } from "./SteamUpdateCard";
 import { HealthSection } from "./HealthSection";
@@ -1110,6 +1112,22 @@ const EWindowBringToFront_AndForceOS = 1;
 
 // ---------------------------------------------------------------------------
 
+// Batch 1 (Auto-Completed): a Steam store by its global name (Decky 3, stable Steam), else through the Decky 3/4
+// module lookups (steamModules.ts). Undefined when neither finds it; the feature then waits for the next try.
+function steamStore(globalName: string, is: (value: any) => boolean): any {
+  const check = (value: any) => { try { return !!value && typeof value === "object" && is(value); } catch { return false; } };
+  try { const value = (window as any)[globalName]; if (check(value)) return value; } catch { /* fall through */ }
+  const module = findModule(DFL, (candidate: any) => {
+    try { return check(candidate) || (!!candidate && typeof candidate === "object" && Object.values(candidate).some(check)); } catch { return false; }
+  });
+  if (check(module)) return module;
+  try { return module && typeof module === "object" ? Object.values(module).find(check) : undefined; } catch { return undefined; }
+}
+
+function withTimeout<T>(work: Promise<T>, ms: number): Promise<T | undefined> {
+  return Promise.race([work, new Promise<undefined>(resolve => window.setTimeout(() => resolve(undefined), ms))]);
+}
+
 function installOptionalHook(name: string, install: () => () => void): () => void {
   try { return install(); }
   catch (error) {
@@ -1141,10 +1159,53 @@ export default definePlugin(() => {
     cancel: timer => window.clearTimeout(timer as number),
   }));
   // Mark III: prove to the agent that Decky's UI loaded, and keep a Core Repair tile in the library.
+  // Batch 1: the beat's answer may carry a bedtime reminder, shown once with Steam's toaster (it appears over games).
+  const seenToasts = new Set<string>();
   const stopCoreHeartbeat = installOptionalHook("Core heartbeat", () => installCoreHeartbeat({
     beat: () => controlCall<[], unknown>("core_heartbeat"),
     schedule: (callback, delay) => window.setTimeout(callback, delay),
     cancel: timer => window.clearTimeout(timer as number),
+    onAnswer: answer => {
+      const toast = heartbeatToast(answer, seenToasts);
+      if (toast) toaster.toast({ title: toast.title, body: toast.body, playSound: !toast.quiet, duration: 8000 });
+    },
+  }));
+  // Batch 1 (B9): games at 100% achievements join the Steam collection "Completed" (src/autoCompleted.ts).
+  let completedSettings: { at: number; value: CompletedSettings } | undefined;
+  const stopAutoCompleted = installOptionalHook("Auto-Completed", () => installAutoCompleted({
+    settings: async () => {
+      if (completedSettings && Date.now() - completedSettings.at < 300000) return completedSettings.value;
+      const value = settingsFrom(await controlCall<[], unknown>("core_completed_settings").catch(() => undefined));
+      completedSettings = { at: Date.now(), value };
+      return value;
+    },
+    progress: async appId => {
+      const cache = steamStore("appAchievementProgressCache", value => !!value.m_achievementProgress);
+      let progress = progressFrom(cache?.m_achievementProgress?.mapCache?.get?.(appId));
+      if (!isComplete(progress)) {
+        const apps = (window as any).SteamClient?.Apps;
+        if (typeof apps?.GetMyAchievementsForApp === "function") {
+          const answer = progressFrom(await withTimeout(Promise.resolve(apps.GetMyAchievementsForApp(String(appId))), 5000).catch(() => undefined));
+          if (answer) progress = answer;
+        }
+      }
+      return progress;
+    },
+    collections: () => steamStore("collectionStore", value => typeof value.GetCollection === "function" && "userCollections" in value),
+    overview: appId => steamStore("appStore", value => typeof value.GetAppOverviewByAppID === "function")?.GetAppOverviewByAppID?.(appId),
+    register: callback => {
+      const sessions = (window as any).SteamClient?.GameSessions;
+      if (typeof sessions?.RegisterForAchievementNotification !== "function") return undefined;
+      const registration = sessions.RegisterForAchievementNotification(callback);
+      return () => registration?.unregister?.();
+    },
+    recent: () => recentGames(steamStore("appStore", value => typeof value.GetAppOverviewByAppID === "function")?.allApps, Date.now()),
+    schedule: (callback, delay) => window.setTimeout(callback, delay),
+    cancel: timer => window.clearTimeout(timer as number),
+    now: () => Date.now(),
+    readSweep: () => Number(window.localStorage.getItem("core.completed.sweep") ?? 0),
+    writeSweep: at => window.localStorage.setItem("core.completed.sweep", String(at)),
+    report: (appId: number, outcome: CompletedOutcome) => { void controlCall<[number, string], unknown>("core_completed_report", appId, outcome).catch(() => undefined); },
   }));
   // Stream mode: tell the agent when Steam streams from this PC (Remote Play, Steam Link, a Steam Frame).
   const stopSteamStreamWatch = installOptionalHook("Core stream watch", () => installSteamStreamWatch({
@@ -1230,7 +1291,7 @@ export default definePlugin(() => {
       const cleanups = [
         stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
         stopUpdateNotice,
-        stopCoreHeartbeat, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
+        stopCoreHeartbeat, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
         stopDeckyIpcRecovery,
         uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
         uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,

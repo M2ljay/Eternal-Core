@@ -108,13 +108,14 @@ jobs:
         working-directory: Source/MarkIII.Tests
         run: dotnet run -c Release
 
-      - name: Mark III Big Picture plugin tests (heartbeat, Core Repair tile, optional startup, Health with the console guards, Voice and Stream mode sections)
+      - name: Mark III Big Picture plugin tests (heartbeat, Core Repair tile, optional startup, Health with the console guards, Voice and Stream mode sections, batch 1)
         working-directory: Source/GamingModeDeckyPlugin
-        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs tests/coreHealthSection.test.mjs tests/coreVoiceSection.test.mjs tests/coreStreamMode.test.mjs tests/steamModules.test.mjs tests/steamUpdateCard.test.mjs tests/consoleGuards.test.mjs
+        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs tests/coreHealthSection.test.mjs tests/coreVoiceSection.test.mjs tests/coreStreamMode.test.mjs tests/steamModules.test.mjs tests/steamUpdateCard.test.mjs tests/consoleGuards.test.mjs tests/coreBatchOne.test.mjs
 
       # Core Health: reading the home server's core-status.json, every row's verdict and the notice
       # rules (once a day per problem; a dismissed problem returns only if it changes), plus the console
-      # guards (BitLocker, sign-ins, display, sound, controllers, update policy, launchers, wake checks).
+      # guards (BitLocker, sign-ins, display, sound, controllers, update policy, launchers, wake checks)
+      # and batch 1 (Ludusavi save backup, Decky plugin logs, bedtime wind-down).
       - name: Core Health tests
         working-directory: Source/CoreHealth.Tests
         run: dotnet run -c Release

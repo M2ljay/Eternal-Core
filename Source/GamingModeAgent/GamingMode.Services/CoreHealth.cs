@@ -96,13 +96,18 @@ internal sealed record CoreHealthInputs
 	// Console guards (ConsoleGuards.cs, docs/eternal/CONSOLE-GUARDS.md): the PC stays a console. Null leaves
 	// their rows out (the server-only checks and their tests).
 	public ConsoleGuardInputs? Guards { get; init; }
+	// Batch 1 (docs/eternal/BATCH-1.md): the update-night save backup (SaveBackup.cs) and Decky's heartbeat with the
+	// plugins whose logs report errors (DeckyPluginLogs.cs). Null leaves their rows out.
+	public SaveBackupInputs? SaveBackup { get; init; }
+	public DeckyPluginInputs? DeckyPlugins { get; init; }
 }
 
 internal sealed record HealthRow(string Id, HealthLevel Level, string State, IReadOnlyDictionary<string, object?> Data);
 
 // A problem that may raise a notice. The fingerprint changes when the problem changes in a way the
-// user should hear about again (a new failure streak, a worse drive state, a new stale file).
-internal sealed record HealthProblem(string Id, string RowId, string Fingerprint, string NoticeKey);
+// user should hear about again (a new failure streak, a worse drive state, a new stale file). Argument fills the
+// notice text's {0} (the failing Decky plugins' names).
+internal sealed record HealthProblem(string Id, string RowId, string Fingerprint, string NoticeKey, string? Argument = null);
 
 internal sealed record HealthReport(int Attention, IReadOnlyList<HealthRow> Rows, IReadOnlyList<HealthProblem> Problems);
 
@@ -115,7 +120,7 @@ internal static class CoreHealthPolicy
 	internal const long PcMinFreeBytes = 20L * 1000 * 1000 * 1000;
 
 	// The order the Quick Access section shows the rows in.
-	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "steam-update", "tv", "streaming", "microphone", "pc-disk", "core-update" };
+	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "save-backup", "steam-update", "decky-plugins", "tv", "streaming", "microphone", "pc-disk", "core-update" };
 
 	// The home server running Aincrad: "serverv3", "192.168.1.109", "serverv3:8123" or a full http(s) URL.
 	// Its nightly backup writes core-status.json into Home Assistant's www/ folder, served without a
@@ -310,12 +315,18 @@ internal static class CoreHealthPolicy
 		else if (input.UpdateNightOffer) rows.Add(new HealthRow("update-night", HealthLevel.Attention, "waiting", night));
 		else rows.Add(new HealthRow("update-night", HealthLevel.Ok, "nothing", night));
 
+		// Save backup before update night (Ludusavi): "last night OK", "failed" or "Ludusavi not installed".
+		if (input.SaveBackup is { } saves) rows.Add(SaveBackupPolicy.Row(saves.Enabled, saves.Installed, saves.State, input.Now));
+
 		// Steam updates: a row only while an automatic update is postponed ("Steam update postponed: <reason>").
 		if (input.SteamPostponedReason is { Length: > 0 } steamReason)
 		{
 			var steam = new Dictionary<string, object?> { ["reason"] = steamReason, ["failedCheck"] = input.SteamFailedCheck, ["pending"] = input.SteamPendingVersion, ["since"] = Stamp(input.SteamPostponedSince) };
 			rows.Add(new HealthRow("steam-update", input.SteamPostponedAttention ? HealthLevel.Attention : HealthLevel.Info, "postponed", steam));
 		}
+
+		// Decky: the heartbeat's verdict, and the plugins whose logs reported errors lately ("Decky: Forge is reporting errors").
+		if (input.DeckyPlugins is { } decky) rows.Add(DeckyLogPolicy.Row(decky.Verdict, decky.Logs, input.Now, problems));
 
 		// TV: read only; never woken for this.
 		var tv = new Dictionary<string, object?> { ["enabled"] = input.TvEnabled, ["paired"] = input.TvPaired, ["reachable"] = input.TvReachable };

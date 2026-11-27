@@ -1570,5 +1570,17 @@
   "Serve il permesso di amministratore.": "Hace falta el permiso de administrador.",
   "Schermo, audio e controller normali dimenticati.": "Pantalla, sonido y mandos normales olvidados.",
   "Windows Home: nessun driver da Windows Update per i dispositivi": "Windows Home: sin controladores de dispositivos desde Windows Update",
-  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Las actualizaciones de características de Windows se quedan en la versión actual"
+  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Las actualizaciones de características de Windows se quedan en la versión actual",
+  "Prima di dormire": "Antes de dormir",
+  "Backup dei salvataggi prima degli aggiornamenti notturni, un promemoria per salvare prima di andare a letto e la raccolta Completed di Steam.": "Copia de las partidas guardadas antes de las actualizaciones nocturnas, un recordatorio para guardar antes de dormir y la colección Completed de Steam.",
+  "Backup dei salvataggi prima degli aggiornamenti": "Copia de las partidas antes de actualizar",
+  "Prima del riavvio della notte degli aggiornamenti e prima di un aggiornamento automatico di Steam, Ludusavi fa il backup dei salvataggi di tutti i giochi. Serve Ludusavi (winget install -e --id mtkennerly.ludusavi). Se il backup non riesce, l'aggiornamento parte comunque.": "Antes del reinicio de la noche de actualizaciones y antes de una actualización automática de Steam, Ludusavi hace una copia de las partidas guardadas de todos los juegos. Requiere Ludusavi (winget install -e --id mtkennerly.ludusavi). Si la copia falla, la actualización sigue igualmente.",
+  "Promemoria per salvare prima di dormire": "Recordatorios para guardar antes de dormir",
+  "Mentre giochi, un avviso di Steam ricorda di salvare poco prima dell'ora di andare a letto. È solo un avviso: Core non chiude mai il gioco.": "Mientras juegas, un aviso de Steam te recuerda guardar poco antes de la hora de dormir. Es solo un aviso: Core nunca cierra el juego.",
+  "Ora di andare a letto": "Hora de dormir",
+  "Minuti prima (separati da virgole)": "Minutos antes (separados por comas)",
+  "Aggiungi i giochi completati alla raccolta Completed": "Añadir los juegos completados a la colección Completed",
+  "Quando un gioco di Steam arriva al 100% degli obiettivi, Core lo aggiunge alla tua raccolta di Steam chiamata Completed. Non toglie mai giochi dalla raccolta.": "Cuando un juego de Steam llega al 100 % de los logros, Core lo añade a tu colección de Steam llamada Completed. Nunca quita juegos de la colección.",
+  "Crea la raccolta Completed se manca": "Crear la colección Completed si no existe",
+  "Senza questa opzione Core usa solo una raccolta Completed che esiste già.": "Sin esta opción, Core solo usa una colección Completed que ya exista."
 }

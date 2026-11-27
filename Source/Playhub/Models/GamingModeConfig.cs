@@ -74,6 +74,14 @@ public sealed class GamingOptions
     // Console guards (agent ConsoleGuards.cs): launcher pop-ups pushed behind Big Picture, checks after a wake.
     public bool ConsoleLauncherFocusGuard { get; set; } = true;
     public bool ConsoleWakeChecks { get; set; } = true;
+    // Batch 1 (docs/eternal/BATCH-1.md): Ludusavi save backup before update night and Steam updates, the bedtime
+    // wind-down reminders, and adding 100% games to the Steam collection "Completed".
+    public bool SaveBackupBeforeUpdates { get; set; } = true;
+    public bool WindDownEnabled { get; set; } = true;
+    public string WindDownBedtime { get; set; } = "04:00";
+    public string WindDownMinutes { get; set; } = "30, 10";
+    public bool AutoCompletedEnabled { get; set; } = true;
+    public bool AutoCompletedCreate { get; set; }
     public List<StartupAppConfig> CustomStartupApps { get; set; } = new();
 
     // Qui finiscono le opzioni che vivono solo lato agente - fra cui le app

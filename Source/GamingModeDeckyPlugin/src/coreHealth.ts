@@ -14,6 +14,8 @@ export type HeartbeatDeps = {
   schedule: (callback: () => void, delay: number) => unknown;
   cancel: (timer: unknown) => void;
   interval?: number;
+  // Batch 1: the agent's answer to a beat (it may carry a wind-down reminder, see heartbeatToast).
+  onAnswer?: (answer: unknown) => void;
 };
 
 export function installCoreHeartbeat(deps: HeartbeatDeps): () => void {
@@ -25,7 +27,8 @@ export function installCoreHeartbeat(deps: HeartbeatDeps): () => void {
       busy = true;
       let pending: Promise<unknown>;
       try { pending = Promise.resolve(deps.beat()); } catch { pending = Promise.resolve(); }
-      pending.catch(() => { /* The agent may be restarting; the next beat retries. */ }).finally(() => { busy = false; });
+      pending.then(answer => { try { deps.onAnswer?.(answer); } catch { /* A bad answer is ignored. */ } })
+        .catch(() => { /* The agent may be restarting; the next beat retries. */ }).finally(() => { busy = false; });
     }
     timer = deps.schedule(tick, interval);
   }
@@ -82,4 +85,25 @@ export async function ensureCoreRepairTile(deps: TileDeps): Promise<TileResult> 
   } catch {
     return "failed";
   }
+}
+
+// Batch 1 (docs/eternal/BATCH-1.md): the bedtime wind-down. The agent decides when ("It's 3:50, good moment to
+// save."), only while a game runs, and hands the reminder over once in a heartbeat answer; the plugin shows it
+// with Steam's toaster, which appears over games (Core's own notice window is for Big Picture only). quiet
+// (Stream mode or VR): no toast sound. Each reminder is shown once even if the answer repeats.
+export type CoreToast = { id: string; title: string; body: string; quiet: boolean };
+
+export function heartbeatToast(answer: unknown, seen: Set<string>): CoreToast | undefined {
+  try {
+    const toast = (answer as any)?.toast;
+    if (!toast || typeof toast !== "object") return undefined;
+    const id = toast.id, body = toast.body;
+    if (typeof id !== "string" || !/^[a-z0-9-]{1,40}$/.test(id) || seen.has(id)) return undefined;
+    if (typeof body !== "string") return undefined;
+    const text = body.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 200);
+    if (!text) return undefined;
+    seen.add(id);
+    if (seen.size > 32) seen.delete(seen.values().next().value as string);
+    return { id, title: "Core", body: text, quiet: toast.quiet === true };
+  } catch { return undefined; }
 }

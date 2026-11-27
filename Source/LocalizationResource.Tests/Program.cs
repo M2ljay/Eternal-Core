@@ -239,6 +239,37 @@ foreach (var language in LocalizationService.Languages.Where(language => languag
     Check(true, $"{language.Key}: {consoleGuards.Length} console guards strings translate");
 }
 
+// Batch 1 (MainWindow.MarkIII.cs BuildBeforeBedCard, docs/eternal/BATCH-1.md): save backup, wind-down and
+// Auto-Completed settings, in every language.
+string[] batchOne =
+{
+    "Prima di dormire",
+    "Backup dei salvataggi prima degli aggiornamenti notturni, un promemoria per salvare prima di andare a letto e la raccolta Completed di Steam.",
+    "Backup dei salvataggi prima degli aggiornamenti",
+    "Prima del riavvio della notte degli aggiornamenti e prima di un aggiornamento automatico di Steam, Ludusavi fa il backup dei salvataggi di tutti i giochi. Serve Ludusavi (winget install -e --id mtkennerly.ludusavi). Se il backup non riesce, l'aggiornamento parte comunque.",
+    "Promemoria per salvare prima di dormire",
+    "Mentre giochi, un avviso di Steam ricorda di salvare poco prima dell'ora di andare a letto. È solo un avviso: Core non chiude mai il gioco.",
+    "Ora di andare a letto",
+    "Minuti prima (separati da virgole)",
+    "Aggiungi i giochi completati alla raccolta Completed",
+    "Quando un gioco di Steam arriva al 100% degli obiettivi, Core lo aggiunge alla tua raccolta di Steam chiamata Completed. Non toglie mai giochi dalla raccolta.",
+    "Crea la raccolta Completed se manca",
+    "Senza questa opzione Core usa solo una raccolta Completed che esiste già."
+};
+foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
+{
+    foreach (var key in batchOne)
+    {
+        var translated = LocalizationService.Translate(language.Key, key);
+        if (string.IsNullOrWhiteSpace(translated) || translated == key)
+            throw new Exception($"Batch 1 string is not translated: {language.Key}/{key}");
+        if (!Tokens(translated).SequenceEqual(Tokens(key)))
+            throw new Exception($"Batch 1 string format token mismatch: {language.Key}/{key}");
+    }
+    Check(true, $"{language.Key}: {batchOne.Length} batch 1 strings translate");
+}
+Check(batchOne.All(key => LocalizationService.Translate("it", key) == key), "Batch 1 Italian source strings render as written");
+
 // Eternal Core rebrand (docs/eternal/REBRAND.md): the app is called Core everywhere the user reads it.
 // "Playhub" stays only where it names something that still carries that name: the upstream project in
 // the credits, the upstream Playhub-* plugin suite, and the Playhub.exe file. Any other product-name use is a missed string.

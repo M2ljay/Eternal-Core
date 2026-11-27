@@ -1553,5 +1553,17 @@
   "Serve il permesso di amministratore.": "管理者権限が必要です。",
   "Schermo, audio e controller normali dimenticati.": "通常の画面・音・コントローラーの設定を忘れました。",
   "Windows Home: nessun driver da Windows Update per i dispositivi": "Windows Home：Windows Update からデバイス ドライバーを入れない",
-  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Windows の機能更新を現在のバージョンにとどめる"
+  "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale": "Windows の機能更新を現在のバージョンにとどめる",
+  "Prima di dormire": "寝る前",
+  "Backup dei salvataggi prima degli aggiornamenti notturni, un promemoria per salvare prima di andare a letto e la raccolta Completed di Steam.": "夜間アップデート前のセーブデータのバックアップ、就寝前のセーブのリマインダー、Steam のコレクション Completed。",
+  "Backup dei salvataggi prima degli aggiornamenti": "アップデート前にセーブデータをバックアップ",
+  "Prima del riavvio della notte degli aggiornamenti e prima di un aggiornamento automatico di Steam, Ludusavi fa il backup dei salvataggi di tutti i giochi. Serve Ludusavi (winget install -e --id mtkennerly.ludusavi). Se il backup non riesce, l'aggiornamento parte comunque.": "アップデートの夜の再起動前と Steam の自動アップデート前に、Ludusavi がすべてのゲームのセーブデータをバックアップします。Ludusavi が必要です（winget install -e --id mtkennerly.ludusavi）。バックアップに失敗してもアップデートは行われます。",
+  "Promemoria per salvare prima di dormire": "寝る前のセーブのリマインダー",
+  "Mentre giochi, un avviso di Steam ricorda di salvare poco prima dell'ora di andare a letto. È solo un avviso: Core non chiude mai il gioco.": "プレイ中、就寝時刻の少し前に Steam の通知がセーブを促します。お知らせだけで、Core がゲームを閉じることはありません。",
+  "Ora di andare a letto": "就寝時刻",
+  "Minuti prima (separati da virgole)": "何分前（カンマ区切り）",
+  "Aggiungi i giochi completati alla raccolta Completed": "クリアしたゲームをコレクション Completed に追加",
+  "Quando un gioco di Steam arriva al 100% degli obiettivi, Core lo aggiunge alla tua raccolta di Steam chiamata Completed. Non toglie mai giochi dalla raccolta.": "Steam のゲームが実績 100% に達すると、Core が Completed という名前の Steam コレクションに追加します。コレクションからゲームを外すことはありません。",
+  "Crea la raccolta Completed se manca": "Completed コレクションがなければ作成",
+  "Senza questa opzione Core usa solo una raccolta Completed che esiste già.": "このオプションがオフのときは、既存の Completed コレクションだけを使います。"
 }
