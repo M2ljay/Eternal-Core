@@ -1,10 +1,11 @@
 import { registerQamVisibilityDocument } from './qamTabVisibility';
 import { HomeHistorySettings, historyTitle } from "./DailyHistory";
 import { HomeNewsSettings } from "./HomeNews";
+import { ClubSettings } from "./club";
 import { call } from "./controlBackend";
 import { CORE } from "./corePalette";
 import { DFL, SP_REACT as React, toaster } from "./decky";
-import { TbPower, TbDeviceTv, TbVolume, TbDeviceGamepad2, TbPhoto, TbSettings, TbShoppingBag, TbRestore, TbPlug, TbGauge } from "react-icons/tb";
+import { TbPower, TbDeviceTv, TbVolume, TbDeviceGamepad2, TbPhoto, TbSettings, TbShoppingBag, TbRestore, TbPlug, TbGauge, TbTrophy } from "react-icons/tb";
 import { controlLocale, controlStatus } from "./controlCenterLocale";
 import { normalizeControlPreferences, visibleControlTabs, type ControlPreferences, type ControlTab } from "./controlCenterState";
 import { createTabEditor, canToggleTab, tabEditorTransition, type TabEditorAction } from "./controlTabEditorState";
@@ -275,6 +276,7 @@ export function ControlCenter({ locale, origin, session, store, controller, sett
       </div>
       <ControlSection id="news" title="News" locale={locale} icon={<TbPhoto />} collapsed={!expanded.includes("news")} onToggle={toggleSection}><HomeNewsSettings locale={locale} /></ControlSection>
       <ControlSection id="daily-history" title={historyTitle(locale)} locale={locale} icon={<TbPhoto />} collapsed={!expanded.includes("daily-history")} onToggle={toggleSection}><HomeHistorySettings locale={locale} /></ControlSection>
+      <ControlSection id="club" title="Club" locale={locale} icon={<TbTrophy />} collapsed={!expanded.includes("club")} onToggle={toggleSection}><ClubSettings locale={locale} /></ControlSection>
       <QuickSettingsContent page="tools" locale={locale} expanded={expanded} onToggle={toggleSection} />
       <DialogButton className="ph-settings-action" onClick={() => { setCustomizing(false); replayPlayhubOnboarding(); }}>
         <TbRestore /> {getOnboardingExtraCopy(locale).replay}

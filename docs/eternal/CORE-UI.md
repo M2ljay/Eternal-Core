@@ -261,7 +261,8 @@ extends that patch. The bottom tabs become:
    Steam's own news and updates for the user's games with Core's gaming news (what the What's new tab held).
 2. **Consoles**: one shelf per family (PlayStation, Nintendo, Sega, Xbox, Retro, VR) built from the user's collections
    by name, with the family's icon and tone; games most recently played first, up to 24; A opens the game page.
-3. **Club** (registered by `src/club/`, when present).
+3. **Club**: Play Retro Games Club (`src/club/`), registered through the registry below; hidden until the Club is
+   on and has data.
 4. **On this day**: kept (Steam's Recommended slot).
 
 Steam's What's new and Friends tabs are removed; a remembered Friends tab opens the brief. Everything renders inside an
@@ -280,15 +281,16 @@ local cache), the Talk button, and that Home falls back cleanly if Steam changes
 `src/coreHomeTabs.ts` keeps a small registry so a module can add a Home tab without touching Home's internals:
 
 ```ts
-registerHomeTab({ id: "CoreClub", label: "Club", order: 30, component: ClubTab, isAvailable: clubAvailable });
+registerHomeTab({ id: "club", label: locale => clubCopy(locale).tab, order: 30,
+  render: props => <ClubTab {...props} />, isAvailable: clubAvailable, subscribe: subscribeClub });
 ```
 
-`label` is a string or a function of the locale; `order` places it (brief 10, Consoles 20, Club 30, On this day 40;
-Steam tabs Core does not know come after). A tab whose `isAvailable()` is false or throws is left out; the returned
-function unregisters it. The Club module (`src/club/ClubTab.tsx` exporting `ClubTab`, `src/club/clubAvailable.ts`
-exporting `clubAvailable()`) is wired through a virtual module, `core-optional:club`, resolved by `rollup.config.js`:
-when both files exist it re-exports them and `coreHome.tsx` registers the tab; when they do not, it is `null` and the
-build is unaffected.
+`label` is a string or a function of the locale; `render({ locale, getLocale })` (or `component`) is what the tab
+shows; `order` places it (brief 10, Consoles 20, Club 30, On this day 40; Steam tabs Core does not know come after). A
+tab whose `isAvailable()` is false or throws is left out; `subscribe` tells Home when that may have changed; the returned
+function unregisters it. The Club (`src/club/`, merged from `core-club`) registers this way from `coreHome.tsx` with
+its `clubHomeTab` (shown once the Club is on and has data), and its line ("Two days left on this week's pick, sir.")
+joins the Jarvis brief through `clubBriefLine()`. Its settings sit in Quick Access > Core next to News and On this day.
 
 ## Phase 3 notes: the game page
 

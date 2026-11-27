@@ -15,20 +15,29 @@ export type HomeTabRegistration<C = unknown> = {
   // A label key the caller resolves, or a function of the locale.
   label: string | ((locale: string) => string);
   order: number;
-  component: C;
+  // What the tab shows: a component given { locale, getLocale }, or a render function given the same.
+  component?: C;
+  render?: (props: { locale: string; getLocale: () => string }) => unknown;
   isAvailable?: () => boolean;
+  // Tells Home when isAvailable() may have changed (the Club's data arriving).
+  subscribe?: (listener: () => void) => () => void;
 };
 
 const registry = new Map<string, HomeTabRegistration>();
+const unsubscribers = new Map<string, () => void>();
 const listeners = new Set<() => void>();
 let revision = 0;
 const notify = () => { revision++; for (const listener of [...listeners]) { try { listener(); } catch { /* Others still hear it. */ } } };
 
 export function registerHomeTab<C>(tab: HomeTabRegistration<C>): () => void {
   if (!tab || typeof tab.id !== "string" || !tab.id) return () => {};
+  registry.get(tab.id) && unsubscribers.get(tab.id)?.();
   registry.set(tab.id, tab as HomeTabRegistration);
+  let stop: (() => void) | undefined;
+  try { stop = tab.subscribe?.(notify); } catch { stop = undefined; }
+  unsubscribers.set(tab.id, () => { try { stop?.(); } catch { /* Gone already. */ } unsubscribers.delete(tab.id); });
   notify();
-  return () => { if (registry.get(tab.id) === tab) { registry.delete(tab.id); notify(); } };
+  return () => { if (registry.get(tab.id) === tab) { unsubscribers.get(tab.id)?.(); registry.delete(tab.id); notify(); } };
 }
 
 export function subscribeHomeTabs(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; }

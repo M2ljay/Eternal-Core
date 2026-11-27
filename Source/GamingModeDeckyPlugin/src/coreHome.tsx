@@ -14,17 +14,15 @@ import {
 } from "./coreHomeTabs";
 import { matchCollection, matchTab, tabIcon, CORE_FAMILY_TONES, type CoreIconSet } from "./coreLibraryIcons";
 import { jarvisMenuStore, toggleJarvisTab } from "./jarvisPresence";
-import club from "core-optional:club";
+import { clubBriefLine, clubHomeTab } from "./club";
 
 const { Focusable, DialogButton, Navigation } = DFL as any;
 
-// The Club tab (src/club/, built by another module): registered only when that module is in the build.
+// The Club tab (src/club/): registered through Home's registry like any other module's tab; shown once the Club is on
+// and has data (clubAvailable), re-checked whenever the Club's store changes.
 try {
-  const module: any = club;
-  if (module && typeof module.ClubTab === "function") {
-    registerHomeTab({ id: "CoreClub", label: typeof module.label === "string" ? module.label : "Club", order: HOME_TAB_ORDER.club, component: module.ClubTab,
-      isAvailable: () => { try { return typeof module.clubAvailable === "function" ? module.clubAvailable() === true : true; } catch { return false; } } });
-  }
+  registerHomeTab({ id: clubHomeTab.id, label: clubHomeTab.title, order: HOME_TAB_ORDER.club, render: clubHomeTab.render,
+    isAvailable: clubHomeTab.available, subscribe: clubHomeTab.subscribe });
 } catch { /* No Club tab. */ }
 
 let iconSet: () => CoreIconSet | undefined = () => undefined;
@@ -96,9 +94,12 @@ function JarvisBrief({ locale, native }: { locale: string; native: any }) {
   React.useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60 * 1000); return () => window.clearInterval(timer); }, []);
   const last = React.useMemo(() => lastPlayedApp(appStoreApps()), [now]);
   const mods = forgeUpdateCount(steamWindow());
+  let club: string | null = null;
+  try { club = clubBriefLine(now.getTime()); } catch { club = null; }
   return <div className="core-home"><style>{css}</style>
     <h2>{text[greetingKey(now.getHours())]}</h2>
     <p className="core-home-line">{last ? text.lastPlayed.replace("{game}", last.name) : text.nothingYet}</p>
+    {club ? <p className="core-home-line">{club}</p> : null}
     {mods > 0 ? <p className="core-home-line">{mods === 1 ? text.modsOne : text.mods.replace("{count}", String(mods))}</p> : null}
     <Focusable className="core-home-actions" flow-children="row">
       <DialogButton onClick={openJarvis}>{text.talk}</DialogButton>
@@ -159,7 +160,8 @@ export function CoreHomeTabs({ native, getLocale, render }: { native: any; getLo
       { id: "CoreConsoles", title: text.consoles, content: <Consoles locale={locale} />, order: HOME_TAB_ORDER.consoles },
       ...availableHomeTabs().map(tab => {
         const Component = tab.component as any;
-        return { id: tab.id, title: typeof tab.label === "function" ? tab.label(locale) : tab.label, content: <Component locale={locale} />, order: tab.order };
+        const content = tab.render ? tab.render({ locale, getLocale }) : Component ? <Component locale={locale} getLocale={getLocale} /> : null;
+        return { id: tab.id, title: typeof tab.label === "function" ? tab.label(locale) : tab.label, content, order: tab.order };
       }),
     ];
     const next = composeHomeTabs(tabs, core);

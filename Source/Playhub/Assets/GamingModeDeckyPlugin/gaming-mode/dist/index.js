@@ -1235,11 +1235,11 @@ function detect() {
     const fallback = typeof document !== "undefined" && document.documentElement?.lang || typeof navigator !== "undefined" && navigator.language;
     return normalizeSteamLocale$2(fallback) ?? "en";
 }
-const listeners$c = new Set();
+const listeners$d = new Set();
 let current = null, request$1 = 0, users = 0, observation = 0;
 let timer;
 const getSteamLocale = () => current ?? detect();
-const subscribeSteamLocale = (listener) => { listeners$c.add(listener); return () => { listeners$c.delete(listener); }; };
+const subscribeSteamLocale = (listener) => { listeners$d.add(listener); return () => { listeners$d.delete(listener); }; };
 async function read() {
     const win = typeof window !== "undefined" ? window : {};
     const settings = win.SteamClient?.Settings;
@@ -1265,7 +1265,7 @@ async function refreshSteamLocale() {
     const old = getSteamLocale();
     current = value;
     if (old !== value)
-        for (const listener of [...listeners$c])
+        for (const listener of [...listeners$d])
             listener();
     return value;
 }
@@ -1923,18 +1923,18 @@ const STORE_DIGITAL_ROUTE = "/playhub/stores";
 function exitStoreDigitalToHome() { const navigation = CompatUI.Navigation; navigation?.CloseSideMenus?.(); navigation?.Navigate?.("/library/home", true); }
 let pending$3 = null, sequence = 0;
 let downloads = null;
-const listeners$b = new Set();
+const listeners$c = new Set();
 const readStoreDigitalSelection = () => pending$3;
 const consumeStoreDigitalSelection = (value) => { if (pending$3 === value)
     pending$3 = null; };
-const subscribeStoreDigitalSelection = (fn) => { listeners$b.add(fn); return () => { listeners$b.delete(fn); }; };
+const subscribeStoreDigitalSelection = (fn) => { listeners$c.add(fn); return () => { listeners$c.delete(fn); }; };
 const readStoreDigitalDownloads = () => downloads;
 const consumeStoreDigitalDownloads = (value) => { if (downloads === value)
     downloads = null; };
-function openStoreDigitalDownloads() { pending$3 = null; downloads = ++sequence; for (const listener of listeners$b)
+function openStoreDigitalDownloads() { pending$3 = null; downloads = ++sequence; for (const listener of listeners$c)
     listener(); CompatUI.Navigation.Navigate(STORE_DIGITAL_ROUTE); }
 function openStoreDigitalGame(key, action = "install") { if (!validStoreKey(key) || !["install", "manage"].includes(action))
-    return false; downloads = null; pending$3 = { key: { ...key }, action, sequence: ++sequence }; for (const listener of listeners$b)
+    return false; downloads = null; pending$3 = { key: { ...key }, action, sequence: ++sequence }; for (const listener of listeners$c)
     listener(); CompatUI.Navigation.Navigate(`${STORE_DIGITAL_ROUTE}?store=${encodeURIComponent(key.store)}&game=${encodeURIComponent(key.id)}&action=${action}`); return true; }
 function validStoreDigitalIntent(value, now = Date.now()) { const item = value; return !!item && typeof item.requestId === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(item.requestId) && validStoreKey(item.key) && ["install", "manage"].includes(item.action) && Number.isFinite(Date.parse(item.expiresAt)) && Date.parse(item.expiresAt) > now && Date.parse(item.expiresAt) <= now + 31000; }
 function installStoreDigitalIntentPump(request, open = openStoreDigitalGame, clock = () => Date.now()) {
@@ -2261,8 +2261,8 @@ let owned = new Map();
 let jobs = [];
 let steamLinks = new Map(), steamLinksAt = 0;
 let repairSteamLink;
-const listeners$a = new Set();
-function subscribeStoreLibrary(listener) { listeners$a.add(listener); return () => { listeners$a.delete(listener); }; }
+const listeners$b = new Set();
+function subscribeStoreLibrary(listener) { listeners$b.add(listener); return () => { listeners$b.delete(listener); }; }
 const readStoreLibrary = () => owned;
 const readStoreDownloads = () => jobs;
 const readStoreSteamLink = (key) => Date.now() - steamLinksAt < 5000 ? steamLinks.get(nativeStoreKey({ key })) ?? "unknown" : "unknown";
@@ -2287,11 +2287,11 @@ async function storeJobAction(job, action) {
     return result;
 }
 const host$2 = () => globalThis;
-const appStore = () => host$2().appStore;
+const appStore$1 = () => host$2().appStore;
 const steam = () => host$2().SteamClient;
 const collectionNames = { epic: "Epic Games", gog: "GOG", xbox: "Xbox Store", amazon: "Amazon Games" };
 async function addStoreCollection(key, appId, current, libraryKind) {
-    const collections = host$2().collectionStore, store = appStore();
+    const collections = host$2().collectionStore, store = appStore$1();
     if (!current() || !collections || typeof collections.GetCollectionIDByUserTag !== "function" ||
         typeof collections.GetCollection !== "function" || typeof collections.NewUnsavedCollection !== "function")
         throw new Error("steam_collections_unavailable");
@@ -2313,12 +2313,12 @@ async function addStoreCollection(key, appId, current, libraryKind) {
     // Add only the verified shortcut; preserve the user's existing collection,
     // ordering and other games. Save must succeed before sync is acknowledged.
     await collection.Save();
-    if (!current() || host$2().collectionStore !== collections || appStore() !== store ||
+    if (!current() || host$2().collectionStore !== collections || appStore$1() !== store ||
         !Array.isArray(collection.allApps) || !collection.allApps.some((app) => Number(app?.appid) === appId))
         throw new Error("steam_collection_unconfirmed");
 }
 async function reconcileStoreCollection(kind, rows, current, libraryKind) {
-    const collections = host$2().collectionStore, store = appStore(), apps = steam()?.Apps;
+    const collections = host$2().collectionStore, store = appStore$1(), apps = steam()?.Apps;
     if (!current() || !collections || typeof collections.GetCollectionIDByUserTag !== "function" || typeof collections.GetCollection !== "function")
         throw new Error("steam_collections_unavailable");
     const relevant = rows.filter(row => row.key.store === kind && ownedShortcutIdentity(row));
@@ -2338,7 +2338,7 @@ async function reconcileStoreCollection(kind, rows, current, libraryKind) {
         if (installed === members.has(row.appId))
             continue;
         const identity = ownedShortcutIdentity(row), proof = await readShortcut(row.appId);
-        if (!current() || host$2().collectionStore !== collections || appStore() !== store || steam()?.Apps !== apps)
+        if (!current() || host$2().collectionStore !== collections || appStore$1() !== store || steam()?.Apps !== apps)
             throw new Error("steam_shortcut_context_changed");
         // Registry membership alone never grants permission to alter an edited or
         // manually replaced shortcut, even when its numeric AppID is unchanged.
@@ -2359,7 +2359,7 @@ async function reconcileStoreCollection(kind, rows, current, libraryKind) {
     if (remove.length)
         editable.RemoveApps(remove);
     await collection.Save();
-    if (!current() || host$2().collectionStore !== collections || appStore() !== store || steam()?.Apps !== apps ||
+    if (!current() || host$2().collectionStore !== collections || appStore$1() !== store || steam()?.Apps !== apps ||
         add.some(app => !collection.allApps.some((other) => Number(other?.appid) === app.appid)) ||
         remove.some(app => collection.allApps.some((other) => Number(other?.appid) === app.appid)))
         throw new Error("steam_collection_unconfirmed");
@@ -2459,7 +2459,7 @@ async function readShortcut(appId, accept) {
 async function applyPlan(plan, current) {
     if (!current())
         return;
-    const apps = steam()?.Apps, store = appStore();
+    const apps = steam()?.Apps, store = appStore$1();
     if (typeof apps?.RegisterForAppDetails !== "function" || typeof store?.GetAppOverviewByAppID !== "function")
         throw new Error("steam_shortcut_configuration_unavailable");
     const records = creationReceipts(apps, store);
@@ -2508,12 +2508,12 @@ async function applyPlan(plan, current) {
         const initialName = blockedIds.length ? privateDraftName : plan.title;
         if (occupied(initialName))
             throw new Error("steam_shortcut_conflict");
-        if (!current() || steam()?.Apps !== apps || appStore() !== store)
+        if (!current() || steam()?.Apps !== apps || appStore$1() !== store)
             return;
         const created = await apps.AddShortcut(initialName, plan.executable, "", "");
         if (!Number.isInteger(created) || created <= 0 || created > 0xffffffff || blockedIds.includes(created) || appId && created !== appId)
             throw new Error("steam_shortcut_identity_changed");
-        if (steam()?.Apps !== apps || appStore() !== store)
+        if (steam()?.Apps !== apps || appStore$1() !== store)
             throw new Error("steam_shortcut_context_changed");
         appId = created;
         receipt = Object.freeze({ tuple, appId: created, createdAt: Date.now() });
@@ -2521,9 +2521,9 @@ async function applyPlan(plan, current) {
             records.delete(records.keys().next().value);
         records.set(plan.claimId, receipt);
     }
-    if (!current() || steam()?.Apps !== apps || appStore() !== store)
+    if (!current() || steam()?.Apps !== apps || appStore$1() !== store)
         return;
-    const sameContext = () => current() && steam()?.Apps === apps && appStore() === store;
+    const sameContext = () => current() && steam()?.Apps === apps && appStore$1() === store;
     let proof = await readShortcut(appId, value => typeof value.strShortcutExe === "string" && !!store.GetAppOverviewByAppID(appId));
     if (!sameContext())
         throw new Error("steam_shortcut_context_changed");
@@ -2558,10 +2558,10 @@ async function applyPlan(plan, current) {
         }
         proof = await readShortcut(appId, value => sameContext() && matchingShortcut(value, plan, appId) && store.GetAppOverviewByAppID(appId)?.display_name === plan.title);
     }
-    if (!current() || steam()?.Apps !== apps || appStore() !== store || !matchingShortcut(proof, plan, appId))
+    if (!current() || steam()?.Apps !== apps || appStore$1() !== store || !matchingShortcut(proof, plan, appId))
         throw new Error("steam_shortcut_unconfirmed");
     await addStoreCollection(plan.key, appId, current, plan.libraryKind);
-    if (!current() || steam()?.Apps !== apps || appStore() !== store)
+    if (!current() || steam()?.Apps !== apps || appStore$1() !== store)
         throw new Error("steam_shortcut_context_changed");
     await storeRequest("steam-sync-ack", { requestId: plan.requestId, claimId: plan.claimId, appId,
         executable: proof.strShortcutExe, arguments: proof.strShortcutLaunchOptions, startDirectory: proof.strShortcutStartDir });
@@ -2607,8 +2607,8 @@ async function applyPendingPlans(plans, current, deferred, eligible = () => true
     }
 }
 async function reconcileNativeImports(index, identities, rows, current) {
-    const allowed = new Set(), apps = steam()?.Apps, store = appStore();
-    const sameContext = () => current() && steam()?.Apps === apps && appStore() === store;
+    const allowed = new Set(), apps = steam()?.Apps, store = appStore$1();
+    const sameContext = () => current() && steam()?.Apps === apps && appStore$1() === store;
     if (!Array.isArray(identities) || identities.length > 2000 || !identities.every(validNativeIdentity) || !index.ready())
         return allowed;
     const keys = identities.map(nativeStoreKey);
@@ -2706,7 +2706,7 @@ function nativeLinkState(index, identity, rows) {
     return "absent";
 }
 async function removeUninstalledSteamShortcuts(rows, current) {
-    const apps = steam()?.Apps, store = appStore(), sameContext = () => current() && steam()?.Apps === apps && appStore() === store;
+    const apps = steam()?.Apps, store = appStore$1(), sameContext = () => current() && steam()?.Apps === apps && appStore$1() === store;
     if (typeof apps?.RemoveShortcut !== "function" || typeof store?.GetAppOverviewByAppID !== "function")
         return;
     for (const row of rows) {
@@ -2755,12 +2755,12 @@ function installStoreLibraryRuntime() {
     const notifyCompleted = createStoreCompletionNotifications();
     const current = () => alive && root[symbol] === stop;
     const updateLinks = (next) => { const changed = JSON.stringify([...steamLinks]) !== JSON.stringify([...next]); steamLinks = next; steamLinksAt = Date.now(); if (changed)
-        listeners$a.forEach(listener => { try {
+        listeners$b.forEach(listener => { try {
             listener();
         }
         catch { } }); };
     const repair = async (key) => {
-        const sameRepairContext = () => current() && importApps === steam()?.Apps && importStore === appStore();
+        const sameRepairContext = () => current() && importApps === steam()?.Apps && importStore === appStore$1();
         if (!sameRepairContext() || busy || repairing || !imports)
             return false;
         repairing = true;
@@ -2776,7 +2776,7 @@ function installStoreLibraryRuntime() {
             // Last native check immediately before retiring a stale receipt. An
             // original that appeared while metadata was loading must always win.
             imports.observe();
-            if (!sameRepairContext() || !imports.ready() || nativeLinkState(imports, identity, rows) !== "absent" || old && appStore()?.GetAppOverviewByAppID(old.appId))
+            if (!sameRepairContext() || !imports.ready() || nativeLinkState(imports, identity, rows) !== "absent" || old && appStore$1()?.GetAppOverviewByAppID(old.appId))
                 return false;
             const reply = await storeRequest("steam-repair-missing", { key, expectedAccountRevision: identity.accountRevision, ...(old ? { expectedOwnedAppId: old.appId } : {}) });
             if (!sameRepairContext() || reply?.store !== key.store || reply.accountRevision !== identity.accountRevision || reply.state !== "pending" || typeof reply.requestId !== "string")
@@ -2862,15 +2862,15 @@ function installStoreLibraryRuntime() {
             if (Array.isArray(currentJobs) && serializedJobs !== lastJobs) {
                 lastJobs = serializedJobs;
                 jobs = currentJobs;
-                listeners$a.forEach(listener => { try {
+                listeners$b.forEach(listener => { try {
                     listener();
                 }
                 catch { } });
             }
-            if (importApps !== steam()?.Apps || importStore !== appStore() || !imports) {
+            if (importApps !== steam()?.Apps || importStore !== appStore$1() || !imports) {
                 imports?.close();
                 importApps = steam()?.Apps;
-                importStore = appStore();
+                importStore = appStore$1();
                 imports = createNativeImportIndex(importApps, importStore);
             }
             imports.observe();
@@ -2905,7 +2905,7 @@ function installStoreLibraryRuntime() {
             if (serial !== lastOwned) {
                 lastOwned = serial;
                 owned = new Map(rows.map(row => [row.appId, row]));
-                listeners$a.forEach(listener => { try {
+                listeners$b.forEach(listener => { try {
                     listener();
                 }
                 catch { } });
@@ -2928,8 +2928,8 @@ function installStoreLibraryRuntime() {
             }
             if (imports && current())
                 try {
-                    const collections = host$2().collectionStore, store = appStore(), apps = steam()?.Apps;
-                    await reportStoreSteamMigration(storeRequest, imports, collections, store, () => current() && host$2().collectionStore === collections && appStore() === store && steam()?.Apps === apps);
+                    const collections = host$2().collectionStore, store = appStore$1(), apps = steam()?.Apps;
+                    await reportStoreSteamMigration(storeRequest, imports, collections, store, () => current() && host$2().collectionStore === collections && appStore$1() === store && steam()?.Apps === apps);
                 }
                 catch { /* A partial migration remains pending; never manufacture success. */ }
         }
@@ -2958,7 +2958,7 @@ function installStoreLibraryRuntime() {
             jobs = [];
             steamLinks = new Map();
             steamLinksAt = 0;
-            listeners$a.forEach(listener => { try {
+            listeners$b.forEach(listener => { try {
                 listener();
             }
             catch { } });
@@ -4720,7 +4720,7 @@ const storeDigitalTranslations = {
 };
 
 // SPDX-License-Identifier: MIT. Playhub, Copyright (c) 2026 LoZazaMastro.
-const en$9 = {
+const en$a = {
     errorQueueChanged: "The download list changed. Refresh it and try again.",
     partnerInstallEa: "This game requires EA app. Installation from Digital Stores is not available yet.",
     partnerInstallUbisoft: "This game requires Ubisoft Connect. Installation from Digital Stores is not available yet.",
@@ -4743,7 +4743,7 @@ const en$9 = {
     canceled: "Canceled", failed: "Failed", interrupted: "Interrupted", installing: "Installing", verifying: "Verifying", canceling: "Canceling", waiting: "Queued", signInCanceled: "Sign-in canceled. You can try again from Accounts.", signInFailed: "Sign-in failed. Try again from Accounts.", title: "Digital stores", subtitle: "Install and manage your games", library: "Your games", accounts: "Accounts", downloads: "Downloads", search: "Search your games", filters: "Filters", allStores: "All stores", allGames: "All games", installed: "Installed", notInstalled: "Not installed", install: "Install", manage: "Manage", uninstall: "Uninstall", refresh: "Refresh", signIn: "Sign in", signOut: "Sign out", connected: "Connected", disconnected: "Not connected", connecting: "Connecting…", expired: "Sign in again", unavailable: "Unavailable", signInNote: "Complete sign-in in the window that opened.", accountHint: "Sign in to see the games you own.", automaticSteam: "Installed games appear automatically in your Steam library, grouped by store.", installIntentLoading: "Finding this game in your library…", gameMissing: "This game is not available in the connected account. Refresh the library or check your account.", back: "Back", cancel: "Cancel", close: "Close", continue: "Continue", review: "Review installation", confirmInstall: "Install now", chooseFolder: "Choose folder", useFolder: "Use this folder", parentFolder: "Parent folder", thisPc: "This PC", directoryEmpty: "No folders here", directoryTruncated: "Showing the first 512 folders. Open a subfolder to continue.", pathNote: "A separate folder for this game will be created here.", loading: "Loading…", retry: "Retry", errorRead: "Couldn’t read your library. Your last confirmed data is still shown.", errorCommand: "The store couldn’t confirm this action. Refresh and try again.", errorPrepare: "Couldn’t prepare this installation. Try again.", errorDestination: "Choose a valid installation folder.", errorNotEmpty: "This game folder is not empty or writable. Choose another location.", errorSpace: "There is not enough free space in this location.", errorChanged: "The game or account changed. Review the current details and try again.", errorProviderBusy: "Another store operation is in progress. Try again when it finishes.", errorUninstall: "Couldn’t prepare this uninstall. Refresh and try again.", free: "Free space", required: "Required space", folder: "Installation folder", drive: "Drive", selectedDestination: "Selected destination", clearCompleted: "Clear completed", completed: "Completed", paused: "Paused", active: "In progress", downloadNow: "Download now", pause: "Pause", resume: "Resume", cancelDownload: "Cancel download", confirmCancel: "Cancel this download?", confirmUninstall: "Uninstall this game?", uninstallNote: "The selected game will be removed from this PC.", uninstallUnavailable: "Uninstall is unavailable for this installation.", emptyLibrary: "No games to show", emptyLibraryHelp: "Connect an account or adjust your filters.", emptyDownloads: "No downloads yet", emptyDownloadsHelp: "Choose a game to install from Your games.", xboxInstallNote: "Installation and its location are managed by Microsoft Store.", xboxRequested: "Installation requested. Progress appears here after the store confirms it.", unknown: "Not available", sort: "Sort by", titleOrder: "Title A–Z", installedFirst: "Installed first", refreshing: "Refreshing library…", games: "games", directoryError: "Couldn’t open this folder. Choose another location.", statusRetry: "Refresh installation status", accountRefreshFailed: "Couldn’t refresh this store. The previous library is kept."
 };
 function storeDigitalCopy(locale = getSteamLocale()) {
-    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$9 };
+    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$a };
     for (const key of Object.keys(result)) {
         const value = translated?.[key];
         if (typeof value === "string" && value.trim())
@@ -4915,7 +4915,7 @@ function formatStoreInstallLanguage(language, locale) {
     }
 }
 
-const { ModalRoot: ModalRoot$3, TextField: TextField$4, showModal: showModal$5, ConfirmModal: ConfirmModal$3, DropdownItem: DropdownItem$6 } = CompatUI;
+const { ModalRoot: ModalRoot$3, TextField: TextField$5, showModal: showModal$5, ConfirmModal: ConfirmModal$3, DropdownItem: DropdownItem$6 } = CompatUI;
 function StoreDigitalDirectoryPicker({ controller, c, initialPath, onSelect, closeModal }) {
     useDigitalModalGuard();
     const [listing, setListing] = _global_SP_REACT.useState(null), [loading, setLoading] = _global_SP_REACT.useState(true), [error, setError] = _global_SP_REACT.useState(false);
@@ -4977,7 +4977,7 @@ function StoreDigitalInstallDialog({ controller, gameKey, c, onInstalled, closeM
         parent += "\\"; openStoreDigitalDirectory(controller, c, absoluteWindowsPath(parent) ? parent : undefined, selected => void prepare(selected, true)); };
     const game = controller.game(gameKey), free = preparation?.locations.filter(location => path.toLowerCase().startsWith(location.rootPath.toLowerCase())).sort((a, b) => b.rootPath.length - a.rootPath.length)[0]?.freeBytes;
     return SP_JSX.jsx(ModalRoot$3, { className: "ph-sd-modal-frame", onCancel: close, closeModal: close, bDisableBackgroundDismiss: true, children: SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-root ph-sd-modal", "flow-children": "column", noFocusRing: true, onCancel: (event) => { event.preventDefault(); event.stopPropagation(); close(); }, children: [SP_JSX.jsx(StoreDigitalStyles, {}), SP_JSX.jsx("h2", { children: game?.title ?? c.install }), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-modal-body", "flow-children": "column", noFocusRing: true, children: [view.busy && SP_JSX.jsx("div", { role: "status", children: c.loading }), view.error && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "alert", children: storeDigitalError(view.error, c) }), hasStoreInstallLanguageChoice(preparation?.languages) && SP_JSX.jsx(DropdownItem$6, { label: c.gameLanguage, layout: "below", bottomSeparator: "none", selectedOption: preparation?.language, disabled: view.busy, rgOptions: preparation.languages.map(data => ({ data, label: storeInstallLanguageName(data) })), onChange: (option) => { if (preparation?.languages?.includes(option.data))
-                                void prepare(path || undefined, false, option.data); } }), review && preparation ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("strong", { children: c.review }), SP_JSX.jsxs("dl", { className: "ph-sd-facts", children: [SP_JSX.jsx("dt", { children: c.folder }), SP_JSX.jsx("dd", { children: preparation.confirmedPath }), SP_JSX.jsx("dt", { children: c.required }), SP_JSX.jsx("dd", { children: storeBytes(preparation.requiredBytes) }), SP_JSX.jsx("dt", { children: c.free }), SP_JSX.jsx("dd", { children: storeBytes(free) })] })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(TextField$4, { label: c.folder, value: path, disabled: view.busy, onChange: (event) => { controller.discardPreparation(); setPath(event?.target?.value ?? ""); setReview(false); } }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy, onClick: browse, children: c.chooseFolder }), preparation && SP_JSX.jsxs("div", { className: "ph-sd-muted", children: [c.required, ": ", storeBytes(preparation.requiredBytes)] })] }), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(DigitalButton, { ref: cancel.ref, navRef: cancel.navRef, className: "ph-sd-button", disabled: view.busy, onClick: close, children: c.cancel }), SP_JSX.jsx(DigitalButton, { ref: landing.ref, navRef: landing.navRef, className: "ph-sd-button ph-sd-primary", disabled: view.busy || !path.trim(), onClick: () => void (review ? install() : prepare(path)), children: review ? c.confirmInstall : c.continue })] })] })] }) });
+                                void prepare(path || undefined, false, option.data); } }), review && preparation ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("strong", { children: c.review }), SP_JSX.jsxs("dl", { className: "ph-sd-facts", children: [SP_JSX.jsx("dt", { children: c.folder }), SP_JSX.jsx("dd", { children: preparation.confirmedPath }), SP_JSX.jsx("dt", { children: c.required }), SP_JSX.jsx("dd", { children: storeBytes(preparation.requiredBytes) }), SP_JSX.jsx("dt", { children: c.free }), SP_JSX.jsx("dd", { children: storeBytes(free) })] })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(TextField$5, { label: c.folder, value: path, disabled: view.busy, onChange: (event) => { controller.discardPreparation(); setPath(event?.target?.value ?? ""); setReview(false); } }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy, onClick: browse, children: c.chooseFolder }), preparation && SP_JSX.jsxs("div", { className: "ph-sd-muted", children: [c.required, ": ", storeBytes(preparation.requiredBytes)] })] }), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(DigitalButton, { ref: cancel.ref, navRef: cancel.navRef, className: "ph-sd-button", disabled: view.busy, onClick: close, children: c.cancel }), SP_JSX.jsx(DigitalButton, { ref: landing.ref, navRef: landing.navRef, className: "ph-sd-button ph-sd-primary", disabled: view.busy || !path.trim(), onClick: () => void (review ? install() : prepare(path)), children: review ? c.confirmInstall : c.continue })] })] })] }) });
 }
 function openStoreDigitalInstall(controller, key, c, onInstalled) { let modal; modal = showModal$5(SP_JSX.jsx(StoreDigitalInstallDialog, { controller: controller, gameKey: key, c: c, onInstalled: onInstalled, closeModal: () => modal.Close() }), undefined, { bNeverPopOut: true }); }
 function storeInstallLanguageName(language) { return formatStoreInstallLanguage(language, getSteamLocale()); }
@@ -5224,7 +5224,7 @@ function readDigitalGridMetrics(grid) {
     return { columns, rowHeight: rect.height, gap };
 }
 
-const { TextField: TextField$3, ModalRoot: ModalRoot$1, showModal: showModal$3, GamepadButton: GamepadButton$3 } = CompatUI;
+const { TextField: TextField$4, ModalRoot: ModalRoot$1, showModal: showModal$3, GamepadButton: GamepadButton$3 } = CompatUI;
 const logos = { epic, gog, xbox, amazon };
 function storeDigitalFilterStorageKey() {
     let account;
@@ -5491,7 +5491,7 @@ function StoreDigitalPage({ controller, locale }) {
             back(); }, onOptionsActionDescription: tab === "library" && !selected ? c.filters : undefined, onOptionsButton: tab === "library" && !selected ? (event) => { event.preventDefault(); event.stopPropagation(); showFilters(); } : undefined, children: [SP_JSX.jsx(StoreDigitalStyles, {}), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-header", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsxs("div", { className: "ph-sd-brand", children: [SP_JSX.jsx(StoreDigitalStoreIcon, {}), SP_JSX.jsxs("div", { children: [SP_JSX.jsx("h1", { children: c.title }), SP_JSX.jsx("p", { children: c.subtitle })] })] }), SP_JSX.jsx(DigitalFocusable, { className: "ph-sd-tabs", "flow-children": "row", noFocusRing: true, children: ["library", "downloads", "accounts"].map(value => { const Icon = value === "library" ? FaThLarge : value === "downloads" ? FaCloudDownloadAlt : FaUserCircle; const target = () => { let t = tabs.current.get(value); if (!t) {
                             t = { element: null, nav: null };
                             tabs.current.set(value, t);
-                        } return t; }; return SP_JSX.jsxs(DigitalButton, { ref: (node) => { target().element = node; }, navRef: (node) => { target().nav = node; }, className: `ph-sd-button ph-sd-tab ${tab === value ? "is-active" : ""}`, onClick: () => changeTab(value), children: [SP_JSX.jsx(Icon, {}), SP_JSX.jsx("span", { children: c[value] }), value === "downloads" && !!view.snapshot?.jobs.filter(storeJobActive).length && SP_JSX.jsx("span", { className: "ph-sd-count", children: view.snapshot.jobs.filter(storeJobActive).length })] }, value); }) })] }), SP_JSX.jsx("div", { ref: scroll, className: "ph-sd-content", onScroll: viewportScroll, onWheel: () => { pendingDirection.current = null; }, onTouchMove: () => { pendingDirection.current = null; }, children: SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-page", "flow-children": "column", noFocusRing: true, children: [view.error && SP_JSX.jsxs("div", { className: "ph-sd-banner", role: "alert", children: [SP_JSX.jsx("span", { children: storeDigitalError(view.error, c) }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy || view.reading, onClick: () => void controller.read(), children: c.retry })] }), view.signInError && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "status", children: view.signInError === "canceled" ? c.signInCanceled : c.signInFailed }), !view.snapshot && view.reading ? SP_JSX.jsx("div", { className: "ph-sd-empty", role: "status", children: c.loading }) : tab === "library" && selected ? SP_JSX.jsx(StoreDigitalDetail, { controller: controller, c: c, game: libraryGames.find(game => sameStoreKey(game.key, selected)) ?? controller.visibleGames().find(game => sameStoreKey(game.key, selected)), onBack: back, onDownloads: () => changeTab("downloads"), onAccounts: () => changeTab("accounts") }, storeGameId(selected)) : tab === "accounts" ? SP_JSX.jsx(StoreDigitalAccounts, { controller: controller, c: c }) : tab === "downloads" ? SP_JSX.jsx(StoreDigitalDownloads, { controller: controller, c: c, onEmptyFocus: () => { const target = tabs.current.get("downloads"); digitalTakeFocus(target?.element, target?.nav); } }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-toolbar", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx("div", { children: SP_JSX.jsx(TextField$3, { label: c.search, value: query, onChange: (event) => setQuery(event?.target?.value ?? "") }) }), SP_JSX.jsxs(DigitalButton, { ref: filterTarget.ref, navRef: filterTarget.navRef, className: "ph-sd-button ph-sd-filters", onClick: showFilters, children: [SP_JSX.jsx(FaSlidersH, {}), SP_JSX.jsx("span", { className: "ph-sd-filter-label", children: c.filters })] }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy || view.reading || view.gamePassReading || !!view.refreshing.length, onClick: () => void (filters.store === "gamepass" ? controller.loadGamePass(true) : controller.refreshAll()), children: view.refreshing.length || view.gamePassReading ? c.refreshing : c.refresh })] }), SP_JSX.jsx("div", { className: "ph-sd-summary", children: SP_JSX.jsxs("span", { children: [filtered.length, " ", c.games, " \u00B7 ", filters.store === "all" ? c.allStores : filters.store === "gamepass" ? c.gamePass : digitalStoreName(filters.store)] }) }), filters.store === "gamepass" && view.gamePassError && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "alert", children: c.gamePassUnavailable }), filters.store === "gamepass" && view.gamePass?.isStale && !gamePassIsTransient(view.gamePass) && !!view.gamePass.games.length && SP_JSX.jsx("div", { className: "ph-sd-muted", role: "status", children: c.gamePassStale }), !filtered.length ? SP_JSX.jsxs("div", { className: "ph-sd-empty", children: [SP_JSX.jsx("h2", { children: filters.store === "gamepass" && view.gamePassReading ? c.gamePassLoading : c.emptyLibrary }), SP_JSX.jsx("p", { children: c.emptyLibraryHelp }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", onClick: () => changeTab("accounts"), children: c.accounts })] }) : SP_JSX.jsx(DigitalFocusable, { ref: grid, className: "ph-sd-grid", "data-window-start": windowPlan.start, "data-window-end": windowPlan.end, "data-window-loaded": loaded, "data-window-total": filtered.length, "data-window-ranges": windowRanges.map(range => `${range.start}:${range.end}`).join(","), "data-window-mounted": windowRanges.reduce((sum, range) => sum + range.end - range.start, 0), "flow-children": "grid", noFocusRing: true, onButtonDown: gridDirection, children: windowPieces.flatMap(piece => piece.kind === "spacer" ? [SP_JSX.jsx("div", { "aria-hidden": "true", style: { gridColumn: "1 / -1", height: piece.height } }, piece.key)] : filtered.slice(piece.start, piece.end).map((game, offset) => { const index = piece.start + offset; const id = storeGameId(game.key), target = () => { let t = cards.current.get(id); if (!t) {
+                        } return t; }; return SP_JSX.jsxs(DigitalButton, { ref: (node) => { target().element = node; }, navRef: (node) => { target().nav = node; }, className: `ph-sd-button ph-sd-tab ${tab === value ? "is-active" : ""}`, onClick: () => changeTab(value), children: [SP_JSX.jsx(Icon, {}), SP_JSX.jsx("span", { children: c[value] }), value === "downloads" && !!view.snapshot?.jobs.filter(storeJobActive).length && SP_JSX.jsx("span", { className: "ph-sd-count", children: view.snapshot.jobs.filter(storeJobActive).length })] }, value); }) })] }), SP_JSX.jsx("div", { ref: scroll, className: "ph-sd-content", onScroll: viewportScroll, onWheel: () => { pendingDirection.current = null; }, onTouchMove: () => { pendingDirection.current = null; }, children: SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-page", "flow-children": "column", noFocusRing: true, children: [view.error && SP_JSX.jsxs("div", { className: "ph-sd-banner", role: "alert", children: [SP_JSX.jsx("span", { children: storeDigitalError(view.error, c) }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy || view.reading, onClick: () => void controller.read(), children: c.retry })] }), view.signInError && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "status", children: view.signInError === "canceled" ? c.signInCanceled : c.signInFailed }), !view.snapshot && view.reading ? SP_JSX.jsx("div", { className: "ph-sd-empty", role: "status", children: c.loading }) : tab === "library" && selected ? SP_JSX.jsx(StoreDigitalDetail, { controller: controller, c: c, game: libraryGames.find(game => sameStoreKey(game.key, selected)) ?? controller.visibleGames().find(game => sameStoreKey(game.key, selected)), onBack: back, onDownloads: () => changeTab("downloads"), onAccounts: () => changeTab("accounts") }, storeGameId(selected)) : tab === "accounts" ? SP_JSX.jsx(StoreDigitalAccounts, { controller: controller, c: c }) : tab === "downloads" ? SP_JSX.jsx(StoreDigitalDownloads, { controller: controller, c: c, onEmptyFocus: () => { const target = tabs.current.get("downloads"); digitalTakeFocus(target?.element, target?.nav); } }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-toolbar", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx("div", { children: SP_JSX.jsx(TextField$4, { label: c.search, value: query, onChange: (event) => setQuery(event?.target?.value ?? "") }) }), SP_JSX.jsxs(DigitalButton, { ref: filterTarget.ref, navRef: filterTarget.navRef, className: "ph-sd-button ph-sd-filters", onClick: showFilters, children: [SP_JSX.jsx(FaSlidersH, {}), SP_JSX.jsx("span", { className: "ph-sd-filter-label", children: c.filters })] }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy || view.reading || view.gamePassReading || !!view.refreshing.length, onClick: () => void (filters.store === "gamepass" ? controller.loadGamePass(true) : controller.refreshAll()), children: view.refreshing.length || view.gamePassReading ? c.refreshing : c.refresh })] }), SP_JSX.jsx("div", { className: "ph-sd-summary", children: SP_JSX.jsxs("span", { children: [filtered.length, " ", c.games, " \u00B7 ", filters.store === "all" ? c.allStores : filters.store === "gamepass" ? c.gamePass : digitalStoreName(filters.store)] }) }), filters.store === "gamepass" && view.gamePassError && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "alert", children: c.gamePassUnavailable }), filters.store === "gamepass" && view.gamePass?.isStale && !gamePassIsTransient(view.gamePass) && !!view.gamePass.games.length && SP_JSX.jsx("div", { className: "ph-sd-muted", role: "status", children: c.gamePassStale }), !filtered.length ? SP_JSX.jsxs("div", { className: "ph-sd-empty", children: [SP_JSX.jsx("h2", { children: filters.store === "gamepass" && view.gamePassReading ? c.gamePassLoading : c.emptyLibrary }), SP_JSX.jsx("p", { children: c.emptyLibraryHelp }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", onClick: () => changeTab("accounts"), children: c.accounts })] }) : SP_JSX.jsx(DigitalFocusable, { ref: grid, className: "ph-sd-grid", "data-window-start": windowPlan.start, "data-window-end": windowPlan.end, "data-window-loaded": loaded, "data-window-total": filtered.length, "data-window-ranges": windowRanges.map(range => `${range.start}:${range.end}`).join(","), "data-window-mounted": windowRanges.reduce((sum, range) => sum + range.end - range.start, 0), "flow-children": "grid", noFocusRing: true, onButtonDown: gridDirection, children: windowPieces.flatMap(piece => piece.kind === "spacer" ? [SP_JSX.jsx("div", { "aria-hidden": "true", style: { gridColumn: "1 / -1", height: piece.height } }, piece.key)] : filtered.slice(piece.start, piece.end).map((game, offset) => { const index = piece.start + offset; const id = storeGameId(game.key), target = () => { let t = cards.current.get(id); if (!t) {
                                         t = { element: null, nav: null };
                                         cards.current.set(id, t);
                                     } return t; }; return SP_JSX.jsxs(DigitalFocusable, { "data-game-key": id, "data-game-index": index, ref: (node) => { target().element = node; if (!node && target().nav === null)
@@ -5846,7 +5846,7 @@ const { createElement, useSyncExternalStore } = _global_SP_REACT;
 const REVISION = 3; // Registry/cleanup ABI remains compatible with installed Discord v3.
 const IMPLEMENTATION = 4;
 const KEY = "__necroSteamMenuV1";
-const state$1 = () => { var _a; return ((_a = window)[KEY] || (_a[KEY] = { entries: new Map() })); };
+const state$2 = () => { var _a; return ((_a = window)[KEY] || (_a[KEY] = { entries: new Map() })); };
 const ownedItem = (item) => String(item?.key || "").startsWith("necro-menu:")
     || (item?.key === "steamcord" && item?.props?.route === "/discord");
 const isItem = (item) => item?.props?.label && (item.props.onFocus || item.props.onGamepadFocus) && item.props.route;
@@ -6006,7 +6006,7 @@ function observeEntries(s) {
     };
 }
 function registerSteamMenu(entry) {
-    const s = state$1();
+    const s = state$2();
     s.listeners || (s.listeners = new Set());
     observeEntries(s);
     if (s.revision !== REVISION || s.implementation !== IMPLEMENTATION || s.current?.() === false) {
@@ -6060,6 +6060,8 @@ function TbWindow (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M15 8a5 5 0 0 1 0 8"},"child":[]},{"tag":"path","attr":{"d":"M17.7 5a9 9 0 0 1 0 14"},"child":[]},{"tag":"path","attr":{"d":"M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5"},"child":[]}]})(props);
 }function TbVolume2 (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M15 8a5 5 0 0 1 0 8"},"child":[]},{"tag":"path","attr":{"d":"M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5"},"child":[]}]})(props);
+}function TbTrophy (props) {
+  return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M8 21l8 0"},"child":[]},{"tag":"path","attr":{"d":"M12 17l0 4"},"child":[]},{"tag":"path","attr":{"d":"M7 4l10 0"},"child":[]},{"tag":"path","attr":{"d":"M17 4v8a5 5 0 0 1 -10 0v-8"},"child":[]},{"tag":"path","attr":{"d":"M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"},"child":[]},{"tag":"path","attr":{"d":"M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"},"child":[]}]})(props);
 }function TbTrash (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M4 7l16 0"},"child":[]},{"tag":"path","attr":{"d":"M10 11l0 6"},"child":[]},{"tag":"path","attr":{"d":"M14 11l0 6"},"child":[]},{"tag":"path","attr":{"d":"M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"},"child":[]},{"tag":"path","attr":{"d":"M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"},"child":[]}]})(props);
 }function TbShoppingBag (props) {
@@ -6336,7 +6338,7 @@ function deviceInfoLocale(locale) {
         profile: profile[0], auto: profile[1], pc: profile[2], handheld: profile[3], experimental: profile[4], profileHint: profile[5], battery: profile[6], ac: profile[7], primaryDisplay: profile[8], video: profile[9], power: profile[10], details: profile[11], saveError: profile[12], retry: profile[13], batteryHealth: batteryHealth[language] ?? batteryHealth.en };
 }
 
-const copy$i = {
+const copy$j = {
     "en": {
         "StoreLibrary.WindowsManaged": "Installation managed by Microsoft Store",
         "StoreLibrary.Stores": "Digital stores",
@@ -7418,7 +7420,7 @@ const copy$i = {
         "StoreLibrary.ConfirmCancelDownload": "Вы действительно хотите отменить загрузку?"
     }
 };
-function storeLibraryLocale(locale) { return copy$i[deviceLanguage(locale)] ?? copy$i.en; }
+function storeLibraryLocale(locale) { return copy$j[deviceLanguage(locale)] ?? copy$j.en; }
 
 const { PanelSection: PanelSection$b, PanelSectionRow: PanelSectionRow$c, DropdownItem: DropdownItem$5, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = CompatUI;
 const danger = `.ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) {
@@ -7490,7 +7492,7 @@ function StoreDownloadsQam({ locale }) {
     return SP_JSX.jsx(PanelSection$b, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$c, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
 }
 
-const { DialogButton: DialogButton$b } = CompatUI;
+const { DialogButton: DialogButton$d } = CompatUI;
 const labelStore = (store) => ({ gog: "GOG", epic: "Epic Games", xbox: "Xbox", amazon: "Amazon Games" }[store] ?? "");
 const terminal = (job) => !job || ["completed", "canceled", "failed"].includes(job.state) || job.state === "externalHandoff" && job.reasonCode !== "windows_store_managed";
 let locale = () => navigator.language;
@@ -7517,7 +7519,7 @@ function GameAction({ appId, native }) {
     const running = Number(ui?.MainRunningAppID) === appId || (Array.isArray(ui?.RunningApps) && ui.RunningApps.some((app) => app?.appid === appId));
     if (!row?.accountCurrent || !row.game || !identity || proof.identity !== identity || proof.source !== apps || !proof.matches || running || row.game.isInstalled && row.game.isLaunchable)
         return native;
-    return SP_JSX.jsx("div", { style: { minWidth: 240, maxWidth: 560, width: "100%" }, children: terminal(row.job) ? SP_JSX.jsxs(DialogButton$b, { style: { whiteSpace: "normal" }, onClick: () => openStoreDigitalGame(row.key, "install"), children: [text$5().install, " \u00B7 ", labelStore(row.key.store)] }) : SP_JSX.jsx(JobControls, { job: row.job }) });
+    return SP_JSX.jsx("div", { style: { minWidth: 240, maxWidth: 560, width: "100%" }, children: terminal(row.job) ? SP_JSX.jsxs(DialogButton$d, { style: { whiteSpace: "normal" }, onClick: () => openStoreDigitalGame(row.key, "install"), children: [text$5().install, " \u00B7 ", labelStore(row.key.store)] }) : SP_JSX.jsx(JobControls, { job: row.job }) });
 }
 function DownloadSection() {
     const rows = _global_SP_REACT.useSyncExternalStore(subscribeStoreLibrary, readStoreDownloads);
@@ -7877,7 +7879,7 @@ function translationController(store) {
     }
 }
 
-const { PanelSectionRow: PanelSectionRow$b, ToggleField: ToggleField$8 } = CompatUI;
+const { PanelSectionRow: PanelSectionRow$b, ToggleField: ToggleField$9 } = CompatUI;
 const descriptions$1 = {
     en: "Makes the Steam Controller appear as an Xbox controller.",
     it: "Fa riconoscere lo Steam Controller come un pad Xbox.",
@@ -7926,7 +7928,7 @@ function TranslationControllerToggle({ locale }) {
     }, []);
     if (!connected || enabled === null)
         return null;
-    return SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ToggleField$8, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
+    return SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ToggleField$9, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
                 if (typeof value !== "boolean" || writing.current || !available || !mounted.current || !translationController(window.ControllerStore))
                     return;
                 writing.current = true;
@@ -7983,7 +7985,7 @@ function pollStatus(read, update) {
     return () => { stopped = true; clearTimeout(timer); controller?.abort(); };
 }
 
-const copy$h = {
+const copy$i = {
     "en": {
         "Title": "Gaming Mode optional",
         "Description": "Start in Big Picture, switch to the desktop and open the Core Dashboard with a controller.",
@@ -8153,7 +8155,7 @@ const copy$h = {
         "Ready": "Gaming Mode तैयार है।"
     }
 };
-function optionalAgentCopy(locale) { return copy$h[locale] ?? copy$h.en; }
+function optionalAgentCopy(locale) { return copy$i[locale] ?? copy$i.en; }
 
 // Backend client for Quick Settings.
 //   * call(...)  -> Decky Python backend (main.py)
@@ -8316,7 +8318,7 @@ function gameSettingsLabel(_language) {
     return "Core Game Settings";
 }
 
-const copy$g = {
+const copy$h = {
     en: ["Session", "Audio", "Display", "Performance", "Graphics", "Controller", "System", "Settings", "Customize your panel", "Show tabs", "Move up", "Move down", "Restore defaults", "Back", "Hide a tab without changing its settings or disabling its features.", "Expand", "Collapse", "Switch tab", "Settings could not be saved. Try again."],
     it: ["Sessione", "Audio", "Schermo", "Prestazioni", "Grafica", "Controller", "Sistema", "Impostazioni", "Personalizza il pannello", "Mostra le schede", "Sposta su", "Sposta giù", "Ripristina predefiniti", "Indietro", "Nascondere una scheda non modifica le impostazioni e non disattiva le sue funzioni.", "Espandi", "Comprimi", "Cambia scheda", "Impossibile salvare le impostazioni. Riprova."],
     de: ["Sitzung", "Audio", "Bildschirm", "Leistung", "Grafik", "Controller", "System", "Einstellungen", "Panel anpassen", "Tabs anzeigen", "Nach oben", "Nach unten", "Standard wiederherstellen", "Zurück", "Das Ausblenden eines Tabs ändert keine Einstellungen und deaktiviert keine Funktionen.", "Ausklappen", "Einklappen", "Tab wechseln", "Einstellungen konnten nicht gespeichert werden. Erneut versuchen."],
@@ -8333,7 +8335,7 @@ const copy$g = {
 function controlLocale(locale) {
     const aliases = { english: "en", italian: "it", german: "de", spanish: "es", latam: "es", french: "fr", brazilian: "pt", portuguese: "pt", russian: "ru", ukrainian: "uk", japanese: "ja", koreana: "ko", schinese: "zh", tchinese: "zh", hindi: "hi" };
     const key = aliases[locale] ?? locale.split(/[-_]/)[0];
-    const row = copy$g[key] ?? copy$g.en;
+    const row = copy$h[key] ?? copy$h.en;
     const tabs = tabCopy[key] ?? tabCopy.en;
     const video = { en: "Video", it: "Video", de: "Video", es: "Vídeo", fr: "Vidéo", pt: "Vídeo", ru: "Видео", uk: "Відео", ja: "映像", ko: "비디오", zh: "视频", hi: "वीडियो" };
     return { home: row[0], audio: video[key] ?? video.en, display: row[2], performance: row[1], graphics: row[3], controller: row[5], tools: row[6], store: 'Plugin Store', decky: 'Decky', settings: row[7], customize: tabs[1], show: tabs[4], up: tabs[2], down: tabs[3], reset: row[12], back: row[13], hint: row[14], expand: row[15], collapse: row[16], switchTab: row[17], saveError: row[18], device: tabs[5], unavailable: tabs[6], loading: tabs[7], retry: tabs[8] };
@@ -8482,7 +8484,7 @@ const amdIt = {
     amdDisplayTemperature: "Temperatura colore",
     amdDriverRejected: "Il driver AMD non ha confermato questa modifica. Il valore precedente è stato ripristinato.",
 };
-const en$8 = {
+const en$9 = {
     title: "Quick Settings",
     audio: "Audio",
     volume: "Device volume",
@@ -8724,7 +8726,7 @@ const it = {
     cancel: "Annulla",
     notConnected: "Agent Quick Settings non collegato",
 };
-const strings$2 = { en: en$8, it };
+const strings$2 = { en: en$9, it };
 function t$1(locale = navigator.language) {
     const language = locale.split("-")[0];
     return { ...(strings$2[language] ?? strings$2.en), ...quickCoreLocale(language), title: "Core" };
@@ -9409,10 +9411,10 @@ function losslessCaptureLabel(locale, state) {
     return index < 0 ? "" : (rows$7[aliases[key] ?? key] ?? rows$7.en)[index];
 }
 
-const { DialogButton: DialogButton$a, Focusable: Focusable$f } = CompatUI;
+const { DialogButton: DialogButton$c, Focusable: Focusable$h } = CompatUI;
 function ControlSection({ id, title, icon, children, collapsed, onToggle, locale }) {
     const copy = controlLocale(locale);
-    return SP_JSX.jsxs(Focusable$f, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$a, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$f, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
+    return SP_JSX.jsxs(Focusable$h, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$c, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$h, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
 }
 
 /** One writer per independent setting/resource; callbacks receive only current results. */
@@ -10652,7 +10654,7 @@ function bounded$1(operation) {
         operation.then(value => { window.clearTimeout(timer); resolve(value); }, error => { window.clearTimeout(timer); reject(error); });
     });
 }
-const copy$f = {
+const copy$g = {
     en: ["Check shader support", "Graphics requirements met", "Requirements unmet", "Needs verification", "Listed by Intel · cache unverified", "Graphics adapter unavailable"],
     it: ["Verifica supporto shader", "Requisiti grafici soddisfatti", "Fuori requisiti", "Da verificare", "Nel catalogo Intel · cache da verificare", "Scheda grafica da rilevare"],
     de: ["Shader-Unterstützung prüfen", "Grafikanforderungen erfüllt", "Nicht unterstützt", "Nicht geprüft", "Bei Intel gelistet · Cache nicht geprüft", "Keine Grafikkarte erkannt"],
@@ -10691,7 +10693,7 @@ function ShaderCompatibility({ appId, locale, renderSection }) {
         return () => { mounted.current = false; ++epoch.current; window.removeEventListener("focus", onFocus); };
     }, [appId]);
     const text = shaderCacheCopy(locale);
-    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$f[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$f.en;
+    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$g[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$g.en;
     const labels = { eligible, unsupported, unverified: unknown };
     const current = (generation) => mounted.current && epoch.current === generation;
     function accept(next, generation) {
@@ -12190,7 +12192,7 @@ function createSteamDownloadPower(read, send) {
     };
 }
 
-const copy$e = {
+const copy$f = {
     en: ["Finish Steam download", "Stop keeping awake", "On AC power, Windows can turn off the display while Steam finishes the current download.", "PC stays awake for this download.", "Could not start download power mode."],
     it: ["Completa il download Steam", "Termina modalità download", "Con l’alimentazione collegata, Windows può spegnere lo schermo mentre Steam completa il download.", "Il PC resta sveglio per questo download.", "Impossibile avviare la modalità download."],
     de: ["Steam-Download abschließen", "Wachhalten beenden", "Am Netz kann Windows den Bildschirm ausschalten, während Steam den Download beendet.", "Der PC bleibt für diesen Download wach.", "Downloadmodus konnte nicht gestartet werden."],
@@ -12258,7 +12260,7 @@ function SteamDownloadPower({ locale }) {
     }, []);
     if (!state.available && !state.active)
         return null;
-    const [start, stop, detail, active, failed] = copy$e[locale.split(/[-_]/)[0]] ?? copy$e.en;
+    const [start, stop, detail, active, failed] = copy$f[locale.split(/[-_]/)[0]] ?? copy$f.en;
     return SP_JSX.jsxs("div", { className: "qsCardBody", "aria-busy": state.busy, children: [SP_JSX.jsx(CompatUI.DialogButton, { disabled: state.busy, onClick: () => void (state.active ? downloadPower.stop() : downloadPower.start()), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: state.active ? stop : start }) }), SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: state.failed ? failed : state.active ? active : detail })] });
 }
 
@@ -21370,14 +21372,14 @@ function qamNativeLabel(key, fallback, locale) {
 
 let preferences = { version: 3, selected: ["Playhub"], icons: {}, order: [], hidden: [], updated_at: 0 };
 let snapshot$2 = { active: false, native: [], plugins: [] };
-const listeners$9 = new Set();
+const listeners$a = new Set();
 const refreshers = new Set();
 let pending$2 = false;
-function notify$2() { if (pending$2)
-    return; pending$2 = true; void Promise.resolve().then(() => { pending$2 = false; listeners$9.forEach(fn => fn()); }); }
+function notify$3() { if (pending$2)
+    return; pending$2 = true; void Promise.resolve().then(() => { pending$2 = false; listeners$a.forEach(fn => fn()); }); }
 const getQamLayoutPreferences = () => preferences;
 const getQamLayoutSnapshot = () => snapshot$2;
-function subscribeQamLayout(fn) { listeners$9.add(fn); return () => { listeners$9.delete(fn); }; }
+function subscribeQamLayout(fn) { listeners$a.add(fn); return () => { listeners$a.delete(fn); }; }
 function setQamLayoutPreferences(value) {
     const strings = (items) => Array.isArray(items) ? [...new Set(items.filter((v) => typeof v === "string" && !!v))] : [];
     const next = { version: 3, selected: strings(value?.selected), order: strings(value?.order),
@@ -21388,7 +21390,7 @@ function setQamLayoutPreferences(value) {
         return;
     preferences = next;
     refreshers.forEach(fn => fn());
-    notify$2();
+    notify$3();
 }
 // Eternal Core (Core UI, docs/eternal/CORE-UI.md, "Plugin logos"): Core's own logo for the user's Eternal plugin forks,
 // set by index.tsx while Core UI is on. A user-chosen icon still wins; a plugin without a Core logo keeps its own.
@@ -21396,7 +21398,7 @@ let pluginIconFallback;
 function setQamPluginIconFallback(fallback) {
     pluginIconFallback = fallback;
     refreshers.forEach(fn => fn());
-    notify$2();
+    notify$3();
 }
 function icon(name, original) {
     let core;
@@ -21458,7 +21460,7 @@ function createQamLayoutRuntime(hook, nativeRender, ownId, refresh, inventory = 
             if (!snapshot$2.active || native.length !== snapshot$2.native.length || native.some((tab, index) => tab.key !== snapshot$2.native[index]?.key || tab.label !== snapshot$2.native[index]?.label || tab.icon !== snapshot$2.native[index]?.icon) || available.length !== snapshot$2.plugins.length
                 || available.some((p, i) => p.name !== snapshot$2.plugins[i]?.name || p.icon !== snapshot$2.plugins[i]?.icon)) {
                 snapshot$2 = { active: true, native, plugins: available };
-                notify$2();
+                notify$3();
             }
             const original = [...tabs];
             for (const name of preferences.selected) {
@@ -21501,7 +21503,7 @@ function createQamLayoutRuntime(hook, nativeRender, ownId, refresh, inventory = 
                 managedVisibility.set(String(entry.id), preferences.selected.includes(name) && tabs.some(tab => String(tab.key) === String(entry.id)));
             records.add({ array: new globalThis.WeakRef(tabs), original, projected: [...tabs] });
         },
-        stop() { stopped = true; refreshers.delete(changed); restore(); snapshot$2 = { ...snapshot$2, active: false }; notify$2(); } };
+        stop() { stopped = true; refreshers.delete(changed); restore(); snapshot$2 = { ...snapshot$2, active: false }; notify$3(); } };
 }
 
 const text$3 = {
@@ -24452,7 +24454,7 @@ function useHistoryPhoto(url) {
     return resolved?.source === url && resolved.digest === expected?.sha256 ? resolved.url : undefined;
 }
 
-const copy$d = {
+const copy$e = {
     it: ['Premi', 'per approfondire', 'per richiudere', 'Visualizza immagine', 'Chiudi'],
     en: ['Press', 'to explore', 'to collapse', 'View image', 'Close'],
     de: ['Drücke', 'für mehr', 'zum Zuklappen', 'Bild ansehen', 'Schließen'],
@@ -24466,7 +24468,7 @@ const copy$d = {
     zh: ['按', '深入閱讀', '收起內容', '查看圖片', '關閉'],
     hi: ['', 'दबाकर विस्तार से पढ़ें', 'दबाकर समेटें', 'चित्र देखें', 'बंद करें'],
 };
-const historyActionCopy = (locale) => copy$d[locale.split(/[-_]/)[0]] ?? copy$d.en;
+const historyActionCopy = (locale) => copy$e[locale.split(/[-_]/)[0]] ?? copy$e.en;
 class GlyphBoundary extends _global_SP_REACT.Component {
     constructor() {
         super(...arguments);
@@ -24552,7 +24554,7 @@ function historyHeadingCover(all, kind, coverFile) {
 }
 
 const historyDigest = (image) => historyPhotoIntegrity[image.url]?.sha256;
-const { Focusable: Focusable$e, DialogButton: DialogButton$9, Navigation: Navigation$8 } = CompatUI;
+const { Focusable: Focusable$g, DialogButton: DialogButton$b, Navigation: Navigation$9 } = CompatUI;
 const labels$1 = {
     it: ['Accade oggi', 'La storia dei videogiochi, un giorno alla volta', 'In questo giorno', '', 'Dietro la storia', 'Continua su Wikipedia', 'Immagine: crediti e licenza', 'Prepariamo la storia di oggi…', 'Storia non disponibile. Riprova', 'Ultima storia disponibile', 'Fonte: Wikipedia · testo CC BY-SA 4.0'],
     en: ['On this day', 'Video game history, one day at a time', 'On this day', 'Today’s discovery', 'Behind the story', 'Read on Wikipedia', 'Image: credits and license', 'Finding today’s story…', 'Story unavailable. Retry', 'Last available story', 'Source: Wikipedia · text CC BY-SA 4.0'],
@@ -24578,7 +24580,7 @@ const release$1 = { it: 'In questo giorno esce', en: 'Released on this day', de:
 const feature = { it: '', en: '', de: '', es: '', fr: '', pt: '', ru: '', uk: '', ja: '', ko: '', zh: '', hi: '' };
 const commemoration = { it: 'In occasione di', en: 'On the occasion of', de: 'Anlässlich', es: 'Con motivo de', fr: "À l’occasion de", pt: 'Por ocasião de', ru: 'По случаю', uk: 'З нагоди', ja: 'この日に寄せて', ko: '이 날을 기념하며', zh: '值此之际', hi: 'इस अवसर पर' };
 const previewWords = { it: ['Giorno precedente', 'Giorno successivo'], en: ['Previous day', 'Next day'], de: ['Vorheriger Tag', 'Nächster Tag'], es: ['Día anterior', 'Día siguiente'], fr: ['Jour précédent', 'Jour suivant'], pt: ['Dia anterior', 'Dia seguinte'], ru: ['Предыдущий день', 'Следующий день'], uk: ['Попередній день', 'Наступний день'], ja: ['前の日', '次の日'], ko: ['이전 날', '다음 날'], zh: ['前一天', '後一天'], hi: ['पिछला दिन', 'अगला दिन'] };
-const css$5 = `
+const css$6 = `
 .ph-history{color:${CORE.text};padding:0 0 26px;max-width:1480px;margin:auto;font-family:inherit}
  .ph-history-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding:20px 28px;min-height:84px;margin:16px 5px 24px;background:${CORE.gunmetal};border:1px solid ${CORE.gunmetalRaised};border-radius:5px;box-sizing:border-box}
  .ph-history-day-card{cursor:pointer;outline:2px solid transparent;outline-offset:3px;transition:background .2s,outline-color .2s}.ph-history-day-card:hover,.ph-history-day-card.gpfocus,.ph-history-day-card:focus{background:${CORE.gunmetalRaised};outline-color:${CORE.crimson}}
@@ -24606,7 +24608,7 @@ const css$5 = `
 @media(prefers-reduced-motion:reduce){.ph-history *{transition:none!important}}
 `;
 const normalizeGameTitle = (value) => String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[™®©]/g, '').replace(/\b(edition|deluxe|complete|goty|game of the year|remastered|remake)\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
-const plausibleAppId = (value) => { const id = Number(value); return Number.isSafeInteger(id) && id > 0 && id <= 0xffffffff ? id : null; };
+const plausibleAppId$1 = (value) => { const id = Number(value); return Number.isSafeInteger(id) && id > 0 && id <= 0xffffffff ? id : null; };
 const libraryEntries = () => {
     const store = window?.appStore ?? window?.SteamClient?.Apps;
     const values = [];
@@ -24629,7 +24631,7 @@ const libraryAppIdForStory = (story) => {
     const wanted = [story.article.title, story.editorial.title].map(normalizeGameTitle).filter(value => value.length >= 3);
     if (!wanted.length)
         return null;
-    const candidates = libraryEntries().map(entry => ({ id: plausibleAppId(entry?.appid ?? entry?.app_id ?? entry?.unAppID ?? entry?.nAppID), name: normalizeGameTitle(entry?.display_name ?? entry?.localized_name ?? entry?.name ?? entry?.title) })).filter(item => item.id && item.name);
+    const candidates = libraryEntries().map(entry => ({ id: plausibleAppId$1(entry?.appid ?? entry?.app_id ?? entry?.unAppID ?? entry?.nAppID), name: normalizeGameTitle(entry?.display_name ?? entry?.localized_name ?? entry?.name ?? entry?.title) })).filter(item => item.id && item.name);
     for (const target of wanted) {
         const exact = candidates.find(item => item.name === target);
         if (exact)
@@ -24661,7 +24663,7 @@ function Block({ story, chapter, index, locale }) {
     const open = () => { const now = Date.now(); if (now - lastActivation.current < 350)
         return; lastActivation.current = now; if (!media)
         return; openHistoryImage(media.url, media.subject, locale, cardRef.current?.ownerDocument.defaultView ?? window); };
-    return SP_JSX.jsxs(Focusable$e, { ref: cardRef, className: `ph-history-card ${index % 2 ? 'reverse' : ''} ${photo ? '' : 'no-image'}`, role: photo ? 'button' : 'article', "aria-label": title, focusable: true, onOKActionDescription: photo ? historyActionCopy(locale)[3] : undefined, onActivate: photo ? open : undefined, onClick: photo ? open : undefined, children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: chapter ? SP_JSX.jsx("span", { className: "ph-history-subject", children: chapter.subject || story.article.title }) : story.relationship ?? (occasion ? `${occasion} · ${story.article.title}` : story.article.title) }), renderTitle(), SP_JSX.jsx("p", { children: chapter?.body ?? story.editorial.intro }), !chapter && story.year && SP_JSX.jsx("div", { className: "ph-history-year", children: story.year })] }), media && photo && SP_JSX.jsxs("div", { className: "ph-history-image", children: [SP_JSX.jsx("img", { className: "ph-history-image-bg", src: photo, alt: "", "aria-hidden": true, role: "presentation" }), SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject, onError: () => setFailed(previous => [...previous, media.url]) })] })] });
+    return SP_JSX.jsxs(Focusable$g, { ref: cardRef, className: `ph-history-card ${index % 2 ? 'reverse' : ''} ${photo ? '' : 'no-image'}`, role: photo ? 'button' : 'article', "aria-label": title, focusable: true, onOKActionDescription: photo ? historyActionCopy(locale)[3] : undefined, onActivate: photo ? open : undefined, onClick: photo ? open : undefined, children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: chapter ? SP_JSX.jsx("span", { className: "ph-history-subject", children: chapter.subject || story.article.title }) : story.relationship ?? (occasion ? `${occasion} · ${story.article.title}` : story.article.title) }), renderTitle(), SP_JSX.jsx("p", { children: chapter?.body ?? story.editorial.intro }), !chapter && story.year && SP_JSX.jsx("div", { className: "ph-history-year", children: story.year })] }), media && photo && SP_JSX.jsxs("div", { className: "ph-history-image", children: [SP_JSX.jsx("img", { className: "ph-history-image-bg", src: photo, alt: "", "aria-hidden": true, role: "presentation" }), SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject, onError: () => setFailed(previous => [...previous, media.url]) })] })] });
 }
 const expandedRelatedStories = new Set();
 function RelatedStory({ story, locale }) {
@@ -24676,7 +24678,7 @@ function RelatedStory({ story, locale }) {
         expandedRelatedStories.delete(storyKey);
     else
         expandedRelatedStories.add(storyKey); return !value; }); };
-    return SP_JSX.jsxs("div", { className: "ph-history-related", children: [SP_JSX.jsxs(Focusable$e, { className: "ph-history-card ph-history-related-summary", role: "button", "aria-expanded": expanded, focusable: true, onActivate: toggle, onClick: toggle, onOKActionDescription: historyActionCopy(locale)[expanded ? 2 : 1], children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: story.relationship ?? words$3(locale)[4] }), SP_JSX.jsx("h3", { children: story.article.title }), SP_JSX.jsx(HistoryConfirmHint, { locale: locale, expanded: expanded })] }), media && photo && SP_JSX.jsx("div", { className: "ph-history-image", children: SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject }) })] }), expanded && SP_JSX.jsxs("div", { className: "ph-history-related-content", children: [SP_JSX.jsx(Block, { story: story, index: 0, locale: locale }), story.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: story, chapter: chapter, index: index + 1, locale: locale }), story.quote && (story.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$e, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: story.quote.quoted ? `«${story.quote.text}»` : story.quote.text }), story.quote.attribution && SP_JSX.jsx("span", { children: story.quote.attribution })] })] }, index))] })] });
+    return SP_JSX.jsxs("div", { className: "ph-history-related", children: [SP_JSX.jsxs(Focusable$g, { className: "ph-history-card ph-history-related-summary", role: "button", "aria-expanded": expanded, focusable: true, onActivate: toggle, onClick: toggle, onOKActionDescription: historyActionCopy(locale)[expanded ? 2 : 1], children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: story.relationship ?? words$3(locale)[4] }), SP_JSX.jsx("h3", { children: story.article.title }), SP_JSX.jsx(HistoryConfirmHint, { locale: locale, expanded: expanded })] }), media && photo && SP_JSX.jsx("div", { className: "ph-history-image", children: SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject }) })] }), expanded && SP_JSX.jsxs("div", { className: "ph-history-related-content", children: [SP_JSX.jsx(Block, { story: story, index: 0, locale: locale }), story.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: story, chapter: chapter, index: index + 1, locale: locale }), story.quote && (story.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$g, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: story.quote.quoted ? `«${story.quote.text}»` : story.quote.text }), story.quote.attribution && SP_JSX.jsx("span", { children: story.quote.attribution })] })] }, index))] })] });
 }
 let historyPreviewOffset = 0;
 function DailyHistory({ getLocale }) {
@@ -24740,19 +24742,19 @@ function DailyHistory({ getLocale }) {
     const dayAppId = story ? libraryAppIdForStory(story) : null;
     const openDayGame = () => { if (!dayAppId)
         return; try {
-        Navigation$8?.Navigate?.(`/library/app/${dayAppId}`);
+        Navigation$9?.Navigate?.(`/library/app/${dayAppId}`);
     }
     catch { } };
     const headingContent = SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-date", children: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(date) }), story ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("div", { className: "ph-history-sub", children: [heading && SP_JSX.jsx("span", { children: heading }), SP_JSX.jsx("strong", { children: story.article.title }), story.year && story.occasion?.kind !== 'feature' && SP_JSX.jsx("span", { className: "ph-history-year", children: story.year })] }), headingMedia(story)] }) : SP_JSX.jsx("div", { className: "ph-history-sub", children: copy[1] })] });
-    return SP_JSX.jsxs(Focusable$e, { className: "ph-history", ref: root, "flow-children": "column", onButtonDown: navigate, actionDescriptionMap: story?.preview ? { [buttons.SECONDARY]: hints[0], [buttons.OPTIONS]: hints[1] } : {}, children: [SP_JSX.jsx("style", { children: css$5 }), SP_JSX.jsx(Focusable$e, { className: "ph-history-head ph-history-day-card", role: "button", "aria-label": story?.article.title ?? copy[0], focusable: true, onActivate: dayAppId ? openDayGame : undefined, onClick: dayAppId ? openDayGame : undefined, children: headingContent }), !story ? SP_JSX.jsx("div", { className: "ph-history-empty", children: failed ? SP_JSX.jsx(DialogButton$9, { onClick: () => setRetry(v => v + 1), children: copy[8] }) : SP_JSX.jsx("span", { role: "status", children: copy[7] }) }) : [story, ...(story.also ?? [])].map(item => SP_JSX.jsxs("div", { className: "ph-history-story", children: [SP_JSX.jsx(Block, { story: item, index: 0, locale: locale }), item.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: item, chapter: chapter, index: index + 1, locale: locale }), item.quote && (item.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$e, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] })] }, index)), item.quote && !item.editorial.chapters?.length && SP_JSX.jsxs(Focusable$e, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] }), item.connections?.length ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-connections-title", children: copy[4] }), item.connections.map(related => SP_JSX.jsx(RelatedStory, { story: related, locale: locale }, `${related.date}-${related.editorial.id}`))] }) : null] }, `${item.date}-${item.editorial.id}`))] });
+    return SP_JSX.jsxs(Focusable$g, { className: "ph-history", ref: root, "flow-children": "column", onButtonDown: navigate, actionDescriptionMap: story?.preview ? { [buttons.SECONDARY]: hints[0], [buttons.OPTIONS]: hints[1] } : {}, children: [SP_JSX.jsx("style", { children: css$6 }), SP_JSX.jsx(Focusable$g, { className: "ph-history-head ph-history-day-card", role: "button", "aria-label": story?.article.title ?? copy[0], focusable: true, onActivate: dayAppId ? openDayGame : undefined, onClick: dayAppId ? openDayGame : undefined, children: headingContent }), !story ? SP_JSX.jsx("div", { className: "ph-history-empty", children: failed ? SP_JSX.jsx(DialogButton$b, { onClick: () => setRetry(v => v + 1), children: copy[8] }) : SP_JSX.jsx("span", { role: "status", children: copy[7] }) }) : [story, ...(story.also ?? [])].map(item => SP_JSX.jsxs("div", { className: "ph-history-story", children: [SP_JSX.jsx(Block, { story: item, index: 0, locale: locale }), item.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: item, chapter: chapter, index: index + 1, locale: locale }), item.quote && (item.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$g, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] })] }, index)), item.quote && !item.editorial.chapters?.length && SP_JSX.jsxs(Focusable$g, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] }), item.connections?.length ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-connections-title", children: copy[4] }), item.connections.map(related => SP_JSX.jsx(RelatedStory, { story: related, locale: locale }, `${related.date}-${related.editorial.id}`))] }) : null] }, `${item.date}-${item.editorial.id}`))] });
 }
 let historyConfig = { enabled: true, revision: 0 };
 let historyReady = false;
-const listeners$8 = new Set();
-const subscribe$2 = (listener) => { listeners$8.add(listener); return () => { listeners$8.delete(listener); }; };
-const notify$1 = () => listeners$8.forEach(listener => listener());
-const notifyHistoryLanguageChanged = () => { historyConfig = { ...historyConfig, revision: historyConfig.revision + 1 }; notify$1(); };
-async function loadHistorySettings() { const next = await call("get_daily_history_settings"); historyConfig = { ...next, revision: historyConfig.revision + 1 }; historyReady = true; notify$1(); }
+const listeners$9 = new Set();
+const subscribe$2 = (listener) => { listeners$9.add(listener); return () => { listeners$9.delete(listener); }; };
+const notify$2 = () => listeners$9.forEach(listener => listener());
+const notifyHistoryLanguageChanged = () => { historyConfig = { ...historyConfig, revision: historyConfig.revision + 1 }; notify$2(); };
+async function loadHistorySettings() { const next = await call("get_daily_history_settings"); historyConfig = { ...next, revision: historyConfig.revision + 1 }; historyReady = true; notify$2(); }
 function HistoryTabs({ native, getLocale }) {
     const config = _global_SP_REACT.useSyncExternalStore(subscribe$2, () => historyConfig);
     _global_SP_REACT.useEffect(() => { if (!historyReady)
@@ -24771,7 +24773,7 @@ function HomeHistorySettings({ locale }) {
         return; setBusy(true); try {
         const next = await call('set_daily_history_settings', enabled);
         historyConfig = { ...next, revision: config.revision + 1 };
-        notify$1();
+        notify$2();
         setFailed(false);
     }
     catch {
@@ -24781,7 +24783,7 @@ function HomeHistorySettings({ locale }) {
         setBusy(false);
     } };
     const Toggle = CompatUI.ToggleField;
-    return SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Toggle, { label: historyTitle(locale), description: words$3(locale)[1], checked: config.enabled, disabled: !historyReady || busy, onChange: (enabled) => void save(enabled), bottomSeparator: "none" }), failed && SP_JSX.jsx(DialogButton$9, { onClick: () => void loadHistorySettings().then(() => setFailed(false)).catch(() => { }), children: words$3(locale)[8] })] });
+    return SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Toggle, { label: historyTitle(locale), description: words$3(locale)[1], checked: config.enabled, disabled: !historyReady || busy, onChange: (enabled) => void save(enabled), bottomSeparator: "none" }), failed && SP_JSX.jsx(DialogButton$b, { onClick: () => void loadHistorySettings().then(() => setFailed(false)).catch(() => { }), children: words$3(locale)[8] })] });
 }
 
 const words$2 = {
@@ -24847,15 +24849,15 @@ const coreUiSetting = createCoreUiSetting(defaultStorage());
 
 // Eternal Core: Core Home's text in Core's 12 languages (docs/eternal/CORE-UI.md, "Phase 2: Home"). "Jarvis", "Forge"
 // and the console names are names and stay the same everywhere. Self-contained: tests load it alone.
-const en$7 = {
+const en$8 = {
     brief: "Jarvis brief", consoles: "Consoles",
     morning: "Good morning, sir", afternoon: "Good afternoon, sir", evening: "Good evening, sir", night: "Up late, sir",
     lastPlayed: "You were last playing {game}.", nothingYet: "Nothing on the go yet. Pick something and I'll keep track.",
     talk: "Talk to Jarvis", mods: "{count} mods have updates in Forge", modsOne: "1 mod has an update in Forge",
     updates: "News and updates for your games", empty: "No games in this collection yet", vr: "VR", retro: "Retro",
 };
-const copy$c = {
-    en: en$7,
+const copy$d = {
+    en: en$8,
     it: { brief: "Il punto di Jarvis", consoles: "Console", morning: "Buongiorno, signore", afternoon: "Buon pomeriggio, signore", evening: "Buonasera, signore", night: "Ancora sveglio, signore",
         lastPlayed: "L'ultima volta giocavi a {game}.", nothingYet: "Ancora niente in corso. Scegli un gioco e ne terrò traccia.", talk: "Parla con Jarvis",
         mods: "{count} mod hanno aggiornamenti in Forge", modsOne: "1 mod ha un aggiornamento in Forge", updates: "Notizie e aggiornamenti dei tuoi giochi", empty: "Ancora nessun gioco in questa raccolta", vr: "VR", retro: "Retro" },
@@ -24892,7 +24894,7 @@ const copy$c = {
 };
 function coreHomeCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return copy$c[language === "ua" ? "uk" : language] ?? en$7;
+    return copy$d[language === "ua" ? "uk" : language] ?? en$8;
 }
 // The greeting for the hour (local time): night 0-4, morning 5-11, afternoon 12-17, evening 18-23. The household
 // keeps late hours, so 4am is still "up late".
@@ -24913,9 +24915,39 @@ function greetingKey(hour) {
 // Registration point: registerHomeTab({ id, label, order, component, isAvailable }) adds a tab without touching Home's
 // internals; an unavailable tab (isAvailable() false or throwing) is left out.
 const registry = new Map();
-const listeners$7 = new Set();
+const unsubscribers = new Map();
+const listeners$8 = new Set();
 let revision = 0;
-function subscribeHomeTabs(listener) { listeners$7.add(listener); return () => { listeners$7.delete(listener); }; }
+const notify$1 = () => { revision++; for (const listener of [...listeners$8]) {
+    try {
+        listener();
+    }
+    catch { /* Others still hear it. */ }
+} };
+function registerHomeTab(tab) {
+    if (!tab || typeof tab.id !== "string" || !tab.id)
+        return () => { };
+    registry.get(tab.id) && unsubscribers.get(tab.id)?.();
+    registry.set(tab.id, tab);
+    let stop;
+    try {
+        stop = tab.subscribe?.(notify$1);
+    }
+    catch {
+        stop = undefined;
+    }
+    unsubscribers.set(tab.id, () => { try {
+        stop?.();
+    }
+    catch { /* Gone already. */ } unsubscribers.delete(tab.id); });
+    notify$1();
+    return () => { if (registry.get(tab.id) === tab) {
+        unsubscribers.get(tab.id)?.();
+        registry.delete(tab.id);
+        notify$1();
+    } };
+}
+function subscribeHomeTabs(listener) { listeners$8.add(listener); return () => { listeners$8.delete(listener); }; }
 const homeTabsRevision = () => revision;
 // Registered tabs that are available now, by order.
 function availableHomeTabs() {
@@ -24928,7 +24960,7 @@ function availableHomeTabs() {
         }
     }).sort((a, b) => a.order - b.order);
 }
-const HOME_TAB_ORDER = { brief: 10, consoles: 20, onThisDay: 40 };
+const HOME_TAB_ORDER = { brief: 10, consoles: 20, club: 30, onThisDay: 40 };
 const REMOVED_STEAM_TABS = new Set(["WhatsNew", "Friends"]);
 const ON_THIS_DAY_ID = "Recommended";
 const BRIEF_ID = "WhatsNew";
@@ -25438,7 +25470,858 @@ function createPresence(now = Date.now) {
     };
 }
 
+// Eternal Core: the Core Starfield for Core UI surfaces (docs/eternal/CORE-UI.md, "Black means starfield").
+//
+// The same flight as the Core Starfield screensaver (screensaver/main.js): the same seeded field (seed 23),
+// the same colours (steel and near-white, one in twenty-five crimson), the same perspective projection and
+// speed. Only the bouncing mark, its corner flash and the clock constellation stay in the screensaver.
+//
+// Cheap on purpose: one field is shared by every surface (one set of stars, one clock), fewer stars than the
+// screensaver, drawn at most 30 times a second and only while a surface is visible (coreUi.ts decides).
+//
+// Readable text: a star is never brighter than STARFIELD_MAX_ALPHA over black, so Core's dimmest text
+// (#9AA4AE) still has 4.5:1 against the brightest star pixel (tests/coreUi.test.mjs checks the sums).
+//
+// Self-contained (no imports): tests load it on its own.
+const STARFIELD_SEED = 23;
+const STARFIELD_COLOURS = { crimson: "215,38,61", steel: "201,209,217", white: "230,236,242" };
+// Depth travelled per second (the screensaver's .035), and how many stars a surface gets.
+const STARFIELD_SPEED = 0.035;
+const STARFIELD_COUNT = 160;
+const STARFIELD_MAX_ALPHA = 0.24;
+const STARFIELD_FPS = 30;
+// The longest step one frame may take (seconds). A throttled window (a popup Steam draws at a few frames a second)
+// still moves at full speed; a long pause (a closed menu) does not jump.
+const STARFIELD_MAX_STEP = 0.25;
+// The screensaver's generator: Park-Miller from seed 23, three draws per star.
+function makeStars(count = STARFIELD_COUNT, seed = STARFIELD_SEED) {
+    let state = seed;
+    const rand = () => { state = (state * 16807) % 2147483647; return (state - 1) / 2147483646; };
+    return Array.from({ length: Math.max(0, Math.min(420, Math.floor(count))) }, () => {
+        const c = rand();
+        return { x: rand(), y: rand(), z: rand(), c: c < 0.04 ? STARFIELD_COLOURS.crimson : c < 0.3 ? STARFIELD_COLOURS.white : STARFIELD_COLOURS.steel };
+    });
+}
+function createStarfield(count = STARFIELD_COUNT) {
+    const stars = makeStars(count);
+    let zoff = 0, clock;
+    const advance = (seconds) => {
+        if (!(seconds > 0))
+            return;
+        zoff = (zoff + Math.min(STARFIELD_MAX_STEP, seconds) * STARFIELD_SPEED) % 1;
+    };
+    return {
+        stars,
+        advance,
+        advanceTo(time) {
+            if (!Number.isFinite(time))
+                return;
+            if (clock !== undefined && time > clock)
+                advance((time - clock) / 1000);
+            if (clock === undefined || time > clock)
+                clock = time;
+        },
+        depth: () => zoff,
+        draw(context, width, height) {
+            if (!(width > 0) || !(height > 0))
+                return 0;
+            context.clearRect(0, 0, width, height);
+            const cx = width / 2, cy = height / 2, f = Math.max(width, height) * 0.55;
+            let drawn = 0;
+            for (const s of stars) {
+                const z = Math.max(0.03, ((s.z - zoff) % 1 + 1) % 1);
+                const x = cx + (s.x - 0.5) * f / z, y = cy + (s.y - 0.5) * f / z;
+                if (x < 0 || x > width || y < 0 || y > height)
+                    continue;
+                const alpha = starAlpha(z);
+                context.fillStyle = `rgba(${s.c},${alpha.toFixed(3)})`;
+                context.beginPath();
+                context.arc(x, y, Math.max(0.4, (1 - z) * 1.4), 0, Math.PI * 2);
+                context.fill();
+                drawn++;
+            }
+            return drawn;
+        },
+    };
+}
+// One field for every Core surface (Core UI's canvases and Core's own black pages).
+let shared;
+function sharedStarfield() { return shared ?? (shared = createStarfield()); }
+// The screensaver's fade-in with depth, scaled down to the readable ceiling.
+function starAlpha(z) {
+    return Math.max(0, Math.min(1, (1 - z) * 1.2)) * STARFIELD_MAX_ALPHA;
+}
+
+// Eternal Core: the Core Starfield behind one of Core's own black pages (the Jarvis page), per "black means
+// starfield" (docs/eternal/CORE-UI.md). The parent must be positioned with isolation: isolate. Shares the one field
+// with Core UI's canvases; draws at most 30 frames a second, holds still while a game runs, while the page is
+// hidden and under reduced motion, and shows nothing while the Core UI setting is off.
+function CoreStars() {
+    const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
+    const canvas = _global_SP_REACT.useRef(null);
+    _global_SP_REACT.useEffect(() => {
+        const element = canvas.current;
+        if (!on || !element)
+            return;
+        const view = element.ownerDocument?.defaultView ?? window;
+        const field = sharedStarfield();
+        let frame, last, stopped = false;
+        const still = () => {
+            try {
+                const running = Number(window.SteamUIStore?.MainRunningAppID ?? 0) > 0;
+                return running || view.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+            }
+            catch {
+                return false;
+            }
+        };
+        const paint = () => {
+            const width = Math.round(element.clientWidth), height = Math.round(element.clientHeight);
+            if (element.width !== width)
+                element.width = width;
+            if (element.height !== height)
+                element.height = height;
+            const context = element.getContext("2d");
+            if (context)
+                field.draw(context, width, height);
+        };
+        const tick = (time) => {
+            frame = undefined;
+            if (stopped)
+                return;
+            if (element.ownerDocument?.visibilityState === "hidden") {
+                frame = view.requestAnimationFrame(tick);
+                return;
+            }
+            if (last === undefined || time - last >= 1000 / STARFIELD_FPS - 1) {
+                last = time;
+                if (!still())
+                    field.advanceTo(time);
+                paint();
+            }
+            // Held still: check again twice a second instead of every frame.
+            if (still()) {
+                const timer = view.setTimeout(() => { if (!stopped)
+                    frame = view.requestAnimationFrame(tick); }, 500);
+                frame = -timer;
+            }
+            else
+                frame = view.requestAnimationFrame(tick);
+        };
+        frame = view.requestAnimationFrame(tick);
+        return () => {
+            stopped = true;
+            if (frame !== undefined) {
+                if (frame < 0)
+                    view.clearTimeout(-frame);
+                else
+                    view.cancelAnimationFrame(frame);
+            }
+        };
+    }, [on]);
+    if (!on)
+        return null;
+    return SP_JSX.jsx("canvas", { ref: canvas, "aria-hidden": "true", "data-core-stars": "page", style: { position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: -1, pointerEvents: "none", background: "#000000" } });
+}
+
+// Eternal Core: the Club tab's text in Core's 12 languages. Event names ("Game of the Week", ...), game titles,
+// member names and the bot command stay as the club writes them: they are the club's own names.
+// Self-contained (no imports): tests/club.test.mjs loads it alone.
+const en$7 = {
+    tab: "Club", title: "Play Retro Games Club", playing: "Playing now",
+    daysLeft: { one: "{n} day left", other: "{n} days left" }, lastDay: "Last day", ended: "Ended", noDate: "Dates on the club site",
+    notInLibrary: "Not in your library", play: "Play", details: "Game page", standing: "Your standing", beaten: "games beaten",
+    streak: "streak", rank: "rank", rankOf: "#{rank} of {of}", crowns: "Crowns",
+    setName: "Enter your club name in Quick Access > Core > Club to see your standing.",
+    notFound: "No member called \"{name}\" on the leaderboard yet.", top: "Top 5", nominations: "Nominations",
+    voteOpens: "Vote opens {date}", logTitle: "How to log a win", logDiscord: "On Discord, in the game's thread:",
+    logOptions: "Options: event, ra_username (first time only), screenshot (adds 0.75 to your vote weight). On its own, it sends you a private link to log on the website.",
+    logForum: "On the forum: open the game's thread in PRGC General and choose Log a completion.",
+    logDeadline: "Log it before the pick ends: completions close the moment it does.", updated: "Updated {ago}",
+    saved: "Showing saved data", refresh: "Refresh", loading: "Loading the club…", noData: "Club data isn't available yet.",
+    setting: "Show the Club tab", settingHint: "Play Retro Games Club picks, your standing and nominations on the Home.",
+    nameLabel: "Your club display name", nameSave: "Save name", saveFailed: "Could not save the Club settings.",
+};
+const copy$c = {
+    en: en$7,
+    it: { ...en$7, tab: "Club", playing: "In gioco ora", daysLeft: { one: "Manca {n} giorno", other: "Mancano {n} giorni" }, lastDay: "Ultimo giorno", ended: "Terminato", noDate: "Date sul sito del club",
+        notInLibrary: "Non è nella tua libreria", play: "Gioca", details: "Pagina del gioco", standing: "La tua posizione", beaten: "giochi completati", streak: "serie", rank: "posizione",
+        rankOf: "#{rank} su {of}", crowns: "Corone", setName: "Inserisci il tuo nome nel club in Accesso rapido > Core > Club per vedere la tua posizione.",
+        notFound: "Nessun membro chiamato \"{name}\" nella classifica per ora.", top: "Top 5", nominations: "Candidature", voteOpens: "Il voto apre il {date}",
+        logTitle: "Come registrare una vittoria", logDiscord: "Su Discord, nel thread del gioco:",
+        logOptions: "Opzioni: event, ra_username (solo la prima volta), screenshot (aggiunge 0,75 al peso del tuo voto). Da solo ti invia un link privato per registrarla sul sito.",
+        logForum: "Sul forum: apri il thread del gioco in PRGC General e scegli Log a completion.", logDeadline: "Registrala prima che la scelta finisca: le registrazioni chiudono in quel momento.",
+        updated: "Aggiornato {ago}", saved: "Dati salvati", refresh: "Aggiorna", loading: "Caricamento del club…", noData: "I dati del club non sono ancora disponibili.",
+        setting: "Mostra la scheda Club", settingHint: "Le scelte del Play Retro Games Club, la tua posizione e le candidature nella Home.", nameLabel: "Il tuo nome nel club",
+        nameSave: "Salva nome", saveFailed: "Impossibile salvare le impostazioni del Club." },
+    es: { ...en$7, playing: "Jugando ahora", daysLeft: { one: "Queda {n} día", other: "Quedan {n} días" }, lastDay: "Último día", ended: "Terminado", noDate: "Fechas en la web del club",
+        notInLibrary: "No está en tu biblioteca", play: "Jugar", details: "Página del juego", standing: "Tu posición", beaten: "juegos superados", streak: "racha", rank: "puesto",
+        rankOf: "#{rank} de {of}", crowns: "Coronas", setName: "Escribe tu nombre del club en Acceso rápido > Core > Club para ver tu posición.",
+        notFound: "Aún no hay ningún miembro llamado \"{name}\" en la clasificación.", top: "Top 5", nominations: "Nominaciones", voteOpens: "La votación abre el {date}",
+        logTitle: "Cómo registrar una victoria", logDiscord: "En Discord, en el hilo del juego:",
+        logOptions: "Opciones: event, ra_username (solo la primera vez), screenshot (suma 0,75 al peso de tu voto). Solo, te envía un enlace privado para registrarla en la web.",
+        logForum: "En el foro: abre el hilo del juego en PRGC General y elige Log a completion.", logDeadline: "Regístrala antes de que acabe la elección: los registros cierran en ese momento.",
+        updated: "Actualizado {ago}", saved: "Datos guardados", refresh: "Actualizar", loading: "Cargando el club…", noData: "Los datos del club aún no están disponibles.",
+        setting: "Mostrar la pestaña Club", settingHint: "Las elecciones del Play Retro Games Club, tu posición y las nominaciones en Inicio.", nameLabel: "Tu nombre en el club",
+        nameSave: "Guardar nombre", saveFailed: "No se pudo guardar la configuración del Club." },
+    fr: { ...en$7, playing: "En cours", daysLeft: { one: "{n} jour restant", other: "{n} jours restants" }, lastDay: "Dernier jour", ended: "Terminé", noDate: "Dates sur le site du club",
+        notInLibrary: "Absent de votre bibliothèque", play: "Jouer", details: "Page du jeu", standing: "Votre classement", beaten: "jeux terminés", streak: "série", rank: "rang",
+        rankOf: "#{rank} sur {of}", crowns: "Couronnes", setName: "Saisissez votre nom de membre dans Accès rapide > Core > Club pour voir votre classement.",
+        notFound: "Aucun membre nommé « {name} » dans le classement pour l'instant.", top: "Top 5", nominations: "Nominations", voteOpens: "Vote le {date}",
+        logTitle: "Enregistrer une victoire", logDiscord: "Sur Discord, dans le fil du jeu :",
+        logOptions: "Options : event, ra_username (la première fois seulement), screenshot (ajoute 0,75 au poids de votre vote). Seule, elle vous envoie un lien privé pour l'enregistrer sur le site.",
+        logForum: "Sur le forum : ouvrez le fil du jeu dans PRGC General et choisissez Log a completion.", logDeadline: "Enregistrez-la avant la fin de la sélection : les enregistrements ferment à ce moment-là.",
+        updated: "Mis à jour {ago}", saved: "Données enregistrées", refresh: "Actualiser", loading: "Chargement du club…", noData: "Les données du club ne sont pas encore disponibles.",
+        setting: "Afficher l'onglet Club", settingHint: "Les sélections du Play Retro Games Club, votre classement et les nominations sur l'accueil.", nameLabel: "Votre nom de membre",
+        nameSave: "Enregistrer le nom", saveFailed: "Impossible d'enregistrer les paramètres du Club." },
+    de: { ...en$7, playing: "Läuft gerade", daysLeft: { one: "Noch {n} Tag", other: "Noch {n} Tage" }, lastDay: "Letzter Tag", ended: "Beendet", noDate: "Termine auf der Club-Website",
+        notInLibrary: "Nicht in deiner Bibliothek", play: "Spielen", details: "Spielseite", standing: "Dein Stand", beaten: "Spiele geschafft", streak: "Serie", rank: "Platz",
+        rankOf: "Platz {rank} von {of}", crowns: "Kronen", setName: "Gib deinen Club-Namen unter Schnellzugriff > Core > Club ein, um deinen Stand zu sehen.",
+        notFound: "Noch kein Mitglied namens „{name}“ in der Rangliste.", top: "Top 5", nominations: "Nominierungen", voteOpens: "Abstimmung ab {date}",
+        logTitle: "So trägst du einen Sieg ein", logDiscord: "Auf Discord, im Thread des Spiels:",
+        logOptions: "Optionen: event, ra_username (nur beim ersten Mal), screenshot (erhöht dein Stimmgewicht um 0,75). Allein schickt es dir einen privaten Link zum Eintragen auf der Website.",
+        logForum: "Im Forum: Öffne den Thread des Spiels in PRGC General und wähle Log a completion.", logDeadline: "Trag ihn ein, bevor die Wahl endet: Einträge schließen genau dann.",
+        updated: "Aktualisiert {ago}", saved: "Gespeicherte Daten", refresh: "Aktualisieren", loading: "Club wird geladen…", noData: "Club-Daten sind noch nicht verfügbar.",
+        setting: "Club-Tab anzeigen", settingHint: "Die Picks des Play Retro Games Club, dein Stand und die Nominierungen auf der Startseite.", nameLabel: "Dein Club-Anzeigename",
+        nameSave: "Namen speichern", saveFailed: "Club-Einstellungen konnten nicht gespeichert werden." },
+    pt: { ...en$7, playing: "Jogando agora", daysLeft: { one: "Falta {n} dia", other: "Faltam {n} dias" }, lastDay: "Último dia", ended: "Encerrado", noDate: "Datas no site do clube",
+        notInLibrary: "Não está na sua biblioteca", play: "Jogar", details: "Página do jogo", standing: "Sua posição", beaten: "jogos zerados", streak: "sequência", rank: "posição",
+        rankOf: "#{rank} de {of}", crowns: "Coroas", setName: "Digite seu nome no clube em Acesso rápido > Core > Club para ver sua posição.",
+        notFound: "Ainda não há membro chamado \"{name}\" no ranking.", top: "Top 5", nominations: "Indicações", voteOpens: "Votação abre em {date}",
+        logTitle: "Como registrar uma vitória", logDiscord: "No Discord, no tópico do jogo:",
+        logOptions: "Opções: event, ra_username (só na primeira vez), screenshot (soma 0,75 ao peso do seu voto). Sozinho, envia um link privado para registrar no site.",
+        logForum: "No fórum: abra o tópico do jogo em PRGC General e escolha Log a completion.", logDeadline: "Registre antes que a escolha termine: os registros fecham nesse momento.",
+        updated: "Atualizado {ago}", saved: "Dados salvos", refresh: "Atualizar", loading: "Carregando o clube…", noData: "Os dados do clube ainda não estão disponíveis.",
+        setting: "Mostrar a aba Club", settingHint: "As escolhas do Play Retro Games Club, sua posição e as indicações na página inicial.", nameLabel: "Seu nome no clube",
+        nameSave: "Salvar nome", saveFailed: "Não foi possível salvar as configurações do Club." },
+    uk: { ...en$7, tab: "Клуб", playing: "Зараз грають", daysLeft: { one: "Залишився {n} день", few: "Залишилося {n} дні", many: "Залишилося {n} днів", other: "Залишилося {n} дня" },
+        lastDay: "Останній день", ended: "Завершено", noDate: "Дати на сайті клубу", notInLibrary: "Немає у вашій бібліотеці", play: "Грати", details: "Сторінка гри",
+        standing: "Ваше місце", beaten: "ігор пройдено", streak: "серія", rank: "місце", rankOf: "№{rank} з {of}", crowns: "Корони",
+        setName: "Введіть своє ім'я в клубі в Швидкий доступ > Core > Club, щоб бачити своє місце.", notFound: "У рейтингу поки немає учасника «{name}».",
+        top: "Топ-5", nominations: "Номінації", voteOpens: "Голосування з {date}", logTitle: "Як зареєструвати перемогу", logDiscord: "У Discord, у гілці гри:",
+        logOptions: "Параметри: event, ra_username (лише першого разу), screenshot (додає 0,75 до ваги вашого голосу). Сама команда надсилає приватне посилання для реєстрації на сайті.",
+        logForum: "На форумі: відкрийте гілку гри в PRGC General і виберіть Log a completion.", logDeadline: "Зареєструйте до кінця вибору: реєстрація закривається саме тоді.",
+        updated: "Оновлено {ago}", saved: "Збережені дані", refresh: "Оновити", loading: "Завантаження клубу…", noData: "Дані клубу ще недоступні.",
+        setting: "Показувати вкладку «Клуб»", settingHint: "Вибір Play Retro Games Club, ваше місце й номінації на головній.", nameLabel: "Ваше ім'я в клубі",
+        nameSave: "Зберегти ім'я", saveFailed: "Не вдалося зберегти налаштування клубу." },
+    ru: { ...en$7, tab: "Клуб", playing: "Сейчас играют", daysLeft: { one: "Остался {n} день", few: "Осталось {n} дня", many: "Осталось {n} дней", other: "Осталось {n} дня" },
+        lastDay: "Последний день", ended: "Завершено", noDate: "Даты на сайте клуба", notInLibrary: "Нет в вашей библиотеке", play: "Играть", details: "Страница игры",
+        standing: "Ваше место", beaten: "игр пройдено", streak: "серия", rank: "место", rankOf: "№{rank} из {of}", crowns: "Короны",
+        setName: "Введите своё имя в клубе в Быстрый доступ > Core > Club, чтобы видеть своё место.", notFound: "В рейтинге пока нет участника «{name}».",
+        top: "Топ-5", nominations: "Номинации", voteOpens: "Голосование с {date}", logTitle: "Как записать победу", logDiscord: "В Discord, в ветке игры:",
+        logOptions: "Параметры: event, ra_username (только в первый раз), screenshot (добавляет 0,75 к весу вашего голоса). Сама команда присылает личную ссылку для записи на сайте.",
+        logForum: "На форуме: откройте ветку игры в PRGC General и выберите Log a completion.", logDeadline: "Запишите до конца выбора: запись закрывается в этот момент.",
+        updated: "Обновлено {ago}", saved: "Сохранённые данные", refresh: "Обновить", loading: "Загрузка клуба…", noData: "Данные клуба пока недоступны.",
+        setting: "Показывать вкладку «Клуб»", settingHint: "Выбор Play Retro Games Club, ваше место и номинации на главной.", nameLabel: "Ваше имя в клубе",
+        nameSave: "Сохранить имя", saveFailed: "Не удалось сохранить настройки клуба." },
+    zh: { ...en$7, tab: "俱乐部", playing: "正在游玩", daysLeft: { other: "还剩 {n} 天" }, lastDay: "最后一天", ended: "已结束", noDate: "日期见俱乐部网站",
+        notInLibrary: "不在你的库中", play: "开始游戏", details: "游戏页面", standing: "你的排名", beaten: "款已通关", streak: "连续", rank: "排名", rankOf: "第 {rank} 名，共 {of} 人",
+        crowns: "王冠", setName: "在 快速访问 > Core > Club 中输入你的俱乐部名称即可查看排名。", notFound: "排行榜上还没有名为“{name}”的成员。", top: "前 5 名",
+        nominations: "提名", voteOpens: "{date} 开始投票", logTitle: "如何登记通关", logDiscord: "在 Discord 上，于该游戏的帖子中：",
+        logOptions: "选项：event、ra_username（仅首次）、screenshot（为你的投票权重加 0.75）。单独使用时会私信你一个在网站上登记的链接。",
+        logForum: "在论坛上：打开 PRGC General 中该游戏的帖子，选择 Log a completion。", logDeadline: "请在本期结束前登记：结束时登记即关闭。",
+        updated: "更新于{ago}", saved: "显示已保存的数据", refresh: "刷新", loading: "正在加载俱乐部…", noData: "俱乐部数据暂不可用。",
+        setting: "显示俱乐部标签页", settingHint: "在主页显示 Play Retro Games Club 的本期游戏、你的排名和提名。", nameLabel: "你的俱乐部显示名称",
+        nameSave: "保存名称", saveFailed: "无法保存俱乐部设置。" },
+    ja: { ...en$7, tab: "クラブ", playing: "プレイ中", daysLeft: { other: "残り{n}日" }, lastDay: "最終日", ended: "終了", noDate: "日程はクラブのサイトで",
+        notInLibrary: "ライブラリにありません", play: "プレイ", details: "ゲームページ", standing: "あなたの順位", beaten: "本クリア", streak: "連続", rank: "順位",
+        rankOf: "{of}人中{rank}位", crowns: "クラウン", setName: "クイックアクセス > Core > Club でクラブの表示名を入力すると順位が表示されます。",
+        notFound: "「{name}」というメンバーはまだランキングにいません。", top: "トップ5", nominations: "ノミネート", voteOpens: "{date}に投票開始",
+        logTitle: "クリアの記録方法", logDiscord: "Discord のゲームのスレッドで：",
+        logOptions: "オプション：event、ra_username（初回のみ）、screenshot（投票の重みに 0.75 加算）。単独で使うと、サイトで記録するための非公開リンクが届きます。",
+        logForum: "フォーラムでは：PRGC General のゲームのスレッドを開き、Log a completion を選びます。", logDeadline: "選出期間が終わる前に記録してください。終了と同時に締め切られます。",
+        updated: "{ago}に更新", saved: "保存済みのデータを表示中", refresh: "更新", loading: "クラブを読み込み中…", noData: "クラブのデータはまだありません。",
+        setting: "クラブタブを表示", settingHint: "ホームに Play Retro Games Club の選出作品、あなたの順位、ノミネートを表示します。", nameLabel: "クラブの表示名",
+        nameSave: "名前を保存", saveFailed: "クラブの設定を保存できませんでした。" },
+    ko: { ...en$7, tab: "클럽", playing: "지금 플레이 중", daysLeft: { other: "{n}일 남음" }, lastDay: "마지막 날", ended: "종료", noDate: "날짜는 클럽 사이트에서",
+        notInLibrary: "라이브러리에 없음", play: "플레이", details: "게임 페이지", standing: "내 순위", beaten: "개 클리어", streak: "연속", rank: "순위",
+        rankOf: "{of}명 중 {rank}위", crowns: "크라운", setName: "빠른 실행 > Core > Club에서 클럽 이름을 입력하면 순위가 표시됩니다.",
+        notFound: "아직 순위표에 \"{name}\" 멤버가 없습니다.", top: "상위 5명", nominations: "후보", voteOpens: "{date} 투표 시작",
+        logTitle: "클리어 기록 방법", logDiscord: "Discord의 게임 스레드에서:",
+        logOptions: "옵션: event, ra_username(처음 한 번만), screenshot(투표 가중치 +0.75). 단독으로 쓰면 웹사이트에서 기록할 비공개 링크를 보내 줍니다.",
+        logForum: "포럼에서: PRGC General의 게임 스레드를 열고 Log a completion을 선택하세요.", logDeadline: "선정 기간이 끝나기 전에 기록하세요. 끝나는 순간 마감됩니다.",
+        updated: "{ago} 업데이트", saved: "저장된 데이터 표시 중", refresh: "새로 고침", loading: "클럽을 불러오는 중…", noData: "아직 클럽 데이터가 없습니다.",
+        setting: "클럽 탭 표시", settingHint: "홈에 Play Retro Games Club 선정작, 내 순위, 후보를 표시합니다.", nameLabel: "클럽 표시 이름",
+        nameSave: "이름 저장", saveFailed: "클럽 설정을 저장하지 못했습니다." },
+    hi: { ...en$7, tab: "क्लब", playing: "अभी खेल रहे हैं", daysLeft: { one: "{n} दिन बाकी", other: "{n} दिन बाकी" }, lastDay: "आखिरी दिन", ended: "समाप्त",
+        noDate: "तारीखें क्लब की साइट पर", notInLibrary: "आपकी लाइब्रेरी में नहीं", play: "खेलें", details: "गेम पेज", standing: "आपकी स्थिति", beaten: "गेम पूरे किए",
+        streak: "लगातार", rank: "रैंक", rankOf: "{of} में #{rank}", crowns: "ताज", setName: "अपनी स्थिति देखने के लिए क्विक एक्सेस > Core > Club में अपना क्लब नाम डालें।",
+        notFound: "लीडरबोर्ड पर अभी \"{name}\" नाम का कोई सदस्य नहीं है।", top: "शीर्ष 5", nominations: "नामांकन", voteOpens: "मतदान {date} से",
+        logTitle: "जीत कैसे दर्ज करें", logDiscord: "Discord पर, गेम के थ्रेड में:",
+        logOptions: "विकल्प: event, ra_username (सिर्फ़ पहली बार), screenshot (आपके वोट के वज़न में 0.75 जोड़ता है)। अकेले चलाने पर वेबसाइट पर दर्ज करने का निजी लिंक भेजता है।",
+        logForum: "फ़ोरम पर: PRGC General में गेम का थ्रेड खोलें और Log a completion चुनें।", logDeadline: "चयन खत्म होने से पहले दर्ज करें: उसी पल प्रविष्टियाँ बंद हो जाती हैं।",
+        updated: "{ago} अपडेट किया गया", saved: "सहेजा गया डेटा दिखाया जा रहा है", refresh: "रीफ़्रेश करें", loading: "क्लब लोड हो रहा है…", noData: "क्लब का डेटा अभी उपलब्ध नहीं है।",
+        setting: "क्लब टैब दिखाएँ", settingHint: "होम पर Play Retro Games Club के चुने गए गेम, आपकी स्थिति और नामांकन।", nameLabel: "आपका क्लब डिस्प्ले नाम",
+        nameSave: "नाम सहेजें", saveFailed: "क्लब सेटिंग्स सहेजी नहीं जा सकीं।" },
+};
+function clubLanguage(locale) {
+    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
+    return language === "ua" ? "uk" : language in copy$c ? language : "en";
+}
+function clubCopy(locale) {
+    return copy$c[clubLanguage(locale)];
+}
+function fill$5(template, values) {
+    return template.replace(/\{(\w+)\}/g, (match, key) => key in values ? String(values[key]) : match);
+}
+function daysLeftText(locale, days) {
+    const language = clubLanguage(locale);
+    const forms = copy$c[language].daysLeft;
+    let category = "other";
+    try {
+        category = new Intl.PluralRules(language).select(days);
+    }
+    catch {
+        category = days === 1 ? "one" : "other";
+    }
+    return fill$5(forms[category] ?? forms.other, { n: days });
+}
+
+// Eternal Core: the Club tab's time maths. Pure (no imports) so tests/club.test.mjs loads it alone.
+// The club's picks end at midnight UTC; the feed gives epoch seconds.
+const DAY$1 = 86400000;
+// Whole days left, as the club site leads with them ("1 day 16 hours left" is 1 day). Under a day is the last day.
+function timeLeft(endsAtSeconds, nowMs) {
+    if (typeof endsAtSeconds !== "number" || !Number.isFinite(endsAtSeconds) || endsAtSeconds <= 0)
+        return { state: "unknown" };
+    const remaining = endsAtSeconds * 1000 - nowMs;
+    if (remaining <= 0)
+        return { state: "ended" };
+    if (remaining < DAY$1)
+        return { state: "last", hours: Math.max(1, Math.ceil(remaining / 3600000)) };
+    return { state: "days", days: Math.floor(remaining / DAY$1) };
+}
+// "Updated X ago": a negative count for Intl.RelativeTimeFormat. Null when there is no timestamp.
+function updatedAgo(updatedSeconds, nowMs) {
+    if (typeof updatedSeconds !== "number" || !Number.isFinite(updatedSeconds) || updatedSeconds <= 0)
+        return null;
+    const minutes = Math.max(0, Math.round((nowMs - updatedSeconds * 1000) / 60000));
+    if (minutes < 60)
+        return { value: -minutes, unit: "minute" };
+    const hours = Math.round(minutes / 60);
+    if (hours < 48)
+        return { value: -hours, unit: "hour" };
+    return { value: -Math.round(hours / 24), unit: "day" };
+}
+function formatAgo(locale, ago) {
+    try {
+        return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(ago.value, ago.unit);
+    }
+    catch {
+        return `${-ago.value} ${ago.unit}${ago.value === -1 ? "" : "s"} ago`;
+    }
+}
+function formatClubDate(locale, seconds) {
+    if (typeof seconds !== "number" || !Number.isFinite(seconds))
+        return "";
+    try {
+        return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(seconds * 1000));
+    }
+    catch {
+        return new Date(seconds * 1000).toUTCString();
+    }
+}
+
+// Eternal Core: matching a club pick to the user's Steam library. Pure (no imports): tests/club.test.mjs loads it.
+//
+// The Collector (Eternal-Collector) creates non-Steam shortcuts named after ROMs and files them in per-platform
+// collections; Steam games are matched too. Titles are compared after normalising accents, punctuation, a leading
+// or trailing "The", "&"/"and", roman numerals and ROM tags such as "(USA)", "(Rev 1)" or "[!]". Numbers must agree,
+// so "Mega Man" never matches "Mega Man 2".
+const ROMAN = { ii: "2", iii: "3", iv: "4", v: "5", vi: "6", vii: "7", viii: "8", ix: "9", x: "10", xi: "11", xii: "12" };
+// ROM-set and region tags in brackets: dropped whole.
+const TAG = /[([](?:[^)\]]*\b(?:usa|us|europe|eu|japan|jp|jpn|world|en|fr|de|es|it|ja|rev\s*\w+|v\d[\w.]*|beta|proto|demo|hack|unl|translated|t\+\w+|pal|ntsc(?:-[uj])?|[!abcfhopt]|\d{4})\b[^)\]]*)[)\]]/gi;
+function normalizeTitle(value) {
+    let text = String(value ?? "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    text = text.replace(/[™®©]/g, "").replace(/\[[^\]]{0,8}\]/g, " ").replace(/\([a-z]{1,3}\)/g, " ").replace(TAG, " ").replace(/\.(?:sfc|smc|nes|gba|gbc|gb|n64|z64|v64|nds|iso|chd|cue|bin|zip|7z|rvz|pbp)$/i, "");
+    // No-Intro moves a leading article behind the main title: "Legend of Zelda, The - A Link to the Past".
+    text = text.replace(/,\s*the\b(?=\s*(?:[-:(]|$))/g, "");
+    text = text.replace(/&/g, " and ").replace(/['’`]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+    text = text.replace(/^the\s+/, "").replace(/\s+the$/, "");
+    return text.split(/\s+/).filter(Boolean).map(word => ROMAN[word] ?? word).join(" ");
+}
+function numbers(text) {
+    return (text.match(/\d+/g) ?? []).join(",");
+}
+function levenshtein(a, b) {
+    if (a === b)
+        return 0;
+    const row = Array.from({ length: b.length + 1 }, (_, index) => index);
+    for (let i = 1; i <= a.length; i++) {
+        let previous = row[0];
+        row[0] = i;
+        for (let j = 1; j <= b.length; j++) {
+            const saved = row[j];
+            row[j] = Math.min(row[j] + 1, row[j - 1] + 1, previous + (a[i - 1] === b[j - 1] ? 0 : 1));
+            previous = saved;
+        }
+    }
+    return row[b.length];
+}
+// 1 = same title; 0 = different. Requires the same numbers, then a close spelling (typos, a missing word joiner).
+function titleSimilarity(left, right) {
+    const a = normalizeTitle(left), b = normalizeTitle(right);
+    if (!a || !b)
+        return 0;
+    if (a === b)
+        return 1;
+    if (numbers(a) !== numbers(b))
+        return 0;
+    if (a.replace(/ /g, "") === b.replace(/ /g, ""))
+        return 0.98;
+    const longest = Math.max(a.length, b.length);
+    if (longest < 6)
+        return 0;
+    const ratio = 1 - levenshtein(a, b) / longest;
+    return ratio >= 0.9 ? ratio : 0;
+}
+// Platform words in collection names (The Collector's "SNES", "RomM: SNES", "Super Nintendo", ...) -> club codes.
+const PLATFORM_WORDS = [
+    [/\b(snes|super nintendo|super famicom|sfc)\b/i, "SNES"], [/\b(nes|famicom|nintendo entertainment system)\b/i, "NES"],
+    [/\b(gba|game ?boy advance)\b/i, "GBA"], [/\b(gbc|game ?boy colou?r)\b/i, "GBC"], [/\b(gb|game ?boy)\b/i, "GB"],
+    [/\b(n64|nintendo 64)\b/i, "N64"], [/\b(nds|nintendo ds|ds)\b/i, "NDS"], [/\b(3ds|nintendo 3ds)\b/i, "3DS"],
+    [/\b(gc|ngc|gamecube)\b/i, "GC"], [/\bwii\b/i, "Wii"], [/\b(ps2|playstation 2)\b/i, "PS2"], [/\b(psp|playstation portable)\b/i, "PSP"],
+    [/\b(ps1|psx|playstation)\b/i, "PS1"], [/\b(md|genesis|mega ?drive)\b/i, "MD"], [/\b(sms|master system)\b/i, "SMS"],
+    [/\b(dc|dreamcast)\b/i, "DC"], [/\b(sat|saturn)\b/i, "SAT"], [/\b(pce|pc ?engine|turbografx(?:-16)?)\b/i, "PCE"],
+    [/\b(arcade|mame|fbneo|fba)\b/i, "Arcade"],
+];
+function platformOf(collectionName) {
+    const name = String(collectionName ?? "");
+    for (const [pattern, code] of PLATFORM_WORDS)
+        if (pattern.test(name))
+            return code;
+    return "";
+}
+function platformKey(value) {
+    const code = String(value ?? "").replace(/\s+romhack$/i, "").trim();
+    return platformOf(code) || code.toUpperCase();
+}
+// Best library entry for a pick, or null. A shortcut on the pick's platform beats a shortcut whose platform is
+// unknown, which beats a Steam game (a re-release with the same name); a shortcut filed under another platform
+// never matches.
+function matchPick(pick, library) {
+    const wanted = pick.platform ? platformKey(pick.platform) : "";
+    let best = null;
+    for (const entry of library) {
+        const similarity = titleSimilarity(pick.title, entry.name);
+        if (!similarity)
+            continue;
+        let weight;
+        if (entry.shortcut) {
+            const platforms = entry.platforms.map(platformKey).filter(Boolean);
+            if (wanted && platforms.length && !platforms.includes(wanted))
+                continue;
+            weight = wanted && platforms.includes(wanted) ? 3 : 2;
+        }
+        else {
+            weight = 1;
+        }
+        const score = weight + similarity;
+        if (!best || score > best.score)
+            best = { appId: entry.appId, name: entry.name, score };
+    }
+    return best;
+}
+
+// Eternal Core: the Club tab's view of the Steam library: entries for matching (with the platforms The
+// Collector's collections give them), Steam's own artwork, and play / game page actions. Every Steam call is
+// guarded: a missing store or method leaves the pick unmatched or without art, never broken.
+const SHORTCUT_TYPE$1 = 1073741824;
+const plausibleAppId = (value) => {
+    const id = Number(value);
+    return Number.isSafeInteger(id) && id > 0 && id <= 0xffffffff ? id : null;
+};
+function appStore() {
+    return globalThis.appStore ?? globalThis.window?.appStore;
+}
+function overviews() {
+    const store = appStore();
+    const values = [];
+    const add = (value) => {
+        if (!value)
+            return;
+        if (value instanceof Map) {
+            value.forEach((entry, key) => add(entry && typeof entry === "object" ? { ...entry, appid: entry.appid ?? key } : null));
+            return;
+        }
+        if (Array.isArray(value)) {
+            value.forEach(add);
+            return;
+        }
+        if (typeof value === "object")
+            values.push(value);
+    };
+    try {
+        add(store?.allApps);
+    }
+    catch { /* the next source may still answer */ }
+    if (!values.length) {
+        try {
+            add(store?.m_mapAppOverview);
+        }
+        catch { /* none */ }
+    }
+    return values;
+}
+function collectionPlatforms() {
+    const map = new Map();
+    try {
+        const store = globalThis.collectionStore;
+        const collections = store?.userCollections ?? [];
+        for (const collection of collections) {
+            const platform = platformOf(collection?.displayName ?? collection?.strName ?? collection?.m_strName);
+            if (!platform)
+                continue;
+            const apps = collection?.allApps ?? collection?.apps;
+            const ids = [];
+            if (apps instanceof Map)
+                apps.forEach((value, key) => { const id = plausibleAppId(value?.appid ?? key); if (id)
+                    ids.push(id); });
+            else if (Array.isArray(apps))
+                apps.forEach((value) => { const id = plausibleAppId(value?.appid ?? value); if (id)
+                    ids.push(id); });
+            else if (apps instanceof Set)
+                apps.forEach((value) => { const id = plausibleAppId(value?.appid ?? value); if (id)
+                    ids.push(id); });
+            for (const id of ids)
+                map.set(id, [...(map.get(id) ?? []), platform]);
+        }
+    }
+    catch { /* collections are a refinement; titles still match */ }
+    return map;
+}
+function readLibrary() {
+    const platforms = collectionPlatforms();
+    const seen = new Set();
+    const entries = [];
+    for (const overview of overviews()) {
+        const appId = plausibleAppId(overview?.appid ?? overview?.app_id ?? overview?.unAppID);
+        const name = String(overview?.display_name ?? overview?.localized_name ?? overview?.name ?? overview?.strDisplayName ?? "");
+        if (!appId || !name || seen.has(appId))
+            continue;
+        seen.add(appId);
+        const shortcut = overview?.app_type === SHORTCUT_TYPE$1 || appId >= 0x80000000;
+        entries.push({ appId, name, shortcut, platforms: platforms.get(appId) ?? [] });
+    }
+    return entries;
+}
+function overviewFor(appId) {
+    try {
+        return appStore()?.GetAppOverviewByAppID?.(appId);
+    }
+    catch {
+        return undefined;
+    }
+}
+// Steam's own artwork for the app: the user's custom (SteamGridDB / The Collector) portrait first, then Steam's.
+function steamArtFor(appId) {
+    const store = appStore();
+    const overview = overviewFor(appId);
+    if (!store || !overview)
+        return "";
+    const attempts = [
+        () => store.GetCustomVerticalCapsuleURLs?.(overview)?.[0],
+        () => store.GetVerticalCapsuleURLForApp?.(overview),
+        () => store.GetCustomLandcapeImageURLs?.(overview)?.[0],
+        () => store.GetLandscapeImageURLForApp?.(overview),
+    ];
+    for (const attempt of attempts) {
+        try {
+            const url = attempt();
+            if (typeof url === "string" && url)
+                return url;
+        }
+        catch { /* next */ }
+    }
+    return "";
+}
+// A: play. Steam's own RunGame, so Core's launch patches (owned-launch dispatcher, return navigation) see it.
+function playApp(appId) {
+    try {
+        const overview = overviewFor(appId);
+        const gameId = String(overview?.m_gameid ?? overview?.gameid ?? appId);
+        const apps = globalThis.SteamClient?.Apps;
+        if (typeof apps?.RunGame !== "function")
+            return false;
+        apps.RunGame(gameId, "", -1, 100);
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
+// X: the game's page in the library.
+function openGamePage(appId, navigate) {
+    try {
+        navigate?.(`/library/app/${appId}`);
+        return Boolean(navigate);
+    }
+    catch {
+        return false;
+    }
+}
+
+// Eternal Core: the Club tab's shared state. The backend (quick_settings/club_feed.py) owns fetching, caching and
+// politeness; this only asks it for the cached feed (cheap), or for a refresh when the user presses Refresh.
+let state$1 = { settings: null, feed: null, loading: false, failed: false };
+const listeners$7 = new Set();
+let inflight = null;
+const set = (patch) => { state$1 = { ...state$1, ...patch }; listeners$7.forEach(listener => listener()); };
+const subscribeClub = (listener) => { listeners$7.add(listener); return () => { listeners$7.delete(listener); }; };
+const clubState = () => state$1;
+function loadClub(force = false) {
+    if (inflight && !force)
+        return inflight;
+    let run = null;
+    run = (async () => {
+        set({ loading: true });
+        try {
+            const [settings, feed] = await Promise.all([
+                state$1.settings ? Promise.resolve(state$1.settings) : call("get_club_settings"),
+                call("get_club_feed", force),
+            ]);
+            set({ settings, feed, failed: false });
+        }
+        catch {
+            set({ failed: true });
+        }
+        finally {
+            set({ loading: false });
+            if (inflight === run)
+                inflight = null;
+        }
+    })();
+    inflight = run;
+    return run;
+}
+// Starts one background load the first time anything asks; later calls just read the state.
+let started = false;
+function ensureClubLoaded() {
+    if (started)
+        return inflight;
+    started = true;
+    return loadClub(false);
+}
+async function saveClubSettings(next) {
+    const saved = await call("set_club_settings", next.enabled, next.display_name);
+    set({ settings: saved });
+    void loadClub(false);
+    return saved;
+}
+
+// Eternal Core: logging a club completion through Eternal-Assemble (the Discord plugin), later.
+//
+// TODO(club-assemble): once Assemble exposes a "send slash command" bridge, Core will offer "Log this win" on a
+// matched pick: show the exact command in a confirmation dialog, and only after the user confirms ask Assemble to
+// send it in the game's thread. Nothing is sent from Core today: this hook reports "unavailable", and the Club
+// tab shows the manual steps instead.
+// The club's completion command (playretrogamesclub.com/rules/, checked 2026-11-27):
+// /completed [event] [ra_username] [screenshot], run in the game's thread on the club's Discord.
+const CLUB_COMPLETION_COMMAND = "/completed";
+
+// Eternal Core: the Club tab on Core's Home: Play Retro Games Club's current picks (matched to the Steam library,
+// A plays, X opens the game page), the user's standing beside the top 5, nominations, and how to log a win.
+// Core palette: black with the Starfield, gunmetal cards (10 px radius), crimson square focus, steel text.
+const { Focusable: Focusable$f, DialogButton: DialogButton$a, Navigation: Navigation$8 } = CompatUI;
+const css$5 = `
+.ph-club{position:relative;isolation:isolate;min-height:100%;padding:24px 36px 48px;color:${CORE.text};background:${CORE.black};box-sizing:border-box}
+.ph-club h2{margin:0;font-size:28px;font-weight:700;color:${CORE.white}}
+.ph-club h3{margin:0 0 12px;font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${CORE.steel}}
+.ph-club-head{display:flex;align-items:baseline;gap:18px;margin-bottom:20px;flex-wrap:wrap}
+.ph-club-updated{font-size:14px;color:${CORE.hint}}
+.ph-club-updated.stale{color:${CORE.warning}}
+.ph-club-focus{outline:none;border-radius:0}
+.ph-club-focus.gpfocus,.ph-club-focus:focus-visible{box-shadow:0 0 0 3px ${CORE.crimson};border-radius:0}
+.ph-club-picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:22px;margin-bottom:30px}
+.ph-club-tile{padding:4px}
+.ph-club-card{background:${CORE.gunmetal};border-radius:10px;overflow:hidden;height:100%;display:flex;flex-direction:column}
+.ph-club-art{position:relative;aspect-ratio:2/3;background:${CORE.gunmetalRaised} center/cover no-repeat;display:flex;align-items:center;justify-content:center}
+.ph-club-badge{font-size:44px;font-weight:800;letter-spacing:.04em;color:${CORE.steel};border-bottom:4px solid ${CORE.crimson};padding-bottom:6px}
+.ph-club-event{position:absolute;left:0;top:0;padding:6px 10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:${coreAlpha(CORE.black, 0.78)};color:${CORE.white}}
+.ph-club-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px}
+.ph-club-title{font-size:18px;font-weight:700;color:${CORE.white};line-height:1.25}
+.ph-club-meta{font-size:14px;color:${CORE.steel}}
+.ph-club-left{font-size:15px;font-weight:700;color:${CORE.white}}
+.ph-club-left.soon{color:${CORE.crimsonText}}
+.ph-club-lib{font-size:13px;color:${CORE.hint}}
+.ph-club-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;margin-bottom:22px}
+.ph-club-panel{background:${CORE.gunmetal};border-radius:10px;padding:18px 20px}
+.ph-club-stats{display:flex;gap:28px;flex-wrap:wrap}
+.ph-club-stat strong{display:block;font-size:34px;color:${CORE.white};line-height:1.1}
+.ph-club-stat span{font-size:13px;color:${CORE.steel}}
+.ph-club-crowns{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.ph-club-crown{font-size:12px;padding:4px 8px;border-radius:10px;background:${CORE.gunmetalRaised};color:${CORE.text}}
+.ph-club-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ph-club-list li{display:flex;justify-content:space-between;gap:12px;font-size:15px}
+.ph-club-list li.me{color:${CORE.white};font-weight:700;box-shadow:inset 3px 0 0 ${CORE.crimson};padding-left:8px}
+.ph-club-list .muted{color:${CORE.hint}}
+.ph-club-note{font-size:14px;color:${CORE.steel};line-height:1.5;margin:6px 0 0}
+.ph-club-command{display:inline-block;margin:6px 0;padding:6px 10px;border-radius:10px;background:${CORE.black};color:${CORE.white};font-family:ui-monospace,Consolas,monospace;font-size:18px}
+.ph-club-empty{padding:40px 0;color:${CORE.steel};font-size:16px}
+@media(max-width:900px){.ph-club-row{grid-template-columns:1fr}.ph-club{padding:18px}}
+@media(prefers-reduced-motion:reduce){.ph-club *{transition:none!important}}
+`;
+const browserLocale = () => { try {
+    return navigator.language || "en";
+}
+catch {
+    return "en";
+} };
+function useClub() {
+    return _global_SP_REACT.useSyncExternalStore(subscribeClub, clubState, clubState);
+}
+function PickTile({ pick, match, copy, locale, now }) {
+    const art = match ? steamArtFor(match.appId) : "";
+    const image = art || ("");
+    const left = timeLeft(pick.ends_at, now);
+    const leftText = left.state === "days" ? daysLeftText(locale, left.days) : left.state === "last" ? copy.lastDay
+        : left.state === "ended" ? copy.ended : copy.noDate;
+    const soon = left.state === "last" || (left.state === "days" && left.days <= 2);
+    const platform = pick.platform ? (pick.romhack ? `${pick.platform} romhack` : pick.platform) : "";
+    const play = () => { if (match)
+        playApp(match.appId); };
+    const details = () => { if (match)
+        openGamePage(match.appId, (path) => Navigation$8?.Navigate?.(path)); };
+    return SP_JSX.jsx(Focusable$f, { className: "ph-club-tile ph-club-focus", focusable: true, role: "button", "aria-label": `${pick.label}: ${pick.title}. ${leftText}. ${match ? copy.play : copy.notInLibrary}`, onActivate: match ? play : undefined, onClick: match ? play : undefined, onOKActionDescription: match ? copy.play : undefined, onSecondaryButton: match ? (event) => { event?.preventDefault?.(); event?.stopPropagation?.(); details(); } : undefined, onSecondaryActionDescription: match ? copy.details : undefined, children: SP_JSX.jsxs("div", { className: "ph-club-card", children: [SP_JSX.jsxs("div", { className: "ph-club-art", style: image ? { backgroundImage: `url("${image.replace(/"/g, "%22")}")` } : undefined, children: [!image && SP_JSX.jsx("span", { className: "ph-club-badge", children: pick.platform || "?" }), SP_JSX.jsx("span", { className: "ph-club-event", children: pick.label })] }), SP_JSX.jsxs("div", { className: "ph-club-body", children: [SP_JSX.jsx("div", { className: "ph-club-title", children: pick.title }), platform && SP_JSX.jsx("div", { className: "ph-club-meta", children: platform }), SP_JSX.jsx("div", { className: `ph-club-left${soon ? " soon" : ""}`, children: leftText }), SP_JSX.jsx("div", { className: "ph-club-lib", children: match ? `A ${copy.play} · X ${copy.details}` : copy.notInLibrary })] })] }) });
+}
+function Standing({ member, name, copy }) {
+    if (!name)
+        return SP_JSX.jsx("p", { className: "ph-club-note", children: copy.setName });
+    if (!member)
+        return SP_JSX.jsx("p", { className: "ph-club-note", children: fill$5(copy.notFound, { name }) });
+    const streak = member.streak && member.streak.count > 0 ? member.streak : null;
+    return SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("div", { className: "ph-club-stats", children: [SP_JSX.jsxs("div", { className: "ph-club-stat", children: [SP_JSX.jsx("strong", { children: member.beaten ?? "—" }), SP_JSX.jsx("span", { children: copy.beaten })] }), SP_JSX.jsxs("div", { className: "ph-club-stat", children: [SP_JSX.jsx("strong", { children: streak ? streak.count : "—" }), SP_JSX.jsxs("span", { children: [copy.streak, streak?.event ? ` · ${streak.event}` : ""] })] }), SP_JSX.jsxs("div", { className: "ph-club-stat", children: [SP_JSX.jsx("strong", { children: member.rank ? `#${member.rank}` : "—" }), SP_JSX.jsx("span", { children: member.rank && member.of ? fill$5(copy.rankOf, { rank: member.rank, of: member.of }) : copy.rank })] })] }), member.crowns.length > 0 && SP_JSX.jsx("div", { className: "ph-club-crowns", "aria-label": copy.crowns, children: member.crowns.slice(0, 6).map((crown, index) => SP_JSX.jsxs("span", { className: "ph-club-crown", children: [crown.crown, crown.tier ? ` (${crown.tier})` : "", " \u00B7 ", crown.period] }, index)) })] });
+}
+function TopFive({ rows, me }) {
+    return SP_JSX.jsx("ol", { className: "ph-club-list", children: rows.slice(0, 5).map(row => SP_JSX.jsxs("li", { className: row.slug === me ? "me" : undefined, children: [SP_JSX.jsxs("span", { children: [SP_JSX.jsxs("span", { className: "muted", children: [row.rank, "."] }), " ", row.name] }), SP_JSX.jsx("span", { children: row.beaten })] }, row.slug)) });
+}
+function Nominations({ groups, copy, locale }) {
+    return SP_JSX.jsx(SP_JSX.Fragment, { children: groups.slice(0, 3).map((group, index) => SP_JSX.jsxs("div", { style: { marginBottom: 14 }, children: [SP_JSX.jsxs("div", { className: "ph-club-meta", style: { color: CORE.white, fontWeight: 700 }, children: [group.label, group.count ? ` · ${group.count}` : ""] }), group.opens_at ? SP_JSX.jsx("div", { className: "ph-club-lib", children: fill$5(copy.voteOpens, { date: formatClubDate(locale, group.opens_at) }) }) : null, group.items.length > 0 && SP_JSX.jsx("ul", { className: "ph-club-list", style: { marginTop: 6 }, children: group.items.slice(0, 5).map((item, row) => SP_JSX.jsxs("li", { children: [SP_JSX.jsx("span", { children: item.title }), SP_JSX.jsxs("span", { className: "muted", children: [item.platform, item.romhack ? " romhack" : ""] })] }, row)) })] }, index)) });
+}
+function ClubTab({ locale, getLocale }) {
+    const resolved = locale ?? getLocale?.() ?? browserLocale();
+    const copy = clubCopy(resolved);
+    const state = useClub();
+    const [now, setNow] = _global_SP_REACT.useState(() => Date.now());
+    const [library, setLibrary] = _global_SP_REACT.useState(() => readLibrary());
+    _global_SP_REACT.useEffect(() => {
+        void loadClub(false);
+        // The backend serves its cache between refreshes, so asking every 30 minutes costs no request to the club.
+        const poll = window.setInterval(() => void loadClub(false), 30 * 60000);
+        const clock = window.setInterval(() => setNow(Date.now()), 60000);
+        // Steam fills its library stores shortly after the UI appears: read them again a few times.
+        let reads = 0;
+        const libraryTimer = window.setInterval(() => { setLibrary(readLibrary()); if (++reads >= 5)
+            window.clearInterval(libraryTimer); }, 2000);
+        return () => { window.clearInterval(poll); window.clearInterval(clock); window.clearInterval(libraryTimer); };
+    }, []);
+    const feed = state.feed, snapshot = feed?.snapshot ?? null;
+    const matches = _global_SP_REACT.useMemo(() => new Map((snapshot?.picks ?? []).map(pick => [pick, matchPick({ title: pick.title, platform: pick.platform }, library)])), [snapshot, library]);
+    const ago = updatedAgo(feed?.updated ?? snapshot?.fetched_at, now);
+    const canRefresh = !state.loading && now / 1000 >= (feed?.refresh_available_at ?? 0);
+    const name = feed?.display_name ?? state.settings?.display_name ?? "";
+    return SP_JSX.jsxs(Focusable$f, { className: "ph-club", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$5 }), SP_JSX.jsx(CoreStars, {}), SP_JSX.jsxs("div", { className: "ph-club-head", children: [SP_JSX.jsx("h2", { children: copy.title }), ago && SP_JSX.jsxs("span", { className: `ph-club-updated${feed?.stale ? " stale" : ""}`, role: "status", children: [fill$5(copy.updated, { ago: formatAgo(resolved, ago) }), feed?.stale ? ` · ${copy.saved}` : ""] }), SP_JSX.jsx(DialogButton$a, { style: { width: "auto", minWidth: 0, padding: "6px 16px", marginLeft: "auto" }, disabled: !canRefresh, onClick: () => void loadClub(true), children: copy.refresh })] }), !snapshot ? SP_JSX.jsx("div", { className: "ph-club-empty", role: "status", children: state.loading || !feed ? copy.loading : copy.noData }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h3", { children: copy.playing }), SP_JSX.jsx(Focusable$f, { className: "ph-club-picks", "flow-children": "row", children: snapshot.picks.map(pick => SP_JSX.jsx(PickTile, { pick: pick, match: matches.get(pick) ?? null, copy: copy, locale: resolved, now: now }, `${pick.kind}-${pick.slug}`)) }), SP_JSX.jsxs("div", { className: "ph-club-row", children: [SP_JSX.jsxs(Focusable$f, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.standing, children: [SP_JSX.jsxs("h3", { children: [copy.standing, snapshot.member?.name ? ` · ${snapshot.member.name}` : ""] }), SP_JSX.jsx(Standing, { member: snapshot.member, name: name, copy: copy })] }), SP_JSX.jsxs(Focusable$f, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.top, children: [SP_JSX.jsx("h3", { children: copy.top }), SP_JSX.jsx(TopFive, { rows: snapshot.top, me: snapshot.member?.slug ?? "" })] })] }), SP_JSX.jsxs("div", { className: "ph-club-row", children: [snapshot.nominations.length > 0 && SP_JSX.jsxs(Focusable$f, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.nominations, children: [SP_JSX.jsx("h3", { children: copy.nominations }), SP_JSX.jsx(Nominations, { groups: snapshot.nominations, copy: copy, locale: resolved })] }), SP_JSX.jsxs(Focusable$f, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.logTitle, children: [SP_JSX.jsx("h3", { children: copy.logTitle }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logDiscord }), SP_JSX.jsx("code", { className: "ph-club-command", children: CLUB_COMPLETION_COMMAND }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logOptions }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logForum }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logDeadline })] })] })] })] });
+}
+
+// Eternal Core: whether Home shows the Club tab. False while the "Show the Club tab" setting is off, and until
+// there is club data (cached data counts, even when stale). The first call starts one background load;
+// subscribe with subscribeClub (./clubStore) to hear when the answer changes.
+function isClubAvailable(state) {
+    if (state.settings?.enabled === false || state.feed?.enabled === false)
+        return false;
+    return Boolean(state.feed?.snapshot?.picks?.length);
+}
+function clubAvailable() {
+    void ensureClubLoaded();
+    return isClubAvailable(clubState());
+}
+
+// Eternal Core: the Club's line for Jarvis's brief, from a feed snapshot. Pure (no imports): tests load it alone.
+// Jarvis speaks English, so the line is English (the brief's own language).
+const WORDS = ["", "One", "Two", "Three"];
+const WHOSE = { week: "this week's pick", month: "this month's pick", romhack: "this month's romhack", season: "this season's pick" };
+// Only picks this close to their end make the brief.
+const BRIEF_DAYS = 3;
+function briefLineFor(snapshot, nowMs) {
+    const beaten = new Set(snapshot?.member?.beaten_slugs ?? []);
+    let chosen = null;
+    for (const pick of snapshot?.picks ?? []) {
+        if (typeof pick?.ends_at !== "number" || (pick.slug && beaten.has(pick.slug)))
+            continue;
+        const remaining = pick.ends_at * 1000 - nowMs;
+        if (remaining <= 0 || remaining >= (BRIEF_DAYS + 1) * 86400000)
+            continue;
+        if (!chosen || remaining < chosen.remaining)
+            chosen = { pick, remaining };
+    }
+    if (!chosen)
+        return null;
+    const days = Math.floor(chosen.remaining / 86400000);
+    const which = WHOSE[chosen.pick.kind] ?? (chosen.pick.label ? `the ${chosen.pick.label}` : "the club's pick");
+    if (days === 0)
+        return `Last day for ${which}, sir.`;
+    return `${WORDS[days]} day${days === 1 ? "" : "s"} left on ${which}, sir.`;
+}
+
+// Eternal Core: the Club's settings (Quick Access > Core): "Show the Club tab" (on by default) and the member's
+// club display name, typed once with Steam's on-screen keyboard (Steam opens it when the field is activated).
+const { Focusable: Focusable$e, ToggleField: ToggleField$8, TextField: TextField$3, DialogButton: DialogButton$9 } = CompatUI;
+function ClubSettings({ locale }) {
+    const copy = clubCopy(locale);
+    const state = _global_SP_REACT.useSyncExternalStore(subscribeClub, clubState, clubState);
+    const settings = state.settings;
+    const [name, setName] = _global_SP_REACT.useState(null);
+    const [busy, setBusy] = _global_SP_REACT.useState(false);
+    _global_SP_REACT.useEffect(() => { if (!state.settings)
+        void loadClub(false); }, []);
+    const value = name ?? settings?.display_name ?? "";
+    const save = async (enabled, display_name) => {
+        if (busy)
+            return;
+        setBusy(true);
+        try {
+            await saveClubSettings({ enabled, display_name });
+            setName(null);
+        }
+        catch {
+            toaster.toast({ title: "Core", body: copy.saveFailed });
+        }
+        finally {
+            setBusy(false);
+        }
+    };
+    return SP_JSX.jsxs(Focusable$e, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [SP_JSX.jsx(ToggleField$8, { label: copy.setting, description: copy.settingHint, bottomSeparator: "none", checked: settings?.enabled !== false, disabled: busy || !settings, onChange: (enabled) => void save(enabled, settings?.display_name ?? "") }), SP_JSX.jsx(TextField$3, { label: copy.nameLabel, value: value, disabled: busy || !settings, onChange: (event) => setName(String(event?.target?.value ?? "").slice(0, 64)), onKeyDown: (event) => { if (event?.key === "Enter")
+                    void save(settings?.enabled !== false, value); } }), SP_JSX.jsx(DialogButton$9, { disabled: busy || !settings || value.trim() === (settings?.display_name ?? ""), onClick: () => void save(settings?.enabled !== false, value), children: copy.nameSave })] });
+}
+
+// Eternal Core: the Club tab's public surface for Home and Jarvis.
+//
+// Home tab registry (being added on core-ui-2; order: Jarvis brief, Consoles, Club, On this day): register
+// `clubHomeTab`, or use ClubTab + clubAvailable + subscribeClub directly.
+// Jarvis brief: `clubBriefLine()` returns e.g. "Two days left on this week's pick, sir." or null.
+// Null when the Club is off, has no data yet, or nothing ends within three days (picks already beaten are skipped).
+function clubBriefLine(now = Date.now()) {
+    void ensureClubLoaded();
+    if (!clubAvailable())
+        return null;
+    return briefLineFor(clubState().feed?.snapshot, now);
+}
+const clubHomeTab = {
+    id: "club",
+    title: (locale) => clubCopy(locale).tab,
+    available: clubAvailable,
+    subscribe: subscribeClub,
+    render: (props) => _global_SP_REACT.createElement(ClubTab, props),
+};
+
 const { Focusable: Focusable$d, DialogButton: DialogButton$8, Navigation: Navigation$7 } = CompatUI;
+// The Club tab (src/club/): registered through Home's registry like any other module's tab; shown once the Club is on
+// and has data (clubAvailable), re-checked whenever the Club's store changes.
+try {
+    registerHomeTab({ id: clubHomeTab.id, label: clubHomeTab.title, order: HOME_TAB_ORDER.club, render: clubHomeTab.render,
+        isAvailable: clubHomeTab.available, subscribe: clubHomeTab.subscribe });
+}
+catch { /* No Club tab. */ }
 let iconSet = () => undefined;
 function setCoreHomeIcons(source) { iconSet = source; }
 const css$4 = `
@@ -25514,7 +26397,14 @@ function JarvisBrief({ locale, native }) {
     _global_SP_REACT.useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60 * 1000); return () => window.clearInterval(timer); }, []);
     const last = _global_SP_REACT.useMemo(() => lastPlayedApp(appStoreApps()), [now]);
     const mods = forgeUpdateCount(steamWindow());
-    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx("h2", { children: text[greetingKey(now.getHours())] }), SP_JSX.jsx("p", { className: "core-home-line", children: last ? text.lastPlayed.replace("{game}", last.name) : text.nothingYet }), mods > 0 ? SP_JSX.jsx("p", { className: "core-home-line", children: mods === 1 ? text.modsOne : text.mods.replace("{count}", String(mods)) }) : null, SP_JSX.jsx(Focusable$d, { className: "core-home-actions", "flow-children": "row", children: SP_JSX.jsx(DialogButton$8, { onClick: openJarvis, children: text.talk }) }), native ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "core-home-label", children: text.updates }), native] }) : null] });
+    let club = null;
+    try {
+        club = clubBriefLine(now.getTime());
+    }
+    catch {
+        club = null;
+    }
+    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx("h2", { children: text[greetingKey(now.getHours())] }), SP_JSX.jsx("p", { className: "core-home-line", children: last ? text.lastPlayed.replace("{game}", last.name) : text.nothingYet }), club ? SP_JSX.jsx("p", { className: "core-home-line", children: club }) : null, mods > 0 ? SP_JSX.jsx("p", { className: "core-home-line", children: mods === 1 ? text.modsOne : text.mods.replace("{count}", String(mods)) }) : null, SP_JSX.jsx(Focusable$d, { className: "core-home-actions", "flow-children": "row", children: SP_JSX.jsx(DialogButton$8, { onClick: openJarvis, children: text.talk }) }), native ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "core-home-label", children: text.updates }), native] }) : null] });
 }
 const familyName = { playstation: "PlayStation", nintendo: "Nintendo", sega: "Sega", xbox: "Xbox", retro: "Retro", vr: "VR" };
 function shelfFamily(name) {
@@ -25566,7 +26456,8 @@ function CoreHomeTabs({ native, getLocale, render }) {
             { id: "CoreConsoles", title: text.consoles, content: SP_JSX.jsx(Consoles, { locale: locale }), order: HOME_TAB_ORDER.consoles },
             ...availableHomeTabs().map(tab => {
                 const Component = tab.component;
-                return { id: tab.id, title: typeof tab.label === "function" ? tab.label(locale) : tab.label, content: SP_JSX.jsx(Component, { locale: locale }), order: tab.order };
+                const content = tab.render ? tab.render({ locale, getLocale }) : Component ? SP_JSX.jsx(Component, { locale: locale, getLocale: getLocale }) : null;
+                return { id: tab.id, title: typeof tab.label === "function" ? tab.label(locale) : tab.label, content, order: tab.order };
             }),
         ];
         const next = composeHomeTabs(tabs, core);
@@ -58433,7 +59324,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
                                             }, children: editorTabs.map(id => {
                                                 const Icon = icons[id];
                                                 return SP_JSX.jsx(DialogButton$3, { className: "ph-control-icon", role: "tab", "aria-label": `${copy[id]}: ${state.hidden.includes(id) ? editorCopy.hidden : editorCopy.visible}`, title: copy[id], onOKActionDescription: editorAction(id), onSecondaryActionDescription: editor.draftOrder ? editorCopy.confirm : editorCopy.move, onCancelActionDescription: editorCopy.cancel, actionDescriptionMap: { [GamepadButton.OK]: editorAction(id), [GamepadButton.SECONDARY]: editor.draftOrder ? editorCopy.confirm : editorCopy.move, [GamepadButton.CANCEL]: editorCopy.cancel }, "aria-selected": editing === id, "data-hidden": state.hidden.includes(id), "data-moving": editing === id && !!editor.draftOrder, style: { order: (editor.draftOrder ?? state.order).indexOf(id) }, onFocus: () => edit({ type: "select", id }), onGamepadFocus: () => edit({ type: "select", id }), onGamepadDirection: editor.draftOrder ? editorDirection : undefined, onSecondaryButton: (event) => { event.preventDefault?.(); event.stopPropagation?.(); edit({ type: "select", id }); edit({ type: "secondary" }); }, onCancelButton: cancelEditor, onClick: () => { edit({ type: "select", id }); edit({ type: "confirm" }); }, children: SP_JSX.jsx(Icon, {}) }, id);
-                                            }) }), SP_JSX.jsx("div", { className: "ph-control-setting-row", "aria-live": "polite", children: SP_JSX.jsxs("div", { className: "ph-selected-tab", children: [SP_JSX.jsx("span", { children: copy[editing] }), SP_JSX.jsxs("span", { className: "ph-selected-tab-status", children: [state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible, !canToggleTab(state, editing, deckyAvailable) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("br", {}), editorCopy.lastTab] })] })] }) }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onOKActionDescription: editorCopy.reset, onClick: () => edit({ type: "reset" }), children: [SP_JSX.jsx(TbRestore, {}), SP_JSX.jsx("span", { children: editorCopy.reset })] }), SP_JSX.jsx("p", { className: "ph-tab-reset-hint", children: editorCopy.resetHint }), SP_JSX.jsxs("div", { className: "ph-editor-following", children: [SP_JSX.jsxs("div", { style: { paddingTop: 16 }, children: [SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) }), !showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: visible.includes("audio") ? openDeviceVideo : undefined, openPerformance: visible.includes("graphics") ? openDevicePerformance : undefined, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] })] }), SP_JSX.jsx(ControlSection, { id: "news", title: "News", locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("news"), onToggle: toggleSection, children: SP_JSX.jsx(HomeNewsSettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "daily-history", title: historyTitle(locale), locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("daily-history"), onToggle: toggleSection, children: SP_JSX.jsx(HomeHistorySettings, { locale: locale }) }), SP_JSX.jsx(QuickSettingsContent, { page: "tools", locale: locale, expanded: expanded, onToggle: toggleSection }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onClick: () => { setCustomizing(false); replayPlayhubOnboarding(); }, children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] })] })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$7, { className: "ph-control-nav", "flow-children": "row", children: SP_JSX.jsxs(Focusable$7, { className: "ph-control-tabs", "flow-children": "row", role: "tablist", "aria-label": "Core", children: [visible.map(id => {
+                                            }) }), SP_JSX.jsx("div", { className: "ph-control-setting-row", "aria-live": "polite", children: SP_JSX.jsxs("div", { className: "ph-selected-tab", children: [SP_JSX.jsx("span", { children: copy[editing] }), SP_JSX.jsxs("span", { className: "ph-selected-tab-status", children: [state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible, !canToggleTab(state, editing, deckyAvailable) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("br", {}), editorCopy.lastTab] })] })] }) }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onOKActionDescription: editorCopy.reset, onClick: () => edit({ type: "reset" }), children: [SP_JSX.jsx(TbRestore, {}), SP_JSX.jsx("span", { children: editorCopy.reset })] }), SP_JSX.jsx("p", { className: "ph-tab-reset-hint", children: editorCopy.resetHint }), SP_JSX.jsxs("div", { className: "ph-editor-following", children: [SP_JSX.jsxs("div", { style: { paddingTop: 16 }, children: [SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) }), !showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: visible.includes("audio") ? openDeviceVideo : undefined, openPerformance: visible.includes("graphics") ? openDevicePerformance : undefined, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] })] }), SP_JSX.jsx(ControlSection, { id: "news", title: "News", locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("news"), onToggle: toggleSection, children: SP_JSX.jsx(HomeNewsSettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "daily-history", title: historyTitle(locale), locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("daily-history"), onToggle: toggleSection, children: SP_JSX.jsx(HomeHistorySettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "club", title: "Club", locale: locale, icon: SP_JSX.jsx(TbTrophy, {}), collapsed: !expanded.includes("club"), onToggle: toggleSection, children: SP_JSX.jsx(ClubSettings, { locale: locale }) }), SP_JSX.jsx(QuickSettingsContent, { page: "tools", locale: locale, expanded: expanded, onToggle: toggleSection }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onClick: () => { setCustomizing(false); replayPlayhubOnboarding(); }, children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] })] })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$7, { className: "ph-control-nav", "flow-children": "row", children: SP_JSX.jsxs(Focusable$7, { className: "ph-control-tabs", "flow-children": "row", role: "tablist", "aria-label": "Core", children: [visible.map(id => {
                                             const Icon = icons[id];
                                             return SP_JSX.jsx(DialogButton$3, { className: "ph-control-icon", role: "tab", "aria-selected": active === id, "aria-label": copy[id], onOKActionDescription: copy[id], disabled: !ready, "data-playhub-onboarding": origin === "qam" ? id : undefined, onClick: () => choose(id), children: SP_JSX.jsx(Icon, {}) }, id);
                                         }), SP_JSX.jsx(DialogButton$3, { className: "ph-control-icon", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, "aria-label": copy.settings, onOKActionDescription: copy.settings, disabled: !ready, onClick: () => setCustomizing(true), children: SP_JSX.jsx(TbSettings, {}) })] }) }), active !== "decky" && (active !== "home" || homeTitle) && SP_JSX.jsx("h2", { className: "ph-control-heading", children: active === "home" ? homeTitle : copy[active] }), !hostActive && SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs("div", { "data-playhub-onboarding-content": origin === "qam" ? active : undefined, children: [active === "home" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "home" : undefined, children: session }) : active === "store" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "store" : undefined, children: store }) : active === "controller" ? SP_JSX.jsx(SP_JSX.Fragment, { children: controller }) :
@@ -65290,160 +66181,6 @@ function jarvisTapLine(state, locale) {
         return "";
     const text = jarvisTabCopy(locale);
     return (state?.tapOpens === false ? text.tapOff : text.tap).replace("{talk}", talk);
-}
-
-// Eternal Core: the Core Starfield for Core UI surfaces (docs/eternal/CORE-UI.md, "Black means starfield").
-//
-// The same flight as the Core Starfield screensaver (screensaver/main.js): the same seeded field (seed 23),
-// the same colours (steel and near-white, one in twenty-five crimson), the same perspective projection and
-// speed. Only the bouncing mark, its corner flash and the clock constellation stay in the screensaver.
-//
-// Cheap on purpose: one field is shared by every surface (one set of stars, one clock), fewer stars than the
-// screensaver, drawn at most 30 times a second and only while a surface is visible (coreUi.ts decides).
-//
-// Readable text: a star is never brighter than STARFIELD_MAX_ALPHA over black, so Core's dimmest text
-// (#9AA4AE) still has 4.5:1 against the brightest star pixel (tests/coreUi.test.mjs checks the sums).
-//
-// Self-contained (no imports): tests load it on its own.
-const STARFIELD_SEED = 23;
-const STARFIELD_COLOURS = { crimson: "215,38,61", steel: "201,209,217", white: "230,236,242" };
-// Depth travelled per second (the screensaver's .035), and how many stars a surface gets.
-const STARFIELD_SPEED = 0.035;
-const STARFIELD_COUNT = 160;
-const STARFIELD_MAX_ALPHA = 0.24;
-const STARFIELD_FPS = 30;
-// The longest step one frame may take (seconds). A throttled window (a popup Steam draws at a few frames a second)
-// still moves at full speed; a long pause (a closed menu) does not jump.
-const STARFIELD_MAX_STEP = 0.25;
-// The screensaver's generator: Park-Miller from seed 23, three draws per star.
-function makeStars(count = STARFIELD_COUNT, seed = STARFIELD_SEED) {
-    let state = seed;
-    const rand = () => { state = (state * 16807) % 2147483647; return (state - 1) / 2147483646; };
-    return Array.from({ length: Math.max(0, Math.min(420, Math.floor(count))) }, () => {
-        const c = rand();
-        return { x: rand(), y: rand(), z: rand(), c: c < 0.04 ? STARFIELD_COLOURS.crimson : c < 0.3 ? STARFIELD_COLOURS.white : STARFIELD_COLOURS.steel };
-    });
-}
-function createStarfield(count = STARFIELD_COUNT) {
-    const stars = makeStars(count);
-    let zoff = 0, clock;
-    const advance = (seconds) => {
-        if (!(seconds > 0))
-            return;
-        zoff = (zoff + Math.min(STARFIELD_MAX_STEP, seconds) * STARFIELD_SPEED) % 1;
-    };
-    return {
-        stars,
-        advance,
-        advanceTo(time) {
-            if (!Number.isFinite(time))
-                return;
-            if (clock !== undefined && time > clock)
-                advance((time - clock) / 1000);
-            if (clock === undefined || time > clock)
-                clock = time;
-        },
-        depth: () => zoff,
-        draw(context, width, height) {
-            if (!(width > 0) || !(height > 0))
-                return 0;
-            context.clearRect(0, 0, width, height);
-            const cx = width / 2, cy = height / 2, f = Math.max(width, height) * 0.55;
-            let drawn = 0;
-            for (const s of stars) {
-                const z = Math.max(0.03, ((s.z - zoff) % 1 + 1) % 1);
-                const x = cx + (s.x - 0.5) * f / z, y = cy + (s.y - 0.5) * f / z;
-                if (x < 0 || x > width || y < 0 || y > height)
-                    continue;
-                const alpha = starAlpha(z);
-                context.fillStyle = `rgba(${s.c},${alpha.toFixed(3)})`;
-                context.beginPath();
-                context.arc(x, y, Math.max(0.4, (1 - z) * 1.4), 0, Math.PI * 2);
-                context.fill();
-                drawn++;
-            }
-            return drawn;
-        },
-    };
-}
-// One field for every Core surface (Core UI's canvases and Core's own black pages).
-let shared;
-function sharedStarfield() { return shared ?? (shared = createStarfield()); }
-// The screensaver's fade-in with depth, scaled down to the readable ceiling.
-function starAlpha(z) {
-    return Math.max(0, Math.min(1, (1 - z) * 1.2)) * STARFIELD_MAX_ALPHA;
-}
-
-// Eternal Core: the Core Starfield behind one of Core's own black pages (the Jarvis page), per "black means
-// starfield" (docs/eternal/CORE-UI.md). The parent must be positioned with isolation: isolate. Shares the one field
-// with Core UI's canvases; draws at most 30 frames a second, holds still while a game runs, while the page is
-// hidden and under reduced motion, and shows nothing while the Core UI setting is off.
-function CoreStars() {
-    const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
-    const canvas = _global_SP_REACT.useRef(null);
-    _global_SP_REACT.useEffect(() => {
-        const element = canvas.current;
-        if (!on || !element)
-            return;
-        const view = element.ownerDocument?.defaultView ?? window;
-        const field = sharedStarfield();
-        let frame, last, stopped = false;
-        const still = () => {
-            try {
-                const running = Number(window.SteamUIStore?.MainRunningAppID ?? 0) > 0;
-                return running || view.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
-            }
-            catch {
-                return false;
-            }
-        };
-        const paint = () => {
-            const width = Math.round(element.clientWidth), height = Math.round(element.clientHeight);
-            if (element.width !== width)
-                element.width = width;
-            if (element.height !== height)
-                element.height = height;
-            const context = element.getContext("2d");
-            if (context)
-                field.draw(context, width, height);
-        };
-        const tick = (time) => {
-            frame = undefined;
-            if (stopped)
-                return;
-            if (element.ownerDocument?.visibilityState === "hidden") {
-                frame = view.requestAnimationFrame(tick);
-                return;
-            }
-            if (last === undefined || time - last >= 1000 / STARFIELD_FPS - 1) {
-                last = time;
-                if (!still())
-                    field.advanceTo(time);
-                paint();
-            }
-            // Held still: check again twice a second instead of every frame.
-            if (still()) {
-                const timer = view.setTimeout(() => { if (!stopped)
-                    frame = view.requestAnimationFrame(tick); }, 500);
-                frame = -timer;
-            }
-            else
-                frame = view.requestAnimationFrame(tick);
-        };
-        frame = view.requestAnimationFrame(tick);
-        return () => {
-            stopped = true;
-            if (frame !== undefined) {
-                if (frame < 0)
-                    view.clearTimeout(-frame);
-                else
-                    view.cancelAnimationFrame(frame);
-            }
-        };
-    }, [on]);
-    if (!on)
-        return null;
-    return SP_JSX.jsx("canvas", { ref: canvas, "aria-hidden": "true", "data-core-stars": "page", style: { position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: -1, pointerEvents: "none", background: "#000000" } });
 }
 
 // Eternal Core: Jarvis in Quick Access > Core and on its own full page (docs/eternal/JARVIS.md). Type with Steam's

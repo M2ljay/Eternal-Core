@@ -286,18 +286,25 @@ test("Core Home: Jarvis brief, Consoles, registered tabs (Club), On this day; Wh
   assert.equal(homeTabs.activeHomeTab("Friends", next), "WhatsNew", "a removed active tab opens the brief");
   assert.equal(homeTabs.activeHomeTab("Recommended", next), "Recommended");
 
-  const off = homeTabs.registerHomeTab({ id: "CoreClub", label: "Club", order: 30, component: () => null, isAvailable: () => true });
+  let clubReady = false; const clubListeners = new Set();
+  const off = homeTabs.registerHomeTab({ id: "club", label: "Club", order: 30, render: () => null, isAvailable: () => clubReady,
+    subscribe: listener => { clubListeners.add(listener); return () => clubListeners.delete(listener); } });
+  const seen = homeTabs.homeTabsRevision();
+  assert.deepEqual([...homeTabs.availableHomeTabs().map(tab => tab.id)], [], "the Club waits for its data");
+  clubReady = true; for (const listener of clubListeners) listener();
+  assert.ok(homeTabs.homeTabsRevision() > seen, "Home hears the Club's store");
   homeTabs.registerHomeTab({ id: "Broken", label: "x", order: 31, component: () => null, isAvailable: () => { throw new Error("no"); } });
   homeTabs.registerHomeTab({ id: "Later", label: "y", order: 25, component: () => null, isAvailable: () => false });
-  assert.deepEqual([...homeTabs.availableHomeTabs().map(tab => tab.id)], ["CoreClub"]);
+  assert.deepEqual([...homeTabs.availableHomeTabs().map(tab => tab.id)], ["club"]);
   off();
   assert.deepEqual([...homeTabs.availableHomeTabs().map(tab => tab.id)], []);
+  assert.equal(clubListeners.size, 0, "unregistering stops listening");
 
   const source = readFileSync(new URL("../src/coreHome.tsx", import.meta.url), "utf8");
-  assert.match(source, /from "core-optional:club"/, "the Club module is optional at build time");
+  assert.match(source, /registerHomeTab\(\{ id: clubHomeTab\.id[^}]*order: HOME_TAB_ORDER\.club[^}]*subscribe: clubHomeTab\.subscribe/, "the Club through the registry");
+  assert.match(source, /clubBriefLine\(/, "the Club's line in the brief");
   assert.match(source, /class HomeBoundary/); assert.match(source, /return fallback;/);
-  const rollup = readFileSync(new URL("../rollup.config.js", import.meta.url), "utf8");
-  assert.match(rollup, /export default null;/);
+  assert.match(readFileSync(new URL("../src/ControlCenter.tsx", import.meta.url), "utf8"), /<ControlSection id="club".*?TbTrophy.*?><ClubSettings locale=\{locale\} \/><\/ControlSection>/);
 });
 
 test("Core Home data: console shelves by family, last played, Forge's updates, greetings in 12 languages", () => {
