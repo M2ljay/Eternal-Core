@@ -108,6 +108,9 @@ Core UI (3.3.1, phase 1: Core's own look for the Steam menu, Quick Access, conte
 built into Core's plugin instead of a CSS Loader theme; Jarvis's tab and presence orb): [CORE-UI.md](CORE-UI.md).
 Core transitions (3.3.2: the mode switch powers Core's mark up into Gaming Mode and down to Desktop over the boot's
 stars; Steam's own startup movie is skipped): [MARK-III-GUIDE.md](MARK-III-GUIDE.md#switching-modes).
+3.3.5 (emulator health and the shared emulator hotkeys, exiting games through Steam, closing store launchers, the back
+paddles as A and B, Vibepollo and per-device game settings, Jarvis tap to talk): [CONSOLE-GUARDS.md](CONSOLE-GUARDS.md),
+[EMULATOR-UPDATES.md](EMULATOR-UPDATES.md), [CORE-STREAM-MODE.md](CORE-STREAM-MODE.md), [JARVIS.md](JARVIS.md).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

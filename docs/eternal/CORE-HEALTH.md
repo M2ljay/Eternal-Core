@@ -36,6 +36,11 @@ shows its other actions (for example **Save current display as normal**).
 | Launcher updates | console guards | never (information: launcher or anti-cheat updates that will ask for administrator rights) |
 | Launcher pop-ups | console guards | never (how many launcher windows Core pushed behind Big Picture today) |
 | After waking | console guards | Big Picture was not visible, the TV was not on Core's input, or the Ethernet cable is unplugged |
+| Exiting games | 3.3.5 | a game did not exit after Steam's Exit Game (notice), or Steam lost track of a game still on screen (**Exit <game>**). See [CONSOLE-GUARDS.md](CONSOLE-GUARDS.md#exiting-games-active-335) |
+| Back paddles | 3.3.5 | never (amber when Steam's Big Picture or Desktop layout does not map L4 to A and R4 to B; **Open Steam's controller layout**) |
+| Emulator updates | 3.3.5 | never (amber when a version needs your confirmation on the desktop or was rolled back). See [EMULATOR-UPDATES.md](EMULATOR-UPDATES.md) |
+| *Each emulator* | 3.3.5 | never (amber when it does not start fullscreen, asks before exiting, skips shader preparation, is not signed in to RetroAchievements or lacks a BIOS; **Fix <emulator> settings** for the settings) |
+| Hotkeys · *each emulator* | 3.3.5 | never (amber when its hotkeys drifted from the shared table; **Re-apply hotkeys**; says what it can't do) |
 | PC disk space | this PC | under 10% or under 20 GB free on the Windows drive |
 | Core update | Core's last update check | (information only: "Core 3.4.0 available") |
 
@@ -49,7 +54,8 @@ With **Health alerts** on (the default), Core shows one short notice over Big Pi
 - the display or the default sound output is no longer the one saved as normal,
 - Windows' automatic sign-in is off,
 - a firmware update is staged while BitLocker is on and the BitLocker guard is not installed,
-- the Ethernet cable is unplugged.
+- the Ethernet cable is unplugged,
+- a game did not exit after Steam's Exit Game (3.3.5).
 - a Decky plugin's log reports errors ("Decky: Forge is reporting errors"), again when the set of plugins changes.
 
 Several at once share one notice ("A few things need attention").

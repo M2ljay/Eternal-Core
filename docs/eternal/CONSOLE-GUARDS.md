@@ -33,6 +33,11 @@ Rules that hold for every guard:
 | Launcher updates | Nothing waiting | Waiting: EA app, Riot Vanguard... | never | none |
 | Launcher pop-ups | Watching, N pushed back today | Off | never | none |
 | After waking | OK at the last wake | Fixed by Core (focus taken back, input re-sent); off | Big Picture not visible, TV not on Core's input, network cable unplugged (notice) | open the row for **Run the wake check now** |
+| Exiting games (3.3.5) | Watching; closed cleanly; Core closed N leftovers | | A game did not exit (notice); Steam lost track of a game still on screen | **Exit <game>** |
+| Back paddles (3.3.5) | L4 = A, R4 = B in Steam's Big Picture and Desktop layouts | Not set in a layout; layouts not found | never | **Open Steam's controller layout** |
+| Emulator updates (3.3.5) | Up to date; waiting (soak) | Needs you (confirm a version on the desktop; a rollback) | never | none (desktop confirmation) |
+| *Emulator* (one per emulator, 3.3.5) | All set · version | Check: settings, RetroAchievements, BIOS | never | **Fix <emulator> settings** |
+| Hotkeys · *emulator* (one per emulator, 3.3.5) | Match the shared table; "Can't: ..." when the emulator has no controller hotkeys or save states | Drifted: functions; start it once first | never | **Re-apply hotkeys to <emulator>** |
 
 ## Each guard
 
@@ -164,6 +169,142 @@ already in use); and the Ethernet link (a physical adapter up with a gateway; VP
 **CPU and GPU temperatures are not shown:** Windows has no user-mode CPU temperature, and the readers that exist need
 a kernel driver (WinRing0, PawnIO), which Core does not use. Switch: `gaming.consoleWakeChecks`.
 
+### Exiting games (active, 3.3.5)
+
+Games are exited only through Steam's own **Exit Game** (Steam button or Quick Access). How Steam ends a game on
+Windows: it ends what it started. For a non-Steam shortcut that is the program the shortcut names, so a wrapper (EmuDeck's
+`tools\launchers\*.ps1`, which waits with `Start-Process -Wait`; a `.bat`; a launcher exe) can be ended while the
+emulator it started keeps running, and a wrapper that exits at once makes Steam think the game is over while it still
+runs, so Steam stops offering Exit Game. (The first is from EmuDeck's source, `functions\emulatorInit.ps1`; that Steam
+ends only its own child is inferred from this behaviour and on the checklist.)
+
+What Core does:
+
+- **Signals.** Core's Big Picture plugin reports Steam's app lifetime (`SteamClient.GameSessions.RegisterForAppLifetimeNotifications`)
+  and wraps `SteamClient.Apps.TerminateApp` (what Steam's Exit Game calls; the original runs first, the report is
+  fire-and-forget, `src/gameExit.ts`) to `POST /game/lifetime` and `/game/exit-chosen`. Without Decky the agent uses
+  the process tree alone (Steam's child gone and `RunningAppID` 0).
+- **The launch tree.** Every 2 s the agent reads the kernel's process list (`NtQuerySystemInformation`; no process is
+  opened): a new child of `steam.exe` starts a launch; its children join while they live, matched by pid **and start
+  time** (a reused pid never counts), and so does a catalogue emulator started during the launch. Steam's own
+  processes, SteamVR and store launchers never join.
+- **When the launch ends.** Exit Game chosen: everything left in the tree is closed. Steam ended it by itself:
+  windowless leftovers are closed; a leftover with a visible window is the game still on screen, which Steam lost track
+  of: it is **left running**, the row turns crimson (*Steam lost track of <game>*) and Quick Access > Core > Controls and
+  the row offer **Exit <game>**, which closes it the same way. Closing: WM_CLOSE to each process's windows, leaves first
+  (the emulator before its wrapper), 8 s, then `TerminateProcess` (opened with `PROCESS_TERMINATE` only, after checking
+  the start time again). Nothing is closed while anti-cheat safe mode is engaged.
+- **Harmless when the launch is already tracked** (The Collector's direct ROM shortcuts): the tree is then just the
+  emulator, Steam ends it itself, and nothing is left to close.
+- Switch: `gaming.gameExitCleanup` (on). State: `%APPDATA%\GamingMode\game-exit.json` (last result).
+
+Not done, on purpose: no emulator-exit hotkey (games are exited through Steam), no patch of Steam's menu: Exit Game is
+Steam's own; Core adds its Exit only for a game Steam no longer tracks.
+
+### Store launchers after a game (active, 3.3.5)
+
+Like Playnite's *Auto Close Clients*: Epic Games Launcher, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar
+Games Launcher and Amazon Games are closed after the game they were started for, when all of these hold: (a) the
+launcher was not running when the game started, (b) no other game runs, (c) it is not busy. Launchers tell other
+programs nothing about downloads, so Core watches what it can see: their disk writes (the kernel's per-process write
+count) during a 90-second grace after the game; 32 MB or more means a download or update, and the launcher is left;
+a running installer of that vendor also leaves it. The close is always polite (WM_CLOSE); Core never ends a launcher.
+Per-launcher switches in Quick Access > Core > Controls and the desktop (Gaming Mode > Stays a console), all on by
+default (`gaming.autoCloseLaunchers`, `{ "epic": false }` turns one off). The *Launcher pop-ups* row also says how many
+Core closed today.
+
+### Back paddles
+
+L4 acts as **A** and R4 as **B** everywhere: Big Picture, Quick Access, Core's own UI, every game and emulator. This
+belongs in Steam Input, which applies it to Big Picture (its Big Picture layout, app 413090), the desktop (413080) and the
+games that inherit them, without touching a per-game layout. **Core does not write Steam's controller files:** Steam
+rewrites them from memory, their format for the 2026 Steam Controller is not published, and an earlier attempt to touch
+Steam's controller handling broke Steam Input. The agent cannot inject input either (that needs a kernel driver). So
+Core **reads** the layouts read-only (`steamapps\common\Steam Controller Configs\<account>\config\413090|413080\*.vdf`,
+the `button_back_left`/`button_back_right` bindings) and the *Back paddles* row says whether both map to A and B;
+**Open Steam's controller layout** opens Steam's own editor (`steam://controllerconfig/413090`) to set them with the
+controller. Inferred: the app ids and folder layout (checklist). Jarvis no longer uses L4 or R4 ([JARVIS.md](JARVIS.md)).
+
+### Emulators (3.3.5)
+
+For the emulators EmuDeck for Windows installs (`%APPDATA%\EmuDeck\Emulators`, located through EmuDeck's own launcher
+scripts' `$emulatorFile`, then its folder names): RetroArch, Dolphin, PCSX2, DuckStation, PPSSPP, Azahar, RPCS3, Xenia
+Canary, shadPS4, Cemu, xemu, Ryujinx. Read-only, at most once a minute, time-boxed. Settings files and keys are the ones
+EmuDeck ships (`configs\*` in EmuDeck's source):
+
+| Emulator | Starts fullscreen | No exit prompt | Shaders | RetroAchievements | BIOS / firmware |
+| -------- | ----------------- | -------------- | ------- | ----------------- | --------------- |
+| RetroArch | `video_fullscreen` | `quit_press_twice` = false | not offered | `cheevos_username` + token/password | PS1 (MD5), Sega CD, Saturn, Dreamcast (`bios\dc`), NDS (names) |
+| Dolphin | `Dolphin.ini [Display] Fullscreen` | `[Interface] ConfirmStop` | `GFX.ini WaitForShadersBeforeStarting` (Compile Shaders Before Starting) | `RetroAchievements.ini` user + `ApiToken` | none needed |
+| PCSX2 | `PCSX2.ini [UI] StartFullscreen` | `[UI] ConfirmShutdown` | shader cache on (`DisableShaderCache` = false) | user + `Token` (PCSX2.ini or secrets.ini) | PS2 (EmuDeck's MD5 list) |
+| DuckStation | `settings.ini [Main] StartFullscreen` | `[Main] ConfirmPowerOff` | not offered | `[Cheevos]` user + token | PS1 (MD5) |
+| PPSSPP | `ppsspp.ini [Graphics] FullScreen` | none | not offered | user + non-empty token file (size only) | none needed |
+| Azahar | `qt-config.ini [UI] fullscreen` (Qt `\default` flag honoured) | `[UI] confirmClose` | `use_disk_shader_cache` | n/a | none needed |
+| RPCS3 | `config.yml Start games in fullscreen mode` | not checked | not offered | n/a | firmware (`dev_flash\sys\external`) |
+| Xenia Canary | `xenia-canary.config.toml [Display] fullscreen` | none | not offered | n/a | none needed |
+| shadPS4 | `user\config.toml [General] Fullscreen` | none | not offered | n/a | none needed |
+| Cemu | `settings.xml <fullscreen>` | none | not offered | n/a | none needed |
+| xemu | `xemu.toml [display.window] fullscreen_on_startup` | none | not offered | n/a | the files `xemu.toml [sys.files]` names |
+| Ryujinx | `Config.json start_fullscreen` | `show_confirm_exit` | `enable_shader_cache` | n/a | `prod.keys` + firmware (as EmuDeck's checker) |
+
+- **RetroAchievements:** presence only, the same discipline as The Collector's parsers: the user name and token are
+  tested for being non-empty inside the parser; neither value is returned, logged or shown (a test checks the rows).
+- **BIOS:** EmuDeck's `functions\checkBIOS.ps1` lists. PS1 and PS2 are judged by the MD5 values EmuDeck accepts (files in
+  `$biosPath` up to depth 3 and under 64 MB are hashed; only the verdict leaves), the others by file name. The version is
+  the exe's version resource (no process is started), else EmuDeck's `emu_versions.json`.
+- **Fix <emulator> settings** sets exactly the wrong keys (one line each; an absent key is added at the end of its
+  section; CRLF, a BOM and comments are kept). Guard, for every write: the file is read again just before writing and
+  must be byte-for-byte what was judged (*changed-since-read* refuses), the emulator must not run (*not-while-running*),
+  and the old file is copied first to `%APPDATA%\GamingMode\emulator-backups\<emulator>\<time>\`. A file the emulator has
+  not written yet is never created (*start it once first*).
+
+### The shared emulator hotkeys (3.3.5)
+
+One scheme, identical in every emulator that has the function, based on EmuDeck's own (Select is the hold modifier,
+so muscle memory carries over), with every quit combo removed (EmuDeck's Select+Start): games are exited only through
+Steam. **No back paddle (L4, R4, L5, R5) is ever used.** Buttons are named as on an Xbox pad, which is how Steam Input
+presents every controller to an emulator.
+
+| Function | Buttons |
+| -------- | ------- |
+| Save state | Select + R1 |
+| Load state | Select + L1 |
+| Next save slot | Select + D-pad right |
+| Previous save slot | Select + D-pad left |
+| Fast-forward | Select + R2 (hold) |
+| Rewind | Select + L2 (hold) |
+| Pause | Select + A |
+| Emulator menu | Select + Y |
+| FPS display | Select + X |
+| Exit a game | Steam's Exit Game only (no combo) |
+| L4 / R4 | A / B (Steam Input) |
+| Jarvis | tap L5 + R5 to talk, hold to open |
+
+The same table is in Quick Access > Core > Controls (`src/emulatorHotkeys.ts`; a test compares it with the agent's
+`EmulatorCatalog.HotkeyTable`).
+
+| Emulator | Written to | Can't do |
+| -------- | ---------- | -------- |
+| RetroArch | `retroarch.cfg` (hotkey enable = Select; button numbers for the xinput driver, or sdl2 when `input_joypad_driver` says so); quit combo and quit button cleared, screenshot moved off Select+A | rewind works only with RetroArch's rewind turned on |
+| PCSX2 | `PCSX2.ini [Hotkeys]` (`SDL-0/Back & ...`; keyboard bindings kept; repeated keys allowed); `ShutdownVM` cleared, turbo/slow-motion toggles moved off Select+R2/L2 | rewind, FPS |
+| DuckStation | `settings.ini [Hotkeys]` (same syntax); `PowerOff` cleared | FPS |
+| Dolphin | `User\Config\Hotkeys.ini` (``@(Back+`Shoulder R`)``...); `General/Exit`, `General/Stop` and the speed-up/down on Select+R2/L2 cleared | rewind, menu, FPS |
+| PPSSPP | `memstick\PSP\SYSTEM\controls.ini [ControlMapping]` (device 20, keyboard mappings kept); `Exit App` cleared | pause without its menu, FPS |
+| Azahar, RPCS3 | nothing | everything: their hotkeys are keyboard-only |
+| Xenia, shadPS4, Cemu, xemu, Ryujinx | nothing | everything: no save states |
+
+**Why each emulator's own config, not Steam Input chords:** a Steam Input layout that sends each emulator's keyboard
+shortcut would apply everywhere the same way, but Core cannot write Steam's controller files reliably (see Back
+paddles), and keyboard shortcuts would make games and Big Picture show keyboard prompts, which breaks the rule that
+button hints always show the controller. The emulators' own controller hotkeys keep prompts as they are.
+
+**Guarded:** the *Hotkeys · <emulator>* row compares every key (and that no other binding sits on a reserved combo) and
+offers **Re-apply hotkeys to <emulator>** when it drifted, with the same backup, unchanged-since-read and not-while-running
+guard. Applied automatically on Core's first run, to an emulator Core has not seen before, and after an emulator update
+replaced its files; a change you make later is shown, not undone. Switch: `gaming.emulatorHotkeysEnabled`. State:
+`%APPDATA%\GamingMode\emulators.json`. The exact key names come from EmuDeck's shipped configs; that every emulator
+version reads them the same way is on the checklist.
+
 ## Settings and files
 
 - `%APPDATA%\GamingMode\config.json` (`gaming`): `consoleLauncherFocusGuard`, `consoleWakeChecks` (both on by default;
@@ -172,6 +313,11 @@ a kernel driver (WinRing0, PawnIO), which Core does not use. Switch: `gaming.con
   launcher push-backs today, Core's last BitLocker suspension. **Forget normal display and sound** on the desktop
   clears the saved ones.
 - `%LOCALAPPDATA%\Playhub\bitlocker-check.json`: the desktop's BitLocker check (type numbers and times only).
+- 3.3.5: `gaming.gameExitCleanup`, `gaming.autoCloseLaunchers`, `gaming.emulatorHotkeysEnabled`, `gaming.emulatorUpdatesEnabled`,
+  `gaming.emulatorUpdateSoakDays`; files `game-exit.json`, `emulators.json`, `emulator-updates.json`, `emulator-backups\`. Rules:
+  `EmulatorHealth.cs`, `EmulatorUpdates.cs`, `GameExit.cs`, `StreamProfiles.cs` (pure; tests in `Source/CoreHealth.Tests/EmulatorTests.cs`);
+  Windows calls `Emulators.Windows.cs`; wiring `MarkIIIHost.Emulators.cs`; Quick Access `src/ControlsSection.tsx`,
+  `src/emulatorHotkeys.ts`, `src/gameExit.ts`, `healthReport.ts` (`tests/coreEmulators.test.mjs`).
 - Agent: `POST /health/action?id=` on 127.0.0.1:47991 (`MarkIIIHost.Console.cs`) runs the buttons and answers with
   the new Health rows. Rules: `ConsoleGuards.cs` (pure, tests in `Source/CoreHealth.Tests/ConsoleGuardTests.cs`);
   Windows calls: `ConsoleGuards.Windows.cs`; BitLocker's elevated parts: `Shared/BitLockerGuard*.cs`; Quick Access:
@@ -197,3 +343,16 @@ a kernel driver (WinRing0, PawnIO), which Core does not use. Switch: `gaming.con
 9. **After waking:** sleep the PC, switch the TV to another input, wake with the controller: about 35 seconds later the
    TV is back on HDMI 2 (if Core turned it on) and the row says *Fixed by Core*. Unplug the Ethernet cable: the row
    says *Network cable unplugged* (and a notice appears once).
+10. **Exiting games (3.3.5):** start an EmuDeck game from its Steam shortcut (PCSX2), choose Exit Game in Steam: PCSX2
+   closes within ~8 s and the *Exiting games* row says *closed cleanly* or *Core closed N leftovers*. Start a game whose
+   wrapper exits at once (a `.bat` that `start`s an emulator): Steam's Exit Game disappears; the row turns crimson
+   *Steam lost track of ...* and **Exit ...** closes it. A Collector ROM shortcut: Exit Game closes it, nothing left over.
+11. **Store launchers:** with Epic closed, start an Epic game from Steam, quit it: about 90 s later Epic closes. Start
+   Epic first, then the game: Epic stays. Switch Epic off in Controls: it stays.
+12. **Back paddles:** the row says whether L4/R4 are A/B in Steam's Big Picture and Desktop layouts; **Open Steam's
+   controller layout** opens Steam's editor (confirm it is the Big Picture layout; set L4 = A, R4 = B); the row turns
+   steel. Confirm in a game and an emulator that L4 confirms and R4 goes back.
+13. **Emulators:** each installed emulator has a row and a *Hotkeys* row. Turn PCSX2's *Start fullscreen* off in PCSX2,
+   close it: amber; **Fix PCSX2 settings** fixes it and a backup appears under `emulator-backups\pcsx2`. Open PCSX2 and
+   press Fix: *Not while a game runs*. In every emulator with hotkeys, try each line of the table; Select+Start does
+   nothing. RetroAchievements and BIOS lines match what you set up.

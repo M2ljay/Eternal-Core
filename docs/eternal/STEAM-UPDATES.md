@@ -6,6 +6,8 @@ Windows wiring is in `MarkIIIHost.cs` (agent). Why it exists: [DECKY-4.md](DECKY
 its UI differently from what the installed Decky expects leaves every Big Picture plugin dead, so Steam updates are
 treated as a change that has to be checked first.
 
+Emulators get the same soak, backup, smoke test and rollback: [EMULATOR-UPDATES.md](EMULATOR-UPDATES.md).
+
 ## The block
 
 The block is Playhub's existing one: `steam.cfg` with `BootStrapperInhibitAll=enable` in the Steam folder stops the

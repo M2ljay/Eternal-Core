@@ -4,7 +4,7 @@ Jarvis, the household's assistant (Aincrad's Home Assistant agent), now lives in
 
 - **Chat** in Jarvis's own Quick Access tab (the orb icon, right after Core's tab; Core UI phase 1, see
   [CORE-UI.md](CORE-UI.md)), and on a full page (*Open full page*). Type with Steam's keyboard (swipe typing works
-  there) or dictate into the field. A short tap on the talk combo opens or closes the tab with the cursor in the field.
+  there) or dictate into the field. Holding L5+R5 opens or closes the tab with the cursor in the field; a tap talks.
 - **Presence orb** in the top bar, next to the clock: dim steel when idle, a slow crimson pulse while Jarvis listens or
   thinks, a crimson ring for a few seconds when an answer is ready. During a game it shows only while Jarvis is active.
 - **"What's on screen?"**: a screen-aware game helper. Core takes one screenshot of the game, sends it with your
@@ -50,7 +50,7 @@ the Claude API with your Anthropic key. Without a key, the button is off and Qui
 ## The screen helper
 
 1. Press **What's on screen?** in Quick Access (Quick Access closes first, so the game is what gets captured), or hold
-   the screen combo (default **L4+L5**). A question typed in the field goes with it; otherwise "What's going on here,
+   Quick Access's *What's on screen?* button (or a spoken request). A question typed in the field goes with it; otherwise "What's going on here,
    and what should I do next?".
 2. Core captures **one frame** of the monitor the game is on with **Windows Graphics Capture** (falling back to a GDI
    copy of the screen), scales it to at most 1280 px on the long edge, encodes it as JPEG (quality 80) in memory and
@@ -73,25 +73,28 @@ black with either method; borderless and modern flip-model games capture normall
 
 Ideas from Quest Compendium (BSD-3-Clause, as of 2026-11-24) and Decky AI; **no code was borrowed**.
 
-## Push-to-talk
+## Talking to Jarvis (L5+R5)
 
-| Combo | Default | What happens |
-| ----- | ------- | ------------ |
-| Talk to Jarvis | **L5+R5** (both lower grips) | **Tap** (released within 300 ms): opens Jarvis's Quick Access tab with the input focused, or closes it if it is already open there; also during a game (Quick Access opens over it). **Hold**: Whisper transcribes on release; Jarvis answers in Quick Access and a toast, and speaks it |
-| Dictation | **L4+R4** (both upper grips) | (held) Whisper transcribes; the text is typed into the focused Steam text field |
-| What's on screen? | **L4+L5** (both left grips) | (pressed, not held) the screen helper above |
+Since 3.3.5 Jarvis has **one combo, L5+R5**. The back paddles L4 and R4 act as **A** and **B** everywhere (see
+[CONSOLE-GUARDS.md](CONSOLE-GUARDS.md#back-paddles)), so no combo may use them; the old dictation (L4+R4) and screen
+helper (L4+L5) combos are gone. Dictation and *What's on screen?* stay on the Jarvis tab's buttons and can be asked for
+by voice.
 
-- **Defaults changed in Core UI phase 1 (3.3.1):** talking moved to L5+R5 and dictation to L4+R4. Saved settings keep
-  what you set; only a new or reset configuration gets the new defaults.
-- **Tap or hold:** recording starts on the press either way, so a hold loses no syllable; a tap cancels the recording
-  (nothing is transcribed or sent) and toggles the tab. The desktop card's *Short tap: open Jarvis in Quick Access*
-  (`jarvisTapOpensQuickAccess`, on by default) turns the tap off; then every press is push-to-talk.
+| Press | What happens |
+| ----- | ------------ |
+| **Tap** L5+R5 (released within 300 ms) | **Talk.** Jarvis listens without opening anything, so the game stays on screen. Listening ends on a pause in speech (1.2 s of quiet after you spoke; 8 s with no speech at all), on another tap, at the 30-second cap or on a mute. The answer is spoken, shown briefly in the answer card at the top right and in a toast; the top-bar orb pulses while he listens and thinks, also in a game |
+| **Hold** L5+R5 (past 300 ms) | **Open** Quick Access straight on the Jarvis tab with the input focused (or close it if it is open there), also over a game. The recording that started on the press is cancelled; nothing is sent |
+
+- Recording starts on the press either way, so a tap loses no syllable.
+- Desktop: Gaming Mode > Jarvis > *Hold: open Jarvis in Quick Access* (`jarvisTapOpensQuickAccess`, the old key kept so
+  settings carry over; on by default). Off, holding L5+R5 is push-to-talk for as long as you hold, and a tap still talks.
+- The end of speech is decided by the agent from the recording's own level (`JarvisListenLevels` in `Jarvis.cs`); the
+  plugin asks `GET /jarvis/listen/state` until it has ended, then fetches the answer.
 
 - **Combos** are two to four buttons held together; Steam's own buttons (Steam, Quick Access) are not allowed, and a
-  combo that contains another is turned off rather than firing both. The defaults use the 2026 Steam Controller's
-  four grip buttons, which Steam Input leaves unbound unless you assign them. Change them in the desktop card
-  (names: `A B X Y L1 R1 L2 R2 L3 R3 L4 R4 L5 R5 SELECT START UP DOWN LEFT RIGHT`, also `LB RB LT RT VIEW MENU`); an
-  empty box turns one off.
+  combo that contains another is turned off rather than firing both. L4 and R4 are refused (they are A and B). Change
+  the talk combo in the desktop card (names: `A B X Y L1 R1 L2 R2 L3 R3 L5 R5 SELECT START UP DOWN LEFT RIGHT`, also
+  `LB RB LT RT VIEW MENU`); an empty box turns it off.
 - **How Core sees the combo:** inside Steam, through `SteamClient.Input.RegisterForControllerStateChanges`
   (`ulButtons`, and `ulUpperButtons` for L4/R4). The agent still never reads a controller (the rule in
   `DashboardShortcutService.cs`). The bit positions come from Decky's typings and the Steam Deck; that the 2026 Steam
@@ -105,8 +108,18 @@ Ideas from Quest Compendium (BSD-3-Clause, as of 2026-11-24) and Decky AI; **no 
   again every 0.4 s while recording: muting mid-sentence (or the microphone changing) discards the recording at once.
 - **Xbox party:** recording works while a party is open in the Game Bar, but Windows shares the microphone, so the
   party hears what you say. A toast says so.
-- **Crimson indicator:** "Jarvis is listening" with a crimson dot at the top right for as long as Core records (over
-  Big Picture and over games; no focus taken). Recording stops by itself after 30 seconds.
+- **Listening pill** (boards 8 and 9 of "Core: current vision"): top right, 32 px from the top and 40 px from the right
+  (at 1920x1080), 52 px high, black at 72% with a 1 px #1A1D21 border and 10 px corners, 19 px semibold text, no focus
+  taken. While the microphone records, and only then (from the first sample to the moment recording stops: a pause, a
+  second tap, the 30 s cap, a mute), it shows **Listening** with nine crimson bars (4 px wide, 3 px apart) whose height
+  follows the input level of the recording itself (RMS per ~50 ms window, smoothed, 6 to 30 px): a muted or dead
+  microphone shows flat bars. Height only, no glow; with Windows' animations off the bars stand still at mid height.
+  After recording it turns into a dimmer **Thinking...** (a 12 px outlined steel dot) until the answer starts, then an
+  answer card (480 to 560 px, the orb, a crimson *JARVIS*, the short answer for a few seconds, *Hold L5 + R5 for the
+  full answer* in steel), then it goes. **Not drawn:** the design's 16 px backdrop blur (WPF layered windows cannot blur
+  what is behind them; the glass is a plain 72% black). **Exclusive fullscreen:** a topmost window can be hidden over
+  a game in exclusive fullscreen; when Windows reports one (`SHQueryUserNotificationState` = D3D full screen) the
+  plugin shows a "Listening" toast as well and the orb pulses (`agent.log` says so).
 - **Typing:** Steam's own keyboard path first (`SteamClient.Input.ControllerKeyboardSendText`, what Steam's on-screen
   keyboard uses); if Steam has no such call, the agent types with `SendInput` (Unicode keystrokes). `SendInput` is the
   one synthetic-input path and is **refused while anti-cheat safe mode is engaged** (the text then stays in Quick
@@ -236,15 +249,18 @@ in game), Home Assistant's conversation, speech-to-text and text-to-speech endpo
    nothing.
 4. **Clear**: the conversation is gone. Turn sleep mode on in Home Assistant: the session clears (`agent.log`:
    *session cleared (Aincrad's sleep mode)*).
-5. In Big Picture, hold **L4+R4** (dictation): the crimson "Jarvis is listening" pill appears; say a sentence into a Steam search
-   field; release: the text appears in the field. Note whether the grips fired (if not: the combo bits differ on the
-   2026 controller; try `L1+R1+SELECT`).
-6. Hold **L5+R5**, ask "What time is it?", release: the answer appears and Piper's British voice speaks it, and the
-   top-bar orb pulses while it thinks, then shows a crimson ring. Tap **L5+R5**: Quick Access opens on the Jarvis tab
-   with the cursor in the field; tap again: it closes. In a game, tap: Quick Access opens over the game on the Jarvis tab.
-7. Mute in Quick Access > Voice (*Mute everything*), hold a combo: "Microphone muted", no pill. Switch to *Mute calls
+5. In Big Picture, press **L4**: it acts as A; **R4** acts as B. Nothing Jarvis-related happens. Quick Access > Jarvis
+   > *Dictate*: say a sentence; press again: the text appears in the chat field.
+6. **Tap L5+R5**, ask "What time is it?" and stop talking: the **Listening** pill appears at once with bars that move
+   with your voice (stay silent: flat), turns into **Thinking...** about 1.2 s after you stop, then the answer card shows
+   and Piper's British voice speaks it; Quick Access does not open. Tap, talk, tap again before pausing: it stops at the
+   second tap. **Hold L5+R5**: Quick Access opens on the Jarvis tab with the cursor in the field; hold again: it closes.
+   In a game, hold: Quick Access opens over the game on the Jarvis tab.
+7. Mute in Quick Access > Voice (*Mute everything*), tap L5+R5: "Microphone muted", no pill. Switch to *Mute calls
    only* with a second microphone: it records from that one. Start recording, then mute: the pill disappears at once.
-8. In a game without anti-cheat: hold **L4+L5** (or Quick Access > *What's on screen?*): "Screenshot taken for
+   In a game in **exclusive fullscreen**, tap L5+R5: check whether the pill shows over the game; if not, a "Listening"
+   toast must appear instead and the orb must pulse (note which).
+8. In a game without anti-cheat: Quick Access > *What's on screen?* (or ask by voice): "Screenshot taken for
    Jarvis" flashes, a toast shows a nudge; Quick Access > Jarvis > **More** shows the full answer. Note whether the
    screenshot shows the game or black (full-screen exclusive), and whether a yellow border flashes.
 9. During a stream to the Steam Frame, use the screen helper: the mark still shows; the stream keeps running.

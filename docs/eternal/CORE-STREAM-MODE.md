@@ -30,6 +30,8 @@ not even open a connection to the TV to check it.
 | Moonlight / Artemis through **Sunshine** | Core reads Sunshine's log (`%ProgramFiles%\Sunshine\config\sunshine.log`, Sunshine's documented default folder): `CLIENT CONNECTED` / `CLIENT DISCONNECTED`, and only while `sunshine.exe` runs (a crash writes no disconnect line) | **Log lines verified** in published Sunshine logs. The file is read-only and shared; Core reads only what was added since the last check. A session that starts but never connects does not count |
 | Moonlight / Artemis through **Apollo** | The same lines, plus Apollo's `Display mode for client [<name>] requested` (the device name) and `Virtual Display created at …` / `Virtual Display removed successfully` (Apollo's virtual display), from `%ProgramFiles%\Apollo\config\sunshine.log` | **Log lines verified** in a published Apollo log (2026). The folder is **inferred** (Apollo is a Sunshine fork with the same layout): if yours differs, set `hostLog` (below) |
 
+| Moonlight / Artemis through **Vibepollo** (3.3.5) | Vibepollo is found in `%ProgramFiles%\Apollo` by its `config\logs` folder or its `vibepollo*.exe` tools, and shown as **Vibepollo** in Quick Access (*On · Vibepollo*, *Vibepollo: virtual display active*). Process `sunshine.exe`; the same `CLIENT CONNECTED` / `CLIENT DISCONNECTED` and `Display mode for client [<name>]` lines, from the newest per-run log | **Verified in Vibepollo's source** (2026-11-27): `CMakeLists.txt` `project(Vibepollo ...)`; `cmake/packaging/windows.cmake` `CPACK_PACKAGE_INSTALL_DIRECTORY "Apollo"`; `cmake/targets/common.cmake` builds `sunshine`; `src/stream.cpp` logs `CLIENT CONNECTED`; `src/nvhttp.cpp` logs the client's display mode; `src/logging.cpp` keeps logs under `logs`. That the installed tools carry a `vibepollo` file name is inferred from `cmake/targets/windows.cmake` |
+
 **Vibepollo** (an Apollo fork, [Nonary/Vibepollo](https://github.com/Nonary/Vibepollo)) installs into Apollo's folder and
 writes one log per run, `%ProgramFiles%\Apollo\config\logs\sunshine-<date>-<time>.log`, with the same `CLIENT CONNECTED` /
 `CLIENT DISCONNECTED` lines; Core reads the newest one and shows it as Apollo. Its log rolls over in place every ~2 MB
@@ -130,6 +132,32 @@ handhelds' resolution matters: install **Apollo instead of Sunshine** (not both:
 AYN devices with Artemis and the Z13 with Moonlight, and try *Deactivate other displays* so the TV's input goes dark
 for the stream. Test it on test day: switching displays can move Big Picture and Core's windows; if Big Picture does
 not come back to the TV after a session, leave *Device configuration* at its default.
+
+## Per-device game settings (3.3.5)
+
+Apollo had a Profile Manager that saved and restored chosen files per game for each client (4K TV settings on the TV,
+1080p settings on a handheld). **Vibepollo does not carry it** (no such feature in its source or documentation, checked
+2026-11-27), so Core does the same, tightly:
+
+- You list games and their settings files in `%APPDATA%\GamingMode\stream-profiles.json` (desktop, once):
+
+  ```json
+  { "enabled": true, "games": [ { "name": "Cyberpunk 2077", "process": "Cyberpunk2077.exe",
+      "files": [ "C:\\Users\\Vonn\\AppData\\Local\\CD Projekt Red\\Cyberpunk 2077\\UserSettings.json" ] } ] }
+  ```
+- The **device** is Stream mode's: the stream's device name (Apollo's/Vibepollo's client name, Steam Remote Play's device)
+  or **tv** when nothing streams (*Keep TV out of it* alone does not count as a device).
+- When the device changes, for each game Core **snapshots** the listed files for the device that was playing and
+  **restores** the new device's copy if it has one (a device seen for the first time keeps the files as they are, and
+  its copy is taken at the next change). Copies live in `%APPDATA%\GamingMode\stream-profiles\<game>\<device>\`.
+- **Never while that game runs:** the switch waits until it exits (`agent.log`: *its settings switch to ... when it
+  exits*). Every file a restore overwrites is backed up first under `stream-profiles\backups\<time>\`.
+- Only regular files of at most 8 MB inside your user folder are touched; a listed path outside it, or a folder, is
+  ignored. Checked once a minute. Quick Access state: `GET /emulators/state` (`profiles`: games, devices with copies,
+  the current device, a waiting switch).
+- How to use it with Core: set the game up on the TV, quit it (Core snapshots *tv* at the next change); start a stream
+  from the Steam Frame, set the game up there, quit; from then on each device gets its own settings automatically.
+  Rules: `StreamProfiles.cs` (`StreamProfilePolicy`, tests in `CoreHealth.Tests`).
 
 ## Settings
 

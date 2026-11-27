@@ -249,11 +249,12 @@ Core's rows are styled with Steam's own.
 - **Presence orb** in the top bar, right after Steam's clock: dim steel ring when idle, a slow crimson pulse while
   listening or thinking (no glow; still under reduced motion), a crimson ring for 4 seconds when an answer arrives.
   Hidden during a game unless Jarvis is busy or has just answered (`src/jarvisPresence.ts`). Part of Core UI.
-- **The talk combo, default L5+R5** (dictation moved to L4+R4; the screen helper stays L4+L5): a **short tap**
-  (released within 300 ms) opens Quick Access straight to the Jarvis tab with the input focused, or closes it if it is
-  already open there, also during a game (Quick Access opens over it); **holding** it is push-to-talk as before.
-  Recording starts on the press either way and a tap cancels it. Desktop: Gaming Mode > Jarvis > *Short tap: open
-  Jarvis in Quick Access*. Details: [JARVIS.md](JARVIS.md).
+- **L5+R5, Jarvis's only combo (3.3.5):** a **tap** (released within 300 ms) talks without opening anything (listening
+  ends on a pause, another tap, the 30 s cap or a mute; the game stays on screen); a **hold** opens Quick Access
+  straight to the Jarvis tab with the input focused, or closes it, also during a game, and cancels the recording that
+  began on the press. L4 and R4 are A and B and are never in a combo; dictation and the screen helper are buttons on
+  the Jarvis tab. Desktop: Gaming Mode > Jarvis > *Hold: open Jarvis in Quick Access*. The listening pill (live input
+  bars, "Listening", then "Thinking...", then the answer card): [JARVIS.md](JARVIS.md).
 - The full Jarvis page is black with the Starfield.
 
 ### Plugin logos (TV item 12)
@@ -474,11 +475,11 @@ Stable Steam, Decky 3.3.1, every CSS Loader theme off, Core 3.3.1 installed.
    with the crimson left bar, *Uninstall* in crimson text, disabled items grey. The menus opened from the Steam menu
    and Quick Access look the same.
 5. Top bar and hint bar: clear over Home's art; no grey strip under the Steam menu or Quick Access.
-6. Button hints: press a key on a keyboard, move the mouse, dictate with L4+R4: the hints stay A / B / ≡ in the
+6. Button hints: press a key on a keyboard, move the mouse, dictate from the Jarvis tab: the hints stay A / B / ≡ in the
    controller's own style. With an Xbox controller they are Xbox glyphs; with the Steam Controller, Steam's.
-7. Jarvis: the orb sits after the clock (dim). Hold L5+R5 and ask something: it pulses, then shows a crimson ring.
-   Tap L5+R5: Quick Access opens on the Jarvis tab with the cursor in the field; tap again: closes. In a game: tap
-   opens Quick Access over it; the orb is hidden in the game unless Jarvis is busy.
+7. Jarvis: the orb sits after the clock (dim). Tap L5+R5 and ask something: it pulses while listening and thinking,
+   then shows a crimson ring for 4 s. Hold L5+R5: Quick Access opens on the Jarvis tab with the cursor in the field; hold
+   again: closes. In a game: hold opens Quick Access over it; the orb is hidden in the game unless Jarvis is busy.
 8. Quick Access > Core > Look > **Core UI** off: everything above returns to Steam's look at once (no restart);
    on again: back.
 9. Re-enable one CSS Loader theme that styles the Steam menu: Core UI's menu still wins; Home follows the theme.
