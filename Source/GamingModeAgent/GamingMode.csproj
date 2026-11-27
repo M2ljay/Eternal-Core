@@ -29,6 +29,7 @@
     <Compile Include="../Playhub.XboxSession/SteamNativeOverlayInputWire.cs" Link="SteamNativeOverlayInputWire.cs" />
     <Compile Include="../Playhub.XboxSession/SteamNativeOverlayInputPresentationBridge.cs" Link="SteamNativeOverlayInputPresentationBridge.cs" />
     <Compile Include="../Shared/DeckyStartupGuard.cs" Link="DeckyStartupGuard.cs" />
+    <Compile Include="../Shared/SteamStartupMovie.cs" Link="SteamStartupMovie.cs" />
     <Compile Include="../Shared/LegacyXboxGameBarWatcher.cs" Link="LegacyXboxGameBarWatcher.cs" />
     <Compile Include="../Playhub.DeckyHost/DeckyProcessTree.cs" Link="DeckyProcessTree.cs" />
     <Compile Include="../Shared/UwpSessionIdentity.cs" Link="UwpSessionIdentity.cs" />
@@ -69,6 +70,8 @@
   <ItemGroup><Compile Include="../Shared/EpicLaunchPayload.cs" Link="EpicLaunchPayload.cs" /></ItemGroup>
   <!-- Mark III boot sound (docs/eternal/brand/sound/eternal-core-boot.ogg as 16-bit PCM WAV), played by BootSequenceSound. -->
   <ItemGroup><EmbeddedResource Include="Assets/eternal-core-boot.wav" LogicalName="GamingMode.BootSound.wav" /></ItemGroup>
+  <!-- Eternal Core: 0.3 s of black that replaces Steam's startup movie (Shared/SteamStartupMovie.cs). -->
+  <ItemGroup><EmbeddedResource Include="Assets/core-skip-startup.webm" LogicalName="GamingMode.SkipStartupMovie.webm" /></ItemGroup>
   <!-- Eternal Core: the Steam update gate's known-good file (docs/eternal/STEAM-UPDATES.md). -->
   <ItemGroup><EmbeddedResource Include="../Shared/SteamCompatibility.json" LogicalName="SteamCompatibility.json" /></ItemGroup>
   <!-- Private first-content cover is independent of HUD/menu/input and OFF without exact pins. -->

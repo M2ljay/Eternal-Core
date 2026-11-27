@@ -1458,6 +1458,8 @@
   "Circa sette secondi su sfondo nero. Non ritarda mai Steam: se qualcosa non va, la Gaming Mode parte comunque.": "黒い背景で約 7 秒。Steam を遅らせることはありません。問題があっても Gaming Mode はそのまま起動します。",
   "Suono di avvio": "起動サウンド",
   "Il suono arcade che accompagna la sequenza.": "シーケンスに合わせて流れるアーケード風サウンドです。",
+  "Salta l'animazione di avvio di Steam": "Steam の起動アニメーションをスキップ",
+  "Al posto del filmato di avvio della Big Picture Steam mostra un istante di nero, così la sequenza di Core passa subito alla Big Picture. Se la spegni torna il filmato che avevi scelto.": "Big Picture の起動ムービーの代わりに Steam は一瞬だけ黒い画面を表示し、Core の起動シーケンスからそのまま Big Picture に移ります。オフにすると以前選んでいたムービーに戻ります。",
   "Controllo della TV": "テレビの操作",
   "Core accende la TV e passa al suo ingresso quando entra in Gaming Mode, e la spegne quando va in sospensione o si spegne.": "Core は Gaming Mode に入るとテレビをオンにして自分の入力に切り替え、スリープやシャットダウンのときにテレビをオフにします。",
   "Spegni la TV con Core": "Core と一緒にテレビをオフ",

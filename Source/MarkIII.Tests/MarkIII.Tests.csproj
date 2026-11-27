@@ -21,6 +21,7 @@
     <Compile Include="../GamingModeAgent/GamingMode.Services/CoreText.cs" Link="CoreText.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/UpdateNight.cs" Link="UpdateNight.cs" />
     <Compile Include="../Shared/CouchHardening.cs" Link="CouchHardening.cs" />
+    <Compile Include="../Shared/SteamStartupMovie.cs" Link="SteamStartupMovie.cs" />
     <Compile Include="../Shared/DeckySteamPairing.cs" Link="DeckySteamPairing.cs" />
     <Compile Include="../Shared/SteamClientKindProbe.cs" Link="SteamClientKindProbe.cs" />
   </ItemGroup>

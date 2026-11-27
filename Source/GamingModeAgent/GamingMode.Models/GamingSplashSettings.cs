@@ -22,4 +22,8 @@ public sealed class GamingSplashSettings
 	public bool BootSequenceEnabled { get; set; } = true;
 
 	public bool BootSoundEnabled { get; set; } = true;
+
+	// Eternal Core: Steam's own startup movie is replaced by an instant of black
+	// (Shared/SteamStartupMovie.cs), so Core hands straight to Big Picture.
+	public bool SkipSteamStartupMovie { get; set; } = true;
 }

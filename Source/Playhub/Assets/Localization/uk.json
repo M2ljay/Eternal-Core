@@ -1477,6 +1477,8 @@
   "Circa sette secondi su sfondo nero. Non ritarda mai Steam: se qualcosa non va, la Gaming Mode parte comunque.": "Близько семи секунд на чорному тлі. Ніколи не затримує Steam: якщо щось не так, Gaming Mode однаково запуститься.",
   "Suono di avvio": "Звук запуску",
   "Il suono arcade che accompagna la sequenza.": "Аркадний звук, що супроводжує заставку.",
+  "Salta l'animazione di avvio di Steam": "Пропускати анімацію запуску Steam",
+  "Al posto del filmato di avvio della Big Picture Steam mostra un istante di nero, così la sequenza di Core passa subito alla Big Picture. Se la spegni torna il filmato che avevi scelto.": "Замість заставки запуску Big Picture Steam показує мить чорного, тож заставка Core одразу переходить до Big Picture. Вимкніть, щоб повернути заставку, яку ви обрали.",
   "Controllo della TV": "Керування телевізором",
   "Core accende la TV e passa al suo ingresso quando entra in Gaming Mode, e la spegne quando va in sospensione o si spegne.": "Core вмикає телевізор і перемикає його на свій вхід під час входу в Gaming Mode, а вимикає, коли засинає або вимикається.",
   "Spegni la TV con Core": "Вимикати телевізор разом із Core",

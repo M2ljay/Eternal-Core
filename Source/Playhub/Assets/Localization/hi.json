@@ -1457,6 +1457,8 @@
   "Circa sette secondi su sfondo nero. Non ritarda mai Steam: se qualcosa non va, la Gaming Mode parte comunque.": "काली पृष्ठभूमि पर लगभग सात सेकंड। यह Steam को कभी देर नहीं कराता: कुछ गड़बड़ हो तब भी Gaming Mode शुरू हो जाता है।",
   "Suono di avvio": "बूट ध्वनि",
   "Il suono arcade che accompagna la sequenza.": "सीक्वेंस के साथ बजने वाली आर्केड ध्वनि।",
+  "Salta l'animazione di avvio di Steam": "Steam का स्टार्टअप एनिमेशन छोड़ें",
+  "Al posto del filmato di avvio della Big Picture Steam mostra un istante di nero, così la sequenza di Core passa subito alla Big Picture. Se la spegni torna il filmato che avevi scelto.": "Big Picture के स्टार्टअप वीडियो की जगह Steam पल भर के लिए काला दिखाता है, ताकि Core का सीक्वेंस सीधे Big Picture पर पहुँचे। बंद करने पर आपका चुना हुआ वीडियो लौट आता है।",
   "Controllo della TV": "टीवी नियंत्रण",
   "Core accende la TV e passa al suo ingresso quando entra in Gaming Mode, e la spegne quando va in sospensione o si spegne.": "Gaming Mode में जाते समय Core टीवी चालू करके अपने इनपुट पर ले जाता है, और स्लीप या बंद होने पर टीवी बंद कर देता है।",
   "Spegni la TV con Core": "Core के साथ टीवी बंद करें",

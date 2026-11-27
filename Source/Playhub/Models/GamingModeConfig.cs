@@ -131,6 +131,8 @@ public sealed class SplashOptions
     // Mark III boot sequence (Eternal, then Core) and its sound.
     public bool BootSequenceEnabled { get; set; } = true;
     public bool BootSoundEnabled { get; set; } = true;
+    // Replace Steam's Big Picture startup movie with an instant of black (Shared/SteamStartupMovie.cs).
+    public bool SkipSteamStartupMovie { get; set; } = true;
 }
 
 // Mark III LG webOS TV control; must match GamingModeAgent/GamingMode.Models/TvSettings.cs.

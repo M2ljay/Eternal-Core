@@ -53,6 +53,8 @@ public sealed partial class MainWindow
             "Circa sette secondi su sfondo nero. Non ritarda mai Steam: se qualcosa non va, la Gaming Mode parte comunque.", "bootSequence");
         AddExplainedToggle(card, "Suono di avvio",
             "Il suono arcade che accompagna la sequenza.", "bootSound");
+        AddExplainedToggle(card, "Salta l'animazione di avvio di Steam",
+            "Al posto del filmato di avvio della Big Picture Steam mostra un istante di nero, così la sequenza di Core passa subito alla Big Picture. Se la spegni torna il filmato che avevi scelto.", "skipSteamMovie");
         return card;
     }
 
@@ -91,6 +93,7 @@ public sealed partial class MainWindow
         var gaming = _gamingConfig.Gaming;
         gaming.Splash.BootSequenceEnabled = GetToggle("bootSequence");
         gaming.Splash.BootSoundEnabled = GetToggle("bootSound");
+        gaming.Splash.SkipSteamStartupMovie = GetToggle("skipSteamMovie");
         gaming.Tv ??= new();
         gaming.Tv.Enabled = GetToggle("tvEnabled");
         gaming.Tv.TurnOnWithCore = GetToggle("tvOn");
@@ -121,6 +124,7 @@ public sealed partial class MainWindow
         gaming.Tv ??= new();
         SetToggle("bootSequence", gaming.Splash.BootSequenceEnabled);
         SetToggle("bootSound", gaming.Splash.BootSoundEnabled);
+        SetToggle("skipSteamMovie", gaming.Splash.SkipSteamStartupMovie);
         SetToggle("tvEnabled", gaming.Tv.Enabled);
         SetToggle("tvOn", gaming.Tv.TurnOnWithCore);
         SetToggle("tvOff", gaming.Tv.TurnOffWithCore);

@@ -121,6 +121,8 @@ string[] eternalMarkIII =
     "Circa sette secondi su sfondo nero. Non ritarda mai Steam: se qualcosa non va, la Gaming Mode parte comunque.",
     "Suono di avvio",
     "Il suono arcade che accompagna la sequenza.",
+    "Salta l'animazione di avvio di Steam",
+    "Al posto del filmato di avvio della Big Picture Steam mostra un istante di nero, così la sequenza di Core passa subito alla Big Picture. Se la spegni torna il filmato che avevi scelto.",
     "Controllo della TV",
     "Core accende la TV e passa al suo ingresso quando entra in Gaming Mode, e la spegne quando va in sospensione o si spegne.",
     "Spegni la TV con Core",

@@ -1470,6 +1470,8 @@
   "Circa sette secondi su sfondo nero. Non ritarda mai Steam: se qualcosa non va, la Gaming Mode parte comunque.": "Cerca de sete segundos em fundo preto. Nunca atrasa o Steam: se algo der errado, o Gaming Mode inicia mesmo assim.",
   "Suono di avvio": "Som de inicialização",
   "Il suono arcade che accompagna la sequenza.": "O som arcade que acompanha a sequência.",
+  "Salta l'animazione di avvio di Steam": "Pular a animação de inicialização do Steam",
+  "Al posto del filmato di avvio della Big Picture Steam mostra un istante di nero, così la sequenza di Core passa subito alla Big Picture. Se la spegni torna il filmato che avevi scelto.": "Em vez do vídeo de inicialização do Big Picture, o Steam mostra um instante de preto, e a sequência do Core passa direto para o Big Picture. Desative para voltar ao vídeo que você tinha escolhido.",
   "Controllo della TV": "Controle da TV",
   "Core accende la TV e passa al suo ingresso quando entra in Gaming Mode, e la spegne quando va in sospensione o si spegne.": "O Core liga a TV e muda para a sua entrada ao entrar no Gaming Mode, e a desliga quando entra em suspensão ou desliga.",
   "Spegni la TV con Core": "Desligar a TV com o Core",
