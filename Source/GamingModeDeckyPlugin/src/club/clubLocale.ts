@@ -10,7 +10,8 @@ export type ClubCopy = {
   rankOf: string; crowns: string; setName: string; notFound: string; top: string; nominations: string; voteOpens: string;
   logTitle: string; logDiscord: string; logOptions: string; logForum: string; logDeadline: string; updated: string;
   saved: string; refresh: string; loading: string; noData: string; setting: string; settingHint: string;
-  nameLabel: string; nameSave: string; saveFailed: string;
+  nameLabel: string; nameSave: string; saveFailed: string; logAssemble: string; logButton: string; logOpening: string;
+  logOpened: string; logFailed: string;
 };
 
 const en: ClubCopy = {
@@ -27,6 +28,8 @@ const en: ClubCopy = {
   saved: "Showing saved data", refresh: "Refresh", loading: "Loading the club…", noData: "Club data isn't available yet.",
   setting: "Show the Club tab", settingHint: "Play Retro Games Club picks, your standing and nominations on the Home.",
   nameLabel: "Your club display name", nameSave: "Save name", saveFailed: "Could not save the Club settings.",
+  logAssemble: "Assemble opens the game's thread on the club's Discord with /completed ready. Choose the options there and send it yourself.", logButton: "Log completion", logOpening: "Opening Assemble…",
+  logOpened: "Opened in Assemble: choose the options and send it there.", logFailed: "Assemble could not open the thread.",
 };
 
 const copy: Record<string, ClubCopy> = {
@@ -40,7 +43,9 @@ const copy: Record<string, ClubCopy> = {
     logForum: "Sul forum: apri il thread del gioco in PRGC General e scegli Log a completion.", logDeadline: "Registrala prima che la scelta finisca: le registrazioni chiudono in quel momento.",
     updated: "Aggiornato {ago}", saved: "Dati salvati", refresh: "Aggiorna", loading: "Caricamento del club…", noData: "I dati del club non sono ancora disponibili.",
     setting: "Mostra la scheda Club", settingHint: "Le scelte del Play Retro Games Club, la tua posizione e le candidature nella Home.", nameLabel: "Il tuo nome nel club",
-    nameSave: "Salva nome", saveFailed: "Impossibile salvare le impostazioni del Club." },
+    nameSave: "Salva nome", saveFailed: "Impossibile salvare le impostazioni del Club.",
+    logAssemble: "Assemble apre il thread del gioco sul Discord del club con /completed pronto. Scegli le opzioni lì e invialo tu.", logButton: "Registra completamento", logOpening: "Apertura di Assemble…",
+    logOpened: "Aperto in Assemble: scegli le opzioni e invialo da lì.", logFailed: "Assemble non è riuscito ad aprire il thread." },
   es: { ...en, playing: "Jugando ahora", daysLeft: { one: "Queda {n} día", other: "Quedan {n} días" }, lastDay: "Último día", ended: "Terminado", noDate: "Fechas en la web del club",
     notInLibrary: "No está en tu biblioteca", play: "Jugar", details: "Página del juego", standing: "Tu posición", beaten: "juegos superados", streak: "racha", rank: "puesto",
     rankOf: "#{rank} de {of}", crowns: "Coronas", setName: "Escribe tu nombre del club en Acceso rápido > Core > Club para ver tu posición.",
@@ -50,7 +55,9 @@ const copy: Record<string, ClubCopy> = {
     logForum: "En el foro: abre el hilo del juego en PRGC General y elige Log a completion.", logDeadline: "Regístrala antes de que acabe la elección: los registros cierran en ese momento.",
     updated: "Actualizado {ago}", saved: "Datos guardados", refresh: "Actualizar", loading: "Cargando el club…", noData: "Los datos del club aún no están disponibles.",
     setting: "Mostrar la pestaña Club", settingHint: "Las elecciones del Play Retro Games Club, tu posición y las nominaciones en Inicio.", nameLabel: "Tu nombre en el club",
-    nameSave: "Guardar nombre", saveFailed: "No se pudo guardar la configuración del Club." },
+    nameSave: "Guardar nombre", saveFailed: "No se pudo guardar la configuración del Club.",
+    logAssemble: "Assemble abre el hilo del juego en el Discord del club con /completed listo. Elige las opciones allí y envíalo tú.", logButton: "Registrar completado", logOpening: "Abriendo Assemble…",
+    logOpened: "Abierto en Assemble: elige las opciones y envíalo allí.", logFailed: "Assemble no pudo abrir el hilo." },
   fr: { ...en, playing: "En cours", daysLeft: { one: "{n} jour restant", other: "{n} jours restants" }, lastDay: "Dernier jour", ended: "Terminé", noDate: "Dates sur le site du club",
     notInLibrary: "Absent de votre bibliothèque", play: "Jouer", details: "Page du jeu", standing: "Votre classement", beaten: "jeux terminés", streak: "série", rank: "rang",
     rankOf: "#{rank} sur {of}", crowns: "Couronnes", setName: "Saisissez votre nom de membre dans Accès rapide > Core > Club pour voir votre classement.",
@@ -60,7 +67,9 @@ const copy: Record<string, ClubCopy> = {
     logForum: "Sur le forum : ouvrez le fil du jeu dans PRGC General et choisissez Log a completion.", logDeadline: "Enregistrez-la avant la fin de la sélection : les enregistrements ferment à ce moment-là.",
     updated: "Mis à jour {ago}", saved: "Données enregistrées", refresh: "Actualiser", loading: "Chargement du club…", noData: "Les données du club ne sont pas encore disponibles.",
     setting: "Afficher l'onglet Club", settingHint: "Les sélections du Play Retro Games Club, votre classement et les nominations sur l'accueil.", nameLabel: "Votre nom de membre",
-    nameSave: "Enregistrer le nom", saveFailed: "Impossible d'enregistrer les paramètres du Club." },
+    nameSave: "Enregistrer le nom", saveFailed: "Impossible d'enregistrer les paramètres du Club.",
+    logAssemble: "Assemble ouvre le fil du jeu sur le Discord du club avec /completed prêt. Choisissez les options et envoyez-le vous-même.", logButton: "Enregistrer la complétion", logOpening: "Ouverture d'Assemble…",
+    logOpened: "Ouvert dans Assemble : choisissez les options et envoyez-le depuis là.", logFailed: "Assemble n'a pas pu ouvrir le fil." },
   de: { ...en, playing: "Läuft gerade", daysLeft: { one: "Noch {n} Tag", other: "Noch {n} Tage" }, lastDay: "Letzter Tag", ended: "Beendet", noDate: "Termine auf der Club-Website",
     notInLibrary: "Nicht in deiner Bibliothek", play: "Spielen", details: "Spielseite", standing: "Dein Stand", beaten: "Spiele geschafft", streak: "Serie", rank: "Platz",
     rankOf: "Platz {rank} von {of}", crowns: "Kronen", setName: "Gib deinen Club-Namen unter Schnellzugriff > Core > Club ein, um deinen Stand zu sehen.",
@@ -70,7 +79,9 @@ const copy: Record<string, ClubCopy> = {
     logForum: "Im Forum: Öffne den Thread des Spiels in PRGC General und wähle Log a completion.", logDeadline: "Trag ihn ein, bevor die Wahl endet: Einträge schließen genau dann.",
     updated: "Aktualisiert {ago}", saved: "Gespeicherte Daten", refresh: "Aktualisieren", loading: "Club wird geladen…", noData: "Club-Daten sind noch nicht verfügbar.",
     setting: "Club-Tab anzeigen", settingHint: "Die Picks des Play Retro Games Club, dein Stand und die Nominierungen auf der Startseite.", nameLabel: "Dein Club-Anzeigename",
-    nameSave: "Namen speichern", saveFailed: "Club-Einstellungen konnten nicht gespeichert werden." },
+    nameSave: "Namen speichern", saveFailed: "Club-Einstellungen konnten nicht gespeichert werden.",
+    logAssemble: "Assemble öffnet den Thread des Spiels im Discord des Clubs mit /completed. Wähle dort die Optionen und sende ihn selbst.", logButton: "Abschluss eintragen", logOpening: "Assemble wird geöffnet…",
+    logOpened: "In Assemble geöffnet: Wähle die Optionen und sende ihn dort.", logFailed: "Assemble konnte den Thread nicht öffnen." },
   pt: { ...en, playing: "Jogando agora", daysLeft: { one: "Falta {n} dia", other: "Faltam {n} dias" }, lastDay: "Último dia", ended: "Encerrado", noDate: "Datas no site do clube",
     notInLibrary: "Não está na sua biblioteca", play: "Jogar", details: "Página do jogo", standing: "Sua posição", beaten: "jogos zerados", streak: "sequência", rank: "posição",
     rankOf: "#{rank} de {of}", crowns: "Coroas", setName: "Digite seu nome no clube em Acesso rápido > Core > Club para ver sua posição.",
@@ -80,7 +91,9 @@ const copy: Record<string, ClubCopy> = {
     logForum: "No fórum: abra o tópico do jogo em PRGC General e escolha Log a completion.", logDeadline: "Registre antes que a escolha termine: os registros fecham nesse momento.",
     updated: "Atualizado {ago}", saved: "Dados salvos", refresh: "Atualizar", loading: "Carregando o clube…", noData: "Os dados do clube ainda não estão disponíveis.",
     setting: "Mostrar a aba Club", settingHint: "As escolhas do Play Retro Games Club, sua posição e as indicações na página inicial.", nameLabel: "Seu nome no clube",
-    nameSave: "Salvar nome", saveFailed: "Não foi possível salvar as configurações do Club." },
+    nameSave: "Salvar nome", saveFailed: "Não foi possível salvar as configurações do Club.",
+    logAssemble: "O Assemble abre o tópico do jogo no Discord do clube com /completed pronto. Escolha as opções lá e envie você mesmo.", logButton: "Registrar conclusão", logOpening: "Abrindo o Assemble…",
+    logOpened: "Aberto no Assemble: escolha as opções e envie por lá.", logFailed: "O Assemble não conseguiu abrir o tópico." },
   uk: { ...en, tab: "Клуб", playing: "Зараз грають", daysLeft: { one: "Залишився {n} день", few: "Залишилося {n} дні", many: "Залишилося {n} днів", other: "Залишилося {n} дня" },
     lastDay: "Останній день", ended: "Завершено", noDate: "Дати на сайті клубу", notInLibrary: "Немає у вашій бібліотеці", play: "Грати", details: "Сторінка гри",
     standing: "Ваше місце", beaten: "ігор пройдено", streak: "серія", rank: "місце", rankOf: "№{rank} з {of}", crowns: "Корони",
@@ -90,7 +103,9 @@ const copy: Record<string, ClubCopy> = {
     logForum: "На форумі: відкрийте гілку гри в PRGC General і виберіть Log a completion.", logDeadline: "Зареєструйте до кінця вибору: реєстрація закривається саме тоді.",
     updated: "Оновлено {ago}", saved: "Збережені дані", refresh: "Оновити", loading: "Завантаження клубу…", noData: "Дані клубу ще недоступні.",
     setting: "Показувати вкладку «Клуб»", settingHint: "Вибір Play Retro Games Club, ваше місце й номінації на головній.", nameLabel: "Ваше ім'я в клубі",
-    nameSave: "Зберегти ім'я", saveFailed: "Не вдалося зберегти налаштування клубу." },
+    nameSave: "Зберегти ім'я", saveFailed: "Не вдалося зберегти налаштування клубу.",
+    logAssemble: "Assemble відкриває гілку гри в Discord клубу з готовою командою /completed. Виберіть параметри там і надішліть самі.", logButton: "Зареєструвати проходження", logOpening: "Відкриваємо Assemble…",
+    logOpened: "Відкрито в Assemble: виберіть параметри й надішліть там.", logFailed: "Assemble не вдалося відкрити гілку." },
   ru: { ...en, tab: "Клуб", playing: "Сейчас играют", daysLeft: { one: "Остался {n} день", few: "Осталось {n} дня", many: "Осталось {n} дней", other: "Осталось {n} дня" },
     lastDay: "Последний день", ended: "Завершено", noDate: "Даты на сайте клуба", notInLibrary: "Нет в вашей библиотеке", play: "Играть", details: "Страница игры",
     standing: "Ваше место", beaten: "игр пройдено", streak: "серия", rank: "место", rankOf: "№{rank} из {of}", crowns: "Короны",
@@ -100,7 +115,9 @@ const copy: Record<string, ClubCopy> = {
     logForum: "На форуме: откройте ветку игры в PRGC General и выберите Log a completion.", logDeadline: "Запишите до конца выбора: запись закрывается в этот момент.",
     updated: "Обновлено {ago}", saved: "Сохранённые данные", refresh: "Обновить", loading: "Загрузка клуба…", noData: "Данные клуба пока недоступны.",
     setting: "Показывать вкладку «Клуб»", settingHint: "Выбор Play Retro Games Club, ваше место и номинации на главной.", nameLabel: "Ваше имя в клубе",
-    nameSave: "Сохранить имя", saveFailed: "Не удалось сохранить настройки клуба." },
+    nameSave: "Сохранить имя", saveFailed: "Не удалось сохранить настройки клуба.",
+    logAssemble: "Assemble открывает ветку игры в Discord клуба с готовой командой /completed. Выберите параметры там и отправьте сами.", logButton: "Записать прохождение", logOpening: "Открываем Assemble…",
+    logOpened: "Открыто в Assemble: выберите параметры и отправьте там.", logFailed: "Assemble не удалось открыть ветку." },
   zh: { ...en, tab: "俱乐部", playing: "正在游玩", daysLeft: { other: "还剩 {n} 天" }, lastDay: "最后一天", ended: "已结束", noDate: "日期见俱乐部网站",
     notInLibrary: "不在你的库中", play: "开始游戏", details: "游戏页面", standing: "你的排名", beaten: "款已通关", streak: "连续", rank: "排名", rankOf: "第 {rank} 名，共 {of} 人",
     crowns: "王冠", setName: "在 快速访问 > Core > Club 中输入你的俱乐部名称即可查看排名。", notFound: "排行榜上还没有名为“{name}”的成员。", top: "前 5 名",
@@ -109,7 +126,9 @@ const copy: Record<string, ClubCopy> = {
     logForum: "在论坛上：打开 PRGC General 中该游戏的帖子，选择 Log a completion。", logDeadline: "请在本期结束前登记：结束时登记即关闭。",
     updated: "更新于{ago}", saved: "显示已保存的数据", refresh: "刷新", loading: "正在加载俱乐部…", noData: "俱乐部数据暂不可用。",
     setting: "显示俱乐部标签页", settingHint: "在主页显示 Play Retro Games Club 的本期游戏、你的排名和提名。", nameLabel: "你的俱乐部显示名称",
-    nameSave: "保存名称", saveFailed: "无法保存俱乐部设置。" },
+    nameSave: "保存名称", saveFailed: "无法保存俱乐部设置。",
+    logAssemble: "Assemble 会在俱乐部的 Discord 中打开该游戏的帖子，并准备好 /completed。请在那里选择选项并自行发送。", logButton: "登记通关", logOpening: "正在打开 Assemble…",
+    logOpened: "已在 Assemble 中打开：请在那里选择选项并发送。", logFailed: "Assemble 无法打开该帖子。" },
   ja: { ...en, tab: "クラブ", playing: "プレイ中", daysLeft: { other: "残り{n}日" }, lastDay: "最終日", ended: "終了", noDate: "日程はクラブのサイトで",
     notInLibrary: "ライブラリにありません", play: "プレイ", details: "ゲームページ", standing: "あなたの順位", beaten: "本クリア", streak: "連続", rank: "順位",
     rankOf: "{of}人中{rank}位", crowns: "クラウン", setName: "クイックアクセス > Core > Club でクラブの表示名を入力すると順位が表示されます。",
@@ -119,7 +138,9 @@ const copy: Record<string, ClubCopy> = {
     logForum: "フォーラムでは：PRGC General のゲームのスレッドを開き、Log a completion を選びます。", logDeadline: "選出期間が終わる前に記録してください。終了と同時に締め切られます。",
     updated: "{ago}に更新", saved: "保存済みのデータを表示中", refresh: "更新", loading: "クラブを読み込み中…", noData: "クラブのデータはまだありません。",
     setting: "クラブタブを表示", settingHint: "ホームに Play Retro Games Club の選出作品、あなたの順位、ノミネートを表示します。", nameLabel: "クラブの表示名",
-    nameSave: "名前を保存", saveFailed: "クラブの設定を保存できませんでした。" },
+    nameSave: "名前を保存", saveFailed: "クラブの設定を保存できませんでした。",
+    logAssemble: "Assemble がクラブの Discord でゲームのスレッドを開き、/completed を用意します。オプションを選んでご自身で送信してください。", logButton: "クリアを記録", logOpening: "Assemble を開いています…",
+    logOpened: "Assemble で開きました。オプションを選んで送信してください。", logFailed: "Assemble はスレッドを開けませんでした。" },
   ko: { ...en, tab: "클럽", playing: "지금 플레이 중", daysLeft: { other: "{n}일 남음" }, lastDay: "마지막 날", ended: "종료", noDate: "날짜는 클럽 사이트에서",
     notInLibrary: "라이브러리에 없음", play: "플레이", details: "게임 페이지", standing: "내 순위", beaten: "개 클리어", streak: "연속", rank: "순위",
     rankOf: "{of}명 중 {rank}위", crowns: "크라운", setName: "빠른 실행 > Core > Club에서 클럽 이름을 입력하면 순위가 표시됩니다.",
@@ -129,7 +150,9 @@ const copy: Record<string, ClubCopy> = {
     logForum: "포럼에서: PRGC General의 게임 스레드를 열고 Log a completion을 선택하세요.", logDeadline: "선정 기간이 끝나기 전에 기록하세요. 끝나는 순간 마감됩니다.",
     updated: "{ago} 업데이트", saved: "저장된 데이터 표시 중", refresh: "새로 고침", loading: "클럽을 불러오는 중…", noData: "아직 클럽 데이터가 없습니다.",
     setting: "클럽 탭 표시", settingHint: "홈에 Play Retro Games Club 선정작, 내 순위, 후보를 표시합니다.", nameLabel: "클럽 표시 이름",
-    nameSave: "이름 저장", saveFailed: "클럽 설정을 저장하지 못했습니다." },
+    nameSave: "이름 저장", saveFailed: "클럽 설정을 저장하지 못했습니다.",
+    logAssemble: "Assemble이 클럽 Discord에서 게임 스레드를 열고 /completed를 준비합니다. 옵션을 고른 뒤 직접 보내세요.", logButton: "클리어 기록", logOpening: "Assemble 여는 중…",
+    logOpened: "Assemble에서 열렸습니다. 옵션을 고르고 보내세요.", logFailed: "Assemble이 스레드를 열지 못했습니다." },
   hi: { ...en, tab: "क्लब", playing: "अभी खेल रहे हैं", daysLeft: { one: "{n} दिन बाकी", other: "{n} दिन बाकी" }, lastDay: "आखिरी दिन", ended: "समाप्त",
     noDate: "तारीखें क्लब की साइट पर", notInLibrary: "आपकी लाइब्रेरी में नहीं", play: "खेलें", details: "गेम पेज", standing: "आपकी स्थिति", beaten: "गेम पूरे किए",
     streak: "लगातार", rank: "रैंक", rankOf: "{of} में #{rank}", crowns: "ताज", setName: "अपनी स्थिति देखने के लिए क्विक एक्सेस > Core > Club में अपना क्लब नाम डालें।",
@@ -139,7 +162,9 @@ const copy: Record<string, ClubCopy> = {
     logForum: "फ़ोरम पर: PRGC General में गेम का थ्रेड खोलें और Log a completion चुनें।", logDeadline: "चयन खत्म होने से पहले दर्ज करें: उसी पल प्रविष्टियाँ बंद हो जाती हैं।",
     updated: "{ago} अपडेट किया गया", saved: "सहेजा गया डेटा दिखाया जा रहा है", refresh: "रीफ़्रेश करें", loading: "क्लब लोड हो रहा है…", noData: "क्लब का डेटा अभी उपलब्ध नहीं है।",
     setting: "क्लब टैब दिखाएँ", settingHint: "होम पर Play Retro Games Club के चुने गए गेम, आपकी स्थिति और नामांकन।", nameLabel: "आपका क्लब डिस्प्ले नाम",
-    nameSave: "नाम सहेजें", saveFailed: "क्लब सेटिंग्स सहेजी नहीं जा सकीं।" },
+    nameSave: "नाम सहेजें", saveFailed: "क्लब सेटिंग्स सहेजी नहीं जा सकीं।",
+    logAssemble: "Assemble क्लब के Discord पर गेम का थ्रेड /completed के साथ तैयार खोलता है। वहाँ विकल्प चुनें और खुद भेजें।", logButton: "पूरा होना दर्ज करें", logOpening: "Assemble खुल रहा है…",
+    logOpened: "Assemble में खुल गया: विकल्प चुनें और वहीं से भेजें।", logFailed: "Assemble थ्रेड नहीं खोल सका।" },
 };
 
 export const clubLanguages = Object.keys(copy);

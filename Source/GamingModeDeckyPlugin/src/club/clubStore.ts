@@ -3,16 +3,26 @@
 
 import { call } from "../controlBackend";
 
+export type ClubEventCode = "gotw" | "gotm" | "rhotm" | "gots" | "special";
+export type ClubFirst = { name: string; at: number | null } | null;
+// Fields after `beaten` are additive (3.3.6): older caches may lack them.
 export type ClubPick = { kind: string; label: string; title: string; slug: string; platform: string; romhack: boolean;
-  url: string; image: string; ends_at: number | null; beaten: number | null };
-export type ClubRow = { rank: number; name: string; slug: string; beaten: number };
+  url: string; image: string; ends_at: number | null; beaten: number | null; event?: ClubEventCode; cover?: string;
+  at100?: number | null; rating?: number | null; hours?: number | null; first_clear?: ClubFirst; first_100?: ClubFirst };
+export type ClubRow = { rank: number; name: string; slug: string; beaten: number; hours?: number | null;
+  hardcore?: number | null; completed?: number | null; mastered?: number | null; firsts?: number | null;
+  firsthundred?: number | null; by_event?: Record<string, number> };
 export type ClubNomination = { kind: string; label: string; opens_at: number | null; count: number | null;
-  items: { title: string; platform: string; romhack: boolean; nominator: string; hours: number | null }[] };
+  event?: string; period?: string; closes_at?: number | null;
+  items: { title: string; platform: string; romhack: boolean; nominator: string; hours: number | null;
+    nominator_slug?: string; order?: number | null; ra_game_id?: number | null; cover?: string }[] };
+export type ClubScheduleItem = { at: number; text: string; title?: string; tags?: { kind: string; label: string }[]; until?: number | null };
 export type ClubMember = { name: string; slug: string; rank: number | null; of: number | null; beaten: number | null;
   streak: { event: string; count: number; unit: string; best: number } | null; crowns: { crown: string; tier: string; period: string }[];
   beaten_slugs: string[] };
-export type ClubSnapshot = { picks: ClubPick[]; top: ClubRow[]; leaderboard: ClubRow[]; schedule: { at: number; text: string }[];
-  nominations: ClubNomination[]; member: ClubMember | null; fetched_at: number; source: string };
+export type ClubSnapshot = { picks: ClubPick[]; top: ClubRow[]; leaderboard: ClubRow[]; schedule: ClubScheduleItem[];
+  nominations: ClubNomination[]; member: ClubMember | null; fetched_at: number; source: string;
+  stats?: Record<string, number>; carried?: string[] };
 export type ClubFeedReply = { enabled: boolean; display_name?: string; snapshot: ClubSnapshot | null; updated?: number | null;
   stale?: boolean; error?: string; refresh_available_at?: number };
 export type ClubSettingsValue = { enabled: boolean; display_name: string };

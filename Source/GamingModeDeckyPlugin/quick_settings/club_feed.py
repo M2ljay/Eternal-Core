@@ -8,15 +8,19 @@ Until the organisers offer a feed, this reads the club's public pages politely:
   that names Core and says who is asking ("Core/<version> (+contact: club member)");
 - no login, no cookies, no credentials; only public display names are kept.
 
-Parsing is pure (``parse_*`` functions take HTML text and return plain dicts) and anchored on
-visible text and link targets rather than CSS classes, so it survives a restyle. When a page's
-structure stops matching, one warning is logged per change.
+Parsing is pure (``parse_*`` functions take HTML text and return plain dicts). The home, nominations and
+leaderboards parsers read the club's own markup and data attributes (event classes w/m/r/s/x, ``a.room``
+cards, ``ol.cal-strip``, ``section.run``, ``data-sys``/``data-s-*`` rows, ``<time datetime>``), as captured
+on 2026-11-27 (tests/fixtures/club/). Each section has a structure flag that is true only when that section
+was parsed; when a page's structure stops matching, one warning is logged per change and the section's last
+good data is kept. The member page is still read by visible text (``html_lines``): no capture of it exists.
 
 ``ClubProvider`` is the seam: an official JSON feed or API can replace ``PrgcScraperProvider``
 by returning the same snapshot shape (see ``JsonFeedProvider``).
 
-Standard library only, and only modules Decky's frozen Windows Python ships (no html.parser,
-no xml): the same set home_news.py uses.
+Standard library only, and only modules Decky's frozen Windows Python ships: ``html`` and
+``html.entities`` but no ``html.parser`` and no ``xml``, so the small DOM below is built with a regex
+tokenizer (the same set home_news.py uses).
 """
 import datetime
 import gzip
@@ -42,13 +46,6 @@ LIMIT = 1024 * 1024         # bytes per page
 TIMEOUT = 10
 LOG = logging.getLogger("core.club")
 
-EVENTS = (
-    ("week", re.compile(r"^game of the week\b", re.I)),
-    ("month", re.compile(r"^game of the month\b", re.I)),
-    ("romhack", re.compile(r"^romhack of the month\b", re.I)),
-    ("season", re.compile(r"^game of the season\b", re.I)),
-    ("special", re.compile(r"^(?:[a-z]+\s){0,2}special\b", re.I)),
-)
 EVENT_ANYWHERE = re.compile(r"(game of the week|game of the month|romhack of the month|game of the season|[a-z]+ special)", re.I)
 # The club's system filter, plus common spellings. Value = the short code the site uses.
 PLATFORMS = {
@@ -61,9 +58,6 @@ PLATFORMS = {
 }
 _PLATFORM_TOKEN = "|".join(sorted((re.escape(k) for k in PLATFORMS), key=len, reverse=True))
 PLATFORM_RE = re.compile(r"(?<![\w/])(" + _PLATFORM_TOKEN + r")(\s+romhack)?(?![\w/])", re.I)
-MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 1)}
-DATE_RE = re.compile(r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2})(?:,?\s+(\d{4}))?(?:,?\s+(\d{1,2}):(\d{2}))?\s*(UTC|GMT)?", re.I)
-LEFT_RE = re.compile(r"(?:(\d+)\s*days?)?\s*(?:(\d+)\s*h(?:ours?)?)?\s+left", re.I)
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 
 
@@ -195,32 +189,6 @@ def platform_code(text):
     return PLATFORMS[match.group(1).lower()], bool(match.group(2))
 
 
-def infer_date(month, day, year, hour, minute, now):
-    """Text dates carry no year when it is the current one: take the year that puts the date
-    nearest to ``now`` (the club never lists anything more than about a year away)."""
-    try:
-        if year:
-            return datetime.datetime(int(year), month, day, hour, minute, tzinfo=datetime.timezone.utc).timestamp()
-        today = datetime.datetime.fromtimestamp(now, datetime.timezone.utc).year
-        candidates = []
-        for y in (today - 1, today, today + 1):
-            try: candidates.append(datetime.datetime(y, month, day, hour, minute, tzinfo=datetime.timezone.utc).timestamp())
-            except ValueError: pass
-        return min(candidates, key=lambda ts: abs(ts - now)) if candidates else None
-    except ValueError:
-        return None
-
-
-def text_dates(text, now):
-    out = []
-    for m in DATE_RE.finditer(text or ""):
-        hour = int(m.group(4)) if m.group(4) else 0
-        minute = int(m.group(5)) if m.group(5) else 0
-        ts = infer_date(MONTHS[m.group(1)[:3].lower()], int(m.group(2)), m.group(3), hour, minute, now)
-        if ts is not None: out.append(ts)
-    return out
-
-
 def _sections(lines, pattern):
     """Lines under the first heading matching ``pattern``, up to the next heading of the same or a
     higher level. None when no heading matches."""
@@ -234,174 +202,371 @@ def _sections(lines, pattern):
     return None
 
 
-def _event_kind(text):
-    text = (text or "").strip()
-    if len(text) > 48: return ""
-    for kind, pattern in EVENTS:
-        if pattern.match(text): return kind
+# ---------------------------------------------------------------------------------------------
+# A small, forgiving DOM. Decky's frozen Python ships ``html`` and ``html.entities`` but not
+# ``html.parser`` (tests/decky_frozen_stdlib.txt in the plugin forks), so the tree is built from the
+# same tag regex as html_lines: elements with their attributes and children, text as strings.
+# Unclosed elements are closed by their parent's end tag; stray end tags are ignored.
+# ---------------------------------------------------------------------------------------------
+_VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+_RAW = {"script", "style", "noscript", "template", "svg", "head", "textarea", "title"}
+# An open element of the same family is closed by the next one (<li> after <li>, <td> after <th>).
+_AUTO_CLOSE = {"li": {"li"}, "tr": {"tr", "td", "th"}, "td": {"td", "th"}, "th": {"td", "th"}, "p": {"p"},
+               "dt": {"dt", "dd"}, "dd": {"dt", "dd"}, "option": {"option"}}
+_SCOPE = {"ul", "ol", "table", "tbody", "thead", "tfoot", "dl", "select", "section", "div"}
+_MAX_NODES = 60000
+
+
+class Node:
+    __slots__ = ("tag", "attrs", "children", "parent")
+
+    def __init__(self, tag, attrs=None, parent=None):
+        self.tag, self.attrs, self.children, self.parent = tag, attrs or {}, [], parent
+
+    @property
+    def classes(self):
+        return set((self.attrs.get("class") or "").split())
+
+    def has(self, *names):
+        classes = self.classes
+        return all(name in classes for name in names)
+
+    def get(self, name, default=""):
+        return self.attrs.get(name, default)
+
+    def elements(self):
+        """Every descendant element, document order."""
+        stack = [child for child in reversed(self.children) if isinstance(child, Node)]
+        while stack:
+            node = stack.pop()
+            yield node
+            stack.extend(child for child in reversed(node.children) if isinstance(child, Node))
+
+    def find_all(self, tag=None, cls=(), **attrs):
+        cls = (cls,) if isinstance(cls, str) else tuple(cls)
+        for node in self.elements():
+            if tag and node.tag != tag: continue
+            if cls and not node.has(*cls): continue
+            if any(node.attrs.get(key.replace("_", "-")) != value for key, value in attrs.items()): continue
+            yield node
+
+    def find(self, tag=None, cls=(), **attrs):
+        return next(self.find_all(tag, cls, **attrs), None)
+
+    def child_elements(self):
+        return [child for child in self.children if isinstance(child, Node)]
+
+    @property
+    def text(self):
+        parts, stack = [], list(reversed(self.children))
+        while stack:
+            item = stack.pop()
+            if isinstance(item, Node): stack.extend(reversed(item.children))
+            else: parts.append(item)
+        return _clean("".join(parts))
+
+
+def parse_dom(document):
+    root = Node("#root")
+    current, count, raw = root, 0, None
+    position = 0
+    for match in _TAG.finditer(document or ""):
+        between = document[position:match.start()]
+        position = match.end()
+        whole = match.group(0)
+        if whole.startswith("<!--"):
+            if raw is None and between: current.children.append(between)
+            continue
+        closing, name = match.group(1) == "/", match.group(2).lower()
+        if raw is not None:
+            if closing and name == raw: raw = None
+            continue
+        if between: current.children.append(between)
+        if closing:
+            node = current
+            while node is not root and node.tag != name: node = node.parent
+            if node is not root: current = node.parent
+            continue
+        if name in _RAW:
+            if not whole.endswith("/>"): raw = name
+            continue
+        count += 1
+        if count > _MAX_NODES: break
+        closes = _AUTO_CLOSE.get(name)
+        if closes:
+            node = current
+            while node is not root and node.tag not in _SCOPE:
+                if node.tag in closes:
+                    current = node.parent
+                    break
+                node = node.parent
+        element = Node(name, _attrs(match.group(3)), current)
+        current.children.append(element)
+        if name not in _VOID and not whole.endswith("/>"): current = element
+    if raw is None and position < len(document or ""): current.children.append(document[position:])
+    return root
+
+
+# The club's event classes (and the ids of its nominations sections) -> Core's kinds and Assemble's event codes.
+EVENT_CLASSES = {"w": "week", "m": "month", "r": "romhack", "s": "season", "x": "special"}
+EVENT_IDS = {"gotw": "week", "gotm": "month", "rhotm": "romhack", "gots": "season"}
+EVENT_CODES = {"week": "gotw", "month": "gotm", "romhack": "rhotm", "season": "gots", "special": "special"}
+RA_GAME_RE = re.compile(r"^https://retroachievements\.org/game/(\d{1,9})/?$")
+COVER_RE = re.compile(r"^/img/(\d{1,9})\.(?:png|jpg|jpeg|webp)$")
+
+
+def _event_of(node):
+    for cls in node.classes:
+        if cls in EVENT_CLASSES: return EVENT_CLASSES[cls]
     return ""
 
 
+def _number(value, kind=int):
+    text = (value or "").replace(",", "").strip()
+    try:
+        return kind(text) if text else None
+    except ValueError:
+        return None
+
+
+def _time_of(node):
+    """Epoch seconds of the first <time datetime> (or data-end) inside ``node``, else None."""
+    if node is None: return None
+    for element in [node, *node.elements()]:
+        for key in ("datetime", "data-end"):
+            if element.attrs.get(key):
+                parsed = parse_time_value(element.attrs[key])
+                if parsed: return parsed
+    return None
+
+
+def _platform(value):
+    """The club's system code ("PS1", "GBA romhack") -> (code, romhack). Unknown codes stay as written."""
+    text = _clean(value)
+    romhack = bool(re.search(r"\bromhack\b", text, re.I))
+    text = re.sub(r"\s*\bromhack\b", "", text, flags=re.I).strip()
+    if not text: return "", romhack
+    known = PLATFORMS.get(text.lower())
+    if known: return known, romhack
+    code, _ = platform_code(text)
+    if code: return code, romhack
+    return (text[:12] if re.fullmatch(r"[A-Za-z0-9 ./+-]{1,24}", text) else ""), romhack
+
+
+def _cover(node):
+    img = node.find("img", "cover") or node.find("img") if node is not None else None
+    if img is None: return "", ""
+    src = img.get("src") or img.get("data-src")
+    url = _absolute(src)
+    path = urllib.parse.urlsplit(url).path if url else ""
+    return (path if COVER_RE.match(path) else ""), url
+
+
+def _section_by_heading(root, pattern):
+    """The block that holds a ``.sec`` heading matching ``pattern`` (the home's "Coming up", "Nominations",
+    "Top players" columns), else None."""
+    for heading in root.find_all("h2"):
+        if not re.search(pattern, heading.text, re.I): continue
+        holder = heading.parent
+        if holder is not None and holder.has("sec") and holder.parent is not None: return holder.parent
+        return holder
+    return None
+
+
 # ---------------------------------------------------------------------------------------------
-# Pure page parsers
+# Pure page parsers, anchored on the club's own markup (captured 2026-11-27, tests/fixtures/club/)
 # ---------------------------------------------------------------------------------------------
-def parse_picks(lines, now):
-    """The current picks: one card per event label line, each with a /games/ link."""
-    section = _sections(lines, r"playing now|now playing|current picks|playing now and next") or lines
-    cards, current = [], None
-    for line in section:
-        kind = _event_kind(line["text"].split(" | ")[0])
-        if kind:
-            current = {"kind": kind, "label": _clean(EVENT_ANYWHERE.search(line["text"]).group(1)), "lines": []}
-            cards.append(current)
-            if not line["links"]: continue
-            # A label and its title link in one block: the block belongs to the card.
-        if current is not None:
-            current["lines"].append(line)
+def parse_room(room, now=None):
+    """One ``a.room.<event>`` card on the home page, or None when it is not a game card."""
+    kind = _event_of(room)
+    slug = _path_slug(room.get("href"), "games")
+    heading = room.find("h3")
+    title = heading.text if heading else ""
+    if not title:
+        img = room.find("img")
+        title = re.sub(r"\s+box art$", "", (img.get("alt") if img else ""), flags=re.I).strip()
+    if not kind or not slug or not title: return None
+    tag = room.find(cls="tag")
+    label = tag.text if tag else ""
+    plat = room.find(cls="plat")
+    plat_text = plat.text if plat else ""
+    system, _, rest = plat_text.partition("·")
+    platform, romhack = _platform(system)
+    hours = re.search(r"(\d+(?:\.\d+)?)\s*hours?", rest or plat_text, re.I)
+    facts = {}
+    holder = room.find(cls="facts")
+    for fact in holder.child_elements() if holder else []:
+        value, name = fact.find("b"), fact.find("span")
+        if value is not None and name is not None: facts[name.text.lower()] = value.text
+    firsts = {}
+    for line in room.find_all(cls="first"):
+        who = line.find("b")
+        key = "first_100" if re.match(r"first to 100", line.text, re.I) else "first_clear" if re.match(r"first clear", line.text, re.I) else ""
+        if key and who is not None:
+            firsts[key] = {"name": who.text[:64], "at": _time_of(line)}
+    ends_at = _time_of(room.find(cls="ends")) or _time_of(room.find(cls="countdown"))
+    cover, image = _cover(room)
+    return {"kind": kind, "event": EVENT_CODES[kind], "label": label[:80] or kind.title(), "title": title[:120],
+            "slug": slug, "platform": platform, "romhack": romhack or kind == "romhack", "url": _absolute(room.get("href")),
+            "image": image, "cover": cover, "ends_at": ends_at, "beaten": _number(facts.get("beaten")),
+            "at100": _number(facts.get("at 100%")), "rating": _number(facts.get("rating"), float),
+            "hours": float(hours.group(1)) if hours else None,
+            "first_clear": firsts.get("first_clear"), "first_100": firsts.get("first_100")}
+
+
+def parse_home(document, now):
+    root = parse_dom(document)
     picks, seen = [], set()
-    for card in cards:
-        game = None
-        for line in card["lines"]:
-            for link in line["links"]:
-                if _path_slug(link["href"], "games") and link["text"] and not _event_kind(link["text"]) \
-                        and not re.search(r"\b(beaten|left|ends?)\b|\d+\s*h\b", link["text"], re.I):
-                    game = link
-                    break
-            if game: break
-        if not game: continue
-        slug = _path_slug(game["href"], "games")
-        joined = " ".join(line["text"] for line in card["lines"])
-        title = re.sub(r"\s+box art$", "", game["text"], flags=re.I).strip()
-        platform, romhack = "", False
-        explicit = re.search(r"\(([^()]{1,24})\)", joined[joined.find(title) + len(title):] if title in joined else joined)
-        if explicit: platform, romhack = platform_code(explicit.group(1))
-        if not platform:
-            for line in card["lines"]:
-                if line["text"] != title and len(line["text"]) <= 24:
-                    platform, romhack = platform_code(line["text"])
-                    if platform: break
-        if not platform:
-            platform, _ = platform_code(slug.rsplit("-", 1)[-1])
-        romhack = romhack or card["kind"] == "romhack"
-        ends = None
-        machine = [ts for line in card["lines"] for ts in line["times"]]
-        if machine: ends = max(machine)
-        if ends is None:
-            ending = [line["text"] for line in card["lines"] if re.search(r"\bend|until|closes|left\b", line["text"], re.I)]
-            dates = [ts for text in (ending or [joined]) for ts in text_dates(text, now)]
-            if dates: ends = max(dates)
-        if ends is None:
-            left = LEFT_RE.search(joined)
-            if left and (left.group(1) or left.group(2)):
-                ends = round((now + int(left.group(1) or 0) * 86400 + int(left.group(2) or 0) * 3600) / 3600) * 3600
-        beaten = re.search(r"(\d[\d,]*)\s*beaten", joined, re.I)
-        image = ""
-        for line in card["lines"]:
-            for img in line["imgs"]:
-                if "box art" in img["alt"].lower() or "/img/" in img["src"]:
-                    image = _absolute(img["src"])
-                    break
-            if image: break
-        key = (card["kind"], slug)
-        if key in seen or any(p["kind"] == card["kind"] and p["kind"] != "special" for p in picks): continue
+    for room in root.find_all("a", "room"):
+        pick = parse_room(room, now)
+        if not pick: continue
+        key = pick["kind"] if pick["kind"] != "special" else (pick["kind"], pick["slug"])
+        if key in seen: continue
         seen.add(key)
-        picks.append({"kind": card["kind"], "label": card["label"], "title": title, "slug": slug,
-                      "platform": platform, "romhack": romhack, "url": _absolute(game["href"]), "image": image,
-                      "ends_at": ends, "beaten": int(beaten.group(1).replace(",", "")) if beaten else None})
-    return picks
+        picks.append(pick)
+
+    schedule = []
+    strip = root.find("ol", "cal-strip")
+    for item in strip.find_all("li") if strip is not None else []:
+        when = next((child for child in item.child_elements() if child.tag == "time"), None) or item.find("time")
+        at = _time_of(when)
+        head = item.find("strong")
+        title = head.text if head else ""
+        if at is None or not title: continue
+        tags = [{"kind": _event_of(tag), "label": tag.text[:80]} for tag in item.find_all(cls="tag") if tag.text]
+        until = None
+        for small in item.find_all("small"):
+            if small.parent is item: until = _time_of(small) or until
+        named = [tag["label"] for tag in tags if tag["label"].lower() not in title.lower()]
+        text = title + (": " + ", ".join(named) if named else "")
+        schedule.append({"at": at, "text": text[:200], "title": title[:120], "tags": tags[:6], "until": until})
+        if len(schedule) >= 10: break
+
+    nominations = []
+    block = _section_by_heading(root, r"^nominations$")
+    noms = block.find(cls="noms") if block is not None else None
+    for item in noms.find_all("li") if noms is not None else []:
+        tag, num = item.find(cls="tag"), item.find(cls="num")
+        count = _number(num.text) if num is not None else None
+        if tag is None or count is None: continue
+        nominations.append({"kind": _event_of(tag), "label": tag.text[:120], "count": count})
+
+    top = []
+    block = _section_by_heading(root, r"^top players$")
+    board = block.find("ol", "list") if block is not None else None
+    for index, item in enumerate(board.find_all("li") if board is not None else []):
+        link = item.find("a", "pname") or item.find("a")
+        slug = _path_slug(link.get("href"), "members") if link is not None else ""
+        rank, num = item.find(cls="rn"), item.find(cls="num")
+        beaten = re.search(r"\d[\d,]*", num.text) if num is not None else None
+        if not slug or not link.text or not beaten: continue
+        top.append({"rank": _number(rank.text) if rank is not None else index + 1, "name": link.text[:64], "slug": slug,
+                    "beaten": int(beaten.group(0).replace(",", ""))})
+
+    stats = {}
+    totals = root.find("ul", "totals")
+    for item in totals.find_all("li") if totals is not None else []:
+        value, name = item.find("b"), item.find("span")
+        if value is None or name is None: continue
+        label = name.text.lower()
+        key = "players" if label == "players" else "games_beaten" if label.startswith("club games beaten") \
+            else "hours" if label.startswith("hours played") else "picks" if label.startswith("picks") else ""
+        number = _number(value.text)
+        if key and number is not None: stats[key] = number
+
+    return {"picks": picks, "top": top[:10], "schedule": schedule, "nomination_counts": nominations, "stats": stats,
+            "structure": {"playing_now": bool(picks), "top_players": bool(top), "schedule": bool(schedule),
+                          "nominations": bool(nominations), "stats": bool(stats)}}
 
 
-def parse_member_rows(lines):
-    """Ranked rows: one /members/ link per row, the first number after the name is games beaten."""
+def _ra_game(href):
+    match = RA_GAME_RE.match((href or "").strip())
+    return int(match.group(1)) if match else None
+
+
+def parse_nomination_row(row):
+    link = next((a for a in row.find_all("a") if _ra_game(a.get("href"))), None)
+    title = link.text if link is not None else (row.get("data-s-name") or "")
+    if not title: return None
+    system = row.get("data-sys")
+    label = row.find(cls="muted")
+    platform, romhack = _platform(system or (label.text if label is not None else ""))
+    if label is not None and re.search(r"\bromhack\b", label.text, re.I): romhack = True
+    nominator = row.find("a", "pname")
+    cover, _ = _cover(row)
+    return {"title": title[:120], "platform": platform, "romhack": romhack,
+            "nominator": nominator.text[:64] if nominator is not None else "",
+            "nominator_slug": _path_slug(nominator.get("href"), "members") if nominator is not None else "",
+            "hours": _number(row.get("data-s-hours"), float), "order": _number(row.get("data-s-order")),
+            "ra_game_id": _ra_game(link.get("href")) if link is not None else None, "cover": cover}
+
+
+def parse_nominations(document, now):
+    """One group per ``section.run`` (gotm, rhotm, gots, ...): event, period heading, vote opening, count, rows."""
+    root = parse_dom(document)
+    groups = []
+    for section in root.find_all("section", "run"):
+        kind = EVENT_IDS.get(section.get("id")) or _event_of(section)
+        if not kind: continue
+        tag, heading = section.find(cls="tag"), section.find("h2")
+        event_label, period = (tag.text if tag else ""), (heading.text if heading else "")
+        opens_at = closes_at = None
+        for live in section.find_all(cls="live"):
+            if re.search(r"\bopens?\b", live.text, re.I): opens_at = opens_at or _time_of(live)
+            elif re.search(r"\bclos", live.text, re.I): closes_at = closes_at or _time_of(live)
+        count = None
+        for stat in section.find_all(cls="stat"):
+            value, name = stat.find("b"), stat.find("span")
+            if value is not None and name is not None and "nominated" in name.text.lower():
+                count = _number(value.text)
+                break
+        table = section.find("table", id="nomt-" + section.get("id")) or section.find("table")
+        items = []
+        body = table.find("tbody") if table is not None else None
+        for row in (body or table).find_all("tr") if table is not None else []:
+            if row.find("th") is not None and row.find("td") is None: continue
+            item = parse_nomination_row(row)
+            if item and len(items) < 60: items.append(item)
+        if not event_label and not period and not items: continue
+        label = " · ".join(part for part in (event_label, period) if part)
+        groups.append({"kind": kind, "event": EVENT_CODES[kind], "label": label[:120], "period": period[:60],
+                       "opens_at": opens_at, "closes_at": closes_at,
+                       "count": count if count is not None else (len(items) or None), "items": items})
+    return groups
+
+
+LEADERBOARD_STATS = ("hardcore", "completed", "mastered", "firsts", "firsthundred", "hours")
+
+
+def parse_leaderboard(document):
+    """The first board (All time · All events): ranked rows with the stats the site keeps in data-s-*."""
+    root = parse_dom(document)
+    table = root.find("table", id="board-all-all") or root.find("table", "lb")
     rows = []
-    for line in lines:
-        members = [link for link in line["links"] if _path_slug(link["href"], "members") and link["text"]]
-        if len(members) != 1: continue
-        link = members[0]
-        text = line["text"]
-        at = text.find(link["text"])
-        before, after = (text[:at], text[at + len(link["text"]):]) if at >= 0 else ("", text)
-        count = re.search(r"(\d[\d,]*)\s*beaten", after, re.I) or re.search(r"(?<![\w.#])(\d[\d,]*)(?![\w.%])", after)
-        if not count: continue
-        rank = re.search(r"#?\s*(\d+)\D*$", before)
-        rows.append({"rank": int(rank.group(1)) if rank else len(rows) + 1, "name": link["text"],
-                     "slug": _path_slug(link["href"], "members"), "beaten": int(count.group(1).replace(",", ""))})
+    for row in table.find_all("tr") if table is not None else []:
+        link = row.find("a", "pname")
+        slug = _path_slug(link.get("href"), "members") if link is not None else ""
+        beaten = _number(row.get("data-s-total"))
+        if not slug or not link.text or beaten is None: continue
+        rank = row.find("td", "rank")
+        entry = {"rank": _number(rank.text) if rank is not None else None, "name": link.text[:64], "slug": slug, "beaten": beaten}
+        if entry["rank"] is None: entry["rank"] = len(rows) + 1
+        for key in LEADERBOARD_STATS:
+            value = _number(row.get("data-s-" + key), float)
+            entry[key] = int(value) if value is not None and value.is_integer() else value
+        by_event = {}
+        counts = row.find(cls="lb-counts")
+        for part in counts.child_elements() if counts is not None else []:
+            kind, value = _event_of(part), part.find("b")
+            if kind and value is not None and _number(value.text) is not None: by_event[kind] = _number(value.text)
+        entry["by_event"] = by_event
+        rows.append(entry)
     seen, unique = set(), []
     for row in rows:
         if row["slug"] in seen: continue
         seen.add(row["slug"])
         unique.append(row)
     return unique
-
-
-def parse_leaderboard(document):
-    lines = html_lines(document)
-    section = _sections(lines, r"all time\W+all events") or _sections(lines, r"all time") or lines
-    return parse_member_rows(section)
-
-
-def parse_schedule(lines, now):
-    section = _sections(lines, r"coming up|schedule") or []
-    items = []
-    for line in section:
-        dates = text_dates(line["text"], now)
-        start = min(line["times"]) if line["times"] else (dates[0] if dates else None)
-        if start is None: continue
-        text = DATE_RE.sub("", line["text"], count=1).strip(" :|-·")
-        if text: items.append({"at": start, "text": text[:200]})
-    return items[:10]
-
-
-def parse_home(document, now):
-    lines = html_lines(document)
-    top_section = _sections(lines, r"top players|leaderboard")
-    nominations = []
-    for line in _sections(lines, r"^nominations") or []:
-        match = re.match(r"^(.*?)\s*\|?\s*(\d+)(?:\s+nominated)?$", line["text"])
-        if match and EVENT_ANYWHERE.search(match.group(1)):
-            nominations.append({"label": match.group(1).strip(" |"), "count": int(match.group(2))})
-    stats = {}
-    joined = " ".join(line["text"] for line in lines[:120])
-    for key, pattern in (("players", r"(\d[\d,]*)\s*players"), ("games_beaten", r"(\d[\d,]*)\s*club games beaten"),
-                         ("hours", r"(\d[\d,]*)\s*hours played"), ("picks", r"(\d[\d,]*)\s*picks\b")):
-        found = re.search(pattern, joined, re.I)
-        if found: stats[key] = int(found.group(1).replace(",", ""))
-    return {"picks": parse_picks(lines, now), "top": parse_member_rows(top_section or [])[:10],
-            "schedule": parse_schedule(lines, now), "nomination_counts": nominations, "stats": stats,
-            "structure": {"playing_now": _sections(lines, r"playing now|now playing") is not None,
-                          "top_players": top_section is not None}}
-
-
-def parse_nominations(document, now):
-    lines = html_lines(document)
-    categories, current = [], None
-    for line in lines:
-        if line["level"] and EVENT_ANYWHERE.search(line["text"]) and not line["links"]:
-            label = line["text"]
-            kind = _event_kind(EVENT_ANYWHERE.search(label).group(1))
-            current = {"kind": kind, "label": label[:120], "opens_at": None, "count": None, "items": []}
-            categories.append(current)
-            continue
-        if current is None: continue
-        if line["level"] and line["level"] <= 2: current = None; continue
-        text = line["text"]
-        if current["opens_at"] is None and re.search(r"vote opens|opens", text, re.I):
-            dates = line["times"] or text_dates(text, now)
-            if dates: current["opens_at"] = min(dates)
-        counted = re.search(r"(\d+)\s+nominated", text, re.I)
-        if counted and current["count"] is None: current["count"] = int(counted.group(1))
-        game = next((l for l in line["links"] if l["text"] and ("retroachievements.org/game/" in l["href"] or _path_slug(l["href"], "games"))), None)
-        if not game: continue
-        nominator = next((l["text"] for l in line["links"] if _path_slug(l["href"], "members") and l["text"]), "")
-        rest = text.replace(game["text"], " ", 1)
-        platform, romhack = platform_code(rest)
-        hours = re.search(r"(\d+(?:\.\d+)?)\s*h(?:ours?)?\b", rest, re.I)
-        if len(current["items"]) < 60:
-            current["items"].append({"title": game["text"][:120], "platform": platform, "romhack": romhack,
-                                     "nominator": nominator[:64], "hours": float(hours.group(1)) if hours else None})
-    for category in categories:
-        if category["count"] is None and category["items"]: category["count"] = len(category["items"])
-    return [c for c in categories if c["items"] or c["count"]]
 
 
 def parse_member(document):
@@ -530,10 +695,13 @@ class PrgcScraperProvider(ClubProvider):
             leaderboard = []
         structure["leaderboards.rows"] = bool(leaderboard)
         if not nominations and home["nomination_counts"]:
-            nominations = [{"kind": _event_kind(EVENT_ANYWHERE.search(n["label"]).group(1)), "label": n["label"],
-                            "opens_at": None, "count": n["count"], "items": []} for n in home["nomination_counts"]]
+            # The home page's counts stand in for the nominations page (no rows, no vote date).
+            nominations = [{"kind": n["kind"], "event": EVENT_CODES.get(n["kind"], ""), "label": n["label"], "period": "",
+                            "opens_at": None, "closes_at": None, "count": n["count"], "items": []}
+                           for n in home["nomination_counts"]]
         return {"picks": home["picks"], "top": (leaderboard or home["top"])[:5],
-                "leaderboard": [{"rank": r["rank"], "name": r["name"], "slug": r["slug"], "beaten": r["beaten"]} for r in leaderboard[:500]],
+                "leaderboard": [{"rank": r["rank"], "name": r["name"], "slug": r["slug"], "beaten": r["beaten"],
+                                 "hours": r.get("hours")} for r in leaderboard[:500]],
                 "schedule": home["schedule"], "nominations": nominations, "stats": home["stats"], "structure": structure}
 
     def member(self, get, now, display_name, leaderboard):
@@ -747,6 +915,22 @@ class ClubFeed:
         except (TypeError, ValueError):
             return 0
 
+    # A section whose structure flag is False came back empty because its markup was not recognised (or its
+    # page was skipped), not because the club emptied it: keep the last good data for it.
+    CARRY = (("leaderboard", "leaderboards.rows"), ("top", "home.top_players"), ("schedule", "home.schedule"),
+             ("nominations", "nominations.categories"), ("stats", "home.stats"))
+
+    @classmethod
+    def _carry_over(cls, previous, snapshot, structure):
+        carried = []
+        for key, flag in cls.CARRY:
+            if structure.get(flag) is not False or snapshot.get(key): continue
+            old = (previous or {}).get(key)
+            if old:
+                snapshot[key] = old
+                carried.append(key)
+        return carried
+
     # refresh -------------------------------------------------------------------------------
     def _refresh(self, state, now, display_name):
         state["attempt_at"] = now
@@ -765,6 +949,7 @@ class ClubFeed:
             structure = snapshot.pop("structure", {})
             if display_name: structure["member.found"] = member is not None
             self._check_structure(state, structure)
+            snapshot["carried"] = self._carry_over(state.get("snapshot"), snapshot, structure)
             snapshot.update(schema=SCHEMA, source=self.provider.name, fetched_at=now)
             state.update(snapshot=snapshot, fetched_at=now, failures=0, error="", next_allowed=now + REFRESH,
                          member={"for": _fold(display_name), "data": member} if display_name else None)

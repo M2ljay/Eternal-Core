@@ -6,10 +6,11 @@ import { formatAgo, formatClubDate, timeLeft, updatedAgo } from "./clubTime";
 import { matchPick, type LibraryEntry, type Match } from "./clubMatch";
 import { openGamePage, playApp, readLibrary, steamArtFor } from "./clubLibrary";
 import { clubState, loadClub, subscribeClub, type ClubMember, type ClubNomination, type ClubPick, type ClubRow } from "./clubStore";
-import { CLUB_COMPLETION_COMMAND } from "./clubAssemble";
+import { CLUB_COMPLETION_COMMAND, assembleBridge, assembleEventFor, openClubCompletion, subscribeAssemble } from "./clubAssemble";
 
 // Eternal Core: the Club tab on Core's Home: Play Retro Games Club's current picks (matched to the Steam library,
-// A plays, X opens the game page), the user's standing beside the top 5, nominations, and how to log a win.
+// A plays, X opens the game page), the user's standing beside the top 5, nominations, and how to log a win: with
+// Eternal-Assemble loaded, a Log completion button per current pick opens its Discord thread with /completed ready.
 // Core palette: black with the Starfield, gunmetal cards (10 px radius), crimson square focus, steel text.
 
 const { Focusable, DialogButton, Navigation } = DFL as any;
@@ -52,6 +53,9 @@ const css = `
 .ph-club-list .muted{color:${CORE.hint}}
 .ph-club-note{font-size:14px;color:${CORE.steel};line-height:1.5;margin:6px 0 0}
 .ph-club-command{display:inline-block;margin:6px 0;padding:6px 10px;border-radius:10px;background:${CORE.black};color:${CORE.white};font-family:ui-monospace,Consolas,monospace;font-size:18px}
+.ph-club-log{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.ph-club-log-status{font-size:14px;color:${CORE.steel};margin:4px 0 0}
+.ph-club-log-status.error{color:${CORE.warning}}
 .ph-club-empty{padding:40px 0;color:${CORE.steel};font-size:16px}
 @media(max-width:900px){.ph-club-row{grid-template-columns:1fr}.ph-club{padding:18px}}
 @media(prefers-reduced-motion:reduce){.ph-club *{transition:none!important}}
@@ -130,6 +134,46 @@ function Nominations({ groups, copy, locale }: { groups: ClubNomination[]; copy:
   </div>)}</>;
 }
 
+function LogCompletion({ picks, copy, now }: { picks: ClubPick[]; copy: ClubCopy; now: number }) {
+  const [, setReady] = React.useState(0);
+  const [busy, setBusy] = React.useState<string | null>(null);
+  const [status, setStatus] = React.useState<{ error: boolean; text: string } | null>(null);
+  // Assemble fires its ready event when it (re)loads; the bridge is read again on every render.
+  React.useEffect(() => subscribeAssemble(() => setReady(tick => tick + 1)), []);
+  const bridge = assembleBridge();
+  const open = picks.filter(pick => assembleEventFor(pick) && timeLeft(pick.ends_at, now).state !== "ended");
+  if (!bridge || open.length === 0) return <Focusable className="ph-club-panel ph-club-focus" focusable={true} role="group" aria-label={copy.logTitle}>
+    <h3>{copy.logTitle}</h3>
+    <p className="ph-club-note">{copy.logDiscord}</p>
+    <code className="ph-club-command">{CLUB_COMPLETION_COMMAND}</code>
+    <p className="ph-club-note">{copy.logOptions}</p>
+    <p className="ph-club-note">{copy.logForum}</p>
+    <p className="ph-club-note">{copy.logDeadline}</p>
+  </Focusable>;
+  const log = async (pick: ClubPick) => {
+    const event = assembleEventFor(pick);
+    if (!event || busy) return;
+    const key = `${pick.kind}-${pick.slug}`;
+    setBusy(key);
+    setStatus({ error: false, text: copy.logOpening });
+    // Assemble only opens the thread with /completed ready; the user chooses the options and sends it.
+    const result = await openClubCompletion({ event, title: pick.title });
+    setBusy(null);
+    setStatus(result.success ? { error: false, text: copy.logOpened } : { error: true, text: result.message || copy.logFailed });
+  };
+  return <Focusable className="ph-club-panel" flow-children="column" role="group" aria-label={copy.logTitle}>
+    <h3>{copy.logTitle}</h3>
+    <p className="ph-club-note">{copy.logAssemble}</p>
+    <div className="ph-club-log">
+      {open.map(pick => <DialogButton key={`${pick.kind}-${pick.slug}`} disabled={Boolean(busy)}
+        style={{ width: "100%", minWidth: 0, padding: "8px 14px", textAlign: "left" }}
+        onClick={() => void log(pick)}>{`${copy.logButton} · ${pick.label}: ${pick.title}`}</DialogButton>)}
+    </div>
+    {status && <p className={`ph-club-log-status${status.error ? " error" : ""}`} role="status">{status.text}</p>}
+    <p className="ph-club-note">{copy.logDeadline}</p>
+  </Focusable>;
+}
+
 export function ClubTab({ locale, getLocale }: { locale?: string; getLocale?: () => string }) {
   const resolved = locale ?? getLocale?.() ?? browserLocale();
   const copy = clubCopy(resolved);
@@ -182,14 +226,7 @@ export function ClubTab({ locale, getLocale }: { locale?: string; getLocale?: ()
           <h3>{copy.nominations}</h3>
           <Nominations groups={snapshot.nominations} copy={copy} locale={resolved} />
         </Focusable>}
-        <Focusable className="ph-club-panel ph-club-focus" focusable={true} role="group" aria-label={copy.logTitle}>
-          <h3>{copy.logTitle}</h3>
-          <p className="ph-club-note">{copy.logDiscord}</p>
-          <code className="ph-club-command">{CLUB_COMPLETION_COMMAND}</code>
-          <p className="ph-club-note">{copy.logOptions}</p>
-          <p className="ph-club-note">{copy.logForum}</p>
-          <p className="ph-club-note">{copy.logDeadline}</p>
-        </Focusable>
+        <LogCompletion picks={snapshot.picks} copy={copy} now={now} />
       </div>
     </>}
   </Focusable>;

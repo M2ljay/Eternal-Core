@@ -111,6 +111,8 @@ stars; Steam's own startup movie is skipped): [MARK-III-GUIDE.md](MARK-III-GUIDE
 3.3.5 (emulator health and the shared emulator hotkeys, exiting games through Steam, closing store launchers, the back
 paddles as A and B, Vibepollo and per-device game settings, Jarvis tap to talk): [CONSOLE-GUARDS.md](CONSOLE-GUARDS.md),
 [EMULATOR-UPDATES.md](EMULATOR-UPDATES.md), [CORE-STREAM-MODE.md](CORE-STREAM-MODE.md), [JARVIS.md](JARVIS.md).
+3.3.6 (the Club tab reads the club's real pages; Log completion through Eternal-Assemble):
+[CORE-UI.md](CORE-UI.md#the-club-tab-play-retro-games-club).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

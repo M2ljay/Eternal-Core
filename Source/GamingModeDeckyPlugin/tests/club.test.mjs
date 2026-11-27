@@ -165,7 +165,81 @@ test("the tab follows the Core palette: crimson square focus, 10 px cards, no si
   assert.match(source, /<CoreStars \/>/);
   assert.match(source, /export const CLUB_SITE_ART_ALLOWED = false;/);
   assert.doesNotMatch(source, /#[0-9a-fA-F]{6}/, "colours come from corePalette");
-  const assemble = readFileSync(new URL("../src/club/clubAssemble.ts", import.meta.url), "utf8");
-  assert.match(assemble, /TODO\(club-assemble\)/);
-  assert.match(assemble, /sent: false, reason: "not_implemented"/);
+});
+
+const assemble = load("clubAssemble.ts");
+
+function bridgeHost(openClubCompletion, version = 1) {
+  const listeners = new Map();
+  return {
+    __eternalAssemble: openClubCompletion === undefined ? undefined : { version, openClubCompletion },
+    addEventListener: (name, fn) => listeners.set(name, fn),
+    removeEventListener: (name, fn) => { if (listeners.get(name) === fn) listeners.delete(name); },
+    fire: name => listeners.get(name)?.(),
+    listeners,
+  };
+}
+
+test("Assemble bridge: found only when it is published with version 1 or later and the function", () => {
+  assert.equal(assemble.assembleBridge(undefined), null);
+  assert.equal(assemble.assembleBridge(bridgeHost(undefined)), null);
+  assert.equal(assemble.assembleBridge(bridgeHost(async () => ({}), 0)), null);
+  assert.equal(assemble.assembleBridge({ __eternalAssemble: { version: 1 } }), null);
+  assert.ok(assemble.assembleBridge(bridgeHost(async () => ({}))));
+  assert.ok(assemble.assembleBridge(bridgeHost(async () => ({}), 2)));
+  const throwing = { get __eternalAssemble() { throw new Error("gone"); } };
+  assert.equal(assemble.assembleBridge(throwing), null);
+});
+
+test("Assemble bridge: event codes come from the feed or the pick's kind", () => {
+  assert.equal(assemble.assembleEventFor({ kind: "week" }), "gotw");
+  assert.equal(assemble.assembleEventFor({ kind: "month" }), "gotm");
+  assert.equal(assemble.assembleEventFor({ kind: "romhack" }), "rhotm");
+  assert.equal(assemble.assembleEventFor({ kind: "season" }), "gots");
+  assert.equal(assemble.assembleEventFor({ kind: "special", event: "special" }), "special");
+  assert.equal(assemble.assembleEventFor({ kind: "week", event: "bogus" }), "gotw");
+  assert.equal(assemble.assembleEventFor({ kind: "other" }), null);
+  assert.equal(assemble.assembleEventFor(null), null);
+});
+
+test("Log completion asks Assemble to open the thread and passes its answer through", async () => {
+  const calls = [];
+  const ok = bridgeHost(async request => { calls.push(request); return { success: true, opened: "thread" }; });
+  assert.deepEqual({ ...await assemble.openClubCompletion({ event: "gotw", title: "Mega Man" }, ok) }, { success: true, opened: "thread" });
+  assert.deepEqual(calls.map(call => ({ ...call })), [{ event: "gotw", title: "Mega Man" }], "no RA username unless given");
+  const channel = bridgeHost(async () => ({ success: true, opened: "channel" }));
+  assert.equal((await assemble.openClubCompletion({ event: "special", title: "A Christmas Hack" }, channel)).opened, "channel");
+  const refused = bridgeHost(async () => ({ success: false, reason: "not_signed_in", message: "Sign in to Discord in Assemble first." }));
+  assert.deepEqual({ ...await assemble.openClubCompletion({ event: "gotm", title: "Donkey Kong Country" }, refused) },
+    { success: false, reason: "not_signed_in", message: "Sign in to Discord in Assemble first." });
+  const throws = bridgeHost(async () => { throw new Error("Discord view closed"); });
+  assert.deepEqual({ ...await assemble.openClubCompletion({ event: "gots", title: "Paper Mario" }, throws) },
+    { success: false, reason: "bridge_error", message: "Discord view closed" });
+  const odd = bridgeHost(async () => "yes");
+  assert.equal((await assemble.openClubCompletion({ event: "gotw", title: "Mega Man" }, odd)).reason, "bad_reply");
+  assert.equal((await assemble.openClubCompletion({ event: "gotw", title: "Mega Man" }, bridgeHost(undefined))).reason, "assemble_unavailable");
+  assert.equal((await assemble.openClubCompletion({ event: "nope", title: "Mega Man" }, ok)).reason, "invalid_request");
+  assert.equal(calls.length, 1, "an invalid request never reaches Assemble");
+});
+
+test("Assemble's ready event is heard and the listener can be removed", () => {
+  const target = bridgeHost(async () => ({ success: true, opened: "thread" }));
+  let heard = 0;
+  const stop = assemble.subscribeAssemble(() => heard++, target);
+  target.fire("eternal_assemble_ready");
+  assert.equal(heard, 1);
+  stop();
+  assert.equal(target.listeners.size, 0);
+  assert.equal(typeof assemble.subscribeAssemble(() => {}, undefined), "function");
+});
+
+test("the Club tab offers Log completion only with the bridge and sends nothing itself", () => {
+  const source = readFileSync(new URL("../src/club/ClubTab.tsx", import.meta.url), "utf8");
+  assert.match(source, /if \(!bridge \|\| open\.length === 0\) return/, "manual steps without Assemble");
+  assert.match(source, /copy\.logDiscord/);
+  assert.match(source, /openClubCompletion\(\{ event, title: pick\.title \}\)/);
+  assert.match(source, /result\.message \|\| copy\.logFailed/, "Assemble's own message on failure");
+  assert.match(source, /subscribeAssemble\(/);
+  const bridge = readFileSync(new URL("../src/club/clubAssemble.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(bridge, /sendMessage|\.send\(|fetch\(|discord\.com\/api/i, "Core never sends to Discord");
 });

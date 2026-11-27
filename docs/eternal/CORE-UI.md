@@ -386,6 +386,53 @@ function unregisters it. The Club (`src/club/`, merged from `core-club`) registe
 its `clubHomeTab` (shown once the Club is on and has data), and its line ("Two days left on this week's pick, sir.")
 joins the Jarvis brief through `clubBriefLine()`. Its settings sit in Quick Access > Core next to News and On this day.
 
+### The Club tab (Play Retro Games Club)
+
+The backend (`quick_settings/club_feed.py`, `ClubFeed`) reads three public pages of playretrogamesclub.com: `/`,
+`/nominations/` and `/leaderboards/` (plus one member page for "Your standing"). Politeness is unchanged: robots.txt
+first and obeyed (Crawl-delay included), a full refresh at most every 6 hours and on demand at most once per
+10 minutes, doubling backoff after failures, Retry-After honoured, one page at a time with a pause, a bounded body,
+User-Agent `Core/<version> (+contact: club member)`, no cookies or sign-in, cached to disk.
+
+**Parsing (3.3.6).** The first parser was written without the real pages and matched nothing on the PC
+(`nominations.categories not found`). It now reads the site's own markup, captured on 2026-11-27 and kept verbatim
+(trimmed) in `tests/fixtures/club/` with a README describing it. Decky's frozen Windows Python has no `html.parser`,
+so a small regex-built DOM (`parse_dom`) stands in for it.
+
+| Page | Read from | Snapshot field |
+| ---- | --------- | -------------- |
+| Home | four `a.room.<w\|m\|r\|s>` cards (and `x` for a special): `.tag`, `h3`, `.plat` ("NES · about 2.8 hours"), `.facts` (beaten, at 100%, rating), `.first` lines, `.ends <time datetime>` | `picks` |
+| Home | `ol.cal-strip` items: `<time datetime>`, `strong`, event `.tag`s, the closing/until `<time>` | `schedule` |
+| Home | "Nominations" `.noms li` (`.tag` + `.num`); "Top players" `ol.list` (`.rn`, `a.pname`, `.num`); `ul.totals` | `nominations` fallback, `top` fallback, `stats` |
+| Nominations | each `section.run.<event>#gotm\|rhotm\|gots`: `.tag`, `h2` period, "Vote opens `<time>`", `.stat b` count, `table#nomt-<id>` rows (`data-sys`, `data-s-order`, `data-s-hours`, `data-s-name`, the `retroachievements.org/game/<id>` link, `/img/<id>.png`, `a.pname`) | `nominations` |
+| Leaderboards | `table#board-all-all` rows: rank, `a.pname`, `data-s-total`/`-hardcore`/`-completed`/`-mastered`/`-firsts`/`-firsthundred`/`-hours`, `.lb-counts` per event | `leaderboard`, `top` |
+
+The output shape is the one the tab already used; 3.3.6 only adds fields: on picks `event` (Assemble's code: `gotw`,
+`gotm`, `rhotm`, `gots`, `special`), `cover`, `at100`, `rating`, `hours`, `first_clear`, `first_100`; on nominations
+`event`, `period`, `closes_at` and per row `order`, `ra_game_id`, `cover`, `nominator_slug`; on leaderboard rows `hours`
+(and the full stats and `by_event` on `top`); on schedule items `title`, `tags`, `until`; and `carried` on the snapshot.
+The club's box art is still not shown (`CLUB_SITE_ART_ALLOWED = false`); `cover` is only its path.
+
+**Structure flags.** Each flag is true only when its section was parsed: `home.playing_now`, `home.picks`,
+`home.top_players`, `home.schedule`, `home.nominations`, `home.stats`, `nominations.categories`, `leaderboards.rows`
+(and `member.found` with a display name). A change logs one warning naming the missing flags. A page without picks never
+replaces the cache; a section whose flag is false keeps its last good data (listed in `carried`), except nominations,
+where the home page's current counts stand in first. A parser exception keeps the whole cache (`parse_error`). The
+member page is still read by visible text: no capture of it exists yet.
+
+**Logging a completion through Assemble.** Eternal-Assemble (the Discord plugin) publishes
+`window.__eternalAssemble = { version: 1, openClubCompletion(req) }` and fires `eternal_assemble_ready` when it
+(re)loads. `req` is `{ event: "gotw" | "gotm" | "rhotm" | "gots" | "special", title, raUsername? }`; the answer is
+`{ success: true, opened: "thread" | "channel" }` or `{ success: false, reason, message }`. With the bridge present, the
+"How to log a win" panel shows one **Log completion** button per current pick (not ended); it asks Assemble to open the
+pick's Discord thread with `/completed` ready, then shows "Opened in Assemble" or Assemble's own message. The user picks
+the options and sends it there: Core never sends anything, and Assemble sends nothing automatically. Core does not pass
+`raUsername` (the club display name is not known to be the RetroAchievements username). Without Assemble, the panel keeps
+the manual steps. Code: `src/club/clubAssemble.ts` (bridge detection, version check, result validation; never throws).
+
+**Needs the TV:** the Log completion buttons' focus order with a controller, Assemble opening the right thread, and the
+failure line when Assemble is closed or signed out.
+
 ## Phase 3 notes: the game page
 
 Left for phase 3: the game page keeps Steam's grey-blue content area in 3.3.3. Painting it black needs Steam's

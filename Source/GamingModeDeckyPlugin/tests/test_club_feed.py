@@ -1,10 +1,11 @@
 """The Club feed (quick_settings/club_feed.py): parsing Play Retro Games Club's public pages, robots.txt,
-the 6-hour / 10-minute fetch limits, backoff, stale fallback and the once-per-change structure warning.
+the 6-hour / 10-minute fetch limits, backoff, stale fallback, the per-section structure flags (each true only
+when that section was parsed), keeping a section's last good data when its markup changes, and the
+once-per-change structure warning.
 
-Fixtures (tests/fixtures/club/) are trimmed rebuilds of the club's pages as read on 2026-11-27: visible
-text, headings, link targets and order, in two markups (home.html: tables and lists; home_cards.html:
-cards with <time datetime>). The raw HTML was not reachable from the research machine, so the parser is
-tested on structure rather than CSS classes. Only public display names; member.html is fictional.
+Fixtures (tests/fixtures/club/, see its README): home.html, nominations.html and leaderboards.html are the
+club's real pages captured on 2026-11-27, trimmed (fewer rows, no scripts or styles) with the markup, classes
+and attributes verbatim. member.html is fictional. Only public display names.
 """
 import datetime
 import json
@@ -41,7 +42,7 @@ class FakeSite:
             "/robots.txt": (200, "User-agent: *\nDisallow: /admin/\n"),
             "/": (200, fixture("home.html")),
             "/nominations/": (200, fixture("nominations.html")),
-            "/leaderboards/": (200, fixture("leaderboards.html")),
+            "/leaderboards/": (200, leaderboard_with_members()),
             "/members/examplemember/": (200, fixture("member.html")),
         }
         self.requests, self.headers, self.down, self.retry_after = [], [], False, None
@@ -62,60 +63,139 @@ class Clock:
     def __call__(self): return self.now
 
 
-class ParserTests(unittest.TestCase):
-    def test_home_picks_with_platform_deadline_and_beaten(self):
-        home = club.parse_home(fixture("home.html"), NOW)
-        picks = [(p["kind"], p["title"], p["platform"], p["romhack"], p["ends_at"], p["beaten"]) for p in home["picks"]]
+FRAME = "<html><body><main>{}</main></body></html>"
+# A synthetic leaderboard row in the club's markup, added to the real page for the member tests.
+MEMBER_ROWS = ('<tr data-name="Example Member examplemember" data-s-total="12" data-s-hours="40" data-s-name="example member">'
+               '<td class="rank">42</td><td class="grow-cell lb-who"><a class="pname" href="/members/examplemember/">Example Member</a></td></tr>'
+               '<tr data-name="jaso.90 jaso-90" data-s-total="25" data-s-name="jaso.90">'
+               '<td class="rank">9</td><td class="grow-cell lb-who"><a class="pname" href="/members/jaso-90/">jaso.90</a></td></tr>')
+
+
+def leaderboard_with_members():
+    page = fixture("leaderboards.html")
+    return page.replace("</tbody>", MEMBER_ROWS + "</tbody>", 1)
+
+
+class HomeParserTests(unittest.TestCase):
+    def setUp(self):
+        self.home = club.parse_home(fixture("home.html"), NOW)
+
+    def test_four_room_cards_by_event_class(self):
+        picks = [(p["kind"], p["event"], p["label"], p["title"], p["slug"], p["platform"], p["romhack"]) for p in self.home["picks"]]
         self.assertEqual(picks, [
-            ("week", "Mega Man", "NES", False, utc(2026, 11, 29), 35),
-            ("month", "Donkey Kong Country", "SNES", False, utc(2026, 12, 1), 56),
-            ("romhack", "Super Metroid: GBA Edition", "GBA", True, utc(2026, 12, 1), 23),
-            ("season", "Paper Mario", "N64", False, utc(2027, 1, 1), 19),
+            ("week", "gotw", "Game of the Week", "Mega Man", "mega-man-nes", "NES", False),
+            ("month", "gotm", "Game of the Month", "Donkey Kong Country", "donkey-kong-country-snes", "SNES", False),
+            ("romhack", "rhotm", "Romhack of the Month", "Super Metroid: GBA Edition", "super-metroid-gba-edition-gba", "GBA", True),
+            ("season", "gots", "Game of the Season", "Paper Mario", "paper-mario-n64", "N64", False),
         ])
-        self.assertEqual(home["picks"][0]["url"], "https://www.playretrogamesclub.com/games/mega-man-nes/")
-        self.assertEqual(home["picks"][0]["image"], "https://www.playretrogamesclub.com/img/1448.png")
-        self.assertEqual(home["picks"][0]["label"], "Game of the Week")
 
-    def test_home_top_players_schedule_nominations_and_stats(self):
-        home = club.parse_home(fixture("home.html"), NOW)
-        self.assertEqual([(r["rank"], r["name"], r["slug"], r["beaten"]) for r in home["top"]], [
-            (1, "Gin649", "gin649", 35), (2, "Draven", "dragonmagic28", 34), (3, "popogego99", "popogego99", 33),
-            (4, "malson", "malson", 32), (5, "joeysretrohandhelds", "joeysretrohandhelds", 32)])
-        self.assertEqual(home["schedule"][0]["at"], utc(2026, 11, 28))
-        self.assertTrue(home["schedule"][0]["text"].startswith("Votes open for December's Game of the Month"))
-        self.assertEqual(home["schedule"][-1]["at"], utc(2027, 1, 1), "a yearless January date after November is next year")
-        self.assertEqual([n["count"] for n in home["nomination_counts"]], [34, 15, 14])
-        self.assertEqual(home["stats"], {"players": 179, "games_beaten": 1185, "hours": 7495, "picks": 84})
-        self.assertEqual(home["structure"], {"playing_now": True, "top_players": True})
+    def test_card_facts_hours_firsts_cover_and_end(self):
+        week = self.home["picks"][0]
+        self.assertEqual((week["beaten"], week["at100"], week["rating"], week["hours"]), (35, 6, 5.1, 2.8))
+        self.assertEqual(week["first_clear"], {"name": "chiefly1818", "at": utc(2026, 11, 22, 1, 50, 7)})
+        self.assertEqual(week["first_100"], {"name": "xsandraax", "at": utc(2026, 11, 22, 4, 41, 17)})
+        self.assertEqual(week["ends_at"], utc(2026, 11, 29))
+        self.assertEqual(week["url"], "https://www.playretrogamesclub.com/games/mega-man-nes/")
+        self.assertEqual(week["image"], "https://www.playretrogamesclub.com/img/1448.png")
+        self.assertEqual(week["cover"], "/img/1448.png")
+        self.assertEqual([p["ends_at"] for p in self.home["picks"]][1:], [utc(2026, 12, 1), utc(2026, 12, 1), utc(2027, 1, 1)])
+        self.assertEqual(self.home["picks"][3]["hours"], 23.1)
+        self.assertEqual(self.home["picks"][2]["first_100"]["name"], "Draven")
 
-    def test_card_markup_with_machine_times_parses_the_same_picks(self):
-        home = club.parse_home(fixture("home_cards.html"), NOW)
-        self.assertEqual([(p["kind"], p["title"], p["platform"], p["romhack"]) for p in home["picks"]], [
-            ("week", "Mega Man", "NES", False), ("month", "Donkey Kong Country", "SNES", False),
-            ("romhack", "Super Metroid: GBA Edition", "GBA", True), ("season", "Paper Mario", "N64", False)])
-        self.assertEqual(home["picks"][0]["ends_at"], utc(2026, 11, 29), "<time datetime> wins")
-        self.assertEqual(home["picks"][2]["ends_at"], utc(2026, 12, 1), "data-ends epoch")
-        self.assertEqual(home["picks"][3]["ends_at"], utc(2027, 1, 1), "'34 days 16 hours left' as a last resort")
-        self.assertEqual(home["picks"][3]["platform"], "N64", "platform from the game's address")
-        self.assertEqual([r["name"] for r in home["top"]], ["Gin649", "Draven"])
+    def test_coming_up_strip(self):
+        schedule = self.home["schedule"]
+        self.assertEqual([(item["at"], item["title"]) for item in schedule], [
+            (utc(2026, 11, 28), "Votes open"), (utc(2026, 11, 29), "Game of the Week revealed"), (utc(2026, 12, 1), "December picks start")])
+        self.assertEqual(schedule[0]["text"], "Votes open: December's Game of the Month, December's Romhack of the Month, Christmas Special")
+        self.assertEqual([tag["kind"] for tag in schedule[0]["tags"]], ["month", "romhack", "special"])
+        self.assertEqual(schedule[0]["until"], utc(2026, 11, 30, 23, 59))
+        self.assertEqual(schedule[1]["text"], "Game of the Week revealed", "a tag already in the title is not repeated")
+        self.assertEqual(schedule[1]["until"], utc(2026, 12, 6))
+        self.assertIsNone(schedule[2]["until"])
 
-    def test_leaderboard_keeps_ranks_names_and_profile_slugs(self):
+    def test_nomination_counts_top_players_and_totals(self):
+        self.assertEqual(self.home["nomination_counts"], [
+            {"kind": "month", "label": "December Game of the Month", "count": 34},
+            {"kind": "romhack", "label": "December Romhack of the Month", "count": 15},
+            {"kind": "season", "label": "January to March 2027 Game of the Season", "count": 14}])
+        self.assertEqual(self.home["top"], [
+            {"rank": 1, "name": "Gin649", "slug": "gin649", "beaten": 35},
+            {"rank": 2, "name": "Draven", "slug": "dragonmagic28", "beaten": 34},
+            {"rank": 3, "name": "popogego99", "slug": "popogego99", "beaten": 33}])
+        self.assertEqual(self.home["stats"], {"players": 179, "games_beaten": 1186, "hours": 7519, "picks": 84})
+        self.assertEqual(self.home["structure"], {"playing_now": True, "top_players": True, "schedule": True,
+                                                  "nominations": True, "stats": True})
+
+    def test_each_flag_is_false_when_only_its_section_is_missing(self):
+        page = fixture("home.html")
+        without_strip = page.replace('class="cal-strip"', 'class="calendar"')
+        home = club.parse_home(without_strip, NOW)
+        self.assertEqual(home["schedule"], [])
+        self.assertFalse(home["structure"]["schedule"])
+        self.assertTrue(home["structure"]["playing_now"] and home["structure"]["top_players"])
+        renamed = club.parse_home(page.replace("<h2>Top players</h2>", "<h2>Leaders</h2>"), NOW)
+        self.assertEqual(renamed["top"], [])
+        self.assertFalse(renamed["structure"]["top_players"])
+        self.assertTrue(renamed["structure"]["nominations"])
+
+    def test_a_special_card_and_an_unknown_system(self):
+        card = ('<a class="room x" href="/games/a-christmas-hack-snes/"><div class="frame"><img class="cover" src="/img/77.png" alt="A box art"></div>'
+                '<div><span class="tag">Christmas Special</span><h3>A Christmas Hack</h3><div class="plat">PICO-8 · about 1 hour</div>'
+                '<div class="ends">Ends <time datetime="2026-12-31T00:00:00Z">Dec 31</time></div></div></a>')
+        pick = club.parse_home(FRAME.format(card), NOW)["picks"][0]
+        self.assertEqual((pick["kind"], pick["event"], pick["label"], pick["platform"], pick["hours"], pick["ends_at"]),
+                         ("special", "special", "Christmas Special", "PICO-8", 1.0, utc(2026, 12, 31)))
+        self.assertIsNone(pick["beaten"])
+        self.assertIsNone(pick["first_clear"])
+
+
+class NominationParserTests(unittest.TestCase):
+    def setUp(self):
+        self.groups = club.parse_nominations(fixture("nominations.html"), NOW)
+
+    def test_one_group_per_run_section(self):
+        self.assertEqual([(g["kind"], g["event"], g["label"], g["period"], g["opens_at"], g["count"]) for g in self.groups], [
+            ("month", "gotm", "Game of the Month · December 2026", "December 2026", utc(2026, 11, 28), 34),
+            ("romhack", "rhotm", "Romhack of the Month · December 2026", "December 2026", utc(2026, 11, 28), 15)])
+
+    def test_rows_from_data_attributes_and_links(self):
+        first = self.groups[0]["items"][0]
+        self.assertEqual(first, {"title": "Spyro: Year of the Dragon", "platform": "PS1", "romhack": False,
+                                 "nominator": "joeysretrohandhelds", "nominator_slug": "joeysretrohandhelds", "hours": 8.2,
+                                 "order": 1, "ra_game_id": 11267, "cover": "/img/11267.png"})
+        katamari = self.groups[0]["items"][1]
+        self.assertEqual((katamari["nominator"], katamari["nominator_slug"]), ("Gain", "gavin4010"))
+        self.assertEqual(self.groups[0]["items"][2]["title"], "Sin & Punishment: Star Successor", "entities decoded")
+        self.assertEqual(self.groups[0]["items"][2]["platform"], "Wii")
+        self.assertEqual([i["order"] for i in self.groups[0]["items"]], [1, 2, 4])
+        hack, blank = self.groups[1]["items"]
+        self.assertTrue(hack["romhack"])
+        self.assertEqual((hack["platform"], hack["ra_game_id"]), ("N64", 19490))
+        self.assertIsNone(blank["hours"], "an empty data-s-hours is no time")
+        self.assertEqual(blank["title"], "Pokémon Recordkeepers")
+
+    def test_only_retroachievements_game_links_count(self):
+        row = ('<section class="run m" id="gotm"><span class="tag">Game of the Month</span><h2>December 2026</h2>'
+               '<table id="nomt-gotm"><tbody><tr data-sys="NES" data-s-order="1" data-s-hours="1" data-s-name="x">'
+               '<td><a href="https://evil.example/game/5">X</a></td></tr>'
+               '<tr data-sys="NES" data-s-order="2" data-s-name="y"><td><a href="http://retroachievements.org/game/6">Y</a></td></tr></tbody></table></section>')
+        items = club.parse_nominations(FRAME.format(row), NOW)[0]["items"]
+        self.assertEqual([(i["title"], i["ra_game_id"]) for i in items], [("x", None), ("y", None)],
+                         "the title falls back to data-s-name; no id from an off-site or plain-http link")
+
+
+class LeaderboardParserTests(unittest.TestCase):
+    def test_rows_and_their_data_stats(self):
         rows = club.parse_leaderboard(fixture("leaderboards.html"))
-        self.assertEqual(len(rows), 8, "only the first (All time, All events) table")
-        self.assertEqual(rows[0], {"rank": 1, "name": "Gin649", "slug": "gin649", "beaten": 35})
-        self.assertEqual(rows[6], {"rank": 9, "name": "jaso.90", "slug": "jaso-90", "beaten": 25})
-        self.assertEqual(rows[7]["rank"], 42)
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0], {"rank": 1, "name": "Gin649", "slug": "gin649", "beaten": 35, "hardcore": 0, "completed": 2,
+                                   "mastered": 0, "firsts": 13, "firsthundred": 0, "hours": 172,
+                                   "by_event": {"week": 22, "month": 5, "romhack": 5, "season": 2, "special": 1}})
+        self.assertEqual((rows[1]["name"], rows[1]["slug"], rows[1]["completed"], rows[1]["firsthundred"], rows[1]["hours"]),
+                         ("Draven", "dragonmagic28", 32, 24, 602))
 
-    def test_nominations_by_category(self):
-        groups = club.parse_nominations(fixture("nominations.html"), NOW)
-        self.assertEqual([(g["kind"], g["count"], g["opens_at"]) for g in groups], [
-            ("month", 34, utc(2026, 11, 28)), ("romhack", 15, utc(2026, 11, 28)), ("season", 14, utc(2026, 12, 29))])
-        self.assertEqual(groups[0]["items"][1], {"title": "Katamari Damacy", "platform": "PS2", "romhack": False,
-                                                 "nominator": "Gain", "hours": 5.8})
-        self.assertEqual(groups[1]["items"][1]["hours"], None)
-        self.assertTrue(groups[1]["items"][0]["romhack"])
-        self.assertEqual(groups[2]["items"][0]["title"], "EarthBound")
 
+class MemberAndSafetyTests(unittest.TestCase):
     def test_member_standing_streaks_and_crowns(self):
         member = club.parse_member(fixture("member.html"))
         self.assertEqual((member["name"], member["rank"], member["of"], member["beaten"], member["at100"]),
@@ -127,16 +207,25 @@ class ParserTests(unittest.TestCase):
 
     def test_unknown_or_broken_markup_yields_nothing_rather_than_failing(self):
         for document in ("", "<html><body><p>Under maintenance</p></body></html>", "<div><a href='/games/x/'>",
-                         "<<<>>> <script>Game of the Week</script>"):
+                         "<<<>>> <script>Game of the Week</script>", "</div></div><a class='room w'>", "<td><tr><li>" * 50,
+                         FRAME.format('<a class="room w" href="/games/mega-man-nes/"><span class="tag">Game of the Week</span></a>')):
             home = club.parse_home(document, NOW)
             self.assertEqual(home["picks"], [])
+            self.assertFalse(any(home["structure"].values()))
             self.assertEqual(club.parse_nominations(document, NOW), [])
             self.assertEqual(club.parse_leaderboard(document), [])
 
     def test_off_site_links_and_odd_slugs_are_ignored(self):
-        lines = club.html_lines('<p>Game of the Week</p><p><a href="https://evil.example/games/x/">X</a></p>'
-                                '<p><a href="/games/../../etc/">Y</a></p>')
-        self.assertEqual(club.parse_picks(lines, NOW), [])
+        cards = ('<a class="room w" href="https://evil.example/games/x/"><h3>X</h3></a>'
+                 '<a class="room m" href="/games/../../etc/"><h3>Y</h3></a>'
+                 '<a class="room r" href="/games/ok-snes/"><h3>Z</h3><img class="cover" src="https://evil.example/img/1.png"></a>')
+        picks = club.parse_home(FRAME.format(cards), NOW)["picks"]
+        self.assertEqual([p["title"] for p in picks], ["Z"])
+        self.assertEqual((picks[0]["image"], picks[0]["cover"]), ("", ""), "no off-site image")
+
+    def test_scripts_and_comments_are_not_content(self):
+        page = fixture("home.html").replace("<h3>Mega Man</h3>", "<h3><!-- x -->Mega Man<script>var a = '<h3>No</h3>';</script></h3>")
+        self.assertEqual(club.parse_home(page, NOW)["picks"][0]["title"], "Mega Man")
 
     def test_loads_without_modules_decky_frozen_python_lacks(self):
         from unittest.mock import patch
@@ -145,16 +234,17 @@ class ParserTests(unittest.TestCase):
         original = builtins.__import__
 
         def restricted(name, *args, **kwargs):
-            if name.startswith(("xml", "pyexpat", "html.parser", "sqlite3", "ssl_extra")): raise ModuleNotFoundError(name)
+            if name.startswith(("xml", "pyexpat", "html.parser", "_markupbase", "sqlite3", "ssl_extra")): raise ModuleNotFoundError(name)
             return original(name, *args, **kwargs)
         with patch("builtins.__import__", side_effect=restricted):
             spec = importlib.util.spec_from_file_location("club_frozen_fixture", Path(__file__).resolve().parents[1] / "quick_settings/club_feed.py")
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             self.assertEqual(len(module.parse_home(fixture("home.html"), NOW)["picks"]), 4)
+            self.assertEqual(len(module.parse_nominations(fixture("nominations.html"), NOW)), 2)
 
     def test_member_slug_from_display_name_or_username(self):
-        rows = club.parse_leaderboard(fixture("leaderboards.html"))
+        rows = club.parse_leaderboard(leaderboard_with_members())
         self.assertEqual(club.resolve_member_slug("draven", rows), "dragonmagic28")
         self.assertEqual(club.resolve_member_slug("Example Member", rows), "examplemember")
         self.assertEqual(club.resolve_member_slug("jaso.90", rows), "jaso-90")
@@ -324,6 +414,65 @@ class FeedTests(unittest.TestCase):
         self.assertEqual(reply["error"], "no_picks")
         self.assertEqual(len(reply["snapshot"]["picks"]), 4, "a page without picks never replaces good data")
         self.assertEqual(sum("home.picks" in w for w in self.log.warnings), 1)
+
+    def state(self):
+        return json.loads((Path(self.tmp.name) / "club-feed.json").read_text(encoding="utf-8"))
+
+    def test_every_structure_flag_is_true_on_the_real_pages(self):
+        reply = self.feed.get()
+        self.assertEqual(self.state()["structure"], {
+            "home.playing_now": True, "home.top_players": True, "home.schedule": True, "home.nominations": True,
+            "home.stats": True, "home.picks": True, "nominations.categories": True, "leaderboards.rows": True})
+        snapshot = reply["snapshot"]
+        self.assertEqual(snapshot["carried"], [])
+        self.assertEqual([g["event"] for g in snapshot["nominations"]], ["gotm", "rhotm"])
+        self.assertEqual(snapshot["nominations"][0]["items"][0]["ra_game_id"], 11267)
+        self.assertEqual(snapshot["top"][0]["by_event"]["week"], 22)
+        self.assertEqual(snapshot["leaderboard"][1], {"rank": 2, "name": "Draven", "slug": "dragonmagic28", "beaten": 34, "hours": 602})
+        self.assertEqual(snapshot["picks"][0]["event"], "gotw")
+        self.assertEqual(self.log.warnings, [])
+
+    def test_a_changed_page_keeps_that_sections_last_good_data(self):
+        first = self.feed.get()["snapshot"]
+        self.site.pages["/leaderboards/"] = (200, "<html><body><table class='board'><tr><td>Gin649</td><td>35</td></tr></table></body></html>")
+        self.site.pages["/nominations/"] = (200, "<html><body><section class='round'><h2>December 2026</h2></section></body></html>")
+        self.site.pages["/"] = (200, fixture("home.html").replace('class="noms"', 'class="noms-v2"').replace('class="cal-strip"', 'class="cal"'))
+        self.clock.now = NOW + 6 * 3600
+        reply = self.feed.get()
+        self.assertTrue(reply["refreshed"])
+        self.assertEqual(reply["error"], "")
+        snapshot = reply["snapshot"]
+        structure = self.state()["structure"]
+        self.assertFalse(structure["leaderboards.rows"] or structure["nominations.categories"] or structure["home.schedule"]
+                         or structure["home.nominations"])
+        self.assertTrue(structure["home.picks"] and structure["home.top_players"])
+        self.assertEqual(sorted(snapshot["carried"]), ["leaderboard", "nominations", "schedule"])
+        self.assertEqual(snapshot["leaderboard"], first["leaderboard"])
+        self.assertEqual(snapshot["nominations"], first["nominations"])
+        self.assertEqual(snapshot["schedule"], first["schedule"])
+        self.assertEqual(snapshot["top"][0]["name"], "Gin649", "top from the home page while the leaderboard is unreadable")
+        self.assertEqual(snapshot["fetched_at"], NOW + 6 * 3600)
+        changed = [w for w in self.log.warnings if "changed shape" in w]
+        self.assertEqual(changed, ["Club feed: the club's pages changed shape; not found: home.nominations, home.schedule, "
+                                   "leaderboards.rows, nominations.categories"])
+
+    def test_home_counts_stand_in_for_an_unreadable_nominations_page(self):
+        self.site.pages["/nominations/"] = (200, "<html><body><p>Soon</p></body></html>")
+        snapshot = self.feed.get()["snapshot"]
+        self.assertEqual([(g["event"], g["count"], g["items"]) for g in snapshot["nominations"]],
+                         [("gotm", 34, []), ("rhotm", 15, []), ("gots", 14, [])])
+        self.assertFalse(self.state()["structure"]["nominations.categories"], "the flag stays honest")
+
+    def test_a_parser_crash_keeps_the_cache(self):
+        from unittest.mock import patch
+        self.feed.get()
+        self.clock.now = NOW + 6 * 3600
+        with patch.object(club, "parse_nominations", side_effect=RuntimeError("boom")):
+            reply = self.feed.get()
+        self.assertEqual(reply["error"], "parse_error")
+        self.assertTrue(reply["stale"])
+        self.assertEqual(len(reply["snapshot"]["picks"]), 4)
+        self.assertEqual(reply["updated"], NOW)
 
     def test_disabled_club_fetches_nothing(self):
         self.feed.save(False, "")

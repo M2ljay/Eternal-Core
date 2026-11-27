@@ -118,8 +118,9 @@ jobs:
         working-directory: Source/GamingModeDeckyPlugin
         run: python -m unittest tests.test_core_icons tests.test_core_ui_snapshot
 
-      # The Club tab: Play Retro Games Club's public pages parsed from saved fixtures, robots.txt, the 6-hour /
-      # 10-minute fetch limits with backoff and stale data, library matching, days left and Jarvis's brief line.
+      # The Club tab: Play Retro Games Club's real pages (captured fixtures) parsed per section with honest structure
+      # flags, robots.txt, the 6-hour / 10-minute fetch limits with backoff and stale data, library matching, days left,
+      # Jarvis's brief line and the Log completion bridge to Eternal-Assemble.
       - name: Club tab tests (Decky plugin)
         working-directory: Source/GamingModeDeckyPlugin
         run: |
