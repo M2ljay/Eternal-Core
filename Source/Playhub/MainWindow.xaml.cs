@@ -2289,6 +2289,7 @@ public sealed partial class MainWindow : Window
         panel.Children.Add(BuildBeforeBedCard());
         panel.Children.Add(BuildHomeAssistantCard());
         panel.Children.Add(BuildAutomationsCard());
+        panel.Children.Add(BuildJarvisCard());
 
         // ---------- Splash logo with live preview ----------
         _splashLogoCombo = ChoiceCombo(SplashLogoOptions);

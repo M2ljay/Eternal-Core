@@ -53,7 +53,12 @@ public static class CoreSecretStore
 
 	private const int UiForbidden = 0x1;
 
-	private static byte[] Transform(byte[] data, bool protect)
+	// Jarvis's secrets (JarvisSecretStore.cs) use the same sealing, with their own description.
+	internal static byte[] Seal(byte[] data, string description) => Transform(data, protect: true, description);
+
+	internal static byte[] Unseal(byte[] data) => Transform(data, protect: false);
+
+	private static byte[] Transform(byte[] data, bool protect, string description = "Core Home Assistant")
 	{
 		var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
 		var input = new DataBlob { Size = data.Length, Data = handle.AddrOfPinnedObject() };
@@ -61,7 +66,7 @@ public static class CoreSecretStore
 		try
 		{
 			bool ok = protect
-				? CryptProtectData(ref input, "Core Home Assistant", 0, 0, 0, UiForbidden, ref output)
+				? CryptProtectData(ref input, description, 0, 0, 0, UiForbidden, ref output)
 				: CryptUnprotectData(ref input, 0, 0, 0, 0, UiForbidden, ref output);
 			if (!ok) throw new InvalidOperationException("DPAPI failed with error " + Marshal.GetLastWin32Error() + ".");
 			var result = new byte[output.Size];

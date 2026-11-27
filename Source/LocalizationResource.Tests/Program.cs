@@ -333,6 +333,72 @@ foreach (var language in LocalizationService.Languages.Where(language => languag
 }
 Check(batchTwo.All(key => LocalizationService.Translate("it", key) == key), "Batch 2 Italian source strings render as written");
 
+// Jarvis (MainWindow.Jarvis.cs, docs/eternal/JARVIS.md): the desktop card in every language.
+string[] jarvis =
+{
+    "Salvato.",
+    "Non riesco a salvare.",
+    "Token e chiavi dimenticati.",
+    "Indirizzo di Home Assistant non valido.",
+    "Nessun token salvato.",
+    "Collegato a Home Assistant: l'agente {0} risponde.",
+    "Home Assistant risponde, ma non trovo l'agente {0}.",
+    "Token rifiutato da Home Assistant.",
+    "L'indirizzo non sembra Home Assistant.",
+    "Non riesco a raggiungere Home Assistant.",
+    "Nessuna chiave salvata.",
+    "Aiuto sullo schermo: nessuna chiave di Anthropic salvata.",
+    "Chiave di Anthropic valida: modello {0}.",
+    "Chiave di Anthropic rifiutata.",
+    "Modello sconosciuto: {0}.",
+    "Non riesco a raggiungere l'API di Claude.",
+    "Combinazione non valida: {0}",
+    "Token e chiavi salvati.",
+    "Chi risponde",
+    "Indirizzo di Home Assistant",
+    "Agente di conversazione",
+    "Token di accesso di Home Assistant",
+    "Modello",
+    "Chiave API di Anthropic",
+    "Chiave per Whisper nel cloud (facoltativa)",
+    "Dettatura (tieni premuto)",
+    "Parla con Jarvis (tieni premuto)",
+    "Cosa c'è sullo schermo?",
+    "Jarvis di Home Assistant ha la stessa memoria e la stessa personalità degli altoparlanti e può comandare la casa. L'API diretta usa la tua chiave di Anthropic e non comanda la casa. Serrature, garage e allarme non sono mai disponibili da Core: richiedono sempre la conferma sul telefono.",
+    "Il token di Home Assistant si crea nel tuo profilo di Home Assistant > Sicurezza > Token di accesso a lunga durata. L'aiuto sullo schermo usa sempre la chiave di Anthropic, perché Home Assistant non accetta immagini nella conversazione. Token e chiavi restano su questo PC, cifrati per il tuo utente di Windows: non finiscono mai in config.json né nei log.",
+    "Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. I quattro pulsanti posteriori dello Steam Controller sono liberi in Steam Input se non li assegni tu.",
+    "Costi: ogni messaggio a Claude si paga a consumo, sia con l'agente di Home Assistant sia con l'API diretta. Uno screenshot vale circa 1.200 token in più. Trascrizione e voce sul server di casa sono gratis.",
+    "Salva token e chiavi",
+    "Prova la connessione",
+    "Dimentica token e chiavi",
+    "Attiva Jarvis",
+    "La sezione Jarvis in Accesso rapido e le combinazioni del controller.",
+    "Modalità senza spoiler",
+    "La prima risposta sullo schermo è solo un indizio; \"Altro\" mostra la risposta completa.",
+    "Risposte a voce",
+    "Parlando con Jarvis, la risposta si sente con la voce Piper di Home Assistant, oppure con la voce inglese britannica di Windows.",
+    "Leggi ad alta voce l'aiuto sullo schermo",
+    "Anche le risposte su quello che c'è sullo schermo si sentono.",
+    "Whisper nel cloud se il server non risponde",
+    "Solo con la chiave per Whisper nel cloud. Di solito la voce si trascrive con Whisper sul server di casa, gratis e in locale.",
+    "Jarvis in Core: chat in Accesso rapido, aiuto con quello che c'è sullo schermo e dettatura con il microfono. Non viene inviato niente finché non lo chiedi.",
+    "Jarvis di Home Assistant (consigliato)",
+    "API di Claude diretta"
+};
+foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
+{
+    foreach (var key in jarvis)
+    {
+        var translated = LocalizationService.Translate(language.Key, key);
+        if (string.IsNullOrWhiteSpace(translated) || translated == key)
+            throw new Exception($"Jarvis string is not translated: {language.Key}/{key}");
+        if (!Tokens(translated).SequenceEqual(Tokens(key)))
+            throw new Exception($"Jarvis string format token mismatch: {language.Key}/{key}");
+    }
+    Check(true, $"{language.Key}: {jarvis.Length} Jarvis strings translate");
+}
+Check(jarvis.All(key => LocalizationService.Translate("it", key) == key), "Jarvis Italian source strings render as written");
+
 // Eternal Core rebrand (docs/eternal/REBRAND.md): the app is called Core everywhere the user reads it.
 // "Playhub" stays only where it names something that still carries that name: the upstream project in
 // the credits, the upstream Playhub-* plugin suite, and the Playhub.exe file. Any other product-name use is a missed string.

@@ -102,6 +102,8 @@ Batch 1 (save backup before update night, Decky naming the failing plugin, the 4
 [BATCH-1.md](BATCH-1.md).
 Batch 2 (swipe typing on Steam's keyboard, the Home Assistant bridge over MQTT, automations, sleep after streaming
 with Wake-on-LAN): [BATCH-2.md](BATCH-2.md).
+Jarvis (chat in Quick Access, the screen-aware game helper, push-to-talk dictation and voice; privacy, costs, setup and
+the combos): [JARVIS.md](JARVIS.md).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

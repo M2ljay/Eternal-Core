@@ -146,6 +146,28 @@ public sealed class GamingSettings
 	public int StreamSleepMinutes { get; set; } = 10;
 	public bool SwipeTypingEnabled { get; set; } = true;
 
+	// Jarvis (docs/eternal/JARVIS.md, MarkIIIHost.Jarvis.cs). Edited in the desktop app's Jarvis card; the token and keys
+	// are not here: they are DPAPI-sealed in jarvis-secrets.json (Shared/JarvisSecretStore.cs). Combos: two to four
+	// controller buttons held together ("L5+R5"; empty turns one off), detected by Core's Decky plugin.
+	public bool JarvisEnabled { get; set; } = true;
+	public string JarvisBackend { get; set; } = "home-assistant";
+	public string JarvisHaUrl { get; set; } = "http://serverv3:8123";
+	public string? JarvisHaAgent { get; set; } = "conversation.jarvis";
+	public string JarvisModel { get; set; } = "claude-haiku-5-5";
+	public string? JarvisDictateCombo { get; set; } = "L5+R5";
+	public string? JarvisTalkCombo { get; set; } = "L4+R4";
+	public string? JarvisScreenCombo { get; set; } = "L4+L5";
+	public bool JarvisSpoilerSafe { get; set; } = true;
+	public bool JarvisVoice { get; set; } = true;
+	public bool JarvisSpeakScreen { get; set; }
+	public bool JarvisCloudWhisper { get; set; }
+	// Config-only: where Aincrad's Whisper and Piper are, and the Home Assistant entities for them.
+	public string JarvisWyomingHost { get; set; } = "serverv3";
+	public int JarvisWyomingPort { get; set; } = 10300;
+	public string? JarvisSttEntity { get; set; } = "stt.faster_whisper";
+	public string? JarvisTtsEntity { get; set; } = "tts.piper";
+	public string? JarvisOpenAiUrl { get; set; } = "https://api.openai.com/v1";
+
 	// Core Voice (MarkIIIHost.Voice.cs), config-only. A keyboard combination that toggles the
 	// microphone mute (bind it to a Steam Input chord); empty turns it off. An ms-gamebar: URI
 	// the Xbox party button opens instead of Win+G, for a widget link found to work on this PC.

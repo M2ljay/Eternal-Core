@@ -58,6 +58,9 @@ import { SwipeTypingSection, setSwipeTypingRuntime } from "./SwipeTypingSection"
 import { AutomationsSection } from "./AutomationsSection";
 import { installLocalInputWatch } from "./localInput";
 import { keyboardBase } from "./keyboardBase";
+import { JarvisPage, JarvisSection, JARVIS_ROUTE, setJarvisRuntime } from "./JarvisSection";
+import { createJarvisRuntime, type ListenMode } from "./jarvisRuntime";
+import { installJarvisCombos, type ComboKind } from "./jarvisCombos";
 
 const { useState, useEffect, useMemo } = React;
 let hapticSettingsWrite = Promise.resolve();
@@ -975,6 +978,7 @@ function Content({ origin = "decky" }: { origin?: "qam" | "decky" }) {
     <><ControlCenter locale={locale} origin={origin} homeTitle={local.controlCentre} gameAppId={gameAppId} gamingMode={status?.currentMode === "Gaming"} downloads={<StoreDownloadsQam locale={locale} />}
       frameTiming={origin === "qam" && status && gameAppId !== 0 ? <GameFrameTiming key={gameAppId} appId={gameAppId} locale={locale} /> : null} session={<>
       {status && <VoiceSection locale={locale} />}
+      {status && <JarvisSection locale={locale} />}
       {status && <StreamSection locale={locale} />}
       {status && <AutomationsSection locale={locale} />}
       {status && <SwipeTypingSection locale={locale} />}
@@ -1252,6 +1256,41 @@ export default definePlugin(() => {
     void typing.start();
     return () => { setSwipeTypingRuntime(undefined); typing.shutdown(); };
   });
+  // Jarvis (docs/eternal/JARVIS.md): push-to-talk and the screen helper on controller combos, watched inside Steam
+  // (src/jarvisCombos.ts); the agent records, transcribes, answers and takes the screenshot.
+  const stopJarvis = installOptionalHook("Jarvis", () => {
+    let settings: { enabled: boolean; combos: Partial<Record<ComboKind, string | null>> } = { enabled: false, combos: {} };
+    let refresh: number | undefined;
+    let stopped = false;
+    const load = async () => {
+      let state: { enabled?: boolean; combos?: Partial<Record<ComboKind, string | null>> } | undefined;
+      try { state = await controlCall<[], { enabled?: boolean; combos?: Partial<Record<ComboKind, string | null>> }>("core_jarvis_state"); } catch { state = undefined; }
+      if (state && typeof state === "object") settings = { enabled: state.enabled === true, combos: state.combos ?? {} };
+      if (!stopped) refresh = window.setTimeout(() => { void load(); }, 30000);
+    };
+    const runtime = createJarvisRuntime({
+      backend: {
+        listenStart: (mode: ListenMode) => controlCall<[string], any>("core_jarvis_listen_start", mode),
+        listenStop: (steamTyping: boolean) => controlCall<[boolean], any>("core_jarvis_listen_stop", steamTyping),
+        listenCancel: () => controlCall<[], unknown>("core_jarvis_listen_cancel"),
+        screen: (question: string) => controlCall<[string], any>("core_jarvis_screen", question),
+        type: (text: string) => controlCall<[string], any>("core_jarvis_type", text),
+      },
+      input: () => (window as any).SteamClient?.Input,
+      toast: (title, body) => toaster.toast({ title, body, duration: 8000 }),
+      locale: () => currentLocale,
+      enabled: () => settings.enabled,
+    });
+    setJarvisRuntime(runtime);
+    const watch = installJarvisCombos({
+      input: () => (window as any).SteamClient?.Input,
+      combos: () => (settings.enabled ? settings.combos : {}),
+      onPress: kind => runtime.press(kind),
+      onRelease: kind => runtime.release(kind),
+    });
+    void load();
+    return () => { stopped = true; if (refresh !== undefined) window.clearTimeout(refresh); watch.stop(); setJarvisRuntime(undefined); };
+  });
   // Stream mode: tell the agent when Steam streams from this PC (Remote Play, Steam Link, a Steam Frame).
   const stopSteamStreamWatch = installOptionalHook("Core stream watch", () => installSteamStreamWatch({
     remotePlay: () => (window as any).SteamClient?.RemotePlay,
@@ -1326,6 +1365,11 @@ export default definePlugin(() => {
   } catch (error) {
     console.warn("Playhub Plugin Store: rotta non aggiunta", error);
   }
+  try {
+    routerHook?.addRoute?.(JARVIS_ROUTE, () => <JarvisPage locale={() => currentLocale} />, { exact: true });
+  } catch (error) {
+    console.warn("Core Jarvis: route not added", error);
+  }
 
   return {
     name: "Playhub",
@@ -1336,7 +1380,7 @@ export default definePlugin(() => {
       const cleanups = [
         stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
         stopUpdateNotice,
-        stopCoreHeartbeat, stopLocalInput, stopSwipeTyping, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
+        stopCoreHeartbeat, stopLocalInput, stopSwipeTyping, stopJarvis, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
         stopDeckyIpcRecovery,
         uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
         uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,
@@ -1358,6 +1402,11 @@ export default definePlugin(() => {
         routerHook?.removeRoute?.(PLUGIN_STORE_ROUTE);
       } catch (error) {
         console.warn("Playhub Plugin Store: rotta non rimossa", error);
+      }
+      try {
+        routerHook?.removeRoute?.(JARVIS_ROUTE);
+      } catch (error) {
+        console.warn("Core Jarvis: route not removed", error);
       }
     },
   };

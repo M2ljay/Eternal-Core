@@ -92,6 +92,20 @@ public sealed class GamingOptions
     public bool StreamSleepEnabled { get; set; } = true;
     public int StreamSleepMinutes { get; set; } = 10;
     public bool SwipeTypingEnabled { get; set; } = true;
+    // Jarvis (docs/eternal/JARVIS.md): the desktop card's settings. Token and keys are DPAPI-sealed in
+    // jarvis-secrets.json (Shared/JarvisSecretStore.cs), never here. Config-only Jarvis settings stay in Extra.
+    public bool JarvisEnabled { get; set; } = true;
+    public string JarvisBackend { get; set; } = "home-assistant";
+    public string JarvisHaUrl { get; set; } = "http://serverv3:8123";
+    public string? JarvisHaAgent { get; set; } = "conversation.jarvis";
+    public string JarvisModel { get; set; } = "claude-haiku-5-5";
+    public string? JarvisDictateCombo { get; set; } = "L5+R5";
+    public string? JarvisTalkCombo { get; set; } = "L4+R4";
+    public string? JarvisScreenCombo { get; set; } = "L4+L5";
+    public bool JarvisSpoilerSafe { get; set; } = true;
+    public bool JarvisVoice { get; set; } = true;
+    public bool JarvisSpeakScreen { get; set; }
+    public bool JarvisCloudWhisper { get; set; }
     public List<StartupAppConfig> CustomStartupApps { get; set; } = new();
 
     // Qui finiscono le opzioni che vivono solo lato agente - fra cui le app

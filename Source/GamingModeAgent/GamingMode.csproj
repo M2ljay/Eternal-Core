@@ -42,6 +42,11 @@
     <!-- Batch 2: automations (shared with the app) and the DPAPI store for the Home Assistant password. -->
     <Compile Include="../Shared/CoreAutomations.cs" Link="CoreAutomations.cs" />
     <Compile Include="../Shared/CoreSecretStore.cs" Link="CoreSecretStore.cs" />
+    <!-- Jarvis: requests, prompts, audio, Wyoming and the DPAPI store for the token and keys (docs/eternal/JARVIS.md). -->
+    <Compile Include="../Shared/JarvisCore.cs" Link="JarvisCore.cs" />
+    <Compile Include="../Shared/JarvisClient.cs" Link="JarvisClient.cs" />
+    <Compile Include="../Shared/JarvisWyoming.cs" Link="JarvisWyoming.cs" />
+    <Compile Include="../Shared/JarvisSecretStore.cs" Link="JarvisSecretStore.cs" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <!-- Private, default-OFF HUD trial. Does not enable the mirror or input. -->

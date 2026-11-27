@@ -112,6 +112,7 @@ public sealed partial class MainWindow
         gaming.AutoCompletedCreate = GetToggle("autoCompletedCreate");
         if (int.TryParse(GetComboKey(_steamSoakCombo), NumberStyles.None, CultureInfo.InvariantCulture, out int soak)) gaming.SteamUpdateSoakDays = soak;
         ReadBatchTwoIntoConfig();
+        ReadJarvisIntoConfig();
     }
 
     private void WriteMarkIIIIntoControls()
@@ -144,6 +145,7 @@ public sealed partial class MainWindow
         SelectComboKey(_tvInputCombo, string.IsNullOrWhiteSpace(gaming.Tv.CoreInput) ? "HDMI_2" : gaming.Tv.CoreInput);
         _ = RefreshMarkIIIStatusAsync();
         WriteBatchTwoIntoControls();
+        WriteJarvisIntoControls();
     }
 
     private async Task FindTvAsync()

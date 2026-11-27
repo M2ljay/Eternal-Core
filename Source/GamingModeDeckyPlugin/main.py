@@ -161,6 +161,10 @@ _VOICE_MUTE_SCOPES = ("all", "calls")
 _VOICE_DEVICE_ID = re.compile(r"\{[0-9.]{1,32}\}\.\{[0-9A-Fa-f-]{36}\}")
 # /voice/state lists the capture devices for the calls mic picker, so it outgrows 4 KB.
 _VOICE_STATE_MAXIMUM = 32768
+# Jarvis (src/JarvisSection.tsx, agent MarkIIIHost.Jarvis.cs): the state carries the session's last turns.
+_JARVIS_STATE_MAXIMUM = 131072
+_JARVIS_LISTEN_MODES = ("dictate", "talk")
+_JARVIS_TEXT_MAXIMUM = 2000
 # Stream mode's state (src/StreamSection.tsx): a few short fields.
 _STREAM_STATE_MAXIMUM = 8192
 # Console guards: the actions Quick Access may ask the agent for (ConsoleGuardPolicy.Actions).
@@ -279,6 +283,62 @@ class Plugin(QuickSettingsPlugin):
 
     async def core_voice_party(self):
         return await asyncio.to_thread(self._agent_local, "POST", "/voice/party", timeout=6)
+
+    # Jarvis (docs/eternal/JARVIS.md; src/JarvisSection.tsx, src/jarvisRuntime.ts; agent MarkIIIHost.Jarvis.cs): chat,
+    # push-to-talk and the screen helper. Text goes to the agent in the request body and is never logged here; the agent
+    # holds the token and keys. Time boxes cover Whisper plus Jarvis's answer (talk) and a screenshot plus Claude (screen).
+    async def core_jarvis_state(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/jarvis/state", timeout=4, maximum=_JARVIS_STATE_MAXIMUM)
+
+    async def core_jarvis_chat(self, text, speak=False):
+        text = self._jarvis_text(text)
+        if not text:
+            return {"ok": False, "error": "empty"}
+        return await asyncio.to_thread(self._agent_local_json, "/jarvis/chat", {"text": text, "speak": speak is True}, timeout=40, maximum=65536)
+
+    async def core_jarvis_clear(self):
+        return await asyncio.to_thread(self._agent_local, "POST", "/jarvis/clear", timeout=4)
+
+    async def core_jarvis_listen_start(self, mode):
+        if mode not in _JARVIS_LISTEN_MODES:
+            return {}
+        return await asyncio.to_thread(self._agent_local, "POST", "/jarvis/listen/start?mode=" + mode, timeout=6)
+
+    async def core_jarvis_listen_stop(self, steam_typing=False):
+        path = "/jarvis/listen/stop?steamTyping=" + ("true" if steam_typing is True else "false")
+        return await asyncio.to_thread(self._agent_local, "POST", path, timeout=60, maximum=65536)
+
+    async def core_jarvis_listen_cancel(self):
+        return await asyncio.to_thread(self._agent_local, "POST", "/jarvis/listen/cancel", timeout=4)
+
+    async def core_jarvis_screen(self, question=""):
+        question = self._jarvis_text(question)[:500]
+        return await asyncio.to_thread(self._agent_local_json, "/jarvis/screen", {"question": question}, timeout=60, maximum=65536)
+
+    async def core_jarvis_screen_more(self):
+        return await asyncio.to_thread(self._agent_local, "POST", "/jarvis/screen/more", timeout=4, maximum=65536)
+
+    async def core_jarvis_speak(self, text):
+        text = self._jarvis_text(text)
+        if not text:
+            return {"ok": False, "error": "empty"}
+        return await asyncio.to_thread(self._agent_local_json, "/jarvis/speak", {"text": text}, timeout=4)
+
+    async def core_jarvis_speak_stop(self):
+        return await asyncio.to_thread(self._agent_local, "POST", "/jarvis/speak/stop", timeout=4)
+
+    async def core_jarvis_type(self, text):
+        text = self._jarvis_text(text)
+        if not text:
+            return {"ok": False, "error": "empty"}
+        return await asyncio.to_thread(self._agent_local_json, "/jarvis/type", {"text": text}, timeout=8)
+
+    @staticmethod
+    def _jarvis_text(value):
+        if not isinstance(value, str):
+            return ""
+        cleaned = "".join(character if character.isprintable() or character == "\n" else " " for character in value)
+        return cleaned.strip()[:_JARVIS_TEXT_MAXIMUM]
 
     # Stream mode (src/StreamSection.tsx, src/streamMode.ts; agent MarkIIIHost.Stream.cs): while this PC
     # streams to another device, Core leaves the TV alone. The frontend reports Steam Remote Play, which
@@ -543,6 +603,19 @@ class Plugin(QuickSettingsPlugin):
         with self._typing_lock():
             ok = self._typing_forget(None)
             return {"epoch": self._typing_prefs()["epoch"], "ok": ok}
+
+    # A loopback POST with a JSON body (Jarvis's messages). The body is never logged.
+    @staticmethod
+    def _agent_local_json(path, body, *, timeout=2.5, maximum=4096):
+        try:
+            data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+            request = urllib.request.Request("http://127.0.0.1:47991" + path, data=data, method="POST", headers={"Content-Type": "application/json"})
+            client = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            with client.open(request, timeout=timeout) as response:
+                answer = json.loads(response.read(maximum))
+            return answer if isinstance(answer, dict) else {}
+        except (OSError, ValueError, TypeError):
+            return {}
 
     @staticmethod
     def _agent_local(method, path, *, timeout=2.5, maximum=4096):

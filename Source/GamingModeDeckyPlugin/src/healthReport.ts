@@ -647,6 +647,23 @@ const batchTwoCopy: Record<string, Copy> = {
 };
 for (const [language, table] of Object.entries(batchTwoCopy)) Object.assign(copy[language] ?? {}, table);
 
+// Jarvis (JARVIS.md): connected, not set up, Home Assistant unreachable, and how it answers.
+const jarvisCopy: Record<string, Copy> = {
+  en: { r_jarvis: "Jarvis", jvOff: "Off", jvNotSetUp: "Not set up", jvConnected: "Connected", jvReady: "Ready", jvHaDown: "Home Assistant unreachable", jvClaudeDown: "Claude API unreachable", jvToken: "Token refused", jvKey: "Key refused", jvAgent: "Agent not found", jvViaHa: "Through Home Assistant · {host}", jvViaClaude: "Through the Claude API", jvNoHelper: "Screen helper: needs the Anthropic key" },
+  it: { r_jarvis: "Jarvis", jvOff: "Spento", jvNotSetUp: "Non configurato", jvConnected: "Collegato", jvReady: "Pronto", jvHaDown: "Home Assistant non raggiungibile", jvClaudeDown: "API di Claude non raggiungibile", jvToken: "Token rifiutato", jvKey: "Chiave rifiutata", jvAgent: "Agente non trovato", jvViaHa: "Tramite Home Assistant · {host}", jvViaClaude: "Tramite l'API di Claude", jvNoHelper: "Aiuto sullo schermo: serve la chiave di Anthropic" },
+  es: { r_jarvis: "Jarvis", jvOff: "Desactivado", jvNotSetUp: "Sin configurar", jvConnected: "Conectado", jvReady: "Listo", jvHaDown: "Home Assistant no responde", jvClaudeDown: "La API de Claude no responde", jvToken: "Token rechazado", jvKey: "Clave rechazada", jvAgent: "Agente no encontrado", jvViaHa: "Mediante Home Assistant · {host}", jvViaClaude: "Mediante la API de Claude", jvNoHelper: "Ayuda en pantalla: necesita la clave de Anthropic" },
+  fr: { r_jarvis: "Jarvis", jvOff: "Désactivé", jvNotSetUp: "Non configuré", jvConnected: "Connecté", jvReady: "Prêt", jvHaDown: "Home Assistant injoignable", jvClaudeDown: "API Claude injoignable", jvToken: "Jeton refusé", jvKey: "Clé refusée", jvAgent: "Agent introuvable", jvViaHa: "Via Home Assistant · {host}", jvViaClaude: "Via l'API Claude", jvNoHelper: "Aide à l'écran : il faut la clé Anthropic" },
+  de: { r_jarvis: "Jarvis", jvOff: "Aus", jvNotSetUp: "Nicht eingerichtet", jvConnected: "Verbunden", jvReady: "Bereit", jvHaDown: "Home Assistant nicht erreichbar", jvClaudeDown: "Claude-API nicht erreichbar", jvToken: "Token abgelehnt", jvKey: "Schlüssel abgelehnt", jvAgent: "Agent nicht gefunden", jvViaHa: "Über Home Assistant · {host}", jvViaClaude: "Über die Claude-API", jvNoHelper: "Bildschirmhilfe: braucht den Anthropic-Schlüssel" },
+  pt: { r_jarvis: "Jarvis", jvOff: "Desligado", jvNotSetUp: "Não configurado", jvConnected: "Conectado", jvReady: "Pronto", jvHaDown: "Home Assistant inacessível", jvClaudeDown: "API do Claude inacessível", jvToken: "Token recusado", jvKey: "Chave recusada", jvAgent: "Agente não encontrado", jvViaHa: "Pelo Home Assistant · {host}", jvViaClaude: "Pela API do Claude", jvNoHelper: "Ajuda na tela: precisa da chave da Anthropic" },
+  uk: { r_jarvis: "Jarvis", jvOff: "Вимкнено", jvNotSetUp: "Не налаштовано", jvConnected: "Під’єднано", jvReady: "Готово", jvHaDown: "Home Assistant недоступний", jvClaudeDown: "API Claude недоступне", jvToken: "Токен відхилено", jvKey: "Ключ відхилено", jvAgent: "Агента не знайдено", jvViaHa: "Через Home Assistant · {host}", jvViaClaude: "Через API Claude", jvNoHelper: "Допомога з екраном: потрібен ключ Anthropic" },
+  zh: { r_jarvis: "Jarvis", jvOff: "已关闭", jvNotSetUp: "未设置", jvConnected: "已连接", jvReady: "就绪", jvHaDown: "无法连接 Home Assistant", jvClaudeDown: "无法连接 Claude API", jvToken: "令牌被拒绝", jvKey: "密钥被拒绝", jvAgent: "找不到代理", jvViaHa: "通过 Home Assistant · {host}", jvViaClaude: "通过 Claude API", jvNoHelper: "屏幕助手：需要 Anthropic 密钥" },
+  ja: { r_jarvis: "Jarvis", jvOff: "オフ", jvNotSetUp: "未設定", jvConnected: "接続済み", jvReady: "準備完了", jvHaDown: "Home Assistant に接続できません", jvClaudeDown: "Claude API に接続できません", jvToken: "トークンが拒否されました", jvKey: "キーが拒否されました", jvAgent: "エージェントが見つかりません", jvViaHa: "Home Assistant 経由 · {host}", jvViaClaude: "Claude API 経由", jvNoHelper: "画面ヘルパー：Anthropic のキーが必要です" },
+  ko: { r_jarvis: "Jarvis", jvOff: "꺼짐", jvNotSetUp: "설정 안 됨", jvConnected: "연결됨", jvReady: "준비됨", jvHaDown: "Home Assistant에 연결할 수 없음", jvClaudeDown: "Claude API에 연결할 수 없음", jvToken: "토큰 거부됨", jvKey: "키 거부됨", jvAgent: "에이전트를 찾을 수 없음", jvViaHa: "Home Assistant 경유 · {host}", jvViaClaude: "Claude API 경유", jvNoHelper: "화면 도우미: Anthropic 키가 필요해요" },
+  hi: { r_jarvis: "Jarvis", jvOff: "बंद", jvNotSetUp: "सेट नहीं है", jvConnected: "जुड़ा", jvReady: "तैयार", jvHaDown: "Home Assistant तक नहीं पहुँच पा रहे", jvClaudeDown: "Claude API तक नहीं पहुँच पा रहे", jvToken: "टोकन ठुकराया गया", jvKey: "कुंजी ठुकराई गई", jvAgent: "एजेंट नहीं मिला", jvViaHa: "Home Assistant से · {host}", jvViaClaude: "Claude API से", jvNoHelper: "स्क्रीन सहायक: Anthropic कुंजी चाहिए" },
+  ru: { r_jarvis: "Jarvis", jvOff: "Выключено", jvNotSetUp: "Не настроено", jvConnected: "Подключено", jvReady: "Готово", jvHaDown: "Home Assistant недоступен", jvClaudeDown: "API Claude недоступен", jvToken: "Токен отклонён", jvKey: "Ключ отклонён", jvAgent: "Агент не найден", jvViaHa: "Через Home Assistant · {host}", jvViaClaude: "Через API Claude", jvNoHelper: "Помощь с экраном: нужен ключ Anthropic" },
+};
+for (const [language, table] of Object.entries(jarvisCopy)) Object.assign(copy[language] ?? {}, table);
+
 export const healthLanguages = Object.keys(copy);
 
 export function healthCopy(locale: string): Copy {
@@ -689,7 +706,7 @@ function formatTime(value: unknown, locale: string, hour: unknown): string {
 
 const titles: Record<string, string> = {
   "server-backup": "r_backup", "restore-check": "r_restore", "server-drive": "r_drive", romm: "r_romm",
-  "windows-restart": "r_restart", "update-night": "r_night", "save-backup": "r_saves", "steam-update": "r_steam", "decky-plugins": "r_decky", tv: "r_tv", streaming: "r_stream", "stream-sleep": "r_streamSleep", "wake-on-lan": "r_wol", "home-assistant": "r_ha", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
+  "windows-restart": "r_restart", "update-night": "r_night", "save-backup": "r_saves", "steam-update": "r_steam", "decky-plugins": "r_decky", tv: "r_tv", streaming: "r_stream", "stream-sleep": "r_streamSleep", "wake-on-lan": "r_wol", "home-assistant": "r_ha", jarvis: "r_jarvis", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
   // Console guards (ConsoleGuards.cs).
   display: "r_display", "sound-output": "r_sound", controllers: "r_controllers", "steam-sign-in": "r_steamSign", "auto-sign-in": "r_autoSign", bitlocker: "r_bitlocker",
   "windows-prompts": "r_prompts", "update-policy": "r_updPolicy", "launcher-updates": "r_launchUpd", "launcher-focus": "r_launchFocus", "wake-check": "r_wake",
@@ -844,6 +861,15 @@ function rowValue(row: HealthRowData, text: Copy, locale: string, now: Date): { 
       const host = clean(data.host, 64) || "serverv3";
       const states: Record<string, string> = { off: text.haOff, "not-configured": text.haNotConfigured, connecting: text.haConnecting,
         connected: fill(text.haConnected, { host }), refused: fill(text.haRefused, { host }), unreachable: fill(text.haUnreachable, { host }) };
+      return { value: states[row.state] ?? text.unknown, details };
+    }
+    case "jarvis": {
+      // Jarvis: information only. How it answers rides along; the screen helper needs the Anthropic key.
+      const host = clean(data.host, 64) || "serverv3";
+      if (row.state !== "off") details.push(data.backend === "claude" ? text.jvViaClaude : fill(text.jvViaHa, { host }));
+      if (row.state !== "off" && data.screenHelper === false) details.push(text.jvNoHelper);
+      const states: Record<string, string> = { off: text.jvOff, "not-set-up": text.jvNotSetUp, connected: text.jvConnected, ready: text.jvReady,
+        "ha-unreachable": text.jvHaDown, "claude-unreachable": text.jvClaudeDown, "token-refused": text.jvToken, "key-refused": text.jvKey, "agent-missing": text.jvAgent };
       return { value: states[row.state] ?? text.unknown, details };
     }
     case "core-update":

@@ -123,7 +123,7 @@ internal static class CoreHealthPolicy
 	internal const long PcMinFreeBytes = 20L * 1000 * 1000 * 1000;
 
 	// The order the Quick Access section shows the rows in.
-	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "save-backup", "steam-update", "decky-plugins", "tv", "streaming", "stream-sleep", "wake-on-lan", "home-assistant", "microphone", "pc-disk", "core-update" };
+	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "save-backup", "steam-update", "decky-plugins", "tv", "streaming", "stream-sleep", "wake-on-lan", "home-assistant", "jarvis", "microphone", "pc-disk", "core-update" };
 
 	// The home server running Aincrad: "serverv3", "192.168.1.109", "serverv3:8123" or a full http(s) URL.
 	// Its nightly backup writes core-status.json into Home Assistant's www/ folder, served without a

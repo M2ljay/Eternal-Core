@@ -51,7 +51,7 @@ using (JsonDocument nullPool = JsonDocument.Parse(sample.Replace("\"pool\": {", 
 // ---------- verdicts ----------
 HealthReport report = CoreHealthPolicy.Evaluate(Base(server: status));
 Check(report.Attention == 0 && report.Problems.Count == 0, "verdict: sample is all good");
-Check(report.Rows.Select(row => row.Id).SequenceEqual(CoreHealthPolicy.RowOrder.Where(id => id is not ("steam-update" or "save-backup" or "decky-plugins" or "stream-sleep" or "wake-on-lan" or "home-assistant"))), "verdict: rows in display order (Steam updates only when postponed, batch 1 rows only with their inputs)");
+Check(report.Rows.Select(row => row.Id).SequenceEqual(CoreHealthPolicy.RowOrder.Where(id => id is not ("steam-update" or "save-backup" or "decky-plugins" or "stream-sleep" or "wake-on-lan" or "home-assistant" or "jarvis"))), "verdict: rows in display order (Steam updates only when postponed, batch 1 rows only with their inputs)");
 Check(Row(report, "server-backup").State == "ok" && Row(report, "server-backup").Data["skippedPlatforms"] is IReadOnlyList<string> { Count: 2 }, "verdict: backup ok with skipped platforms");
 
 report = CoreHealthPolicy.Evaluate(Base(ServerStatusRead.NotConfigured) with { ServerName = null });
@@ -90,7 +90,7 @@ Check(Row(report, "update-night").State == "scheduled" && report.Attention == 0,
 report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { SteamPostponedReason = "pending-unknown", SteamPendingVersion = "1795000000", SteamPostponedSince = now.AddDays(-3) });
 Check(Row(report, "steam-update") is { Level: HealthLevel.Info, State: "postponed" } && (string?)Row(report, "steam-update").Data["reason"] == "pending-unknown" && report.Attention == 0,
     "verdict: a postponed Steam update is shown with its reason, calmly at first");
-Check(report.Rows.Select(row => row.Id).SequenceEqual(CoreHealthPolicy.RowOrder.Where(id => id is not ("save-backup" or "decky-plugins" or "stream-sleep" or "wake-on-lan" or "home-assistant"))), "verdict: the Steam update row sits after update night");
+Check(report.Rows.Select(row => row.Id).SequenceEqual(CoreHealthPolicy.RowOrder.Where(id => id is not ("save-backup" or "decky-plugins" or "stream-sleep" or "wake-on-lan" or "home-assistant" or "jarvis"))), "verdict: the Steam update row sits after update night");
 report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { SteamPostponedReason = "rolled-back", SteamFailedCheck = "plugins", SteamPostponedAttention = true });
 Check(Row(report, "steam-update") is { Level: HealthLevel.Attention } && (string?)Row(report, "steam-update").Data["failedCheck"] == "plugins" && report.Attention == 1,
     "verdict: postponed 21 days past the soak turns amber (attention)");
@@ -180,6 +180,9 @@ BatchOneTests.Run(Check);
 
 // ---------- batch 2: MQTT, Home Assistant, automations, sleep after streaming, Wake-on-LAN (BatchTwoTests.cs) ----------
 BatchTwoTests.Run(Check);
+
+// ---------- Jarvis: chat, screen helper, push-to-talk (JarvisTests.cs, docs/eternal/JARVIS.md) ----------
+JarvisTests.Run(Check);
 
 Console.WriteLine($"ALL PASS ({passed} checks)");
 return 0;

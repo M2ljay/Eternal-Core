@@ -122,6 +122,7 @@ internal sealed partial class MarkIIIHost : IDisposable
 	{
 		StopVoice();
 		StopConsole();
+		try { CancelListening("the agent stopped"); _jarvisClient.Dispose(); } catch { }
 		lock (_sync)
 		{
 			if (!_subscribed) return;
@@ -147,6 +148,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 			catch (Exception error) { _logger.Error("Stream mode: check failed this round.", error); }
 			try { await CheckBatchTwoAsync().ConfigureAwait(false); }
 			catch (Exception error) { _logger.Error("Batch 2: check failed this round.", error); }
+			try { CheckJarvis(); }
+			catch (Exception error) { _logger.Error("Jarvis: check failed this round.", error); }
 			if (++tick % 12 != 0) continue; // once a minute
 			try { await CheckSteamHoldAsync().ConfigureAwait(false); }
 			catch (Exception error) { _logger.Error("Mark III: Steam update hold check failed this round.", error); }
@@ -853,6 +856,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 		{
 			if (e.Mode == PowerModes.Suspend)
 			{
+				// Jarvis: the session (history, screen answer, any recording) is forgotten when the PC sleeps.
+				try { ClearJarvis("the PC went to sleep"); } catch (Exception error) { _logger.Error("Jarvis: could not clear the session before sleep.", error); }
 				bool forStream = _sleepingForStream;
 				if (!forStream) { try { RememberStreamAtSleep(); } catch (Exception error) { _logger.Error("Stream mode: could not note the stream before sleep.", error); } }
 				// Batch 2: Home Assistant hears "asleep" (bounded, the sleep does not wait for the broker).
@@ -1053,5 +1058,6 @@ internal sealed partial class MarkIIIHost : IDisposable
 		MapConsole(app);
 		MapBatch(app);
 		MapBatchTwo(app);
+		MapJarvis(app);
 	}
 }

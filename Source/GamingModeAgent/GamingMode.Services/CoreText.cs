@@ -506,5 +506,17 @@ internal static class CoreText
 			"कुछ चीज़ों पर ध्यान देने की ज़रूरत है। जानकारी क्विक एक्सेस > Core में है।",
 			"Несколько вещей требуют внимания. Подробности в Быстром доступе > Core.",
 		},
+		// Jarvis (JARVIS.md): the small indicator Core shows over the screen while push-to-talk records, and every time the
+		// screen helper takes a screenshot.
+		["jarvis.listening"] = new[]
+		{
+			"Jarvis ascolta", "Jarvis is listening", "Jarvis escucha", "Jarvis écoute", "Jarvis hört zu", "Jarvis está ouvindo",
+			"Jarvis слухає", "Jarvis 正在聆听", "Jarvis が聞いています", "Jarvis가 듣고 있어요", "Jarvis सुन रहा है", "Jarvis слушает",
+		},
+		["jarvis.screenshot"] = new[]
+		{
+			"Screenshot per Jarvis", "Screenshot taken for Jarvis", "Captura para Jarvis", "Capture d'écran pour Jarvis", "Screenshot für Jarvis", "Captura de tela para o Jarvis",
+			"Знімок екрана для Jarvis", "已为 Jarvis 截图", "Jarvis 用にスクリーンショットを撮りました", "Jarvis용 스크린샷을 찍었어요", "Jarvis के लिए स्क्रीनशॉट लिया गया", "Снимок экрана для Jarvis",
+		},
 	};
 }

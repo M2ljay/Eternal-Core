@@ -49,6 +49,9 @@
     <Compile Include="../Shared/PluginForkProtection.cs" Link="PluginForkProtection.cs" />
     <Compile Include="../Shared/CoreAutomations.cs" Link="CoreAutomations.cs" />
     <Compile Include="../Shared/CoreSecretStore.cs" Link="CoreSecretStore.cs" />
+    <Compile Include="../Shared/JarvisCore.cs" Link="JarvisCore.cs" />
+    <Compile Include="../Shared/JarvisClient.cs" Link="JarvisClient.cs" />
+    <Compile Include="../Shared/JarvisSecretStore.cs" Link="JarvisSecretStore.cs" />
     <EmbeddedResource Include="../Shared/ProtectedPluginForks.json" LogicalName="Playhub.ProtectedPluginForks.json" />
     <!-- Shared artwork services used by imported PC games. -->
     <Compile Include="../ApplicationIntegrations/Native/SteamPluginBridge.cs" Link="Importing/SteamPluginBridge.cs" />
