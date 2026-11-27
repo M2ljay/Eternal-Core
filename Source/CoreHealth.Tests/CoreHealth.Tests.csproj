@@ -18,6 +18,12 @@
     <Compile Include="../GamingModeAgent/GamingMode.Services/SaveBackup.cs" Link="SaveBackup.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/DeckyPluginLogs.cs" Link="DeckyPluginLogs.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/WindDown.cs" Link="WindDown.cs" />
+    <!-- Batch 2: MQTT, the Home Assistant bridge, automations, sleep after streaming (and the stream log it reads). -->
+    <Compile Include="../GamingModeAgent/GamingMode.Services/MqttWire.cs" Link="MqttWire.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/HomeAssistantBridge.cs" Link="HomeAssistantBridge.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/StreamPower.cs" Link="StreamPower.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/CoreStreamMode.cs" Link="CoreStreamMode.cs" />
+    <Compile Include="../Shared/CoreAutomations.cs" Link="CoreAutomations.cs" />
     <!-- The full schema 1 shape (every optional section filled). -->
     <None Include="core-status.sample.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- Exactly what Aincrad's scripts/backup.sh writes. -->

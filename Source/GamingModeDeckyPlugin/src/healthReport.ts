@@ -606,6 +606,47 @@ const batchCopy: Record<string, Copy> = {
 };
 for (const [language, table] of Object.entries(batchCopy)) Object.assign(copy[language] ?? {}, table);
 
+// Batch 2 (BATCH-2.md): sleep after streaming, Wake-on-LAN readiness and the Home Assistant bridge.
+const batchTwoCopy: Record<string, Copy> = {
+  en: {
+    r_streamSleep: "Sleep after streaming", ssOff: "Off", ssReady: "On · after {n} min", ssCounting: "Sleeping at {time} unless someone plays here", ssLast: "Last slept {when}", r_wol: "Wake-on-LAN", wolReady: "Ready", wolCheck: "Check the network adapter", wolWifi: "Wi-Fi only", wolNone: "No network adapter", wolUnknown: "Unknown", wolMac: "Wake address (MAC): {mac}", wolMagic: "Turn on \"Wake on Magic Packet\" in the adapter's Advanced settings (Device Manager)", wolPower: "Let the adapter wake the PC: Device Manager > adapter > Power Management", wolArmed: "Windows does not let the adapter wake the PC (Power Management)", wolCable: "Network cable unplugged", wolFast: "Fast startup is on: waking from shutdown may fail; waking from sleep works", wolCableHint: "Use a network cable to wake the PC from a handheld", r_ha: "Home Assistant", haOff: "Off", haNotConfigured: "Set the server in Core > Gaming Mode", haConnected: "Connected · {host}", haConnecting: "Connecting…", haRefused: "Login refused by {host}", haUnreachable: "Can't reach {host}",
+  },
+  it: {
+    r_streamSleep: "Sospensione dopo lo streaming", ssOff: "Spenta", ssReady: "Attiva · dopo {n} min", ssCounting: "Sospensione alle {time}, a meno che qualcuno giochi qui", ssLast: "Ultima sospensione {when}", r_wol: "Wake-on-LAN", wolReady: "Pronto", wolCheck: "Controlla la scheda di rete", wolWifi: "Solo Wi-Fi", wolNone: "Nessuna scheda di rete", wolUnknown: "Sconosciuto", wolMac: "Indirizzo di risveglio (MAC): {mac}", wolMagic: "Attiva \"Wake on Magic Packet\" nelle impostazioni avanzate della scheda (Gestione dispositivi)", wolPower: "Lascia che la scheda risvegli il PC: Gestione dispositivi > scheda > Risparmio energia", wolArmed: "Windows non permette alla scheda di risvegliare il PC (Risparmio energia)", wolCable: "Cavo di rete scollegato", wolFast: "Avvio rapido attivo: il risveglio da spento può non riuscire; da sospensione funziona", wolCableHint: "Usa un cavo di rete per risvegliare il PC da una console portatile", r_ha: "Home Assistant", haOff: "Spento", haNotConfigured: "Imposta il server in Core > Gaming Mode", haConnected: "Collegato · {host}", haConnecting: "Collegamento…", haRefused: "Accesso rifiutato da {host}", haUnreachable: "{host} non raggiungibile",
+  },
+  es: {
+    r_streamSleep: "Suspensión tras la transmisión", ssOff: "Desactivada", ssReady: "Activa · tras {n} min", ssCounting: "Suspensión a las {time} salvo que alguien juegue aquí", ssLast: "Última suspensión {when}", r_wol: "Wake-on-LAN", wolReady: "Listo", wolCheck: "Revisa el adaptador de red", wolWifi: "Solo Wi-Fi", wolNone: "Sin adaptador de red", wolUnknown: "Desconocido", wolMac: "Dirección de activación (MAC): {mac}", wolMagic: "Activa \"Wake on Magic Packet\" en las opciones avanzadas del adaptador (Administrador de dispositivos)", wolPower: "Deja que el adaptador active el PC: Administrador de dispositivos > adaptador > Administración de energía", wolArmed: "Windows no deja que el adaptador active el PC (Administración de energía)", wolCable: "Cable de red desconectado", wolFast: "El inicio rápido está activado: activar desde apagado puede fallar; desde suspensión funciona", wolCableHint: "Usa un cable de red para activar el PC desde una portátil", r_ha: "Home Assistant", haOff: "Desactivado", haNotConfigured: "Configura el servidor en Core > Gaming Mode", haConnected: "Conectado · {host}", haConnecting: "Conectando…", haRefused: "{host} rechazó el inicio de sesión", haUnreachable: "No se puede contactar con {host}",
+  },
+  fr: {
+    r_streamSleep: "Veille après le streaming", ssOff: "Désactivée", ssReady: "Active · après {n} min", ssCounting: "Veille à {time} sauf si quelqu'un joue ici", ssLast: "Dernière veille {when}", r_wol: "Wake-on-LAN", wolReady: "Prêt", wolCheck: "Vérifie la carte réseau", wolWifi: "Wi-Fi uniquement", wolNone: "Aucune carte réseau", wolUnknown: "Inconnu", wolMac: "Adresse de réveil (MAC) : {mac}", wolMagic: "Active « Wake on Magic Packet » dans les paramètres avancés de la carte (Gestionnaire de périphériques)", wolPower: "Autorise la carte à réveiller le PC : Gestionnaire de périphériques > carte > Gestion de l'alimentation", wolArmed: "Windows n'autorise pas la carte à réveiller le PC (Gestion de l'alimentation)", wolCable: "Câble réseau débranché", wolFast: "Le démarrage rapide est activé : réveiller depuis l'arrêt peut échouer ; depuis la veille, ça marche", wolCableHint: "Utilise un câble réseau pour réveiller le PC depuis une console portable", r_ha: "Home Assistant", haOff: "Désactivé", haNotConfigured: "Configure le serveur dans Core > Gaming Mode", haConnected: "Connecté · {host}", haConnecting: "Connexion…", haRefused: "Connexion refusée par {host}", haUnreachable: "{host} injoignable",
+  },
+  de: {
+    r_streamSleep: "Standby nach dem Streamen", ssOff: "Aus", ssReady: "An · nach {n} Min.", ssCounting: "Standby um {time}, außer jemand spielt hier", ssLast: "Zuletzt im Standby {when}", r_wol: "Wake-on-LAN", wolReady: "Bereit", wolCheck: "Netzwerkadapter prüfen", wolWifi: "Nur WLAN", wolNone: "Kein Netzwerkadapter", wolUnknown: "Unbekannt", wolMac: "Weckadresse (MAC): {mac}", wolMagic: "„Wake on Magic Packet“ in den erweiterten Adaptereinstellungen einschalten (Geräte-Manager)", wolPower: "Adapter darf den PC wecken: Geräte-Manager > Adapter > Energieverwaltung", wolArmed: "Windows lässt den Adapter den PC nicht wecken (Energieverwaltung)", wolCable: "Netzwerkkabel getrennt", wolFast: "Schnellstart ist an: Wecken aus dem ausgeschalteten Zustand kann fehlschlagen; aus dem Standby klappt es", wolCableHint: "Nimm ein Netzwerkkabel, um den PC vom Handheld aus zu wecken", r_ha: "Home Assistant", haOff: "Aus", haNotConfigured: "Server in Core > Gaming Mode festlegen", haConnected: "Verbunden · {host}", haConnecting: "Verbinde…", haRefused: "Anmeldung von {host} abgelehnt", haUnreachable: "{host} nicht erreichbar",
+  },
+  pt: {
+    r_streamSleep: "Suspensão após a transmissão", ssOff: "Desligada", ssReady: "Ligada · após {n} min", ssCounting: "Suspensão às {time}, a menos que alguém jogue aqui", ssLast: "Última suspensão {when}", r_wol: "Wake-on-LAN", wolReady: "Pronto", wolCheck: "Verifique o adaptador de rede", wolWifi: "Só Wi-Fi", wolNone: "Nenhum adaptador de rede", wolUnknown: "Desconhecido", wolMac: "Endereço de ativação (MAC): {mac}", wolMagic: "Ative \"Wake on Magic Packet\" nas configurações avançadas do adaptador (Gerenciador de Dispositivos)", wolPower: "Deixe o adaptador ativar o PC: Gerenciador de Dispositivos > adaptador > Gerenciamento de Energia", wolArmed: "O Windows não deixa o adaptador ativar o PC (Gerenciamento de Energia)", wolCable: "Cabo de rede desconectado", wolFast: "A inicialização rápida está ligada: ativar a partir de desligado pode falhar; da suspensão funciona", wolCableHint: "Use um cabo de rede para ativar o PC a partir de um portátil", r_ha: "Home Assistant", haOff: "Desligado", haNotConfigured: "Defina o servidor em Core > Gaming Mode", haConnected: "Conectado · {host}", haConnecting: "Conectando…", haRefused: "Login recusado por {host}", haUnreachable: "Não foi possível alcançar {host}",
+  },
+  uk: {
+    r_streamSleep: "Сон після трансляції", ssOff: "Вимкнено", ssReady: "Увімкнено · через {n} хв", ssCounting: "Сон о {time}, якщо тут ніхто не грає", ssLast: "Востаннє засинав {when}", r_wol: "Wake-on-LAN", wolReady: "Готово", wolCheck: "Перевірте мережевий адаптер", wolWifi: "Лише Wi-Fi", wolNone: "Немає мережевого адаптера", wolUnknown: "Невідомо", wolMac: "Адреса пробудження (MAC): {mac}", wolMagic: "Увімкніть «Wake on Magic Packet» у додаткових параметрах адаптера (Диспетчер пристроїв)", wolPower: "Дозвольте адаптеру будити ПК: Диспетчер пристроїв > адаптер > Керування живленням", wolArmed: "Windows не дозволяє адаптеру будити ПК (Керування живленням)", wolCable: "Мережевий кабель від’єднано", wolFast: "Швидкий запуск увімкнено: пробудження з вимкненого стану може не спрацювати; зі сну працює", wolCableHint: "Щоб будити ПК з портативної консолі, використовуйте мережевий кабель", r_ha: "Home Assistant", haOff: "Вимкнено", haNotConfigured: "Вкажіть сервер у Core > Gaming Mode", haConnected: "Підключено · {host}", haConnecting: "Підключення…", haRefused: "{host} відхилив вхід", haUnreachable: "{host} недоступний",
+  },
+  ru: {
+    r_streamSleep: "Сон после трансляции", ssOff: "Выключено", ssReady: "Включено · через {n} мин", ssCounting: "Сон в {time}, если здесь никто не играет", ssLast: "Последний сон {when}", r_wol: "Wake-on-LAN", wolReady: "Готово", wolCheck: "Проверьте сетевой адаптер", wolWifi: "Только Wi-Fi", wolNone: "Нет сетевого адаптера", wolUnknown: "Неизвестно", wolMac: "Адрес пробуждения (MAC): {mac}", wolMagic: "Включите «Wake on Magic Packet» в дополнительных параметрах адаптера (Диспетчер устройств)", wolPower: "Разрешите адаптеру будить ПК: Диспетчер устройств > адаптер > Управление электропитанием", wolArmed: "Windows не разрешает адаптеру будить ПК (Управление электропитанием)", wolCable: "Сетевой кабель отключён", wolFast: "Быстрый запуск включён: пробуждение из выключенного состояния может не сработать; из сна работает", wolCableHint: "Чтобы будить ПК с портативной консоли, используйте сетевой кабель", r_ha: "Home Assistant", haOff: "Выключено", haNotConfigured: "Укажите сервер в Core > Gaming Mode", haConnected: "Подключено · {host}", haConnecting: "Подключение…", haRefused: "{host} отклонил вход", haUnreachable: "{host} недоступен",
+  },
+  zh: {
+    r_streamSleep: "串流后睡眠", ssOff: "已关闭", ssReady: "已开启 · {n} 分钟后", ssCounting: "将在 {time} 睡眠，除非有人在这里玩", ssLast: "上次睡眠 {when}", r_wol: "网络唤醒", wolReady: "就绪", wolCheck: "请检查网络适配器", wolWifi: "仅 Wi-Fi", wolNone: "没有网络适配器", wolUnknown: "未知", wolMac: "唤醒地址（MAC）：{mac}", wolMagic: "在适配器的高级设置中打开“Wake on Magic Packet”（设备管理器）", wolPower: "允许适配器唤醒电脑：设备管理器 > 适配器 > 电源管理", wolArmed: "Windows 不允许适配器唤醒电脑（电源管理）", wolCable: "网线已拔出", wolFast: "快速启动已开启：从关机唤醒可能失败；从睡眠唤醒没问题", wolCableHint: "要从掌机唤醒电脑，请使用网线", r_ha: "Home Assistant", haOff: "已关闭", haNotConfigured: "在 Core > Gaming Mode 中设置服务器", haConnected: "已连接 · {host}", haConnecting: "正在连接…", haRefused: "{host} 拒绝登录", haUnreachable: "无法连接 {host}",
+  },
+  ja: {
+    r_streamSleep: "ストリーミング後にスリープ", ssOff: "オフ", ssReady: "オン · {n} 分後", ssCounting: "{time} にスリープ（ここで誰かが遊ばない限り）", ssLast: "前回のスリープ {when}", r_wol: "Wake-on-LAN", wolReady: "準備完了", wolCheck: "ネットワークアダプターを確認してください", wolWifi: "Wi-Fi のみ", wolNone: "ネットワークアダプターがありません", wolUnknown: "不明", wolMac: "復帰用アドレス（MAC）：{mac}", wolMagic: "アダプターの詳細設定で「Wake on Magic Packet」をオンにします（デバイス マネージャー）", wolPower: "アダプターで PC を復帰できるようにします：デバイス マネージャー > アダプター > 電源の管理", wolArmed: "Windows がアダプターによる復帰を許可していません（電源の管理）", wolCable: "ネットワークケーブルが抜けています", wolFast: "高速スタートアップがオン：シャットダウンからの起動は失敗することがあります。スリープからの復帰は問題ありません", wolCableHint: "携帯機から PC を起こすにはネットワークケーブルを使ってください", r_ha: "Home Assistant", haOff: "オフ", haNotConfigured: "Core > Gaming Mode でサーバーを設定してください", haConnected: "接続済み · {host}", haConnecting: "接続しています…", haRefused: "{host} にログインを拒否されました", haUnreachable: "{host} に接続できません",
+  },
+  ko: {
+    r_streamSleep: "스트리밍 후 절전", ssOff: "꺼짐", ssReady: "켜짐 · {n}분 후", ssCounting: "여기서 누가 플레이하지 않으면 {time}에 절전", ssLast: "마지막 절전 {when}", r_wol: "Wake-on-LAN", wolReady: "준비됨", wolCheck: "네트워크 어댑터를 확인하세요", wolWifi: "Wi-Fi만 있음", wolNone: "네트워크 어댑터 없음", wolUnknown: "알 수 없음", wolMac: "깨우기 주소(MAC): {mac}", wolMagic: "어댑터의 고급 설정에서 \"Wake on Magic Packet\"을 켜세요(장치 관리자)", wolPower: "어댑터가 PC를 깨울 수 있게 하세요: 장치 관리자 > 어댑터 > 전원 관리", wolArmed: "Windows가 어댑터의 PC 깨우기를 허용하지 않음(전원 관리)", wolCable: "네트워크 케이블 분리됨", wolFast: "빠른 시작이 켜져 있음: 종료 상태에서 깨우기는 실패할 수 있고, 절전에서는 됩니다", wolCableHint: "휴대용 기기에서 PC를 깨우려면 네트워크 케이블을 쓰세요", r_ha: "Home Assistant", haOff: "꺼짐", haNotConfigured: "Core > Gaming Mode에서 서버를 설정하세요", haConnected: "연결됨 · {host}", haConnecting: "연결하는 중…", haRefused: "{host}에서 로그인 거부", haUnreachable: "{host}에 연결할 수 없음",
+  },
+  hi: {
+    r_streamSleep: "स्ट्रीमिंग के बाद स्लीप", ssOff: "बंद", ssReady: "चालू · {n} मिनट बाद", ssCounting: "{time} पर स्लीप, जब तक कोई यहाँ न खेले", ssLast: "पिछली बार स्लीप {when}", r_wol: "Wake-on-LAN", wolReady: "तैयार", wolCheck: "नेटवर्क एडैप्टर जाँचें", wolWifi: "सिर्फ़ Wi-Fi", wolNone: "कोई नेटवर्क एडैप्टर नहीं", wolUnknown: "अज्ञात", wolMac: "जगाने का पता (MAC): {mac}", wolMagic: "एडैप्टर की Advanced सेटिंग में \"Wake on Magic Packet\" चालू करें (Device Manager)", wolPower: "एडैप्टर को PC जगाने दें: Device Manager > एडैप्टर > Power Management", wolArmed: "Windows एडैप्टर को PC जगाने नहीं देता (Power Management)", wolCable: "नेटवर्क केबल निकली हुई है", wolFast: "फ़ास्ट स्टार्टअप चालू है: बंद PC को जगाना विफल हो सकता है; स्लीप से जगाना ठीक है", wolCableHint: "हैंडहेल्ड से PC जगाने के लिए नेटवर्क केबल लगाएँ", r_ha: "Home Assistant", haOff: "बंद", haNotConfigured: "Core > Gaming Mode में सर्वर सेट करें", haConnected: "जुड़ा · {host}", haConnecting: "जुड़ रहा है…", haRefused: "{host} ने लॉगिन ठुकराया", haUnreachable: "{host} तक नहीं पहुँच पा रहे",
+  },
+};
+for (const [language, table] of Object.entries(batchTwoCopy)) Object.assign(copy[language] ?? {}, table);
+
 export const healthLanguages = Object.keys(copy);
 
 export function healthCopy(locale: string): Copy {
@@ -648,7 +689,7 @@ function formatTime(value: unknown, locale: string, hour: unknown): string {
 
 const titles: Record<string, string> = {
   "server-backup": "r_backup", "restore-check": "r_restore", "server-drive": "r_drive", romm: "r_romm",
-  "windows-restart": "r_restart", "update-night": "r_night", "save-backup": "r_saves", "steam-update": "r_steam", "decky-plugins": "r_decky", tv: "r_tv", streaming: "r_stream", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
+  "windows-restart": "r_restart", "update-night": "r_night", "save-backup": "r_saves", "steam-update": "r_steam", "decky-plugins": "r_decky", tv: "r_tv", streaming: "r_stream", "stream-sleep": "r_streamSleep", "wake-on-lan": "r_wol", "home-assistant": "r_ha", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
   // Console guards (ConsoleGuards.cs).
   display: "r_display", "sound-output": "r_sound", controllers: "r_controllers", "steam-sign-in": "r_steamSign", "auto-sign-in": "r_autoSign", bitlocker: "r_bitlocker",
   "windows-prompts": "r_prompts", "update-policy": "r_updPolicy", "launcher-updates": "r_launchUpd", "launcher-focus": "r_launchFocus", "wake-check": "r_wake",
@@ -776,6 +817,33 @@ function rowValue(row: HealthRowData, text: Copy, locale: string, now: Date): { 
       if (row.state === "errors" && names.length)
         return { value: names.length === 1 ? fill(text.dkErrOne, { name: names[0] }) : fill(text.dkErrMany, { names: names.join(", ") }), details };
       const states: Record<string, string> = { healthy: text.dkOk, waiting: text.dkWaiting, "not-applicable": text.dkNa, "not-loaded": text.dkNotLoaded };
+      return { value: states[row.state] ?? text.unknown, details };
+    }
+    case "stream-sleep": {
+      // Batch 2 (B13): information only. The countdown names the time; the last sleep rides along.
+      if (typeof data.last === "string") details.push(fill(text.ssLast, { when: when("last") }));
+      const minutes = Number(data.minutes);
+      const value = row.state === "counting" ? fill(text.ssCounting, { time: formatTime(data.at, locale, 0) })
+        : row.state === "ready" ? fill(text.ssReady, { n: Number.isInteger(minutes) && minutes >= 1 && minutes <= 120 ? minutes : 10 }) : text.ssOff;
+      return { value, details };
+    }
+    case "wake-on-lan": {
+      // Batch 2 (B13): what to change on the desktop so a handheld can wake the PC. Never attention.
+      const problems = Array.isArray(data.problems) ? data.problems : [];
+      const hints: Record<string, string> = { cable: text.wolCable, "magic-packet": text.wolMagic, "power-management": text.wolPower, "wake-armed": text.wolArmed };
+      for (const problem of problems) if (typeof problem === "string" && hints[problem]) details.push(hints[problem]);
+      if (row.state === "wifi-only") details.push(text.wolCableHint);
+      const mac = clean(data.mac, 17);
+      if (/^[0-9A-F]{2}(:[0-9A-F]{2}){5}$/.test(mac)) details.push(fill(text.wolMac, { mac }));
+      if (data.fastStartup === true) details.push(text.wolFast);
+      const states: Record<string, string> = { ready: text.wolReady, check: text.wolCheck, "wifi-only": text.wolWifi, "no-adapter": text.wolNone };
+      return { value: states[row.state] ?? text.wolUnknown, details };
+    }
+    case "home-assistant": {
+      // Batch 2 (B8): the MQTT bridge. The host is the user's own setting; never a password.
+      const host = clean(data.host, 64) || "serverv3";
+      const states: Record<string, string> = { off: text.haOff, "not-configured": text.haNotConfigured, connecting: text.haConnecting,
+        connected: fill(text.haConnected, { host }), refused: fill(text.haRefused, { host }), unreachable: fill(text.haUnreachable, { host }) };
       return { value: states[row.state] ?? text.unknown, details };
     }
     case "core-update":

@@ -270,6 +270,69 @@ foreach (var language in LocalizationService.Languages.Where(language => languag
 }
 Check(batchOne.All(key => LocalizationService.Translate("it", key) == key), "Batch 1 Italian source strings render as written");
 
+// Batch 2 (MainWindow.Batch2.cs, docs/eternal/BATCH-2.md): Home Assistant, automations, sleep after streaming and
+// swipe typing, in every language.
+string[] batchTwo =
+{
+    "Core pubblica il suo stato con MQTT: gioco in corso, film in riproduzione, inattivo, in sospensione, modalità streaming e VR. Home Assistant può accendere la TV, avviare la modalità streaming e mettere il PC in sospensione. L'aggiornamento di Steam resta solo sul PC.",
+    "Collega Core a Home Assistant",
+    "Le entità compaiono da sole in Home Assistant (rilevamento MQTT) sotto il dispositivo Core.",
+    "Server MQTT",
+    "Nome utente",
+    "La password resta su questo PC, cifrata per il tuo utente di Windows. Non finisce mai in config.json né nei log.",
+    "Salva la password",
+    "Collegati ora",
+    "Password salvata.",
+    "Non riesco a salvare la password.",
+    "Collegato a {0}.",
+    "Nome utente o password rifiutati dal server MQTT.",
+    "Non riesco a raggiungere {0}.",
+    "Inserisci il nome del server MQTT.",
+    "Collegamento spento.",
+    "Collegamento in corso…",
+    "Nessuna password salvata.",
+    "Automazioni",
+    "Quando succede qualcosa, Core fa qualcosa. Il riepilogo è in Accesso rapido > Core.",
+    "La TV al risveglio segue l'opzione \"Accendi all'avvio del PC\" di LG webOS: una regola \"Quando Core si risveglia: accendi la TV\" usa la stessa strada, e la TV non viene mai accesa due volte di seguito.",
+    "Aggiungi una regola",
+    "Torna alle regole predefinite",
+    "Sospensione dopo lo streaming",
+    "Quando lo streaming verso una console portatile finisce e nessuno usa Core qui, il PC va in sospensione dopo il tempo scelto. Il gioco resta sospeso in memoria; la console portatile risveglia il PC con Wake-on-LAN (\"Risveglia PC\" in Moonlight). La TV resta com'è.",
+    "Dopo",
+    "Per Wake-on-LAN collega il PC con un cavo di rete e attiva \"Wake on Magic Packet\" nella scheda di rete. Accesso rapido > Core > Salute dice se è pronto.",
+    "Scrittura a scorrimento sulla tastiera di Steam",
+    "Scrivi scorrendo sui trackpad, con suggerimenti e correzione automatica (basato su VaporType). Spento torna la tastiera normale di Steam.",
+    "Nessuna regola.",
+    "Rimuovi",
+    "Evento di Home Assistant",
+    "Al massimo 20 regole.",
+    "Quando si collega un controller",
+    "Quando Core si risveglia",
+    "Quando parte un gioco",
+    "Quando finisce un gioco",
+    "Quando inizia uno streaming",
+    "Quando finisce uno streaming",
+    "Accendi la TV e passa a Core",
+    "Ripristina lo schermo normale",
+    "Ripristina l'uscita audio normale",
+    "Lascia stare la TV (modalità streaming)",
+    "Restituisci la TV",
+    "Avvisa Home Assistant"
+};
+foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
+{
+    foreach (var key in batchTwo)
+    {
+        var translated = LocalizationService.Translate(language.Key, key);
+        if (string.IsNullOrWhiteSpace(translated) || translated == key)
+            throw new Exception($"Batch 2 string is not translated: {language.Key}/{key}");
+        if (!Tokens(translated).SequenceEqual(Tokens(key)))
+            throw new Exception($"Batch 2 string format token mismatch: {language.Key}/{key}");
+    }
+    Check(true, $"{language.Key}: {batchTwo.Length} batch 2 strings translate");
+}
+Check(batchTwo.All(key => LocalizationService.Translate("it", key) == key), "Batch 2 Italian source strings render as written");
+
 // Eternal Core rebrand (docs/eternal/REBRAND.md): the app is called Core everywhere the user reads it.
 // "Playhub" stays only where it names something that still carries that name: the upstream project in
 // the credits, the upstream Playhub-* plugin suite, and the Playhub.exe file. Any other product-name use is a missed string.

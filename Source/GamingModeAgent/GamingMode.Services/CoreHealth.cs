@@ -100,6 +100,9 @@ internal sealed record CoreHealthInputs
 	// plugins whose logs report errors (DeckyPluginLogs.cs). Null leaves their rows out.
 	public SaveBackupInputs? SaveBackup { get; init; }
 	public DeckyPluginInputs? DeckyPlugins { get; init; }
+	// Batch 2 (docs/eternal/BATCH-2.md): sleep after streaming, Wake-on-LAN readiness and the Home Assistant bridge, already
+	// judged by their own policies (StreamPower.cs, HomeAssistantBridge.cs); shown after the Streaming row. Null leaves them out.
+	public IReadOnlyList<HealthRow>? BatchTwoRows { get; init; }
 }
 
 internal sealed record HealthRow(string Id, HealthLevel Level, string State, IReadOnlyDictionary<string, object?> Data);
@@ -120,7 +123,7 @@ internal static class CoreHealthPolicy
 	internal const long PcMinFreeBytes = 20L * 1000 * 1000 * 1000;
 
 	// The order the Quick Access section shows the rows in.
-	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "save-backup", "steam-update", "decky-plugins", "tv", "streaming", "microphone", "pc-disk", "core-update" };
+	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "save-backup", "steam-update", "decky-plugins", "tv", "streaming", "stream-sleep", "wake-on-lan", "home-assistant", "microphone", "pc-disk", "core-update" };
 
 	// The home server running Aincrad: "serverv3", "192.168.1.109", "serverv3:8123" or a full http(s) URL.
 	// Its nightly backup writes core-status.json into Home Assistant's www/ folder, served without a
@@ -342,6 +345,7 @@ internal static class CoreHealthPolicy
 		rows.Add(!input.StreamActive ? new HealthRow("streaming", HealthLevel.Ok, "idle", stream)
 			: input.StreamDetected ? new HealthRow("streaming", HealthLevel.Info, "streaming", stream)
 			: new HealthRow("streaming", HealthLevel.Info, "kept-out", stream));
+		if (input.BatchTwoRows is { } batchTwo) rows.AddRange(batchTwo.Where(row => RowOrder.Contains(row.Id)).OrderBy(row => Array.IndexOf(RowOrder, row.Id)));
 
 		// Microphone: information only. Muted is a choice, not a problem (the plugin shows it in crimson).
 		// Partly muted is worth a look: a call may use the muted one while the badge's other mic is live.

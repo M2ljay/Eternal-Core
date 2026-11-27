@@ -201,8 +201,12 @@ class Plugin(QuickSettingsPlugin):
         return await module.request(method, args)
 
     # Eternal Core Mark III: Decky health heartbeat and the Core Repair tile (see src/coreHealth.ts).
-    async def core_heartbeat(self):
-        return await asyncio.to_thread(self._agent_local, "POST", "/decky/heartbeat")
+    async def core_heartbeat(self, input_ago=None):
+        # Batch 2: seconds since Steam last reported controller input here (sleep after streaming, agent StreamPower.cs).
+        path = "/decky/heartbeat"
+        if isinstance(input_ago, int) and not isinstance(input_ago, bool) and 0 <= input_ago <= 86400:
+            path += "?inputAgo=" + str(input_ago)
+        return await asyncio.to_thread(self._agent_local, "POST", path)
 
     async def core_repair_shortcut(self):
         return await asyncio.to_thread(self._agent_local, "GET", "/core/repair/shortcut")
@@ -306,6 +310,239 @@ class Plugin(QuickSettingsPlugin):
             return {}
         query = urllib.parse.urlencode({"appId": str(app_id), "outcome": outcome})
         return await asyncio.to_thread(self._agent_local, "POST", "/core/completed/report?" + query, timeout=3)
+
+    # Batch 2 (docs/eternal/BATCH-2.md): the automations summary for Quick Access (src/AutomationsSection.tsx; agent
+    # MarkIIIHost.Batch2.cs). Rules, the last runs, the Home Assistant bridge's state and sleep after streaming.
+    async def core_automations(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/core/automations", timeout=4, maximum=32768)
+
+    # Batch 2: swipe typing on Steam's keyboard, adapted from VaporType (MIT, github.com/dmitrii-galantsev/VaporType;
+    # src/swipeTyping.ts). The on/off switch is Core's setting (config.json through the agent); learned words, the
+    # optional typing log and the "forget everything" bookkeeping are VaporType's, without its self-update (Core
+    # ships the keyboard files with its own updates) and so without its top-level fcntl import, which has no Windows.
+    async def core_typing_load(self):
+        return await asyncio.to_thread(self._typing_load)
+
+    async def core_typing_set_enabled(self, enabled):
+        if not isinstance(enabled, bool):
+            return {}
+        answer = await asyncio.to_thread(self._agent_local, "POST", "/core/typing?enabled=" + ("true" if enabled else "false"), timeout=4)
+        if isinstance(answer.get("enabled"), bool):
+            await asyncio.to_thread(self._typing_set_pref, "enabled", answer["enabled"])
+        return answer
+
+    async def core_typing_save_words(self, payload, epoch):
+        return await asyncio.to_thread(self._typing_save_words, payload, epoch)
+
+    async def core_typing_append_log(self, batch, epoch):
+        return await asyncio.to_thread(self._typing_append_log, batch, epoch)
+
+    async def core_typing_requests(self, payload, session=""):
+        return await asyncio.to_thread(self._typing_requests, payload, session)
+
+    async def core_typing_forget(self):
+        return await asyncio.to_thread(self._typing_forget_all)
+
+    _TYPING_WORDS = "user-words.json"
+    _TYPING_PREFS = "plugin-settings.json"
+    _TYPING_LOG = "typing-log.jsonl"
+    _TYPING_LOG_MAX = 5 * 1024 * 1024
+    _TYPING_MAX_PAYLOAD = 4 * 1024 * 1024
+
+    def _typing_dirs(self):
+        import decky
+        settings = os.path.join(str(getattr(decky, "DECKY_PLUGIN_SETTINGS_DIR", "") or os.path.dirname(__file__)), "swipe-typing")
+        runtime = os.path.join(str(getattr(decky, "DECKY_PLUGIN_RUNTIME_DIR", "") or os.path.dirname(__file__)), "swipe-typing")
+        return settings, runtime
+
+    def _typing_lock(self):
+        lock = getattr(self, "_typing_lock_object", None)
+        if lock is None:
+            lock = self._typing_lock_object = threading.Lock()
+        return lock
+
+    @staticmethod
+    def _typing_read_json(path):
+        try:
+            with open(path, encoding="utf-8") as handle:
+                data = json.load(handle)
+            return data if isinstance(data, dict) else None
+        except (OSError, ValueError):
+            return None
+
+    @staticmethod
+    def _typing_write(path, text):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        temporary = path + ".tmp"
+        with open(temporary, "w", encoding="utf-8") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+
+    @staticmethod
+    def _typing_remove(path):
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            pass
+        except OSError:
+            return False
+        return True
+
+    def _typing_prefs(self):
+        prefs = getattr(self, "_typing_prefs_cache", None)
+        if prefs is None:
+            settings, _ = self._typing_dirs()
+            prefs = self._typing_read_json(os.path.join(settings, self._TYPING_PREFS)) or {}
+            prefs.setdefault("enabled", True)
+            prefs.setdefault("epoch", 0)
+            self._typing_prefs_cache = prefs
+        return prefs
+
+    def _typing_save_prefs(self):
+        settings, _ = self._typing_dirs()
+        self._typing_write(os.path.join(settings, self._TYPING_PREFS), json.dumps(self._typing_prefs()))
+
+    def _typing_set_pref(self, name, value):
+        with self._typing_lock():
+            self._typing_prefs()[name] = value
+            self._typing_save_prefs()
+
+    def _typing_targets(self):
+        settings, runtime = self._typing_dirs()
+        words = os.path.join(settings, self._TYPING_WORDS)
+        log = os.path.join(runtime, self._TYPING_LOG)
+        return [words, words + ".bak", words + ".tmp", log, log + ".1"]
+
+    # VaporType's forget bookkeeping: a forget raises the epoch, so a save still in flight from before it is refused,
+    # and the files that could not be deleted yet are retried on every later call.
+    def _typing_forget(self, key):
+        prefs = self._typing_prefs()
+        prefs["epoch"] += 1
+        prefs["forget"] = {"key": key, "epoch": prefs["epoch"], "pending": self._typing_targets()}
+        self._typing_save_prefs()
+        return self._typing_settle()
+
+    def _typing_settle(self):
+        forget = self._typing_prefs().get("forget")
+        if not forget:
+            return True
+        left = [path for path in forget["pending"] if not self._typing_remove(path) or os.path.lexists(path)]
+        if left != forget["pending"]:
+            forget["pending"] = left
+            self._typing_save_prefs()
+        return not left
+
+    def _typing_pending(self, path):
+        forget = self._typing_prefs().get("forget")
+        return bool(forget) and path in forget["pending"]
+
+    def _typing_resolved(self, path):
+        forget = self._typing_prefs().get("forget")
+        if forget and path in forget["pending"]:
+            forget["pending"] = [item for item in forget["pending"] if item != path]
+            self._typing_save_prefs()
+
+    def _typing_load(self):
+        agent = self._agent_local("GET", "/core/typing", timeout=3)
+        with self._typing_lock():
+            self._typing_settle()
+            prefs = self._typing_prefs()
+            if isinstance(agent.get("enabled"), bool) and agent["enabled"] != prefs.get("enabled"):
+                prefs["enabled"] = agent["enabled"]
+                self._typing_save_prefs()
+            settings, _ = self._typing_dirs()
+            words = None
+            for path in (os.path.join(settings, self._TYPING_WORDS), os.path.join(settings, self._TYPING_WORDS + ".bak")):
+                if self._typing_pending(path):
+                    continue
+                words = self._typing_read_json(path)
+                if words is not None:
+                    break
+            return {"userWords": words, "enabled": prefs["enabled"], "epoch": prefs["epoch"],
+                    "install": {"date": None, "via": "core", "decky": "", "plugin": "core"}}
+
+    def _typing_save_words(self, payload, epoch):
+        if isinstance(epoch, bool) or not isinstance(epoch, int):
+            return {}
+        with self._typing_lock():
+            current = self._typing_prefs()["epoch"]
+            if epoch != current:
+                return {"saved": False, "epoch": current}
+            if isinstance(payload, str):
+                if len(payload) > self._TYPING_MAX_PAYLOAD:
+                    return {"saved": False, "epoch": current}
+                payload = json.loads(payload)
+            if not isinstance(payload, dict):
+                return {"saved": False, "epoch": current}
+            data = dict(payload)
+            rev = data.pop("rev", None)
+            generation = data.pop("forgetGen", None)
+            text = json.dumps(data)
+            if len(text) > self._TYPING_MAX_PAYLOAD:
+                return {"saved": False, "epoch": current}
+            settings, _ = self._typing_dirs()
+            path = os.path.join(settings, self._TYPING_WORDS)
+            saved_generation = getattr(self, "_typing_saved_generation", None)
+            forgot = isinstance(generation, int) and isinstance(saved_generation, int) and generation > saved_generation
+            if forgot or self._typing_pending(path):
+                self._typing_remove(path + ".bak")
+            elif os.path.isfile(path):
+                shutil.copyfile(path, path + ".bak")
+            self._typing_write(path, text)
+            self._typing_resolved(path)
+            self._typing_resolved(path + ".tmp")
+            self._typing_saved_generation = generation
+            return {"saved": True, "rev": rev, "gen": generation, "epoch": current}
+
+    def _typing_append_log(self, batch, epoch):
+        lines = batch.get("lines") if isinstance(batch, dict) else batch
+        if not isinstance(lines, list) or isinstance(epoch, bool) or not isinstance(epoch, int):
+            return {}
+        with self._typing_lock():
+            current = self._typing_prefs()["epoch"]
+            if epoch != current or not lines:
+                return {"saved": False, "epoch": current}
+            _, runtime = self._typing_dirs()
+            path = os.path.join(runtime, self._TYPING_LOG)
+            if (self._typing_pending(path) or self._typing_pending(path + ".1")) and not self._typing_settle():
+                return {"saved": False, "epoch": current}
+            os.makedirs(runtime, exist_ok=True)
+            try:
+                if os.path.getsize(path) >= self._TYPING_LOG_MAX:
+                    os.replace(path, path + ".1")
+            except OSError:
+                pass
+            with open(path, "a", encoding="utf-8") as handle:
+                handle.write("".join(str(line)[:4096] + "\n" for line in lines[:1000]))
+            return {"saved": True, "epoch": current}
+
+    def _typing_requests(self, payload, session=""):
+        if not isinstance(payload, str) or len(payload) > 65536 or not isinstance(session, str):
+            return {}
+        with self._typing_lock():
+            request = json.loads(payload)
+            if not isinstance(request, dict):
+                return {}
+            rev = request.get("rev")
+            ok = True
+            if request.get("forget") or request.get("removeBackup"):
+                key = "%s:%s" % (session[:80], rev) if session and rev is not None else None
+                forget = self._typing_prefs().get("forget")
+                ok = self._typing_settle() if key is not None and forget and forget.get("key") == key else self._typing_forget(key)
+            if request.get("clearLog"):
+                _, runtime = self._typing_dirs()
+                paths = [os.path.join(runtime, self._TYPING_LOG), os.path.join(runtime, self._TYPING_LOG + ".1")]
+                for path in paths:
+                    self._typing_remove(path)
+                ok = not any(os.path.lexists(path) for path in paths) and ok
+            return {"epoch": self._typing_prefs()["epoch"], "rev": rev, "ok": ok}
+
+    def _typing_forget_all(self):
+        with self._typing_lock():
+            ok = self._typing_forget(None)
+            return {"epoch": self._typing_prefs()["epoch"], "ok": ok}
 
     @staticmethod
     def _agent_local(method, path, *, timeout=2.5, maximum=4096):

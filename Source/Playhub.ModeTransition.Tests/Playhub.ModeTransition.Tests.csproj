@@ -16,6 +16,8 @@
     <Compile Include="../GamingModeAgent/GamingMode.Models/ModeKind.cs" Link="ModeKind.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/ModeConfig.cs" Link="ModeConfig.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/GamingSettings.cs" Link="GamingSettings.cs" />
+    <!-- Batch 2: both config models carry the automation rules. -->
+    <Compile Include="../Shared/CoreAutomations.cs" Link="CoreAutomations.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/TvSettings.cs" Link="TvSettings.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/SafetySettings.cs" Link="SafetySettings.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/GamingStartupApp.cs" Link="GamingStartupApp.cs" />

@@ -100,6 +100,8 @@ the PC streams to another device): [CORE-STREAM-MODE.md](CORE-STREAM-MODE.md). C
 keyboard, mouse or password; nothing quietly breaks the TV): [CONSOLE-GUARDS.md](CONSOLE-GUARDS.md).
 Batch 1 (save backup before update night, Decky naming the failing plugin, the 4 a.m. wind-down, Auto-Completed):
 [BATCH-1.md](BATCH-1.md).
+Batch 2 (swipe typing on Steam's keyboard, the Home Assistant bridge over MQTT, automations, sleep after streaming
+with Wake-on-LAN): [BATCH-2.md](BATCH-2.md).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

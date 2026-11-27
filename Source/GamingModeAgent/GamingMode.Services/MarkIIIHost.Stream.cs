@@ -65,6 +65,9 @@ internal sealed partial class MarkIIIHost
 		}
 		string? change = StreamModePolicy.Describe(before, next);
 		if (change is not null) _logger.Info(change);
+		// Batch 2: a stream starting or ending triggers automations (MarkIIIHost.Batch2.cs).
+		try { OnStreamEvaluated(next); }
+		catch (Exception error) { _logger.Error("Automations: the stream trigger failed.", error); }
 		try { ApplyStreamAudio(next, settings); }
 		catch (Exception error) { _logger.Error("Stream mode: the PC's sound could not be checked this round.", error); }
 		return next;

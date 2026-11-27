@@ -28,8 +28,22 @@ internal static class StreamProbes
 			yield return (path.Contains("apollo", StringComparison.OrdinalIgnoreCase) ? StreamSource.Apollo : StreamSource.Sunshine, path);
 			yield break;
 		}
+		// Vibepollo (an Apollo fork, installed into Apollo's folder) writes one log per run under config\logs (batch 2,
+		// VibepolloLogs in StreamPower.cs); the newest is the current run.
+		if (NewestVibepolloLog() is { } vibepollo) yield return (StreamSource.Apollo, vibepollo);
 		yield return (StreamSource.Apollo, Path.Combine(ApolloFolder, "config", "sunshine.log"));
 		yield return (StreamSource.Sunshine, Path.Combine(SunshineFolder, "config", "sunshine.log"));
+	}
+
+	internal static string? NewestVibepolloLog()
+	{
+		try
+		{
+			string folder = Path.Combine(ApolloFolder, "config", "logs");
+			if (!Directory.Exists(folder)) return null;
+			return VibepolloLogs.Newest(new DirectoryInfo(folder).EnumerateFiles("*.log").Take(200).Select(file => (file.FullName, file.LastWriteTimeUtc)));
+		}
+		catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return null; }
 	}
 
 	// Both Sunshine and Apollo run as sunshine.exe (Sunshine's service starts it in the user's session).

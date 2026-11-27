@@ -133,6 +133,19 @@ public sealed class GamingSettings
 	public bool AutoCompletedEnabled { get; set; } = true;
 	public bool AutoCompletedCreate { get; set; }
 
+	// Batch 2 (docs/eternal/BATCH-2.md). Home Assistant: Core's state over MQTT with discovery (the password is not here:
+	// it is DPAPI-sealed in home-assistant-secret.json, Shared/CoreSecretStore.cs). Automations: trigger -> action rules
+	// (Shared/CoreAutomations.cs; null means the defaults). Stream sleep: sleep the PC this many minutes after a handheld's
+	// stream ends when nobody uses Core here. Swipe typing: VaporType on Steam's keyboard (Decky plugin).
+	public bool HomeAssistantEnabled { get; set; }
+	public string HomeAssistantHost { get; set; } = "serverv3";
+	public int HomeAssistantPort { get; set; } = 1883;
+	public string? HomeAssistantUser { get; set; }
+	public List<Playhub.Shared.CoreAutomationRule>? Automations { get; set; }
+	public bool StreamSleepEnabled { get; set; } = true;
+	public int StreamSleepMinutes { get; set; } = 10;
+	public bool SwipeTypingEnabled { get; set; } = true;
+
 	// Core Voice (MarkIIIHost.Voice.cs), config-only. A keyboard combination that toggles the
 	// microphone mute (bind it to a Steam Input chord); empty turns it off. An ms-gamebar: URI
 	// the Xbox party button opens instead of Win+G, for a widget link found to work on this PC.

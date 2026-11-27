@@ -152,6 +152,7 @@ internal sealed partial class MarkIIIHost
 			// Batch 1: the save backup before update night, and Decky with the plugins whose logs report errors.
 			SaveBackup = SaveBackupHealth(),
 			DeckyPlugins = new DeckyPluginInputs(_decky.Verdict.ToString(), DeckyLogs()),
+			BatchTwoRows = BatchTwoRows(),
 		});
 	}
 

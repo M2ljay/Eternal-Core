@@ -47,6 +47,8 @@
     <Compile Include="../Shared/EditorialPhotoMigration.cs" Link="EditorialPhotoMigration.cs" />
     <Compile Include="../Shared/SplashLogoScale.cs" Link="SplashLogoScale.cs" />
     <Compile Include="../Shared/PluginForkProtection.cs" Link="PluginForkProtection.cs" />
+    <Compile Include="../Shared/CoreAutomations.cs" Link="CoreAutomations.cs" />
+    <Compile Include="../Shared/CoreSecretStore.cs" Link="CoreSecretStore.cs" />
     <EmbeddedResource Include="../Shared/ProtectedPluginForks.json" LogicalName="Playhub.ProtectedPluginForks.json" />
     <!-- Shared artwork services used by imported PC games. -->
     <Compile Include="../ApplicationIntegrations/Native/SteamPluginBridge.cs" Link="Importing/SteamPluginBridge.cs" />

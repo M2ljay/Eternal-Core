@@ -384,6 +384,22 @@ internal static class CoreText
 			"{0} बज गए हैं — सेव करने का अच्छा समय है।",
 			"Уже {0} — хороший момент, чтобы сохраниться.",
 		},
+		// Batch 2: sleep after streaming, one minute before the PC sleeps ({0} = minutes left). A Steam toast.
+		["streamsleep.soon"] = new[]
+		{
+			"Nessuno sta giocando: Core va in sospensione tra {0} min. Premi un tasto per tenerlo sveglio.",
+			"Nobody is playing: Core goes to sleep in {0} min. Press any button to keep it awake.",
+			"Nadie está jugando: Core entrará en suspensión en {0} min. Pulsa un botón para mantenerlo activo.",
+			"Personne ne joue : Core se met en veille dans {0} min. Appuie sur un bouton pour le garder éveillé.",
+			"Niemand spielt: Core geht in {0} Min. in den Standby. Drück eine Taste, damit er wach bleibt.",
+			"Ninguém está jogando: o Core entra em suspensão em {0} min. Aperte um botão para mantê-lo ativo.",
+			"Ніхто не грає: Core засне через {0} хв. Натисніть будь-яку кнопку, щоб він не засинав.",
+			"没有人在玩：Core 将在 {0} 分钟后睡眠。按任意键保持唤醒。",
+			"誰もプレイしていません。Core は {0} 分後にスリープします。起こしておくにはボタンを押してください。",
+			"아무도 플레이하지 않아요. Core가 {0}분 후 절전 모드로 전환됩니다. 깨어 있게 하려면 아무 버튼이나 누르세요.",
+			"कोई नहीं खेल रहा: Core {0} मिनट में स्लीप में जाएगा। जगाए रखने के लिए कोई भी बटन दबाएँ।",
+			"Никто не играет: Core уснёт через {0} мин. Нажмите любую кнопку, чтобы он не засыпал.",
+		},
 		["health.several"] = new[]
 		{
 			"Alcune cose sul server richiedono attenzione. I dettagli sono in Accesso rapido > Core.",

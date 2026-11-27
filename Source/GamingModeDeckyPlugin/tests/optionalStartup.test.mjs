@@ -53,6 +53,10 @@ function fixture(failing, runtime = {}) {
     './coreHealth':{installCoreHeartbeat:install('core heartbeat'),ensureCoreRepairTile:()=>Promise.resolve('present')},
     './streamMode':{installSteamStreamWatch:install('stream watch')},
     './autoCompleted':{installAutoCompleted:install('auto completed')},
+    // Batch 2: the local input watch and swipe typing are optional integrations like the others.
+    './localInput':{installLocalInputWatch:()=>({secondsAgo:()=>undefined,stop:install('local input watch')()})},
+    './swipeTyping':{createSwipeTyping:()=>{const stop=install('swipe typing')();return {start:()=>Promise.resolve(),shutdown:stop};},keyboardLookups:()=>({}),vaporTypeInstalled:()=>false},
+    './SwipeTypingSection':{SwipeTypingSection:noop,setSwipeTypingRuntime:noop},
     './steamNavigationReturn':steamNavigationReturn,
     './steamFocusEvents':steamFocusEvents,
     './steamModeCommands':steamModeCommands,
@@ -69,8 +73,8 @@ function fixture(failing, runtime = {}) {
   vm.runInNewContext(compiled,{exports:{},require:name=>modules[name]??{}, window,document:{documentElement:{lang:'en'}},navigator:{language:'en'},console:{warn:(...items)=>warnings.push(items),log:noop,debug:noop},Promise,Set,performance,Date:{now:runtime.now??Date.now}});
   return {factory,calls,disposed,warnings,tick:()=>tick()};
 }
-const integrations = ['store library','digital stores portal','store game actions','update notice','core heartbeat','auto completed','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','home news','haptics','virtual controller name','qam','power menu'];
-for (const name of ['store library','digital stores portal','store game actions','update notice','core heartbeat','auto completed','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','haptics','virtual controller name','power menu']) {
+const integrations = ['store library','digital stores portal','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','home news','haptics','virtual controller name','qam','power menu'];
+for (const name of ['store library','digital stores portal','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','haptics','virtual controller name','power menu']) {
   test(`Unavailable ${name} hook does not prevent the real plugin and QAM from loading`, async () => {
     const f = fixture(name);
     const plugin = f.factory();

@@ -199,7 +199,19 @@ internal sealed class SunshineLogTail
 	private readonly Decoder _decoder = Encoding.UTF8.GetDecoder();
 	private readonly char[] _chars = new char[ReadLimit + 4];
 
-	internal SunshineLogTail(string path) => _path = path;
+	private readonly bool _rotatesInPlace;
+
+	internal SunshineLogTail(string path)
+	{
+		_path = path;
+		// Vibepollo's per-run logs (StreamPower.cs, VibepolloLogs) roll over by renaming the full piece and starting the
+		// same name empty: a shorter file there is the same run, so the session state carries on.
+		_rotatesInPlace = IsSessionLog(System.IO.Path.GetFileName(path));
+	}
+
+	private static readonly Regex SessionLog = new(@"^[A-Za-z0-9_.]{1,40}-\d{8}-\d{6}-\d{3}\.log$", RegexOptions.CultureInvariant);
+
+	internal static bool IsSessionLog(string fileName) => SessionLog.IsMatch(fileName);
 
 	internal string Path => _path;
 	internal SunshineLogState State { get; private set; } = SunshineLogState.Empty;
@@ -212,7 +224,7 @@ internal sealed class SunshineLogTail
 			var info = new FileInfo(_path);
 			if (!info.Exists) { Reset(); LastWrite = null; return State; }
 			LastWrite = info.LastWriteTimeUtc;
-			if (info.Length < _position || (_created != default && info.CreationTimeUtc != _created)) Reset();
+			if (info.Length < _position || (_created != default && info.CreationTimeUtc != _created)) { if (_rotatesInPlace) Restart(); else Reset(); }
 			_created = info.CreationTimeUtc;
 			using var stream = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
 			long length = stream.Length;
@@ -239,6 +251,15 @@ internal sealed class SunshineLogTail
 		}
 		catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
 		return State;
+	}
+
+	// A new piece of the same run: read it from the start, keep what the run said so far.
+	private void Restart()
+	{
+		_position = 0;
+		_partial = "";
+		_created = default;
+		_decoder.Reset();
 	}
 
 	private void Reset()

@@ -410,6 +410,20 @@ function has(ui, name) {
         return false;
     }
 }
+// "webpack": the Steam UI Decky 3 understands. "modules": the ES-module client only Decky 4 reaches.
+function steamClientKind(host = typeof window === "undefined" ? undefined : window) {
+    try {
+        if (!host || typeof host !== "object")
+            return "unknown";
+        if (host.webpackChunksteamui !== undefined && host.webpackChunksteamui !== null)
+            return "webpack";
+        const scripts = host.document?.querySelectorAll?.("script[type=module]");
+        return scripts && scripts.length > 0 ? "modules" : "unknown";
+    }
+    catch {
+        return "unknown";
+    }
+}
 function findExport(ui, filter, minExports) {
     const found = has(ui, "findModuleExport") ? attempt(() => ui.findModuleExport(filter, minExports)) : undefined;
     if (found !== undefined && found !== null)
@@ -455,6 +469,21 @@ function findModuleChild(ui, find) {
     }
     catch { /* A scope map that cannot be walked finds nothing. */ }
     return undefined;
+}
+// Steam's CSS class map for a set of class names (both loaders build one; on the new client
+// it is the only way to name a class, because the class strings are hashed).
+function findClassModule(ui, filter) {
+    const found = has(ui, "findClassModule") ? attempt(() => ui.findClassModule(filter)) : undefined;
+    if (found)
+        return found;
+    const maps = attempt(() => ui?.classMap);
+    if (Array.isArray(maps)) {
+        const hit = maps.find(map => map && typeof map === "object" && attempt(() => filter(map)));
+        if (hit)
+            return hit;
+    }
+    const fromModule = findModule(ui, filter);
+    return fromModule && typeof fromModule === "object" ? fromModule : undefined;
 }
 // Every class string whose original name contains `fragment`, the class-map equivalent of a
 // [class*="fragment"] selector. Bounded: a fragment that matches too much stays attribute-only.
@@ -4580,7 +4609,7 @@ const storeDigitalTranslations = {
 };
 
 // SPDX-License-Identifier: MIT. Playhub, Copyright (c) 2026 LoZazaMastro.
-const en$4 = {
+const en$5 = {
     errorQueueChanged: "The download list changed. Refresh it and try again.",
     partnerInstallEa: "This game requires EA app. Installation from Digital Stores is not available yet.",
     partnerInstallUbisoft: "This game requires Ubisoft Connect. Installation from Digital Stores is not available yet.",
@@ -4603,7 +4632,7 @@ const en$4 = {
     canceled: "Canceled", failed: "Failed", interrupted: "Interrupted", installing: "Installing", verifying: "Verifying", canceling: "Canceling", waiting: "Queued", signInCanceled: "Sign-in canceled. You can try again from Accounts.", signInFailed: "Sign-in failed. Try again from Accounts.", title: "Digital stores", subtitle: "Install and manage your games", library: "Your games", accounts: "Accounts", downloads: "Downloads", search: "Search your games", filters: "Filters", allStores: "All stores", allGames: "All games", installed: "Installed", notInstalled: "Not installed", install: "Install", manage: "Manage", uninstall: "Uninstall", refresh: "Refresh", signIn: "Sign in", signOut: "Sign out", connected: "Connected", disconnected: "Not connected", connecting: "Connecting…", expired: "Sign in again", unavailable: "Unavailable", signInNote: "Complete sign-in in the window that opened.", accountHint: "Sign in to see the games you own.", automaticSteam: "Installed games appear automatically in your Steam library, grouped by store.", installIntentLoading: "Finding this game in your library…", gameMissing: "This game is not available in the connected account. Refresh the library or check your account.", back: "Back", cancel: "Cancel", close: "Close", continue: "Continue", review: "Review installation", confirmInstall: "Install now", chooseFolder: "Choose folder", useFolder: "Use this folder", parentFolder: "Parent folder", thisPc: "This PC", directoryEmpty: "No folders here", directoryTruncated: "Showing the first 512 folders. Open a subfolder to continue.", pathNote: "A separate folder for this game will be created here.", loading: "Loading…", retry: "Retry", errorRead: "Couldn’t read your library. Your last confirmed data is still shown.", errorCommand: "The store couldn’t confirm this action. Refresh and try again.", errorPrepare: "Couldn’t prepare this installation. Try again.", errorDestination: "Choose a valid installation folder.", errorNotEmpty: "This game folder is not empty or writable. Choose another location.", errorSpace: "There is not enough free space in this location.", errorChanged: "The game or account changed. Review the current details and try again.", errorProviderBusy: "Another store operation is in progress. Try again when it finishes.", errorUninstall: "Couldn’t prepare this uninstall. Refresh and try again.", free: "Free space", required: "Required space", folder: "Installation folder", drive: "Drive", selectedDestination: "Selected destination", clearCompleted: "Clear completed", completed: "Completed", paused: "Paused", active: "In progress", downloadNow: "Download now", pause: "Pause", resume: "Resume", cancelDownload: "Cancel download", confirmCancel: "Cancel this download?", confirmUninstall: "Uninstall this game?", uninstallNote: "The selected game will be removed from this PC.", uninstallUnavailable: "Uninstall is unavailable for this installation.", emptyLibrary: "No games to show", emptyLibraryHelp: "Connect an account or adjust your filters.", emptyDownloads: "No downloads yet", emptyDownloadsHelp: "Choose a game to install from Your games.", xboxInstallNote: "Installation and its location are managed by Microsoft Store.", xboxRequested: "Installation requested. Progress appears here after the store confirms it.", unknown: "Not available", sort: "Sort by", titleOrder: "Title A–Z", installedFirst: "Installed first", refreshing: "Refreshing library…", games: "games", directoryError: "Couldn’t open this folder. Choose another location.", statusRetry: "Refresh installation status", accountRefreshFailed: "Couldn’t refresh this store. The previous library is kept."
 };
 function storeDigitalCopy(locale = getSteamLocale()) {
-    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$4 };
+    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$5 };
     for (const key of Object.keys(result)) {
         const value = translated?.[key];
         if (typeof value === "string" && value.trim())
@@ -5978,7 +6007,7 @@ function deviceInfoLocale(locale) {
         profile: profile[0], auto: profile[1], pc: profile[2], handheld: profile[3], experimental: profile[4], profileHint: profile[5], battery: profile[6], ac: profile[7], primaryDisplay: profile[8], video: profile[9], power: profile[10], details: profile[11], saveError: profile[12], retry: profile[13], batteryHealth: batteryHealth[language] ?? batteryHealth.en };
 }
 
-const copy$d = {
+const copy$e = {
     "en": {
         "StoreLibrary.WindowsManaged": "Installation managed by Microsoft Store",
         "StoreLibrary.Stores": "Digital stores",
@@ -7060,9 +7089,9 @@ const copy$d = {
         "StoreLibrary.ConfirmCancelDownload": "Вы действительно хотите отменить загрузку?"
     }
 };
-function storeLibraryLocale(locale) { return copy$d[deviceLanguage(locale)] ?? copy$d.en; }
+function storeLibraryLocale(locale) { return copy$e[deviceLanguage(locale)] ?? copy$e.en; }
 
-const { PanelSection: PanelSection$7, PanelSectionRow: PanelSectionRow$8, DropdownItem: DropdownItem$5, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = CompatUI;
+const { PanelSection: PanelSection$9, PanelSectionRow: PanelSectionRow$a, DropdownItem: DropdownItem$5, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = CompatUI;
 const danger = `.ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) {
 background:${CORE.crimson}!important;color:${CORE.white}!important}
 .ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) * {color:inherit!important}`;
@@ -7129,7 +7158,7 @@ function StoreDownloadsQam({ locale }) {
     const c = storeLibraryLocale(locale);
     if (!jobs.length)
         return null;
-    return SP_JSX.jsx(PanelSection$7, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
+    return SP_JSX.jsx(PanelSection$9, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$a, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
 }
 
 const { DialogButton: DialogButton$9 } = CompatUI;
@@ -7519,7 +7548,7 @@ function translationController(store) {
     }
 }
 
-const { PanelSectionRow: PanelSectionRow$7, ToggleField: ToggleField$6 } = CompatUI;
+const { PanelSectionRow: PanelSectionRow$9, ToggleField: ToggleField$7 } = CompatUI;
 const descriptions$1 = {
     en: "Makes the Steam Controller appear as an Xbox controller.",
     it: "Fa riconoscere lo Steam Controller come un pad Xbox.",
@@ -7568,7 +7597,7 @@ function TranslationControllerToggle({ locale }) {
     }, []);
     if (!connected || enabled === null)
         return null;
-    return SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsx(ToggleField$6, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
+    return SP_JSX.jsx(PanelSectionRow$9, { children: SP_JSX.jsx(ToggleField$7, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
                 if (typeof value !== "boolean" || writing.current || !available || !mounted.current || !translationController(window.ControllerStore))
                     return;
                 writing.current = true;
@@ -7625,7 +7654,7 @@ function pollStatus(read, update) {
     return () => { stopped = true; clearTimeout(timer); controller?.abort(); };
 }
 
-const copy$c = {
+const copy$d = {
     "en": {
         "Title": "Gaming Mode optional",
         "Description": "Start in Big Picture, switch to the desktop and open the Core Dashboard with a controller.",
@@ -7795,7 +7824,7 @@ const copy$c = {
         "Ready": "Gaming Mode तैयार है।"
     }
 };
-function optionalAgentCopy(locale) { return copy$c[locale] ?? copy$c.en; }
+function optionalAgentCopy(locale) { return copy$d[locale] ?? copy$d.en; }
 
 // Backend client for Quick Settings.
 //   * call(...)  -> Decky Python backend (main.py)
@@ -7958,7 +7987,7 @@ function gameSettingsLabel(_language) {
     return "Core Game Settings";
 }
 
-const copy$b = {
+const copy$c = {
     en: ["Session", "Audio", "Display", "Performance", "Graphics", "Controller", "System", "Settings", "Customize your panel", "Show tabs", "Move up", "Move down", "Restore defaults", "Back", "Hide a tab without changing its settings or disabling its features.", "Expand", "Collapse", "Switch tab", "Settings could not be saved. Try again."],
     it: ["Sessione", "Audio", "Schermo", "Prestazioni", "Grafica", "Controller", "Sistema", "Impostazioni", "Personalizza il pannello", "Mostra le schede", "Sposta su", "Sposta giù", "Ripristina predefiniti", "Indietro", "Nascondere una scheda non modifica le impostazioni e non disattiva le sue funzioni.", "Espandi", "Comprimi", "Cambia scheda", "Impossibile salvare le impostazioni. Riprova."],
     de: ["Sitzung", "Audio", "Bildschirm", "Leistung", "Grafik", "Controller", "System", "Einstellungen", "Panel anpassen", "Tabs anzeigen", "Nach oben", "Nach unten", "Standard wiederherstellen", "Zurück", "Das Ausblenden eines Tabs ändert keine Einstellungen und deaktiviert keine Funktionen.", "Ausklappen", "Einklappen", "Tab wechseln", "Einstellungen konnten nicht gespeichert werden. Erneut versuchen."],
@@ -7975,7 +8004,7 @@ const copy$b = {
 function controlLocale(locale) {
     const aliases = { english: "en", italian: "it", german: "de", spanish: "es", latam: "es", french: "fr", brazilian: "pt", portuguese: "pt", russian: "ru", ukrainian: "uk", japanese: "ja", koreana: "ko", schinese: "zh", tchinese: "zh", hindi: "hi" };
     const key = aliases[locale] ?? locale.split(/[-_]/)[0];
-    const row = copy$b[key] ?? copy$b.en;
+    const row = copy$c[key] ?? copy$c.en;
     const tabs = tabCopy[key] ?? tabCopy.en;
     const video = { en: "Video", it: "Video", de: "Video", es: "Vídeo", fr: "Vidéo", pt: "Vídeo", ru: "Видео", uk: "Відео", ja: "映像", ko: "비디오", zh: "视频", hi: "वीडियो" };
     return { home: row[0], audio: video[key] ?? video.en, display: row[2], performance: row[1], graphics: row[3], controller: row[5], tools: row[6], store: 'Plugin Store', decky: 'Decky', settings: row[7], customize: tabs[1], show: tabs[4], up: tabs[2], down: tabs[3], reset: row[12], back: row[13], hint: row[14], expand: row[15], collapse: row[16], switchTab: row[17], saveError: row[18], device: tabs[5], unavailable: tabs[6], loading: tabs[7], retry: tabs[8] };
@@ -8124,7 +8153,7 @@ const amdIt = {
     amdDisplayTemperature: "Temperatura colore",
     amdDriverRejected: "Il driver AMD non ha confermato questa modifica. Il valore precedente è stato ripristinato.",
 };
-const en$3 = {
+const en$4 = {
     title: "Quick Settings",
     audio: "Audio",
     volume: "Device volume",
@@ -8366,7 +8395,7 @@ const it = {
     cancel: "Annulla",
     notConnected: "Agent Quick Settings non collegato",
 };
-const strings$2 = { en: en$3, it };
+const strings$2 = { en: en$4, it };
 function t$1(locale = navigator.language) {
     const language = locale.split("-")[0];
     return { ...(strings$2[language] ?? strings$2.en), ...quickCoreLocale(language), title: "Core" };
@@ -9114,10 +9143,10 @@ function TbWindow (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M12 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"},"child":[]},{"tag":"path","attr":{"d":"M4 6l8 0"},"child":[]},{"tag":"path","attr":{"d":"M16 6l4 0"},"child":[]},{"tag":"path","attr":{"d":"M6 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"},"child":[]},{"tag":"path","attr":{"d":"M4 12l2 0"},"child":[]},{"tag":"path","attr":{"d":"M10 12l10 0"},"child":[]},{"tag":"path","attr":{"d":"M15 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"},"child":[]},{"tag":"path","attr":{"d":"M4 18l11 0"},"child":[]},{"tag":"path","attr":{"d":"M19 18l1 0"},"child":[]}]})(props);
 }
 
-const { DialogButton: DialogButton$8, Focusable: Focusable$b } = CompatUI;
+const { DialogButton: DialogButton$8, Focusable: Focusable$d } = CompatUI;
 function ControlSection({ id, title, icon, children, collapsed, onToggle, locale }) {
     const copy = controlLocale(locale);
-    return SP_JSX.jsxs(Focusable$b, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$8, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$b, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
+    return SP_JSX.jsxs(Focusable$d, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$8, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$d, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
 }
 
 /** One writer per independent setting/resource; callbacks receive only current results. */
@@ -10357,7 +10386,7 @@ function bounded$1(operation) {
         operation.then(value => { window.clearTimeout(timer); resolve(value); }, error => { window.clearTimeout(timer); reject(error); });
     });
 }
-const copy$a = {
+const copy$b = {
     en: ["Check shader support", "Graphics requirements met", "Requirements unmet", "Needs verification", "Listed by Intel · cache unverified", "Graphics adapter unavailable"],
     it: ["Verifica supporto shader", "Requisiti grafici soddisfatti", "Fuori requisiti", "Da verificare", "Nel catalogo Intel · cache da verificare", "Scheda grafica da rilevare"],
     de: ["Shader-Unterstützung prüfen", "Grafikanforderungen erfüllt", "Nicht unterstützt", "Nicht geprüft", "Bei Intel gelistet · Cache nicht geprüft", "Keine Grafikkarte erkannt"],
@@ -10396,7 +10425,7 @@ function ShaderCompatibility({ appId, locale, renderSection }) {
         return () => { mounted.current = false; ++epoch.current; window.removeEventListener("focus", onFocus); };
     }, [appId]);
     const text = shaderCacheCopy(locale);
-    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$a[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$a.en;
+    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$b[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$b.en;
     const labels = { eligible, unsupported, unverified: unknown };
     const current = (generation) => mounted.current && epoch.current === generation;
     function accept(next, generation) {
@@ -11895,7 +11924,7 @@ function createSteamDownloadPower(read, send) {
     };
 }
 
-const copy$9 = {
+const copy$a = {
     en: ["Finish Steam download", "Stop keeping awake", "On AC power, Windows can turn off the display while Steam finishes the current download.", "PC stays awake for this download.", "Could not start download power mode."],
     it: ["Completa il download Steam", "Termina modalità download", "Con l’alimentazione collegata, Windows può spegnere lo schermo mentre Steam completa il download.", "Il PC resta sveglio per questo download.", "Impossibile avviare la modalità download."],
     de: ["Steam-Download abschließen", "Wachhalten beenden", "Am Netz kann Windows den Bildschirm ausschalten, während Steam den Download beendet.", "Der PC bleibt für diesen Download wach.", "Downloadmodus konnte nicht gestartet werden."],
@@ -11963,7 +11992,7 @@ function SteamDownloadPower({ locale }) {
     }, []);
     if (!state.available && !state.active)
         return null;
-    const [start, stop, detail, active, failed] = copy$9[locale.split(/[-_]/)[0]] ?? copy$9.en;
+    const [start, stop, detail, active, failed] = copy$a[locale.split(/[-_]/)[0]] ?? copy$a.en;
     return SP_JSX.jsxs("div", { className: "qsCardBody", "aria-busy": state.busy, children: [SP_JSX.jsx(CompatUI.DialogButton, { disabled: state.busy, onClick: () => void (state.active ? downloadPower.stop() : downloadPower.start()), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: state.active ? stop : start }) }), SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: state.failed ? failed : state.active ? active : detail })] });
 }
 
@@ -24142,7 +24171,7 @@ function useHistoryPhoto(url) {
     return resolved?.source === url && resolved.digest === expected?.sha256 ? resolved.url : undefined;
 }
 
-const copy$8 = {
+const copy$9 = {
     it: ['Premi', 'per approfondire', 'per richiudere', 'Visualizza immagine', 'Chiudi'],
     en: ['Press', 'to explore', 'to collapse', 'View image', 'Close'],
     de: ['Drücke', 'für mehr', 'zum Zuklappen', 'Bild ansehen', 'Schließen'],
@@ -24156,7 +24185,7 @@ const copy$8 = {
     zh: ['按', '深入閱讀', '收起內容', '查看圖片', '關閉'],
     hi: ['', 'दबाकर विस्तार से पढ़ें', 'दबाकर समेटें', 'चित्र देखें', 'बंद करें'],
 };
-const historyActionCopy = (locale) => copy$8[locale.split(/[-_]/)[0]] ?? copy$8.en;
+const historyActionCopy = (locale) => copy$9[locale.split(/[-_]/)[0]] ?? copy$9.en;
 class GlyphBoundary extends _global_SP_REACT.Component {
     constructor() {
         super(...arguments);
@@ -24242,7 +24271,7 @@ function historyHeadingCover(all, kind, coverFile) {
 }
 
 const historyDigest = (image) => historyPhotoIntegrity[image.url]?.sha256;
-const { Focusable: Focusable$a, DialogButton: DialogButton$7, Navigation: Navigation$4 } = CompatUI;
+const { Focusable: Focusable$c, DialogButton: DialogButton$7, Navigation: Navigation$5 } = CompatUI;
 const labels$1 = {
     it: ['Accade oggi', 'La storia dei videogiochi, un giorno alla volta', 'In questo giorno', '', 'Dietro la storia', 'Continua su Wikipedia', 'Immagine: crediti e licenza', 'Prepariamo la storia di oggi…', 'Storia non disponibile. Riprova', 'Ultima storia disponibile', 'Fonte: Wikipedia · testo CC BY-SA 4.0'],
     en: ['On this day', 'Video game history, one day at a time', 'On this day', 'Today’s discovery', 'Behind the story', 'Read on Wikipedia', 'Image: credits and license', 'Finding today’s story…', 'Story unavailable. Retry', 'Last available story', 'Source: Wikipedia · text CC BY-SA 4.0'],
@@ -24351,7 +24380,7 @@ function Block({ story, chapter, index, locale }) {
     const open = () => { const now = Date.now(); if (now - lastActivation.current < 350)
         return; lastActivation.current = now; if (!media)
         return; openHistoryImage(media.url, media.subject, locale, cardRef.current?.ownerDocument.defaultView ?? window); };
-    return SP_JSX.jsxs(Focusable$a, { ref: cardRef, className: `ph-history-card ${index % 2 ? 'reverse' : ''} ${photo ? '' : 'no-image'}`, role: photo ? 'button' : 'article', "aria-label": title, focusable: true, onOKActionDescription: photo ? historyActionCopy(locale)[3] : undefined, onActivate: photo ? open : undefined, onClick: photo ? open : undefined, children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: chapter ? SP_JSX.jsx("span", { className: "ph-history-subject", children: chapter.subject || story.article.title }) : story.relationship ?? (occasion ? `${occasion} · ${story.article.title}` : story.article.title) }), renderTitle(), SP_JSX.jsx("p", { children: chapter?.body ?? story.editorial.intro }), !chapter && story.year && SP_JSX.jsx("div", { className: "ph-history-year", children: story.year })] }), media && photo && SP_JSX.jsxs("div", { className: "ph-history-image", children: [SP_JSX.jsx("img", { className: "ph-history-image-bg", src: photo, alt: "", "aria-hidden": true, role: "presentation" }), SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject, onError: () => setFailed(previous => [...previous, media.url]) })] })] });
+    return SP_JSX.jsxs(Focusable$c, { ref: cardRef, className: `ph-history-card ${index % 2 ? 'reverse' : ''} ${photo ? '' : 'no-image'}`, role: photo ? 'button' : 'article', "aria-label": title, focusable: true, onOKActionDescription: photo ? historyActionCopy(locale)[3] : undefined, onActivate: photo ? open : undefined, onClick: photo ? open : undefined, children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: chapter ? SP_JSX.jsx("span", { className: "ph-history-subject", children: chapter.subject || story.article.title }) : story.relationship ?? (occasion ? `${occasion} · ${story.article.title}` : story.article.title) }), renderTitle(), SP_JSX.jsx("p", { children: chapter?.body ?? story.editorial.intro }), !chapter && story.year && SP_JSX.jsx("div", { className: "ph-history-year", children: story.year })] }), media && photo && SP_JSX.jsxs("div", { className: "ph-history-image", children: [SP_JSX.jsx("img", { className: "ph-history-image-bg", src: photo, alt: "", "aria-hidden": true, role: "presentation" }), SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject, onError: () => setFailed(previous => [...previous, media.url]) })] })] });
 }
 const expandedRelatedStories = new Set();
 function RelatedStory({ story, locale }) {
@@ -24366,7 +24395,7 @@ function RelatedStory({ story, locale }) {
         expandedRelatedStories.delete(storyKey);
     else
         expandedRelatedStories.add(storyKey); return !value; }); };
-    return SP_JSX.jsxs("div", { className: "ph-history-related", children: [SP_JSX.jsxs(Focusable$a, { className: "ph-history-card ph-history-related-summary", role: "button", "aria-expanded": expanded, focusable: true, onActivate: toggle, onClick: toggle, onOKActionDescription: historyActionCopy(locale)[expanded ? 2 : 1], children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: story.relationship ?? words$3(locale)[4] }), SP_JSX.jsx("h3", { children: story.article.title }), SP_JSX.jsx(HistoryConfirmHint, { locale: locale, expanded: expanded })] }), media && photo && SP_JSX.jsx("div", { className: "ph-history-image", children: SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject }) })] }), expanded && SP_JSX.jsxs("div", { className: "ph-history-related-content", children: [SP_JSX.jsx(Block, { story: story, index: 0, locale: locale }), story.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: story, chapter: chapter, index: index + 1, locale: locale }), story.quote && (story.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$a, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: story.quote.quoted ? `«${story.quote.text}»` : story.quote.text }), story.quote.attribution && SP_JSX.jsx("span", { children: story.quote.attribution })] })] }, index))] })] });
+    return SP_JSX.jsxs("div", { className: "ph-history-related", children: [SP_JSX.jsxs(Focusable$c, { className: "ph-history-card ph-history-related-summary", role: "button", "aria-expanded": expanded, focusable: true, onActivate: toggle, onClick: toggle, onOKActionDescription: historyActionCopy(locale)[expanded ? 2 : 1], children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: story.relationship ?? words$3(locale)[4] }), SP_JSX.jsx("h3", { children: story.article.title }), SP_JSX.jsx(HistoryConfirmHint, { locale: locale, expanded: expanded })] }), media && photo && SP_JSX.jsx("div", { className: "ph-history-image", children: SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject }) })] }), expanded && SP_JSX.jsxs("div", { className: "ph-history-related-content", children: [SP_JSX.jsx(Block, { story: story, index: 0, locale: locale }), story.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: story, chapter: chapter, index: index + 1, locale: locale }), story.quote && (story.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$c, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: story.quote.quoted ? `«${story.quote.text}»` : story.quote.text }), story.quote.attribution && SP_JSX.jsx("span", { children: story.quote.attribution })] })] }, index))] })] });
 }
 let historyPreviewOffset = 0;
 function DailyHistory({ getLocale }) {
@@ -24430,11 +24459,11 @@ function DailyHistory({ getLocale }) {
     const dayAppId = story ? libraryAppIdForStory(story) : null;
     const openDayGame = () => { if (!dayAppId)
         return; try {
-        Navigation$4?.Navigate?.(`/library/app/${dayAppId}`);
+        Navigation$5?.Navigate?.(`/library/app/${dayAppId}`);
     }
     catch { } };
     const headingContent = SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-date", children: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(date) }), story ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("div", { className: "ph-history-sub", children: [heading && SP_JSX.jsx("span", { children: heading }), SP_JSX.jsx("strong", { children: story.article.title }), story.year && story.occasion?.kind !== 'feature' && SP_JSX.jsx("span", { className: "ph-history-year", children: story.year })] }), headingMedia(story)] }) : SP_JSX.jsx("div", { className: "ph-history-sub", children: copy[1] })] });
-    return SP_JSX.jsxs(Focusable$a, { className: "ph-history", ref: root, "flow-children": "column", onButtonDown: navigate, actionDescriptionMap: story?.preview ? { [buttons.SECONDARY]: hints[0], [buttons.OPTIONS]: hints[1] } : {}, children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx(Focusable$a, { className: "ph-history-head ph-history-day-card", role: "button", "aria-label": story?.article.title ?? copy[0], focusable: true, onActivate: dayAppId ? openDayGame : undefined, onClick: dayAppId ? openDayGame : undefined, children: headingContent }), !story ? SP_JSX.jsx("div", { className: "ph-history-empty", children: failed ? SP_JSX.jsx(DialogButton$7, { onClick: () => setRetry(v => v + 1), children: copy[8] }) : SP_JSX.jsx("span", { role: "status", children: copy[7] }) }) : [story, ...(story.also ?? [])].map(item => SP_JSX.jsxs("div", { className: "ph-history-story", children: [SP_JSX.jsx(Block, { story: item, index: 0, locale: locale }), item.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: item, chapter: chapter, index: index + 1, locale: locale }), item.quote && (item.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$a, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] })] }, index)), item.quote && !item.editorial.chapters?.length && SP_JSX.jsxs(Focusable$a, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] }), item.connections?.length ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-connections-title", children: copy[4] }), item.connections.map(related => SP_JSX.jsx(RelatedStory, { story: related, locale: locale }, `${related.date}-${related.editorial.id}`))] }) : null] }, `${item.date}-${item.editorial.id}`))] });
+    return SP_JSX.jsxs(Focusable$c, { className: "ph-history", ref: root, "flow-children": "column", onButtonDown: navigate, actionDescriptionMap: story?.preview ? { [buttons.SECONDARY]: hints[0], [buttons.OPTIONS]: hints[1] } : {}, children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx(Focusable$c, { className: "ph-history-head ph-history-day-card", role: "button", "aria-label": story?.article.title ?? copy[0], focusable: true, onActivate: dayAppId ? openDayGame : undefined, onClick: dayAppId ? openDayGame : undefined, children: headingContent }), !story ? SP_JSX.jsx("div", { className: "ph-history-empty", children: failed ? SP_JSX.jsx(DialogButton$7, { onClick: () => setRetry(v => v + 1), children: copy[8] }) : SP_JSX.jsx("span", { role: "status", children: copy[7] }) }) : [story, ...(story.also ?? [])].map(item => SP_JSX.jsxs("div", { className: "ph-history-story", children: [SP_JSX.jsx(Block, { story: item, index: 0, locale: locale }), item.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: item, chapter: chapter, index: index + 1, locale: locale }), item.quote && (item.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$c, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] })] }, index)), item.quote && !item.editorial.chapters?.length && SP_JSX.jsxs(Focusable$c, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] }), item.connections?.length ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-connections-title", children: copy[4] }), item.connections.map(related => SP_JSX.jsx(RelatedStory, { story: related, locale: locale }, `${related.date}-${related.editorial.id}`))] }) : null] }, `${item.date}-${item.editorial.id}`))] });
 }
 let historyConfig = { enabled: true, revision: 0 };
 let historyReady = false;
@@ -24491,7 +24520,7 @@ const words$2 = {
 const NEWS_COUNTRIES = ["US", "IT", "DE", "ES", "FR", "BR", "RU", "UA", "JP", "KR", "TW", "IN"];
 function newsCopy(locale) { return words$2[locale] ?? words$2.en; }
 
-const { Focusable: Focusable$9, DialogButton: DialogButton$6, DropdownItem: DropdownItem$4, ToggleField: ToggleField$5, Navigation: Navigation$3 } = CompatUI;
+const { Focusable: Focusable$b, DialogButton: DialogButton$6, DropdownItem: DropdownItem$4, ToggleField: ToggleField$6, Navigation: Navigation$4 } = CompatUI;
 let config$1 = { enabled: true, country: "auto" };
 let ready = false;
 const listeners$6 = new Set();
@@ -24525,7 +24554,7 @@ function HomeNewsSettings({ locale }) {
         }
     };
     const names = new Intl.DisplayNames([locale], { type: "region" });
-    return SP_JSX.jsxs(Focusable$9, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [loadFailed && SP_JSX.jsx(DialogButton$6, { onClick: () => void readConfig().then(() => setLoadFailed(false)).catch(() => { }), children: copy[4] }), SP_JSX.jsx(ToggleField$5, { label: copy[1], bottomSeparator: "none", checked: value.enabled, disabled: busy || !ready, onChange: (enabled) => void save({ ...value, enabled }) }), SP_JSX.jsx(DropdownItem$4, { label: copy[2], layout: "below", bottomSeparator: "none", selectedOption: value.country, disabled: busy || !ready, rgOptions: [{ data: "auto", label: copy[3] }, ...NEWS_COUNTRIES.map(data => ({ data, label: names.of(data) ?? data }))], onChange: (option) => void save({ ...value, country: option.data }) })] });
+    return SP_JSX.jsxs(Focusable$b, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [loadFailed && SP_JSX.jsx(DialogButton$6, { onClick: () => void readConfig().then(() => setLoadFailed(false)).catch(() => { }), children: copy[4] }), SP_JSX.jsx(ToggleField$6, { label: copy[1], bottomSeparator: "none", checked: value.enabled, disabled: busy || !ready, onChange: (enabled) => void save({ ...value, enabled }) }), SP_JSX.jsx(DropdownItem$4, { label: copy[2], layout: "below", bottomSeparator: "none", selectedOption: value.country, disabled: busy || !ready, rgOptions: [{ data: "auto", label: copy[3] }, ...NEWS_COUNTRIES.map(data => ({ data, label: names.of(data) ?? data }))], onChange: (option) => void save({ ...value, country: option.data }) })] });
 }
 function nativeNewsRows(tree) {
     const children = tree?.props?.children;
@@ -24572,9 +24601,9 @@ function NewsCard({ item, width, height, locale, skin }) {
     const [missing, setMissing] = _global_SP_REACT.useState(false);
     const c = skin.classes;
     const date = item.published > 0 ? new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "long" }).format(new Date(item.published * 1000)) : "";
-    return SP_JSX.jsxs("div", { className: `${c.OuterWrapper} ph-news-card`, style: { width, height }, "data-news-url": item.url, children: [SP_JSX.jsx("div", { className: c.EventType, children: item.source }), SP_JSX.jsxs(Focusable$9, { className: `${c.EventPreviewContainer} ph-news-content`, focusable: true, "aria-label": `${item.title} Â· ${item.source}`, onActivate: () => {
+    return SP_JSX.jsxs("div", { className: `${c.OuterWrapper} ph-news-card`, style: { width, height }, "data-news-url": item.url, children: [SP_JSX.jsx("div", { className: c.EventType, children: item.source }), SP_JSX.jsxs(Focusable$b, { className: `${c.EventPreviewContainer} ph-news-content`, focusable: true, "aria-label": `${item.title} Â· ${item.source}`, onActivate: () => {
                     if (/^https?:\/\//i.test(item.url))
-                        Navigation$3.NavigateToExternalWeb(item.url);
+                        Navigation$4.NavigateToExternalWeb(item.url);
                 }, children: [SP_JSX.jsx("div", { className: `${c.EventImageWrapper} ph-news-cover`, style: { height: Math.round(width * 9 / 16), minHeight: Math.round(width * 9 / 16), flexShrink: 0 }, "data-logo": fallback, children: !missing ? SP_JSX.jsx("img", { className: `${c.EventImage} ph-news-image`, loading: "lazy", alt: "", src: fallback ? item.logo : item.image, onError: () => fallback ? setMissing(true) : setFallback(true) }) : SP_JSX.jsx("span", { children: item.source }) }), SP_JSX.jsxs("div", { className: `${c.EventInfo} ph-news-info`, children: [SP_JSX.jsx("div", { className: "ph-news-date", children: date }), SP_JSX.jsx("div", { className: `${c.Title} ph-news-title`, children: item.title })] })] })] });
 }
 function NewsRow({ locale, country }) {
@@ -25409,13 +25438,13 @@ function SiSteam (props) {
 }
 
 const { useCallback: useCallback$1, useEffect: useEffect$2, useLayoutEffect, useMemo: useMemo$2, useRef: useRef$1, useState: useState$2 } = _global_SP_REACT;
-const { Focusable: Focusable$8, GamepadButton: GamepadButton$2, Navigation: Navigation$2, TextField: TextField$1, ToggleField: ToggleField$4 } = CompatUI;
+const { Focusable: Focusable$a, GamepadButton: GamepadButton$2, Navigation: Navigation$3, TextField: TextField$1, ToggleField: ToggleField$5 } = CompatUI;
 const DASHBOARD_ROUTE = "/playhub-dashboard";
 const dashboardExit = createDashboardExit({
     hideOverlay: () => { closeDashboardOverlay(); clearDashboardChrome(); },
-    back: () => Navigation$2?.NavigateBack?.(),
-    library: () => Navigation$2?.NavigateToLibraryTab?.(),
-    closeMenus: () => Navigation$2?.CloseSideMenus?.(),
+    back: () => Navigation$3?.NavigateBack?.(),
+    library: () => Navigation$3?.NavigateToLibraryTab?.(),
+    closeMenus: () => Navigation$3?.CloseSideMenus?.(),
     isPresent: () => dashboardDocuments().some((doc) => Boolean(doc.querySelector(".ph-dashboard, #ph-dashboard-overlay-root"))),
     schedule: (callback, delay) => window.setTimeout(callback, delay),
 });
@@ -26125,7 +26154,7 @@ function FocusItem({ className = "", children, onPress, onFocus, ...props }) {
         sound("open");
         onPress?.();
     };
-    return (SP_JSX.jsx(Focusable$8, { ...props, tabIndex: 0, "data-ph-focusable": "true", noFocusRing: true, focusClassName: "ph-focus", className: className, onActivate: activate, onClick: (event) => { if (event?.detail > 0)
+    return (SP_JSX.jsx(Focusable$a, { ...props, tabIndex: 0, "data-ph-focusable": "true", noFocusRing: true, focusClassName: "ph-focus", className: className, onActivate: activate, onClick: (event) => { if (event?.detail > 0)
             activate(event); }, onFocus: (event) => { sound("move"); onFocus?.(event); }, children: children }));
 }
 function gridDirectionFromKey(key) {
@@ -26270,7 +26299,7 @@ function focusSystemMetric(position = 0) {
     return true;
 }
 function FocusGrid({ className = "", children, ...props }) {
-    return (SP_JSX.jsx(Focusable$8, { ...props, className: className, "flow-children": "grid", "data-ph-focus-grid": "true", children: children }));
+    return (SP_JSX.jsx(Focusable$a, { ...props, className: className, "flow-children": "grid", "data-ph-focus-grid": "true", children: children }));
 }
 function useClock() {
     const [now, setNow] = useState$2(() => new Date());
@@ -26291,7 +26320,7 @@ function Header({ tab, setTab, copy, locale, logo }) {
             { id: "system", label: copy.system, icon: FiCpu },
         ];
     }, [copy]);
-    return (SP_JSX.jsxs("header", { className: "ph-header", children: [SP_JSX.jsx("div", { className: "ph-brand", children: logo ? SP_JSX.jsx("img", { src: logo, alt: "Core" }) : SP_JSX.jsx("div", { className: "ph-brand-fallback", children: "core" }) }), SP_JSX.jsx(Focusable$8, { className: "ph-tabs", "flow-children": "horizontal", children: tabs.map((item) => {
+    return (SP_JSX.jsxs("header", { className: "ph-header", children: [SP_JSX.jsx("div", { className: "ph-brand", children: logo ? SP_JSX.jsx("img", { src: logo, alt: "Core" }) : SP_JSX.jsx("div", { className: "ph-brand-fallback", children: "core" }) }), SP_JSX.jsx(Focusable$a, { className: "ph-tabs", "flow-children": "horizontal", children: tabs.map((item) => {
                     const Icon = item.icon;
                     return (SP_JSX.jsxs(FocusItem, { className: `ph-tab ${tab === item.id ? "ph-active" : ""}`, onPress: () => setTab(item.id), onButtonDown: (event) => {
                             if (item.id !== "system" || tab !== "system" || Number(event?.detail?.button) !== GamepadButton$2?.DIR_DOWN)
@@ -26468,7 +26497,7 @@ function TaskSwitcher({ copy, onReady, onSelectWindow }) {
             closingHandles.current.delete(entry.handle);
         }
     }, [windows, refresh, onReady]);
-    return (SP_JSX.jsxs("div", { className: "ph-page ph-switcher-page", children: [closeNotice ? SP_JSX.jsx("div", { className: `ph-window-notice${closeNotice.failed ? " ph-failed" : ""}`, role: "status", "aria-live": "polite", children: closeNotice.text }) : null, windows.length === 0 ? (SP_JSX.jsx("div", { className: "ph-empty", children: SP_JSX.jsxs("div", { className: "ph-empty-inner", children: [SP_JSX.jsx(FiMonitor, {}), SP_JSX.jsx("div", { className: "ph-empty-title", children: copy.noWindows }), SP_JSX.jsx("div", { className: "ph-muted", children: copy.noWindowsBody })] }) })) : (SP_JSX.jsx(Focusable$8, { ref: rail, className: `ph-window-rail ${orderedWindows.length === 1 ? "ph-single" : ""}`, "flow-children": "horizontal", "data-ph-focus-grid": "true", children: orderedWindows.map((entry, index) => (SP_JSX.jsx(WindowCard, { entry: entry, artwork: artwork[entry.handle] ?? "", index: index, copy: copy, onSelect: () => onSelectWindow(entry), onAskClose: () => void closeEntry(entry, index) }, entry.handle))) }))] }));
+    return (SP_JSX.jsxs("div", { className: "ph-page ph-switcher-page", children: [closeNotice ? SP_JSX.jsx("div", { className: `ph-window-notice${closeNotice.failed ? " ph-failed" : ""}`, role: "status", "aria-live": "polite", children: closeNotice.text }) : null, windows.length === 0 ? (SP_JSX.jsx("div", { className: "ph-empty", children: SP_JSX.jsxs("div", { className: "ph-empty-inner", children: [SP_JSX.jsx(FiMonitor, {}), SP_JSX.jsx("div", { className: "ph-empty-title", children: copy.noWindows }), SP_JSX.jsx("div", { className: "ph-muted", children: copy.noWindowsBody })] }) })) : (SP_JSX.jsx(Focusable$a, { ref: rail, className: `ph-window-rail ${orderedWindows.length === 1 ? "ph-single" : ""}`, "flow-children": "horizontal", "data-ph-focus-grid": "true", children: orderedWindows.map((entry, index) => (SP_JSX.jsx(WindowCard, { entry: entry, artwork: artwork[entry.handle] ?? "", index: index, copy: copy, onSelect: () => onSelectWindow(entry), onAskClose: () => void closeEntry(entry, index) }, entry.handle))) }))] }));
 }
 function focusShortcutTile(id) {
     const tile = Array.from(dashboardRoot()?.querySelectorAll("[data-shortcut-id]") ?? [])
@@ -26893,7 +26922,7 @@ function SystemTab({ copy, extra, onConfirm }) {
                                                     stopDirectionalEvent(event);
                                                     focusDashboard(".ph-process-row");
                                                 }
-                                            }, children: [SP_JSX.jsx(FiRefreshCw, {}), SP_JSX.jsx("span", { children: copy.restartDecky })] })] }), SP_JSX.jsx(Focusable$8, { className: "ph-process-list", "flow-children": "vertical", children: processes.slice(0, 18).map((process) => (SP_JSX.jsxs(FocusItem, { className: "ph-process-row", onPress: () => setSelectedProcess(process), onOKActionDescription: copy.open, onButtonDown: (event) => {
+                                            }, children: [SP_JSX.jsx(FiRefreshCw, {}), SP_JSX.jsx("span", { children: copy.restartDecky })] })] }), SP_JSX.jsx(Focusable$a, { className: "ph-process-list", "flow-children": "vertical", children: processes.slice(0, 18).map((process) => (SP_JSX.jsxs(FocusItem, { className: "ph-process-row", onPress: () => setSelectedProcess(process), onOKActionDescription: copy.open, onButtonDown: (event) => {
                                             const direction = gridDirectionFromGamepad(event?.detail?.button);
                                             if (direction === "up" && process === processes[0]) {
                                                 stopDirectionalEvent(event);
@@ -26936,14 +26965,14 @@ function ProcessOptionsSheet({ process, copy, onCancel, onClose, onKill }) {
         const timer = window.setTimeout(() => focusDashboard(".ph-process-options .ph-confirm-button"), 40);
         return () => window.clearTimeout(timer);
     }, []);
-    return (SP_JSX.jsx(Focusable$8, { className: "ph-confirm-backdrop ph-process-options", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: process.name }), SP_JSX.jsxs("div", { className: "ph-confirm-name", children: ["PID ", process.id] }), SP_JSX.jsxs(Focusable$8, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onClose, children: copy.close }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onKill, children: copy.forceClose })] })] }) }));
+    return (SP_JSX.jsx(Focusable$a, { className: "ph-confirm-backdrop ph-process-options", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: process.name }), SP_JSX.jsxs("div", { className: "ph-confirm-name", children: ["PID ", process.id] }), SP_JSX.jsxs(Focusable$a, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onClose, children: copy.close }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onKill, children: copy.forceClose })] })] }) }));
 }
 function ConfirmSheet({ title, name, copy, onCancel, onConfirm }) {
     useEffect$2(() => {
         const timer = window.setTimeout(() => focusDashboard(".ph-confirm-button"), 40);
         return () => window.clearTimeout(timer);
     }, []);
-    return (SP_JSX.jsx(Focusable$8, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: title }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: name }), SP_JSX.jsxs(Focusable$8, { className: "ph-confirm-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onConfirm, children: copy.continue })] })] }) }));
+    return (SP_JSX.jsx(Focusable$a, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: title }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: name }), SP_JSX.jsxs(Focusable$a, { className: "ph-confirm-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onConfirm, children: copy.continue })] })] }) }));
 }
 function AppOptionsSheet({ shortcut, copy, extra, onCancel, onRemove, onSave }) {
     const [name, setName] = useState$2(shortcut.name);
@@ -26952,7 +26981,7 @@ function AppOptionsSheet({ shortcut, copy, extra, onCancel, onRemove, onSave }) 
         const timer = window.setTimeout(() => focusDashboard(".ph-options-field input"), 50);
         return () => window.clearTimeout(timer);
     }, []);
-    return (SP_JSX.jsx(Focusable$8, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: extra.options }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: shortcut.name }), SP_JSX.jsx("div", { className: "ph-options-field", children: SP_JSX.jsx(TextField$1, { value: name, onChange: (event) => setName(event.target.value), style: { width: "100%", minWidth: 0 } }) }), SP_JSX.jsx(ToggleField$4, { label: extra.sdl3, description: extra.sdl3Description, checked: sdl3, onChange: setSdl3 }), SP_JSX.jsxs(Focusable$8, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onRemove, children: copy.remove }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: () => { if (name.trim())
+    return (SP_JSX.jsx(Focusable$a, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: extra.options }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: shortcut.name }), SP_JSX.jsx("div", { className: "ph-options-field", children: SP_JSX.jsx(TextField$1, { value: name, onChange: (event) => setName(event.target.value), style: { width: "100%", minWidth: 0 } }) }), SP_JSX.jsx(ToggleField$5, { label: extra.sdl3, description: extra.sdl3Description, checked: sdl3, onChange: setSdl3 }), SP_JSX.jsxs(Focusable$a, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onRemove, children: copy.remove }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: () => { if (name.trim())
                                 onSave(name.trim(), sdl3); }, children: extra.save })] })] }) }));
 }
 function DashboardSurface() {
@@ -27198,7 +27227,7 @@ function DashboardSurface() {
         targets.forEach((targetWindow) => targetWindow.addEventListener("keydown", onKeyDown, true));
         return () => targets.forEach((targetWindow) => targetWindow.removeEventListener("keydown", onKeyDown, true));
     }, [cancelDashboard, tab]);
-    return (SP_JSX.jsxs(Focusable$8, { ref: root, className: "ph-dashboard", noFocusRing: true, onButtonDown: (event) => {
+    return (SP_JSX.jsxs(Focusable$a, { ref: root, className: "ph-dashboard", noFocusRing: true, onButtonDown: (event) => {
             const button = Number(event?.detail?.button);
             if (button === (GamepadButton$2?.CANCEL ?? 2)) {
                 cancelDashboard(event);
@@ -53153,7 +53182,7 @@ function subscribePluginProgress(listener) {
 }
 
 const { useCallback, useEffect: useEffect$1, useMemo: useMemo$1, useRef, useState: useState$1 } = _global_SP_REACT;
-const { DialogButton: DialogButton$5, ConfirmModal: ConfirmModal$1, Focusable: Focusable$7, GamepadButton: GamepadButton$1, ModalRoot, Navigation: Navigation$1, SteamSpinner, Tabs, TextField, showModal: showModal$1, } = CompatUI;
+const { DialogButton: DialogButton$5, ConfirmModal: ConfirmModal$1, Focusable: Focusable$9, GamepadButton: GamepadButton$1, ModalRoot, Navigation: Navigation$2, SteamSpinner, Tabs, TextField, showModal: showModal$1, } = CompatUI;
 const PLUGIN_STORE_ROUTE = "/playhub/plugin-store";
 const STORE_STYLE = `
   .ph-store-page { box-sizing:border-box; width:100%; height:100%; min-width:0; color:${CORE.text}; background:${CORE.black}; }
@@ -53436,7 +53465,7 @@ function ScrollReader({ children, copy, onBack }) {
         onBack();
     }, [reading, onBack]);
     const cancel = useGuardedCancel(cancelAction);
-    return (SP_JSX.jsx(Focusable$7, { ref: ref, className: `ph-store-reader${reading ? " ph-reading" : ""}`, noFocusRing: true, "flow-children": "none", onActivate: (event) => { stopEvent(event); setReading(true); }, onOKButton: (event) => { stopEvent(event); setReading(true); }, onCancel: cancel, onCancelButton: cancel, onOKActionDescription: reading ? undefined : copy.scroll, onCancelActionDescription: reading ? copy.stopReading : copy.back, actionDescriptionMap: reading ? {
+    return (SP_JSX.jsx(Focusable$9, { ref: ref, className: `ph-store-reader${reading ? " ph-reading" : ""}`, noFocusRing: true, "flow-children": "none", onActivate: (event) => { stopEvent(event); setReading(true); }, onOKButton: (event) => { stopEvent(event); setReading(true); }, onCancel: cancel, onCancelButton: cancel, onOKActionDescription: reading ? undefined : copy.scroll, onCancelActionDescription: reading ? copy.stopReading : copy.back, actionDescriptionMap: reading ? {
             [GamepadButton$1.DIR_UP]: copy.scroll,
             [GamepadButton$1.DIR_DOWN]: copy.scroll,
         } : undefined, onButtonDown: (event) => {
@@ -53452,7 +53481,7 @@ function ScrollReader({ children, copy, onBack }) {
 function MediaViewer({ item, copy, closeModal }) {
     const video = useRef(null);
     const close = useGuardedCancel(() => closeModal?.());
-    return (SP_JSX.jsx(ModalRoot, { closeModal: closeModal, onCancel: () => closeModal?.(), style: { width: "90vw", maxWidth: "1200px", boxSizing: "border-box" }, children: SP_JSX.jsx(Focusable$7, { className: "ph-store-media-modal", style: { width: "100%", maxWidth: "100%", height: "78vh", minWidth: 0, overflow: "hidden", display: "grid", gridTemplateRows: "minmax(0,1fr)" }, "flow-children": "column", onCancel: close, onCancelButton: close, onMenuButton: stopEvent, onMenuActionDescription: "", children: SP_JSX.jsx(Focusable$7, { style: { width: "100%", height: "100%", minWidth: 0, minHeight: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }, "flow-children": "none", onOKActionDescription: copy.select, onOKButton: (event) => {
+    return (SP_JSX.jsx(ModalRoot, { closeModal: closeModal, onCancel: () => closeModal?.(), style: { width: "90vw", maxWidth: "1200px", boxSizing: "border-box" }, children: SP_JSX.jsx(Focusable$9, { className: "ph-store-media-modal", style: { width: "100%", maxWidth: "100%", height: "78vh", minWidth: 0, overflow: "hidden", display: "grid", gridTemplateRows: "minmax(0,1fr)" }, "flow-children": "column", onCancel: close, onCancelButton: close, onMenuButton: stopEvent, onMenuActionDescription: "", children: SP_JSX.jsx(Focusable$9, { style: { width: "100%", height: "100%", minWidth: 0, minHeight: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }, "flow-children": "none", onOKActionDescription: copy.select, onOKButton: (event) => {
                     stopEvent(event);
                     if (video.current?.paused)
                         void video.current.play().catch(() => { });
@@ -53473,7 +53502,7 @@ function SafeMedia({ item, copy }) {
     const [visible, setVisible] = useState$1(true);
     if (!visible)
         return null;
-    return (SP_JSX.jsx(Focusable$7, { className: "ph-store-media-item", "flow-children": "none", onOKActionDescription: copy.select, onActivate: (event) => {
+    return (SP_JSX.jsx(Focusable$9, { className: "ph-store-media-item", "flow-children": "none", onOKActionDescription: copy.select, onActivate: (event) => {
             stopEvent(event);
             openStoreMedia(item, copy);
         }, children: item.kind === "video"
@@ -53542,7 +53571,7 @@ function PluginActionButton({ plugin, shared }) {
 }
 function VersionPicker({ plugin, shared, versions, closeModal }) {
     const [busy, setBusy] = useState$1(false);
-    return SP_JSX.jsxs(ModalRoot, { closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: shared.copy.chooseVersion }), SP_JSX.jsx(Focusable$7, { "flow-children": "column", style: { maxHeight: "60vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "8px 4px" }, children: !versions.length ? SP_JSX.jsx("p", { children: shared.copy.releaseUnavailable }) :
+    return SP_JSX.jsxs(ModalRoot, { closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: shared.copy.chooseVersion }), SP_JSX.jsx(Focusable$9, { "flow-children": "column", style: { maxHeight: "60vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "8px 4px" }, children: !versions.length ? SP_JSX.jsx("p", { children: shared.copy.releaseUnavailable }) :
                     versions.map((artifact) => SP_JSX.jsx(DialogButton$5, { disabled: busy, onClick: async () => {
                             if (!await confirmStoreOperation(shared.copy.installQuestion, "", shared.copy.install, shared.copy))
                                 return;
@@ -53578,10 +53607,10 @@ function UninstallButton({ plugin, shared }) {
 }
 function PluginRow({ plugin, shared, onOpen, manage = false }) {
     const update = pluginHasUpdate(plugin, shared.installed);
-    const body = (SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-store-row-media", children: SP_JSX.jsx(PluginImage, { plugin: plugin }) }), SP_JSX.jsxs("div", { className: "ph-store-row-copy", children: [SP_JSX.jsx("h3", { className: "ph-store-row-title", children: plugin.name }), SP_JSX.jsx("p", { className: "ph-store-row-description", children: plugin.shortDescription })] }), SP_JSX.jsxs("div", { className: "ph-store-row-trailing", children: [update ? SP_JSX.jsx("span", { className: "ph-store-update-marker", "aria-label": shared.copy.update, children: SP_JSX.jsx(TbRefresh, {}) }) : null, plugin.catalogStatus === "installed-only" ? null : SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), manage ? (SP_JSX.jsxs(Focusable$7, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: plugin, shared: shared }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })) : null] })] }));
+    const body = (SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-store-row-media", children: SP_JSX.jsx(PluginImage, { plugin: plugin }) }), SP_JSX.jsxs("div", { className: "ph-store-row-copy", children: [SP_JSX.jsx("h3", { className: "ph-store-row-title", children: plugin.name }), SP_JSX.jsx("p", { className: "ph-store-row-description", children: plugin.shortDescription })] }), SP_JSX.jsxs("div", { className: "ph-store-row-trailing", children: [update ? SP_JSX.jsx("span", { className: "ph-store-update-marker", "aria-label": shared.copy.update, children: SP_JSX.jsx(TbRefresh, {}) }) : null, plugin.catalogStatus === "installed-only" ? null : SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), manage ? (SP_JSX.jsxs(Focusable$9, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: plugin, shared: shared }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })) : null] })] }));
     if (manage || !onOpen)
         return SP_JSX.jsx("div", { className: "ph-store-row ph-store-row-manage", children: body });
-    return (SP_JSX.jsx(Focusable$7, { className: "ph-store-row ph-store-row-openable", onActivate: (event) => { stopEvent(event); onOpen(plugin); }, onOKButton: (event) => { stopEvent(event); onOpen(plugin); }, onOKActionDescription: shared.copy.select, children: body }));
+    return (SP_JSX.jsx(Focusable$9, { className: "ph-store-row ph-store-row-openable", onActivate: (event) => { stopEvent(event); onOpen(plugin); }, onOKButton: (event) => { stopEvent(event); onOpen(plugin); }, onOKActionDescription: shared.copy.select, children: body }));
 }
 function PluginRows({ plugins, shared, onOpen, manage = false }) {
     if (!plugins.length)
@@ -53595,7 +53624,7 @@ function SourceFilters({ value, onChange, copy }) {
         { id: "decky-store", label: "Decky Store" },
         { id: "outside-store", label: "GitHub" },
     ];
-    return (SP_JSX.jsx(Focusable$7, { className: "ph-store-filter", "flow-children": "row", noFocusRing: true, children: options.map((option) => (SP_JSX.jsx(DialogButton$5, { className: value === option.id ? "ph-selected" : "", onClick: () => onChange(option.id), children: option.id === "all" ? option.label : SP_JSX.jsx(SourceBadge, { source: option.id }) }, option.id))) }));
+    return (SP_JSX.jsx(Focusable$9, { className: "ph-store-filter", "flow-children": "row", noFocusRing: true, children: options.map((option) => (SP_JSX.jsx(DialogButton$5, { className: value === option.id ? "ph-selected" : "", onClick: () => onChange(option.id), children: option.id === "all" ? option.label : SP_JSX.jsx(SourceBadge, { source: option.id }) }, option.id))) }));
 }
 function sortLabel(sort, copy) {
     if (sort === "newest")
@@ -53609,7 +53638,7 @@ function SortPickerModal({ value, copy, onChange, closeModal }) {
         onChange(next);
         closeModal();
     };
-    return (SP_JSX.jsxs(ModalRoot, { className: "ph-store-sort-modal", closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: copy.sortBy }), SP_JSX.jsx(Focusable$7, { className: "ph-store-sort-options", "flow-children": "column", noFocusRing: true, children: ["name", "newest", "updated"].map((option) => (SP_JSX.jsx(DialogButton$5, { className: value === option ? "ph-selected" : "", onClick: () => choose(option), children: sortLabel(option, copy) }, option))) })] }));
+    return (SP_JSX.jsxs(ModalRoot, { className: "ph-store-sort-modal", closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: copy.sortBy }), SP_JSX.jsx(Focusable$9, { className: "ph-store-sort-options", "flow-children": "column", noFocusRing: true, children: ["name", "newest", "updated"].map((option) => (SP_JSX.jsx(DialogButton$5, { className: value === option ? "ph-selected" : "", onClick: () => choose(option), children: sortLabel(option, copy) }, option))) })] }));
 }
 function openSortPicker(value, copy, onChange) {
     let modal;
@@ -53637,7 +53666,7 @@ function PluginCollection({ title, items, collectionKey, shared, onOpen, onBack,
         openSortPicker(sort, shared.copy, setSort);
     }, [sort, shared.copy]);
     const guardedBack = useGuardedCancel(onBack);
-    return (SP_JSX.jsxs(Focusable$7, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: title, sort: sort, copy: shared.copy }), SP_JSX.jsxs("div", { className: "ph-store-toolbar", children: [toolbarStart, SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy })] }), SP_JSX.jsx(PluginRows, { plugins: filtered, shared: shared, onOpen: onOpen, manage: manage })] }));
+    return (SP_JSX.jsxs(Focusable$9, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: title, sort: sort, copy: shared.copy }), SP_JSX.jsxs("div", { className: "ph-store-toolbar", children: [toolbarStart, SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy })] }), SP_JSX.jsx(PluginRows, { plugins: filtered, shared: shared, onOpen: onOpen, manage: manage })] }));
 }
 function PluginDetail({ plugin, shared, onBack }) {
     const [release, setRelease] = useState$1(null);
@@ -53689,16 +53718,16 @@ function PluginDetail({ plugin, shared, onBack }) {
     const description = readme || plugin.longDescription || plugin.shortDescription;
     const galleryMedia = media.filter((item) => item.url !== activeCover
         && !(activeCover === bundledPluginCover(plugin.repository) && item.url === plugin.coverUrl));
-    return (SP_JSX.jsxs(Focusable$7, { className: "ph-store-tab-body ph-store-detail ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsxs(Focusable$7, { className: "ph-store-detail-heading", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(Focusable$7, { className: "ph-store-detail-hero", "flow-children": "none", onOKActionDescription: shared.copy.select, onActivate: (event) => {
+    return (SP_JSX.jsxs(Focusable$9, { className: "ph-store-tab-body ph-store-detail ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsxs(Focusable$9, { className: "ph-store-detail-heading", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(Focusable$9, { className: "ph-store-detail-hero", "flow-children": "none", onOKActionDescription: shared.copy.select, onActivate: (event) => {
                             stopEvent(event);
                             if (activeCover)
                                 openStoreMedia({ kind: "image", url: activeCover, alt: plugin.name }, shared.copy);
-                        }, children: SP_JSX.jsx(PluginImage, { plugin: plugin, fallbackSources: coverSources, onImageLoaded: setActiveCover }) }), SP_JSX.jsxs("div", { className: "ph-store-detail-summary", children: [SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), SP_JSX.jsx("h1", { className: "ph-store-detail-title", children: plugin.name }), SP_JSX.jsxs("div", { className: "ph-store-detail-status", children: [installed ? SP_JSX.jsxs("span", { children: [shared.copy.installedVersion, ": ", installed.version || "?"] }) : null, SP_JSX.jsxs("span", { children: [shared.copy.latestVersion, ": ", latestVersion || "?"] })] }), SP_JSX.jsxs(Focusable$7, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: currentPlugin, shared: shared }), versions.some((item) => compareVersions(item.version, latestVersion) < 0) && SP_JSX.jsx(DialogButton$5, { className: "ph-store-action", "aria-label": shared.copy.chooseVersion, title: shared.copy.chooseVersion, onOKActionDescription: shared.copy.chooseVersion, onClick: () => showModal$1(SP_JSX.jsx(VersionPicker, { plugin: plugin, shared: shared, versions: versions }), window, { bNeverPopOut: true }), children: SP_JSX.jsx(TbHistory, {}) }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })] })] }), galleryMedia.length ? (SP_JSX.jsxs("section", { className: "ph-store-media-section", children: [SP_JSX.jsx("h2", { children: shared.copy.media }), SP_JSX.jsx(Focusable$7, { className: "ph-store-media-strip", "flow-children": "row", noFocusRing: true, children: galleryMedia.map((item) => SP_JSX.jsx(SafeMedia, { item: item, copy: shared.copy }, item.url)) })] })) : null, loading ? (SP_JSX.jsx("div", { className: "ph-store-empty", children: SP_JSX.jsx(SteamSpinner, {}) })) : (SP_JSX.jsxs(ScrollReader, { copy: shared.copy, onBack: onBack, children: [SP_JSX.jsx(MarkdownBlocks, { markdown: description }), SP_JSX.jsx("h2", { children: shared.copy.releaseNotes }), releaseNotes
+                        }, children: SP_JSX.jsx(PluginImage, { plugin: plugin, fallbackSources: coverSources, onImageLoaded: setActiveCover }) }), SP_JSX.jsxs("div", { className: "ph-store-detail-summary", children: [SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), SP_JSX.jsx("h1", { className: "ph-store-detail-title", children: plugin.name }), SP_JSX.jsxs("div", { className: "ph-store-detail-status", children: [installed ? SP_JSX.jsxs("span", { children: [shared.copy.installedVersion, ": ", installed.version || "?"] }) : null, SP_JSX.jsxs("span", { children: [shared.copy.latestVersion, ": ", latestVersion || "?"] })] }), SP_JSX.jsxs(Focusable$9, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: currentPlugin, shared: shared }), versions.some((item) => compareVersions(item.version, latestVersion) < 0) && SP_JSX.jsx(DialogButton$5, { className: "ph-store-action", "aria-label": shared.copy.chooseVersion, title: shared.copy.chooseVersion, onOKActionDescription: shared.copy.chooseVersion, onClick: () => showModal$1(SP_JSX.jsx(VersionPicker, { plugin: plugin, shared: shared, versions: versions }), window, { bNeverPopOut: true }), children: SP_JSX.jsx(TbHistory, {}) }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })] })] }), galleryMedia.length ? (SP_JSX.jsxs("section", { className: "ph-store-media-section", children: [SP_JSX.jsx("h2", { children: shared.copy.media }), SP_JSX.jsx(Focusable$9, { className: "ph-store-media-strip", "flow-children": "row", noFocusRing: true, children: galleryMedia.map((item) => SP_JSX.jsx(SafeMedia, { item: item, copy: shared.copy }, item.url)) })] })) : null, loading ? (SP_JSX.jsx("div", { className: "ph-store-empty", children: SP_JSX.jsx(SteamSpinner, {}) })) : (SP_JSX.jsxs(ScrollReader, { copy: shared.copy, onBack: onBack, children: [SP_JSX.jsx(MarkdownBlocks, { markdown: description }), SP_JSX.jsx("h2", { children: shared.copy.releaseNotes }), releaseNotes
                         ? SP_JSX.jsx(MarkdownBlocks, { markdown: releaseNotes })
                         : SP_JSX.jsx("p", { children: shared.copy.releaseNotesUnavailable })] }))] }));
 }
 function CategoryLink({ title, onOpen, copy }) {
-    return (SP_JSX.jsx(Focusable$7, { className: "ph-store-section-link", onActivate: (event) => { stopEvent(event); onOpen(); }, onOKButton: (event) => { stopEvent(event); onOpen(); }, onOKActionDescription: copy.openCategory, children: SP_JSX.jsx("h2", { children: title }) }));
+    return (SP_JSX.jsx(Focusable$9, { className: "ph-store-section-link", onActivate: (event) => { stopEvent(event); onOpen(); }, onOKButton: (event) => { stopEvent(event); onOpen(); }, onOKActionDescription: copy.openCategory, children: SP_JSX.jsx("h2", { children: title }) }));
 }
 function FeaturedSlider({ plugins, shared, onOpen }) {
     const [index, setIndex] = useState$1(0);
@@ -53710,7 +53739,7 @@ function FeaturedSlider({ plugins, shared, onOpen }) {
     const move = (delta) => {
         setIndex((value) => (value + delta + plugins.length) % plugins.length);
     };
-    return (SP_JSX.jsxs("div", { className: "ph-store-featured-shell", children: [SP_JSX.jsxs(Focusable$7, { className: "ph-store-featured-slide", "flow-children": "none", onActivate: (event) => { stopEvent(event); onOpen(active); }, onOKButton: (event) => { stopEvent(event); onOpen(active); }, onOKActionDescription: shared.copy.select, actionDescriptionMap: {
+    return (SP_JSX.jsxs("div", { className: "ph-store-featured-shell", children: [SP_JSX.jsxs(Focusable$9, { className: "ph-store-featured-slide", "flow-children": "none", onActivate: (event) => { stopEvent(event); onOpen(active); }, onOKButton: (event) => { stopEvent(event); onOpen(active); }, onOKActionDescription: shared.copy.select, actionDescriptionMap: {
                     [GamepadButton$1.DIR_LEFT]: shared.copy.previous,
                     [GamepadButton$1.DIR_RIGHT]: shared.copy.next,
                 }, onButtonDown: (event) => {
@@ -53736,7 +53765,7 @@ function DiscoverTab(shared) {
             setView({ kind: "home" });
             return;
         }
-        Navigation$1?.NavigateBack?.();
+        Navigation$2?.NavigateBack?.();
     }, [view]);
     useTabBack("discover", back);
     const guardedBack = useGuardedCancel(back);
@@ -53750,7 +53779,7 @@ function DiscoverTab(shared) {
     const featured = featuredPlugins(shared.plugins, 10);
     const featuredRepositories = new Set(featured.map((plugin) => plugin.repository.toLocaleLowerCase("en-US")));
     const categories = discoveryCategories(shared.plugins);
-    return (SP_JSX.jsxs(Focusable$7, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsx("section", { className: "ph-store-section", children: SP_JSX.jsx(FeaturedSlider, { plugins: featured, shared: shared, onOpen: (plugin) => setView({ kind: "detail", plugin }) }) }), categories.map((category) => {
+    return (SP_JSX.jsxs(Focusable$9, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsx("section", { className: "ph-store-section", children: SP_JSX.jsx(FeaturedSlider, { plugins: featured, shared: shared, onOpen: (plugin) => setView({ kind: "detail", plugin }) }) }), categories.map((category) => {
                 let items = shared.plugins.filter((plugin) => pluginInCategory(plugin, category));
                 if (category === "Playhub") {
                     items = items.filter((plugin) => !featuredRepositories.has(plugin.repository.toLocaleLowerCase("en-US")));
@@ -53799,7 +53828,7 @@ function ManageTab({ active, ...shared }) {
     const [sourceReset, setSourceReset] = useState$1(0);
     useEffect$1(() => { if (active)
         setSourceReset((value) => value + 1); }, [active]);
-    const back = useCallback(() => Navigation$1?.NavigateBack?.(), []);
+    const back = useCallback(() => Navigation$2?.NavigateBack?.(), []);
     useTabBack("manage", back);
     const items = useMemo$1(() => pluginsForManage(shared.plugins, shared.installed, shared.copy), [shared.plugins, shared.installed, shared.copy]);
     return (SP_JSX.jsx(PluginCollection, { title: shared.copy.installedPlugins, items: items, collectionKey: `manage:${sourceReset}`, shared: shared, manage: true, onBack: back }));
@@ -53818,7 +53847,7 @@ function SearchTab({ active, ...shared }) {
             setDetail(null);
             return;
         }
-        Navigation$1?.NavigateBack?.();
+        Navigation$2?.NavigateBack?.();
     }, [detail]);
     useTabBack("search", back);
     const guardedBack = useGuardedCancel(back);
@@ -53834,7 +53863,7 @@ function SearchTab({ active, ...shared }) {
         stopEvent(event);
         openSortPicker(sort, shared.copy, setSort);
     };
-    return (SP_JSX.jsxs(Focusable$7, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: shared.copy.search, sort: sort, copy: shared.copy }), SP_JSX.jsx("div", { className: "ph-store-search-shell", children: SP_JSX.jsx(TextField, { label: shared.copy.searchPlaceholder, value: query, onChange: (event) => setQuery(event.target.value) }) }), SP_JSX.jsx("div", { className: "ph-store-toolbar", children: SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy }) }), SP_JSX.jsx(PluginRows, { plugins: results, shared: shared, onOpen: setDetail })] }));
+    return (SP_JSX.jsxs(Focusable$9, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: shared.copy.search, sort: sort, copy: shared.copy }), SP_JSX.jsx("div", { className: "ph-store-search-shell", children: SP_JSX.jsx(TextField, { label: shared.copy.searchPlaceholder, value: query, onChange: (event) => setQuery(event.target.value) }) }), SP_JSX.jsx("div", { className: "ph-store-toolbar", children: SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy }) }), SP_JSX.jsx(PluginRows, { plugins: results, shared: shared, onOpen: setDetail })] }));
 }
 function PluginStorePage() {
     const locale = useStoreLocale();
@@ -53845,7 +53874,7 @@ function PluginStorePage() {
         if (handler)
             handler();
         else
-            Navigation$1?.NavigateBack?.();
+            Navigation$2?.NavigateBack?.();
     });
     const [plugins, setPlugins] = useState$1(null);
     const [installed, setInstalled] = useState$1(() => readInstalledPlugins());
@@ -54055,7 +54084,7 @@ function tabEditorLocale(locale) {
 // Testi della sezione "Barra superiore" nelle impostazioni del plugin.
 // Ordine: titolo, data accanto all'ora, descrizione, sposta a sinistra,
 // descrizione, formato della data, automatico.
-const copy$7 = {
+const copy$8 = {
     en: ["Top bar", "Date next to the time", "Shows the date in Steam's top bar, before the weather and the current track.", "Move time and date to the left", "Moves the clock group, together with weather and music when shown.", "Date format", "Automatic"],
     it: ["Barra superiore", "Data accanto all'ora", "Mostra la data nella barra superiore di Steam, prima di meteo e brano corrente.", "Sposta ora e data a sinistra", "Sposta il gruppo dell’orologio, insieme a meteo e musica se presenti.", "Formato della data", "Automatico"],
     de: ["Obere Leiste", "Datum neben der Uhrzeit", "Zeigt das Datum in der oberen Leiste von Steam, vor Wetter und aktuellem Titel.", "Uhrzeit und Datum nach links", "Verschiebt die Uhrgruppe, zusammen mit Wetter und Musik, falls vorhanden.", "Datumsformat", "Automatisch"],
@@ -54074,10 +54103,10 @@ const tags = { en: "en-US", it: "it-IT", de: "de-DE", es: "es-ES", fr: "fr-FR", 
 function key(locale) {
     const lower = String(locale || "").toLowerCase();
     const k = aliases[lower] ?? lower.split(/[-_]/)[0];
-    return copy$7[k] ? k : "en";
+    return copy$8[k] ? k : "en";
 }
 function topbarDateCopy(locale) {
-    const [title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic] = copy$7[key(locale)];
+    const [title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic] = copy$8[key(locale)];
     return { title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic };
 }
 // Esempi calcolati come li scrive la barra superiore: stesse opzioni Intl e
@@ -54110,7 +54139,7 @@ function topbarDateOptions(locale, sample = new Date(2026, 8, 19)) {
             }
         }
         if (data === "auto")
-            label = `${copy$7[k][6]} (${label})`;
+            label = `${copy$8[k][6]} (${label})`;
         return { data, label };
     });
 }
@@ -54756,7 +54785,7 @@ function deckyIntegrationLocale(locale) {
     return { label: row[0], description: row[1] };
 }
 
-const copy$6 = {
+const copy$7 = {
     en: ["Discover the new Core experience", "Open Quick Access to discover Core.", "Everything is here: your Core, in Quick Access.", "Decky is available here. You can restore its Quick Access tab in Core settings.", "Decky integration is optional. You can enable it in Core settings and restore its Quick Access tab at any time.", "Continue", "Pause guide", "Finish"],
     it: ["Scopri la nuova esperienza Core", "Apri l'accesso rapido per scoprire Core.", "Trovi tutto qui: il tuo Core, nell'accesso rapido.", "Decky è accessibile qui. Puoi ripristinare la sua scheda nell'accesso rapido dalle impostazioni di Core.", "L'integrazione di Decky è facoltativa. Puoi attivarla nelle impostazioni di Core e ripristinare la sua scheda nell'accesso rapido in qualsiasi momento.", "Continua", "Sospendi la guida", "Concludi"],
     es: ["Descubre la nueva experiencia Core", "Abre el acceso rápido para descubrir Core.", "Todo está aquí: tu Core, en el acceso rápido.", "Decky está disponible aquí. Puedes restaurar su pestaña de acceso rápido en los ajustes de Core.", "La integración de Decky es opcional. Puedes activarla en los ajustes de Core y restaurar su pestaña de acceso rápido cuando quieras.", "Continuar", "Pausar la guía", "Finalizar"],
@@ -54771,7 +54800,7 @@ const copy$6 = {
     ru: ["Откройте новый Core", "Откройте быстрый доступ, чтобы познакомиться с Core.", "Всё здесь: ваш Core в быстром доступе.", "Decky доступен здесь. Его вкладку быстрого доступа можно восстановить в настройках Core.", "Интеграция Decky необязательна. Её можно включить в настройках Core и в любой момент восстановить вкладку быстрого доступа.", "Продолжить", "Приостановить руководство", "Завершить"],
 };
 function getOnboardingCopy(locale) {
-    const [, open, , decky, , next, pause, finish] = copy$6[normalizeStoreLocale(locale)];
+    const [, open, , decky, , next, pause, finish] = copy$7[normalizeStoreLocale(locale)];
     nativeDeckyCopy[normalizeStoreLocale(locale)];
     const [title] = welcome[normalizeStoreLocale(locale)];
     const text = presentation[normalizeStoreLocale(locale)];
@@ -56368,7 +56397,7 @@ function deviceCapabilitiesLocale(locale) {
         statuses: { available: r[2], windows: r[2], readback: r[3], "manual-commands": r[4], "read-only": r[3], "manual-required": r[5], unavailable: r[6], pending: r[7], "hardware-required": r[8] } };
 }
 
-const { DialogButton: DialogButton$4, Focusable: Focusable$6 } = CompatUI;
+const { DialogButton: DialogButton$4, Focusable: Focusable$8 } = CompatUI;
 const ids = new Set(["windows-display", "windows-power", "windows-battery", "presets", "fans", "temperatures", "power-limits", "charge-limit", "rgb", "vibration"]);
 const css$1 = `.ph-device-capabilities{display:grid;gap:10px;min-width:0;padding:12px 0;border-top:1px solid ${CORE.gunmetalRaised}}.ph-device-capability-list{display:grid;gap:10px;margin:0}.ph-device-capability-row{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;align-items:start}.ph-device-capability-row>svg{width:16px;height:16px;margin-top:2px;opacity:.65}.ph-device-capability-row[data-available=true]>svg{color:${CORE.ok};opacity:1}.ph-device-capability-row dt{font-size:13px;line-height:1.4}.ph-device-capability-row dd{margin:2px 0 0;font-size:11px;line-height:1.4;color:${CORE.steel};overflow-wrap:anywhere}.ph-device-capability-mismatch{display:flex;gap:8px;font-size:12px;line-height:1.45;color:${CORE.crimsonText}}.ph-device-capability-mismatch svg{width:16px;height:16px;flex:none;margin-top:2px}.ph-device-capabilities .ph-device-actions button{justify-content:flex-start;white-space:normal;min-width:0}.ph-device-capabilities>strong{font-size:13px}`;
 function DeviceCapabilities({ selection, effective, detected, locale, openVideo, openPerformance }) {
@@ -56412,7 +56441,7 @@ function DeviceCapabilities({ selection, effective, detected, locale, openVideo,
     const rows = current?.controls ?? [];
     const video = rows.some(row => row.available && row.destination === "video") ? openVideo : undefined;
     const performance = rows.some(row => row.available && row.destination === "performance") ? openPerformance : undefined;
-    return SP_JSX.jsxs(Focusable$6, { className: "ph-device-capabilities", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$1 }), SP_JSX.jsx("strong", { children: current?.coverage === "windows" ? copy.windows : copy.title }), effective !== detected && SP_JSX.jsxs("div", { className: "ph-device-capability-mismatch", role: "status", children: [SP_JSX.jsx(TbInfoCircle, { "aria-hidden": "true" }), SP_JSX.jsx("span", { children: copy.mismatch })] }), busy && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loading }), failed && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loadError }), current && SP_JSX.jsx("dl", { className: "ph-device-capability-list", children: rows.map(row => SP_JSX.jsxs("div", { className: "ph-device-capability-row", "data-available": row.available, children: [row.available ? SP_JSX.jsx(TbCheck, { "aria-hidden": "true" }) : SP_JSX.jsx(TbMinus, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.labels[row.id] }), SP_JSX.jsxs("dd", { children: [copy.statuses[row.status], row.id === "fans" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 ", row.values.map(v => v ?? "—").join(" / "), " RPM"] }), row.id === "temperatures" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 CPU ", row.values[0] ?? "—", " / GPU ", row.values[1] ?? "—", " \u00B0C"] })] })] })] }, row.id)) }), (video || performance) && SP_JSX.jsxs(Focusable$6, { className: "ph-device-actions", "flow-children": "column", children: [video && SP_JSX.jsxs(DialogButton$4, { onClick: video, children: [SP_JSX.jsx("span", { children: device.video }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), performance && SP_JSX.jsxs(DialogButton$4, { onClick: performance, children: [SP_JSX.jsx("span", { children: device.power }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] })] }), (failed || rows.some(row => row.status === "pending" || row.status === "unavailable")) && SP_JSX.jsx(DialogButton$4, { disabled: busy, onClick: () => setAttempt(value => value + 1), children: copy.retry })] });
+    return SP_JSX.jsxs(Focusable$8, { className: "ph-device-capabilities", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$1 }), SP_JSX.jsx("strong", { children: current?.coverage === "windows" ? copy.windows : copy.title }), effective !== detected && SP_JSX.jsxs("div", { className: "ph-device-capability-mismatch", role: "status", children: [SP_JSX.jsx(TbInfoCircle, { "aria-hidden": "true" }), SP_JSX.jsx("span", { children: copy.mismatch })] }), busy && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loading }), failed && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loadError }), current && SP_JSX.jsx("dl", { className: "ph-device-capability-list", children: rows.map(row => SP_JSX.jsxs("div", { className: "ph-device-capability-row", "data-available": row.available, children: [row.available ? SP_JSX.jsx(TbCheck, { "aria-hidden": "true" }) : SP_JSX.jsx(TbMinus, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.labels[row.id] }), SP_JSX.jsxs("dd", { children: [copy.statuses[row.status], row.id === "fans" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 ", row.values.map(v => v ?? "—").join(" / "), " RPM"] }), row.id === "temperatures" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 CPU ", row.values[0] ?? "—", " / GPU ", row.values[1] ?? "—", " \u00B0C"] })] })] })] }, row.id)) }), (video || performance) && SP_JSX.jsxs(Focusable$8, { className: "ph-device-actions", "flow-children": "column", children: [video && SP_JSX.jsxs(DialogButton$4, { onClick: video, children: [SP_JSX.jsx("span", { children: device.video }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), performance && SP_JSX.jsxs(DialogButton$4, { onClick: performance, children: [SP_JSX.jsx("span", { children: device.power }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] })] }), (failed || rows.some(row => row.status === "pending" || row.status === "unavailable")) && SP_JSX.jsx(DialogButton$4, { disabled: busy, onClick: () => setAttempt(value => value + 1), children: copy.retry })] });
 }
 
 const words$1 = {
@@ -56865,8 +56894,8 @@ function GpdV1ControllerControls({ locale, deviceKey, profile, active = true }) 
                             model.current?.edit(data); } }), SP_JSX.jsxs("div", { className: "qsMeta", children: [copy[6], ": ", label(snapshot.state.rumble)] }), view.editing && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: disabled, onClick: () => void model.current?.run("apply"), children: copy[4] }), snapshot.restoreAvailable && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: view.busy || snapshot.recoveryRequired, onClick: () => void model.current?.run("restore"), children: copy[5] })] }) : SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: common.unavailable }), (view.error || snapshot?.recoveryRequired) && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: view.error === "changed" ? copy[7] : common.saveError }), (!snapshot || view.error || snapshot.recoveryRequired) && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: view.busy, onClick: () => void model.current?.refresh(), children: common.retry })] });
 }
 
-const { DialogButton: DialogButton$3, DropdownItem: DropdownItem$3, Focusable: Focusable$5 } = CompatUI;
-const style$4 = `
+const { DialogButton: DialogButton$3, DropdownItem: DropdownItem$3, Focusable: Focusable$7 } = CompatUI;
+const style$6 = `
 .ph-device-settings{display:grid;gap:12px;min-width:0;padding:4px 4px 0;overflow-wrap:anywhere}
 .ph-device-identity{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:12px;border-radius:9px;background:${CORE.gunmetal}}
 .ph-device-symbol{display:grid;place-items:center;width:42px;height:42px;border-radius:8px;background:${CORE.gunmetalRaised};font-size:22px}
@@ -56967,7 +56996,7 @@ function DeviceSettings({ locale, openVideo, openPerformance, detailsOpen = fals
         }
     };
     if (!profile)
-        return SP_JSX.jsxs(Focusable$5, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$4 }), SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: error === "load" ? copy.loadError : copy.loading }), error === "load" && SP_JSX.jsx(DialogButton$3, { onClick: () => { setError(undefined); setLoadAttempt(value => value + 1); }, children: copy.retry })] });
+        return SP_JSX.jsxs(Focusable$7, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$6 }), SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: error === "load" ? copy.loadError : copy.loading }), error === "load" && SP_JSX.jsx(DialogButton$3, { onClick: () => { setError(undefined); setLoadAttempt(value => value + 1); }, children: copy.retry })] });
     const profileNames = [{ id: "pc", name: copy.pc }, { id: "handheld", name: copy.handheld }, ...profile.handhelds];
     const names = new Map(profileNames.map(({ id, name }) => [id, name]));
     const handheld = profile.effective !== "pc";
@@ -56984,7 +57013,7 @@ function DeviceSettings({ locale, openVideo, openPerformance, detailsOpen = fals
         ? `${copy.batteryRemaining} · ${new Intl.NumberFormat(copy.language, {
             style: "unit", unit: "minute", unitDisplay: "short", maximumFractionDigits: 0,
         }).format(Math.ceil(seconds / 60))}` : undefined;
-    return SP_JSX.jsxs(Focusable$5, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$4 }), SP_JSX.jsxs("div", { className: "ph-device-identity", children: [SP_JSX.jsx("div", { className: "ph-device-symbol", "aria-hidden": "true", children: handheld ? SP_JSX.jsx(TbDeviceGamepad2, {}) : SP_JSX.jsx(TbDeviceDesktop, {}) }), SP_JSX.jsxs("div", { children: [SP_JSX.jsxs("div", { className: "ph-device-title", children: [SP_JSX.jsx("strong", { children: names.get(profile.effective) ?? copy.pc }), handheld && SP_JSX.jsx("span", { className: "ph-device-experimental", children: copy.experimental })] }), modelLabel && SP_JSX.jsxs("div", { className: "ph-device-detail", children: [copy.model, " \u00B7 ", modelLabel] })] })] }), SP_JSX.jsx(DropdownItem$3, { label: copy.profile, layout: "below", bottomSeparator: "none", selectedOption: profile.selection, disabled: saving, rgOptions: [{ label: copy.auto, data: "auto" }, ...profileNames.map(({ id, name }) => ({ label: name, data: id }))], onChange: select }), SP_JSX.jsx("p", { className: "ph-device-hint", children: copy.profileHint }), error === "save" && SP_JSX.jsx("div", { className: "ph-device-detail", role: "alert", children: copy.saveError }), (battery || health || remaining) && SP_JSX.jsxs("div", { className: "ph-device-battery", children: [SP_JSX.jsx(TbBattery, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [battery && SP_JSX.jsx("div", { children: battery }), remaining && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: remaining }), health && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: health })] })] }), display && SP_JSX.jsx("dl", { className: "ph-device-status", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.primaryDisplay }), SP_JSX.jsxs("dd", { children: [display.width, " \u00D7 ", display.height, display.hz ? ` · ${display.hz} Hz` : ""] })] }) }), SP_JSX.jsx(DeviceCapabilities, { selection: profile.selection, effective: profile.effective, detected: profile.detected, locale: locale, openVideo: openVideo, openPerformance: openPerformance }), profile.effective === "ayaneo-3" && profile.detected === "ayaneo-3" && SP_JSX.jsx(Ayaneo3ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), profile.effective === profile.detected && ["gpd-win-4", "gpd-win-mini"].includes(profile.detected) && SP_JSX.jsx(GpdV1ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), profile: profile.detected, locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), SP_JSX.jsxs(DialogButton$3, { className: "ph-device-details", "aria-expanded": detailsOpen, onClick: onDetailsToggle, children: [SP_JSX.jsx("span", { children: copy.details }), detailsOpen ? SP_JSX.jsx(TbChevronDown, { "aria-hidden": "true" }) : SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), detailsOpen && SP_JSX.jsx(DeviceInfo, { copy: copy, model: actualModel })] });
+    return SP_JSX.jsxs(Focusable$7, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$6 }), SP_JSX.jsxs("div", { className: "ph-device-identity", children: [SP_JSX.jsx("div", { className: "ph-device-symbol", "aria-hidden": "true", children: handheld ? SP_JSX.jsx(TbDeviceGamepad2, {}) : SP_JSX.jsx(TbDeviceDesktop, {}) }), SP_JSX.jsxs("div", { children: [SP_JSX.jsxs("div", { className: "ph-device-title", children: [SP_JSX.jsx("strong", { children: names.get(profile.effective) ?? copy.pc }), handheld && SP_JSX.jsx("span", { className: "ph-device-experimental", children: copy.experimental })] }), modelLabel && SP_JSX.jsxs("div", { className: "ph-device-detail", children: [copy.model, " \u00B7 ", modelLabel] })] })] }), SP_JSX.jsx(DropdownItem$3, { label: copy.profile, layout: "below", bottomSeparator: "none", selectedOption: profile.selection, disabled: saving, rgOptions: [{ label: copy.auto, data: "auto" }, ...profileNames.map(({ id, name }) => ({ label: name, data: id }))], onChange: select }), SP_JSX.jsx("p", { className: "ph-device-hint", children: copy.profileHint }), error === "save" && SP_JSX.jsx("div", { className: "ph-device-detail", role: "alert", children: copy.saveError }), (battery || health || remaining) && SP_JSX.jsxs("div", { className: "ph-device-battery", children: [SP_JSX.jsx(TbBattery, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [battery && SP_JSX.jsx("div", { children: battery }), remaining && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: remaining }), health && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: health })] })] }), display && SP_JSX.jsx("dl", { className: "ph-device-status", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.primaryDisplay }), SP_JSX.jsxs("dd", { children: [display.width, " \u00D7 ", display.height, display.hz ? ` · ${display.hz} Hz` : ""] })] }) }), SP_JSX.jsx(DeviceCapabilities, { selection: profile.selection, effective: profile.effective, detected: profile.detected, locale: locale, openVideo: openVideo, openPerformance: openPerformance }), profile.effective === "ayaneo-3" && profile.detected === "ayaneo-3" && SP_JSX.jsx(Ayaneo3ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), profile.effective === profile.detected && ["gpd-win-4", "gpd-win-mini"].includes(profile.detected) && SP_JSX.jsx(GpdV1ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), profile: profile.detected, locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), SP_JSX.jsxs(DialogButton$3, { className: "ph-device-details", "aria-expanded": detailsOpen, onClick: onDetailsToggle, children: [SP_JSX.jsx("span", { children: copy.details }), detailsOpen ? SP_JSX.jsx(TbChevronDown, { "aria-hidden": "true" }) : SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), detailsOpen && SP_JSX.jsx(DeviceInfo, { copy: copy, model: actualModel })] });
 }
 
 // The panel preference store owns expansion across QAM openings and tab changes.
@@ -57080,7 +57109,7 @@ function MsiChargeLimit({ locale }) {
     return SP_JSX.jsxs("div", { className: "qsCardBody qsDropdownFullWidth", "aria-busy": busy, children: [SP_JSX.jsx(DFL.DropdownItem, { label: copy[0], description: `${copy[1]} · ${deviceInfoLocale(locale).experimental}`, bottomSeparator: "none", layout: "below", selectedOption: state.chargeLimit, disabled: busy, rgOptions: choices.map(percent => ({ data: percent, label: `${percent}%` })), onChange: ({ data }) => void choose(data) }), failed && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: controlLocale(locale).saveError })] });
 }
 
-const { Focusable: Focusable$4, DialogButton: DialogButton$2, ToggleField: ToggleField$3, DropdownItem: DropdownItem$2, ScrollPanel, GamepadButton } = CompatUI;
+const { Focusable: Focusable$6, DialogButton: DialogButton$2, ToggleField: ToggleField$4, DropdownItem: DropdownItem$2, ScrollPanel, GamepadButton } = CompatUI;
 const icons = { home: TbPower, audio: TbDeviceTv, performance: TbVolume, graphics: TbGauge, controller: TbDeviceGamepad2, store: TbShoppingBag, decky: TbPlug };
 let prefs = normalizeControlPreferences({});
 let loaded = false;
@@ -57091,7 +57120,7 @@ const listeners = new Set();
 const subscribe = (listener) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
 function TopbarDateSettings({ state, update, locale }) {
     const text = topbarDateCopy(locale);
-    return SP_JSX.jsxs(Focusable$4, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 10 }, children: [SP_JSX.jsx(ToggleField$3, { label: text.dateLabel, description: text.dateDescription, bottomSeparator: "none", checked: state.topbarDateEnabled, onChange: (enabled) => update({ ...state, topbarDateEnabled: enabled }, locale) }), SP_JSX.jsx(ToggleField$3, { bottomSeparator: "none", label: text.leftLabel, description: text.leftDescription, checked: state.topbarClockLeft, onChange: (enabled) => update({ ...state, topbarClockLeft: enabled }, locale) }), SP_JSX.jsx(DropdownItem$2, { label: text.formatLabel, layout: "below", bottomSeparator: "none", selectedOption: state.topbarDateFormat, disabled: !state.topbarDateEnabled, rgOptions: topbarDateOptions(locale), onChange: (option) => update({ ...state, topbarDateFormat: option.data }, locale) })] });
+    return SP_JSX.jsxs(Focusable$6, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 10 }, children: [SP_JSX.jsx(ToggleField$4, { label: text.dateLabel, description: text.dateDescription, bottomSeparator: "none", checked: state.topbarDateEnabled, onChange: (enabled) => update({ ...state, topbarDateEnabled: enabled }, locale) }), SP_JSX.jsx(ToggleField$4, { bottomSeparator: "none", label: text.leftLabel, description: text.leftDescription, checked: state.topbarClockLeft, onChange: (enabled) => update({ ...state, topbarClockLeft: enabled }, locale) }), SP_JSX.jsx(DropdownItem$2, { label: text.formatLabel, layout: "below", bottomSeparator: "none", selectedOption: state.topbarDateFormat, disabled: !state.topbarDateEnabled, rgOptions: topbarDateOptions(locale), onChange: (option) => update({ ...state, topbarDateFormat: option.data }, locale) })] });
 }
 function OnboardingInputCapture({ active }) {
     const root = _global_SP_REACT.useRef(null);
@@ -57270,7 +57299,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
         const index = visible.indexOf(active);
         choose(visible[(index + direction + visible.length) % visible.length]);
     };
-    return SP_JSX.jsxs(Focusable$4, { className: "ph-control-shell", "flow-children": "column", onMoveDown: () => true, "data-playhub-onboarding-controls": origin === "qam" ? "true" : undefined, "data-onboarding-ready": ready, "data-onboarding-decky-enabled": deckyHost.available, "data-onboarding-decky-visible": visible.includes("decky"), "data-onboarding-customizing": customizing, "data-onboarding-active-tab": customizing ? "customize" : active, "data-onboarding-store-visible": visible.includes("store"), "data-onboarding-showcasing": showcasing, "data-onboarding-visible-tabs": JSON.stringify(visible), "data-onboarding-content-ready": ready && (active !== "decky" || customizing || deckyHost.ready), actionDescriptionMap: customizing ? {} : { [GamepadButton.BUMPER_LEFT]: copy.switchTab, [GamepadButton.BUMPER_RIGHT]: copy.switchTab }, onButtonDown: (event) => {
+    return SP_JSX.jsxs(Focusable$6, { className: "ph-control-shell", "flow-children": "column", onMoveDown: () => true, "data-playhub-onboarding-controls": origin === "qam" ? "true" : undefined, "data-onboarding-ready": ready, "data-onboarding-decky-enabled": deckyHost.available, "data-onboarding-decky-visible": visible.includes("decky"), "data-onboarding-customizing": customizing, "data-onboarding-active-tab": customizing ? "customize" : active, "data-onboarding-store-visible": visible.includes("store"), "data-onboarding-showcasing": showcasing, "data-onboarding-visible-tabs": JSON.stringify(visible), "data-onboarding-content-ready": ready && (active !== "decky" || customizing || deckyHost.ready), actionDescriptionMap: customizing ? {} : { [GamepadButton.BUMPER_LEFT]: copy.switchTab, [GamepadButton.BUMPER_RIGHT]: copy.switchTab }, onButtonDown: (event) => {
             if (customizing)
                 return;
             const button = event?.detail?.button;
@@ -57279,7 +57308,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
             event.preventDefault?.();
             event.stopPropagation?.();
             step(button === GamepadButton.BUMPER_LEFT ? -1 : 1);
-        }, onCancelButton: customizing ? cancelEditor : undefined, onCancelActionDescription: customizing ? editorCopy.cancel : undefined, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: (CompatUI.coreClassSelectors?.(css) ?? css) }), customizing ? SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs(Focusable$4, { className: "ph-control-settings", "flow-children": "column", "data-playhub-onboarding-content": origin === "qam" ? "customize" : undefined, children: [SP_JSX.jsx("style", { children: `.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:${CORE.gunmetal};margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:${CORE.gunmetalRaised}!important;box-shadow:inset 0 -3px 0 ${CORE.crimson}!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:${CORE.white}!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid ${CORE.crimson}!important;outline-offset:-2px!important}` }), !showcasing && SP_JSX.jsxs(Focusable$4, { className: "ph-settings-pages", "flow-children": "row", role: "tablist", children: [SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'general', onClick: () => setSettingsPage('general'), children: qamSettingsCopy(locale)[0] }), SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'qam', onClick: () => setSettingsPage('qam'), children: "Shortcuts" })] }), settingsPage === 'qam' && !showcasing ? SP_JSX.jsxs(QamSettings, { locale: locale, children: [settings, SP_JSX.jsx(ToggleField$3, { label: integrationCopy.label, description: integrationCopy.description, bottomSeparator: "none", checked: state.deckyHostEnabled, onChange: (enabled) => update({ ...state, deckyHostEnabled: enabled }, locale) })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h2", { className: "ph-tab-editor-title", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: editorCopy.title }), SP_JSX.jsx("p", { children: editorCopy.introduction }), SP_JSX.jsx(Focusable$4, { className: "ph-control-tabs ph-tab-editor", "flow-children": "row", role: "tablist", "aria-label": copy.customize, onKeyDown: (event) => {
+        }, onCancelButton: customizing ? cancelEditor : undefined, onCancelActionDescription: customizing ? editorCopy.cancel : undefined, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: (CompatUI.coreClassSelectors?.(css) ?? css) }), customizing ? SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs(Focusable$6, { className: "ph-control-settings", "flow-children": "column", "data-playhub-onboarding-content": origin === "qam" ? "customize" : undefined, children: [SP_JSX.jsx("style", { children: `.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:${CORE.gunmetal};margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:${CORE.gunmetalRaised}!important;box-shadow:inset 0 -3px 0 ${CORE.crimson}!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:${CORE.white}!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid ${CORE.crimson}!important;outline-offset:-2px!important}` }), !showcasing && SP_JSX.jsxs(Focusable$6, { className: "ph-settings-pages", "flow-children": "row", role: "tablist", children: [SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'general', onClick: () => setSettingsPage('general'), children: qamSettingsCopy(locale)[0] }), SP_JSX.jsx(DialogButton$2, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'qam', onClick: () => setSettingsPage('qam'), children: "Shortcuts" })] }), settingsPage === 'qam' && !showcasing ? SP_JSX.jsxs(QamSettings, { locale: locale, children: [settings, SP_JSX.jsx(ToggleField$4, { label: integrationCopy.label, description: integrationCopy.description, bottomSeparator: "none", checked: state.deckyHostEnabled, onChange: (enabled) => update({ ...state, deckyHostEnabled: enabled }, locale) })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h2", { className: "ph-tab-editor-title", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: editorCopy.title }), SP_JSX.jsx("p", { children: editorCopy.introduction }), SP_JSX.jsx(Focusable$6, { className: "ph-control-tabs ph-tab-editor", "flow-children": "row", role: "tablist", "aria-label": copy.customize, onKeyDown: (event) => {
                                                 if (event.key === "x" || event.key === "X") {
                                                     event.preventDefault();
                                                     event.stopPropagation();
@@ -57296,7 +57325,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
                                             }, children: editorTabs.map(id => {
                                                 const Icon = icons[id];
                                                 return SP_JSX.jsx(DialogButton$2, { className: "ph-control-icon", role: "tab", "aria-label": `${copy[id]}: ${state.hidden.includes(id) ? editorCopy.hidden : editorCopy.visible}`, title: copy[id], onOKActionDescription: editorAction(id), onSecondaryActionDescription: editor.draftOrder ? editorCopy.confirm : editorCopy.move, onCancelActionDescription: editorCopy.cancel, actionDescriptionMap: { [GamepadButton.OK]: editorAction(id), [GamepadButton.SECONDARY]: editor.draftOrder ? editorCopy.confirm : editorCopy.move, [GamepadButton.CANCEL]: editorCopy.cancel }, "aria-selected": editing === id, "data-hidden": state.hidden.includes(id), "data-moving": editing === id && !!editor.draftOrder, style: { order: (editor.draftOrder ?? state.order).indexOf(id) }, onFocus: () => edit({ type: "select", id }), onGamepadFocus: () => edit({ type: "select", id }), onGamepadDirection: editor.draftOrder ? editorDirection : undefined, onSecondaryButton: (event) => { event.preventDefault?.(); event.stopPropagation?.(); edit({ type: "select", id }); edit({ type: "secondary" }); }, onCancelButton: cancelEditor, onClick: () => { edit({ type: "select", id }); edit({ type: "confirm" }); }, children: SP_JSX.jsx(Icon, {}) }, id);
-                                            }) }), SP_JSX.jsx("div", { className: "ph-control-setting-row", "aria-live": "polite", children: SP_JSX.jsxs("div", { className: "ph-selected-tab", children: [SP_JSX.jsx("span", { children: copy[editing] }), SP_JSX.jsxs("span", { className: "ph-selected-tab-status", children: [state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible, !canToggleTab(state, editing, deckyAvailable) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("br", {}), editorCopy.lastTab] })] })] }) }), SP_JSX.jsxs(DialogButton$2, { className: "ph-settings-action", onOKActionDescription: editorCopy.reset, onClick: () => edit({ type: "reset" }), children: [SP_JSX.jsx(TbRestore, {}), SP_JSX.jsx("span", { children: editorCopy.reset })] }), SP_JSX.jsx("p", { className: "ph-tab-reset-hint", children: editorCopy.resetHint }), SP_JSX.jsxs("div", { className: "ph-editor-following", children: [SP_JSX.jsxs("div", { style: { paddingTop: 16 }, children: [SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) }), !showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: visible.includes("audio") ? openDeviceVideo : undefined, openPerformance: visible.includes("graphics") ? openDevicePerformance : undefined, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] })] }), SP_JSX.jsx(ControlSection, { id: "news", title: "News", locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("news"), onToggle: toggleSection, children: SP_JSX.jsx(HomeNewsSettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "daily-history", title: historyTitle(locale), locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("daily-history"), onToggle: toggleSection, children: SP_JSX.jsx(HomeHistorySettings, { locale: locale }) }), SP_JSX.jsx(QuickSettingsContent, { page: "tools", locale: locale, expanded: expanded, onToggle: toggleSection }), SP_JSX.jsxs(DialogButton$2, { className: "ph-settings-action", onClick: () => { setCustomizing(false); replayPlayhubOnboarding(); }, children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] })] })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$4, { className: "ph-control-nav", "flow-children": "row", children: SP_JSX.jsxs(Focusable$4, { className: "ph-control-tabs", "flow-children": "row", role: "tablist", "aria-label": "Core", children: [visible.map(id => {
+                                            }) }), SP_JSX.jsx("div", { className: "ph-control-setting-row", "aria-live": "polite", children: SP_JSX.jsxs("div", { className: "ph-selected-tab", children: [SP_JSX.jsx("span", { children: copy[editing] }), SP_JSX.jsxs("span", { className: "ph-selected-tab-status", children: [state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible, !canToggleTab(state, editing, deckyAvailable) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("br", {}), editorCopy.lastTab] })] })] }) }), SP_JSX.jsxs(DialogButton$2, { className: "ph-settings-action", onOKActionDescription: editorCopy.reset, onClick: () => edit({ type: "reset" }), children: [SP_JSX.jsx(TbRestore, {}), SP_JSX.jsx("span", { children: editorCopy.reset })] }), SP_JSX.jsx("p", { className: "ph-tab-reset-hint", children: editorCopy.resetHint }), SP_JSX.jsxs("div", { className: "ph-editor-following", children: [SP_JSX.jsxs("div", { style: { paddingTop: 16 }, children: [SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) }), !showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: visible.includes("audio") ? openDeviceVideo : undefined, openPerformance: visible.includes("graphics") ? openDevicePerformance : undefined, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] })] }), SP_JSX.jsx(ControlSection, { id: "news", title: "News", locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("news"), onToggle: toggleSection, children: SP_JSX.jsx(HomeNewsSettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "daily-history", title: historyTitle(locale), locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("daily-history"), onToggle: toggleSection, children: SP_JSX.jsx(HomeHistorySettings, { locale: locale }) }), SP_JSX.jsx(QuickSettingsContent, { page: "tools", locale: locale, expanded: expanded, onToggle: toggleSection }), SP_JSX.jsxs(DialogButton$2, { className: "ph-settings-action", onClick: () => { setCustomizing(false); replayPlayhubOnboarding(); }, children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] })] })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$6, { className: "ph-control-nav", "flow-children": "row", children: SP_JSX.jsxs(Focusable$6, { className: "ph-control-tabs", "flow-children": "row", role: "tablist", "aria-label": "Core", children: [visible.map(id => {
                                             const Icon = icons[id];
                                             return SP_JSX.jsx(DialogButton$2, { className: "ph-control-icon", role: "tab", "aria-selected": active === id, "aria-label": copy[id], onOKActionDescription: copy[id], disabled: !ready, "data-playhub-onboarding": origin === "qam" ? id : undefined, onClick: () => choose(id), children: SP_JSX.jsx(Icon, {}) }, id);
                                         }), SP_JSX.jsx(DialogButton$2, { className: "ph-control-icon", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, "aria-label": copy.settings, onOKActionDescription: copy.settings, disabled: !ready, onClick: () => setCustomizing(true), children: SP_JSX.jsx(TbSettings, {}) })] }) }), active !== "decky" && (active !== "home" || homeTitle) && SP_JSX.jsx("h2", { className: "ph-control-heading", children: active === "home" ? homeTitle : copy[active] }), !hostActive && SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs("div", { "data-playhub-onboarding-content": origin === "qam" ? active : undefined, children: [active === "home" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "home" : undefined, children: session }) : active === "store" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "store" : undefined, children: store }) : active === "controller" ? SP_JSX.jsx(SP_JSX.Fragment, { children: controller }) :
@@ -57359,8 +57388,8 @@ function createGameFrameComparison() {
 }
 const gameFrameComparison = createGameFrameComparison();
 
-const { ButtonItem: ButtonItem$4, PanelSection: PanelSection$6, PanelSectionRow: PanelSectionRow$6 } = CompatUI;
-const copy$5 = {
+const { ButtonItem: ButtonItem$5, PanelSection: PanelSection$8, PanelSectionRow: PanelSectionRow$8 } = CompatUI;
+const copy$6 = {
     en: ["Frame timing", "Measure FPS", "Measuring…", "Four-second sample of the current game.", "Presented FPS", "Frame time", "No game frames captured. Try during play.", "Frame measurement is unavailable.", "Windows denied access to frame data."],
     it: ["Tempi dei fotogrammi", "Misura FPS", "Misurazione…", "Campione di quattro secondi del gioco in corso.", "FPS presentati", "Tempo per fotogramma", "Nessun fotogramma rilevato. Riprova durante il gioco.", "Misurazione dei fotogrammi non disponibile.", "Windows ha negato l’accesso ai dati dei fotogrammi."],
     de: ["Framezeiten", "FPS messen", "Messung läuft…", "Vier Sekunden aus dem laufenden Spiel.", "Ausgegebene FPS", "Framezeit", "Keine Frames erfasst. Versuche es im Spiel erneut.", "Frame-Messung nicht verfügbar.", "Windows hat den Zugriff auf Frame-Daten verweigert."],
@@ -57390,7 +57419,7 @@ const comparisonCopy = {
 };
 function GameFrameTiming({ appId, locale }) {
     const language = locale.split(/[-_]/)[0];
-    const [title, , measuring, , fps, frame, empty, unavailable, denied] = copy$5[language] ?? copy$5.en;
+    const [title, , measuring, , fps, frame, empty, unavailable, denied] = copy$6[language] ?? copy$6.en;
     const [measureFirst, measureSecond, repeat, clear, hint, prepare, firstLabel, secondLabel, change, returnToGame] = comparisonCopy[language] ?? comparisonCopy.en;
     const [result, setResult] = _global_SP_REACT.useState(() => gameFrameComparison.read(appId));
     _global_SP_REACT.useEffect(() => {
@@ -57411,10 +57440,10 @@ function GameFrameTiming({ appId, locale }) {
         { label: frame, before: first.medianFrameTimeMs, after: second?.medianFrameTimeMs, unit: " ms" },
         { label: "P95", before: first.p95FrameTimeMs, after: second?.p95FrameTimeMs, unit: " ms" },
     ] : [];
-    return SP_JSX.jsxs(PanelSection$6, { title: title, children: [SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsx(ButtonItem$4, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => void gameFrameComparison.capture(appId, id => call("measure_game_frames", id, true)), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: busy ? measuring : measure }) }) }), SP_JSX.jsxs("div", { role: "status", style: { padding: "4px 16px 12px", fontSize: 13, lineHeight: 1.5, overflowWrap: "anywhere" }, children: [SP_JSX.jsx("div", { children: message }), !busy && !error && SP_JSX.jsx("div", { style: { opacity: .74 }, children: prepare }), first && SP_JSX.jsx("dl", { style: { display: "grid", gap: 8, margin: "12px 0 0" }, children: rows.map(({ label, before, after, unit }) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { style: { fontWeight: 650 }, children: label }), SP_JSX.jsxs("dd", { style: { margin: 0, display: "flex", flexWrap: "wrap", columnGap: 12 }, children: [SP_JSX.jsxs("span", { children: [firstLabel, " \u00B7 ", format(before), unit] }), after !== undefined && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { children: [secondLabel, " \u00B7 ", format(after), unit] }), SP_JSX.jsxs("span", { children: [change, " \u00B7 ", format(Number((after - before).toFixed(2)), true), unit] })] })] })] }, label)) })] }), first && SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsx(ButtonItem$4, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => gameFrameComparison.reset(appId), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: clear }) }) })] });
+    return SP_JSX.jsxs(PanelSection$8, { title: title, children: [SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsx(ButtonItem$5, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => void gameFrameComparison.capture(appId, id => call("measure_game_frames", id, true)), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: busy ? measuring : measure }) }) }), SP_JSX.jsxs("div", { role: "status", style: { padding: "4px 16px 12px", fontSize: 13, lineHeight: 1.5, overflowWrap: "anywhere" }, children: [SP_JSX.jsx("div", { children: message }), !busy && !error && SP_JSX.jsx("div", { style: { opacity: .74 }, children: prepare }), first && SP_JSX.jsx("dl", { style: { display: "grid", gap: 8, margin: "12px 0 0" }, children: rows.map(({ label, before, after, unit }) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { style: { fontWeight: 650 }, children: label }), SP_JSX.jsxs("dd", { style: { margin: 0, display: "flex", flexWrap: "wrap", columnGap: 12 }, children: [SP_JSX.jsxs("span", { children: [firstLabel, " \u00B7 ", format(before), unit] }), after !== undefined && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { children: [secondLabel, " \u00B7 ", format(after), unit] }), SP_JSX.jsxs("span", { children: [change, " \u00B7 ", format(Number((after - before).toFixed(2)), true), unit] })] })] })] }, label)) })] }), first && SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsx(ButtonItem$5, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => gameFrameComparison.reset(appId), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: clear }) }) })] });
 }
 
-const style$3 = `
+const style$5 = `
 .ph-store-intro{isolation:isolate;width:100%;min-width:0;padding:0 0 14px;box-sizing:border-box}
 .ph-store-launch{position:relative;z-index:1}
 .ph-store-download{position:relative;z-index:0;width:100%;overflow:hidden;pointer-events:none}
@@ -57473,7 +57502,7 @@ function PluginStoreIntro({ description, button }) {
             observer.observe(target);
         return () => observer.disconnect();
     }, []);
-    return SP_JSX.jsxs("div", { className: "ph-store-intro", ref: container, children: [SP_JSX.jsx("style", { children: style$3 }), SP_JSX.jsx("div", { className: "ph-store-launch", ref: launcher, children: button }), SP_JSX.jsx("div", { className: "ph-store-download", style: { height: Math.max(0, height - overlap), marginTop: -wrapperGap }, "aria-hidden": "true", children: SP_JSX.jsx("div", { className: "ph-store-download-viewport", style: { height, top: -overlap }, children: SP_JSX.jsxs("div", { className: "ph-store-download-stage", children: [SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbPhoto, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbMusic, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbDeviceGamepad2, {}) }), SP_JSX.jsx("span", { className: "ph-store-shelf" }), SP_JSX.jsx(TbCheck, { className: "ph-store-saved" })] }) }) }), SP_JSX.jsx("div", { className: "ph-store-intro-copy", children: description })] });
+    return SP_JSX.jsxs("div", { className: "ph-store-intro", ref: container, children: [SP_JSX.jsx("style", { children: style$5 }), SP_JSX.jsx("div", { className: "ph-store-launch", ref: launcher, children: button }), SP_JSX.jsx("div", { className: "ph-store-download", style: { height: Math.max(0, height - overlap), marginTop: -wrapperGap }, "aria-hidden": "true", children: SP_JSX.jsx("div", { className: "ph-store-download-viewport", style: { height, top: -overlap }, children: SP_JSX.jsxs("div", { className: "ph-store-download-stage", children: [SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbPhoto, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbMusic, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbDeviceGamepad2, {}) }), SP_JSX.jsx("span", { className: "ph-store-shelf" }), SP_JSX.jsx(TbCheck, { className: "ph-store-saved" })] }) }) }), SP_JSX.jsx("div", { className: "ph-store-intro-copy", children: description })] });
 }
 
 /** Three startup checks only. Evidence and the durable session claim live in Python. */
@@ -61173,8 +61202,8 @@ function installAutoCompleted(deps) {
 // while someone is signed in, so when Windows has a restart pending (or a month has
 // passed) this card offers to restart at 5:00. The agent does the restart, never during a
 // game (GamingMode.Services/UpdateNight.cs). Shown only when there is something to say.
-const { PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$5, ButtonItem: ButtonItem$3 } = CompatUI;
-const copy$4 = {
+const { PanelSection: PanelSection$7, PanelSectionRow: PanelSectionRow$7, ButtonItem: ButtonItem$4 } = CompatUI;
+const copy$5 = {
     en: { title: "Windows updates", offer: "Windows has updates waiting. Restart tonight at {time}?", restart: "Restart at {time}", scheduled: "Core will restart at {time} for Windows updates, unless a game is running.", cancel: "Cancel" },
     it: { title: "Aggiornamenti di Windows", offer: "Windows ha degli aggiornamenti in attesa. Riavviare stanotte alle {time}?", restart: "Riavvia alle {time}", scheduled: "Core si riavvierà alle {time} per gli aggiornamenti di Windows, a meno che un gioco sia aperto.", cancel: "Annulla" },
     es: { title: "Actualizaciones de Windows", offer: "Windows tiene actualizaciones pendientes. ¿Reiniciar esta noche a las {time}?", restart: "Reiniciar a las {time}", scheduled: "Core se reiniciará a las {time} para las actualizaciones de Windows, salvo que haya un juego abierto.", cancel: "Cancelar" },
@@ -61206,7 +61235,7 @@ function nightTime(locale, state, now = new Date()) {
 function UpdateNightCard({ locale }) {
     const [state, setState] = _global_SP_REACT.useState();
     const [busy, setBusy] = _global_SP_REACT.useState(false);
-    const text = copy$4[locale] ?? copy$4.en;
+    const text = copy$5[locale] ?? copy$5.en;
     _global_SP_REACT.useEffect(() => {
         let alive = true;
         const load = () => { call("core_update_night").then(value => { if (alive)
@@ -61228,14 +61257,14 @@ function UpdateNightCard({ locale }) {
             setBusy(false);
         }
     };
-    return (SP_JSX.jsxs(PanelSection$5, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${CORE.warning}` }, children: (state.scheduledFor ? text.scheduled : text.offer).replace("{time}", time) }) }), SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy, onClick: () => act(state.scheduledFor ? "core_update_night_cancel" : "core_update_night_schedule"), children: state.scheduledFor ? text.cancel : text.restart.replace("{time}", time) }) })] }));
+    return (SP_JSX.jsxs(PanelSection$7, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${CORE.warning}` }, children: (state.scheduledFor ? text.scheduled : text.offer).replace("{time}", time) }) }), SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsx(ButtonItem$4, { layout: "below", disabled: busy, onClick: () => act(state.scheduledFor ? "core_update_night_cancel" : "core_update_night_schedule"), children: state.scheduledFor ? text.cancel : text.restart.replace("{time}", time) }) })] }));
 }
 
 // Eternal Core: Core Health in Quick Access. Turns the agent's GET /health answer
 // (GamingMode.Services/CoreHealth.cs) into the lines HealthSection.tsx shows, in Core's 12
 // languages, including the console guards' rows and buttons (CONSOLE-GUARDS.md). Self-contained on purpose:
 // tests/coreHealthSection.test.mjs and tests/consoleGuards.test.mjs load this file alone.
-const en$2 = {
+const en$3 = {
     title: "Health", allGood: "All good", attention: "Needs attention: {n}", checking: "Checking…", agentDown: "Core's service is not answering.", dismiss: "Dismiss alert",
     r_backup: "Server backup", r_restore: "Restore check", r_drive: "Server drive", r_romm: "RomM", r_restart: "Windows restart", r_night: "Update night", r_tv: "TV", r_pc: "PC disk space", r_core: "Core update",
     notConfigured: "Set the server in Core > Gaming Mode", unreachable: "Server not reachable", missing: "No status file on the server", unreadable: "Status file unreadable", stale: "Last news {when}", unknown: "Unknown",
@@ -61251,8 +61280,8 @@ const en$2 = {
     r_stream: "Streaming", sIdle: "Idle", sTo: "Streaming to {device}", sVia: "Streaming · {source}", sKept: "TV kept out by you", tHeld: "Left alone (Stream mode)", sThrough: "Through {source}", sVd: "Apollo's virtual display is active",
     r_steam: "Steam update", stPostponed: "Postponed: {reason}", stUnsupported: "the new Steam doesn't work with the installed Decky", stUnknown: "Core can't tell yet if the new Steam works with Decky", stCantCheck: "Core can't check compatibility with Decky", stFailed: "the last try failed its check and was undone", stPending: "Waiting version: {version}",
 };
-const copy$3 = {
-    en: en$2,
+const copy$4 = {
+    en: en$3,
     it: {
         title: "Salute", allGood: "Tutto a posto", attention: "Da controllare: {n}", checking: "Controllo…", agentDown: "Il servizio di Core non risponde.", dismiss: "Ignora l'avviso",
         r_backup: "Backup del server", r_restore: "Prova di ripristino", r_drive: "Disco del server", r_romm: "RomM", r_restart: "Riavvio di Windows", r_night: "Notte degli aggiornamenti", r_tv: "TV", r_pc: "Spazio sul PC", r_core: "Aggiornamento di Core",
@@ -61782,7 +61811,7 @@ const consoleCopy = {
     },
 };
 for (const [language, table] of Object.entries(consoleCopy))
-    Object.assign(copy$3[language] ?? {}, table);
+    Object.assign(copy$4[language] ?? {}, table);
 // Batch 1 (BATCH-1.md): the save backup before update night and Decky with the plugins that report errors.
 const batchCopy = {
     en: {
@@ -61823,13 +61852,54 @@ const batchCopy = {
     },
 };
 for (const [language, table] of Object.entries(batchCopy))
-    Object.assign(copy$3[language] ?? {}, table);
+    Object.assign(copy$4[language] ?? {}, table);
+// Batch 2 (BATCH-2.md): sleep after streaming, Wake-on-LAN readiness and the Home Assistant bridge.
+const batchTwoCopy$1 = {
+    en: {
+        r_streamSleep: "Sleep after streaming", ssOff: "Off", ssReady: "On · after {n} min", ssCounting: "Sleeping at {time} unless someone plays here", ssLast: "Last slept {when}", r_wol: "Wake-on-LAN", wolReady: "Ready", wolCheck: "Check the network adapter", wolWifi: "Wi-Fi only", wolNone: "No network adapter", wolUnknown: "Unknown", wolMac: "Wake address (MAC): {mac}", wolMagic: "Turn on \"Wake on Magic Packet\" in the adapter's Advanced settings (Device Manager)", wolPower: "Let the adapter wake the PC: Device Manager > adapter > Power Management", wolArmed: "Windows does not let the adapter wake the PC (Power Management)", wolCable: "Network cable unplugged", wolFast: "Fast startup is on: waking from shutdown may fail; waking from sleep works", wolCableHint: "Use a network cable to wake the PC from a handheld", r_ha: "Home Assistant", haOff: "Off", haNotConfigured: "Set the server in Core > Gaming Mode", haConnected: "Connected · {host}", haConnecting: "Connecting…", haRefused: "Login refused by {host}", haUnreachable: "Can't reach {host}",
+    },
+    it: {
+        r_streamSleep: "Sospensione dopo lo streaming", ssOff: "Spenta", ssReady: "Attiva · dopo {n} min", ssCounting: "Sospensione alle {time}, a meno che qualcuno giochi qui", ssLast: "Ultima sospensione {when}", r_wol: "Wake-on-LAN", wolReady: "Pronto", wolCheck: "Controlla la scheda di rete", wolWifi: "Solo Wi-Fi", wolNone: "Nessuna scheda di rete", wolUnknown: "Sconosciuto", wolMac: "Indirizzo di risveglio (MAC): {mac}", wolMagic: "Attiva \"Wake on Magic Packet\" nelle impostazioni avanzate della scheda (Gestione dispositivi)", wolPower: "Lascia che la scheda risvegli il PC: Gestione dispositivi > scheda > Risparmio energia", wolArmed: "Windows non permette alla scheda di risvegliare il PC (Risparmio energia)", wolCable: "Cavo di rete scollegato", wolFast: "Avvio rapido attivo: il risveglio da spento può non riuscire; da sospensione funziona", wolCableHint: "Usa un cavo di rete per risvegliare il PC da una console portatile", r_ha: "Home Assistant", haOff: "Spento", haNotConfigured: "Imposta il server in Core > Gaming Mode", haConnected: "Collegato · {host}", haConnecting: "Collegamento…", haRefused: "Accesso rifiutato da {host}", haUnreachable: "{host} non raggiungibile",
+    },
+    es: {
+        r_streamSleep: "Suspensión tras la transmisión", ssOff: "Desactivada", ssReady: "Activa · tras {n} min", ssCounting: "Suspensión a las {time} salvo que alguien juegue aquí", ssLast: "Última suspensión {when}", r_wol: "Wake-on-LAN", wolReady: "Listo", wolCheck: "Revisa el adaptador de red", wolWifi: "Solo Wi-Fi", wolNone: "Sin adaptador de red", wolUnknown: "Desconocido", wolMac: "Dirección de activación (MAC): {mac}", wolMagic: "Activa \"Wake on Magic Packet\" en las opciones avanzadas del adaptador (Administrador de dispositivos)", wolPower: "Deja que el adaptador active el PC: Administrador de dispositivos > adaptador > Administración de energía", wolArmed: "Windows no deja que el adaptador active el PC (Administración de energía)", wolCable: "Cable de red desconectado", wolFast: "El inicio rápido está activado: activar desde apagado puede fallar; desde suspensión funciona", wolCableHint: "Usa un cable de red para activar el PC desde una portátil", r_ha: "Home Assistant", haOff: "Desactivado", haNotConfigured: "Configura el servidor en Core > Gaming Mode", haConnected: "Conectado · {host}", haConnecting: "Conectando…", haRefused: "{host} rechazó el inicio de sesión", haUnreachable: "No se puede contactar con {host}",
+    },
+    fr: {
+        r_streamSleep: "Veille après le streaming", ssOff: "Désactivée", ssReady: "Active · après {n} min", ssCounting: "Veille à {time} sauf si quelqu'un joue ici", ssLast: "Dernière veille {when}", r_wol: "Wake-on-LAN", wolReady: "Prêt", wolCheck: "Vérifie la carte réseau", wolWifi: "Wi-Fi uniquement", wolNone: "Aucune carte réseau", wolUnknown: "Inconnu", wolMac: "Adresse de réveil (MAC) : {mac}", wolMagic: "Active « Wake on Magic Packet » dans les paramètres avancés de la carte (Gestionnaire de périphériques)", wolPower: "Autorise la carte à réveiller le PC : Gestionnaire de périphériques > carte > Gestion de l'alimentation", wolArmed: "Windows n'autorise pas la carte à réveiller le PC (Gestion de l'alimentation)", wolCable: "Câble réseau débranché", wolFast: "Le démarrage rapide est activé : réveiller depuis l'arrêt peut échouer ; depuis la veille, ça marche", wolCableHint: "Utilise un câble réseau pour réveiller le PC depuis une console portable", r_ha: "Home Assistant", haOff: "Désactivé", haNotConfigured: "Configure le serveur dans Core > Gaming Mode", haConnected: "Connecté · {host}", haConnecting: "Connexion…", haRefused: "Connexion refusée par {host}", haUnreachable: "{host} injoignable",
+    },
+    de: {
+        r_streamSleep: "Standby nach dem Streamen", ssOff: "Aus", ssReady: "An · nach {n} Min.", ssCounting: "Standby um {time}, außer jemand spielt hier", ssLast: "Zuletzt im Standby {when}", r_wol: "Wake-on-LAN", wolReady: "Bereit", wolCheck: "Netzwerkadapter prüfen", wolWifi: "Nur WLAN", wolNone: "Kein Netzwerkadapter", wolUnknown: "Unbekannt", wolMac: "Weckadresse (MAC): {mac}", wolMagic: "„Wake on Magic Packet“ in den erweiterten Adaptereinstellungen einschalten (Geräte-Manager)", wolPower: "Adapter darf den PC wecken: Geräte-Manager > Adapter > Energieverwaltung", wolArmed: "Windows lässt den Adapter den PC nicht wecken (Energieverwaltung)", wolCable: "Netzwerkkabel getrennt", wolFast: "Schnellstart ist an: Wecken aus dem ausgeschalteten Zustand kann fehlschlagen; aus dem Standby klappt es", wolCableHint: "Nimm ein Netzwerkkabel, um den PC vom Handheld aus zu wecken", r_ha: "Home Assistant", haOff: "Aus", haNotConfigured: "Server in Core > Gaming Mode festlegen", haConnected: "Verbunden · {host}", haConnecting: "Verbinde…", haRefused: "Anmeldung von {host} abgelehnt", haUnreachable: "{host} nicht erreichbar",
+    },
+    pt: {
+        r_streamSleep: "Suspensão após a transmissão", ssOff: "Desligada", ssReady: "Ligada · após {n} min", ssCounting: "Suspensão às {time}, a menos que alguém jogue aqui", ssLast: "Última suspensão {when}", r_wol: "Wake-on-LAN", wolReady: "Pronto", wolCheck: "Verifique o adaptador de rede", wolWifi: "Só Wi-Fi", wolNone: "Nenhum adaptador de rede", wolUnknown: "Desconhecido", wolMac: "Endereço de ativação (MAC): {mac}", wolMagic: "Ative \"Wake on Magic Packet\" nas configurações avançadas do adaptador (Gerenciador de Dispositivos)", wolPower: "Deixe o adaptador ativar o PC: Gerenciador de Dispositivos > adaptador > Gerenciamento de Energia", wolArmed: "O Windows não deixa o adaptador ativar o PC (Gerenciamento de Energia)", wolCable: "Cabo de rede desconectado", wolFast: "A inicialização rápida está ligada: ativar a partir de desligado pode falhar; da suspensão funciona", wolCableHint: "Use um cabo de rede para ativar o PC a partir de um portátil", r_ha: "Home Assistant", haOff: "Desligado", haNotConfigured: "Defina o servidor em Core > Gaming Mode", haConnected: "Conectado · {host}", haConnecting: "Conectando…", haRefused: "Login recusado por {host}", haUnreachable: "Não foi possível alcançar {host}",
+    },
+    uk: {
+        r_streamSleep: "Сон після трансляції", ssOff: "Вимкнено", ssReady: "Увімкнено · через {n} хв", ssCounting: "Сон о {time}, якщо тут ніхто не грає", ssLast: "Востаннє засинав {when}", r_wol: "Wake-on-LAN", wolReady: "Готово", wolCheck: "Перевірте мережевий адаптер", wolWifi: "Лише Wi-Fi", wolNone: "Немає мережевого адаптера", wolUnknown: "Невідомо", wolMac: "Адреса пробудження (MAC): {mac}", wolMagic: "Увімкніть «Wake on Magic Packet» у додаткових параметрах адаптера (Диспетчер пристроїв)", wolPower: "Дозвольте адаптеру будити ПК: Диспетчер пристроїв > адаптер > Керування живленням", wolArmed: "Windows не дозволяє адаптеру будити ПК (Керування живленням)", wolCable: "Мережевий кабель від’єднано", wolFast: "Швидкий запуск увімкнено: пробудження з вимкненого стану може не спрацювати; зі сну працює", wolCableHint: "Щоб будити ПК з портативної консолі, використовуйте мережевий кабель", r_ha: "Home Assistant", haOff: "Вимкнено", haNotConfigured: "Вкажіть сервер у Core > Gaming Mode", haConnected: "Підключено · {host}", haConnecting: "Підключення…", haRefused: "{host} відхилив вхід", haUnreachable: "{host} недоступний",
+    },
+    ru: {
+        r_streamSleep: "Сон после трансляции", ssOff: "Выключено", ssReady: "Включено · через {n} мин", ssCounting: "Сон в {time}, если здесь никто не играет", ssLast: "Последний сон {when}", r_wol: "Wake-on-LAN", wolReady: "Готово", wolCheck: "Проверьте сетевой адаптер", wolWifi: "Только Wi-Fi", wolNone: "Нет сетевого адаптера", wolUnknown: "Неизвестно", wolMac: "Адрес пробуждения (MAC): {mac}", wolMagic: "Включите «Wake on Magic Packet» в дополнительных параметрах адаптера (Диспетчер устройств)", wolPower: "Разрешите адаптеру будить ПК: Диспетчер устройств > адаптер > Управление электропитанием", wolArmed: "Windows не разрешает адаптеру будить ПК (Управление электропитанием)", wolCable: "Сетевой кабель отключён", wolFast: "Быстрый запуск включён: пробуждение из выключенного состояния может не сработать; из сна работает", wolCableHint: "Чтобы будить ПК с портативной консоли, используйте сетевой кабель", r_ha: "Home Assistant", haOff: "Выключено", haNotConfigured: "Укажите сервер в Core > Gaming Mode", haConnected: "Подключено · {host}", haConnecting: "Подключение…", haRefused: "{host} отклонил вход", haUnreachable: "{host} недоступен",
+    },
+    zh: {
+        r_streamSleep: "串流后睡眠", ssOff: "已关闭", ssReady: "已开启 · {n} 分钟后", ssCounting: "将在 {time} 睡眠，除非有人在这里玩", ssLast: "上次睡眠 {when}", r_wol: "网络唤醒", wolReady: "就绪", wolCheck: "请检查网络适配器", wolWifi: "仅 Wi-Fi", wolNone: "没有网络适配器", wolUnknown: "未知", wolMac: "唤醒地址（MAC）：{mac}", wolMagic: "在适配器的高级设置中打开“Wake on Magic Packet”（设备管理器）", wolPower: "允许适配器唤醒电脑：设备管理器 > 适配器 > 电源管理", wolArmed: "Windows 不允许适配器唤醒电脑（电源管理）", wolCable: "网线已拔出", wolFast: "快速启动已开启：从关机唤醒可能失败；从睡眠唤醒没问题", wolCableHint: "要从掌机唤醒电脑，请使用网线", r_ha: "Home Assistant", haOff: "已关闭", haNotConfigured: "在 Core > Gaming Mode 中设置服务器", haConnected: "已连接 · {host}", haConnecting: "正在连接…", haRefused: "{host} 拒绝登录", haUnreachable: "无法连接 {host}",
+    },
+    ja: {
+        r_streamSleep: "ストリーミング後にスリープ", ssOff: "オフ", ssReady: "オン · {n} 分後", ssCounting: "{time} にスリープ（ここで誰かが遊ばない限り）", ssLast: "前回のスリープ {when}", r_wol: "Wake-on-LAN", wolReady: "準備完了", wolCheck: "ネットワークアダプターを確認してください", wolWifi: "Wi-Fi のみ", wolNone: "ネットワークアダプターがありません", wolUnknown: "不明", wolMac: "復帰用アドレス（MAC）：{mac}", wolMagic: "アダプターの詳細設定で「Wake on Magic Packet」をオンにします（デバイス マネージャー）", wolPower: "アダプターで PC を復帰できるようにします：デバイス マネージャー > アダプター > 電源の管理", wolArmed: "Windows がアダプターによる復帰を許可していません（電源の管理）", wolCable: "ネットワークケーブルが抜けています", wolFast: "高速スタートアップがオン：シャットダウンからの起動は失敗することがあります。スリープからの復帰は問題ありません", wolCableHint: "携帯機から PC を起こすにはネットワークケーブルを使ってください", r_ha: "Home Assistant", haOff: "オフ", haNotConfigured: "Core > Gaming Mode でサーバーを設定してください", haConnected: "接続済み · {host}", haConnecting: "接続しています…", haRefused: "{host} にログインを拒否されました", haUnreachable: "{host} に接続できません",
+    },
+    ko: {
+        r_streamSleep: "스트리밍 후 절전", ssOff: "꺼짐", ssReady: "켜짐 · {n}분 후", ssCounting: "여기서 누가 플레이하지 않으면 {time}에 절전", ssLast: "마지막 절전 {when}", r_wol: "Wake-on-LAN", wolReady: "준비됨", wolCheck: "네트워크 어댑터를 확인하세요", wolWifi: "Wi-Fi만 있음", wolNone: "네트워크 어댑터 없음", wolUnknown: "알 수 없음", wolMac: "깨우기 주소(MAC): {mac}", wolMagic: "어댑터의 고급 설정에서 \"Wake on Magic Packet\"을 켜세요(장치 관리자)", wolPower: "어댑터가 PC를 깨울 수 있게 하세요: 장치 관리자 > 어댑터 > 전원 관리", wolArmed: "Windows가 어댑터의 PC 깨우기를 허용하지 않음(전원 관리)", wolCable: "네트워크 케이블 분리됨", wolFast: "빠른 시작이 켜져 있음: 종료 상태에서 깨우기는 실패할 수 있고, 절전에서는 됩니다", wolCableHint: "휴대용 기기에서 PC를 깨우려면 네트워크 케이블을 쓰세요", r_ha: "Home Assistant", haOff: "꺼짐", haNotConfigured: "Core > Gaming Mode에서 서버를 설정하세요", haConnected: "연결됨 · {host}", haConnecting: "연결하는 중…", haRefused: "{host}에서 로그인 거부", haUnreachable: "{host}에 연결할 수 없음",
+    },
+    hi: {
+        r_streamSleep: "स्ट्रीमिंग के बाद स्लीप", ssOff: "बंद", ssReady: "चालू · {n} मिनट बाद", ssCounting: "{time} पर स्लीप, जब तक कोई यहाँ न खेले", ssLast: "पिछली बार स्लीप {when}", r_wol: "Wake-on-LAN", wolReady: "तैयार", wolCheck: "नेटवर्क एडैप्टर जाँचें", wolWifi: "सिर्फ़ Wi-Fi", wolNone: "कोई नेटवर्क एडैप्टर नहीं", wolUnknown: "अज्ञात", wolMac: "जगाने का पता (MAC): {mac}", wolMagic: "एडैप्टर की Advanced सेटिंग में \"Wake on Magic Packet\" चालू करें (Device Manager)", wolPower: "एडैप्टर को PC जगाने दें: Device Manager > एडैप्टर > Power Management", wolArmed: "Windows एडैप्टर को PC जगाने नहीं देता (Power Management)", wolCable: "नेटवर्क केबल निकली हुई है", wolFast: "फ़ास्ट स्टार्टअप चालू है: बंद PC को जगाना विफल हो सकता है; स्लीप से जगाना ठीक है", wolCableHint: "हैंडहेल्ड से PC जगाने के लिए नेटवर्क केबल लगाएँ", r_ha: "Home Assistant", haOff: "बंद", haNotConfigured: "Core > Gaming Mode में सर्वर सेट करें", haConnected: "जुड़ा · {host}", haConnecting: "जुड़ रहा है…", haRefused: "{host} ने लॉगिन ठुकराया", haUnreachable: "{host} तक नहीं पहुँच पा रहे",
+    },
+};
+for (const [language, table] of Object.entries(batchTwoCopy$1))
+    Object.assign(copy$4[language] ?? {}, table);
 function healthCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$3[language === "ua" ? "uk" : language] ?? en$2;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$2[key] ?? key });
+    const table = copy$4[language === "ua" ? "uk" : language] ?? en$3;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$3[key] ?? key });
 }
-function fill$2(template, values) {
+function fill$3(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? String(values[name]) : all));
 }
 function formatBytes(bytes, locale = "en") {
@@ -61876,7 +61946,7 @@ function formatTime(value, locale, hour) {
 }
 const titles = {
     "server-backup": "r_backup", "restore-check": "r_restore", "server-drive": "r_drive", romm: "r_romm",
-    "windows-restart": "r_restart", "update-night": "r_night", "save-backup": "r_saves", "steam-update": "r_steam", "decky-plugins": "r_decky", tv: "r_tv", streaming: "r_stream", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
+    "windows-restart": "r_restart", "update-night": "r_night", "save-backup": "r_saves", "steam-update": "r_steam", "decky-plugins": "r_decky", tv: "r_tv", streaming: "r_stream", "stream-sleep": "r_streamSleep", "wake-on-lan": "r_wol", "home-assistant": "r_ha", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
     // Console guards (ConsoleGuards.cs).
     display: "r_display", "sound-output": "r_sound", controllers: "r_controllers", "steam-sign-in": "r_steamSign", "auto-sign-in": "r_autoSign", bitlocker: "r_bitlocker",
     "windows-prompts": "r_prompts", "update-policy": "r_updPolicy", "launcher-updates": "r_launchUpd", "launcher-focus": "r_launchFocus", "wake-check": "r_wake",
@@ -61887,7 +61957,7 @@ const actionLabels = {
     "controllers-expect": "aControllersExpect", "prompts-off": "aPromptsOff", "bitlocker-suspend": "aBitlockerSuspend", "wake-check-now": "aWakeNow",
 };
 // Short, single-line text from the PC (device and monitor names): no control characters, at most 64 characters.
-function clean$1(value, max = 64) {
+function clean$2(value, max = 64) {
     return typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, max) : "";
 }
 const serverStates = { "not-configured": "notConfigured", unreachable: "unreachable", missing: "missing", unreadable: "unreadable" };
@@ -61902,28 +61972,28 @@ function rowValue(row, text, locale, now) {
         return { value: row.id === "server-backup" ? text[sourceState] : text.unknown, details };
     }
     if (row.state === "stale")
-        return { value: fill$2(text.stale, { when: when("writtenAt") }), details };
+        return { value: fill$3(text.stale, { when: when("writtenAt") }), details };
     switch (row.id) {
         case "server-backup": {
             const failures = Number(data.consecutiveFailures) || 0;
             const skipped = Array.isArray(data.skippedPlatforms) ? data.skippedPlatforms.filter(item => typeof item === "string") : [];
             if (row.state !== "ok" && data.lastSuccessAt)
-                details.push(fill$2(text.lastSuccess, { when: when("lastSuccessAt") }));
+                details.push(fill$3(text.lastSuccess, { when: when("lastSuccessAt") }));
             if (failures > 0)
-                details.push(fill$2(text.failures, { n: failures }));
+                details.push(fill$3(text.failures, { n: failures }));
             if (skipped.length)
-                details.push(fill$2(text.skipped, { list: skipped.join(", ") }));
+                details.push(fill$3(text.skipped, { list: skipped.join(", ") }));
             if (row.state !== "ok" && typeof data.message === "string" && data.message)
                 details.push(data.message);
-            const value = row.state === "ok" ? fill$2(text.bOk, { when: when("lastSuccessAt") })
+            const value = row.state === "ok" ? fill$3(text.bOk, { when: when("lastSuccessAt") })
                 : row.state === "partial" ? text.bPartial : row.state === "failed" ? text.bFailed : row.state === "never" ? text.bNever : text.unknown;
             return { value, details };
         }
         case "restore-check": {
             if (typeof data.message === "string" && data.message && row.state !== "ok")
                 details.push(data.message);
-            const value = row.state === "ok" ? fill$2(text.rOk, { when: when("at") }) : row.state === "failed" ? text.rFailed
-                : row.state === "overdue" ? fill$2(text.rOverdue, { when: when("at") }) : row.state === "never" ? text.rNever : text.unknown;
+            const value = row.state === "ok" ? fill$3(text.rOk, { when: when("at") }) : row.state === "failed" ? text.rFailed
+                : row.state === "overdue" ? fill$3(text.rOverdue, { when: when("at") }) : row.state === "never" ? text.rNever : text.unknown;
             return { value, details };
         }
         case "server-drive": {
@@ -61931,7 +62001,7 @@ function rowValue(row, text, locale, now) {
                 details.push(data.label);
             if (row.state !== "healthy" && typeof data.message === "string" && data.message)
                 details.push(data.message);
-            const value = row.state === "healthy" ? fill$2(text.dHealthy, { free: formatBytes(data.freeBytes, locale) })
+            const value = row.state === "healthy" ? fill$3(text.dHealthy, { free: formatBytes(data.freeBytes, locale) })
                 : row.state === "warning" ? text.dWarning : row.state === "unhealthy" ? text.dUnhealthy : text.unknown;
             return { value, details };
         }
@@ -61942,7 +62012,7 @@ function rowValue(row, text, locale, now) {
         case "windows-restart":
             return { value: row.state === "pending" ? text.pending : text.notNeeded, details };
         case "update-night":
-            return { value: row.state === "scheduled" ? fill$2(text.nScheduled, { time: formatTime(data.scheduledFor, locale, data.hour) })
+            return { value: row.state === "scheduled" ? fill$3(text.nScheduled, { time: formatTime(data.scheduledFor, locale, data.hour) })
                     : row.state === "waiting" ? text.nWaiting : text.nNothing, details };
         case "tv":
             return { value: { off: text.tOff, "not-paired": text.tNotPaired, reachable: text.tOk, unreachable: text.tDown, "stream-mode": text.tHeld }[row.state] ?? text.unknown, details };
@@ -61952,11 +62022,11 @@ function rowValue(row, text, locale, now) {
             const source = typeof data.source === "string" ? sources[data.source] ?? "" : "";
             const device = typeof data.device === "string" ? data.device.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 64) : "";
             if (source)
-                details.push(fill$2(text.sThrough, { source }));
+                details.push(fill$3(text.sThrough, { source }));
             if (data.virtualDisplay === true)
                 details.push(text.sVd);
             if (row.state === "streaming")
-                return { value: device ? fill$2(text.sTo, { device }) : source ? fill$2(text.sVia, { source }) : text.sKept, details };
+                return { value: device ? fill$3(text.sTo, { device }) : source ? fill$3(text.sVia, { source }) : text.sKept, details };
             if (row.state === "kept-out")
                 return { value: text.sKept, details };
             return { value: row.state === "idle" ? text.sIdle : text.unknown, details };
@@ -61970,7 +62040,7 @@ function rowValue(row, text, locale, now) {
             if (status === "none" || !["active", "absent", "changed", "failed"].includes(status))
                 return { value: state, details };
             if (name)
-                details.push(fill$2(text.micCalls, { name }));
+                details.push(fill$3(text.micCalls, { name }));
             details.push({ active: text.micActiveDetail, absent: text.micAwayDetail, changed: text.micChangedDetail, failed: text.micFailedDetail }[status]);
             return { value: `${state} · ${status === "absent" ? text.micAway : name || text.micActiveDetail}`, details };
         }
@@ -61978,17 +62048,17 @@ function rowValue(row, text, locale, now) {
             if (typeof data.drive === "string" && data.drive)
                 details.push(data.drive);
             const free = formatBytes(data.freeBytes, locale);
-            return { value: row.state === "ok" ? fill$2(text.pcOk, { free }) : row.state === "low" ? fill$2(text.pcLow, { free }) : text.unknown, details };
+            return { value: row.state === "ok" ? fill$3(text.pcOk, { free }) : row.state === "low" ? fill$3(text.pcLow, { free }) : text.unknown, details };
         }
         case "steam-update": {
             // Steam updates (STEAM-UPDATES.md): a row only while an automatic update is postponed.
             const reasons = { "pending-unsupported": text.stUnsupported, "pending-unknown": text.stUnknown, "rolled-back": text.stFailed };
             const reason = reasons[String(data.reason ?? "")] ?? text.stCantCheck;
             if (typeof data.pending === "string" && /^\d{1,20}$/.test(data.pending))
-                details.push(fill$2(text.stPending, { version: data.pending }));
+                details.push(fill$3(text.stPending, { version: data.pending }));
             if (typeof data.failedCheck === "string" && /^[a-z-]{1,20}$/.test(data.failedCheck))
                 details.push(data.failedCheck);
-            return { value: fill$2(text.stPostponed, { reason }), details };
+            return { value: fill$3(text.stPostponed, { reason }), details };
         }
         case "save-backup": {
             // Batch 1: Ludusavi before update night. One reason line, never Ludusavi's output.
@@ -61996,40 +62066,73 @@ function rowValue(row, text, locale, now) {
             const reason = String(data.reason ?? "");
             const exit = /^exit-(-?\d{1,6})$/.exec(reason);
             if (row.state === "ok" && games > 0)
-                details.push(fill$2(text.svGames, { n: games }));
+                details.push(fill$3(text.svGames, { n: games }));
             if (row.state === "failed") {
                 const why = reason === "time-limit" ? text.svLimit : reason === "some-games-failed" ? text.svSome : reason === "no-answer" ? text.svNoAnswer
-                    : reason === "not-started" ? text.svNotStarted : exit ? fill$2(text.svExit, { code: exit[1] }) : "";
+                    : reason === "not-started" ? text.svNotStarted : exit ? fill$3(text.svExit, { code: exit[1] }) : "";
                 if (why)
                     details.push(why);
             }
             if (row.state === "not-installed")
                 details.push(text.svInstall);
-            const value = row.state === "ok" ? (recent ? text.svOkNight : fill$2(text.svOkWhen, { when: when("at") }))
-                : row.state === "failed" ? (recent ? text.svFailedNight : fill$2(text.svFailedWhen, { when: when("at") }))
+            const value = row.state === "ok" ? (recent ? text.svOkNight : fill$3(text.svOkWhen, { when: when("at") }))
+                : row.state === "failed" ? (recent ? text.svFailedNight : fill$3(text.svFailedWhen, { when: when("at") }))
                     : row.state === "not-installed" ? text.svNone : row.state === "off" ? text.svOff : row.state === "never" ? text.svNever : text.unknown;
             return { value, details };
         }
         case "decky-plugins": {
             // Batch 1 (B11): the heartbeat's verdict and the plugins whose logs report errors. The agent masks the one line.
-            const names = (Array.isArray(data.plugins) ? data.plugins : []).map(item => clean$1(item, 40)).filter(Boolean).slice(0, 6);
-            const line = clean$1(data.line, 120), errors = Number(data.errors) || 0;
+            const names = (Array.isArray(data.plugins) ? data.plugins : []).map(item => clean$2(item, 40)).filter(Boolean).slice(0, 6);
+            const line = clean$2(data.line, 120), errors = Number(data.errors) || 0;
             if (row.state === "errors" || row.state === "not-loaded") {
                 if (row.state === "not-loaded" && names.length)
-                    details.push(fill$2(text.dkFrom, { names: names.join(", ") }));
+                    details.push(fill$3(text.dkFrom, { names: names.join(", ") }));
                 if (errors > 0 && names.length)
-                    details.push(fill$2(text.dkCount, { n: errors }));
+                    details.push(fill$3(text.dkCount, { n: errors }));
                 if (line && names.length)
-                    details.push(fill$2(text.dkLast, { line }));
+                    details.push(fill$3(text.dkLast, { line }));
             }
             if (row.state === "errors" && names.length)
-                return { value: names.length === 1 ? fill$2(text.dkErrOne, { name: names[0] }) : fill$2(text.dkErrMany, { names: names.join(", ") }), details };
+                return { value: names.length === 1 ? fill$3(text.dkErrOne, { name: names[0] }) : fill$3(text.dkErrMany, { names: names.join(", ") }), details };
             const states = { healthy: text.dkOk, waiting: text.dkWaiting, "not-applicable": text.dkNa, "not-loaded": text.dkNotLoaded };
             return { value: states[row.state] ?? text.unknown, details };
         }
+        case "stream-sleep": {
+            // Batch 2 (B13): information only. The countdown names the time; the last sleep rides along.
+            if (typeof data.last === "string")
+                details.push(fill$3(text.ssLast, { when: when("last") }));
+            const minutes = Number(data.minutes);
+            const value = row.state === "counting" ? fill$3(text.ssCounting, { time: formatTime(data.at, locale, 0) })
+                : row.state === "ready" ? fill$3(text.ssReady, { n: Number.isInteger(minutes) && minutes >= 1 && minutes <= 120 ? minutes : 10 }) : text.ssOff;
+            return { value, details };
+        }
+        case "wake-on-lan": {
+            // Batch 2 (B13): what to change on the desktop so a handheld can wake the PC. Never attention.
+            const problems = Array.isArray(data.problems) ? data.problems : [];
+            const hints = { cable: text.wolCable, "magic-packet": text.wolMagic, "power-management": text.wolPower, "wake-armed": text.wolArmed };
+            for (const problem of problems)
+                if (typeof problem === "string" && hints[problem])
+                    details.push(hints[problem]);
+            if (row.state === "wifi-only")
+                details.push(text.wolCableHint);
+            const mac = clean$2(data.mac, 17);
+            if (/^[0-9A-F]{2}(:[0-9A-F]{2}){5}$/.test(mac))
+                details.push(fill$3(text.wolMac, { mac }));
+            if (data.fastStartup === true)
+                details.push(text.wolFast);
+            const states = { ready: text.wolReady, check: text.wolCheck, "wifi-only": text.wolWifi, "no-adapter": text.wolNone };
+            return { value: states[row.state] ?? text.wolUnknown, details };
+        }
+        case "home-assistant": {
+            // Batch 2 (B8): the MQTT bridge. The host is the user's own setting; never a password.
+            const host = clean$2(data.host, 64) || "serverv3";
+            const states = { off: text.haOff, "not-configured": text.haNotConfigured, connecting: text.haConnecting,
+                connected: fill$3(text.haConnected, { host }), refused: fill$3(text.haRefused, { host }), unreachable: fill$3(text.haUnreachable, { host }) };
+            return { value: states[row.state] ?? text.unknown, details };
+        }
         case "core-update":
-            return { value: row.state === "available" ? fill$2(text.cAvail, { latest: String(data.latest ?? "?") })
-                    : row.state === "current" ? fill$2(text.cCurrent, { current: String(data.current ?? "?") }) : text.unknown, details };
+            return { value: row.state === "available" ? fill$3(text.cAvail, { latest: String(data.latest ?? "?") })
+                    : row.state === "current" ? fill$3(text.cCurrent, { current: String(data.current ?? "?") }) : text.unknown, details };
         default:
             return consoleValue(row, text, locale, now);
     }
@@ -62042,47 +62145,47 @@ function consoleValue(row, text, locale, now) {
     const when = (key) => formatWhen(data[key], locale, now);
     switch (row.id) {
         case "display": {
-            const saved = clean$1(data.saved), current = clean$1(data.current), monitor = clean$1(data.monitor);
+            const saved = clean$2(data.saved), current = clean$2(data.current), monitor = clean$2(data.monitor);
             if (monitor)
                 details.push(monitor);
             if (row.state === "changed") {
                 const names = { resolution: text.dpResolution, refresh: text.dpRefresh, hdr: text.dpHdr, primary: text.dpPrimary, vrr: text.dpVrr };
                 const what = (Array.isArray(data.differences) ? data.differences : []).map(item => names[String(item)]).filter(Boolean).join(", ");
                 if (saved)
-                    details.push(fill$2(text.dpSaved, { mode: saved }));
+                    details.push(fill$3(text.dpSaved, { mode: saved }));
                 if (current)
-                    details.push(fill$2(text.dpNow, { mode: current }));
+                    details.push(fill$3(text.dpNow, { mode: current }));
                 if (data.vrrReadable !== true)
                     details.push(text.dpVrrNote);
-                return { value: fill$2(text.dpChanged, { what: what || "?" }), details };
+                return { value: fill$3(text.dpChanged, { what: what || "?" }), details };
             }
             if (data.vrrReadable !== true && row.state !== "unknown")
                 details.push(text.dpVrrNote);
             if (row.state === "normal")
-                return { value: fill$2(text.dpNormal, { mode: current || saved || "?" }), details };
+                return { value: fill$3(text.dpNormal, { mode: current || saved || "?" }), details };
             if (row.state === "not-saved") {
                 if (current)
-                    details.push(fill$2(text.dpNow, { mode: current }));
+                    details.push(fill$3(text.dpNow, { mode: current }));
                 return { value: text.dpNotSaved, details };
             }
             if (row.state === "missing") {
                 if (saved)
-                    details.push(fill$2(text.dpSaved, { mode: saved }));
+                    details.push(fill$3(text.dpSaved, { mode: saved }));
                 return { value: text.dpMissing, details };
             }
             return { value: text.unknown, details };
         }
         case "sound-output": {
-            const saved = clean$1(data.saved, 80) || "?", current = clean$1(data.current, 80) || "?";
+            const saved = clean$2(data.saved, 80) || "?", current = clean$2(data.current, 80) || "?";
             if (row.state === "normal")
-                return { value: fill$2(text.soNormal, { name: current }), details };
+                return { value: fill$3(text.soNormal, { name: current }), details };
             if (row.state === "changed") {
-                details.push(fill$2(text.soSaved, { name: saved }));
-                return { value: fill$2(text.soChanged, { name: current }), details };
+                details.push(fill$3(text.soSaved, { name: saved }));
+                return { value: fill$3(text.soChanged, { name: current }), details };
             }
             if (row.state === "missing") {
-                details.push(fill$2(text.soChanged, { name: current }));
-                return { value: fill$2(text.soMissing, { name: saved }), details };
+                details.push(fill$3(text.soChanged, { name: current }));
+                return { value: fill$3(text.soMissing, { name: saved }), details };
             }
             if (row.state === "stream-mode")
                 return { value: text.soStream, details };
@@ -62093,25 +62196,25 @@ function consoleValue(row, text, locale, now) {
         case "controllers": {
             const list = Array.isArray(data.controllers) ? data.controllers : [];
             for (const controller of list.slice(0, 12)) {
-                const name = clean$1(controller?.name), key = clean$1(controller?.key, 9);
+                const name = clean$2(controller?.name), key = clean$2(controller?.key, 9);
                 if (name)
                     details.push(key ? `${name} (${key})` : name);
             }
             const missing = Array.isArray(data.missing) ? data.missing.length : 0;
             if (row.state === "expected-missing")
-                return { value: fill$2(text.coMissing, { n: missing }), details };
+                return { value: fill$3(text.coMissing, { n: missing }), details };
             if (row.state === "seen")
-                return { value: fill$2(text.coSeen, { n: list.length }), details };
+                return { value: fill$3(text.coSeen, { n: list.length }), details };
             if (row.state === "none")
                 return { value: text.coNone, details };
             return { value: text.unknown, details };
         }
         case "steam-sign-in": {
-            const name = clean$1(data.persona) || "Steam";
+            const name = clean$2(data.persona) || "Steam";
             if (row.state === "signed-in")
-                return { value: fill$2(text.siSigned, { name }), details };
+                return { value: fill$3(text.siSigned, { name }), details };
             if (row.state === "offline")
-                return { value: fill$2(text.siOffline, { name }), details };
+                return { value: fill$3(text.siOffline, { name }), details };
             if (row.state === "signed-out") {
                 details.push(text.siOutDetail);
                 return { value: text.siOut, details };
@@ -62125,22 +62228,22 @@ function consoleValue(row, text, locale, now) {
             return { value: text.unknown, details };
         }
         case "auto-sign-in": {
-            const user = clean$1(data.user) || "?";
+            const user = clean$2(data.user) || "?";
             if (data.plainTextPassword === true)
                 details.push(text.asPlain);
             if (row.state === "on")
-                return { value: fill$2(text.asOn, { user }), details };
+                return { value: fill$3(text.asOn, { user }), details };
             details.push(text.asGuide);
             if (row.state === "off")
                 return { value: text.asOff, details };
             if (row.state === "expires")
-                return { value: fill$2(text.asExpires, { n: Number(data.count) || 0 }), details };
+                return { value: fill$3(text.asExpires, { n: Number(data.count) || 0 }), details };
             if (row.state === "passwordless")
                 return { value: text.asHello, details };
             return { value: text.unknown, details: [] };
         }
         case "bitlocker": {
-            const url = clean$1(data.confirmAt) || "account.microsoft.com/devices/recoverykey";
+            const url = clean$2(data.confirmAt) || "account.microsoft.com/devices/recoverykey";
             const states = { off: text.blOff, on: text.blOn, encrypting: text.blEncrypting, unchecked: text.blUnchecked, "no-recovery-key": text.blNoKey,
                 "firmware-pending": text.blFw, "firmware-no-guard": text.blFwNoGuard, suspended: text.blSuspended, "suspended-for-update": text.blSuspendedUpd, waiting: text.blWaiting };
             if (row.state === "unchecked")
@@ -62153,8 +62256,8 @@ function consoleValue(row, text, locale, now) {
                 details.push(text.blSuspendedDetail);
             if (["on", "encrypting", "unchecked", "no-recovery-key", "firmware-pending", "firmware-no-guard", "waiting"].includes(row.state)) {
                 if (data.backupSeenAt)
-                    details.push(fill$2(text.blBackup, { when: when("backupSeenAt") }));
-                details.push(fill$2(text.blConfirm, { url }));
+                    details.push(fill$3(text.blBackup, { when: when("backupSeenAt") }));
+                details.push(fill$3(text.blConfirm, { url }));
             }
             return { value: states[row.state] ?? text.unknown, details };
         }
@@ -62164,7 +62267,7 @@ function consoleValue(row, text, locale, now) {
             return { value: row.state === "off" ? text.prOff : row.state === "on" ? text.prOn : text.unknown, details };
         case "update-policy": {
             if (row.state === "applied")
-                return { value: fill$2(text.upApplied, { version: clean$1(data.pinnedVersion, 8) || "?" }), details };
+                return { value: fill$3(text.upApplied, { version: clean$2(data.pinnedVersion, 8) || "?" }), details };
             if (row.state === "applied-home") {
                 details.push(text.upHomeDetail);
                 return { value: text.upHome, details };
@@ -62178,18 +62281,18 @@ function consoleValue(row, text, locale, now) {
             return { value: text.unknown, details };
         }
         case "launcher-updates": {
-            const list = (Array.isArray(data.pending) ? data.pending : []).map(item => clean$1(item, 40)).filter(Boolean);
+            const list = (Array.isArray(data.pending) ? data.pending : []).map(item => clean$2(item, 40)).filter(Boolean);
             if (row.state === "pending") {
                 details.push(text.luDetail);
-                return { value: fill$2(text.luPending, { list: list.join(", ") || "?" }), details };
+                return { value: fill$3(text.luPending, { list: list.join(", ") || "?" }), details };
             }
             return { value: row.state === "none" ? text.luNone : text.unknown, details };
         }
         case "launcher-focus": {
-            const last = clean$1(data.last, 40);
+            const last = clean$2(data.last, 40);
             if (last)
-                details.push(fill$2(text.lfLast, { name: last }));
-            return { value: row.state === "watching" ? fill$2(text.lfOn, { n: Number(data.pushedToday) || 0 }) : row.state === "off" ? text.lfOff : text.unknown, details };
+                details.push(fill$3(text.lfLast, { name: last }));
+            return { value: row.state === "watching" ? fill$3(text.lfOn, { n: Number(data.pushedToday) || 0 }) : row.state === "off" ? text.lfOff : text.unknown, details };
         }
         case "wake-check": {
             if (data.focusRetaken === true)
@@ -62200,12 +62303,12 @@ function consoleValue(row, text, locale, now) {
                 details.push(text.wkNoBp);
             if (data.tvOnCore === false)
                 details.push(text.wkTvNo);
-            if (clean$1(data.adapter))
-                details.push(fill$2(text.wkAdapter, { name: clean$1(data.adapter) }));
+            if (clean$2(data.adapter))
+                details.push(fill$3(text.wkAdapter, { name: clean$2(data.adapter) }));
             details.push(text.wkTemps);
             const states = { ok: text.wkOk, fixed: text.wkFixed, problem: text.wkProblem };
             if (states[row.state])
-                return { value: fill$2(states[row.state], { when: when("at") }), details };
+                return { value: fill$3(states[row.state], { when: when("at") }), details };
             if (row.state === "network-down")
                 return { value: text.wkNet, details };
             return { value: row.state === "none-yet" ? text.wkNone : row.state === "off" ? text.wkOff : text.unknown, details };
@@ -62228,7 +62331,7 @@ function rowActions(row, text) {
 function healthSummary(answer, locale) {
     const text = healthCopy(locale);
     const attention = Math.max(0, Number(answer?.attention) || 0);
-    return { line: attention === 0 ? text.allGood : fill$2(text.attention, { n: attention }), attention };
+    return { line: attention === 0 ? text.allGood : fill$3(text.attention, { n: attention }), attention };
 }
 function healthLines(answer, locale, now = new Date()) {
     const text = healthCopy(locale);
@@ -62252,8 +62355,8 @@ function healthLines(answer, locale, now = new Date()) {
 // failed try) and "Update Steam now": the same backup, smoke test and rollback as the automatic update. The
 // agent's gate may ask for confirmation first: once when it cannot tell whether the new Steam works with Decky,
 // twice when it knows it does not. Each confirmation is another press of the same button.
-const { PanelSection: PanelSection$4, PanelSectionRow: PanelSectionRow$4, ButtonItem: ButtonItem$2 } = CompatUI;
-const copy$2 = {
+const { PanelSection: PanelSection$6, PanelSectionRow: PanelSectionRow$6, ButtonItem: ButtonItem$3 } = CompatUI;
+const copy$3 = {
     en: { title: "Steam updates", current: "Steam is up to date.", soaking: "A new Steam version is waiting: Core installs it in {n} days, at night, if it works with Decky.", due: "Core updates Steam on the next update night, when you're not playing.", waiting: "The last Steam update failed its check and was undone. Core tries again when a fix arrives.", off: "Steam updates itself, as usual.", now: "Update Steam now", again: "Update anyway", started: "Updating Steam: Core saves a copy first and is back in a few minutes.", busy: "An update is already running.", confirmCantTell: "Core can't tell whether the new Steam works with Decky. Press again to update anyway: Core saves a copy first and rolls back if something goes wrong.", confirmIncompatible: "The new Steam doesn't work with the installed Decky: plugins will stop loading. Press again if you want to update anyway.", confirmAgain: "Last confirmation: press once more to update Steam knowing that plugins won't work." },
     it: { title: "Aggiornamenti di Steam", current: "Steam è aggiornato.", soaking: "C'è una nuova versione di Steam: Core la installa tra {n} giorni, di notte, se funziona con Decky.", due: "Core aggiorna Steam la prossima notte degli aggiornamenti, quando non giochi.", waiting: "L'ultimo aggiornamento di Steam non ha superato il controllo ed è stato annullato. Core riprova quando arriva una correzione.", off: "Steam si aggiorna da solo, come al solito.", now: "Aggiorna Steam ora", again: "Aggiorna comunque", started: "Aggiornamento di Steam in corso: Core salva prima una copia e torna tra qualche minuto.", busy: "Un aggiornamento è già in corso.", confirmCantTell: "Core non sa se il nuovo Steam funziona con Decky. Premi di nuovo per aggiornare comunque: Core salva prima una copia e torna indietro se qualcosa non va.", confirmIncompatible: "Il nuovo Steam non funziona con il Decky installato: i plugin smetteranno di caricarsi. Premi di nuovo se vuoi aggiornare lo stesso.", confirmAgain: "Ultima conferma: premi ancora una volta per aggiornare Steam sapendo che i plugin non funzioneranno." },
     es: { title: "Actualizaciones de Steam", current: "Steam está actualizado.", soaking: "Hay una nueva versión de Steam: Core la instalará dentro de {n} días, de noche, si funciona con Decky.", due: "Core actualizará Steam la próxima noche de actualizaciones, cuando no estés jugando.", waiting: "La última actualización de Steam no pasó la comprobación y se deshizo. Core lo volverá a intentar cuando llegue una corrección.", off: "Steam se actualiza solo, como siempre.", now: "Actualizar Steam ahora", again: "Actualizar igualmente", started: "Actualizando Steam: Core guarda antes una copia y vuelve en unos minutos.", busy: "Ya hay una actualización en curso.", confirmCantTell: "Core no sabe si el nuevo Steam funciona con Decky. Pulsa de nuevo para actualizar igualmente: Core guarda antes una copia y vuelve atrás si algo falla.", confirmIncompatible: "El nuevo Steam no funciona con el Decky instalado: los plugins dejarán de cargarse. Pulsa de nuevo si quieres actualizar igualmente.", confirmAgain: "Última confirmación: pulsa una vez más para actualizar Steam sabiendo que los plugins no funcionarán." },
@@ -62269,7 +62372,7 @@ const copy$2 = {
 };
 function steamUpdateCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return copy$2[language === "ua" ? "uk" : language] ?? copy$2.en;
+    return copy$3[language === "ua" ? "uk" : language] ?? copy$3.en;
 }
 // The status line for the agent's /steam/update/state answer.
 function steamUpdateLine(state, locale) {
@@ -62332,7 +62435,7 @@ function SteamUpdateCard({ locale }) {
         }
     };
     const running = state.busy === true && (state.action === "update-steam" || state.action === "verify-steam");
-    return (SP_JSX.jsxs(PanelSection$4, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${state.holdPhase === "Postponed" || state.holdPhase === "WaitingForChange" ? CORE.warning : CORE.gunmetalRaised}` }, children: message ?? steamUpdateLine(state, locale) }) }), SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsx(ButtonItem$2, { layout: "below", disabled: busy || running, onClick: press, children: confirmations > 0 ? text.again : text.now }) })] }));
+    return (SP_JSX.jsxs(PanelSection$6, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${state.holdPhase === "Postponed" || state.holdPhase === "WaitingForChange" ? CORE.warning : CORE.gunmetalRaised}` }, children: message ?? steamUpdateLine(state, locale) }) }), SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy || running, onClick: press, children: confirmations > 0 ? text.again : text.now }) })] }));
 }
 
 // Eternal Core: the Health section of Quick Access > Core. One line for the whole setup, then a
@@ -62347,26 +62450,26 @@ function SteamUpdateCard({ locale }) {
 // ("Restore display settings", "Switch sound back"...); an open row also offers its other actions
 // ("Save current display as normal"...). The agent runs them (POST /health/action) and answers with
 // the new rows.
-const { PanelSection: PanelSection$3, PanelSectionRow: PanelSectionRow$3, ButtonItem: ButtonItem$1, Focusable: Focusable$3 } = CompatUI;
-const { black: BLACK$2, crimson: CRIMSON$2, crimsonText: CRIMSON_TEXT$2, steel: STEEL$2, gunmetal: GUNMETAL$2, white: WHITE$2 } = CORE;
-const style$2 = `
-.core-health{background:${BLACK$2};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
-.core-health-summary{padding:8px 12px;font-size:14px;font-weight:650;color:${WHITE$2}}
-.core-health-summary.problem{color:${CRIMSON_TEXT$2}}
-.core-health-row{background:${GUNMETAL$2};border-radius:6px;padding:9px 12px;outline:none;box-shadow:none;text-shadow:none}
-.core-health-row.gpfocus,.core-health-row:focus-visible{outline:2px solid ${CRIMSON$2};outline-offset:-2px}
+const { PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$5, ButtonItem: ButtonItem$2, Focusable: Focusable$5 } = CompatUI;
+const { black: BLACK$4, crimson: CRIMSON$4, crimsonText: CRIMSON_TEXT$3, steel: STEEL$4, gunmetal: GUNMETAL$4, white: WHITE$4 } = CORE;
+const style$4 = `
+.core-health{background:${BLACK$4};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-health-summary{padding:8px 12px;font-size:14px;font-weight:650;color:${WHITE$4}}
+.core-health-summary.problem{color:${CRIMSON_TEXT$3}}
+.core-health-row{background:${GUNMETAL$4};border-radius:6px;padding:9px 12px;outline:none;box-shadow:none;text-shadow:none}
+.core-health-row.gpfocus,.core-health-row:focus-visible{outline:2px solid ${CRIMSON$4};outline-offset:-2px}
 .core-health-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.core-health-title{font-size:13px;color:${WHITE$2};font-weight:600;white-space:nowrap}
-.core-health-value{font-size:12px;color:${STEEL$2};text-align:right;overflow:hidden;text-overflow:ellipsis}
+.core-health-title{font-size:13px;color:${WHITE$4};font-weight:600;white-space:nowrap}
+.core-health-value{font-size:12px;color:${STEEL$4};text-align:right;overflow:hidden;text-overflow:ellipsis}
 .core-health-row.ok .core-health-value{color:${CORE_STATUS.neutral}}
 .core-health-row.info .core-health-value{color:${CORE_STATUS.warning}}
 .core-health-row.attention .core-health-value,.core-health-row.crimson .core-health-value{color:${CORE_STATUS.error};font-weight:600}
-.core-health-detail{margin-top:6px;font-size:11px;line-height:1.45;color:${STEEL$2};word-break:break-word}
-.core-health-result{padding:0 12px 6px;font-size:12px;color:${STEEL$2}}
+.core-health-detail{margin-top:6px;font-size:11px;line-height:1.45;color:${STEEL$4};word-break:break-word}
+.core-health-result{padding:0 12px 6px;font-size:12px;color:${STEEL$4}}
 .core-health-result.problem{color:${CORE_STATUS.error}}
 `;
 function Row({ line, open, onToggle }) {
-    return (SP_JSX.jsxs(Focusable$3, { className: `core-health-row ${line.level}${line.tone ? " " + line.tone : ""}`, onActivate: onToggle, "aria-expanded": open, noFocusRing: true, children: [SP_JSX.jsxs("div", { className: "core-health-head", children: [SP_JSX.jsx("span", { className: "core-health-title", children: line.title }), SP_JSX.jsx("span", { className: "core-health-value", children: line.value })] }), open && line.details.length > 0 && SP_JSX.jsx("div", { className: "core-health-detail", children: line.details.map((detail, index) => SP_JSX.jsx("div", { children: detail }, index)) })] }));
+    return (SP_JSX.jsxs(Focusable$5, { className: `core-health-row ${line.level}${line.tone ? " " + line.tone : ""}`, onActivate: onToggle, "aria-expanded": open, noFocusRing: true, children: [SP_JSX.jsxs("div", { className: "core-health-head", children: [SP_JSX.jsx("span", { className: "core-health-title", children: line.title }), SP_JSX.jsx("span", { className: "core-health-value", children: line.value })] }), open && line.details.length > 0 && SP_JSX.jsx("div", { className: "core-health-detail", children: line.details.map((detail, index) => SP_JSX.jsx("div", { children: detail }, index)) })] }));
 }
 function HealthSection({ locale }) {
     const [answer, setAnswer] = _global_SP_REACT.useState(undefined);
@@ -62422,14 +62525,14 @@ function HealthSection({ locale }) {
         .filter(action => action.fix ? line.level === "attention" || line.level === "info" : !!open[line.id])
         .map(action => ({ line, action })));
     const summary = answer ? healthSummary(answer, locale) : undefined;
-    return (SP_JSX.jsxs(PanelSection$3, { title: text.title, children: [SP_JSX.jsx("style", { children: style$2 }), SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsxs(Focusable$3, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id))), result && SP_JSX.jsx("div", { className: `core-health-result${result.problem ? " problem" : ""}`, role: "status", children: result.text })] }) }), buttons.map(({ line, action }) => (SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsx(ButtonItem$1, { layout: "below", disabled: busy, onClick: () => act(action), children: action.label }) }, `action-${line.id}-${action.id}`))), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsx(ButtonItem$1, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
+    return (SP_JSX.jsxs(PanelSection$5, { title: text.title, children: [SP_JSX.jsx("style", { children: style$4 }), SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsxs(Focusable$5, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id))), result && SP_JSX.jsx("div", { className: `core-health-result${result.problem ? " problem" : ""}`, role: "status", children: result.text })] }) }), buttons.map(({ line, action }) => (SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsx(ButtonItem$2, { layout: "below", disabled: busy, onClick: () => act(action), children: action.label }) }, `action-${line.id}-${action.id}`))), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsx(ButtonItem$2, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
 }
 
 // Eternal Core: the Voice section of Quick Access > Core. Turns the agent's GET /voice/state and
 // POST /voice/party answers (GamingMode.Services/MarkIIIHost.Voice.cs) into what VoiceSection.tsx
 // shows, in Core's 12 languages. Self-contained on purpose: tests/coreVoiceSection.test.mjs loads
 // this file alone.
-const en$1 = {
+const en$2 = {
     title: "Voice", agentDown: "Core's service is not answering.",
     mute: "Mute microphone", unmute: "Unmute microphone", live: "Microphone live", muted: "Microphone muted", none: "No microphone", unknown: "Microphone: unknown", partial: "Microphone partly muted", partialDetail: "One default microphone is muted, the other is live. Check which one your call uses.",
     mutedElsewhere: "Muted outside Core", hotkey: "Shortcut {keys}: bind it to a controller chord in Steam",
@@ -62439,8 +62542,8 @@ const en$1 = {
     callsMic: "Calls mic", callsMicHint: "Windows' default microphone for calls: Xbox party, Discord.", windowsChoice: "Windows' choice", unnamed: "Microphone", tagCalls: "calls", tagApps: "games and apps", notConnected: "not connected", cmActive: "Connected and used for calls.", cmAbsent: "Not connected. Calls use Windows' default microphone.", cmChanged: "Windows uses another microphone for calls. Pick it again to use it.", cmFailed: "Windows did not let Core set the default. Pick it again, or set it in Windows' sound settings.", cmNotFound: "That microphone is no longer connected.",
     everything: "Use for everything", everythingHint: "Also the default for games and apps.", scope: "Mute", scopeAll: "Mute everything", scopeCalls: "Mute calls only", scopeAllHint: "Mutes the calls mic and the games and apps mic.", scopeCallsHint: "Mutes only the calls mic; the games and apps mic stays live. Windows mutes a microphone for every app at once, so an app that records from the calls mic itself (like OBS) is muted too.",
 };
-const copy$1 = {
-    en: en$1,
+const copy$2 = {
+    en: en$2,
     it: {
         title: "Voce", agentDown: "Il servizio di Core non risponde.",
         mute: "Silenzia il microfono", unmute: "Riattiva il microfono", live: "Microfono attivo", muted: "Microfono silenziato", none: "Nessun microfono", unknown: "Microfono: sconosciuto", partial: "Microfono silenziato in parte", partialDetail: "Un microfono predefinito è silenziato, l'altro è attivo. Controlla quale usa la chiamata.",
@@ -62554,10 +62657,10 @@ const copy$1 = {
 };
 function voiceCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$1[language === "ua" ? "uk" : language] ?? en$1;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$1[key] ?? key });
+    const table = copy$2[language === "ua" ? "uk" : language] ?? en$2;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$2[key] ?? key });
 }
-function fill$1(template, values) {
+function fill$2(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? values[name] : all));
 }
 function micView(answer, locale) {
@@ -62568,7 +62671,7 @@ function micView(answer, locale) {
     // button goes the way the agent's toggle does: the Communications default (the call mic) decides.
     const muted = state === "muted" || state === "partial";
     const unmutes = state === "muted" || (state === "partial" && mic?.communications === "muted");
-    const hotkey = typeof mic?.hotkey === "string" && mic.hotkey.trim() && mic.hotkey.length <= 40 ? fill$1(text.hotkey, { keys: mic.hotkey.trim() }) : "";
+    const hotkey = typeof mic?.hotkey === "string" && mic.hotkey.trim() && mic.hotkey.length <= 40 ? fill$2(text.hotkey, { keys: mic.hotkey.trim() }) : "";
     const detail = state === "partial" ? text.partialDetail : muted && mic?.coreMuted === false ? text.mutedElsewhere : hotkey;
     return { state, muted, line: text[state], button: unmutes ? text.unmute : text.mute, detail };
 }
@@ -62635,24 +62738,24 @@ function discordInstalled(inventory) {
 // another plugin's panel. The agent does the work (GamingMode.Services/MarkIIIHost.Voice.cs).
 // Below the button: the calls mic picker (makes a device Windows' default for calls, and for
 // everything with the toggle) and the mute scope (everything, the default, or calls only).
-const { PanelSection: PanelSection$2, PanelSectionRow: PanelSectionRow$2, Focusable: Focusable$2, DialogButton: DialogButton$1, DropdownItem: DropdownItem$1, ToggleField: ToggleField$2 } = CompatUI;
-const { black: BLACK$1, crimson: CRIMSON$1, crimsonText: CRIMSON_TEXT$1, steel: STEEL$1, gunmetal: GUNMETAL$1, white: WHITE$1 } = CORE;
-const style$1 = `
-.core-voice{background:${BLACK$1};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
-.core-voice .core-voice-button{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box;background:${GUNMETAL$1}!important;color:${WHITE$1}!important;border-radius:6px!important;padding:12px 14px!important;display:flex;align-items:center;gap:12px;text-align:left;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important}
-.core-voice .core-voice-button.gpfocus,.core-voice .core-voice-button:focus-visible{outline:2px solid ${CRIMSON$1};outline-offset:-2px}
-.core-voice .core-voice-button.muted.gpfocus,.core-voice .core-voice-button.muted:focus-visible{outline-color:${WHITE$1}}
-.core-voice .core-voice-button.muted{background:${CRIMSON$1}!important}
+const { PanelSection: PanelSection$4, PanelSectionRow: PanelSectionRow$4, Focusable: Focusable$4, DialogButton: DialogButton$1, DropdownItem: DropdownItem$1, ToggleField: ToggleField$3 } = CompatUI;
+const { black: BLACK$3, crimson: CRIMSON$3, crimsonText: CRIMSON_TEXT$2, steel: STEEL$3, gunmetal: GUNMETAL$3, white: WHITE$3 } = CORE;
+const style$3 = `
+.core-voice{background:${BLACK$3};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
+.core-voice .core-voice-button{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box;background:${GUNMETAL$3}!important;color:${WHITE$3}!important;border-radius:6px!important;padding:12px 14px!important;display:flex;align-items:center;gap:12px;text-align:left;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important}
+.core-voice .core-voice-button.gpfocus,.core-voice .core-voice-button:focus-visible{outline:2px solid ${CRIMSON$3};outline-offset:-2px}
+.core-voice .core-voice-button.muted.gpfocus,.core-voice .core-voice-button.muted:focus-visible{outline-color:${WHITE$3}}
+.core-voice .core-voice-button.muted{background:${CRIMSON$3}!important}
 .core-voice-icon{width:28px;height:28px;flex:0 0 auto}
 .core-voice-text{display:flex;flex-direction:column;gap:2px;min-width:0}
 .core-voice-label{font-size:15px;font-weight:650;line-height:1.2}
-.core-voice-state{font-size:12px;color:${STEEL$1};line-height:1.3}
-.core-voice .muted .core-voice-state{color:${WHITE$1}}
-.core-voice-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL$1}}
-.core-voice-row{background:${GUNMETAL$1};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.core-voice-row-title{font-size:13px;color:${WHITE$1};font-weight:600}
-.core-voice-row-value{font-size:12px;color:${STEEL$1};text-align:right}
-.core-voice-note{padding:0 12px;font-size:12px;color:${CRIMSON_TEXT$1}}
+.core-voice-state{font-size:12px;color:${STEEL$3};line-height:1.3}
+.core-voice .muted .core-voice-state{color:${WHITE$3}}
+.core-voice-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL$3}}
+.core-voice-row{background:${GUNMETAL$3};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.core-voice-row-title{font-size:13px;color:${WHITE$3};font-weight:600}
+.core-voice-row-value{font-size:12px;color:${STEEL$3};text-align:right}
+.core-voice-note{padding:0 12px;font-size:12px;color:${CRIMSON_TEXT$2}}
 .core-voice-settings{display:flex;flex-direction:column;gap:6px;padding:0 4px}
 `;
 // Lucide Mic and MicOff (ISC; see quick_settings/THIRD-PARTY-NOTICES.md).
@@ -62759,8 +62862,8 @@ function VoiceSection({ locale }) {
     const mic = micView(answer, locale);
     const calls = callsMicView(answer, locale);
     const scope = scopeView(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$2, { title: text.title, children: [SP_JSX.jsx("style", { children: style$1 }), SP_JSX.jsx(PanelSectionRow$2, { children: SP_JSX.jsxs(Focusable$2, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$1, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs("div", { className: "core-voice-settings", children: [SP_JSX.jsx(DropdownItem$1, { label: text.callsMic, description: text.callsMicHint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: calls.options, selectedOption: calls.selected, onChange: (option) => { if (option.data !== calls.selected)
-                                        void pickCallsMic(option.data, calls.everything); } }), calls.line && SP_JSX.jsx("div", { className: "core-voice-hint", role: "status", children: calls.line }), callsNote && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: callsNote }), SP_JSX.jsx(ToggleField$2, { label: text.everything, description: text.everythingHint, bottomSeparator: "none", checked: calls.everything, disabled: busy || !answer || !calls.canToggleEverything, onChange: (enabled) => void pickCallsMic(calls.selected, enabled) }), SP_JSX.jsx(DropdownItem$1, { label: text.scope, description: scope.hint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: scope.options, selectedOption: scope.selected, onChange: (option) => { if (option.data !== scope.selected)
+    return (SP_JSX.jsxs(PanelSection$4, { title: text.title, children: [SP_JSX.jsx("style", { children: style$3 }), SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsxs(Focusable$4, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$1, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs("div", { className: "core-voice-settings", children: [SP_JSX.jsx(DropdownItem$1, { label: text.callsMic, description: text.callsMicHint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: calls.options, selectedOption: calls.selected, onChange: (option) => { if (option.data !== calls.selected)
+                                        void pickCallsMic(option.data, calls.everything); } }), calls.line && SP_JSX.jsx("div", { className: "core-voice-hint", role: "status", children: calls.line }), callsNote && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: callsNote }), SP_JSX.jsx(ToggleField$3, { label: text.everything, description: text.everythingHint, bottomSeparator: "none", checked: calls.everything, disabled: busy || !answer || !calls.canToggleEverything, onChange: (enabled) => void pickCallsMic(calls.selected, enabled) }), SP_JSX.jsx(DropdownItem$1, { label: text.scope, description: scope.hint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: scope.options, selectedOption: scope.selected, onChange: (option) => { if (option.data !== scope.selected)
                                         void pickScope(option.data); } })] }), SP_JSX.jsxs(DialogButton$1, { className: "core-voice-button", disabled: !answer, onClick: openParty, children: [SP_JSX.jsx(PartyIcon, {}), SP_JSX.jsx("span", { className: "core-voice-text", children: SP_JSX.jsx("span", { className: "core-voice-label", children: text.party }) })] }), SP_JSX.jsx("div", { className: "core-voice-hint", children: text.partyHint }), note && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: note }), SP_JSX.jsxs("div", { className: "core-voice-row", children: [SP_JSX.jsx("span", { className: "core-voice-row-title", children: text.discord }), SP_JSX.jsx("span", { className: "core-voice-row-value", children: discord ? text.discordInstalled : text.discordMissing })] })] }) })] }));
 }
 
@@ -62769,11 +62872,11 @@ function VoiceSection({ locale }) {
 // languages. Self-contained on purpose: tests/coreStreamMode.test.mjs loads this file alone.
 // Product names: the same in every language.
 const STREAM_SOURCES = { steam: "Steam Remote Play", steamvr: "SteamVR", sunshine: "Sunshine", apollo: "Apollo" };
-const en = {
+const en$1 = {
     title: "Stream mode", agentDown: "Core's service is not answering.", off: "Off", onDevice: "On · {device}", onSource: "On · {source}", forcedOn: "On · kept on by you", keep: "Keep TV out of it", keepHint: "Stream mode stays on even when Core sees no stream.", heldDetail: "Core does not wake the TV, switch its input or send it anything, and holds its notices.", offDetail: "Turns on by itself when this PC streams to another device.", audioVirtual: "Sound: on the stream ({device})", audioAlready: "Sound: already on the stream", audioMuted: "Sound: TV speaker muted", audioNone: "Sound: no TV speaker to mute", audioOff: "Sound: left as it is (turned off in settings)", apolloMissing: "Apollo: not installed (optional, see Core's guide)", apolloIdle: "Apollo: installed, not streaming", apolloDisplay: "Apollo: virtual display active", apolloNoDisplay: "Apollo: streaming without a virtual display",
 };
-const copy = {
-    en,
+const copy$1 = {
+    en: en$1,
     it: {
         title: "Modalità streaming", agentDown: "Il servizio di Core non risponde.", off: "Spenta", onDevice: "Attiva · {device}", onSource: "Attiva · {source}", forcedOn: "Attiva · tenuta accesa da te", keep: "Lascia stare la TV", keepHint: "La modalità streaming resta attiva anche quando Core non vede uno streaming.", heldDetail: "Core non accende la TV, non cambia ingresso, non le invia nulla e trattiene i suoi avvisi.", offDetail: "Si attiva da sola quando questo PC trasmette a un altro dispositivo.", audioVirtual: "Audio: sullo streaming ({device})", audioAlready: "Audio: già sullo streaming", audioMuted: "Audio: altoparlante della TV silenziato", audioNone: "Audio: nessun altoparlante della TV da silenziare", audioOff: "Audio: lasciato com'è (disattivato nelle impostazioni)", apolloMissing: "Apollo: non installato (facoltativo, vedi la guida di Core)", apolloIdle: "Apollo: installato, nessuno streaming", apolloDisplay: "Apollo: schermo virtuale attivo", apolloNoDisplay: "Apollo: streaming senza schermo virtuale",
     },
@@ -62810,13 +62913,13 @@ const copy = {
 };
 function streamCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy[language === "ua" ? "uk" : language] ?? en;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en[key] ?? key });
+    const table = copy$1[language === "ua" ? "uk" : language] ?? en$1;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$1[key] ?? key });
 }
-function fill(template, values) {
+function fill$1(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? values[name] : all));
 }
-function clean(value) {
+function clean$1(value) {
     return typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 64) : "";
 }
 function streamSourceLabel(source) {
@@ -62830,8 +62933,8 @@ function streamView(answer, locale) {
     const apollo = apolloLine(answer, text);
     if (!answer.active)
         return { state: "off", line: text.off, detail: text.offDetail, forced, audio: "", apollo };
-    const device = clean(answer.device), source = streamSourceLabel(answer.source);
-    const line = answer.detected ? (device ? fill(text.onDevice, { device }) : source ? fill(text.onSource, { source }) : text.forcedOn) : text.forcedOn;
+    const device = clean$1(answer.device), source = streamSourceLabel(answer.source);
+    const line = answer.detected ? (device ? fill$1(text.onDevice, { device }) : source ? fill$1(text.onSource, { source }) : text.forcedOn) : text.forcedOn;
     return { state: "on", line, detail: text.heldDetail, forced, audio: audioLine(answer, text), apollo };
 }
 function audioLine(answer, text) {
@@ -62839,7 +62942,7 @@ function audioLine(answer, text) {
     if (audio.enabled === false)
         return text.audioOff;
     switch (audio.mode) {
-        case "virtual": return fill(text.audioVirtual, { device: clean(audio.device) || "Steam Streaming Speakers" });
+        case "virtual": return fill$1(text.audioVirtual, { device: clean$1(audio.device) || "Steam Streaming Speakers" });
         case "already": return text.audioAlready;
         case "muted": return text.audioMuted;
         case "none": return text.audioNone;
@@ -62860,17 +62963,17 @@ function apolloLine(answer, text) {
 // (and to which device the PC streams, when known), a toggle forces it on ("Keep TV out of it"), and
 // short lines say what happens to the PC's sound and whether Apollo's virtual display is active. While
 // Stream mode is on, Core sends nothing to the TV (GamingMode.Services/MarkIIIHost.Stream.cs).
-const { PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1, Focusable: Focusable$1, ToggleField: ToggleField$1 } = CompatUI;
-const { black: BLACK, crimson: CRIMSON, crimsonText: CRIMSON_TEXT, steel: STEEL, gunmetal: GUNMETAL, white: WHITE } = CORE;
-const style = `
-.core-stream{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
-.core-stream-row{background:${GUNMETAL};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none;box-shadow:none;text-shadow:none}
-.core-stream-row.gpfocus,.core-stream-row:focus-visible{outline:2px solid ${CRIMSON};outline-offset:-2px}
-.core-stream-row.on{border-left:3px solid ${CRIMSON}}
-.core-stream-title{font-size:13px;color:${WHITE};font-weight:600;white-space:nowrap}
-.core-stream-value{font-size:12px;color:${STEEL};text-align:right;overflow:hidden;text-overflow:ellipsis}
-.core-stream-row.on .core-stream-value{color:${CRIMSON_TEXT};font-weight:600}
-.core-stream-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL}}
+const { PanelSection: PanelSection$3, PanelSectionRow: PanelSectionRow$3, Focusable: Focusable$3, ToggleField: ToggleField$2 } = CompatUI;
+const { black: BLACK$2, crimson: CRIMSON$2, crimsonText: CRIMSON_TEXT$1, steel: STEEL$2, gunmetal: GUNMETAL$2, white: WHITE$2 } = CORE;
+const style$2 = `
+.core-stream{background:${BLACK$2};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-stream-row{background:${GUNMETAL$2};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none;box-shadow:none;text-shadow:none}
+.core-stream-row.gpfocus,.core-stream-row:focus-visible{outline:2px solid ${CRIMSON$2};outline-offset:-2px}
+.core-stream-row.on{border-left:3px solid ${CRIMSON$2}}
+.core-stream-title{font-size:13px;color:${WHITE$2};font-weight:600;white-space:nowrap}
+.core-stream-value{font-size:12px;color:${STEEL$2};text-align:right;overflow:hidden;text-overflow:ellipsis}
+.core-stream-row.on .core-stream-value{color:${CRIMSON_TEXT$1};font-weight:600}
+.core-stream-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL$2}}
 .core-stream-settings{display:flex;flex-direction:column;gap:6px;padding:0 4px}
 `;
 function StreamSection({ locale }) {
@@ -62903,7 +63006,7 @@ function StreamSection({ locale }) {
         }
     };
     const view = streamView(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$1, { title: text.title, children: [SP_JSX.jsx("style", { children: style }), SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsxs(Focusable$1, { className: "core-stream", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$1, { className: `core-stream-row${view.state === "on" ? " on" : ""}`, noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-stream-title", children: text.title }), SP_JSX.jsx("span", { className: "core-stream-value", role: "status", children: view.line })] }), view.detail && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.detail }), view.audio && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.audio }), SP_JSX.jsx("div", { className: "core-stream-settings", children: SP_JSX.jsx(ToggleField$1, { label: text.keep, description: text.keepHint, bottomSeparator: "none", checked: view.forced, disabled: busy || !answer, onChange: (enabled) => void keepTvOut(enabled) }) }), view.apollo && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.apollo })] }) })] }));
+    return (SP_JSX.jsxs(PanelSection$3, { title: text.title, children: [SP_JSX.jsx("style", { children: style$2 }), SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsxs(Focusable$3, { className: "core-stream", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$3, { className: `core-stream-row${view.state === "on" ? " on" : ""}`, noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-stream-title", children: text.title }), SP_JSX.jsx("span", { className: "core-stream-value", role: "status", children: view.line })] }), view.detail && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.detail }), view.audio && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.audio }), SP_JSX.jsx("div", { className: "core-stream-settings", children: SP_JSX.jsx(ToggleField$2, { label: text.keep, description: text.keepHint, bottomSeparator: "none", checked: view.forced, disabled: busy || !answer, onChange: (enabled) => void keepTvOut(enabled) }) }), view.apollo && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.apollo })] }) })] }));
 }
 
 // Eternal Core: Stream mode, Steam's half. The Gaming Mode agent cannot see Steam Remote Play (Steam
@@ -62975,6 +63078,815 @@ function installSteamStreamWatch(deps) {
         }
         catch { /* Steam may already be gone. */ }
     };
+}
+
+// Eternal Core batch 2 (B7, docs/eternal/BATCH-2.md): swipe typing, word suggestions and autocorrect on Steam's own
+// on-screen keyboard, with the trackpads. Adapted from VaporType 0.3.2 (MIT, Copyright (c) 2026 VaporType
+// contributors, github.com/dmitrii-galantsev/VaporType, commit 53b499c, src/keyboard.ts): this is its loader. The
+// keyboard itself (patch.js, modes.js, swipe/engine.js and the word data) ships unchanged in Core's plugin under
+// dist/keyboard/ except for one hook in patch.js (see dist/keyboard/CORE-CHANGES.md); the MIT notice and the data
+// licences (CC BY-SA 4.0 word data) are there too.
+//
+// Changes from VaporType's loader: no self-update (Core updates the files with Core); the on/off switch is Core's
+// setting; Decky 3/4: the Steam client kind and the keyboard lookups go through steamModules.ts (Core's compat
+// helpers), handed to patch.js as window.__coreOskLookups; and Core stands aside when the standalone VaporType plugin
+// is loaded, so the two never patch the keyboard at once. Everything is injected, so tests/coreBatchTwo.test.mjs runs
+// it against fakes.
+const KEYBOARD_FILES = ["swipe/words.js", "swipe/lm.js", "swipe/engine.js", "modes.js", "patch.js"];
+const PRELUDE = [
+    { file: "swipe/words.js", global: "__oskWords", pattern: /version: (\d+)/ },
+    { file: "swipe/lm.js", global: "__oskLM", pattern: /version: (\d+)/ },
+    { file: "swipe/engine.js", global: "__oskSwipeEngine", pattern: /const VERSION = (\d+)/ },
+    { file: "modes.js", global: "__oskModes", pattern: /const VERSION = (\d+)/ },
+];
+const POLL_MS = 5000;
+const SAVE_MS = 60000;
+const LOG_BATCH = 200;
+function createSwipeTyping(deps) {
+    const g = deps.globals;
+    let sources = null;
+    let state = null;
+    let lastError = null;
+    let generation = 0;
+    let disposed = false;
+    let pollTimer = null;
+    let queue = Promise.resolve();
+    let lastSave = 0;
+    let wasOpen = false;
+    let blocked = null;
+    const message = (error) => String(error?.message ?? error).slice(0, 160);
+    const live = (gen) => !disposed && gen === generation && state?.enabled === true && blocked === null;
+    const fix = () => g.__oskTrackpadFix;
+    function serial(job) {
+        const run = queue.then(job, job);
+        queue = run.catch(() => undefined);
+        return run;
+    }
+    function fetchSources() {
+        if (!sources) {
+            const pending = Promise.all(KEYBOARD_FILES.map(async (file) => [file, await deps.fetchText(file)]))
+                .then(pairs => Object.fromEntries(pairs));
+            pending.catch(() => { if (sources === pending)
+                sources = null; });
+            sources = pending;
+        }
+        return sources;
+    }
+    // Decky 3/4: the stable Steam client (webpack) is what the keyboard patch understands. On the ES-module client it
+    // would only find nothing and roll back, so Core does not inject it there at all. Standalone VaporType: it owns the
+    // keyboard; injecting a second copy would stop it.
+    function gate() {
+        let kind = "unknown", standalone = false;
+        try {
+            kind = deps.clientKind();
+        }
+        catch {
+            kind = "unknown";
+        }
+        try {
+            standalone = deps.standalone();
+        }
+        catch {
+            standalone = false;
+        }
+        blocked = standalone ? "standalone" : kind === "modules" ? "modules" : null;
+        return blocked === null;
+    }
+    async function inject(gen) {
+        const src = await fetchSources();
+        for (const { file, global, pattern } of PRELUDE) {
+            if (!live(gen))
+                return null;
+            const want = Number(pattern.exec(src[file])?.[1] ?? 0);
+            if ((g[global]?.version ?? 0) !== want)
+                deps.evaluate(src[file] + "\n;0");
+        }
+        if (!live(gen))
+            return null;
+        if (!g.__oskUserWordsLoaded) {
+            g.__oskUserWords = state?.userWords ?? null;
+            g.__oskUserWordsLoaded = true;
+        }
+        g.__oskInstall = { date: null, via: "core", decky: "", plugin: "core" };
+        g.__coreOskLookups = deps.lookups;
+        return String(deps.evaluate(src["patch.js"]));
+    }
+    function due(f, force) {
+        const now = deps.now();
+        let open = false;
+        try {
+            open = f.keyboardOpen?.() === true;
+        }
+        catch (error) {
+            lastError = message(error);
+        }
+        if (open && !wasOpen)
+            lastSave = now;
+        wasOpen = open;
+        if (force || !open || now - lastSave >= SAVE_MS || (f.typingLog?.out?.length ?? 0) >= LOG_BATCH) {
+            lastSave = now;
+            return true;
+        }
+        return false;
+    }
+    function collect(f, force = true) {
+        let save = true;
+        try {
+            f.hostAcks = true;
+            save = due(f, force);
+            if (save)
+                f.flushLog?.();
+        }
+        catch (error) {
+            lastError = message(error);
+        }
+        return {
+            fix: f, epoch: state?.epoch ?? 0, gen: f.forgetGen ?? 0,
+            requests: f.takeRequests?.() ?? null,
+            words: save ? (f.takeUserWords?.() ?? null) : null,
+            log: save ? (f.takeTypingLog?.() ?? null) : null,
+        };
+    }
+    async function handle(f, requests) {
+        g.__vaporTypeSession ?? (g.__vaporTypeSession = `${deps.now().toString(36)}-${Math.random().toString(36).slice(2)}`);
+        const answer = await deps.requests(requests, String(g.__vaporTypeSession));
+        const epoch = Number(answer?.epoch ?? state?.epoch ?? 0);
+        if (state)
+            state.epoch = epoch;
+        const rev = JSON.parse(requests).rev;
+        if (!answer?.ok)
+            lastError = "some files could not be deleted; retrying";
+        else if (typeof rev === "number")
+            f.ackRequests?.(rev);
+        return epoch;
+    }
+    const forgotSince = (f, gen) => (f.forgetGen ?? 0) !== gen;
+    async function persist(batch) {
+        if (!state)
+            return;
+        const f = batch.fix;
+        try {
+            lastError = null;
+            let epoch = batch.epoch;
+            if (batch.requests)
+                epoch = await handle(f, batch.requests);
+            const logEpoch = epoch;
+            let words = batch.words;
+            let gen = batch.gen;
+            for (let attempt = 0; words && attempt < 3; attempt++) {
+                const answer = await deps.saveWords(JSON.parse(words), epoch);
+                const answered = Number(answer?.epoch ?? epoch);
+                if (state)
+                    state.epoch = answered;
+                if (answer?.saved && !forgotSince(f, gen)) {
+                    if (typeof answer.rev === "number")
+                        f.ackUserWords?.(answer.rev);
+                    break;
+                }
+                const request = f.takeRequests?.();
+                epoch = request ? await handle(f, request) : answered;
+                gen = f.forgetGen ?? 0;
+                words = f.takeUserWords?.() ?? null;
+            }
+            if (batch.log && !forgotSince(f, batch.gen)) {
+                const { upTo, lines } = JSON.parse(batch.log);
+                const answer = await deps.appendLog({ lines }, logEpoch);
+                const answered = Number(answer?.epoch ?? logEpoch);
+                if (state)
+                    state.epoch = answered;
+                if (answer?.saved || answered !== logEpoch)
+                    f.ackTypingLog?.(Number(upTo));
+            }
+        }
+        catch (error) {
+            lastError = `saving failed: ${message(error)}`;
+        }
+    }
+    async function tick(gen) {
+        if (!live(gen))
+            return;
+        try {
+            const f = fix();
+            if (!f || (f.stopped && !f.unsupported))
+                await inject(gen);
+        }
+        catch (error) {
+            lastError = `loading failed: ${message(error)}`;
+        }
+        if (!live(gen))
+            return;
+        const f = fix();
+        if (f)
+            await persist(collect(f, false));
+    }
+    function cancelPoll() {
+        if (pollTimer !== null)
+            deps.cancel(pollTimer);
+        pollTimer = null;
+    }
+    function schedule(gen) {
+        cancelPoll();
+        if (!live(gen))
+            return;
+        pollTimer = deps.schedule(() => {
+            pollTimer = null;
+            void serial(() => tick(gen)).finally(() => { if (live(gen) && pollTimer === null)
+                schedule(gen); });
+        }, POLL_MS);
+    }
+    function stopLocal() {
+        const f = fix();
+        if (!f)
+            return Promise.resolve();
+        const batch = collect(f);
+        try {
+            if (!f.stopped)
+                f.stop();
+        }
+        catch (error) {
+            lastError = `stop failed: ${message(error)}`;
+        }
+        return serial(() => persist(batch));
+    }
+    async function start() {
+        const gen = generation;
+        let loaded;
+        try {
+            loaded = await deps.load();
+            if (!loaded || typeof loaded.enabled !== "boolean")
+                throw new Error("no answer");
+        }
+        catch (error) {
+            lastError = `backend unavailable: ${message(error)}`;
+            loaded = { userWords: null, enabled: false, epoch: 0 };
+        }
+        if (disposed || gen !== generation)
+            return;
+        state = { ...loaded, epoch: Number(loaded.epoch) || 0 };
+        if (!gate())
+            return;
+        await serial(() => tick(gen));
+        schedule(gen);
+    }
+    function shutdown() {
+        disposed = true;
+        generation++;
+        cancelPoll();
+        void stopLocal();
+        try {
+            delete g.__coreOskLookups;
+        }
+        catch { /* Not ours to clear. */ }
+    }
+    async function setEnabled(on) {
+        if (disposed || !state)
+            return;
+        const gen = ++generation;
+        cancelPoll();
+        state.enabled = on;
+        const stopped = on ? Promise.resolve() : stopLocal();
+        try {
+            const answer = await serial(() => deps.setEnabled(on));
+            if (typeof answer?.enabled === "boolean")
+                state.enabled = answer.enabled;
+        }
+        catch (error) {
+            lastError = `could not save the setting: ${message(error)}`;
+        }
+        await stopped;
+        if (!on || !gate() || !live(gen))
+            return;
+        await serial(() => tick(gen));
+        schedule(gen);
+    }
+    function forgetEverything() {
+        return serial(async () => {
+            const f = fix();
+            let ok = true;
+            try {
+                f?.forgetAll();
+            }
+            catch (error) {
+                lastError = `forget failed: ${message(error)}`;
+                ok = false;
+            }
+            try {
+                deps.removeStoredWords();
+            }
+            catch (error) {
+                lastError = message(error);
+                ok = false;
+            }
+            g.__oskUserWords = null;
+            if (state)
+                state.userWords = null;
+            try {
+                const answer = await deps.forget();
+                if (state && answer?.epoch !== undefined)
+                    state.epoch = Number(answer.epoch);
+                if (!answer?.ok) {
+                    lastError = "some files could not be deleted; they will be retried";
+                    ok = false;
+                }
+            }
+            catch (error) {
+                lastError = message(error);
+                ok = false;
+            }
+            if (f)
+                await persist(collect(f));
+            return ok;
+        });
+    }
+    function status() {
+        if (blocked)
+            return { state: blocked, error: null };
+        if (!state)
+            return { state: "loading", error: lastError };
+        if (!state.enabled)
+            return { state: "off", error: null };
+        const f = fix();
+        if (f?.unsupported)
+            return { state: "paused", error: String(f.unsupported) };
+        if (f && !f.stopped)
+            return { state: "on", error: lastError };
+        return { state: lastError ? "paused" : "loading", error: lastError };
+    }
+    return {
+        start, shutdown, setEnabled, forgetEverything, status,
+        enabled: () => state?.enabled === true,
+        running: () => { const f = fix(); return !!f && !f.stopped && blocked === null; },
+        settingsValue: (name) => g.__oskSettings?.[name],
+        setSetting: (name, value) => {
+            const f = fix();
+            if (!f || f.stopped)
+                return false;
+            f.setSetting(name, value);
+            return true;
+        },
+        openSettingsWhenKeyboardOpens: (ms) => new Promise(resolve => {
+            const until = deps.now() + ms;
+            const poll = () => {
+                const f = fix();
+                if (disposed)
+                    resolve(false);
+                else if (f && !f.stopped && f.openSettings())
+                    resolve(true);
+                else if (deps.now() > until)
+                    resolve(false);
+                else
+                    deps.schedule(poll, 250);
+            };
+            poll();
+        }),
+    };
+}
+// Core's Decky 3/4 lookups for patch.js (window.__coreOskLookups): Steam's trackpad-typing settings store and the
+// keyboard's CSS class map. Built from steamModules.ts's findExport / findClassModule by the caller; pure here.
+function keyboardLookups(ui, finders) {
+    return {
+        inputSettings: () => {
+            const found = finders.findExport(ui, (value) => value && typeof value === "object" && "TrackpadTypingTriggerAsClick" in value);
+            return found && typeof found === "object" ? found : null;
+        },
+        classes: () => {
+            const keyboard = finders.findClassModule(ui, (module) => !!module && typeof module.TouchpadPointerContainer === "string" && typeof module.KeyboardKey === "string");
+            if (!keyboard || typeof keyboard.Keyboard !== "string")
+                return null;
+            const glass = finders.findClassModule(ui, (module) => !!module && typeof module.BackgroundGlass === "string" && typeof module.DrawBackground === "string");
+            return { ...(glass ? { BackgroundGlass: glass.BackgroundGlass, DrawBackground: glass.DrawBackground } : {}), ...keyboard };
+        },
+    };
+}
+// The standalone VaporType plugin, in Decky's plugin list: Core then leaves the keyboard to it.
+function vaporTypeInstalled(inventory) {
+    try {
+        const names = [...(Array.isArray(inventory?.plugins) ? inventory.plugins : []), ...(Array.isArray(inventory?.installedPlugins) ? inventory.installedPlugins : [])]
+            .map((plugin) => String(typeof plugin === "string" ? plugin : plugin?.name ?? "").trim().toLowerCase());
+        return names.includes("vaportype");
+    }
+    catch {
+        return false;
+    }
+}
+
+// Eternal Core batch 2 (docs/eternal/BATCH-2.md): the Quick Access text for swipe typing and the automations summary,
+// in Core's 12 languages, and the pure functions that turn the agent's answers into lines. Self-contained on purpose:
+// tests/coreBatchTwo.test.mjs loads this file alone. The Health rows' text lives in healthReport.ts.
+const en = {
+    typing: "Swipe typing", typingHint: "Swipe across the trackpads on Steam's keyboard, with word suggestions and autocorrect. Off brings back Steam's own keyboard.",
+    private: "Private mode", privateHint: "Pauses learning, autocorrect and the typing log. You can also hold Esc with a trackpad.",
+    log: "Keep typing log", logHint: "Saves typed words with swipe paths on this PC, to help tuning. Nothing is sent anywhere.",
+    settings: "Keyboard settings", settingsToast: "Open the keyboard (STEAM + X) to show its settings.", noKeyboard: "No keyboard opened. You can also hold the emoji key on the keyboard.",
+    forget: "Forget everything", forgetConfirm: "Press again to forget everything", forgetting: "Deleting typing data…",
+    forgotOk: "Learned words, blocked words and the typing log were deleted.", forgotFail: "Some data could not be deleted. Core tries again.",
+    stOn: "Active on Steam's keyboard", stOff: "Off: Steam's own keyboard", stLoading: "Loading…", stModules: "Not available on this Steam client yet",
+    stStandalone: "The VaporType plugin is installed and handles the keyboard", stPaused: "Paused: {error}",
+    english: "Swiping, suggestions and autocorrect need the English QWERTY layout.", credit: "Based on VaporType (MIT). Word data: wordfreq, CC BY-SA 4.0.",
+    autos: "Automations", none: "No automations are on", edit: "Edit them in Core on the desktop: Gaming Mode > Automations.",
+    t_controller: "When a controller connects", t_wake: "When Core wakes", t_gameStart: "When a game starts", t_gameStop: "When a game ends", t_streamOn: "When a stream starts", t_streamOff: "When a stream ends",
+    a_tv: "wake the TV and switch to Core", a_display: "restore the display", a_sound: "restore the sound output", a_streamStart: "keep the TV out (Stream mode)", a_streamStop: "give the TV back", a_ha: "tell Home Assistant ({event})",
+    ha: "Home Assistant", haOff: "Off", haNotConfigured: "Not set up", haConnected: "Connected to {host}", haConnecting: "Connecting to {host}…", haRefused: "Login refused by {host}", haUnreachable: "Can't reach {host}",
+    sleep: "Sleep after streaming", sleepOff: "Off", sleepOn: "After {n} min with nobody here", sleepAt: "Sleeping at {time} unless someone plays here",
+};
+const copy = {
+    en,
+    it: {
+        typing: "Scrittura a scorrimento", typingHint: "Scorri sui trackpad sulla tastiera di Steam, con suggerimenti e correzione automatica. Spento torna la tastiera normale di Steam.",
+        private: "Modalità privata", privateHint: "Mette in pausa apprendimento, correzione automatica e registro di scrittura. Puoi anche tenere premuto Esc con un trackpad.",
+        log: "Tieni il registro di scrittura", logHint: "Salva su questo PC le parole scritte con i percorsi dello scorrimento, per migliorare la precisione. Non viene inviato niente.",
+        settings: "Impostazioni della tastiera", settingsToast: "Apri la tastiera (STEAM + X) per vedere le sue impostazioni.", noKeyboard: "Nessuna tastiera aperta. Puoi anche tenere premuto il tasto emoji sulla tastiera.",
+        forget: "Dimentica tutto", forgetConfirm: "Premi di nuovo per dimenticare tutto", forgetting: "Cancellazione dei dati di scrittura…",
+        forgotOk: "Parole imparate, parole bloccate e registro di scrittura cancellati.", forgotFail: "Non è stato possibile cancellare alcuni dati. Core riprova.",
+        stOn: "Attiva sulla tastiera di Steam", stOff: "Spenta: tastiera normale di Steam", stLoading: "Caricamento…", stModules: "Non ancora disponibile su questo client di Steam",
+        stStandalone: "È installato il plugin VaporType, che gestisce la tastiera", stPaused: "In pausa: {error}",
+        english: "Scorrimento, suggerimenti e correzione automatica richiedono il layout inglese QWERTY.", credit: "Basato su VaporType (MIT). Dati delle parole: wordfreq, CC BY-SA 4.0.",
+        autos: "Automazioni", none: "Nessuna automazione attiva", edit: "Si modificano in Core sul desktop: Gaming Mode > Automazioni.",
+        t_controller: "Quando si collega un controller", t_wake: "Quando Core si risveglia", t_gameStart: "Quando parte un gioco", t_gameStop: "Quando finisce un gioco", t_streamOn: "Quando inizia uno streaming", t_streamOff: "Quando finisce uno streaming",
+        a_tv: "accendi la TV e passa a Core", a_display: "ripristina lo schermo", a_sound: "ripristina l'uscita audio", a_streamStart: "lascia stare la TV (modalità streaming)", a_streamStop: "restituisci la TV", a_ha: "avvisa Home Assistant ({event})",
+        ha: "Home Assistant", haOff: "Spento", haNotConfigured: "Non configurato", haConnected: "Collegato a {host}", haConnecting: "Collegamento a {host}…", haRefused: "Accesso rifiutato da {host}", haUnreachable: "{host} non raggiungibile",
+        sleep: "Sospensione dopo lo streaming", sleepOff: "Spenta", sleepOn: "Dopo {n} min senza nessuno qui", sleepAt: "Sospensione alle {time}, a meno che qualcuno giochi qui",
+    },
+    es: {
+        typing: "Escritura deslizando", typingHint: "Desliza por los trackpads en el teclado de Steam, con sugerencias y autocorrección. Desactivado vuelve el teclado normal de Steam.",
+        private: "Modo privado", privateHint: "Pausa el aprendizaje, la autocorrección y el registro de escritura. También puedes mantener Esc con un trackpad.",
+        log: "Guardar registro de escritura", logHint: "Guarda en este PC las palabras escritas con sus trazos, para afinar la precisión. No se envía nada.",
+        settings: "Ajustes del teclado", settingsToast: "Abre el teclado (STEAM + X) para ver sus ajustes.", noKeyboard: "No se abrió ningún teclado. También puedes mantener la tecla de emoji del teclado.",
+        forget: "Olvidarlo todo", forgetConfirm: "Pulsa otra vez para olvidarlo todo", forgetting: "Borrando los datos de escritura…",
+        forgotOk: "Se borraron las palabras aprendidas, las bloqueadas y el registro de escritura.", forgotFail: "No se pudieron borrar algunos datos. Core lo reintentará.",
+        stOn: "Activa en el teclado de Steam", stOff: "Desactivada: teclado normal de Steam", stLoading: "Cargando…", stModules: "Aún no disponible en este cliente de Steam",
+        stStandalone: "El plugin VaporType está instalado y gestiona el teclado", stPaused: "En pausa: {error}",
+        english: "Deslizar, las sugerencias y la autocorrección necesitan la distribución inglesa QWERTY.", credit: "Basado en VaporType (MIT). Datos de palabras: wordfreq, CC BY-SA 4.0.",
+        autos: "Automatizaciones", none: "No hay automatizaciones activas", edit: "Se editan en Core en el escritorio: Gaming Mode > Automatizaciones.",
+        t_controller: "Cuando se conecta un mando", t_wake: "Cuando Core se activa", t_gameStart: "Cuando empieza un juego", t_gameStop: "Cuando termina un juego", t_streamOn: "Cuando empieza una transmisión", t_streamOff: "Cuando termina una transmisión",
+        a_tv: "encender la TV y cambiar a Core", a_display: "restaurar la pantalla", a_sound: "restaurar la salida de sonido", a_streamStart: "dejar la TV en paz (modo transmisión)", a_streamStop: "devolver la TV", a_ha: "avisar a Home Assistant ({event})",
+        ha: "Home Assistant", haOff: "Desactivado", haNotConfigured: "Sin configurar", haConnected: "Conectado a {host}", haConnecting: "Conectando a {host}…", haRefused: "{host} rechazó el inicio de sesión", haUnreachable: "No se puede contactar con {host}",
+        sleep: "Suspensión tras la transmisión", sleepOff: "Desactivada", sleepOn: "Tras {n} min sin nadie aquí", sleepAt: "Suspensión a las {time} salvo que alguien juegue aquí",
+    },
+    fr: {
+        typing: "Saisie par glissement", typingHint: "Glisse sur les trackpads avec le clavier de Steam, avec suggestions et correction automatique. Désactivé, le clavier normal de Steam revient.",
+        private: "Mode privé", privateHint: "Met en pause l'apprentissage, la correction automatique et le journal de saisie. Tu peux aussi maintenir Échap avec un trackpad.",
+        log: "Garder le journal de saisie", logHint: "Enregistre sur ce PC les mots tapés et leurs tracés, pour affiner la précision. Rien n'est envoyé.",
+        settings: "Réglages du clavier", settingsToast: "Ouvre le clavier (STEAM + X) pour afficher ses réglages.", noKeyboard: "Aucun clavier ouvert. Tu peux aussi maintenir la touche emoji du clavier.",
+        forget: "Tout oublier", forgetConfirm: "Appuie encore pour tout oublier", forgetting: "Suppression des données de saisie…",
+        forgotOk: "Les mots appris, les mots bloqués et le journal de saisie ont été supprimés.", forgotFail: "Certaines données n'ont pas pu être supprimées. Core réessaiera.",
+        stOn: "Active sur le clavier de Steam", stOff: "Désactivée : clavier normal de Steam", stLoading: "Chargement…", stModules: "Pas encore disponible sur ce client Steam",
+        stStandalone: "Le plugin VaporType est installé et gère le clavier", stPaused: "En pause : {error}",
+        english: "Le glissement, les suggestions et la correction automatique demandent la disposition anglaise QWERTY.", credit: "Basé sur VaporType (MIT). Données des mots : wordfreq, CC BY-SA 4.0.",
+        autos: "Automatisations", none: "Aucune automatisation active", edit: "Elles se modifient dans Core sur le bureau : Gaming Mode > Automatisations.",
+        t_controller: "Quand une manette se connecte", t_wake: "Quand Core sort de veille", t_gameStart: "Quand un jeu démarre", t_gameStop: "Quand un jeu se termine", t_streamOn: "Quand un streaming commence", t_streamOff: "Quand un streaming se termine",
+        a_tv: "allumer la TV et passer sur Core", a_display: "rétablir l'affichage", a_sound: "rétablir la sortie audio", a_streamStart: "laisser la TV tranquille (mode streaming)", a_streamStop: "rendre la TV", a_ha: "prévenir Home Assistant ({event})",
+        ha: "Home Assistant", haOff: "Désactivé", haNotConfigured: "Non configuré", haConnected: "Connecté à {host}", haConnecting: "Connexion à {host}…", haRefused: "Connexion refusée par {host}", haUnreachable: "{host} injoignable",
+        sleep: "Veille après le streaming", sleepOff: "Désactivée", sleepOn: "Après {n} min sans personne ici", sleepAt: "Veille à {time} sauf si quelqu'un joue ici",
+    },
+    de: {
+        typing: "Wischtippen", typingHint: "Wische auf Steams Tastatur über die Trackpads, mit Wortvorschlägen und Autokorrektur. Aus bringt Steams normale Tastatur zurück.",
+        private: "Privatmodus", privateHint: "Pausiert Lernen, Autokorrektur und das Tipp-Protokoll. Du kannst auch Esc mit einem Trackpad halten.",
+        log: "Tipp-Protokoll behalten", logHint: "Speichert getippte Wörter mit Wischpfaden auf diesem PC, um die Genauigkeit zu verbessern. Nichts wird gesendet.",
+        settings: "Tastatureinstellungen", settingsToast: "Öffne die Tastatur (STEAM + X), um ihre Einstellungen zu sehen.", noKeyboard: "Keine Tastatur geöffnet. Du kannst auch die Emoji-Taste auf der Tastatur halten.",
+        forget: "Alles vergessen", forgetConfirm: "Noch einmal drücken, um alles zu vergessen", forgetting: "Tippdaten werden gelöscht…",
+        forgotOk: "Gelernte Wörter, gesperrte Wörter und das Tipp-Protokoll wurden gelöscht.", forgotFail: "Einige Daten konnten nicht gelöscht werden. Core versucht es erneut.",
+        stOn: "Aktiv auf Steams Tastatur", stOff: "Aus: Steams normale Tastatur", stLoading: "Wird geladen…", stModules: "Auf diesem Steam-Client noch nicht verfügbar",
+        stStandalone: "Das Plugin VaporType ist installiert und steuert die Tastatur", stPaused: "Pausiert: {error}",
+        english: "Wischen, Vorschläge und Autokorrektur brauchen das englische QWERTY-Layout.", credit: "Basiert auf VaporType (MIT). Wortdaten: wordfreq, CC BY-SA 4.0.",
+        autos: "Automationen", none: "Keine Automation aktiv", edit: "Bearbeiten in Core auf dem Desktop: Gaming Mode > Automationen.",
+        t_controller: "Wenn ein Controller verbunden wird", t_wake: "Wenn Core aufwacht", t_gameStart: "Wenn ein Spiel startet", t_gameStop: "Wenn ein Spiel endet", t_streamOn: "Wenn ein Stream beginnt", t_streamOff: "Wenn ein Stream endet",
+        a_tv: "TV einschalten und zu Core wechseln", a_display: "Anzeige wiederherstellen", a_sound: "Tonausgabe wiederherstellen", a_streamStart: "TV in Ruhe lassen (Stream-Modus)", a_streamStop: "TV zurückgeben", a_ha: "Home Assistant melden ({event})",
+        ha: "Home Assistant", haOff: "Aus", haNotConfigured: "Nicht eingerichtet", haConnected: "Verbunden mit {host}", haConnecting: "Verbinde mit {host}…", haRefused: "Anmeldung von {host} abgelehnt", haUnreachable: "{host} nicht erreichbar",
+        sleep: "Standby nach dem Streamen", sleepOff: "Aus", sleepOn: "Nach {n} Min. ohne jemanden hier", sleepAt: "Standby um {time}, außer jemand spielt hier",
+    },
+    pt: {
+        typing: "Digitação por deslize", typingHint: "Deslize pelos trackpads no teclado do Steam, com sugestões e correção automática. Desligado, volta o teclado normal do Steam.",
+        private: "Modo privado", privateHint: "Pausa o aprendizado, a correção automática e o registro de digitação. Você também pode segurar Esc com um trackpad.",
+        log: "Manter registro de digitação", logHint: "Salva neste PC as palavras digitadas com os traços, para melhorar a precisão. Nada é enviado.",
+        settings: "Configurações do teclado", settingsToast: "Abra o teclado (STEAM + X) para ver as configurações dele.", noKeyboard: "Nenhum teclado aberto. Você também pode segurar a tecla de emoji do teclado.",
+        forget: "Esquecer tudo", forgetConfirm: "Aperte de novo para esquecer tudo", forgetting: "Apagando os dados de digitação…",
+        forgotOk: "Palavras aprendidas, palavras bloqueadas e o registro de digitação foram apagados.", forgotFail: "Alguns dados não puderam ser apagados. O Core tenta de novo.",
+        stOn: "Ativa no teclado do Steam", stOff: "Desligada: teclado normal do Steam", stLoading: "Carregando…", stModules: "Ainda não disponível neste cliente do Steam",
+        stStandalone: "O plugin VaporType está instalado e cuida do teclado", stPaused: "Pausada: {error}",
+        english: "Deslize, sugestões e correção automática exigem o layout inglês QWERTY.", credit: "Baseado no VaporType (MIT). Dados de palavras: wordfreq, CC BY-SA 4.0.",
+        autos: "Automações", none: "Nenhuma automação ativa", edit: "Edite no Core na área de trabalho: Gaming Mode > Automações.",
+        t_controller: "Quando um controle se conecta", t_wake: "Quando o Core desperta", t_gameStart: "Quando um jogo começa", t_gameStop: "Quando um jogo termina", t_streamOn: "Quando uma transmissão começa", t_streamOff: "Quando uma transmissão termina",
+        a_tv: "ligar a TV e mudar para o Core", a_display: "restaurar a tela", a_sound: "restaurar a saída de som", a_streamStart: "deixar a TV em paz (modo transmissão)", a_streamStop: "devolver a TV", a_ha: "avisar o Home Assistant ({event})",
+        ha: "Home Assistant", haOff: "Desligado", haNotConfigured: "Não configurado", haConnected: "Conectado a {host}", haConnecting: "Conectando a {host}…", haRefused: "Login recusado por {host}", haUnreachable: "Não foi possível alcançar {host}",
+        sleep: "Suspensão após a transmissão", sleepOff: "Desligada", sleepOn: "Após {n} min sem ninguém aqui", sleepAt: "Suspensão às {time}, a menos que alguém jogue aqui",
+    },
+    uk: {
+        typing: "Введення ковзанням", typingHint: "Ковзайте трекпадами по клавіатурі Steam, з підказками слів і автовиправленням. Вимкнено — повертається звичайна клавіатура Steam.",
+        private: "Приватний режим", privateHint: "Призупиняє навчання, автовиправлення і журнал введення. Також можна утримати Esc трекпадом.",
+        log: "Вести журнал введення", logHint: "Зберігає на цьому ПК введені слова з траєкторіями, щоб покращити точність. Нічого не надсилається.",
+        settings: "Налаштування клавіатури", settingsToast: "Відкрийте клавіатуру (STEAM + X), щоб побачити її налаштування.", noKeyboard: "Клавіатура не відкрилася. Також можна утримати клавішу емодзі на клавіатурі.",
+        forget: "Забути все", forgetConfirm: "Натисніть ще раз, щоб забути все", forgetting: "Видалення даних введення…",
+        forgotOk: "Вивчені слова, заблоковані слова та журнал введення видалено.", forgotFail: "Деякі дані не вдалося видалити. Core спробує ще раз.",
+        stOn: "Увімкнено на клавіатурі Steam", stOff: "Вимкнено: звичайна клавіатура Steam", stLoading: "Завантаження…", stModules: "Поки що недоступно в цьому клієнті Steam",
+        stStandalone: "Установлено плагін VaporType, він керує клавіатурою", stPaused: "Призупинено: {error}",
+        english: "Ковзання, підказки й автовиправлення потребують англійської розкладки QWERTY.", credit: "На основі VaporType (MIT). Дані слів: wordfreq, CC BY-SA 4.0.",
+        autos: "Автоматизації", none: "Немає увімкнених автоматизацій", edit: "Редагуйте в Core на робочому столі: Gaming Mode > Автоматизації.",
+        t_controller: "Коли підключається контролер", t_wake: "Коли Core прокидається", t_gameStart: "Коли запускається гра", t_gameStop: "Коли гра завершується", t_streamOn: "Коли починається трансляція", t_streamOff: "Коли трансляція завершується",
+        a_tv: "увімкнути телевізор і перейти на Core", a_display: "відновити екран", a_sound: "відновити аудіовихід", a_streamStart: "не чіпати телевізор (режим трансляції)", a_streamStop: "повернути телевізор", a_ha: "повідомити Home Assistant ({event})",
+        ha: "Home Assistant", haOff: "Вимкнено", haNotConfigured: "Не налаштовано", haConnected: "Підключено до {host}", haConnecting: "Підключення до {host}…", haRefused: "{host} відхилив вхід", haUnreachable: "{host} недоступний",
+        sleep: "Сон після трансляції", sleepOff: "Вимкнено", sleepOn: "Через {n} хв, якщо тут нікого", sleepAt: "Сон о {time}, якщо тут ніхто не грає",
+    },
+    zh: {
+        typing: "滑行输入", typingHint: "在 Steam 键盘上用触控板滑行输入，带单词建议和自动更正。关闭后恢复 Steam 原来的键盘。",
+        private: "隐私模式", privateHint: "暂停学习、自动更正和输入记录。也可以用触控板按住 Esc。",
+        log: "保留输入记录", logHint: "在这台电脑上保存输入的单词和滑行轨迹，用于调优。不会发送任何内容。",
+        settings: "键盘设置", settingsToast: "打开键盘（STEAM + X）即可显示其设置。", noKeyboard: "没有打开键盘。也可以在键盘上按住表情键。",
+        forget: "全部忘记", forgetConfirm: "再按一次以全部忘记", forgetting: "正在删除输入数据…",
+        forgotOk: "已删除学习的单词、屏蔽的单词和输入记录。", forgotFail: "部分数据无法删除。Core 会重试。",
+        stOn: "已在 Steam 键盘上启用", stOff: "已关闭：Steam 原来的键盘", stLoading: "正在加载…", stModules: "此 Steam 客户端暂不支持",
+        stStandalone: "已安装 VaporType 插件，由它处理键盘", stPaused: "已暂停：{error}",
+        english: "滑行、建议和自动更正需要英文 QWERTY 布局。", credit: "基于 VaporType（MIT）。词汇数据：wordfreq，CC BY-SA 4.0。",
+        autos: "自动化", none: "没有启用的自动化", edit: "请在桌面版 Core 中编辑：Gaming Mode > 自动化。",
+        t_controller: "控制器连接时", t_wake: "Core 唤醒时", t_gameStart: "游戏开始时", t_gameStop: "游戏结束时", t_streamOn: "串流开始时", t_streamOff: "串流结束时",
+        a_tv: "打开电视并切换到 Core", a_display: "恢复显示设置", a_sound: "恢复声音输出", a_streamStart: "不打扰电视（串流模式）", a_streamStop: "交还电视", a_ha: "通知 Home Assistant（{event}）",
+        ha: "Home Assistant", haOff: "已关闭", haNotConfigured: "未设置", haConnected: "已连接到 {host}", haConnecting: "正在连接 {host}…", haRefused: "{host} 拒绝登录", haUnreachable: "无法连接 {host}",
+        sleep: "串流后睡眠", sleepOff: "已关闭", sleepOn: "无人使用 {n} 分钟后", sleepAt: "将在 {time} 睡眠，除非有人在这里玩",
+    },
+    ja: {
+        typing: "スワイプ入力", typingHint: "Steam のキーボードでトラックパッドをなぞって入力。単語の候補と自動修正付き。オフにすると Steam の通常のキーボードに戻ります。",
+        private: "プライベートモード", privateHint: "学習、自動修正、入力ログを一時停止します。トラックパッドで Esc を長押ししても切り替えられます。",
+        log: "入力ログを保存", logHint: "入力した単語とスワイプの軌跡をこの PC に保存し、精度の調整に使います。何も送信されません。",
+        settings: "キーボードの設定", settingsToast: "キーボード（STEAM + X）を開くと設定が表示されます。", noKeyboard: "キーボードが開きませんでした。キーボードの絵文字キーを長押ししても開けます。",
+        forget: "すべて忘れる", forgetConfirm: "もう一度押すとすべて忘れます", forgetting: "入力データを削除しています…",
+        forgotOk: "学習した単語、ブロックした単語、入力ログを削除しました。", forgotFail: "一部のデータを削除できませんでした。Core が再試行します。",
+        stOn: "Steam のキーボードで有効", stOff: "オフ：Steam の通常のキーボード", stLoading: "読み込み中…", stModules: "この Steam クライアントではまだ使えません",
+        stStandalone: "VaporType プラグインがインストールされていて、キーボードを担当しています", stPaused: "一時停止：{error}",
+        english: "スワイプ、候補、自動修正には英語 QWERTY 配列が必要です。", credit: "VaporType（MIT）をもとにしています。単語データ：wordfreq、CC BY-SA 4.0。",
+        autos: "オートメーション", none: "有効なオートメーションはありません", edit: "デスクトップの Core で編集します：Gaming Mode > オートメーション。",
+        t_controller: "コントローラーが接続されたとき", t_wake: "Core がスリープから復帰したとき", t_gameStart: "ゲームが始まったとき", t_gameStop: "ゲームが終わったとき", t_streamOn: "ストリーミングが始まったとき", t_streamOff: "ストリーミングが終わったとき",
+        a_tv: "テレビをつけて Core に切り替える", a_display: "ディスプレイを元に戻す", a_sound: "サウンド出力を元に戻す", a_streamStart: "テレビに触れない（ストリームモード）", a_streamStop: "テレビを戻す", a_ha: "Home Assistant に通知（{event}）",
+        ha: "Home Assistant", haOff: "オフ", haNotConfigured: "未設定", haConnected: "{host} に接続中", haConnecting: "{host} に接続しています…", haRefused: "{host} にログインを拒否されました", haUnreachable: "{host} に接続できません",
+        sleep: "ストリーミング後にスリープ", sleepOff: "オフ", sleepOn: "誰もいない状態が {n} 分続いたら", sleepAt: "{time} にスリープ（ここで誰かが遊ばない限り）",
+    },
+    ko: {
+        typing: "스와이프 입력", typingHint: "Steam 키보드에서 트랙패드로 밀어서 입력하고, 단어 추천과 자동 수정을 씁니다. 끄면 Steam 기본 키보드로 돌아갑니다.",
+        private: "개인 정보 모드", privateHint: "학습, 자동 수정, 입력 기록을 일시 중지합니다. 트랙패드로 Esc를 길게 눌러도 됩니다.",
+        log: "입력 기록 보관", logHint: "입력한 단어와 스와이프 경로를 이 PC에 저장해 정확도를 높이는 데 씁니다. 아무것도 전송하지 않습니다.",
+        settings: "키보드 설정", settingsToast: "키보드(STEAM + X)를 열면 설정이 보입니다.", noKeyboard: "키보드가 열리지 않았습니다. 키보드의 이모지 키를 길게 눌러도 됩니다.",
+        forget: "모두 잊기", forgetConfirm: "한 번 더 누르면 모두 잊습니다", forgetting: "입력 데이터를 삭제하는 중…",
+        forgotOk: "학습한 단어, 차단한 단어, 입력 기록을 삭제했습니다.", forgotFail: "일부 데이터를 삭제하지 못했습니다. Core가 다시 시도합니다.",
+        stOn: "Steam 키보드에서 사용 중", stOff: "꺼짐: Steam 기본 키보드", stLoading: "불러오는 중…", stModules: "이 Steam 클라이언트에서는 아직 사용할 수 없음",
+        stStandalone: "VaporType 플러그인이 설치되어 키보드를 맡고 있음", stPaused: "일시 중지: {error}",
+        english: "스와이프, 추천, 자동 수정은 영어 QWERTY 배열이 필요합니다.", credit: "VaporType(MIT) 기반. 단어 데이터: wordfreq, CC BY-SA 4.0.",
+        autos: "자동화", none: "켜진 자동화가 없습니다", edit: "데스크톱의 Core에서 편집하세요: Gaming Mode > 자동화.",
+        t_controller: "컨트롤러가 연결되면", t_wake: "Core가 깨어나면", t_gameStart: "게임이 시작되면", t_gameStop: "게임이 끝나면", t_streamOn: "스트리밍이 시작되면", t_streamOff: "스트리밍이 끝나면",
+        a_tv: "TV를 켜고 Core로 전환", a_display: "디스플레이 복원", a_sound: "사운드 출력 복원", a_streamStart: "TV 건드리지 않기(스트리밍 모드)", a_streamStop: "TV 돌려주기", a_ha: "Home Assistant에 알림({event})",
+        ha: "Home Assistant", haOff: "꺼짐", haNotConfigured: "설정 안 됨", haConnected: "{host}에 연결됨", haConnecting: "{host}에 연결하는 중…", haRefused: "{host}에서 로그인 거부", haUnreachable: "{host}에 연결할 수 없음",
+        sleep: "스트리밍 후 절전", sleepOff: "꺼짐", sleepOn: "아무도 없이 {n}분 지나면", sleepAt: "여기서 누가 플레이하지 않으면 {time}에 절전",
+    },
+    hi: {
+        typing: "स्वाइप टाइपिंग", typingHint: "Steam कीबोर्ड पर ट्रैकपैड से स्वाइप करके लिखें, शब्द सुझाव और ऑटोकरेक्ट के साथ। बंद करने पर Steam का सामान्य कीबोर्ड लौट आता है।",
+        private: "निजी मोड", privateHint: "सीखना, ऑटोकरेक्ट और टाइपिंग लॉग रोक देता है। ट्रैकपैड से Esc दबाए रखकर भी कर सकते हैं।",
+        log: "टाइपिंग लॉग रखें", logHint: "टाइप किए शब्द और स्वाइप रास्ते इस PC पर सहेजता है, सटीकता सुधारने के लिए। कुछ भी कहीं नहीं भेजा जाता।",
+        settings: "कीबोर्ड सेटिंग्स", settingsToast: "सेटिंग्स देखने के लिए कीबोर्ड (STEAM + X) खोलें।", noKeyboard: "कोई कीबोर्ड नहीं खुला। आप कीबोर्ड पर इमोजी कुंजी दबाए भी रख सकते हैं।",
+        forget: "सब भूल जाएँ", forgetConfirm: "सब भूलने के लिए फिर से दबाएँ", forgetting: "टाइपिंग डेटा मिटाया जा रहा है…",
+        forgotOk: "सीखे हुए शब्द, ब्लॉक किए शब्द और टाइपिंग लॉग मिटा दिए गए।", forgotFail: "कुछ डेटा मिटाया नहीं जा सका। Core फिर कोशिश करेगा।",
+        stOn: "Steam कीबोर्ड पर चालू", stOff: "बंद: Steam का सामान्य कीबोर्ड", stLoading: "लोड हो रहा है…", stModules: "इस Steam क्लाइंट पर अभी उपलब्ध नहीं",
+        stStandalone: "VaporType प्लगइन इंस्टॉल है और कीबोर्ड वही संभालता है", stPaused: "रुका हुआ: {error}",
+        english: "स्वाइप, सुझाव और ऑटोकरेक्ट के लिए अंग्रेज़ी QWERTY लेआउट चाहिए।", credit: "VaporType (MIT) पर आधारित। शब्द डेटा: wordfreq, CC BY-SA 4.0।",
+        autos: "ऑटोमेशन", none: "कोई ऑटोमेशन चालू नहीं", edit: "डेस्कटॉप पर Core में बदलें: Gaming Mode > ऑटोमेशन।",
+        t_controller: "जब कोई कंट्रोलर जुड़े", t_wake: "जब Core जागे", t_gameStart: "जब कोई गेम शुरू हो", t_gameStop: "जब कोई गेम खत्म हो", t_streamOn: "जब स्ट्रीम शुरू हो", t_streamOff: "जब स्ट्रीम खत्म हो",
+        a_tv: "TV चालू करें और Core पर जाएँ", a_display: "डिस्प्ले वापस करें", a_sound: "साउंड आउटपुट वापस करें", a_streamStart: "TV को न छेड़ें (स्ट्रीम मोड)", a_streamStop: "TV वापस दें", a_ha: "Home Assistant को बताएँ ({event})",
+        ha: "Home Assistant", haOff: "बंद", haNotConfigured: "सेट नहीं है", haConnected: "{host} से जुड़ा", haConnecting: "{host} से जुड़ रहा है…", haRefused: "{host} ने लॉगिन ठुकराया", haUnreachable: "{host} तक नहीं पहुँच पा रहे",
+        sleep: "स्ट्रीमिंग के बाद स्लीप", sleepOff: "बंद", sleepOn: "यहाँ किसी के न होने पर {n} मिनट बाद", sleepAt: "{time} पर स्लीप, जब तक कोई यहाँ न खेले",
+    },
+    ru: {
+        typing: "Ввод скольжением", typingHint: "Скользите трекпадами по клавиатуре Steam, с подсказками слов и автоисправлением. Выключено — возвращается обычная клавиатура Steam.",
+        private: "Приватный режим", privateHint: "Приостанавливает обучение, автоисправление и журнал ввода. Также можно удерживать Esc трекпадом.",
+        log: "Вести журнал ввода", logHint: "Сохраняет на этом ПК введённые слова с траекториями, чтобы улучшить точность. Ничего не отправляется.",
+        settings: "Настройки клавиатуры", settingsToast: "Откройте клавиатуру (STEAM + X), чтобы увидеть её настройки.", noKeyboard: "Клавиатура не открылась. Можно также удерживать клавишу эмодзи на клавиатуре.",
+        forget: "Забыть всё", forgetConfirm: "Нажмите ещё раз, чтобы забыть всё", forgetting: "Удаление данных ввода…",
+        forgotOk: "Выученные слова, заблокированные слова и журнал ввода удалены.", forgotFail: "Некоторые данные не удалось удалить. Core попробует ещё раз.",
+        stOn: "Включено на клавиатуре Steam", stOff: "Выключено: обычная клавиатура Steam", stLoading: "Загрузка…", stModules: "Пока недоступно в этом клиенте Steam",
+        stStandalone: "Установлен плагин VaporType, он управляет клавиатурой", stPaused: "Приостановлено: {error}",
+        english: "Скольжение, подсказки и автоисправление требуют английской раскладки QWERTY.", credit: "На основе VaporType (MIT). Данные слов: wordfreq, CC BY-SA 4.0.",
+        autos: "Автоматизации", none: "Нет включённых автоматизаций", edit: "Редактируйте в Core на рабочем столе: Gaming Mode > Автоматизации.",
+        t_controller: "Когда подключается контроллер", t_wake: "Когда Core просыпается", t_gameStart: "Когда запускается игра", t_gameStop: "Когда игра заканчивается", t_streamOn: "Когда начинается трансляция", t_streamOff: "Когда трансляция заканчивается",
+        a_tv: "включить телевизор и переключить на Core", a_display: "восстановить экран", a_sound: "восстановить аудиовыход", a_streamStart: "не трогать телевизор (режим трансляции)", a_streamStop: "вернуть телевизор", a_ha: "сообщить Home Assistant ({event})",
+        ha: "Home Assistant", haOff: "Выключено", haNotConfigured: "Не настроено", haConnected: "Подключено к {host}", haConnecting: "Подключение к {host}…", haRefused: "{host} отклонил вход", haUnreachable: "{host} недоступен",
+        sleep: "Сон после трансляции", sleepOff: "Выключено", sleepOn: "Через {n} мин, если здесь никого", sleepAt: "Сон в {time}, если здесь никто не играет",
+    },
+};
+function batchTwoCopy(locale) {
+    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
+    const table = copy[language === "ua" ? "uk" : language] ?? en;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en[key] ?? key });
+}
+function fill(template, values) {
+    return template.replace(/\{(\w+)\}/g, (whole, name) => (name in values ? String(values[name]) : whole));
+}
+function clean(value, limit) {
+    return typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, limit) : "";
+}
+function typingStatus(state, locale, error) {
+    const text = batchTwoCopy(locale);
+    switch (state) {
+        case "on": return text.stOn;
+        case "off": return text.stOff;
+        case "modules": return text.stModules;
+        case "standalone": return text.stStandalone;
+        case "paused": return fill(text.stPaused, { error: clean(error, 80) || "?" });
+        default: return text.stLoading;
+    }
+}
+const TRIGGERS = {
+    "controller-connected": "t_controller", wake: "t_wake", "game-start": "t_gameStart", "game-stop": "t_gameStop", "stream-on": "t_streamOn", "stream-off": "t_streamOff",
+};
+const ACTIONS = {
+    "tv-wake": "a_tv", "display-restore": "a_display", "sound-restore": "a_sound", "stream-start": "a_streamStart", "stream-stop": "a_streamStop", "ha-event": "a_ha",
+};
+// One line per enabled rule ("When a controller connects: wake the TV and switch to Core"). TV-on-wake is shown as a
+// rule too: it is the same TV wake path (CoreAutomations.WakeTvOnResume).
+function automationLines(answer, locale) {
+    const text = batchTwoCopy(locale);
+    const lines = [];
+    let wakeTvShown = false;
+    for (const rule of Array.isArray(answer?.rules) ? answer.rules : []) {
+        if (rule?.enabled !== true || typeof rule.trigger !== "string" || !(rule.trigger in TRIGGERS))
+            continue;
+        const actions = (Array.isArray(rule.actions) ? rule.actions : []).filter((action) => typeof action === "string" && action in ACTIONS);
+        if (!actions.length)
+            continue;
+        if (rule.trigger === "wake" && actions.includes("tv-wake"))
+            wakeTvShown = true;
+        const event = clean(rule.event, 32) || rule.trigger;
+        const what = actions.map(action => fill(text[ACTIONS[action]], { event }));
+        lines.push(`${text[TRIGGERS[rule.trigger]]}: ${what.join(", ")}`);
+        if (lines.length >= 8)
+            break;
+    }
+    if (answer?.tvOnWake === true && !wakeTvShown)
+        lines.unshift(`${text.t_wake}: ${text.a_tv}`);
+    return lines;
+}
+function bridgeLine(answer, locale) {
+    const text = batchTwoCopy(locale);
+    const bridge = answer?.bridge;
+    const host = clean(bridge?.host, 64) || "serverv3";
+    if (bridge?.enabled !== true)
+        return text.haOff;
+    switch (bridge.state) {
+        case "connected": return fill(text.haConnected, { host });
+        case "refused": return fill(text.haRefused, { host });
+        case "unreachable": return fill(text.haUnreachable, { host });
+        case "not-configured": return text.haNotConfigured;
+        default: return fill(text.haConnecting, { host });
+    }
+}
+function sleepLine(answer, locale) {
+    const text = batchTwoCopy(locale);
+    const sleep = answer?.streamSleep;
+    if (sleep?.enabled !== true)
+        return text.sleepOff;
+    const at = typeof sleep.at === "string" ? new Date(sleep.at) : null;
+    if (at && !Number.isNaN(at.getTime())) {
+        let time;
+        try {
+            time = at.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+        }
+        catch {
+            time = at.toISOString().slice(11, 16);
+        }
+        return fill(text.sleepAt, { time });
+    }
+    const minutes = Number(sleep.minutes);
+    return fill(text.sleepOn, { n: Number.isInteger(minutes) && minutes >= 1 && minutes <= 120 ? minutes : 10 });
+}
+
+// Eternal Core batch 2 (B7): swipe typing in Quick Access > Core. The switch is Core's setting (also in the desktop
+// app); private mode, the typing log, the keyboard's own settings and "forget everything" are VaporType's
+// (src/swipeTyping.ts). The keyboard's own settings panel is VaporType's and in English.
+const { PanelSection: PanelSection$2, PanelSectionRow: PanelSectionRow$2, Focusable: Focusable$2, ToggleField: ToggleField$1, ButtonItem: ButtonItem$1, Navigation: Navigation$1 } = CompatUI;
+const { black: BLACK$1, steel: STEEL$1, gunmetal: GUNMETAL$1, white: WHITE$1, crimson: CRIMSON$1, crimsonText: CRIMSON_TEXT, hint: HINT$1 } = CORE;
+let runtime;
+function setSwipeTypingRuntime(value) { runtime = value; }
+const style$1 = `
+.core-typing{background:${BLACK$1};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-typing-row{background:${GUNMETAL$1};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none}
+.core-typing-row.gpfocus,.core-typing-row:focus-visible{outline:2px solid ${CRIMSON$1};outline-offset:-2px}
+.core-typing-title{font-size:13px;color:${WHITE$1};font-weight:600;white-space:nowrap}
+.core-typing-value{font-size:12px;color:${STEEL$1};text-align:right}
+.core-typing-value.paused{color:${CRIMSON_TEXT}}
+.core-typing-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${HINT$1}}
+`;
+function SwipeTypingSection({ locale }) {
+    const text = batchTwoCopy(locale);
+    const [, setTick] = _global_SP_REACT.useState(0);
+    const [confirm, setConfirm] = _global_SP_REACT.useState(false);
+    const [forgetting, setForgetting] = _global_SP_REACT.useState(false);
+    _global_SP_REACT.useEffect(() => {
+        const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
+        return () => window.clearInterval(timer);
+    }, []);
+    _global_SP_REACT.useEffect(() => {
+        if (!confirm)
+            return;
+        const timer = window.setTimeout(() => setConfirm(false), 4000);
+        return () => window.clearTimeout(timer);
+    }, [confirm]);
+    if (!runtime)
+        return null;
+    const typing = runtime;
+    const status = typing.status();
+    const running = typing.running();
+    const forget = async () => {
+        if (forgetting)
+            return;
+        if (!confirm) {
+            setConfirm(true);
+            return;
+        }
+        setConfirm(false);
+        setForgetting(true);
+        const ok = await typing.forgetEverything().catch(() => false);
+        setForgetting(false);
+        toaster.toast({ title: "Core", body: ok ? text.forgotOk : text.forgotFail });
+    };
+    const openSettings = async () => {
+        try {
+            Navigation$1?.CloseSideMenus?.();
+        }
+        catch { /* The menu closes itself on the keyboard. */ }
+        toaster.toast({ title: "Core", body: text.settingsToast });
+        if (!(await typing.openSettingsWhenKeyboardOpens(20000)))
+            toaster.toast({ title: "Core", body: text.noKeyboard });
+    };
+    return (SP_JSX.jsxs(PanelSection$2, { title: text.typing, children: [SP_JSX.jsx("style", { children: style$1 }), SP_JSX.jsx(PanelSectionRow$2, { children: SP_JSX.jsxs(Focusable$2, { className: "core-typing", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$2, { className: "core-typing-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-typing-title", children: text.typing }), SP_JSX.jsx("span", { className: `core-typing-value${status.state === "paused" ? " paused" : ""}`, role: "status", children: typingStatus(status.state, locale, status.error ?? undefined) })] }), SP_JSX.jsx(ToggleField$1, { label: text.typing, description: text.typingHint, bottomSeparator: "none", checked: typing.enabled(), disabled: status.state === "loading" && !typing.enabled(), onChange: (on) => void typing.setEnabled(on) }), running && SP_JSX.jsx(ToggleField$1, { label: text.private, description: text.privateHint, bottomSeparator: "none", checked: typing.settingsValue("privateMode") === true, onChange: (on) => typing.setSetting("privateMode", on) }), running && SP_JSX.jsx(ToggleField$1, { label: text.log, description: text.logHint, bottomSeparator: "none", checked: typing.settingsValue("typingLog") === true, onChange: (on) => typing.setSetting("typingLog", on) }), running && SP_JSX.jsx(ButtonItem$1, { layout: "below", bottomSeparator: "none", onClick: () => void openSettings(), children: text.settings }), SP_JSX.jsx(ButtonItem$1, { layout: "below", bottomSeparator: "none", disabled: forgetting, onClick: () => void forget(), children: forgetting ? text.forgetting : confirm ? text.forgetConfirm : text.forget }), SP_JSX.jsx("div", { className: "core-typing-hint", children: text.english }), SP_JSX.jsx("div", { className: "core-typing-hint", children: text.credit })] }) })] }));
+}
+
+// Eternal Core batch 2 (B17, B8, B13): a read-only summary in Quick Access > Core: the automations that are on, the
+// Home Assistant bridge and sleep after streaming. Editing happens in the desktop app (Gaming Mode > Automations).
+const { PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1, Focusable: Focusable$1 } = CompatUI;
+const { black: BLACK, steel: STEEL, gunmetal: GUNMETAL, white: WHITE, crimson: CRIMSON, hint: HINT } = CORE;
+const style = `
+.core-autos{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-autos-row{background:${GUNMETAL};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none}
+.core-autos-row.gpfocus,.core-autos-row:focus-visible{outline:2px solid ${CRIMSON};outline-offset:-2px}
+.core-autos-title{font-size:13px;color:${WHITE};font-weight:600;white-space:nowrap}
+.core-autos-value{font-size:12px;color:${STEEL};text-align:right}
+.core-autos-rule{padding:0 12px;font-size:12px;line-height:1.45;color:${STEEL}}
+.core-autos-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${HINT}}
+`;
+function AutomationsSection({ locale }) {
+    const text = batchTwoCopy(locale);
+    const [answer, setAnswer] = _global_SP_REACT.useState(undefined);
+    _global_SP_REACT.useEffect(() => {
+        let alive = true;
+        const load = () => {
+            call("core_automations")
+                .then(value => { if (alive)
+                setAnswer(value && Array.isArray(value.rules) ? value : null); })
+                .catch(() => { if (alive)
+                setAnswer(null); });
+        };
+        load();
+        const timer = window.setInterval(load, 15000);
+        return () => { alive = false; window.clearInterval(timer); };
+    }, []);
+    if (!answer)
+        return null;
+    const lines = automationLines(answer, locale);
+    return (SP_JSX.jsxs(PanelSection$1, { title: text.autos, children: [SP_JSX.jsx("style", { children: style }), SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsxs(Focusable$1, { className: "core-autos", "flow-children": "column", children: [(lines.length ? lines : [text.none]).map((line, index) => SP_JSX.jsx("div", { className: "core-autos-rule", children: line }, index)), SP_JSX.jsxs(Focusable$1, { className: "core-autos-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-autos-title", children: text.ha }), SP_JSX.jsx("span", { className: "core-autos-value", role: "status", children: bridgeLine(answer, locale) })] }), SP_JSX.jsxs(Focusable$1, { className: "core-autos-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-autos-title", children: text.sleep }), SP_JSX.jsx("span", { className: "core-autos-value", children: sleepLine(answer, locale) })] }), SP_JSX.jsx("div", { className: "core-autos-hint", children: text.edit })] }) })] }));
+}
+
+// Eternal Core batch 2 (B13, docs/eternal/BATCH-2.md): when Steam last saw controller input on this PC. Sleep after
+// streaming (agent StreamPower.cs) cancels its timer when someone picks up a controller here; Windows' own idle time
+// does not see a controller in Big Picture, Steam does. The heartbeat carries "seconds ago" to the agent.
+// Self-contained on purpose: tests/coreBatchTwo.test.mjs loads this file alone.
+function installLocalInputWatch(deps) {
+    let last;
+    const registrations = [];
+    const note = () => { last = deps.now(); };
+    try {
+        const input = deps.input();
+        // Button messages only: analog ones (sticks, gyro, a resting thumb on a trackpad) arrive constantly and would keep
+        // the PC awake forever.
+        if (typeof input?.RegisterForControllerInputMessages === "function")
+            registrations.push(input.RegisterForControllerInputMessages(note));
+    }
+    catch { /* No Steam input API: the agent relies on Windows' idle time alone. */ }
+    return {
+        secondsAgo: () => {
+            if (last === undefined)
+                return undefined;
+            const seconds = Math.floor((deps.now() - last) / 1000);
+            return seconds >= 0 && seconds <= 86400 ? seconds : undefined;
+        },
+        stop: () => { for (const registration of registrations) {
+            try {
+                registration?.unregister?.();
+            }
+            catch { /* Already gone. */ }
+        } },
+    };
+}
+
+// Eternal Core batch 2: where Decky serves the swipe typing keyboard files (dist/keyboard/ beside dist/index.js), the
+// way VaporType finds them. Its own module because import.meta exists only in the ES-module bundle: the tests that
+// load src/index.tsx as CommonJS replace this module.
+function keyboardBase() {
+    return new URL("keyboard/", import.meta.url);
 }
 
 const { useState, useEffect, useMemo } = _global_SP_REACT;
@@ -63854,7 +64766,7 @@ function Content({ origin = "decky" }) {
         return () => { alive = false; stopStatus(); };
     }, []);
     const gameAppId = steamAppId(window.SteamUIStore?.MainRunningAppID ?? CompatUI.Router?.MainRunningAppID);
-    return (SP_JSX.jsx(SP_JSX.Fragment, { children: SP_JSX.jsx(ControlCenter, { locale: locale, origin: origin, homeTitle: local.controlCentre, gameAppId: gameAppId, gamingMode: status?.currentMode === "Gaming", downloads: SP_JSX.jsx(StoreDownloadsQam, { locale: locale }), frameTiming: origin === "qam" && status && gameAppId !== 0 ? SP_JSX.jsx(GameFrameTiming, { appId: gameAppId, locale: locale }, gameAppId) : null, session: SP_JSX.jsxs(SP_JSX.Fragment, { children: [status && SP_JSX.jsx(VoiceSection, { locale: locale }), status && SP_JSX.jsx(StreamSection, { locale: locale }), status && SP_JSX.jsx(UpdateNightCard, { locale: locale }), status && SP_JSX.jsx(SteamUpdateCard, { locale: locale }), status && SP_JSX.jsx(HealthSection, { locale: locale }), !status && SP_JSX.jsx(PanelSection, { children: SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsxs("div", { role: "status", style: { margin: "8px 0 16px", padding: "16px", borderRadius: 10,
+    return (SP_JSX.jsx(SP_JSX.Fragment, { children: SP_JSX.jsx(ControlCenter, { locale: locale, origin: origin, homeTitle: local.controlCentre, gameAppId: gameAppId, gamingMode: status?.currentMode === "Gaming", downloads: SP_JSX.jsx(StoreDownloadsQam, { locale: locale }), frameTiming: origin === "qam" && status && gameAppId !== 0 ? SP_JSX.jsx(GameFrameTiming, { appId: gameAppId, locale: locale }, gameAppId) : null, session: SP_JSX.jsxs(SP_JSX.Fragment, { children: [status && SP_JSX.jsx(VoiceSection, { locale: locale }), status && SP_JSX.jsx(StreamSection, { locale: locale }), status && SP_JSX.jsx(AutomationsSection, { locale: locale }), status && SP_JSX.jsx(SwipeTypingSection, { locale: locale }), status && SP_JSX.jsx(UpdateNightCard, { locale: locale }), status && SP_JSX.jsx(SteamUpdateCard, { locale: locale }), status && SP_JSX.jsx(HealthSection, { locale: locale }), !status && SP_JSX.jsx(PanelSection, { children: SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsxs("div", { role: "status", style: { margin: "8px 0 16px", padding: "16px", borderRadius: 10,
                                     background: CORE.gunmetal, border: `1px solid ${CORE.gunmetalRaised}`, borderLeft: `3px solid ${CORE.warning}` }, children: [SP_JSX.jsx("div", { style: { fontSize: 16, fontWeight: 650, marginBottom: 8 }, children: optional.Title }), SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, opacity: .8 }, children: optional.AgentRequired })] }) }) }), SP_JSX.jsxs(PanelSection, { children: [SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsx(ButtonItem, { disabled: !dashboardEnabled || !status, bottomSeparator: "none", layout: "below", onClick: () => openDashboard(), children: "Core Dashboard" }) }), SP_JSX.jsxs(PanelSectionRow, { children: [SP_JSX.jsx("style", { children: `
             @keyframes phShortcutPulse { 0%,100% { opacity:.62; transform:scale(.96); } 50% { opacity:1; transform:scale(1); } }
             @keyframes phShortcutTravel { 0%,100% { transform:translateX(-3px); opacity:.35; } 50% { transform:translateX(3px); opacity:1; } }
@@ -63959,8 +64871,17 @@ var index = definePlugin(() => {
     // Mark III: prove to the agent that Decky's UI loaded, and keep a Core Repair tile in the library.
     // Batch 1: the beat's answer may carry a bedtime reminder, shown once with Steam's toaster (it appears over games).
     const seenToasts = new Set();
+    // Batch 2 (B13): when Steam last saw controller input here; the beat carries it for sleep after streaming.
+    let localInput;
+    const stopLocalInput = installOptionalHook("Local input watch", () => {
+        localInput = installLocalInputWatch({ input: () => window.SteamClient?.Input, now: () => Date.now() });
+        return localInput.stop;
+    });
     const stopCoreHeartbeat = installOptionalHook("Core heartbeat", () => installCoreHeartbeat({
-        beat: () => call("core_heartbeat"),
+        beat: () => {
+            const ago = localInput?.secondsAgo();
+            return ago === undefined ? call("core_heartbeat") : call("core_heartbeat", ago);
+        },
         schedule: (callback, delay) => window.setTimeout(callback, delay),
         cancel: timer => window.clearTimeout(timer),
         onAnswer: answer => {
@@ -64009,6 +64930,36 @@ var index = definePlugin(() => {
         writeSweep: at => window.localStorage.setItem("core.completed.sweep", String(at)),
         report: (appId, outcome) => { void call("core_completed_report", appId, outcome).catch(() => undefined); },
     }));
+    // Batch 2 (B7): swipe typing on Steam's keyboard, adapted from VaporType (MIT; src/swipeTyping.ts). Its keyboard files
+    // ship in dist/keyboard/; Decky 3/4 lookups through steamModules.ts.
+    const stopSwipeTyping = installOptionalHook("Swipe typing", () => {
+        const typing = createSwipeTyping({
+            load: () => call("core_typing_load"),
+            setEnabled: on => call("core_typing_set_enabled", on),
+            saveWords: (payload, epoch) => call("core_typing_save_words", payload, epoch),
+            appendLog: (batch, epoch) => call("core_typing_append_log", batch, epoch),
+            requests: (payload, session) => call("core_typing_requests", payload, session),
+            forget: () => call("core_typing_forget"),
+            fetchText: async (file) => {
+                const response = await fetch(new URL(file, keyboardBase()).href, { cache: "no-store" });
+                if (!response.ok)
+                    throw new Error(`${file}: HTTP ${response.status}`);
+                return response.text();
+            },
+            evaluate: source => (0, eval)(source),
+            globals: window,
+            clientKind: () => steamClientKind(),
+            standalone: () => vaporTypeInstalled(window.DeckyPluginLoader?.deckyState?.publicState?.()),
+            lookups: keyboardLookups(CompatUI, { findExport, findClassModule }),
+            schedule: (callback, delay) => window.setTimeout(callback, delay),
+            cancel: timer => window.clearTimeout(timer),
+            now: () => Date.now(),
+            removeStoredWords: () => window.localStorage?.removeItem("oskSwipeUserWords"),
+        });
+        setSwipeTypingRuntime(typing);
+        void typing.start();
+        return () => { setSwipeTypingRuntime(undefined); typing.shutdown(); };
+    });
     // Stream mode: tell the agent when Steam streams from this PC (Remote Play, Steam Link, a Steam Frame).
     const stopSteamStreamWatch = installOptionalHook("Core stream watch", () => installSteamStreamWatch({
         remotePlay: () => window.SteamClient?.RemotePlay,
@@ -64094,7 +65045,7 @@ var index = definePlugin(() => {
             const cleanups = [
                 stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
                 stopUpdateNotice,
-                stopCoreHeartbeat, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
+                stopCoreHeartbeat, stopLocalInput, stopSwipeTyping, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
                 stopDeckyIpcRecovery,
                 uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
                 uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,

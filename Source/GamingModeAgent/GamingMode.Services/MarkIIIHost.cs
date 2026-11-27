@@ -98,6 +98,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 		catch (Exception error) { _logger.Error("Voice: could not start; the microphone mute and party button are unavailable.", error); }
 		try { StartStream(); }
 		catch (Exception error) { _logger.Error("Stream mode: could not start; the TV is handled as usual until the next check.", error); }
+		try { StartBatchTwo(stopping); }
+		catch (Exception error) { _logger.Error("Batch 2: could not start; Home Assistant, automations and sleep after streaming are off until the next start.", error); }
 		try { StartConsole(stopping); }
 		catch (Exception error) { _logger.Error("Console guards: could not start; their Health rows still read, launcher pop-ups are left alone.", error); }
 		_ = Task.Run(() => LoopAsync(stopping));
@@ -143,6 +145,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 			catch (Exception error) { _logger.Error("Voice: microphone check failed this round.", error); }
 			try { CheckStream(); }
 			catch (Exception error) { _logger.Error("Stream mode: check failed this round.", error); }
+			try { await CheckBatchTwoAsync().ConfigureAwait(false); }
+			catch (Exception error) { _logger.Error("Batch 2: check failed this round.", error); }
 			if (++tick % 12 != 0) continue; // once a minute
 			try { await CheckSteamHoldAsync().ConfigureAwait(false); }
 			catch (Exception error) { _logger.Error("Mark III: Steam update hold check failed this round.", error); }
@@ -849,8 +853,13 @@ internal sealed partial class MarkIIIHost : IDisposable
 		{
 			if (e.Mode == PowerModes.Suspend)
 			{
-				try { RememberStreamAtSleep(); } catch (Exception error) { _logger.Error("Stream mode: could not note the stream before sleep.", error); }
-				TurnTvOffIfShowingCore("sleep", TimeSpan.FromMilliseconds(1800));
+				bool forStream = _sleepingForStream;
+				if (!forStream) { try { RememberStreamAtSleep(); } catch (Exception error) { _logger.Error("Stream mode: could not note the stream before sleep.", error); } }
+				// Batch 2: Home Assistant hears "asleep" (bounded, the sleep does not wait for the broker).
+				try { AnnounceSleepAsync().Wait(TimeSpan.FromMilliseconds(1200)); } catch (Exception error) { _logger.Error("Home Assistant: could not announce the sleep.", error); }
+				// Sleep after streaming: the TV belongs to whoever watches it; leave it as it is.
+				if (forStream) _logger.Info("TV on sleep: left alone (sleep after streaming).");
+				else TurnTvOffIfShowingCore("sleep", TimeSpan.FromMilliseconds(1800));
 			}
 			else if (e.Mode == PowerModes.Resume) OnResume();
 		}
@@ -860,6 +869,7 @@ internal sealed partial class MarkIIIHost : IDisposable
 	private void OnSessionEnding(object? sender, SessionEndingEventArgs e)
 	{
 		try { RememberStreamAtSleep(); } catch (Exception error) { _logger.Error("Stream mode: could not note the stream before shutdown.", error); }
+		try { AnnounceSleepAsync().Wait(TimeSpan.FromMilliseconds(1200)); } catch (Exception error) { _logger.Error("Home Assistant: could not announce the shutdown.", error); }
 		try { TurnTvOffIfShowingCore(e.Reason == SessionEndReasons.SystemShutdown ? "shutdown" : "sign-out", TimeSpan.FromMilliseconds(2500)); }
 		catch (Exception error) { _logger.Error("Mark III shutdown handling failed.", error); }
 	}
@@ -887,13 +897,18 @@ internal sealed partial class MarkIIIHost : IDisposable
 		_logger.Info($"Mark III: resumed from sleep (Gaming Mode: {gaming}).");
 		try { ReconcileMic("resume"); }
 		catch (Exception error) { _logger.Error("Voice: microphone check after resume failed.", error); }
+		try { OnResumeBatchTwo(); }
+		catch (Exception error) { _logger.Error("Batch 2: resume handling failed.", error); }
 		bool streamedAtSleep;
 		lock (_streamSync) streamedAtSleep = _streamSettings.StreamingAtSleep;
 		if (!gaming) { ClearStreamAtSleep(); return; }
 		StreamState streamNow = CheckStream();
 		NoteWakeTvOutcome(null);
 		TvSettings tv = config.Gaming.Tv ?? new TvSettings();
-		Task tvReady = tv.Enabled && tv.TurnOnWithCore
+		// Batch 2: a "wake -> wake TV" automation turns on this same path (one wake, one cooldown; CoreAutomations.cs).
+		bool wakeTv = tv.Enabled && CoreAutomations.WakeTvOnResume(tv.TurnOnWithCore, Rules());
+		if (wakeTv) NoteTvWake();
+		Task tvReady = wakeTv
 			? Task.Run(async () =>
 			{
 				// Stream mode: a stream running now, or one that ended with the sleep and comes back within
@@ -910,7 +925,7 @@ internal sealed partial class MarkIIIHost : IDisposable
 		try { StartWakeCheck(tvReady); }
 		catch (Exception error) { _logger.Error("Console guards: wake check could not start.", error); }
 		// No TV wake to make the stream decision: the note from before the sleep has done its job.
-		if (!(tv.Enabled && tv.TurnOnWithCore)) ClearStreamAtSleep();
+		if (!wakeTv) ClearStreamAtSleep();
 		var decision = BootSequencePolicy.Decide(BootSequenceTrigger.Wake, config.Gaming.Splash.BootSequenceEnabled, config.Gaming.Splash.BootSoundEnabled,
 			config.Gaming.Splash.Enabled, gaming, RunningAppId() != 0, _antiCheat.Engaged);
 		if (decision.Play && (streamNow.Active || streamedAtSleep))
@@ -963,6 +978,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 		{
 			if (!Local(context)) return Results.StatusCode(403);
 			Heartbeat();
+			// Batch 2: seconds since Core's plugin last saw Steam controller input (sleep after streaming).
+			NoteSteamInput(context.Request.Query["inputAgo"].ToString());
 			// Batch 1: a waiting wind-down reminder rides on the answer once (shown with Steam's toaster, over games).
 			return Results.Json(new { ok = true, toast = TakeToast() });
 		}));
@@ -1035,5 +1052,6 @@ internal sealed partial class MarkIIIHost : IDisposable
 		MapStream(app);
 		MapConsole(app);
 		MapBatch(app);
+		MapBatchTwo(app);
 	}
 }

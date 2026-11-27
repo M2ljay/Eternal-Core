@@ -197,8 +197,8 @@ internal sealed partial class MarkIIIHost
 
 	// ---------- wind-down ----------
 
-	// Hook for Home Assistant's sleep mode (input_boolean.sleep_mode): true skips the reminders. Not wired yet.
-	private static bool? SleepModeActive() => null;
+	// Home Assistant's sleep mode (input_boolean.sleep_mode): true skips the reminders. Batch 2 wires it
+	// (SleepModeActive in MarkIIIHost.Batch2.cs, through the MQTT bridge).
 
 	private void CheckWindDown()
 	{
@@ -230,8 +230,8 @@ internal sealed partial class MarkIIIHost
 		{
 			if (_pendingToast is not { } toast) return null;
 			_pendingToast = null;
-			if (DateTimeOffset.Now > toast.Expires) { _logger.Info($"Wind-down: reminder {toast.Id} expired before Core's plugin asked for it (Decky not loaded?)."); return null; }
-			_logger.Info($"Wind-down: reminder {toast.Id} handed to Core's plugin.");
+			if (DateTimeOffset.Now > toast.Expires) { _logger.Info($"Core toast {toast.Id} expired before Core's plugin asked for it (Decky not loaded?)."); return null; }
+			_logger.Info($"Core toast {toast.Id} handed to Core's plugin.");
 			return new { id = toast.Id, title = "Core", body = toast.Body, quiet = toast.Quiet };
 		}
 	}

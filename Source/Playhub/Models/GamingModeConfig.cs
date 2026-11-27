@@ -82,6 +82,16 @@ public sealed class GamingOptions
     public string WindDownMinutes { get; set; } = "30, 10";
     public bool AutoCompletedEnabled { get; set; } = true;
     public bool AutoCompletedCreate { get; set; }
+    // Batch 2 (docs/eternal/BATCH-2.md): Home Assistant over MQTT (password DPAPI-sealed in home-assistant-secret.json,
+    // never here), automations (null = the defaults), sleep after streaming, swipe typing on Steam's keyboard.
+    public bool HomeAssistantEnabled { get; set; }
+    public string HomeAssistantHost { get; set; } = "serverv3";
+    public int HomeAssistantPort { get; set; } = 1883;
+    public string? HomeAssistantUser { get; set; }
+    public List<Playhub.Shared.CoreAutomationRule>? Automations { get; set; }
+    public bool StreamSleepEnabled { get; set; } = true;
+    public int StreamSleepMinutes { get; set; } = 10;
+    public bool SwipeTypingEnabled { get; set; } = true;
     public List<StartupAppConfig> CustomStartupApps { get; set; } = new();
 
     // Qui finiscono le opzioni che vivono solo lato agente - fra cui le app

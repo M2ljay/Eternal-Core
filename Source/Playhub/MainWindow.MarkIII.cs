@@ -111,6 +111,7 @@ public sealed partial class MainWindow
         gaming.AutoCompletedEnabled = GetToggle("autoCompleted");
         gaming.AutoCompletedCreate = GetToggle("autoCompletedCreate");
         if (int.TryParse(GetComboKey(_steamSoakCombo), NumberStyles.None, CultureInfo.InvariantCulture, out int soak)) gaming.SteamUpdateSoakDays = soak;
+        ReadBatchTwoIntoConfig();
     }
 
     private void WriteMarkIIIIntoControls()
@@ -142,6 +143,7 @@ public sealed partial class MainWindow
         _tvMacBox.Text = gaming.Tv.MacAddress ?? "";
         SelectComboKey(_tvInputCombo, string.IsNullOrWhiteSpace(gaming.Tv.CoreInput) ? "HDMI_2" : gaming.Tv.CoreInput);
         _ = RefreshMarkIIIStatusAsync();
+        WriteBatchTwoIntoControls();
     }
 
     private async Task FindTvAsync()

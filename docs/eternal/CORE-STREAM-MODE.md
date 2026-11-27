@@ -30,6 +30,12 @@ not even open a connection to the TV to check it.
 | Moonlight / Artemis through **Sunshine** | Core reads Sunshine's log (`%ProgramFiles%\Sunshine\config\sunshine.log`, Sunshine's documented default folder): `CLIENT CONNECTED` / `CLIENT DISCONNECTED`, and only while `sunshine.exe` runs (a crash writes no disconnect line) | **Log lines verified** in published Sunshine logs. The file is read-only and shared; Core reads only what was added since the last check. A session that starts but never connects does not count |
 | Moonlight / Artemis through **Apollo** | The same lines, plus Apollo's `Display mode for client [<name>] requested` (the device name) and `Virtual Display created at …` / `Virtual Display removed successfully` (Apollo's virtual display), from `%ProgramFiles%\Apollo\config\sunshine.log` | **Log lines verified** in a published Apollo log (2026). The folder is **inferred** (Apollo is a Sunshine fork with the same layout): if yours differs, set `hostLog` (below) |
 
+**Vibepollo** (an Apollo fork, [Nonary/Vibepollo](https://github.com/Nonary/Vibepollo)) installs into Apollo's folder and
+writes one log per run, `%ProgramFiles%\Apollo\config\logs\sunshine-<date>-<time>.log`, with the same `CLIENT CONNECTED` /
+`CLIENT DISCONNECTED` lines; Core reads the newest one and shows it as Apollo. Its log rolls over in place every ~2 MB
+(the full piece is renamed `.log.N`), so for these files Core keeps the session state across a shorter file. Verified in
+Vibepollo's source (batch 2, [BATCH-2.md](BATCH-2.md)).
+
 Not used, on purpose:
 
 - **Sunshine's and Apollo's web API** (`https://localhost:47990/api/...`) needs the web UI's user name and password.

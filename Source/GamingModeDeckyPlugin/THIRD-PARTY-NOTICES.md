@@ -133,3 +133,14 @@ GPL-3.0-or-later; the license is included as quick_settings/licenses/GPD-GPL-3.0
 Adapter source is distributed as quick_settings/gpd_v1_controller.py and
 quick_settings/gpd_v1_windows_hid.py. No HandheldCompanion code, kernel driver,
 HIDAPI binary or GPD vendor executable is distributed by this integration.
+
+## VaporType (swipe typing)
+
+Swipe typing on Steam's keyboard (Quick Access > Core > Swipe typing) is adapted from VaporType 0.3.2
+(https://github.com/dmitrii-galantsev/VaporType, commit 53b499c6351d821ab2a3cd3f857387540e70fb4c).
+Copyright (c) 2026 VaporType contributors. MIT License; the full license, with its word-data notices, is
+included as dist/keyboard/LICENSE. The keyboard runtime under dist/keyboard/ is VaporType's, with one hook added
+to patch.js (dist/keyboard/CORE-CHANGES.md); src/swipeTyping.ts is adapted from its loader; its self-update
+is not included. Word data (dist/keyboard/swipe/words.js and lm.js) is CC BY-SA 4.0 (wordfreq data by Robyn
+Speer, with the SCOWL notices); attribution and sources in dist/keyboard/swipe/DATA-LICENSES.md and
+dist/keyboard/swipe/SCOWL-COPYRIGHT.txt. The data was not changed by Core.

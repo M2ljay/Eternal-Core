@@ -46,13 +46,18 @@ import { installLivePerformance } from "./quickSettings/livePerformanceRuntime";
 import { installPlayhubUpdateNotice, updateNoticeBody, type UpdateNotice } from "./playhubUpdateNotice";
 import { installCoreHeartbeat, ensureCoreRepairTile, heartbeatToast, type CoreRepairShortcut } from "./coreHealth";
 import { installAutoCompleted, isComplete, progressFrom, recentGames, settingsFrom, type CompletedOutcome, type CompletedSettings } from "./autoCompleted";
-import { findModule } from "./steamModules";
+import { findModule, findExport, findClassModule, steamClientKind } from "./steamModules";
 import { UpdateNightCard } from "./UpdateNightCard";
 import { SteamUpdateCard } from "./SteamUpdateCard";
 import { HealthSection } from "./HealthSection";
 import { VoiceSection } from "./VoiceSection";
 import { StreamSection } from "./StreamSection";
 import { installSteamStreamWatch } from "./streamMode";
+import { createSwipeTyping, keyboardLookups, vaporTypeInstalled, type TypingBackendState } from "./swipeTyping";
+import { SwipeTypingSection, setSwipeTypingRuntime } from "./SwipeTypingSection";
+import { AutomationsSection } from "./AutomationsSection";
+import { installLocalInputWatch } from "./localInput";
+import { keyboardBase } from "./keyboardBase";
 
 const { useState, useEffect, useMemo } = React;
 let hapticSettingsWrite = Promise.resolve();
@@ -971,6 +976,8 @@ function Content({ origin = "decky" }: { origin?: "qam" | "decky" }) {
       frameTiming={origin === "qam" && status && gameAppId !== 0 ? <GameFrameTiming key={gameAppId} appId={gameAppId} locale={locale} /> : null} session={<>
       {status && <VoiceSection locale={locale} />}
       {status && <StreamSection locale={locale} />}
+      {status && <AutomationsSection locale={locale} />}
+      {status && <SwipeTypingSection locale={locale} />}
       {status && <UpdateNightCard locale={locale} />}
       {status && <SteamUpdateCard locale={locale} />}
       {status && <HealthSection locale={locale} />}
@@ -1161,8 +1168,17 @@ export default definePlugin(() => {
   // Mark III: prove to the agent that Decky's UI loaded, and keep a Core Repair tile in the library.
   // Batch 1: the beat's answer may carry a bedtime reminder, shown once with Steam's toaster (it appears over games).
   const seenToasts = new Set<string>();
+  // Batch 2 (B13): when Steam last saw controller input here; the beat carries it for sleep after streaming.
+  let localInput: ReturnType<typeof installLocalInputWatch> | undefined;
+  const stopLocalInput = installOptionalHook("Local input watch", () => {
+    localInput = installLocalInputWatch({ input: () => (window as any).SteamClient?.Input, now: () => Date.now() });
+    return localInput.stop;
+  });
   const stopCoreHeartbeat = installOptionalHook("Core heartbeat", () => installCoreHeartbeat({
-    beat: () => controlCall<[], unknown>("core_heartbeat"),
+    beat: () => {
+      const ago = localInput?.secondsAgo();
+      return ago === undefined ? controlCall<[], unknown>("core_heartbeat") : controlCall<[number], unknown>("core_heartbeat", ago);
+    },
     schedule: (callback, delay) => window.setTimeout(callback, delay),
     cancel: timer => window.clearTimeout(timer as number),
     onAnswer: answer => {
@@ -1207,6 +1223,35 @@ export default definePlugin(() => {
     writeSweep: at => window.localStorage.setItem("core.completed.sweep", String(at)),
     report: (appId: number, outcome: CompletedOutcome) => { void controlCall<[number, string], unknown>("core_completed_report", appId, outcome).catch(() => undefined); },
   }));
+  // Batch 2 (B7): swipe typing on Steam's keyboard, adapted from VaporType (MIT; src/swipeTyping.ts). Its keyboard files
+  // ship in dist/keyboard/; Decky 3/4 lookups through steamModules.ts.
+  const stopSwipeTyping = installOptionalHook("Swipe typing", () => {
+    const typing = createSwipeTyping({
+      load: () => controlCall<[], TypingBackendState>("core_typing_load"),
+      setEnabled: on => controlCall<[boolean], { enabled?: unknown }>("core_typing_set_enabled", on),
+      saveWords: (payload, epoch) => controlCall<[object, number], { saved?: boolean; rev?: number | null; epoch?: number }>("core_typing_save_words", payload, epoch),
+      appendLog: (batch, epoch) => controlCall<[{ lines: string[] }, number], { saved?: boolean; epoch?: number }>("core_typing_append_log", batch, epoch),
+      requests: (payload, session) => controlCall<[string, string], { epoch?: number; rev?: number | null; ok?: boolean }>("core_typing_requests", payload, session),
+      forget: () => controlCall<[], { epoch?: number; ok?: boolean }>("core_typing_forget"),
+      fetchText: async file => {
+        const response = await fetch(new URL(file, keyboardBase()).href, { cache: "no-store" });
+        if (!response.ok) throw new Error(`${file}: HTTP ${response.status}`);
+        return response.text();
+      },
+      evaluate: source => (0, eval)(source),
+      globals: window as any,
+      clientKind: () => steamClientKind(),
+      standalone: () => vaporTypeInstalled((window as any).DeckyPluginLoader?.deckyState?.publicState?.()),
+      lookups: keyboardLookups(DFL, { findExport, findClassModule }),
+      schedule: (callback, delay) => window.setTimeout(callback, delay),
+      cancel: timer => window.clearTimeout(timer as number),
+      now: () => Date.now(),
+      removeStoredWords: () => window.localStorage?.removeItem("oskSwipeUserWords"),
+    });
+    setSwipeTypingRuntime(typing);
+    void typing.start();
+    return () => { setSwipeTypingRuntime(undefined); typing.shutdown(); };
+  });
   // Stream mode: tell the agent when Steam streams from this PC (Remote Play, Steam Link, a Steam Frame).
   const stopSteamStreamWatch = installOptionalHook("Core stream watch", () => installSteamStreamWatch({
     remotePlay: () => (window as any).SteamClient?.RemotePlay,
@@ -1291,7 +1336,7 @@ export default definePlugin(() => {
       const cleanups = [
         stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
         stopUpdateNotice,
-        stopCoreHeartbeat, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
+        stopCoreHeartbeat, stopLocalInput, stopSwipeTyping, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
         stopDeckyIpcRecovery,
         uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
         uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,
