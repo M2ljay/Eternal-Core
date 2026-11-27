@@ -12,17 +12,18 @@ kept for reference) because:
   hints, Jarvis's orb and tab.
 
 First shipped in **3.3.1** (Mark III). The Gaming Mode agent's file version rose with it, so Core re-copies its Decky
-plugin on the next start.
+plugin on the next start. **3.3.3** adds the fixes from the first TV pass (numbered as on the TV list, below) and phase 2
+(Home and the Library).
 
 ## Phases
 
 | Phase | Scope | Status |
 | ----- | ----- | ------ |
-| 1 | Global chrome (top bar, button-hint bar), the Steam menu, Quick Access, context menus, controller-only button hints, Steam menu entries (Awesome Mix in, Digital stores moved), Jarvis's Quick Access tab, presence orb and tap/hold combo | This release |
-| 2 | Home (see "Phase 2 plan" below) | Planned |
-| 3 | The game page and the Library | Planned |
+| 1 | Global chrome (top bar, button-hint bar), the Steam menu, Quick Access, context menus, controller-only button hints, Steam menu entries (Awesome Mix in, Digital stores moved), Jarvis's Quick Access tab, presence orb and tap/hold combo | 3.3.1; TV fixes in 3.3.3 |
+| 2 | Home (Jarvis brief, Consoles, Club, On this day) and the Library (tab icons and tones, collection tiles, black grid) | 3.3.3 |
+| 3 | The game page (and The Collector's ROM pages under the same design) | Planned (see "Phase 3 notes") |
 
-Steam's grey-blue page backgrounds (Home, game page, Library, Settings) are untouched in phase 1.
+Steam's grey-blue backgrounds stay on the game page and in Settings.
 
 ## Design rules
 
@@ -33,6 +34,11 @@ Core palette (`src/corePalette.ts`, `docs/eternal/brand/PALETTE.md`):
   `#2A2F36`, crimson as text `#EA5A68`, hint grey `#9AA4AE`, status green `#6FA37F` and amber `#C98B4A` (black text on
   those fills).
 - No gold, no haze or nebula, no Steam blue, no grey-blue gradients. Glass only over game art.
+- **Corners** (the user's choice, 3.3.3): square (0 px) for the full-height side panels (Steam menu, Quick Access), the
+  top bar, the footer and every focus or selection highlight, the crimson bar included. One token,
+  `--core-radius-float: 10px` (set on `body` by the stylesheet; `CORE_RADIUS_FLOAT` in `coreUiStyles.ts`), for floating
+  things only: context menus and submenus, dialogs (`.GenericConfirmDialog`), modals, toasts and cards (collection
+  tiles, Core Home's tiles). Capsules and art keep Steam's own radius; a focus ring around a capsule follows the art.
 - **Focus** is a gunmetal fill plus a crimson ring, underline or left bar, with no glow. The Starfield screensaver's
   corner flash and the Jarvis orb's slow pulse (opacity only) are the only exceptions.
 - **Black means starfield.** Every AMOLED-black surface Core UI paints gets the Core Starfield behind its content.
@@ -46,25 +52,69 @@ Core palette (`src/corePalette.ts`, `docs/eternal/brand/PALETTE.md`):
 | ---- | ------ | ----- |
 | Top bar | Clear (black or the game art shows through); opaque state black with stars | Home, Library (48px bar, 32px inset) |
 | Button-hint bar | Clear; opaque state black with stars; no grey strip | Home |
-| Steam menu | Black panel with the Starfield, the Core wordmark above Home, one 24px left inset for every row, fixed 32px icon cells and 16px labels in steel; focused row gunmetal with a 3px crimson **left bar**; Home's active marker crimson; the "MENU" footer black | Context (48px rows, inset, 16px labels) |
-| Quick Access | Black panel with the Starfield behind the tab rail and the content; flat gunmetal title strip (no gradient bars); selected tab gunmetal (Core's crimson bar stays); black footer | Context, Library (tabs) |
+| Steam menu | Black panel with the Starfield, Core's ring mark alone (44px, top left, in its own 80px band, 3.3.3), one 24px left inset for every row, fixed 32px icon cells and 16px labels in steel; focused row gunmetal with a 3px crimson **left bar**; Home's active marker crimson; the "MENU" footer black | Context (48px rows, inset, 16px labels) |
+| Quick Access | Black panel with the Starfield behind the tab rail and the content; the title strip, tab rail, plugin panels and any large opaque layer clear over it (3.3.3); no logo (Core's tab title is the plain name); selected tab gunmetal (Core's crimson bar stays); black footer; Core's logos for the Eternal plugins on the rail | Context, Library (tabs) |
 | Plugin content in Quick Access | Steam's `DialogButton`s and dropdowns gunmetal; focused: raised gunmetal with a 2px crimson ring (Discord's grey-blue dropdown becomes neutral) | Strip (buttons) |
-| Context menus and submenus (a game's Options / "…", Manage, menus from the Steam menu and Quick Access) | Black panel with the Starfield, 1px gunmetal edge, 10px corners, 8px top and bottom; 48px rows, 22px inset, 16px steel text, icons aligned with a 12px gap; 13px hint-grey header; hairline gunmetal separators; focused item gunmetal with the crimson left bar; an open submenu's item keeps it; disabled items hint grey; danger items (Steam's *Destructive*: Uninstall, Remove) crimson text `#EA5A68` | Context |
+| Context menus and submenus (a game's Options / "…", Manage, menus from the Steam menu and Quick Access) | Black panel with the Starfield, 1px gunmetal edge, the float corner token (10px), 8px top and bottom; 48px rows, 22px inset, 16px steel text, icons aligned with a 12px gap; 13px hint-grey header; hairline gunmetal separators; focused item gunmetal with the crimson left bar; an open submenu's item keeps it; disabled items hint grey; danger items (Steam's *Destructive*: Uninstall, Remove) crimson text `#EA5A68` | Context |
 | Full height | The Steam menu and Quick Access run from the very top of the screen to the very bottom (see below) | Main |
 
-### Full height
+### Full height (TV item 9, 3.3.3)
 
-Steam places both panels between the top bar and the button hints. Core UI does not move or resize the panel (that
-would shift focus and break its scrolling). Instead the panel's Starfield canvas, which is black, reaches past the
-panel: Core UI measures the gap above and below the panel each second (`getBoundingClientRect`, at most a quarter of
-the screen each way) and extends the canvas by that much (`--core-ui-extend-top` / `--core-ui-extend-bottom` on the
-canvas only). The top bar's clock or icons and the footer hints stay readable on top of the black and stars. Works the
-same at 1080p and 4K: the numbers are CSS pixels, and the canvas draws at one device pixel per CSS pixel (stars are
-slightly softer at 4K, by design, to keep it cheap).
+The panels themselves now span the top edge of the screen to the bottom one (`src/coreFullHeight.ts`). Steam places
+the Steam menu and Quick Access between the top bar and the button hints, with a top offset, a max height or a padded
+wrapper (Decky's Quick Access wrapper among them; it differs between clients). Rather than guess which, Core UI measures
+the panel once a second and stretches it by what is missing, without moving its content:
 
-**Needs the TV:** if Steam clips the panel (`overflow: hidden` on an ancestor), the extension is cut off and the gaps
-stay as Steam draws them, now black rather than grey (the top bar and footer are clear). That would mean Steam's menu
-container needs its own rule; note what is seen.
+    margin-top    -= gap above     padding-top    += gap above
+    margin-bottom -= gap below     padding-bottom += gap below
+    height         = its height + both gaps (border-box), max-height none, min-height 0
+
+So the black box and its stars reach both edges while rows, focus and scroll position stay exactly where Steam put
+them; the top bar's clock and icons and the footer's hints stay readable on top. Then it measures again: anything but
+edge to edge (a scrolling ancestor, a flex parent that shrinks it back) undoes every change. An ancestor that only clips
+(overflow hidden, not scrolling, e.g. Decky's wrapper) is opened vertically. After three failed tries the panel keeps
+Steam's layout and the older fallback stays: the Starfield canvas reaches past the panel (`--core-ui-extend-top` /
+`--core-ui-extend-bottom`, at most a quarter of the screen each way). Each write is recorded (`InlineEdits`,
+`src/coreUiDom.ts`), so Core UI off restores Steam's exact values. Which Quick Access element is the real panel differs
+too: `Container`, `QuickAccessMenu` and `Menu` are all candidates, outermost first; the first one at most 60% of the
+screen wide is the panel (black, stars), the others go clear. `window[Symbol.for("core.ui.diagnostics")]().full` shows
+the result per panel (`stretched`, `full`, `failed`, `gave-up`). Tested with fake DOMs shaped like Steam's
+(`tests/coreUiPhase2.test.mjs`).
+
+**Needs the TV:** that both panels reach the very top and bottom, the clock and hints stay readable, and focus and
+scrolling behave in a long Quick Access tab.
+
+### The Steam menu's logo (TV items 1 and 8)
+
+Only Core's ring mark (no wordmark), 44px, top left, inside an 80px band of its own: an in-flow `::before` block with
+`order: -1` ahead of every row, so no row and no focus fill can overlap it. If Steam's row list ignores the band (an
+absolutely placed list), the runtime pushes it down by what is missing (`keepBelowLogo`). Quick Access has no logo: Core's
+tab title is the plain name "Core" (the wordmark comes back with Core UI off).
+
+### Top bar and button-hint bar (TV item 6)
+
+Pure `#000000` whenever Steam paints them opaque (`HeaderOpaque`, footer `Opaque`) and whenever they sit over a plain
+page: no translucency, tint, blur, gradient or shadow. Over game art (Home's hero, a game page's art, video) they stay
+clear. The runtime decides per bar once a second by hit-testing what is behind it (`chromeState`, three points along
+the bar; any picture wins) and sets `data-core-ui-chrome="black"` or `"clear"`.
+
+### Quick Access over the stars (TV items 4 and 7)
+
+The stars sit on the real panel (above); everything over them is clear: the title strip, the tab rail, the content
+column, Decky's and every plugin's panel sections, and any large opaque layer the runtime finds inside the panel (at
+least 30% of its area, a plain colour or gradient, no picture). That covers the grey area around CSS Loader's panel.
+Buttons, inputs, sliders, toggles and pictures are never touched, so CSS Loader's controls keep working and looking as
+they do. Tagged `data-core-ui-clear`, removed with Core UI off.
+
+### The Starfield's motion (TV item 5)
+
+The stars stood still in the Steam menu: frames were requested from the main Big Picture window, which Steam stops
+drawing while the menu (or a popup) is on top, and each step was capped at 50 ms, so a throttled window barely moved
+them. Now each frame is requested in the window of the surface being drawn, with a 250 ms timer backstop, on the main
+window's clock, and a step may be up to 250 ms. Visibility uses Chromium's `checkVisibility` (ancestors' display,
+visibility and opacity) plus the panel's place on screen: stars move while the menu is open, stop when it is closed or
+off screen, hold still (one frame) while a game runs and under reduced motion. Diagnostics:
+`window[Symbol.for("core.ui.diagnostics")]()` (`state`: `moving`, `idle`, `still-game`, `still-reduced`).
 
 ### Controller-only button hints
 
@@ -113,10 +163,161 @@ Core's rows are styled with Steam's own.
   Jarvis in Quick Access*. Details: [JARVIS.md](JARVIS.md).
 - The full Jarvis page is black with the Starfield.
 
+### Plugin logos (TV item 12)
+
+Core's artwork for the user's Eternal plugin forks (`docs/eternal/brand/plugin-logos/`, credited in REBRAND.md),
+inlined in `src/coreArtwork.ts`, matched by Decky plugin name in `src/corePluginLogos.ts`:
+
+| Decky plugin name | Logo |
+| ----------------- | ---- |
+| Discord | assemble |
+| Awesome Mix, Now Playing Plus | awesome-mix |
+| Nexus Mods, Forge | forge |
+| romm-dock, RomM-Dock, The Collector | the-collector |
+
+- Quick Access tab rail: a single-colour steel glyph derived from each tile (`currentColor`, white when focused). A
+  user-chosen rail icon still wins; another or renamed plugin keeps its own icon. Only while Core UI is on.
+- The Steam menu's Awesome Mix entry: the awesome-mix glyph (Steam's music note if it is ever missing).
+- Core's store page: the full tiles as covers for `M2ljay/Eternal-Assemble`, `Eternal-Mix`, `Eternal-Forge` (alias
+  `vibe-nexus`) and `Eternal-Collector` (alias `eternal-romm`); upstream plugins keep their own covers.
+
+## Phase 2: the Library (TV items 10 and 11)
+
+Follows the Library board: black with stars behind the grid (`GamepadLibrary` is a page host; its canvas covers only
+the visible height), steel small-caps group headers, Steam's glow under capsules off, a 3px crimson focus ring lifted
+6px (still under reduced motion), and the tab bar styled like Quick Access: black row, steel tabs, no tab counts, the
+open tab gunmetal with a 3px crimson underline (square corners), a focused tab also a 2px crimson ring.
+
+### Library icons and tones
+
+What the CSS Loader themes Enhanced Library and Enhanced Collection did by **position**, Core UI now does by **name**
+(`src/coreLibraryIcons.ts`), so adding, hiding or reordering a tab or collection never shifts the others:
+
+- **Tabs** (TabMaster's or Steam's, matched by title, case and punctuation ignored): All Games, Installed, VR,
+  PlayStation, Nintendo, Sega, Xbox, Retro, Completed. The icon sits before the label (26px).
+- **Collection tiles** in Steam's Collections view, matched by collection name; RomM's `RomM: <platform> (<host>)` form
+  works too. A tile with an icon shows it over gunmetal (Steam's collage hidden); a tile without one keeps the collage.
+- **Tones**: each family tab gets a 24px marker under its label, and its collection tiles a 40px bar, in the family's
+  tone; the active tab adds the crimson underline. All Games, Installed, VR and Completed are steel.
+
+| Family | Tone | Collections (by name) |
+| ------ | ---- | --------------------- |
+| PlayStation | `#6E8CB8` | PlayStation, PlayStation 2-5, PlayStation Portable, PlayStation Vita |
+| Nintendo | `#B07A84` | NES, SNES, Nintendo 64, GameCube, Wii, Wii U, Switch, Game Boy (Color, Advance), DS, 3DS |
+| Sega | `#5E9E9A` | Master System, Mega Drive/Genesis, 32X, Sega CD, Saturn, Dreamcast, Game Gear |
+| Xbox | `#7FA36B` | Xbox, Xbox 360 (One, Series) |
+| Retro | `#8F7CB0` | Arcade, Atari, Neo Geo, TurboGrafx-16/PC Engine, MSX, Commodore, Amiga and the like |
+
+Steam's Collections view has no stable class for a tile, so tiles are found as the links into
+`/library/collection/<id>` (and `[data-collection-id]`). **Needs the TV:** that the tiles are found that way on this
+Steam build, and where the tab icon sits best (beside the label now; above it is a one-line change).
+
+### Your own icons
+
+The icon set the user prefers is derived from a personal-use pack and is **never committed**. Core loads it at run time
+from the PC:
+
+    %APPDATA%\GamingMode\icons\
+      map.json
+      family-playstation.png, ps2.png, ... (any names)
+
+Core's plugin backend reads it (`get_core_icons` in `main.py`; the cleanest route, it already runs on the PC and
+answers Core's own frontend) and hands the images over as data URLs. Rules: only plain file names inside that folder
+(no paths), PNG, SVG, WebP or JPEG, at most 1 MB each and 16 MB in all; anything else is skipped and named in the answer's
+`errors`. Read once at start, again when Core UI is switched on and at most every ten minutes.
+
+`map.json`: three optional sections, each mapping a name to a file. `tabs` by tab title, `collections` by collection
+name (with or without RomM's prefix and host), `keys` by Core's icon key (used for any tab or collection that matches
+that key: `all-games`, `installed`, `vr`, `completed`, `playstation`, `nintendo`, `sega`, `xbox`, `retro`, and per
+console `ps1`, `ps2`, `ps3`, `psp`, `vita`, `nes`, `snes`, `n64`, `gamecube`, `wii`, `wiiu`, `switch`, `gb`, `gbc`,
+`gba`, `ds`, `3ds`, `sms`, `megadrive`, `saturn`, `dreamcast`, `gamegear`, `xbox360`, `arcade`, `atari2600`,
+`neogeo`, `pcengine`, `generic`). Names are matched ignoring case and punctuation. A map with none of those sections is
+read as one flat list for tabs and collections alike.
+
+```json
+{
+  "version": 1,
+  "tabs": { "All Games": "core-steel-all-games.png", "PlayStation": "core-steel-family-playstation.png" },
+  "collections": { "PlayStation 2": "core-steel-ps2.png" },
+  "keys": { "n64": "core-steel-n64.png", "snes": "core-steel-snes.png" }
+}
+```
+
+Order for each tab or tile: the user's map by name, then by key, then Core's original drawings
+(`docs/eternal/brand/core-icons/original-*.svg`, inlined in `coreArtwork.ts`: All games, Installed, VR, Completed, PS3,
+Xbox, Xbox 360 and the generic pad, which the four family tabs without an original drawing use).
+
+## Phase 2: Home
+
+Follows the Home board: Steam's recent-games hero runs taller (62% of the screen) and fades into black through a mask
+(nothing painted over the art); Home's page is black with the Starfield behind the shelves (`BasicHome` is a page
+host); section labels in steel small caps; Steam's capsule glow off; focused capsules get the 3px crimson ring, lifted
+6px. Core's plugin already patched Home (HomeNews.tsx for the news, DailyHistory.tsx for On this day); `src/coreHome.tsx`
+extends that patch. The bottom tabs become:
+
+1. **Jarvis brief** (takes Steam's `WhatsNew` id, so a remembered tab still opens): a greeting for the hour ("Good
+   evening, sir"; late hours count as night until 5am), a one-line brief (the last game played), mods with updates if
+   Forge publishes them, a **Talk to Jarvis** button that opens Jarvis's Quick Access tab with the input focused, then
+   Steam's own news and updates for the user's games with Core's gaming news (what the What's new tab held).
+2. **Consoles**: one shelf per family (PlayStation, Nintendo, Sega, Xbox, Retro, VR) built from the user's collections
+   by name, with the family's icon and tone; games most recently played first, up to 24; A opens the game page.
+3. **Club** (registered by `src/club/`, when present).
+4. **On this day**: kept (Steam's Recommended slot).
+
+Steam's What's new and Friends tabs are removed; a remembered Friends tab opens the brief. Everything renders inside an
+error boundary whose fallback is what Core rendered before (Steam's Home with the news and On this day), and Core UI off
+gives Steam's tabs back. Text in `src/coreHomeLocale.ts` (12 languages).
+
+Not available yet: wishlist sales (no local source; Steam's store data is not reachable offline from Home) and Forge's
+mod updates (Forge does not publish them yet). The brief reads `window.__eternalForgeUpdates`
+(`{ version: 1, count }` or `{ version: 1, games: [{ appId, name, count }] }`) when Forge starts publishing it.
+
+**Needs the TV:** the tab order and titles, the capsule art on the Consoles shelves (Steam's portrait URLs, then the
+local cache), the Talk button, and that Home falls back cleanly if Steam changes its tab component.
+
+### Home tabs: the registration point
+
+`src/coreHomeTabs.ts` keeps a small registry so a module can add a Home tab without touching Home's internals:
+
+```ts
+registerHomeTab({ id: "CoreClub", label: "Club", order: 30, component: ClubTab, isAvailable: clubAvailable });
+```
+
+`label` is a string or a function of the locale; `order` places it (brief 10, Consoles 20, Club 30, On this day 40;
+Steam tabs Core does not know come after). A tab whose `isAvailable()` is false or throws is left out; the returned
+function unregisters it. The Club module (`src/club/ClubTab.tsx` exporting `ClubTab`, `src/club/clubAvailable.ts`
+exporting `clubAvailable()`) is wired through a virtual module, `core-optional:club`, resolved by `rollup.config.js`:
+when both files exist it re-exports them and `coreHome.tsx` registers the tab; when they do not, it is `null` and the
+build is unaffected.
+
+## Phase 3 notes: the game page
+
+Left for phase 3: the game page keeps Steam's grey-blue content area in 3.3.3. Painting it black needs Steam's
+app-details class maps (`appdetails`: the root, the play section and the inner content container) and care around the
+header art, which must stay clear; that is not a one-line rule. For The Collector's ROM pages to match Steam's game
+pages under one Core design, the shared hooks are: the same class maps found through `steamModules.ts` (The Collector
+renders its own game detail UI, so it should reuse Steam's play-bar and tab classes where it can, or set
+`data-core-ui-host` / `data-core-collection`-style attributes Core UI already styles), the `--core-radius-float` token,
+the family tones (`CORE_FAMILY_TONES`) and the focus rules (gunmetal plus crimson, square).
+
+## Screensaver
+
+Core registers **Core Starfield** in Steam's screensaver list (`src/circlesScreensaver.ts`). From 3.3.3 it is also the
+default, once: right after registration, if Steam's screensaver is its game-hero slideshow or nothing has been chosen,
+and Core has not done this before (`core.ui.starfield-default` in Steam's localStorage), Core selects Core Starfield
+through Steam's settings store setter (`src/coreScreensaverDefault.ts`; no config file is written). A user who had
+already picked another screensaver keeps it, and the flag means a later choice (Steam's slideshow included) is never
+overridden. A client without a known setter is left alone and tried again on the next start. Quick Access > Core > Look
+> **Use Core Starfield as screensaver** selects it, or goes back to Steam's slideshow.
+
+**Needs the TV:** which setter this Steam build offers (the console logs `[Core] Starfield screensaver default: applied`
+or `unavailable`), and that the switch follows a choice made in Steam's own Settings.
+
 ## Turning it off
 
 Quick Access > Core > **Look** > **Core UI** (on by default; `core.ui.enabled` in Steam's localStorage). Off removes
-the stylesheet, the `data-core-ui` attribute, every Starfield canvas, the Jarvis orb, and the controller-prompt pin at
+the stylesheet, the `data-core-ui` attribute, every Starfield canvas, the Jarvis orb, the controller-prompt pin, the
+full-height stretch, the logo band, the Library's icons and tones, the plugin logos on the rail and Core Home's tabs at
 once; Steam looks and behaves as without Core UI. The Steam menu entries, Jarvis's tab and the tap/hold combo do not
 depend on it.
 
@@ -126,8 +327,8 @@ Core UI does not use CSS Loader and does not need it. If a CSS Loader theme is s
 areas it styles: every selector starts with `html[data-core-ui]`, repeats its target class (Steam's class map value
 twice), and every declaration is `!important`, so Core UI's rules out-rank a theme's ordinary rules and its
 `!important` rules up to three classes deep. A theme with deeper selectors can still win on a property it sets; switch
-that part of the theme off. Areas Core UI does not style (Home, the game page, the Library in phase 1) keep the
-theme. The old Core theme should stay off: its menu, Quick Access and context-menu files duplicate Core UI.
+that part of the theme off. Areas Core UI does not style (the game page, Settings) keep the
+theme. Enhanced Library and Enhanced Collection are no longer needed: Core UI draws the Library's icons itself. The old Core theme should stay off: its menu, Quick Access and context-menu files duplicate Core UI.
 
 ## How it works
 
@@ -142,25 +343,19 @@ theme. The old Core theme should stay off: its menu, Quick Access and context-me
   `screensaver/main.js` keeps the bouncing mark and clock). One shared field and one animation loop for every surface,
   160 stars, at most 30 frames a second, drawn only while a surface is on screen and large enough; held still (one
   frame) while a game runs and under reduced motion. A closed menu costs one cheap check a second.
+- `src/coreUiDom.ts` (clear layers, black chrome, the logo band, undoable inline edits), `src/coreFullHeight.ts`,
+  `src/coreLibraryIcons.ts`, `src/corePluginLogos.ts`, `src/coreArtwork.ts`, `src/coreHome.tsx`, `src/coreHomeTabs.ts`,
+  `src/coreHomeLocale.ts` (12 languages), `src/coreScreensaverDefault.ts` (3.3.3).
 - `src/coreInputPrompts.ts`, `src/coreMenuEntries.ts`, `src/coreUiSetting.ts`, `src/coreUiLocale.ts` (12 languages),
   `src/CoreUiSection.tsx`, `src/CoreStars.tsx`, `src/jarvisPresence.ts`, `src/jarvisTabLocale.ts` (12 languages).
 
 Tests (Linux and CI): `tests/coreUi.test.mjs` (selectors from fake Decky 3 and Decky 4 class maps, missing maps,
 brand checks, context menus, full height, the Starfield, the Awesome Mix swap, the setting on and off, the orb, the
-controller-prompt pin) and `tests/coreJarvisTab.test.mjs` (tap/hold split, opening and closing the Jarvis tab, the tab
+controller-prompt pin), `tests/coreUiPhase2.test.mjs` (3.3.3: full height on Steam-shaped fake DOMs, the logo band,
+black chrome, clear layers, corners, tab and collection matching, tones, icon fallbacks, the decorator, plugin logos,
+Home's tabs and registry, the screensaver default, frames per window), `tests/test_core_icons.py` (the icon folder) and
+`tests/coreJarvisTab.test.mjs` (tap/hold split, opening and closing the Jarvis tab, the tab
 after Core's, the orb states, defaults, text).
-
-## Phase 2 plan: Home
-
-Not built yet. Home's bottom tabs become:
-
-- **Jarvis brief**: a greeting ("Good evening, sir"), what's new for your games (updates, wishlist sales), mods with
-  updates, and a **Talk** button. This absorbs the planned Jarvis greeting card.
-- **Consoles**: one shelf per console (PlayStation, Nintendo, Sega, Xbox, Retro, VR), matching the Library's tabs.
-- **On this day**: kept.
-
-Steam's *What's new* and *Friends* tabs are removed. Home's page background turns black with the Starfield ("black
-means starfield"), except behind the hero art, which fades into black (Home board).
 
 ## TV checklist (phase 1)
 
@@ -195,3 +390,25 @@ Stable Steam, Decky 3.3.1, every CSS Loader theme off, Core 3.3.1 installed.
 Inferred and to confirm on the TV: which element Steam's `Menu` class sits on in the Steam menu and Quick Access (the
 star canvas and wordmark go there), whether the menus' ancestors clip the full-height extension, Steam's
 `OpenQuickAccessMenu` accepting Core's tab ids, and the navigation-source pin (above).
+
+## TV checklist (3.3.3)
+
+Same setup, Core 3.3.3, Enhanced Library and Enhanced Collection off. Numbers follow the TV list.
+
+1. Steam menu: the ring mark alone, small, top left; move to Home and up: the focus fill never covers the mark.
+2. (4, 7) Quick Access: stars behind the whole panel, the tab rail, the title strip and every plugin; CSS Loader's tab
+   has no grey area and its controls still work.
+3. (5) Open the Steam menu: the stars drift. Close it: they stop (diagnostics `idle`). In a game: still.
+4. (6) Top bar and hint bar pure black over the Library and Settings; clear over Home's hero art.
+5. (8) No logo in Quick Access; "Core" as the title.
+6. (9) Steam menu and Quick Access from the very top edge to the very bottom; clock and hints readable; a long Quick
+   Access tab still scrolls and keeps focus.
+7. (10, 11) Library: tab icons beside the labels, the family markers in their tones, the active tab's crimson underline;
+   Collections view: icons and tone bars on the console tiles. With `%APPDATA%\GamingMode\icons\map.json` in place
+   the user's icons replace Core's.
+8. (12) Quick Access rail: Discord, Awesome Mix, Forge and The Collector show Core's logos; Awesome Mix's Steam menu
+   entry shows its mark.
+9. Corners: side panels, bars and focus square; context menus and tiles rounded 10px.
+10. Home: Jarvis brief (greeting, last game, Talk opens Jarvis), Consoles shelves, On this day; no What's new or Friends.
+11. Screensaver: after the first start, Steam's screensaver is Core Starfield; pick another in Steam, restart Core: it
+    stays. The Look switch selects and deselects it.

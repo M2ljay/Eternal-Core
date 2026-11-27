@@ -159,3 +159,15 @@ where a maker logo could appear:
 
 Formats to plan for: a transparent PNG wordmark (at least 2257x595, like `base-logo.png`, for 4K splash), a square mark
 (1024x1024 PNG and a multi-size ICO 16-256) and an SVG master.
+
+## Plugin logos and Library icons (Core UI 3.3.3)
+
+Original Core artwork, made for Core and fine to commit:
+
+| File | What | Where it shows |
+| ---- | ---- | -------------- |
+| `docs/eternal/brand/plugin-logos/{assemble,awesome-mix,forge,the-collector}.svg` (+ `-256.png`) | Core's tiles for the user's Eternal plugin forks: Assemble (Discord), Awesome Mix, Forge (Nexus Mods), The Collector (RomM-Dock) | Quick Access tab rail (a single-colour steel glyph derived from each), the Steam menu's Awesome Mix entry, covers on Core's store page; inlined in `Source/GamingModeDeckyPlugin/src/coreArtwork.ts` (CORE-UI.md, "Plugin logos") |
+| `docs/eternal/brand/core-icons/original-*.svg` | The original drawings of the Core steel icon set: All games, Installed, VR headset, Completed trophy, PS3, Xbox and Xbox 360 pads (plain buttons, no symbols or emblems), generic pad | Fallback Library tab and collection icons; inlined in `coreArtwork.ts` |
+
+The console icons the user prefers are derived from a personal-use icon pack and are **not** in the repository; Core
+loads them at run time from `%APPDATA%\GamingMode\icons\` (CORE-UI.md, "Your own icons").

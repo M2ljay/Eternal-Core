@@ -622,9 +622,110 @@ async function call(method, ...args) {
     return call$1(method, ...args);
 }
 
+// Eternal Core: Core Starfield as Steam's screensaver (docs/eternal/CORE-UI.md, "Screensaver").
+//
+// - A one-time default: once Core Starfield is registered in Steam's screensaver list (circlesScreensaver.ts), Steam's
+//   own game-hero slideshow (or no choice at all) becomes Core Starfield. A flag in Steam's localStorage makes it run
+//   once only: a screensaver the user picks afterwards, Steam's slideshow included, is never overridden. A user who had
+//   already picked another screensaver keeps it (the flag is set then too).
+// - The "Use Core Starfield as screensaver" switch (Quick Access > Core > Look) selects it or goes back to Steam's
+//   slideshow.
+//
+// Writes go only through Steam's settings store setters (whichever this client has); no config file is touched. A
+// client without a known setter is left alone and the default is tried again on the next start.
+// Self-contained (no imports): tests/coreScreensaver.test.mjs drives it with fake stores.
+const CORE_STARFIELD_ID = "Core Starfield";
+const STEAM_SLIDESHOW_ID = "steam-gameslideshow";
+const STARFIELD_DEFAULT_FLAG = "core.ui.starfield-default";
+const KEY$1 = "screensaver_current_id";
+function currentScreensaver(store) {
+    try {
+        const value = store?.clientSettings?.[KEY$1];
+        return typeof value === "string" ? value : undefined;
+    }
+    catch {
+        return undefined;
+    }
+}
+// Steam's slideshow, under its id or its host name, or nothing chosen yet.
+function isSteamDefault(id) {
+    return !id || id === STEAM_SLIDESHOW_ID || id === "steam-gameslideshow.steamscreensavers.host";
+}
+// Sets Steam's screensaver through the settings store's own setter. Answers whether a setter took it.
+function setScreensaver(store, id) {
+    const setters = [
+        () => store.SetClientSetting(KEY$1, id),
+        () => store.SetSetting(KEY$1, id),
+        () => store.UpdateClientSettings({ [KEY$1]: id }),
+        () => store.SetClientSettings({ [KEY$1]: id }),
+    ];
+    const names = ["SetClientSetting", "SetSetting", "UpdateClientSettings", "SetClientSettings"];
+    for (let i = 0; i < setters.length; i++) {
+        try {
+            if (typeof store?.[names[i]] !== "function")
+                continue;
+            const result = setters[i]();
+            if (result && typeof result.catch === "function")
+                result.catch(() => { });
+            return true;
+        }
+        catch { /* Try the next one. */ }
+    }
+    return false;
+}
+function applyStarfieldDefault(store, storage) {
+    let flagged = false;
+    try {
+        flagged = storage?.getItem(STARFIELD_DEFAULT_FLAG) === "1";
+    }
+    catch {
+        flagged = false;
+    }
+    if (flagged)
+        return "already-applied";
+    const remember = () => { try {
+        storage?.setItem(STARFIELD_DEFAULT_FLAG, "1");
+    }
+    catch { /* Tried again next start. */ } };
+    const current = currentScreensaver(store);
+    if (current === CORE_STARFIELD_ID) {
+        remember();
+        return "already-applied";
+    }
+    if (!isSteamDefault(current)) {
+        remember();
+        return "user-choice";
+    }
+    if (!setScreensaver(store, CORE_STARFIELD_ID))
+        return "unavailable";
+    remember();
+    return "applied";
+}
+function createScreensaverControl(store) {
+    const listeners = new Set();
+    return {
+        available: () => !!store() && currentScreensaver(store()) !== undefined,
+        get: () => currentScreensaver(store()) === CORE_STARFIELD_ID,
+        set(on) {
+            const done = setScreensaver(store(), on ? CORE_STARFIELD_ID : STEAM_SLIDESHOW_ID);
+            for (const listener of [...listeners]) {
+                try {
+                    listener();
+                }
+                catch { /* Others still hear it. */ }
+            }
+            return done;
+        },
+        subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    };
+}
+
 // Core Starfield (Mark III) replaces Playhub Circles in the same uioverride folder. The
 // screensaver list shows this id as its name; the old name is renamed in place.
 const MODE = "Core Starfield", LEGACY = "Playhub Circles";
+// Eternal Core: the Look section's "Use Core Starfield as screensaver" switch (coreScreensaverDefault.ts).
+let currentSettingsStore;
+const coreScreensaverControl = createScreensaverControl(() => currentSettingsStore);
 function documents() {
     const docs = [document];
     const add = (value) => { try {
@@ -650,6 +751,7 @@ function installCirclesScreensaver(locale) {
         ?? ui.findModuleExport((v) => typeof v?.GetLocalScreensavers === "function" && typeof v?.GetActiveState === "function");
     const settingsStore = ui.findModule((m) => m?.rV?.clientSettings && typeof m?.qt === "function")?.rV
         ?? ui.findModuleExport((v) => v?.clientSettings && typeof v.clientSettings === "object" && "screensaver_current_id" in v.clientSettings);
+    currentSettingsStore = settingsStore;
     let disposed = false, busy = false, restore = () => { };
     async function register() {
         const result = await call("install_circles_screensaver");
@@ -692,6 +794,15 @@ function installCirclesScreensaver(locale) {
         restore = () => { unsubscribe(); rename(MODE, "uioverride-playhub-circles"); };
         decorate();
         void client.invalidateQueries({ queryKey: key });
+        // One-time default: Steam's slideshow (or no choice) becomes Core Starfield, once; never over a later choice.
+        try {
+            const result = applyStarfieldDefault(settingsStore, window.localStorage);
+            if (result !== "already-applied")
+                console.info(`[Core] Starfield screensaver default: ${result}`);
+        }
+        catch (error) {
+            console.debug("Core Starfield default", error);
+        }
     }
     async function tick() {
         if (disposed || busy || settingsStore?.clientSettings?.screensaver_current_id !== MODE)
@@ -730,7 +841,7 @@ function installCirclesScreensaver(locale) {
     }
     void register().catch(error => console.warn("Core Starfield registration", error));
     const timer = window.setInterval(tick, 1500);
-    return () => { disposed = true; window.clearInterval(timer); restore(); };
+    return () => { disposed = true; window.clearInterval(timer); restore(); currentSettingsStore = undefined; };
 }
 
 const { cloneElement, createElement: createElement$1, forwardRef, isValidElement, memo } = _global_SP_REACT;
@@ -1124,11 +1235,11 @@ function detect() {
     const fallback = typeof document !== "undefined" && document.documentElement?.lang || typeof navigator !== "undefined" && navigator.language;
     return normalizeSteamLocale$2(fallback) ?? "en";
 }
-const listeners$b = new Set();
+const listeners$c = new Set();
 let current = null, request$1 = 0, users = 0, observation = 0;
 let timer;
 const getSteamLocale = () => current ?? detect();
-const subscribeSteamLocale = (listener) => { listeners$b.add(listener); return () => { listeners$b.delete(listener); }; };
+const subscribeSteamLocale = (listener) => { listeners$c.add(listener); return () => { listeners$c.delete(listener); }; };
 async function read() {
     const win = typeof window !== "undefined" ? window : {};
     const settings = win.SteamClient?.Settings;
@@ -1154,7 +1265,7 @@ async function refreshSteamLocale() {
     const old = getSteamLocale();
     current = value;
     if (old !== value)
-        for (const listener of [...listeners$b])
+        for (const listener of [...listeners$c])
             listener();
     return value;
 }
@@ -1812,18 +1923,18 @@ const STORE_DIGITAL_ROUTE = "/playhub/stores";
 function exitStoreDigitalToHome() { const navigation = CompatUI.Navigation; navigation?.CloseSideMenus?.(); navigation?.Navigate?.("/library/home", true); }
 let pending$3 = null, sequence = 0;
 let downloads = null;
-const listeners$a = new Set();
+const listeners$b = new Set();
 const readStoreDigitalSelection = () => pending$3;
 const consumeStoreDigitalSelection = (value) => { if (pending$3 === value)
     pending$3 = null; };
-const subscribeStoreDigitalSelection = (fn) => { listeners$a.add(fn); return () => { listeners$a.delete(fn); }; };
+const subscribeStoreDigitalSelection = (fn) => { listeners$b.add(fn); return () => { listeners$b.delete(fn); }; };
 const readStoreDigitalDownloads = () => downloads;
 const consumeStoreDigitalDownloads = (value) => { if (downloads === value)
     downloads = null; };
-function openStoreDigitalDownloads() { pending$3 = null; downloads = ++sequence; for (const listener of listeners$a)
+function openStoreDigitalDownloads() { pending$3 = null; downloads = ++sequence; for (const listener of listeners$b)
     listener(); CompatUI.Navigation.Navigate(STORE_DIGITAL_ROUTE); }
 function openStoreDigitalGame(key, action = "install") { if (!validStoreKey(key) || !["install", "manage"].includes(action))
-    return false; downloads = null; pending$3 = { key: { ...key }, action, sequence: ++sequence }; for (const listener of listeners$a)
+    return false; downloads = null; pending$3 = { key: { ...key }, action, sequence: ++sequence }; for (const listener of listeners$b)
     listener(); CompatUI.Navigation.Navigate(`${STORE_DIGITAL_ROUTE}?store=${encodeURIComponent(key.store)}&game=${encodeURIComponent(key.id)}&action=${action}`); return true; }
 function validStoreDigitalIntent(value, now = Date.now()) { const item = value; return !!item && typeof item.requestId === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(item.requestId) && validStoreKey(item.key) && ["install", "manage"].includes(item.action) && Number.isFinite(Date.parse(item.expiresAt)) && Date.parse(item.expiresAt) > now && Date.parse(item.expiresAt) <= now + 31000; }
 function installStoreDigitalIntentPump(request, open = openStoreDigitalGame, clock = () => Date.now()) {
@@ -2150,8 +2261,8 @@ let owned = new Map();
 let jobs = [];
 let steamLinks = new Map(), steamLinksAt = 0;
 let repairSteamLink;
-const listeners$9 = new Set();
-function subscribeStoreLibrary(listener) { listeners$9.add(listener); return () => { listeners$9.delete(listener); }; }
+const listeners$a = new Set();
+function subscribeStoreLibrary(listener) { listeners$a.add(listener); return () => { listeners$a.delete(listener); }; }
 const readStoreLibrary = () => owned;
 const readStoreDownloads = () => jobs;
 const readStoreSteamLink = (key) => Date.now() - steamLinksAt < 5000 ? steamLinks.get(nativeStoreKey({ key })) ?? "unknown" : "unknown";
@@ -2644,7 +2755,7 @@ function installStoreLibraryRuntime() {
     const notifyCompleted = createStoreCompletionNotifications();
     const current = () => alive && root[symbol] === stop;
     const updateLinks = (next) => { const changed = JSON.stringify([...steamLinks]) !== JSON.stringify([...next]); steamLinks = next; steamLinksAt = Date.now(); if (changed)
-        listeners$9.forEach(listener => { try {
+        listeners$a.forEach(listener => { try {
             listener();
         }
         catch { } }); };
@@ -2751,7 +2862,7 @@ function installStoreLibraryRuntime() {
             if (Array.isArray(currentJobs) && serializedJobs !== lastJobs) {
                 lastJobs = serializedJobs;
                 jobs = currentJobs;
-                listeners$9.forEach(listener => { try {
+                listeners$a.forEach(listener => { try {
                     listener();
                 }
                 catch { } });
@@ -2794,7 +2905,7 @@ function installStoreLibraryRuntime() {
             if (serial !== lastOwned) {
                 lastOwned = serial;
                 owned = new Map(rows.map(row => [row.appId, row]));
-                listeners$9.forEach(listener => { try {
+                listeners$a.forEach(listener => { try {
                     listener();
                 }
                 catch { } });
@@ -2847,7 +2958,7 @@ function installStoreLibraryRuntime() {
             jobs = [];
             steamLinks = new Map();
             steamLinksAt = 0;
-            listeners$9.forEach(listener => { try {
+            listeners$a.forEach(listener => { try {
                 listener();
             }
             catch { } });
@@ -4609,7 +4720,7 @@ const storeDigitalTranslations = {
 };
 
 // SPDX-License-Identifier: MIT. Playhub, Copyright (c) 2026 LoZazaMastro.
-const en$8 = {
+const en$9 = {
     errorQueueChanged: "The download list changed. Refresh it and try again.",
     partnerInstallEa: "This game requires EA app. Installation from Digital Stores is not available yet.",
     partnerInstallUbisoft: "This game requires Ubisoft Connect. Installation from Digital Stores is not available yet.",
@@ -4632,7 +4743,7 @@ const en$8 = {
     canceled: "Canceled", failed: "Failed", interrupted: "Interrupted", installing: "Installing", verifying: "Verifying", canceling: "Canceling", waiting: "Queued", signInCanceled: "Sign-in canceled. You can try again from Accounts.", signInFailed: "Sign-in failed. Try again from Accounts.", title: "Digital stores", subtitle: "Install and manage your games", library: "Your games", accounts: "Accounts", downloads: "Downloads", search: "Search your games", filters: "Filters", allStores: "All stores", allGames: "All games", installed: "Installed", notInstalled: "Not installed", install: "Install", manage: "Manage", uninstall: "Uninstall", refresh: "Refresh", signIn: "Sign in", signOut: "Sign out", connected: "Connected", disconnected: "Not connected", connecting: "Connecting…", expired: "Sign in again", unavailable: "Unavailable", signInNote: "Complete sign-in in the window that opened.", accountHint: "Sign in to see the games you own.", automaticSteam: "Installed games appear automatically in your Steam library, grouped by store.", installIntentLoading: "Finding this game in your library…", gameMissing: "This game is not available in the connected account. Refresh the library or check your account.", back: "Back", cancel: "Cancel", close: "Close", continue: "Continue", review: "Review installation", confirmInstall: "Install now", chooseFolder: "Choose folder", useFolder: "Use this folder", parentFolder: "Parent folder", thisPc: "This PC", directoryEmpty: "No folders here", directoryTruncated: "Showing the first 512 folders. Open a subfolder to continue.", pathNote: "A separate folder for this game will be created here.", loading: "Loading…", retry: "Retry", errorRead: "Couldn’t read your library. Your last confirmed data is still shown.", errorCommand: "The store couldn’t confirm this action. Refresh and try again.", errorPrepare: "Couldn’t prepare this installation. Try again.", errorDestination: "Choose a valid installation folder.", errorNotEmpty: "This game folder is not empty or writable. Choose another location.", errorSpace: "There is not enough free space in this location.", errorChanged: "The game or account changed. Review the current details and try again.", errorProviderBusy: "Another store operation is in progress. Try again when it finishes.", errorUninstall: "Couldn’t prepare this uninstall. Refresh and try again.", free: "Free space", required: "Required space", folder: "Installation folder", drive: "Drive", selectedDestination: "Selected destination", clearCompleted: "Clear completed", completed: "Completed", paused: "Paused", active: "In progress", downloadNow: "Download now", pause: "Pause", resume: "Resume", cancelDownload: "Cancel download", confirmCancel: "Cancel this download?", confirmUninstall: "Uninstall this game?", uninstallNote: "The selected game will be removed from this PC.", uninstallUnavailable: "Uninstall is unavailable for this installation.", emptyLibrary: "No games to show", emptyLibraryHelp: "Connect an account or adjust your filters.", emptyDownloads: "No downloads yet", emptyDownloadsHelp: "Choose a game to install from Your games.", xboxInstallNote: "Installation and its location are managed by Microsoft Store.", xboxRequested: "Installation requested. Progress appears here after the store confirms it.", unknown: "Not available", sort: "Sort by", titleOrder: "Title A–Z", installedFirst: "Installed first", refreshing: "Refreshing library…", games: "games", directoryError: "Couldn’t open this folder. Choose another location.", statusRetry: "Refresh installation status", accountRefreshFailed: "Couldn’t refresh this store. The previous library is kept."
 };
 function storeDigitalCopy(locale = getSteamLocale()) {
-    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$8 };
+    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$9 };
     for (const key of Object.keys(result)) {
         const value = translated?.[key];
         if (typeof value === "string" && value.trim())
@@ -6037,7 +6148,94 @@ function coreSteamMenuEntries(state) {
     return awesomeMixInstalled(state) ? [AWESOME_MIX_ENTRY] : [];
 }
 
-function AwesomeMixMenuIcon() { return SP_JSX.jsx("span", { style: { display: "flex", width: "1em", height: "1em" }, children: SP_JSX.jsx(TbMusic, { style: { width: "100%", height: "100%" } }) }); }
+// Eternal Core: Core's own artwork, as SVG text (generated from docs/eternal/brand/; see REBRAND.md, "Plugin logos" and
+// CORE-UI.md, "Library icons"). Original drawings only: nothing here comes from a third-party icon pack.
+// Self-contained (no imports): tests load it alone.
+// Plugin tiles (Core artwork for the Eternal plugin forks), full colour.
+const CORE_PLUGIN_TILES = {
+    "assemble": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 140 140\" width=\"140\" height=\"140\"><title>Assemble</title><defs><linearGradient id=\"chrome\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#F4F7FA\"/><stop offset=\"0.48\" stop-color=\"#AEB8C2\"/><stop offset=\"0.52\" stop-color=\"#5B636C\"/><stop offset=\"1\" stop-color=\"#C9D1D9\"/></linearGradient></defs><rect width=\"140\" height=\"140\" rx=\"28\" fill=\"#1A1D21\"/><g stroke=\"url(#chrome)\" stroke-width=\"9\" stroke-linecap=\"round\"><line x1=\"60\" y1=\"36\" x2=\"52\" y2=\"104\"/><line x1=\"88\" y1=\"36\" x2=\"80\" y2=\"104\"/><line x1=\"38\" y1=\"58\" x2=\"102\" y2=\"58\"/><line x1=\"34\" y1=\"84\" x2=\"98\" y2=\"84\"/></g><circle cx=\"106\" cy=\"34\" r=\"12\" fill=\"#D7263D\" stroke=\"#1A1D21\" stroke-width=\"4\"/></svg>",
+    "awesome-mix": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 140 140\" width=\"140\" height=\"140\"><title>Awesome Mix</title><defs><linearGradient id=\"chrome\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#F4F7FA\"/><stop offset=\"0.48\" stop-color=\"#AEB8C2\"/><stop offset=\"0.52\" stop-color=\"#5B636C\"/><stop offset=\"1\" stop-color=\"#C9D1D9\"/></linearGradient></defs><rect width=\"140\" height=\"140\" rx=\"28\" fill=\"#1A1D21\"/><rect x=\"28\" y=\"40\" width=\"84\" height=\"58\" rx=\"6\" fill=\"url(#chrome)\"/><rect x=\"40\" y=\"50\" width=\"60\" height=\"22\" rx=\"11\" fill=\"#1A1D21\"/><circle cx=\"54\" cy=\"61\" r=\"7\" fill=\"none\" stroke=\"#C9D1D9\" stroke-width=\"3\"/><circle cx=\"86\" cy=\"61\" r=\"7\" fill=\"none\" stroke=\"#C9D1D9\" stroke-width=\"3\"/><rect x=\"40\" y=\"80\" width=\"60\" height=\"5\" rx=\"2\" fill=\"#D7263D\"/><path d=\"M44 98 L50 90 H90 L96 98 Z\" fill=\"#5B636C\"/></svg>",
+    "forge": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 140 140\" width=\"140\" height=\"140\"><title>Forge</title><defs><linearGradient id=\"chrome\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#F4F7FA\"/><stop offset=\"0.48\" stop-color=\"#AEB8C2\"/><stop offset=\"0.52\" stop-color=\"#5B636C\"/><stop offset=\"1\" stop-color=\"#C9D1D9\"/></linearGradient></defs><rect width=\"140\" height=\"140\" rx=\"28\" fill=\"#1A1D21\"/><path d=\"M30 58 H104 Q104 70 92 74 L88 76 V84 H96 V96 H44 V84 H52 V76 Q38 72 30 58 Z\" fill=\"url(#chrome)\"/><path d=\"M104 58 L116 52 V64 Z\" fill=\"url(#chrome)\"/><g fill=\"#D7263D\"><circle cx=\"70\" cy=\"40\" r=\"4\"/><circle cx=\"84\" cy=\"34\" r=\"3\"/><circle cx=\"58\" cy=\"32\" r=\"2.5\"/><circle cx=\"94\" cy=\"44\" r=\"2\"/></g></svg>",
+    "the-collector": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 140 140\" width=\"140\" height=\"140\"><title>The Collector</title><defs><linearGradient id=\"chrome\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#F4F7FA\"/><stop offset=\"0.48\" stop-color=\"#AEB8C2\"/><stop offset=\"0.52\" stop-color=\"#5B636C\"/><stop offset=\"1\" stop-color=\"#C9D1D9\"/></linearGradient></defs><rect width=\"140\" height=\"140\" rx=\"28\" fill=\"#1A1D21\"/><path d=\"M40 28 H100 V112 H92 V104 H48 V112 H40 Z\" fill=\"url(#chrome)\"/><rect x=\"49\" y=\"38\" width=\"42\" height=\"40\" rx=\"4\" fill=\"#1A1D21\"/><path d=\"M58 54 H62 V50 H66 V54 H70 V58 H66 V62 H62 V58 H58 Z\" fill=\"#C9D1D9\"/><circle cx=\"80\" cy=\"53\" r=\"3.5\" fill=\"#D7263D\"/><circle cx=\"84\" cy=\"61\" r=\"3.5\" fill=\"#D7263D\"/><g stroke=\"#1A1D21\" stroke-width=\"3\"><line x1=\"56\" y1=\"88\" x2=\"56\" y2=\"98\"/><line x1=\"64\" y1=\"88\" x2=\"64\" y2=\"98\"/><line x1=\"72\" y1=\"88\" x2=\"72\" y2=\"98\"/><line x1=\"80\" y1=\"88\" x2=\"80\" y2=\"98\"/></g></svg>",
+};
+// Single-colour glyphs derived from the tiles for the Quick Access tab rail (currentColor: steel, white when focused).
+const CORE_PLUGIN_GLYPHS = {
+    "assemble": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"16 16 108 108\"><g stroke=\"currentColor\" stroke-width=\"9\" stroke-linecap=\"round\"><line x1=\"60\" y1=\"36\" x2=\"52\" y2=\"104\"/><line x1=\"88\" y1=\"36\" x2=\"80\" y2=\"104\"/><line x1=\"38\" y1=\"58\" x2=\"102\" y2=\"58\"/><line x1=\"34\" y1=\"84\" x2=\"98\" y2=\"84\"/></g><circle cx=\"106\" cy=\"34\" r=\"12\" fill=\"currentColor\" stroke=\"#000000\" stroke-width=\"4\"/></svg>",
+    "awesome-mix": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"16 16 108 108\"><rect x=\"28\" y=\"40\" width=\"84\" height=\"58\" rx=\"6\" fill=\"currentColor\"/><rect x=\"40\" y=\"50\" width=\"60\" height=\"22\" rx=\"11\" fill=\"#000000\"/><circle cx=\"54\" cy=\"61\" r=\"7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\"/><circle cx=\"86\" cy=\"61\" r=\"7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\"/><rect x=\"40\" y=\"80\" width=\"60\" height=\"5\" rx=\"2\" fill=\"currentColor\"/><path d=\"M44 98 L50 90 H90 L96 98 Z\" fill=\"currentColor\"/></svg>",
+    "forge": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"16 16 108 108\"><path d=\"M30 58 H104 Q104 70 92 74 L88 76 V84 H96 V96 H44 V84 H52 V76 Q38 72 30 58 Z\" fill=\"currentColor\"/><path d=\"M104 58 L116 52 V64 Z\" fill=\"currentColor\"/><g fill=\"currentColor\"><circle cx=\"70\" cy=\"40\" r=\"4\"/><circle cx=\"84\" cy=\"34\" r=\"3\"/><circle cx=\"58\" cy=\"32\" r=\"2.5\"/><circle cx=\"94\" cy=\"44\" r=\"2\"/></g></svg>",
+    "the-collector": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"16 16 108 108\"><path d=\"M40 28 H100 V112 H92 V104 H48 V112 H40 Z\" fill=\"currentColor\"/><rect x=\"49\" y=\"38\" width=\"42\" height=\"40\" rx=\"4\" fill=\"#000000\"/><path d=\"M58 54 H62 V50 H66 V54 H70 V58 H66 V62 H62 V58 H58 Z\" fill=\"currentColor\"/><circle cx=\"80\" cy=\"53\" r=\"3.5\" fill=\"currentColor\"/><circle cx=\"84\" cy=\"61\" r=\"3.5\" fill=\"currentColor\"/><g stroke=\"#000000\" stroke-width=\"3\"><line x1=\"56\" y1=\"88\" x2=\"56\" y2=\"98\"/><line x1=\"64\" y1=\"88\" x2=\"64\" y2=\"98\"/><line x1=\"72\" y1=\"88\" x2=\"72\" y2=\"98\"/><line x1=\"80\" y1=\"88\" x2=\"80\" y2=\"98\"/></g></svg>",
+};
+// Library fallbacks: the original drawings of the Core steel icon set (svg/original-*.svg). Console-family icons
+// derived from third-party packs are never committed; they load at run time from %APPDATA%\\GamingMode\\icons.
+const CORE_ORIGINAL_ICONS = {
+    "all-games": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" width=\"256\" height=\"256\"><defs><radialGradient id=\"gloss\" cx=\".5\" cy=\"0\" r=\".75\" fx=\".5\" fy=\"0\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"/><stop offset=\".55\" stop-color=\"#fff\" stop-opacity=\".12\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\"0\"/></radialGradient><linearGradient id=\"shade\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\".45\" stop-color=\"#000\" stop-opacity=\"0\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".32\"/></linearGradient><radialGradient id=\"cap\" cx=\".4\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".7\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".25\"/></radialGradient><filter id=\"drop\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"150%\"><feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"3\"/><feOffset dy=\"4\"/><feComponentTransfer><feFuncA type=\"linear\" slope=\".22\"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in=\"SourceGraphic\"/></feMerge></filter></defs><g filter=\"url(#drop)\"><clipPath id=\"c51\"><path d=\"M58 40 H104 A18 18 0 0 1 122 58 V104 A18 18 0 0 1 104 122 H58 A18 18 0 0 1 40 104 V58 A18 18 0 0 1 58 40 Z\"/></clipPath><path d=\"M58 40 H104 A18 18 0 0 1 122 58 V104 A18 18 0 0 1 104 122 H58 A18 18 0 0 1 40 104 V58 A18 18 0 0 1 58 40 Z\" fill=\"#9a9a9a\"/><g clip-path=\"url(#c51)\"><path d=\"M58 40 H104 A18 18 0 0 1 122 58 V104 A18 18 0 0 1 104 122 H58 A18 18 0 0 1 40 104 V58 A18 18 0 0 1 58 40 Z\" fill=\"#cfcfcf\"/><path d=\"M58 40 H104 A18 18 0 0 1 122 58 V104 A18 18 0 0 1 104 122 H58 A18 18 0 0 1 40 104 V58 A18 18 0 0 1 58 40 Z\" fill=\"#9a9a9a\" transform=\"translate(0 7)\"/><path d=\"M58 40 H104 A18 18 0 0 1 122 58 V104 A18 18 0 0 1 104 122 H58 A18 18 0 0 1 40 104 V58 A18 18 0 0 1 58 40 Z\" fill=\"url(#shade)\"/><path d=\"M58 40 H104 A18 18 0 0 1 122 58 V104 A18 18 0 0 1 104 122 H58 A18 18 0 0 1 40 104 V58 A18 18 0 0 1 58 40 Z\" fill=\"url(#gloss)\" opacity=\"1\"/></g><path d=\"M58 40 H104 A18 18 0 0 1 122 58 V104 A18 18 0 0 1 104 122 H58 A18 18 0 0 1 40 104 V58 A18 18 0 0 1 58 40 Z\" fill=\"none\" stroke=\"#3a3a3a\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c52\"><path d=\"M58 134 H104 A18 18 0 0 1 122 152 V198 A18 18 0 0 1 104 216 H58 A18 18 0 0 1 40 198 V152 A18 18 0 0 1 58 134 Z\"/></clipPath><path d=\"M58 134 H104 A18 18 0 0 1 122 152 V198 A18 18 0 0 1 104 216 H58 A18 18 0 0 1 40 198 V152 A18 18 0 0 1 58 134 Z\" fill=\"#9a9a9a\"/><g clip-path=\"url(#c52)\"><path d=\"M58 134 H104 A18 18 0 0 1 122 152 V198 A18 18 0 0 1 104 216 H58 A18 18 0 0 1 40 198 V152 A18 18 0 0 1 58 134 Z\" fill=\"#cfcfcf\"/><path d=\"M58 134 H104 A18 18 0 0 1 122 152 V198 A18 18 0 0 1 104 216 H58 A18 18 0 0 1 40 198 V152 A18 18 0 0 1 58 134 Z\" fill=\"#9a9a9a\" transform=\"translate(0 7)\"/><path d=\"M58 134 H104 A18 18 0 0 1 122 152 V198 A18 18 0 0 1 104 216 H58 A18 18 0 0 1 40 198 V152 A18 18 0 0 1 58 134 Z\" fill=\"url(#shade)\"/><path d=\"M58 134 H104 A18 18 0 0 1 122 152 V198 A18 18 0 0 1 104 216 H58 A18 18 0 0 1 40 198 V152 A18 18 0 0 1 58 134 Z\" fill=\"url(#gloss)\" opacity=\"1\"/></g><path d=\"M58 134 H104 A18 18 0 0 1 122 152 V198 A18 18 0 0 1 104 216 H58 A18 18 0 0 1 40 198 V152 A18 18 0 0 1 58 134 Z\" fill=\"none\" stroke=\"#3a3a3a\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c53\"><path d=\"M152 40 H198 A18 18 0 0 1 216 58 V104 A18 18 0 0 1 198 122 H152 A18 18 0 0 1 134 104 V58 A18 18 0 0 1 152 40 Z\"/></clipPath><path d=\"M152 40 H198 A18 18 0 0 1 216 58 V104 A18 18 0 0 1 198 122 H152 A18 18 0 0 1 134 104 V58 A18 18 0 0 1 152 40 Z\" fill=\"#9a9a9a\"/><g clip-path=\"url(#c53)\"><path d=\"M152 40 H198 A18 18 0 0 1 216 58 V104 A18 18 0 0 1 198 122 H152 A18 18 0 0 1 134 104 V58 A18 18 0 0 1 152 40 Z\" fill=\"#cfcfcf\"/><path d=\"M152 40 H198 A18 18 0 0 1 216 58 V104 A18 18 0 0 1 198 122 H152 A18 18 0 0 1 134 104 V58 A18 18 0 0 1 152 40 Z\" fill=\"#9a9a9a\" transform=\"translate(0 7)\"/><path d=\"M152 40 H198 A18 18 0 0 1 216 58 V104 A18 18 0 0 1 198 122 H152 A18 18 0 0 1 134 104 V58 A18 18 0 0 1 152 40 Z\" fill=\"url(#shade)\"/><path d=\"M152 40 H198 A18 18 0 0 1 216 58 V104 A18 18 0 0 1 198 122 H152 A18 18 0 0 1 134 104 V58 A18 18 0 0 1 152 40 Z\" fill=\"url(#gloss)\" opacity=\"1\"/></g><path d=\"M152 40 H198 A18 18 0 0 1 216 58 V104 A18 18 0 0 1 198 122 H152 A18 18 0 0 1 134 104 V58 A18 18 0 0 1 152 40 Z\" fill=\"none\" stroke=\"#3a3a3a\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c54\"><path d=\"M152 134 H198 A18 18 0 0 1 216 152 V198 A18 18 0 0 1 198 216 H152 A18 18 0 0 1 134 198 V152 A18 18 0 0 1 152 134 Z\"/></clipPath><path d=\"M152 134 H198 A18 18 0 0 1 216 152 V198 A18 18 0 0 1 198 216 H152 A18 18 0 0 1 134 198 V152 A18 18 0 0 1 152 134 Z\" fill=\"#9a9a9a\"/><g clip-path=\"url(#c54)\"><path d=\"M152 134 H198 A18 18 0 0 1 216 152 V198 A18 18 0 0 1 198 216 H152 A18 18 0 0 1 134 198 V152 A18 18 0 0 1 152 134 Z\" fill=\"#cfcfcf\"/><path d=\"M152 134 H198 A18 18 0 0 1 216 152 V198 A18 18 0 0 1 198 216 H152 A18 18 0 0 1 134 198 V152 A18 18 0 0 1 152 134 Z\" fill=\"#9a9a9a\" transform=\"translate(0 7)\"/><path d=\"M152 134 H198 A18 18 0 0 1 216 152 V198 A18 18 0 0 1 198 216 H152 A18 18 0 0 1 134 198 V152 A18 18 0 0 1 152 134 Z\" fill=\"url(#shade)\"/><path d=\"M152 134 H198 A18 18 0 0 1 216 152 V198 A18 18 0 0 1 198 216 H152 A18 18 0 0 1 134 198 V152 A18 18 0 0 1 152 134 Z\" fill=\"url(#gloss)\" opacity=\"1\"/></g><path d=\"M152 134 H198 A18 18 0 0 1 216 152 V198 A18 18 0 0 1 198 216 H152 A18 18 0 0 1 134 198 V152 A18 18 0 0 1 152 134 Z\" fill=\"none\" stroke=\"#3a3a3a\" stroke-width=\"9\" stroke-linejoin=\"round\"/></g></svg>",
+    "installed": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" width=\"256\" height=\"256\"><defs><radialGradient id=\"gloss\" cx=\".5\" cy=\"0\" r=\".75\" fx=\".5\" fy=\"0\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"/><stop offset=\".55\" stop-color=\"#fff\" stop-opacity=\".12\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\"0\"/></radialGradient><linearGradient id=\"shade\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\".45\" stop-color=\"#000\" stop-opacity=\"0\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".32\"/></linearGradient><radialGradient id=\"cap\" cx=\".4\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".7\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".25\"/></radialGradient><filter id=\"drop\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"150%\"><feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"3\"/><feOffset dy=\"4\"/><feComponentTransfer><feFuncA type=\"linear\" slope=\".22\"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in=\"SourceGraphic\"/></feMerge></filter></defs><g filter=\"url(#drop)\"><clipPath id=\"c55\"><path d=\"M30 146 H84 L102 168 H154 L172 146 H226 V200 C226 214 216 224 202 224 H54 C40 224 30 214 30 200 Z\"/></clipPath><path d=\"M30 146 H84 L102 168 H154 L172 146 H226 V200 C226 214 216 224 202 224 H54 C40 224 30 214 30 200 Z\" fill=\"#8a8a8a\"/><g clip-path=\"url(#c55)\"><path d=\"M30 146 H84 L102 168 H154 L172 146 H226 V200 C226 214 216 224 202 224 H54 C40 224 30 214 30 200 Z\" fill=\"#bdbdbd\"/><path d=\"M30 146 H84 L102 168 H154 L172 146 H226 V200 C226 214 216 224 202 224 H54 C40 224 30 214 30 200 Z\" fill=\"#8a8a8a\" transform=\"translate(0 7)\"/><path d=\"M30 146 H84 L102 168 H154 L172 146 H226 V200 C226 214 216 224 202 224 H54 C40 224 30 214 30 200 Z\" fill=\"url(#shade)\"/><path d=\"M30 146 H84 L102 168 H154 L172 146 H226 V200 C226 214 216 224 202 224 H54 C40 224 30 214 30 200 Z\" fill=\"url(#gloss)\" opacity=\"0.8\"/></g><path d=\"M30 146 H84 L102 168 H154 L172 146 H226 V200 C226 214 216 224 202 224 H54 C40 224 30 214 30 200 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c56\"><path d=\"M108 30 H148 C154 30 158 34 158 40 V104 H182 C190 104 194 112 188 118 L136 172 C132 176 124 176 120 172 L68 118 C62 112 66 104 74 104 H98 V40 C98 34 102 30 108 30 Z\"/></clipPath><path d=\"M108 30 H148 C154 30 158 34 158 40 V104 H182 C190 104 194 112 188 118 L136 172 C132 176 124 176 120 172 L68 118 C62 112 66 104 74 104 H98 V40 C98 34 102 30 108 30 Z\" fill=\"#b0b0b0\"/><g clip-path=\"url(#c56)\"><path d=\"M108 30 H148 C154 30 158 34 158 40 V104 H182 C190 104 194 112 188 118 L136 172 C132 176 124 176 120 172 L68 118 C62 112 66 104 74 104 H98 V40 C98 34 102 30 108 30 Z\" fill=\"#e6e6e6\"/><path d=\"M108 30 H148 C154 30 158 34 158 40 V104 H182 C190 104 194 112 188 118 L136 172 C132 176 124 176 120 172 L68 118 C62 112 66 104 74 104 H98 V40 C98 34 102 30 108 30 Z\" fill=\"#b0b0b0\" transform=\"translate(0 7)\"/><path d=\"M108 30 H148 C154 30 158 34 158 40 V104 H182 C190 104 194 112 188 118 L136 172 C132 176 124 176 120 172 L68 118 C62 112 66 104 74 104 H98 V40 C98 34 102 30 108 30 Z\" fill=\"url(#shade)\"/><path d=\"M108 30 H148 C154 30 158 34 158 40 V104 H182 C190 104 194 112 188 118 L136 172 C132 176 124 176 120 172 L68 118 C62 112 66 104 74 104 H98 V40 C98 34 102 30 108 30 Z\" fill=\"url(#gloss)\" opacity=\"1\"/></g><path d=\"M108 30 H148 C154 30 158 34 158 40 V104 H182 C190 104 194 112 188 118 L136 172 C132 176 124 176 120 172 L68 118 C62 112 66 104 74 104 H98 V40 C98 34 102 30 108 30 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/></g></svg>",
+    "vr": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" width=\"256\" height=\"256\"><defs><radialGradient id=\"gloss\" cx=\".5\" cy=\"0\" r=\".75\" fx=\".5\" fy=\"0\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"/><stop offset=\".55\" stop-color=\"#fff\" stop-opacity=\".12\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\"0\"/></radialGradient><linearGradient id=\"shade\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\".45\" stop-color=\"#000\" stop-opacity=\"0\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".32\"/></linearGradient><radialGradient id=\"cap\" cx=\".4\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".7\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".25\"/></radialGradient><filter id=\"drop\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"150%\"><feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"3\"/><feOffset dy=\"4\"/><feComponentTransfer><feFuncA type=\"linear\" slope=\".22\"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in=\"SourceGraphic\"/></feMerge></filter></defs><g filter=\"url(#drop)\"><path d=\"M60 150 C30 140 28 96 70 84 M196 84 C236 92 250 120 238 148\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"28\" stroke-linecap=\"round\"/><path d=\"M60 150 C30 140 28 96 70 84 M196 84 C236 92 250 120 238 148\" fill=\"none\" stroke=\"#6a6a6a\" stroke-width=\"13\" stroke-linecap=\"round\"/><path d=\"M112 86 C110 44 168 34 196 70\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"26\" stroke-linecap=\"round\"/><path d=\"M112 86 C110 44 168 34 196 70\" fill=\"none\" stroke=\"#6a6a6a\" stroke-width=\"12\" stroke-linecap=\"round\"/><clipPath id=\"c44\"><path d=\"M180 82 L214 70 C228 66 238 74 238 88 V168 C238 182 230 190 216 194 L182 204 Z\"/></clipPath><path d=\"M180 82 L214 70 C228 66 238 74 238 88 V168 C238 182 230 190 216 194 L182 204 Z\" fill=\"#4a4a4a\"/><g clip-path=\"url(#c44)\"><path d=\"M180 82 L214 70 C228 66 238 74 238 88 V168 C238 182 230 190 216 194 L182 204 Z\" fill=\"#707070\"/><path d=\"M180 82 L214 70 C228 66 238 74 238 88 V168 C238 182 230 190 216 194 L182 204 Z\" fill=\"#4a4a4a\" transform=\"translate(0 7)\"/><path d=\"M180 82 L214 70 C228 66 238 74 238 88 V168 C238 182 230 190 216 194 L182 204 Z\" fill=\"url(#shade)\"/><path d=\"M180 82 L214 70 C228 66 238 74 238 88 V168 C238 182 230 190 216 194 L182 204 Z\" fill=\"url(#gloss)\" opacity=\"0.4\"/></g><path d=\"M180 82 L214 70 C228 66 238 74 238 88 V168 C238 182 230 190 216 194 L182 204 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c45\"><path d=\"M58 80 H176 C196 80 206 92 206 112 V172 C206 194 196 206 176 206 H150 C142 206 138 200 134 192 C130 184 126 180 120 180 C114 180 110 184 106 192 C102 200 98 206 90 206 H58 C38 206 28 194 28 172 V112 C28 92 38 80 58 80 Z\"/></clipPath><path d=\"M58 80 H176 C196 80 206 92 206 112 V172 C206 194 196 206 176 206 H150 C142 206 138 200 134 192 C130 184 126 180 120 180 C114 180 110 184 106 192 C102 200 98 206 90 206 H58 C38 206 28 194 28 172 V112 C28 92 38 80 58 80 Z\" fill=\"#a0a0a0\"/><g clip-path=\"url(#c45)\"><path d=\"M58 80 H176 C196 80 206 92 206 112 V172 C206 194 196 206 176 206 H150 C142 206 138 200 134 192 C130 184 126 180 120 180 C114 180 110 184 106 192 C102 200 98 206 90 206 H58 C38 206 28 194 28 172 V112 C28 92 38 80 58 80 Z\" fill=\"#d8d8d8\"/><path d=\"M58 80 H176 C196 80 206 92 206 112 V172 C206 194 196 206 176 206 H150 C142 206 138 200 134 192 C130 184 126 180 120 180 C114 180 110 184 106 192 C102 200 98 206 90 206 H58 C38 206 28 194 28 172 V112 C28 92 38 80 58 80 Z\" fill=\"#a0a0a0\" transform=\"translate(0 7)\"/><path d=\"M58 80 H176 C196 80 206 92 206 112 V172 C206 194 196 206 176 206 H150 C142 206 138 200 134 192 C130 184 126 180 120 180 C114 180 110 184 106 192 C102 200 98 206 90 206 H58 C38 206 28 194 28 172 V112 C28 92 38 80 58 80 Z\" fill=\"url(#shade)\"/><path d=\"M58 80 H176 C196 80 206 92 206 112 V172 C206 194 196 206 176 206 H150 C142 206 138 200 134 192 C130 184 126 180 120 180 C114 180 110 184 106 192 C102 200 98 206 90 206 H58 C38 206 28 194 28 172 V112 C28 92 38 80 58 80 Z\" fill=\"url(#gloss)\" opacity=\"1\"/></g><path d=\"M58 80 H176 C196 80 206 92 206 112 V172 C206 194 196 206 176 206 H150 C142 206 138 200 134 192 C130 184 126 180 120 180 C114 180 110 184 106 192 C102 200 98 206 90 206 H58 C38 206 28 194 28 172 V112 C28 92 38 80 58 80 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c46\"><path d=\"M64 98 H172 C184 98 190 106 190 118 V160 C190 174 182 182 170 182 H158 C152 182 148 178 144 172 C138 164 130 160 118 160 C108 160 100 164 94 172 C90 178 86 182 80 182 H64 C52 182 44 174 44 162 V118 C44 106 52 98 64 98 Z\"/></clipPath><path d=\"M64 98 H172 C184 98 190 106 190 118 V160 C190 174 182 182 170 182 H158 C152 182 148 178 144 172 C138 164 130 160 118 160 C108 160 100 164 94 172 C90 178 86 182 80 182 H64 C52 182 44 174 44 162 V118 C44 106 52 98 64 98 Z\" fill=\"#2a2a2a\"/><g clip-path=\"url(#c46)\"><path d=\"M64 98 H172 C184 98 190 106 190 118 V160 C190 174 182 182 170 182 H158 C152 182 148 178 144 172 C138 164 130 160 118 160 C108 160 100 164 94 172 C90 178 86 182 80 182 H64 C52 182 44 174 44 162 V118 C44 106 52 98 64 98 Z\" fill=\"#4d4d4d\"/><path d=\"M64 98 H172 C184 98 190 106 190 118 V160 C190 174 182 182 170 182 H158 C152 182 148 178 144 172 C138 164 130 160 118 160 C108 160 100 164 94 172 C90 178 86 182 80 182 H64 C52 182 44 174 44 162 V118 C44 106 52 98 64 98 Z\" fill=\"#2a2a2a\" transform=\"translate(0 4)\"/><path d=\"M64 98 H172 C184 98 190 106 190 118 V160 C190 174 182 182 170 182 H158 C152 182 148 178 144 172 C138 164 130 160 118 160 C108 160 100 164 94 172 C90 178 86 182 80 182 H64 C52 182 44 174 44 162 V118 C44 106 52 98 64 98 Z\" fill=\"url(#shade)\"/><path d=\"M64 98 H172 C184 98 190 106 190 118 V160 C190 174 182 182 170 182 H158 C152 182 148 178 144 172 C138 164 130 160 118 160 C108 160 100 164 94 172 C90 178 86 182 80 182 H64 C52 182 44 174 44 162 V118 C44 106 52 98 64 98 Z\" fill=\"url(#gloss)\" opacity=\"1\"/></g><path d=\"M64 98 H172 C184 98 190 106 190 118 V160 C190 174 182 182 170 182 H158 C152 182 148 178 144 172 C138 164 130 160 118 160 C108 160 100 164 94 172 C90 178 86 182 80 182 H64 C52 182 44 174 44 162 V118 C44 106 52 98 64 98 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><path d=\"M58 112 C80 106 140 106 172 110\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".55\" stroke-width=\"5\" stroke-linecap=\"round\"/></g></svg>",
+    "completed": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" width=\"256\" height=\"256\"><defs><radialGradient id=\"gloss\" cx=\".5\" cy=\"0\" r=\".75\" fx=\".5\" fy=\"0\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"/><stop offset=\".55\" stop-color=\"#fff\" stop-opacity=\".12\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\"0\"/></radialGradient><linearGradient id=\"shade\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\".45\" stop-color=\"#000\" stop-opacity=\"0\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".32\"/></linearGradient><radialGradient id=\"cap\" cx=\".4\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".7\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".25\"/></radialGradient><filter id=\"drop\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"150%\"><feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"3\"/><feOffset dy=\"4\"/><feComponentTransfer><feFuncA type=\"linear\" slope=\".22\"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in=\"SourceGraphic\"/></feMerge></filter></defs><g filter=\"url(#drop)\"><path d=\"M82 74 C44 66 34 122 92 132\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"26\" stroke-linecap=\"round\"/><path d=\"M82 74 C44 66 34 122 92 132\" fill=\"none\" stroke=\"#a8a8a8\" stroke-width=\"12\" stroke-linecap=\"round\"/><path d=\"M174 74 C212 66 222 122 164 132\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"26\" stroke-linecap=\"round\"/><path d=\"M174 74 C212 66 222 122 164 132\" fill=\"none\" stroke=\"#a8a8a8\" stroke-width=\"12\" stroke-linecap=\"round\"/><clipPath id=\"c47\"><path d=\"M87 196 H169 A9 9 0 0 1 178 205 V217 A9 9 0 0 1 169 226 H87 A9 9 0 0 1 78 217 V205 A9 9 0 0 1 87 196 Z\"/></clipPath><path d=\"M87 196 H169 A9 9 0 0 1 178 205 V217 A9 9 0 0 1 169 226 H87 A9 9 0 0 1 78 217 V205 A9 9 0 0 1 87 196 Z\" fill=\"#7a7a7a\"/><g clip-path=\"url(#c47)\"><path d=\"M87 196 H169 A9 9 0 0 1 178 205 V217 A9 9 0 0 1 169 226 H87 A9 9 0 0 1 78 217 V205 A9 9 0 0 1 87 196 Z\" fill=\"#b5b5b5\"/><path d=\"M87 196 H169 A9 9 0 0 1 178 205 V217 A9 9 0 0 1 169 226 H87 A9 9 0 0 1 78 217 V205 A9 9 0 0 1 87 196 Z\" fill=\"#7a7a7a\" transform=\"translate(0 7)\"/><path d=\"M87 196 H169 A9 9 0 0 1 178 205 V217 A9 9 0 0 1 169 226 H87 A9 9 0 0 1 78 217 V205 A9 9 0 0 1 87 196 Z\" fill=\"url(#shade)\"/><path d=\"M87 196 H169 A9 9 0 0 1 178 205 V217 A9 9 0 0 1 169 226 H87 A9 9 0 0 1 78 217 V205 A9 9 0 0 1 87 196 Z\" fill=\"url(#gloss)\" opacity=\"0.6\"/></g><path d=\"M87 196 H169 A9 9 0 0 1 178 205 V217 A9 9 0 0 1 169 226 H87 A9 9 0 0 1 78 217 V205 A9 9 0 0 1 87 196 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c48\"><path d=\"M99 180 H157 A7 7 0 0 1 164 187 V195 A7 7 0 0 1 157 202 H99 A7 7 0 0 1 92 195 V187 A7 7 0 0 1 99 180 Z\"/></clipPath><path d=\"M99 180 H157 A7 7 0 0 1 164 187 V195 A7 7 0 0 1 157 202 H99 A7 7 0 0 1 92 195 V187 A7 7 0 0 1 99 180 Z\" fill=\"#8a8a8a\"/><g clip-path=\"url(#c48)\"><path d=\"M99 180 H157 A7 7 0 0 1 164 187 V195 A7 7 0 0 1 157 202 H99 A7 7 0 0 1 92 195 V187 A7 7 0 0 1 99 180 Z\" fill=\"#bebebe\"/><path d=\"M99 180 H157 A7 7 0 0 1 164 187 V195 A7 7 0 0 1 157 202 H99 A7 7 0 0 1 92 195 V187 A7 7 0 0 1 99 180 Z\" fill=\"#8a8a8a\" transform=\"translate(0 7)\"/><path d=\"M99 180 H157 A7 7 0 0 1 164 187 V195 A7 7 0 0 1 157 202 H99 A7 7 0 0 1 92 195 V187 A7 7 0 0 1 99 180 Z\" fill=\"url(#shade)\"/><path d=\"M99 180 H157 A7 7 0 0 1 164 187 V195 A7 7 0 0 1 157 202 H99 A7 7 0 0 1 92 195 V187 A7 7 0 0 1 99 180 Z\" fill=\"url(#gloss)\" opacity=\"0.6\"/></g><path d=\"M99 180 H157 A7 7 0 0 1 164 187 V195 A7 7 0 0 1 157 202 H99 A7 7 0 0 1 92 195 V187 A7 7 0 0 1 99 180 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c49\"><path d=\"M114 150 H142 L148 184 H108 Z\"/></clipPath><path d=\"M114 150 H142 L148 184 H108 Z\" fill=\"#9a9a9a\"/><g clip-path=\"url(#c49)\"><path d=\"M114 150 H142 L148 184 H108 Z\" fill=\"#c7c7c7\"/><path d=\"M114 150 H142 L148 184 H108 Z\" fill=\"#9a9a9a\" transform=\"translate(0 7)\"/><path d=\"M114 150 H142 L148 184 H108 Z\" fill=\"url(#shade)\"/><path d=\"M114 150 H142 L148 184 H108 Z\" fill=\"url(#gloss)\" opacity=\"0.5\"/></g><path d=\"M114 150 H142 L148 184 H108 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c50\"><path d=\"M70 46 H186 V86 C186 132 160 158 128 160 C96 158 70 132 70 86 Z\"/></clipPath><path d=\"M70 46 H186 V86 C186 132 160 158 128 160 C96 158 70 132 70 86 Z\" fill=\"#b5b5b5\"/><g clip-path=\"url(#c50)\"><path d=\"M70 46 H186 V86 C186 132 160 158 128 160 C96 158 70 132 70 86 Z\" fill=\"#ececec\"/><path d=\"M70 46 H186 V86 C186 132 160 158 128 160 C96 158 70 132 70 86 Z\" fill=\"#b5b5b5\" transform=\"translate(0 7)\"/><path d=\"M70 46 H186 V86 C186 132 160 158 128 160 C96 158 70 132 70 86 Z\" fill=\"url(#shade)\"/><path d=\"M70 46 H186 V86 C186 132 160 158 128 160 C96 158 70 132 70 86 Z\" fill=\"url(#gloss)\" opacity=\"1\"/></g><path d=\"M70 46 H186 V86 C186 132 160 158 128 160 C96 158 70 132 70 86 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><path d=\"M90 64 V92 C90 112 98 128 110 138\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"7\" stroke-linecap=\"round\"/></g></svg>",
+    "generic": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" width=\"256\" height=\"256\"><defs><radialGradient id=\"gloss\" cx=\".5\" cy=\"0\" r=\".75\" fx=\".5\" fy=\"0\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"/><stop offset=\".55\" stop-color=\"#fff\" stop-opacity=\".12\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\"0\"/></radialGradient><linearGradient id=\"shade\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\".45\" stop-color=\"#000\" stop-opacity=\"0\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".32\"/></linearGradient><radialGradient id=\"cap\" cx=\".4\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".7\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".25\"/></radialGradient><filter id=\"drop\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"150%\"><feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"3\"/><feOffset dy=\"4\"/><feComponentTransfer><feFuncA type=\"linear\" slope=\".22\"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in=\"SourceGraphic\"/></feMerge></filter></defs><g filter=\"url(#drop)\"><clipPath id=\"c57\"><path d=\"M66 82 H190 C226 82 248 108 246 142 C244 176 226 196 202 196 C186 196 176 188 166 176 H90 C80 188 70 196 54 196 C30 196 12 176 10 142 C8 108 30 82 66 82 Z\"/></clipPath><path d=\"M66 82 H190 C226 82 248 108 246 142 C244 176 226 196 202 196 C186 196 176 188 166 176 H90 C80 188 70 196 54 196 C30 196 12 176 10 142 C8 108 30 82 66 82 Z\" fill=\"#8c8c8c\"/><g clip-path=\"url(#c57)\"><path d=\"M66 82 H190 C226 82 248 108 246 142 C244 176 226 196 202 196 C186 196 176 188 166 176 H90 C80 188 70 196 54 196 C30 196 12 176 10 142 C8 108 30 82 66 82 Z\" fill=\"#c4c4c4\"/><path d=\"M66 82 H190 C226 82 248 108 246 142 C244 176 226 196 202 196 C186 196 176 188 166 176 H90 C80 188 70 196 54 196 C30 196 12 176 10 142 C8 108 30 82 66 82 Z\" fill=\"#8c8c8c\" transform=\"translate(0 7)\"/><path d=\"M66 82 H190 C226 82 248 108 246 142 C244 176 226 196 202 196 C186 196 176 188 166 176 H90 C80 188 70 196 54 196 C30 196 12 176 10 142 C8 108 30 82 66 82 Z\" fill=\"url(#shade)\"/><path d=\"M66 82 H190 C226 82 248 108 246 142 C244 176 226 196 202 196 C186 196 176 188 166 176 H90 C80 188 70 196 54 196 C30 196 12 176 10 142 C8 108 30 82 66 82 Z\" fill=\"url(#gloss)\" opacity=\"1\"/></g><path d=\"M66 82 H190 C226 82 248 108 246 142 C244 176 226 196 202 196 C186 196 176 188 166 176 H90 C80 188 70 196 54 196 C30 196 12 176 10 142 C8 108 30 82 66 82 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c58\"><path d=\"M58 116 H74 V130 H88 V146 H74 V160 H58 V146 H44 V130 H58 Z\"/></clipPath><path d=\"M58 116 H74 V130 H88 V146 H74 V160 H58 V146 H44 V130 H58 Z\" fill=\"#3a3a3a\"/><g clip-path=\"url(#c58)\"><path d=\"M58 116 H74 V130 H88 V146 H74 V160 H58 V146 H44 V130 H58 Z\" fill=\"#929292\"/><path d=\"M58 116 H74 V130 H88 V146 H74 V160 H58 V146 H44 V130 H58 Z\" fill=\"#3a3a3a\" transform=\"translate(0 3)\"/></g><path d=\"M58 116 H74 V130 H88 V146 H74 V160 H58 V146 H44 V130 H58 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><path d=\"M58 116 H74 V130 H88 V146 H74 V160 H58 V146 H44 V130 H58 Z\" fill=\"url(#cap)\" opacity=\".7\"/><clipPath id=\"c59\"><path d=\"M180 119 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\"/></clipPath><path d=\"M180 119 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#5a5a5a\"/><g clip-path=\"url(#c59)\"><path d=\"M180 119 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#a4a4a4\"/><path d=\"M180 119 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#5a5a5a\" transform=\"translate(0 3)\"/></g><path d=\"M180 119 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"190\" cy=\"119\" r=\"10\" fill=\"url(#cap)\"/><clipPath id=\"c60\"><path d=\"M199 138 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\"/></clipPath><path d=\"M199 138 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#5a5a5a\"/><g clip-path=\"url(#c60)\"><path d=\"M199 138 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#a4a4a4\"/><path d=\"M199 138 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#5a5a5a\" transform=\"translate(0 3)\"/></g><path d=\"M199 138 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"209\" cy=\"138\" r=\"10\" fill=\"url(#cap)\"/><clipPath id=\"c61\"><path d=\"M180 157 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\"/></clipPath><path d=\"M180 157 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#5a5a5a\"/><g clip-path=\"url(#c61)\"><path d=\"M180 157 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#a4a4a4\"/><path d=\"M180 157 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#5a5a5a\" transform=\"translate(0 3)\"/></g><path d=\"M180 157 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"190\" cy=\"157\" r=\"10\" fill=\"url(#cap)\"/><clipPath id=\"c62\"><path d=\"M161 138 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\"/></clipPath><path d=\"M161 138 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#5a5a5a\"/><g clip-path=\"url(#c62)\"><path d=\"M161 138 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#a4a4a4\"/><path d=\"M161 138 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#5a5a5a\" transform=\"translate(0 3)\"/></g><path d=\"M161 138 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"171\" cy=\"138\" r=\"10\" fill=\"url(#cap)\"/><clipPath id=\"c63\"><path d=\"M106.0 134.0 H118.0 A4.0 4.0 0 0 1 122.0 138.0 V138.0 A4.0 4.0 0 0 1 118.0 142.0 H106.0 A4.0 4.0 0 0 1 102.0 138.0 V138.0 A4.0 4.0 0 0 1 106.0 134.0 Z\"/></clipPath><path d=\"M106.0 134.0 H118.0 A4.0 4.0 0 0 1 122.0 138.0 V138.0 A4.0 4.0 0 0 1 118.0 142.0 H106.0 A4.0 4.0 0 0 1 102.0 138.0 V138.0 A4.0 4.0 0 0 1 106.0 134.0 Z\" fill=\"#444444\"/><g clip-path=\"url(#c63)\"><path d=\"M106.0 134.0 H118.0 A4.0 4.0 0 0 1 122.0 138.0 V138.0 A4.0 4.0 0 0 1 118.0 142.0 H106.0 A4.0 4.0 0 0 1 102.0 138.0 V138.0 A4.0 4.0 0 0 1 106.0 134.0 Z\" fill=\"#989898\"/><path d=\"M106.0 134.0 H118.0 A4.0 4.0 0 0 1 122.0 138.0 V138.0 A4.0 4.0 0 0 1 118.0 142.0 H106.0 A4.0 4.0 0 0 1 102.0 138.0 V138.0 A4.0 4.0 0 0 1 106.0 134.0 Z\" fill=\"#444444\" transform=\"translate(0 2)\"/></g><path d=\"M106.0 134.0 H118.0 A4.0 4.0 0 0 1 122.0 138.0 V138.0 A4.0 4.0 0 0 1 118.0 142.0 H106.0 A4.0 4.0 0 0 1 102.0 138.0 V138.0 A4.0 4.0 0 0 1 106.0 134.0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"4\" stroke-linejoin=\"round\"/><clipPath id=\"c64\"><path d=\"M138.0 134.0 H150.0 A4.0 4.0 0 0 1 154.0 138.0 V138.0 A4.0 4.0 0 0 1 150.0 142.0 H138.0 A4.0 4.0 0 0 1 134.0 138.0 V138.0 A4.0 4.0 0 0 1 138.0 134.0 Z\"/></clipPath><path d=\"M138.0 134.0 H150.0 A4.0 4.0 0 0 1 154.0 138.0 V138.0 A4.0 4.0 0 0 1 150.0 142.0 H138.0 A4.0 4.0 0 0 1 134.0 138.0 V138.0 A4.0 4.0 0 0 1 138.0 134.0 Z\" fill=\"#444444\"/><g clip-path=\"url(#c64)\"><path d=\"M138.0 134.0 H150.0 A4.0 4.0 0 0 1 154.0 138.0 V138.0 A4.0 4.0 0 0 1 150.0 142.0 H138.0 A4.0 4.0 0 0 1 134.0 138.0 V138.0 A4.0 4.0 0 0 1 138.0 134.0 Z\" fill=\"#989898\"/><path d=\"M138.0 134.0 H150.0 A4.0 4.0 0 0 1 154.0 138.0 V138.0 A4.0 4.0 0 0 1 150.0 142.0 H138.0 A4.0 4.0 0 0 1 134.0 138.0 V138.0 A4.0 4.0 0 0 1 138.0 134.0 Z\" fill=\"#444444\" transform=\"translate(0 2)\"/></g><path d=\"M138.0 134.0 H150.0 A4.0 4.0 0 0 1 154.0 138.0 V138.0 A4.0 4.0 0 0 1 150.0 142.0 H138.0 A4.0 4.0 0 0 1 134.0 138.0 V138.0 A4.0 4.0 0 0 1 138.0 134.0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"4\" stroke-linejoin=\"round\"/></g></svg>",
+    "ps3": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" width=\"256\" height=\"256\"><defs><radialGradient id=\"gloss\" cx=\".5\" cy=\"0\" r=\".75\" fx=\".5\" fy=\"0\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"/><stop offset=\".55\" stop-color=\"#fff\" stop-opacity=\".12\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\"0\"/></radialGradient><linearGradient id=\"shade\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\".45\" stop-color=\"#000\" stop-opacity=\"0\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".32\"/></linearGradient><radialGradient id=\"cap\" cx=\".4\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".7\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".25\"/></radialGradient><filter id=\"drop\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"150%\"><feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"3\"/><feOffset dy=\"4\"/><feComponentTransfer><feFuncA type=\"linear\" slope=\".22\"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in=\"SourceGraphic\"/></feMerge></filter></defs><g filter=\"url(#drop)\"><clipPath id=\"c0\"><path d=\"M64 70 H88 A10 10 0 0 1 98 80 V82 A10 10 0 0 1 88 92 H64 A10 10 0 0 1 54 82 V80 A10 10 0 0 1 64 70 Z\"/></clipPath><path d=\"M64 70 H88 A10 10 0 0 1 98 80 V82 A10 10 0 0 1 88 92 H64 A10 10 0 0 1 54 82 V80 A10 10 0 0 1 64 70 Z\" fill=\"#2a2a2a\"/><g clip-path=\"url(#c0)\"><path d=\"M64 70 H88 A10 10 0 0 1 98 80 V82 A10 10 0 0 1 88 92 H64 A10 10 0 0 1 54 82 V80 A10 10 0 0 1 64 70 Z\" fill=\"#898989\"/><path d=\"M64 70 H88 A10 10 0 0 1 98 80 V82 A10 10 0 0 1 88 92 H64 A10 10 0 0 1 54 82 V80 A10 10 0 0 1 64 70 Z\" fill=\"#2a2a2a\" transform=\"translate(0 7)\"/><path d=\"M64 70 H88 A10 10 0 0 1 98 80 V82 A10 10 0 0 1 88 92 H64 A10 10 0 0 1 54 82 V80 A10 10 0 0 1 64 70 Z\" fill=\"url(#shade)\"/><path d=\"M64 70 H88 A10 10 0 0 1 98 80 V82 A10 10 0 0 1 88 92 H64 A10 10 0 0 1 54 82 V80 A10 10 0 0 1 64 70 Z\" fill=\"url(#gloss)\" opacity=\"0.9\"/></g><path d=\"M64 70 H88 A10 10 0 0 1 98 80 V82 A10 10 0 0 1 88 92 H64 A10 10 0 0 1 54 82 V80 A10 10 0 0 1 64 70 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c1\"><path d=\"M168 70 H192 A10 10 0 0 1 202 80 V82 A10 10 0 0 1 192 92 H168 A10 10 0 0 1 158 82 V80 A10 10 0 0 1 168 70 Z\"/></clipPath><path d=\"M168 70 H192 A10 10 0 0 1 202 80 V82 A10 10 0 0 1 192 92 H168 A10 10 0 0 1 158 82 V80 A10 10 0 0 1 168 70 Z\" fill=\"#2a2a2a\"/><g clip-path=\"url(#c1)\"><path d=\"M168 70 H192 A10 10 0 0 1 202 80 V82 A10 10 0 0 1 192 92 H168 A10 10 0 0 1 158 82 V80 A10 10 0 0 1 168 70 Z\" fill=\"#898989\"/><path d=\"M168 70 H192 A10 10 0 0 1 202 80 V82 A10 10 0 0 1 192 92 H168 A10 10 0 0 1 158 82 V80 A10 10 0 0 1 168 70 Z\" fill=\"#2a2a2a\" transform=\"translate(0 7)\"/><path d=\"M168 70 H192 A10 10 0 0 1 202 80 V82 A10 10 0 0 1 192 92 H168 A10 10 0 0 1 158 82 V80 A10 10 0 0 1 168 70 Z\" fill=\"url(#shade)\"/><path d=\"M168 70 H192 A10 10 0 0 1 202 80 V82 A10 10 0 0 1 192 92 H168 A10 10 0 0 1 158 82 V80 A10 10 0 0 1 168 70 Z\" fill=\"url(#gloss)\" opacity=\"0.9\"/></g><path d=\"M168 70 H192 A10 10 0 0 1 202 80 V82 A10 10 0 0 1 192 92 H168 A10 10 0 0 1 158 82 V80 A10 10 0 0 1 168 70 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c2\"><path d=\"M72 84 H184 C210 84 226 96 231 120 L244 182 C248 206 236 220 221 220 C208 220 200 210 194 198 L178 166 C174 160 168 158 160 158 H96 C88 158 82 160 78 166 L62 198 C56 210 48 220 35 220 C20 220 8 206 12 182 L25 120 C30 96 46 84 72 84 Z\"/></clipPath><path d=\"M72 84 H184 C210 84 226 96 231 120 L244 182 C248 206 236 220 221 220 C208 220 200 210 194 198 L178 166 C174 160 168 158 160 158 H96 C88 158 82 160 78 166 L62 198 C56 210 48 220 35 220 C20 220 8 206 12 182 L25 120 C30 96 46 84 72 84 Z\" fill=\"#2b2b2b\"/><g clip-path=\"url(#c2)\"><path d=\"M72 84 H184 C210 84 226 96 231 120 L244 182 C248 206 236 220 221 220 C208 220 200 210 194 198 L178 166 C174 160 168 158 160 158 H96 C88 158 82 160 78 166 L62 198 C56 210 48 220 35 220 C20 220 8 206 12 182 L25 120 C30 96 46 84 72 84 Z\" fill=\"#6a6a6a\"/><path d=\"M72 84 H184 C210 84 226 96 231 120 L244 182 C248 206 236 220 221 220 C208 220 200 210 194 198 L178 166 C174 160 168 158 160 158 H96 C88 158 82 160 78 166 L62 198 C56 210 48 220 35 220 C20 220 8 206 12 182 L25 120 C30 96 46 84 72 84 Z\" fill=\"#2b2b2b\" transform=\"translate(0 7)\"/><path d=\"M72 84 H184 C210 84 226 96 231 120 L244 182 C248 206 236 220 221 220 C208 220 200 210 194 198 L178 166 C174 160 168 158 160 158 H96 C88 158 82 160 78 166 L62 198 C56 210 48 220 35 220 C20 220 8 206 12 182 L25 120 C30 96 46 84 72 84 Z\" fill=\"url(#shade)\"/><path d=\"M72 84 H184 C210 84 226 96 231 120 L244 182 C248 206 236 220 221 220 C208 220 200 210 194 198 L178 166 C174 160 168 158 160 158 H96 C88 158 82 160 78 166 L62 198 C56 210 48 220 35 220 C20 220 8 206 12 182 L25 120 C30 96 46 84 72 84 Z\" fill=\"url(#gloss)\" opacity=\"1\"/></g><path d=\"M72 84 H184 C210 84 226 96 231 120 L244 182 C248 206 236 220 221 220 C208 220 200 210 194 198 L178 166 C174 160 168 158 160 158 H96 C88 158 82 160 78 166 L62 198 C56 210 48 220 35 220 C20 220 8 206 12 182 L25 120 C30 96 46 84 72 84 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c3\"><path d=\"M40 116 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z\"/></clipPath><path d=\"M40 116 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z\" fill=\"#202020\"/><g clip-path=\"url(#c3)\"><path d=\"M40 116 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z\" fill=\"#848484\"/><path d=\"M40 116 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z\" fill=\"#202020\" transform=\"translate(0 0)\"/></g><path d=\"M40 116 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><clipPath id=\"c4\"><path d=\"M63 96 H77 V109 H90 V123 H77 V136 H63 V123 H50 V109 H63 Z\"/></clipPath><path d=\"M63 96 H77 V109 H90 V123 H77 V136 H63 V123 H50 V109 H63 Z\" fill=\"#3a3a3a\"/><g clip-path=\"url(#c4)\"><path d=\"M63 96 H77 V109 H90 V123 H77 V136 H63 V123 H50 V109 H63 Z\" fill=\"#929292\"/><path d=\"M63 96 H77 V109 H90 V123 H77 V136 H63 V123 H50 V109 H63 Z\" fill=\"#3a3a3a\" transform=\"translate(0 3)\"/></g><path d=\"M63 96 H77 V109 H90 V123 H77 V136 H63 V123 H50 V109 H63 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><path d=\"M63 96 H77 V109 H90 V123 H77 V136 H63 V123 H50 V109 H63 Z\" fill=\"url(#cap)\" opacity=\".7\"/><clipPath id=\"c5\"><path d=\"M177 98 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\"/></clipPath><path d=\"M177 98 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#454545\"/><g clip-path=\"url(#c5)\"><path d=\"M177 98 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#989898\"/><path d=\"M177 98 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#454545\" transform=\"translate(0 3)\"/></g><path d=\"M177 98 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"186\" cy=\"98\" r=\"9\" fill=\"url(#cap)\"/><clipPath id=\"c6\"><path d=\"M195 116 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\"/></clipPath><path d=\"M195 116 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#454545\"/><g clip-path=\"url(#c6)\"><path d=\"M195 116 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#989898\"/><path d=\"M195 116 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#454545\" transform=\"translate(0 3)\"/></g><path d=\"M195 116 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"204\" cy=\"116\" r=\"9\" fill=\"url(#cap)\"/><clipPath id=\"c7\"><path d=\"M177 134 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\"/></clipPath><path d=\"M177 134 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#454545\"/><g clip-path=\"url(#c7)\"><path d=\"M177 134 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#989898\"/><path d=\"M177 134 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#454545\" transform=\"translate(0 3)\"/></g><path d=\"M177 134 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"186\" cy=\"134\" r=\"9\" fill=\"url(#cap)\"/><clipPath id=\"c8\"><path d=\"M159 116 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\"/></clipPath><path d=\"M159 116 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#454545\"/><g clip-path=\"url(#c8)\"><path d=\"M159 116 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#989898\"/><path d=\"M159 116 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#454545\" transform=\"translate(0 3)\"/></g><path d=\"M159 116 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"168\" cy=\"116\" r=\"9\" fill=\"url(#cap)\"/><clipPath id=\"c9\"><path d=\"M86 148 a18 18 0 1 0 36 0 a18 18 0 1 0 -36 0 Z\"/></clipPath><path d=\"M86 148 a18 18 0 1 0 36 0 a18 18 0 1 0 -36 0 Z\" fill=\"#1c1c1c\"/><g clip-path=\"url(#c9)\"><path d=\"M86 148 a18 18 0 1 0 36 0 a18 18 0 1 0 -36 0 Z\" fill=\"#828282\"/><path d=\"M86 148 a18 18 0 1 0 36 0 a18 18 0 1 0 -36 0 Z\" fill=\"#1c1c1c\" transform=\"translate(0 0)\"/></g><path d=\"M86 148 a18 18 0 1 0 36 0 a18 18 0 1 0 -36 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><clipPath id=\"c10\"><path d=\"M91.76 146 a12.24 12.24 0 1 0 24.48 0 a12.24 12.24 0 1 0 -24.48 0 Z\"/></clipPath><path d=\"M91.76 146 a12.24 12.24 0 1 0 24.48 0 a12.24 12.24 0 1 0 -24.48 0 Z\" fill=\"#3c3c3c\"/><g clip-path=\"url(#c10)\"><path d=\"M91.76 146 a12.24 12.24 0 1 0 24.48 0 a12.24 12.24 0 1 0 -24.48 0 Z\" fill=\"#939393\"/><path d=\"M91.76 146 a12.24 12.24 0 1 0 24.48 0 a12.24 12.24 0 1 0 -24.48 0 Z\" fill=\"#3c3c3c\" transform=\"translate(0 3)\"/></g><path d=\"M91.76 146 a12.24 12.24 0 1 0 24.48 0 a12.24 12.24 0 1 0 -24.48 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"104\" cy=\"146\" r=\"12.24\" fill=\"url(#cap)\"/><clipPath id=\"c11\"><path d=\"M134 148 a18 18 0 1 0 36 0 a18 18 0 1 0 -36 0 Z\"/></clipPath><path d=\"M134 148 a18 18 0 1 0 36 0 a18 18 0 1 0 -36 0 Z\" fill=\"#1c1c1c\"/><g clip-path=\"url(#c11)\"><path d=\"M134 148 a18 18 0 1 0 36 0 a18 18 0 1 0 -36 0 Z\" fill=\"#828282\"/><path d=\"M134 148 a18 18 0 1 0 36 0 a18 18 0 1 0 -36 0 Z\" fill=\"#1c1c1c\" transform=\"translate(0 0)\"/></g><path d=\"M134 148 a18 18 0 1 0 36 0 a18 18 0 1 0 -36 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><clipPath id=\"c12\"><path d=\"M139.76 146 a12.24 12.24 0 1 0 24.48 0 a12.24 12.24 0 1 0 -24.48 0 Z\"/></clipPath><path d=\"M139.76 146 a12.24 12.24 0 1 0 24.48 0 a12.24 12.24 0 1 0 -24.48 0 Z\" fill=\"#3c3c3c\"/><g clip-path=\"url(#c12)\"><path d=\"M139.76 146 a12.24 12.24 0 1 0 24.48 0 a12.24 12.24 0 1 0 -24.48 0 Z\" fill=\"#939393\"/><path d=\"M139.76 146 a12.24 12.24 0 1 0 24.48 0 a12.24 12.24 0 1 0 -24.48 0 Z\" fill=\"#3c3c3c\" transform=\"translate(0 3)\"/></g><path d=\"M139.76 146 a12.24 12.24 0 1 0 24.48 0 a12.24 12.24 0 1 0 -24.48 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"152\" cy=\"146\" r=\"12.24\" fill=\"url(#cap)\"/><clipPath id=\"c13\"><path d=\"M106.5 100.5 H113.5 A3.5 3.5 0 0 1 117.0 104.0 V104.0 A3.5 3.5 0 0 1 113.5 107.5 H106.5 A3.5 3.5 0 0 1 103.0 104.0 V104.0 A3.5 3.5 0 0 1 106.5 100.5 Z\"/></clipPath><path d=\"M106.5 100.5 H113.5 A3.5 3.5 0 0 1 117.0 104.0 V104.0 A3.5 3.5 0 0 1 113.5 107.5 H106.5 A3.5 3.5 0 0 1 103.0 104.0 V104.0 A3.5 3.5 0 0 1 106.5 100.5 Z\" fill=\"#555555\"/><g clip-path=\"url(#c13)\"><path d=\"M106.5 100.5 H113.5 A3.5 3.5 0 0 1 117.0 104.0 V104.0 A3.5 3.5 0 0 1 113.5 107.5 H106.5 A3.5 3.5 0 0 1 103.0 104.0 V104.0 A3.5 3.5 0 0 1 106.5 100.5 Z\" fill=\"#a1a1a1\"/><path d=\"M106.5 100.5 H113.5 A3.5 3.5 0 0 1 117.0 104.0 V104.0 A3.5 3.5 0 0 1 113.5 107.5 H106.5 A3.5 3.5 0 0 1 103.0 104.0 V104.0 A3.5 3.5 0 0 1 106.5 100.5 Z\" fill=\"#555555\" transform=\"translate(0 2)\"/></g><path d=\"M106.5 100.5 H113.5 A3.5 3.5 0 0 1 117.0 104.0 V104.0 A3.5 3.5 0 0 1 113.5 107.5 H106.5 A3.5 3.5 0 0 1 103.0 104.0 V104.0 A3.5 3.5 0 0 1 106.5 100.5 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"4\" stroke-linejoin=\"round\"/><clipPath id=\"c14\"><path d=\"M142.5 100.5 H149.5 A3.5 3.5 0 0 1 153.0 104.0 V104.0 A3.5 3.5 0 0 1 149.5 107.5 H142.5 A3.5 3.5 0 0 1 139.0 104.0 V104.0 A3.5 3.5 0 0 1 142.5 100.5 Z\"/></clipPath><path d=\"M142.5 100.5 H149.5 A3.5 3.5 0 0 1 153.0 104.0 V104.0 A3.5 3.5 0 0 1 149.5 107.5 H142.5 A3.5 3.5 0 0 1 139.0 104.0 V104.0 A3.5 3.5 0 0 1 142.5 100.5 Z\" fill=\"#555555\"/><g clip-path=\"url(#c14)\"><path d=\"M142.5 100.5 H149.5 A3.5 3.5 0 0 1 153.0 104.0 V104.0 A3.5 3.5 0 0 1 149.5 107.5 H142.5 A3.5 3.5 0 0 1 139.0 104.0 V104.0 A3.5 3.5 0 0 1 142.5 100.5 Z\" fill=\"#a1a1a1\"/><path d=\"M142.5 100.5 H149.5 A3.5 3.5 0 0 1 153.0 104.0 V104.0 A3.5 3.5 0 0 1 149.5 107.5 H142.5 A3.5 3.5 0 0 1 139.0 104.0 V104.0 A3.5 3.5 0 0 1 142.5 100.5 Z\" fill=\"#555555\" transform=\"translate(0 2)\"/></g><path d=\"M142.5 100.5 H149.5 A3.5 3.5 0 0 1 153.0 104.0 V104.0 A3.5 3.5 0 0 1 149.5 107.5 H142.5 A3.5 3.5 0 0 1 139.0 104.0 V104.0 A3.5 3.5 0 0 1 142.5 100.5 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"4\" stroke-linejoin=\"round\"/><clipPath id=\"c15\"><path d=\"M121 124 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0 Z\"/></clipPath><path d=\"M121 124 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0 Z\" fill=\"#555555\"/><g clip-path=\"url(#c15)\"><path d=\"M121 124 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0 Z\" fill=\"#a1a1a1\"/><path d=\"M121 124 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0 Z\" fill=\"#555555\" transform=\"translate(0 3)\"/></g><path d=\"M121 124 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"4\" stroke-linejoin=\"round\"/><circle cx=\"128\" cy=\"124\" r=\"7\" fill=\"url(#cap)\"/></g></svg>",
+    "xbox": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" width=\"256\" height=\"256\"><defs><radialGradient id=\"gloss\" cx=\".5\" cy=\"0\" r=\".75\" fx=\".5\" fy=\"0\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"/><stop offset=\".55\" stop-color=\"#fff\" stop-opacity=\".12\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\"0\"/></radialGradient><linearGradient id=\"shade\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\".45\" stop-color=\"#000\" stop-opacity=\"0\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".32\"/></linearGradient><radialGradient id=\"cap\" cx=\".4\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".7\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".25\"/></radialGradient><filter id=\"drop\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"150%\"><feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"3\"/><feOffset dy=\"4\"/><feComponentTransfer><feFuncA type=\"linear\" slope=\".22\"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in=\"SourceGraphic\"/></feMerge></filter></defs><g filter=\"url(#drop)\"><clipPath id=\"c16\"><path d=\"M62 62 C92 54 164 54 194 62 C226 70 242 96 246 128 L250 168 C253 200 236 218 213 218 C195 218 185 206 177 192 L168 176 H88 L79 192 C71 206 61 218 43 218 C20 218 3 200 6 168 L10 128 C14 96 30 70 62 62 Z\"/></clipPath><path d=\"M62 62 C92 54 164 54 194 62 C226 70 242 96 246 128 L250 168 C253 200 236 218 213 218 C195 218 185 206 177 192 L168 176 H88 L79 192 C71 206 61 218 43 218 C20 218 3 200 6 168 L10 128 C14 96 30 70 62 62 Z\" fill=\"#2e2e2e\"/><g clip-path=\"url(#c16)\"><path d=\"M62 62 C92 54 164 54 194 62 C226 70 242 96 246 128 L250 168 C253 200 236 218 213 218 C195 218 185 206 177 192 L168 176 H88 L79 192 C71 206 61 218 43 218 C20 218 3 200 6 168 L10 128 C14 96 30 70 62 62 Z\" fill=\"#666666\"/><path d=\"M62 62 C92 54 164 54 194 62 C226 70 242 96 246 128 L250 168 C253 200 236 218 213 218 C195 218 185 206 177 192 L168 176 H88 L79 192 C71 206 61 218 43 218 C20 218 3 200 6 168 L10 128 C14 96 30 70 62 62 Z\" fill=\"#2e2e2e\" transform=\"translate(0 7)\"/><path d=\"M62 62 C92 54 164 54 194 62 C226 70 242 96 246 128 L250 168 C253 200 236 218 213 218 C195 218 185 206 177 192 L168 176 H88 L79 192 C71 206 61 218 43 218 C20 218 3 200 6 168 L10 128 C14 96 30 70 62 62 Z\" fill=\"url(#shade)\"/><path d=\"M62 62 C92 54 164 54 194 62 C226 70 242 96 246 128 L250 168 C253 200 236 218 213 218 C195 218 185 206 177 192 L168 176 H88 L79 192 C71 206 61 218 43 218 C20 218 3 200 6 168 L10 128 C14 96 30 70 62 62 Z\" fill=\"url(#gloss)\" opacity=\"1\"/></g><path d=\"M62 62 C92 54 164 54 194 62 C226 70 242 96 246 128 L250 168 C253 200 236 218 213 218 C195 218 185 206 177 192 L168 176 H88 L79 192 C71 206 61 218 43 218 C20 218 3 200 6 168 L10 128 C14 96 30 70 62 62 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c17\"><path d=\"M44 110 a22 22 0 1 0 44 0 a22 22 0 1 0 -44 0 Z\"/></clipPath><path d=\"M44 110 a22 22 0 1 0 44 0 a22 22 0 1 0 -44 0 Z\" fill=\"#1c1c1c\"/><g clip-path=\"url(#c17)\"><path d=\"M44 110 a22 22 0 1 0 44 0 a22 22 0 1 0 -44 0 Z\" fill=\"#828282\"/><path d=\"M44 110 a22 22 0 1 0 44 0 a22 22 0 1 0 -44 0 Z\" fill=\"#1c1c1c\" transform=\"translate(0 0)\"/></g><path d=\"M44 110 a22 22 0 1 0 44 0 a22 22 0 1 0 -44 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><clipPath id=\"c18\"><path d=\"M51.04 108 a14.96 14.96 0 1 0 29.92 0 a14.96 14.96 0 1 0 -29.92 0 Z\"/></clipPath><path d=\"M51.04 108 a14.96 14.96 0 1 0 29.92 0 a14.96 14.96 0 1 0 -29.92 0 Z\" fill=\"#3a3a3a\"/><g clip-path=\"url(#c18)\"><path d=\"M51.04 108 a14.96 14.96 0 1 0 29.92 0 a14.96 14.96 0 1 0 -29.92 0 Z\" fill=\"#929292\"/><path d=\"M51.04 108 a14.96 14.96 0 1 0 29.92 0 a14.96 14.96 0 1 0 -29.92 0 Z\" fill=\"#3a3a3a\" transform=\"translate(0 3)\"/></g><path d=\"M51.04 108 a14.96 14.96 0 1 0 29.92 0 a14.96 14.96 0 1 0 -29.92 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"66\" cy=\"108\" r=\"14.96\" fill=\"url(#cap)\"/><clipPath id=\"c19\"><path d=\"M76 160 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0 Z\"/></clipPath><path d=\"M76 160 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0 Z\" fill=\"#222222\"/><g clip-path=\"url(#c19)\"><path d=\"M76 160 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0 Z\" fill=\"#858585\"/><path d=\"M76 160 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0 Z\" fill=\"#222222\" transform=\"translate(0 0)\"/></g><path d=\"M76 160 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><clipPath id=\"c20\"><path d=\"M95 141 H109 V153 H121 V167 H109 V179 H95 V167 H83 V153 H95 Z\"/></clipPath><path d=\"M95 141 H109 V153 H121 V167 H109 V179 H95 V167 H83 V153 H95 Z\" fill=\"#3a3a3a\"/><g clip-path=\"url(#c20)\"><path d=\"M95 141 H109 V153 H121 V167 H109 V179 H95 V167 H83 V153 H95 Z\" fill=\"#929292\"/><path d=\"M95 141 H109 V153 H121 V167 H109 V179 H95 V167 H83 V153 H95 Z\" fill=\"#3a3a3a\" transform=\"translate(0 3)\"/></g><path d=\"M95 141 H109 V153 H121 V167 H109 V179 H95 V167 H83 V153 H95 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><path d=\"M95 141 H109 V153 H121 V167 H109 V179 H95 V167 H83 V153 H95 Z\" fill=\"url(#cap)\" opacity=\".7\"/><clipPath id=\"c21\"><path d=\"M138 160 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0 Z\"/></clipPath><path d=\"M138 160 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0 Z\" fill=\"#1c1c1c\"/><g clip-path=\"url(#c21)\"><path d=\"M138 160 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0 Z\" fill=\"#828282\"/><path d=\"M138 160 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0 Z\" fill=\"#1c1c1c\" transform=\"translate(0 0)\"/></g><path d=\"M138 160 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><clipPath id=\"c22\"><path d=\"M144.4 158 a13.600000000000001 13.600000000000001 0 1 0 27.200000000000003 0 a13.600000000000001 13.600000000000001 0 1 0 -27.200000000000003 0 Z\"/></clipPath><path d=\"M144.4 158 a13.600000000000001 13.600000000000001 0 1 0 27.200000000000003 0 a13.600000000000001 13.600000000000001 0 1 0 -27.200000000000003 0 Z\" fill=\"#3a3a3a\"/><g clip-path=\"url(#c22)\"><path d=\"M144.4 158 a13.600000000000001 13.600000000000001 0 1 0 27.200000000000003 0 a13.600000000000001 13.600000000000001 0 1 0 -27.200000000000003 0 Z\" fill=\"#929292\"/><path d=\"M144.4 158 a13.600000000000001 13.600000000000001 0 1 0 27.200000000000003 0 a13.600000000000001 13.600000000000001 0 1 0 -27.200000000000003 0 Z\" fill=\"#3a3a3a\" transform=\"translate(0 3)\"/></g><path d=\"M144.4 158 a13.600000000000001 13.600000000000001 0 1 0 27.200000000000003 0 a13.600000000000001 13.600000000000001 0 1 0 -27.200000000000003 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"158\" cy=\"158\" r=\"13.600000000000001\" fill=\"url(#cap)\"/><clipPath id=\"c23\"><path d=\"M182 90 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\"/></clipPath><path d=\"M182 90 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#4a4a4a\"/><g clip-path=\"url(#c23)\"><path d=\"M182 90 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#9b9b9b\"/><path d=\"M182 90 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#4a4a4a\" transform=\"translate(0 3)\"/></g><path d=\"M182 90 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"192\" cy=\"90\" r=\"10\" fill=\"url(#cap)\"/><clipPath id=\"c24\"><path d=\"M202 110 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\"/></clipPath><path d=\"M202 110 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#4a4a4a\"/><g clip-path=\"url(#c24)\"><path d=\"M202 110 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#9b9b9b\"/><path d=\"M202 110 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#4a4a4a\" transform=\"translate(0 3)\"/></g><path d=\"M202 110 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"212\" cy=\"110\" r=\"10\" fill=\"url(#cap)\"/><clipPath id=\"c25\"><path d=\"M182 130 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\"/></clipPath><path d=\"M182 130 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#4a4a4a\"/><g clip-path=\"url(#c25)\"><path d=\"M182 130 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#9b9b9b\"/><path d=\"M182 130 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#4a4a4a\" transform=\"translate(0 3)\"/></g><path d=\"M182 130 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"192\" cy=\"130\" r=\"10\" fill=\"url(#cap)\"/><clipPath id=\"c26\"><path d=\"M162 110 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\"/></clipPath><path d=\"M162 110 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#4a4a4a\"/><g clip-path=\"url(#c26)\"><path d=\"M162 110 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#9b9b9b\"/><path d=\"M162 110 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"#4a4a4a\" transform=\"translate(0 3)\"/></g><path d=\"M162 110 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"172\" cy=\"110\" r=\"10\" fill=\"url(#cap)\"/><clipPath id=\"c27\"><path d=\"M112 104 a16 16 0 1 0 32 0 a16 16 0 1 0 -32 0 Z\"/></clipPath><path d=\"M112 104 a16 16 0 1 0 32 0 a16 16 0 1 0 -32 0 Z\" fill=\"#262626\"/><g clip-path=\"url(#c27)\"><path d=\"M112 104 a16 16 0 1 0 32 0 a16 16 0 1 0 -32 0 Z\" fill=\"#878787\"/><path d=\"M112 104 a16 16 0 1 0 32 0 a16 16 0 1 0 -32 0 Z\" fill=\"#262626\" transform=\"translate(0 4)\"/><path d=\"M112 104 a16 16 0 1 0 32 0 a16 16 0 1 0 -32 0 Z\" fill=\"url(#gloss)\" opacity=\"0.6\"/></g><path d=\"M112 104 a16 16 0 1 0 32 0 a16 16 0 1 0 -32 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/></g></svg>",
+    "xbox360": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" width=\"256\" height=\"256\"><defs><radialGradient id=\"gloss\" cx=\".5\" cy=\"0\" r=\".75\" fx=\".5\" fy=\"0\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"/><stop offset=\".55\" stop-color=\"#fff\" stop-opacity=\".12\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\"0\"/></radialGradient><linearGradient id=\"shade\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\".45\" stop-color=\"#000\" stop-opacity=\"0\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".32\"/></linearGradient><radialGradient id=\"cap\" cx=\".4\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".7\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".25\"/></radialGradient><filter id=\"drop\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"150%\"><feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"3\"/><feOffset dy=\"4\"/><feComponentTransfer><feFuncA type=\"linear\" slope=\".22\"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in=\"SourceGraphic\"/></feMerge></filter></defs><g filter=\"url(#drop)\"><clipPath id=\"c28\"><path d=\"M61 56 H91 A11 11 0 0 1 102 67 V69 A11 11 0 0 1 91 80 H61 A11 11 0 0 1 50 69 V67 A11 11 0 0 1 61 56 Z\"/></clipPath><path d=\"M61 56 H91 A11 11 0 0 1 102 67 V69 A11 11 0 0 1 91 80 H61 A11 11 0 0 1 50 69 V67 A11 11 0 0 1 61 56 Z\" fill=\"#d9d9d9\"/><g clip-path=\"url(#c28)\"><path d=\"M61 56 H91 A11 11 0 0 1 102 67 V69 A11 11 0 0 1 91 80 H61 A11 11 0 0 1 50 69 V67 A11 11 0 0 1 61 56 Z\" fill=\"#eaeaea\"/><path d=\"M61 56 H91 A11 11 0 0 1 102 67 V69 A11 11 0 0 1 91 80 H61 A11 11 0 0 1 50 69 V67 A11 11 0 0 1 61 56 Z\" fill=\"#d9d9d9\" transform=\"translate(0 7)\"/><path d=\"M61 56 H91 A11 11 0 0 1 102 67 V69 A11 11 0 0 1 91 80 H61 A11 11 0 0 1 50 69 V67 A11 11 0 0 1 61 56 Z\" fill=\"url(#shade)\"/><path d=\"M61 56 H91 A11 11 0 0 1 102 67 V69 A11 11 0 0 1 91 80 H61 A11 11 0 0 1 50 69 V67 A11 11 0 0 1 61 56 Z\" fill=\"url(#gloss)\" opacity=\"0.9\"/></g><path d=\"M61 56 H91 A11 11 0 0 1 102 67 V69 A11 11 0 0 1 91 80 H61 A11 11 0 0 1 50 69 V67 A11 11 0 0 1 61 56 Z\" fill=\"none\" stroke=\"#5a5a5a\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c29\"><path d=\"M165 56 H195 A11 11 0 0 1 206 67 V69 A11 11 0 0 1 195 80 H165 A11 11 0 0 1 154 69 V67 A11 11 0 0 1 165 56 Z\"/></clipPath><path d=\"M165 56 H195 A11 11 0 0 1 206 67 V69 A11 11 0 0 1 195 80 H165 A11 11 0 0 1 154 69 V67 A11 11 0 0 1 165 56 Z\" fill=\"#d9d9d9\"/><g clip-path=\"url(#c29)\"><path d=\"M165 56 H195 A11 11 0 0 1 206 67 V69 A11 11 0 0 1 195 80 H165 A11 11 0 0 1 154 69 V67 A11 11 0 0 1 165 56 Z\" fill=\"#eaeaea\"/><path d=\"M165 56 H195 A11 11 0 0 1 206 67 V69 A11 11 0 0 1 195 80 H165 A11 11 0 0 1 154 69 V67 A11 11 0 0 1 165 56 Z\" fill=\"#d9d9d9\" transform=\"translate(0 7)\"/><path d=\"M165 56 H195 A11 11 0 0 1 206 67 V69 A11 11 0 0 1 195 80 H165 A11 11 0 0 1 154 69 V67 A11 11 0 0 1 165 56 Z\" fill=\"url(#shade)\"/><path d=\"M165 56 H195 A11 11 0 0 1 206 67 V69 A11 11 0 0 1 195 80 H165 A11 11 0 0 1 154 69 V67 A11 11 0 0 1 165 56 Z\" fill=\"url(#gloss)\" opacity=\"0.9\"/></g><path d=\"M165 56 H195 A11 11 0 0 1 206 67 V69 A11 11 0 0 1 195 80 H165 A11 11 0 0 1 154 69 V67 A11 11 0 0 1 165 56 Z\" fill=\"none\" stroke=\"#5a5a5a\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c30\"><path d=\"M70 70 C98 62 158 62 186 70 C216 78 232 100 238 128 L245 164 C250 194 236 212 214 212 C198 212 188 202 180 190 L170 174 H86 L76 190 C68 202 58 212 42 212 C20 212 6 194 11 164 L18 128 C24 100 40 78 70 70 Z\"/></clipPath><path d=\"M70 70 C98 62 158 62 186 70 C216 78 232 100 238 128 L245 164 C250 194 236 212 214 212 C198 212 188 202 180 190 L170 174 H86 L76 190 C68 202 58 212 42 212 C20 212 6 194 11 164 L18 128 C24 100 40 78 70 70 Z\" fill=\"#e4e4e4\"/><g clip-path=\"url(#c30)\"><path d=\"M70 70 C98 62 158 62 186 70 C216 78 232 100 238 128 L245 164 C250 194 236 212 214 212 C198 212 188 202 180 190 L170 174 H86 L76 190 C68 202 58 212 42 212 C20 212 6 194 11 164 L18 128 C24 100 40 78 70 70 Z\" fill=\"#ffffff\"/><path d=\"M70 70 C98 62 158 62 186 70 C216 78 232 100 238 128 L245 164 C250 194 236 212 214 212 C198 212 188 202 180 190 L170 174 H86 L76 190 C68 202 58 212 42 212 C20 212 6 194 11 164 L18 128 C24 100 40 78 70 70 Z\" fill=\"#e4e4e4\" transform=\"translate(0 7)\"/><path d=\"M70 70 C98 62 158 62 186 70 C216 78 232 100 238 128 L245 164 C250 194 236 212 214 212 C198 212 188 202 180 190 L170 174 H86 L76 190 C68 202 58 212 42 212 C20 212 6 194 11 164 L18 128 C24 100 40 78 70 70 Z\" fill=\"url(#shade)\"/><path d=\"M70 70 C98 62 158 62 186 70 C216 78 232 100 238 128 L245 164 C250 194 236 212 214 212 C198 212 188 202 180 190 L170 174 H86 L76 190 C68 202 58 212 42 212 C20 212 6 194 11 164 L18 128 C24 100 40 78 70 70 Z\" fill=\"url(#gloss)\" opacity=\"0.8\"/></g><path d=\"M70 70 C98 62 158 62 186 70 C216 78 232 100 238 128 L245 164 C250 194 236 212 214 212 C198 212 188 202 180 190 L170 174 H86 L76 190 C68 202 58 212 42 212 C20 212 6 194 11 164 L18 128 C24 100 40 78 70 70 Z\" fill=\"none\" stroke=\"#5a5a5a\" stroke-width=\"9\" stroke-linejoin=\"round\"/><clipPath id=\"c31\"><path d=\"M50 112 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0 Z\"/></clipPath><path d=\"M50 112 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0 Z\" fill=\"#1c1c1c\"/><g clip-path=\"url(#c31)\"><path d=\"M50 112 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0 Z\" fill=\"#828282\"/><path d=\"M50 112 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0 Z\" fill=\"#1c1c1c\" transform=\"translate(0 0)\"/></g><path d=\"M50 112 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><clipPath id=\"c32\"><path d=\"M56.4 110 a13.600000000000001 13.600000000000001 0 1 0 27.200000000000003 0 a13.600000000000001 13.600000000000001 0 1 0 -27.200000000000003 0 Z\"/></clipPath><path d=\"M56.4 110 a13.600000000000001 13.600000000000001 0 1 0 27.200000000000003 0 a13.600000000000001 13.600000000000001 0 1 0 -27.200000000000003 0 Z\" fill=\"#3a3a3a\"/><g clip-path=\"url(#c32)\"><path d=\"M56.4 110 a13.600000000000001 13.600000000000001 0 1 0 27.200000000000003 0 a13.600000000000001 13.600000000000001 0 1 0 -27.200000000000003 0 Z\" fill=\"#929292\"/><path d=\"M56.4 110 a13.600000000000001 13.600000000000001 0 1 0 27.200000000000003 0 a13.600000000000001 13.600000000000001 0 1 0 -27.200000000000003 0 Z\" fill=\"#3a3a3a\" transform=\"translate(0 3)\"/></g><path d=\"M56.4 110 a13.600000000000001 13.600000000000001 0 1 0 27.200000000000003 0 a13.600000000000001 13.600000000000001 0 1 0 -27.200000000000003 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"70\" cy=\"110\" r=\"13.600000000000001\" fill=\"url(#cap)\"/><clipPath id=\"c33\"><path d=\"M77 158 a25 25 0 1 0 50 0 a25 25 0 1 0 -50 0 Z\"/></clipPath><path d=\"M77 158 a25 25 0 1 0 50 0 a25 25 0 1 0 -50 0 Z\" fill=\"#bdbdbd\"/><g clip-path=\"url(#c33)\"><path d=\"M77 158 a25 25 0 1 0 50 0 a25 25 0 1 0 -50 0 Z\" fill=\"#dadada\"/><path d=\"M77 158 a25 25 0 1 0 50 0 a25 25 0 1 0 -50 0 Z\" fill=\"#bdbdbd\" transform=\"translate(0 0)\"/></g><path d=\"M77 158 a25 25 0 1 0 50 0 a25 25 0 1 0 -50 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><clipPath id=\"c34\"><path d=\"M95 140 H109 V151 H120 V165 H109 V176 H95 V165 H84 V151 H95 Z\"/></clipPath><path d=\"M95 140 H109 V151 H120 V165 H109 V176 H95 V165 H84 V151 H95 Z\" fill=\"#9a9a9a\"/><g clip-path=\"url(#c34)\"><path d=\"M95 140 H109 V151 H120 V165 H109 V176 H95 V165 H84 V151 H95 Z\" fill=\"#c7c7c7\"/><path d=\"M95 140 H109 V151 H120 V165 H109 V176 H95 V165 H84 V151 H95 Z\" fill=\"#9a9a9a\" transform=\"translate(0 3)\"/></g><path d=\"M95 140 H109 V151 H120 V165 H109 V176 H95 V165 H84 V151 H95 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><path d=\"M95 140 H109 V151 H120 V165 H109 V176 H95 V165 H84 V151 H95 Z\" fill=\"url(#cap)\" opacity=\".7\"/><clipPath id=\"c35\"><path d=\"M137 158 a19 19 0 1 0 38 0 a19 19 0 1 0 -38 0 Z\"/></clipPath><path d=\"M137 158 a19 19 0 1 0 38 0 a19 19 0 1 0 -38 0 Z\" fill=\"#1c1c1c\"/><g clip-path=\"url(#c35)\"><path d=\"M137 158 a19 19 0 1 0 38 0 a19 19 0 1 0 -38 0 Z\" fill=\"#828282\"/><path d=\"M137 158 a19 19 0 1 0 38 0 a19 19 0 1 0 -38 0 Z\" fill=\"#1c1c1c\" transform=\"translate(0 0)\"/></g><path d=\"M137 158 a19 19 0 1 0 38 0 a19 19 0 1 0 -38 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"6\" stroke-linejoin=\"round\"/><clipPath id=\"c36\"><path d=\"M143.07999999999998 156 a12.920000000000002 12.920000000000002 0 1 0 25.840000000000003 0 a12.920000000000002 12.920000000000002 0 1 0 -25.840000000000003 0 Z\"/></clipPath><path d=\"M143.07999999999998 156 a12.920000000000002 12.920000000000002 0 1 0 25.840000000000003 0 a12.920000000000002 12.920000000000002 0 1 0 -25.840000000000003 0 Z\" fill=\"#3a3a3a\"/><g clip-path=\"url(#c36)\"><path d=\"M143.07999999999998 156 a12.920000000000002 12.920000000000002 0 1 0 25.840000000000003 0 a12.920000000000002 12.920000000000002 0 1 0 -25.840000000000003 0 Z\" fill=\"#929292\"/><path d=\"M143.07999999999998 156 a12.920000000000002 12.920000000000002 0 1 0 25.840000000000003 0 a12.920000000000002 12.920000000000002 0 1 0 -25.840000000000003 0 Z\" fill=\"#3a3a3a\" transform=\"translate(0 3)\"/></g><path d=\"M143.07999999999998 156 a12.920000000000002 12.920000000000002 0 1 0 25.840000000000003 0 a12.920000000000002 12.920000000000002 0 1 0 -25.840000000000003 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"156\" cy=\"156\" r=\"12.920000000000002\" fill=\"url(#cap)\"/><clipPath id=\"c37\"><path d=\"M179 94 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\"/></clipPath><path d=\"M179 94 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#8a8a8a\"/><g clip-path=\"url(#c37)\"><path d=\"M179 94 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#bebebe\"/><path d=\"M179 94 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#8a8a8a\" transform=\"translate(0 3)\"/></g><path d=\"M179 94 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"188\" cy=\"94\" r=\"9\" fill=\"url(#cap)\"/><clipPath id=\"c38\"><path d=\"M197 112 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\"/></clipPath><path d=\"M197 112 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#8a8a8a\"/><g clip-path=\"url(#c38)\"><path d=\"M197 112 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#bebebe\"/><path d=\"M197 112 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#8a8a8a\" transform=\"translate(0 3)\"/></g><path d=\"M197 112 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"206\" cy=\"112\" r=\"9\" fill=\"url(#cap)\"/><clipPath id=\"c39\"><path d=\"M179 130 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\"/></clipPath><path d=\"M179 130 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#8a8a8a\"/><g clip-path=\"url(#c39)\"><path d=\"M179 130 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#bebebe\"/><path d=\"M179 130 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#8a8a8a\" transform=\"translate(0 3)\"/></g><path d=\"M179 130 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"188\" cy=\"130\" r=\"9\" fill=\"url(#cap)\"/><clipPath id=\"c40\"><path d=\"M161 112 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\"/></clipPath><path d=\"M161 112 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#8a8a8a\"/><g clip-path=\"url(#c40)\"><path d=\"M161 112 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#bebebe\"/><path d=\"M161 112 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"#8a8a8a\" transform=\"translate(0 3)\"/></g><path d=\"M161 112 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"170\" cy=\"112\" r=\"9\" fill=\"url(#cap)\"/><clipPath id=\"c41\"><path d=\"M115 104 a13 13 0 1 0 26 0 a13 13 0 1 0 -26 0 Z\"/></clipPath><path d=\"M115 104 a13 13 0 1 0 26 0 a13 13 0 1 0 -26 0 Z\" fill=\"#b8b8b8\"/><g clip-path=\"url(#c41)\"><path d=\"M115 104 a13 13 0 1 0 26 0 a13 13 0 1 0 -26 0 Z\" fill=\"#d7d7d7\"/><path d=\"M115 104 a13 13 0 1 0 26 0 a13 13 0 1 0 -26 0 Z\" fill=\"#b8b8b8\" transform=\"translate(0 3)\"/></g><path d=\"M115 104 a13 13 0 1 0 26 0 a13 13 0 1 0 -26 0 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"128\" cy=\"104\" r=\"13\" fill=\"url(#cap)\"/><clipPath id=\"c42\"><path d=\"M99.5 100.5 H104.5 A3.5 3.5 0 0 1 108.0 104.0 V104.0 A3.5 3.5 0 0 1 104.5 107.5 H99.5 A3.5 3.5 0 0 1 96.0 104.0 V104.0 A3.5 3.5 0 0 1 99.5 100.5 Z\"/></clipPath><path d=\"M99.5 100.5 H104.5 A3.5 3.5 0 0 1 108.0 104.0 V104.0 A3.5 3.5 0 0 1 104.5 107.5 H99.5 A3.5 3.5 0 0 1 96.0 104.0 V104.0 A3.5 3.5 0 0 1 99.5 100.5 Z\" fill=\"#777777\"/><g clip-path=\"url(#c42)\"><path d=\"M99.5 100.5 H104.5 A3.5 3.5 0 0 1 108.0 104.0 V104.0 A3.5 3.5 0 0 1 104.5 107.5 H99.5 A3.5 3.5 0 0 1 96.0 104.0 V104.0 A3.5 3.5 0 0 1 99.5 100.5 Z\" fill=\"#b4b4b4\"/><path d=\"M99.5 100.5 H104.5 A3.5 3.5 0 0 1 108.0 104.0 V104.0 A3.5 3.5 0 0 1 104.5 107.5 H99.5 A3.5 3.5 0 0 1 96.0 104.0 V104.0 A3.5 3.5 0 0 1 99.5 100.5 Z\" fill=\"#777777\" transform=\"translate(0 2)\"/></g><path d=\"M99.5 100.5 H104.5 A3.5 3.5 0 0 1 108.0 104.0 V104.0 A3.5 3.5 0 0 1 104.5 107.5 H99.5 A3.5 3.5 0 0 1 96.0 104.0 V104.0 A3.5 3.5 0 0 1 99.5 100.5 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"4\" stroke-linejoin=\"round\"/><clipPath id=\"c43\"><path d=\"M151.5 100.5 H156.5 A3.5 3.5 0 0 1 160.0 104.0 V104.0 A3.5 3.5 0 0 1 156.5 107.5 H151.5 A3.5 3.5 0 0 1 148.0 104.0 V104.0 A3.5 3.5 0 0 1 151.5 100.5 Z\"/></clipPath><path d=\"M151.5 100.5 H156.5 A3.5 3.5 0 0 1 160.0 104.0 V104.0 A3.5 3.5 0 0 1 156.5 107.5 H151.5 A3.5 3.5 0 0 1 148.0 104.0 V104.0 A3.5 3.5 0 0 1 151.5 100.5 Z\" fill=\"#777777\"/><g clip-path=\"url(#c43)\"><path d=\"M151.5 100.5 H156.5 A3.5 3.5 0 0 1 160.0 104.0 V104.0 A3.5 3.5 0 0 1 156.5 107.5 H151.5 A3.5 3.5 0 0 1 148.0 104.0 V104.0 A3.5 3.5 0 0 1 151.5 100.5 Z\" fill=\"#b4b4b4\"/><path d=\"M151.5 100.5 H156.5 A3.5 3.5 0 0 1 160.0 104.0 V104.0 A3.5 3.5 0 0 1 156.5 107.5 H151.5 A3.5 3.5 0 0 1 148.0 104.0 V104.0 A3.5 3.5 0 0 1 151.5 100.5 Z\" fill=\"#777777\" transform=\"translate(0 2)\"/></g><path d=\"M151.5 100.5 H156.5 A3.5 3.5 0 0 1 160.0 104.0 V104.0 A3.5 3.5 0 0 1 156.5 107.5 H151.5 A3.5 3.5 0 0 1 148.0 104.0 V104.0 A3.5 3.5 0 0 1 151.5 100.5 Z\" fill=\"none\" stroke=\"#1E1E1E\" stroke-width=\"4\" stroke-linejoin=\"round\"/></g></svg>",
+};
+const svgDataUrl = (svg) => "data:image/svg+xml," + encodeURIComponent(svg);
+
+// Eternal Core: Core's logos for the user's Eternal plugin forks (docs/eternal/CORE-UI.md, "Plugin logos"; credited in
+// docs/eternal/REBRAND.md). Matched by the Decky plugin's name, so a renamed or absent plugin keeps its own icon.
+//
+//   Discord                       -> assemble       (Eternal-Assemble)
+//   Awesome Mix, Now Playing Plus -> awesome-mix    (Eternal-Mix)
+//   Nexus Mods, Forge             -> forge          (Eternal-Forge)
+//   romm-dock, RomM-Dock, The Collector -> the-collector (Eternal-Collector)
+//
+// Pure (one import, coreArtwork.ts, itself pure): tests check the matching and the fallbacks.
+const BY_NAME = {
+    "discord": "assemble",
+    "awesome mix": "awesome-mix",
+    "now playing plus": "awesome-mix",
+    "nexus mods": "forge",
+    "forge": "forge",
+    "romm-dock": "the-collector",
+    "romm dock": "the-collector",
+    "the collector": "the-collector",
+};
+// The plugin repositories (Source/Shared/ProtectedPluginForks.json, with their aliases) for Core's store page.
+const BY_REPOSITORY = {
+    "m2ljay/eternal-assemble": "assemble",
+    "m2ljay/eternal-mix": "awesome-mix",
+    "m2ljay/eternal-forge": "forge",
+    "m2ljay/vibe-nexus": "forge",
+    "m2ljay/eternal-collector": "the-collector",
+    "m2ljay/eternal-romm": "the-collector",
+};
+const normal = (value) => String(value ?? "").normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
+// The Core logo for a Decky plugin name, or undefined (the plugin keeps its own icon).
+function corePluginLogo(name) {
+    const key = normal(name);
+    return Object.prototype.hasOwnProperty.call(BY_NAME, key) ? BY_NAME[key] : undefined;
+}
+function corePluginLogoForRepository(repository) {
+    const key = normal(repository);
+    return Object.prototype.hasOwnProperty.call(BY_REPOSITORY, key) ? BY_REPOSITORY[key] : undefined;
+}
+// The rail glyph's SVG text (single colour, currentColor) for a plugin name, or undefined.
+function corePluginGlyph(name) {
+    const logo = corePluginLogo(name);
+    return logo ? CORE_PLUGIN_GLYPHS[logo] : undefined;
+}
+// The full tile as an image URL, by plugin name or by repository.
+function corePluginTile(nameOrRepository) {
+    const logo = corePluginLogo(nameOrRepository) ?? corePluginLogoForRepository(nameOrRepository);
+    return logo ? svgDataUrl(CORE_PLUGIN_TILES[logo]) : undefined;
+}
+
+// Eternal Core: the Awesome Mix entry shows Core's awesome-mix mark (corePluginLogos.ts), single colour like Steam's own
+// menu icons; Steam's music note only if the mark is missing.
+function AwesomeMixMenuIcon() {
+    const glyph = corePluginGlyph(AWESOME_MIX_PLUGIN);
+    return glyph
+        ? SP_JSX.jsx("span", { "aria-hidden": "true", style: { display: "flex", width: "1em", height: "1em" }, dangerouslySetInnerHTML: { __html: glyph.replace("<svg ", '<svg width="100%" height="100%" ') } })
+        : SP_JSX.jsx("span", { style: { display: "flex", width: "1em", height: "1em" }, children: SP_JSX.jsx(TbMusic, { style: { width: "100%", height: "100%" } }) });
+}
 function syncCoreSteamMenu(current, wanted, register) {
     const ids = new Set(wanted.map(entry => entry.id));
     for (const [id, item] of current)
@@ -6138,7 +6336,7 @@ function deviceInfoLocale(locale) {
         profile: profile[0], auto: profile[1], pc: profile[2], handheld: profile[3], experimental: profile[4], profileHint: profile[5], battery: profile[6], ac: profile[7], primaryDisplay: profile[8], video: profile[9], power: profile[10], details: profile[11], saveError: profile[12], retry: profile[13], batteryHealth: batteryHealth[language] ?? batteryHealth.en };
 }
 
-const copy$h = {
+const copy$i = {
     "en": {
         "StoreLibrary.WindowsManaged": "Installation managed by Microsoft Store",
         "StoreLibrary.Stores": "Digital stores",
@@ -7220,7 +7418,7 @@ const copy$h = {
         "StoreLibrary.ConfirmCancelDownload": "Вы действительно хотите отменить загрузку?"
     }
 };
-function storeLibraryLocale(locale) { return copy$h[deviceLanguage(locale)] ?? copy$h.en; }
+function storeLibraryLocale(locale) { return copy$i[deviceLanguage(locale)] ?? copy$i.en; }
 
 const { PanelSection: PanelSection$b, PanelSectionRow: PanelSectionRow$c, DropdownItem: DropdownItem$5, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = CompatUI;
 const danger = `.ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) {
@@ -7292,12 +7490,12 @@ function StoreDownloadsQam({ locale }) {
     return SP_JSX.jsx(PanelSection$b, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$c, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
 }
 
-const { DialogButton: DialogButton$a } = CompatUI;
+const { DialogButton: DialogButton$b } = CompatUI;
 const labelStore = (store) => ({ gog: "GOG", epic: "Epic Games", xbox: "Xbox", amazon: "Amazon Games" }[store] ?? "");
 const terminal = (job) => !job || ["completed", "canceled", "failed"].includes(job.state) || job.state === "externalHandoff" && job.reasonCode !== "windows_store_managed";
 let locale = () => navigator.language;
 const strings$3 = () => storeLibraryLocale(locale());
-const text$4 = () => {
+const text$5 = () => {
     const c = strings$3(), t = (key) => c[`StoreLibrary.${key}`];
     return { install: t("Install"), next: t("Review"), cancel: t("Cancel"), drive: t("Drive"), folder: t("Folder"),
         available: t("Free"), required: t("Required"), confirm: t("Review"), waiting: t("Verifying"),
@@ -7319,14 +7517,14 @@ function GameAction({ appId, native }) {
     const running = Number(ui?.MainRunningAppID) === appId || (Array.isArray(ui?.RunningApps) && ui.RunningApps.some((app) => app?.appid === appId));
     if (!row?.accountCurrent || !row.game || !identity || proof.identity !== identity || proof.source !== apps || !proof.matches || running || row.game.isInstalled && row.game.isLaunchable)
         return native;
-    return SP_JSX.jsx("div", { style: { minWidth: 240, maxWidth: 560, width: "100%" }, children: terminal(row.job) ? SP_JSX.jsxs(DialogButton$a, { style: { whiteSpace: "normal" }, onClick: () => openStoreDigitalGame(row.key, "install"), children: [text$4().install, " \u00B7 ", labelStore(row.key.store)] }) : SP_JSX.jsx(JobControls, { job: row.job }) });
+    return SP_JSX.jsx("div", { style: { minWidth: 240, maxWidth: 560, width: "100%" }, children: terminal(row.job) ? SP_JSX.jsxs(DialogButton$b, { style: { whiteSpace: "normal" }, onClick: () => openStoreDigitalGame(row.key, "install"), children: [text$5().install, " \u00B7 ", labelStore(row.key.store)] }) : SP_JSX.jsx(JobControls, { job: row.job }) });
 }
 function DownloadSection() {
     const rows = _global_SP_REACT.useSyncExternalStore(subscribeStoreLibrary, readStoreDownloads);
     const active = rows.filter(job => !terminal(job));
     if (!active.length)
         return null;
-    return SP_JSX.jsxs("section", { style: { padding: "24px 36px", background: CORE.gunmetal, borderRadius: 8, marginBlock: 18 }, children: [SP_JSX.jsx("h2", { style: { marginBlock: "0 16px" }, children: text$4().downloads }), active.map(job => SP_JSX.jsx("div", { style: { borderTop: `1px solid ${CORE.gunmetalRaised}`, paddingBlock: 14 }, children: SP_JSX.jsx(JobControls, { job: job }) }, job.jobId))] });
+    return SP_JSX.jsxs("section", { style: { padding: "24px 36px", background: CORE.gunmetal, borderRadius: 8, marginBlock: 18 }, children: [SP_JSX.jsx("h2", { style: { marginBlock: "0 16px" }, children: text$5().downloads }), active.map(job => SP_JSX.jsx("div", { style: { borderTop: `1px solid ${CORE.gunmetalRaised}`, paddingBlock: 14 }, children: SP_JSX.jsx(JobControls, { job: job }) }, job.jobId))] });
 }
 function installStoreLibrarySteamUi(getLocale) {
     locale = getLocale;
@@ -7785,7 +7983,7 @@ function pollStatus(read, update) {
     return () => { stopped = true; clearTimeout(timer); controller?.abort(); };
 }
 
-const copy$g = {
+const copy$h = {
     "en": {
         "Title": "Gaming Mode optional",
         "Description": "Start in Big Picture, switch to the desktop and open the Core Dashboard with a controller.",
@@ -7955,7 +8153,7 @@ const copy$g = {
         "Ready": "Gaming Mode तैयार है।"
     }
 };
-function optionalAgentCopy(locale) { return copy$g[locale] ?? copy$g.en; }
+function optionalAgentCopy(locale) { return copy$h[locale] ?? copy$h.en; }
 
 // Backend client for Quick Settings.
 //   * call(...)  -> Decky Python backend (main.py)
@@ -8118,7 +8316,7 @@ function gameSettingsLabel(_language) {
     return "Core Game Settings";
 }
 
-const copy$f = {
+const copy$g = {
     en: ["Session", "Audio", "Display", "Performance", "Graphics", "Controller", "System", "Settings", "Customize your panel", "Show tabs", "Move up", "Move down", "Restore defaults", "Back", "Hide a tab without changing its settings or disabling its features.", "Expand", "Collapse", "Switch tab", "Settings could not be saved. Try again."],
     it: ["Sessione", "Audio", "Schermo", "Prestazioni", "Grafica", "Controller", "Sistema", "Impostazioni", "Personalizza il pannello", "Mostra le schede", "Sposta su", "Sposta giù", "Ripristina predefiniti", "Indietro", "Nascondere una scheda non modifica le impostazioni e non disattiva le sue funzioni.", "Espandi", "Comprimi", "Cambia scheda", "Impossibile salvare le impostazioni. Riprova."],
     de: ["Sitzung", "Audio", "Bildschirm", "Leistung", "Grafik", "Controller", "System", "Einstellungen", "Panel anpassen", "Tabs anzeigen", "Nach oben", "Nach unten", "Standard wiederherstellen", "Zurück", "Das Ausblenden eines Tabs ändert keine Einstellungen und deaktiviert keine Funktionen.", "Ausklappen", "Einklappen", "Tab wechseln", "Einstellungen konnten nicht gespeichert werden. Erneut versuchen."],
@@ -8135,7 +8333,7 @@ const copy$f = {
 function controlLocale(locale) {
     const aliases = { english: "en", italian: "it", german: "de", spanish: "es", latam: "es", french: "fr", brazilian: "pt", portuguese: "pt", russian: "ru", ukrainian: "uk", japanese: "ja", koreana: "ko", schinese: "zh", tchinese: "zh", hindi: "hi" };
     const key = aliases[locale] ?? locale.split(/[-_]/)[0];
-    const row = copy$f[key] ?? copy$f.en;
+    const row = copy$g[key] ?? copy$g.en;
     const tabs = tabCopy[key] ?? tabCopy.en;
     const video = { en: "Video", it: "Video", de: "Video", es: "Vídeo", fr: "Vidéo", pt: "Vídeo", ru: "Видео", uk: "Відео", ja: "映像", ko: "비디오", zh: "视频", hi: "वीडियो" };
     return { home: row[0], audio: video[key] ?? video.en, display: row[2], performance: row[1], graphics: row[3], controller: row[5], tools: row[6], store: 'Plugin Store', decky: 'Decky', settings: row[7], customize: tabs[1], show: tabs[4], up: tabs[2], down: tabs[3], reset: row[12], back: row[13], hint: row[14], expand: row[15], collapse: row[16], switchTab: row[17], saveError: row[18], device: tabs[5], unavailable: tabs[6], loading: tabs[7], retry: tabs[8] };
@@ -8284,7 +8482,7 @@ const amdIt = {
     amdDisplayTemperature: "Temperatura colore",
     amdDriverRejected: "Il driver AMD non ha confermato questa modifica. Il valore precedente è stato ripristinato.",
 };
-const en$7 = {
+const en$8 = {
     title: "Quick Settings",
     audio: "Audio",
     volume: "Device volume",
@@ -8526,7 +8724,7 @@ const it = {
     cancel: "Annulla",
     notConnected: "Agent Quick Settings non collegato",
 };
-const strings$2 = { en: en$7, it };
+const strings$2 = { en: en$8, it };
 function t$1(locale = navigator.language) {
     const language = locale.split("-")[0];
     return { ...(strings$2[language] ?? strings$2.en), ...quickCoreLocale(language), title: "Core" };
@@ -9211,10 +9409,10 @@ function losslessCaptureLabel(locale, state) {
     return index < 0 ? "" : (rows$7[aliases[key] ?? key] ?? rows$7.en)[index];
 }
 
-const { DialogButton: DialogButton$9, Focusable: Focusable$e } = CompatUI;
+const { DialogButton: DialogButton$a, Focusable: Focusable$f } = CompatUI;
 function ControlSection({ id, title, icon, children, collapsed, onToggle, locale }) {
     const copy = controlLocale(locale);
-    return SP_JSX.jsxs(Focusable$e, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$9, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$e, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
+    return SP_JSX.jsxs(Focusable$f, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$a, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$f, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
 }
 
 /** One writer per independent setting/resource; callbacks receive only current results. */
@@ -10454,7 +10652,7 @@ function bounded$1(operation) {
         operation.then(value => { window.clearTimeout(timer); resolve(value); }, error => { window.clearTimeout(timer); reject(error); });
     });
 }
-const copy$e = {
+const copy$f = {
     en: ["Check shader support", "Graphics requirements met", "Requirements unmet", "Needs verification", "Listed by Intel · cache unverified", "Graphics adapter unavailable"],
     it: ["Verifica supporto shader", "Requisiti grafici soddisfatti", "Fuori requisiti", "Da verificare", "Nel catalogo Intel · cache da verificare", "Scheda grafica da rilevare"],
     de: ["Shader-Unterstützung prüfen", "Grafikanforderungen erfüllt", "Nicht unterstützt", "Nicht geprüft", "Bei Intel gelistet · Cache nicht geprüft", "Keine Grafikkarte erkannt"],
@@ -10493,7 +10691,7 @@ function ShaderCompatibility({ appId, locale, renderSection }) {
         return () => { mounted.current = false; ++epoch.current; window.removeEventListener("focus", onFocus); };
     }, [appId]);
     const text = shaderCacheCopy(locale);
-    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$e[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$e.en;
+    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$f[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$f.en;
     const labels = { eligible, unsupported, unverified: unknown };
     const current = (generation) => mounted.current && epoch.current === generation;
     function accept(next, generation) {
@@ -11992,7 +12190,7 @@ function createSteamDownloadPower(read, send) {
     };
 }
 
-const copy$d = {
+const copy$e = {
     en: ["Finish Steam download", "Stop keeping awake", "On AC power, Windows can turn off the display while Steam finishes the current download.", "PC stays awake for this download.", "Could not start download power mode."],
     it: ["Completa il download Steam", "Termina modalità download", "Con l’alimentazione collegata, Windows può spegnere lo schermo mentre Steam completa il download.", "Il PC resta sveglio per questo download.", "Impossibile avviare la modalità download."],
     de: ["Steam-Download abschließen", "Wachhalten beenden", "Am Netz kann Windows den Bildschirm ausschalten, während Steam den Download beendet.", "Der PC bleibt für diesen Download wach.", "Downloadmodus konnte nicht gestartet werden."],
@@ -12060,7 +12258,7 @@ function SteamDownloadPower({ locale }) {
     }, []);
     if (!state.available && !state.active)
         return null;
-    const [start, stop, detail, active, failed] = copy$d[locale.split(/[-_]/)[0]] ?? copy$d.en;
+    const [start, stop, detail, active, failed] = copy$e[locale.split(/[-_]/)[0]] ?? copy$e.en;
     return SP_JSX.jsxs("div", { className: "qsCardBody", "aria-busy": state.busy, children: [SP_JSX.jsx(CompatUI.DialogButton, { disabled: state.busy, onClick: () => void (state.active ? downloadPower.stop() : downloadPower.start()), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: state.active ? stop : start }) }), SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: state.failed ? failed : state.active ? active : detail })] });
 }
 
@@ -20724,7 +20922,7 @@ function searchText(key) {
     const table = SEARCH_TEXT[currentLanguage()] ?? SEARCH_TEXT.en;
     return table[key] ?? SEARCH_TEXT.en[key] ?? key;
 }
-function text$3(key, values = {}) {
+function text$4(key, values = {}) {
     const table = TEXT$1[currentLanguage()] ?? TEXT$1.en;
     let value = table[key] ?? TEXT$1.en[key] ?? key;
     for (const [name, replacement] of Object.entries(values)) {
@@ -20919,7 +21117,7 @@ function PluginIdentity({ entry, muted = false, useSelectedIcon = false }) {
                 opacity: 0.72,
                 marginTop: 2
             }
-        }, entry.disabled ? text$3("disabled") : text$3("unavailable"))
+        }, entry.disabled ? text$4("disabled") : text$4("unavailable"))
         : null));
 }
 function ActiveTabCard({ entry, index, total, runtime, onChooseIcon }) {
@@ -20930,14 +21128,14 @@ function ActiveTabCard({ entry, index, total, runtime, onChooseIcon }) {
         {
             key: "up",
             icon: h(UpIcon, { size: 18 }),
-            description: text$3("moveUp"),
+            description: text$4("moveUp"),
             disabled: index === 0,
             onClick: () => runtime.moveTab(entry.key, -1)
         },
         {
             key: "down",
             icon: h(DownIcon, { size: 18 }),
-            description: text$3("moveDown"),
+            description: text$4("moveDown"),
             disabled: index === total - 1,
             onClick: () => runtime.moveTab(entry.key, 1)
         }
@@ -20946,7 +21144,7 @@ function ActiveTabCard({ entry, index, total, runtime, onChooseIcon }) {
         actions.push({
             key: "visibility",
             icon: h(CustomIcon, { id: entry.hidden ? "eye-off-outline" : "eye", size: 18 }),
-            description: text$3(entry.hidden ? "add" : "remove"),
+            description: text$4(entry.hidden ? "add" : "remove"),
             disabled: false,
             onClick: () => runtime.toggleNativeTab(entry.key)
         });
@@ -20955,7 +21153,7 @@ function ActiveTabCard({ entry, index, total, runtime, onChooseIcon }) {
         actions.push({
             key: "remove",
             icon: h(TrashIcon, { size: 18 }),
-            description: text$3("remove"),
+            description: text$4("remove"),
             disabled: false,
             onClick: () => runtime.remove(entry.pluginName || entry.name)
         });
@@ -20977,8 +21175,8 @@ function ActiveTabCard({ entry, index, total, runtime, onChooseIcon }) {
         style: { width: "100%", minWidth: 0, maxWidth: "100%" }
     }, h(NameButton, {
         onClick: customizable ? onChooseIcon : () => undefined,
-        onOKActionDescription: customizable ? text$3("chooseIcon") : entry.name,
-        "aria-label": customizable ? `${text$3("chooseIcon")}: ${entry.name}` : entry.name,
+        onOKActionDescription: customizable ? text$4("chooseIcon") : entry.name,
+        "aria-label": customizable ? `${text$4("chooseIcon")}: ${entry.name}` : entry.name,
         style: {
             display: "block",
             width: "100%",
@@ -21063,8 +21261,8 @@ function IconPicker({ entry, runtime, onBack }) {
             handleIconPickerNav(event, 0, totalChoices, 4);
         },
         onClick: () => { runtime.setIcon(entry.name, "original"); onBack(); },
-        onOKActionDescription: text$3("originalIcon"),
-        "aria-label": text$3("originalIcon"),
+        onOKActionDescription: text$4("originalIcon"),
+        "aria-label": text$4("originalIcon"),
         style: { minWidth: 0, width: "100%", height: 64, padding: 8, display: "grid", placeItems: "center", overflow: "hidden", outline: selected === "original" ? "2px solid currentColor" : "none", outlineOffset: -3 }
     }, entry.icon ?? h(MissingIcon, { size: 28 })))));
     const categorySections = filteredCategories.map((category) => {
@@ -21075,7 +21273,7 @@ function IconPicker({ entry, runtime, onBack }) {
                 "data-shortcuts-icon-index": String(index),
                 onKeyDown: (event) => handleIconPickerNav(event, index, totalChoices, 4),
                 onClick: () => { runtime.setIcon(entry.name, id); onBack(); },
-                onOKActionDescription: text$3("selectIcon", { icon: id }),
+                onOKActionDescription: text$4("selectIcon", { icon: id }),
                 "aria-label": id,
                 title: id,
                 style: { minWidth: 0, width: "100%", height: 64, padding: 8, display: "grid", placeItems: "center", overflow: "hidden", outline: selected === id ? "2px solid currentColor" : "none", outlineOffset: -3 }
@@ -21118,10 +21316,10 @@ function IconPicker({ entry, runtime, onBack }) {
             event.stopPropagation();
         } },
         onClick: onBack,
-        onOKActionDescription: text$3("back"),
-        "aria-label": text$3("back"),
+        onOKActionDescription: text$4("back"),
+        "aria-label": text$4("back"),
         style: { width: 42, minWidth: 42, height: 36, padding: 8, display: "grid", placeItems: "center" }
-    }, h(BackIcon, { size: 18 })), h("div", { title: entry.name, style: { width: 0, minWidth: 0, flex: "1 1 auto", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600 } }, text$3("iconPickerTitle", { name: entry.name }))), searchSection, originalSection, ...categorySections, emptySearch);
+    }, h(BackIcon, { size: 18 })), h("div", { title: entry.name, style: { width: 0, minWidth: 0, flex: "1 1 auto", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600 } }, text$4("iconPickerTitle", { name: entry.name }))), searchSection, originalSection, ...categorySections, emptySearch);
 }
 function ShortcutsSettings({ runtime }) {
     const subscribe = _global_SP_REACT.useCallback((listener) => runtime.subscribe(listener), [runtime]);
@@ -21144,8 +21342,8 @@ function ShortcutsSettings({ runtime }) {
         return h(IconPicker, { entry: pickerEntry, runtime, onBack: () => setPickerName(null) });
     }
     const Focusable = CompatUI.Focusable ?? "div";
-    return h(Focusable, { "flow-children": "grid", style: { paddingBottom: 18, width: "100%", minWidth: 0 } }, h(CompatUI.PanelSection, { title: text$3("selectedTitle") }, activeEntries.length === 0
-        ? h(EmptyRow, null, text$3("emptySelected"))
+    return h(Focusable, { "flow-children": "grid", style: { paddingBottom: 18, width: "100%", minWidth: 0 } }, h(CompatUI.PanelSection, { title: text$4("selectedTitle") }, activeEntries.length === 0
+        ? h(EmptyRow, null, text$4("emptySelected"))
         : activeEntries.map((entry, index) => h(ActiveTabCard, {
             key: entry.key,
             entry,
@@ -21158,8 +21356,8 @@ function ShortcutsSettings({ runtime }) {
             onChooseIcon: entry.kind === "shortcut"
                 ? () => setPickerName(entry.pluginName || entry.name)
                 : null
-        }))), h(CompatUI.PanelSection, { title: text$3("availableTitle") }, availableEntries.length === 0
-        ? h(EmptyRow, null, text$3("emptyAvailable"))
+        }))), h(CompatUI.PanelSection, { title: text$4("availableTitle") }, availableEntries.length === 0
+        ? h(EmptyRow, null, text$4("emptyAvailable"))
         : availableEntries.map((entry, index) => h(AvailableRow, { key: entry.name, entry, runtime, rowIndex: selectedCount + index, selectedCount, totalRows }))));
 }
 function QamShortcutsView({ runtime, locale }) { language = locale.split(/[-_]/)[0]; return h(ShortcutsSettings, { runtime }); }
@@ -21172,14 +21370,14 @@ function qamNativeLabel(key, fallback, locale) {
 
 let preferences = { version: 3, selected: ["Playhub"], icons: {}, order: [], hidden: [], updated_at: 0 };
 let snapshot$2 = { active: false, native: [], plugins: [] };
-const listeners$8 = new Set();
+const listeners$9 = new Set();
 const refreshers = new Set();
 let pending$2 = false;
 function notify$2() { if (pending$2)
-    return; pending$2 = true; void Promise.resolve().then(() => { pending$2 = false; listeners$8.forEach(fn => fn()); }); }
+    return; pending$2 = true; void Promise.resolve().then(() => { pending$2 = false; listeners$9.forEach(fn => fn()); }); }
 const getQamLayoutPreferences = () => preferences;
 const getQamLayoutSnapshot = () => snapshot$2;
-function subscribeQamLayout(fn) { listeners$8.add(fn); return () => { listeners$8.delete(fn); }; }
+function subscribeQamLayout(fn) { listeners$9.add(fn); return () => { listeners$9.delete(fn); }; }
 function setQamLayoutPreferences(value) {
     const strings = (items) => Array.isArray(items) ? [...new Set(items.filter((v) => typeof v === "string" && !!v))] : [];
     const next = { version: 3, selected: strings(value?.selected), order: strings(value?.order),
@@ -21192,8 +21390,23 @@ function setQamLayoutPreferences(value) {
     refreshers.forEach(fn => fn());
     notify$2();
 }
+// Eternal Core (Core UI, docs/eternal/CORE-UI.md, "Plugin logos"): Core's own logo for the user's Eternal plugin forks,
+// set by index.tsx while Core UI is on. A user-chosen icon still wins; a plugin without a Core logo keeps its own.
+let pluginIconFallback;
+function setQamPluginIconFallback(fallback) {
+    pluginIconFallback = fallback;
+    refreshers.forEach(fn => fn());
+    notify$2();
+}
 function icon(name, original) {
-    return renderQamIcon(preferences.icons[name], original);
+    let core;
+    try {
+        core = pluginIconFallback?.(name);
+    }
+    catch {
+        core = undefined;
+    }
+    return renderQamIcon(preferences.icons[name], core ?? original);
 }
 /** Projects preferences through the existing owner. Does not wrap or change Decky's registry. */
 function createQamLayoutRuntime(hook, nativeRender, ownId, refresh, inventory = () => window.DeckyPluginLoader?.deckyState?.publicState?.()) {
@@ -21291,7 +21504,7 @@ function createQamLayoutRuntime(hook, nativeRender, ownId, refresh, inventory = 
         stop() { stopped = true; refreshers.delete(changed); restore(); snapshot$2 = { ...snapshot$2, active: false }; notify$2(); } };
 }
 
-const text$2 = {
+const text$3 = {
     it: ['Generali', 'Personalizza le tab di Steam e i collegamenti ai plugin nel menu di accesso rapido.', 'Ordine e visibilità', 'Collegamenti ai plugin', 'Icona', 'Predefinita', 'Sposta su', 'Sposta giù', 'Salvataggio non riuscito. Riprova.', 'Riprova', 'La gestione QAM è in attesa della migrazione o dell’apertura del menu.'],
     en: ['General', 'Customize Steam tabs and plugin shortcuts in the quick access menu.', 'Order and visibility', 'Plugin shortcuts', 'Icon', 'Default', 'Move up', 'Move down', 'Could not save. Retry.', 'Retry', 'QAM management is waiting for migration or for the menu to open.'],
     de: ['Allgemein', 'Steam-Tabs und Plugin-Verknüpfungen im Schnellzugriffsmenü anpassen.', 'Reihenfolge und Sichtbarkeit', 'Plugin-Verknüpfungen', 'Symbol', 'Standard', 'Nach oben', 'Nach unten', 'Speichern fehlgeschlagen. Erneut versuchen.', 'Erneut versuchen', 'QAM wartet auf die Migration oder das Öffnen des Menüs.'],
@@ -21305,7 +21518,7 @@ const text$2 = {
     zh: ['一般', '自訂快速存取選單中的 Steam 分頁與外掛捷徑。', '順序與顯示', '外掛捷徑', '圖示', '預設', '上移', '下移', '儲存失敗，請重試。', '重試', 'QAM 正在等待移轉或開啟選單。'],
     hi: ['सामान्य', 'त्वरित पहुँच मेनू में Steam टैब और प्लगइन शॉर्टकट अनुकूलित करें।', 'क्रम और दृश्यता', 'प्लगइन शॉर्टकट', 'चिह्न', 'डिफ़ॉल्ट', 'ऊपर ले जाएँ', 'नीचे ले जाएँ', 'सहेजा नहीं जा सका। फिर कोशिश करें।', 'फिर कोशिश करें', 'QAM स्थानांतरण या मेनू खुलने की प्रतीक्षा कर रहा है।'],
 };
-const qamSettingsCopy = (locale) => text$2[locale.split(/[-_]/)[0]] ?? text$2.en;
+const qamSettingsCopy = (locale) => text$3[locale.split(/[-_]/)[0]] ?? text$3.en;
 let hydration;
 let saving = Promise.resolve();
 function initializeQamPreferences() {
@@ -24239,7 +24452,7 @@ function useHistoryPhoto(url) {
     return resolved?.source === url && resolved.digest === expected?.sha256 ? resolved.url : undefined;
 }
 
-const copy$c = {
+const copy$d = {
     it: ['Premi', 'per approfondire', 'per richiudere', 'Visualizza immagine', 'Chiudi'],
     en: ['Press', 'to explore', 'to collapse', 'View image', 'Close'],
     de: ['Drücke', 'für mehr', 'zum Zuklappen', 'Bild ansehen', 'Schließen'],
@@ -24253,7 +24466,7 @@ const copy$c = {
     zh: ['按', '深入閱讀', '收起內容', '查看圖片', '關閉'],
     hi: ['', 'दबाकर विस्तार से पढ़ें', 'दबाकर समेटें', 'चित्र देखें', 'बंद करें'],
 };
-const historyActionCopy = (locale) => copy$c[locale.split(/[-_]/)[0]] ?? copy$c.en;
+const historyActionCopy = (locale) => copy$d[locale.split(/[-_]/)[0]] ?? copy$d.en;
 class GlyphBoundary extends _global_SP_REACT.Component {
     constructor() {
         super(...arguments);
@@ -24339,7 +24552,7 @@ function historyHeadingCover(all, kind, coverFile) {
 }
 
 const historyDigest = (image) => historyPhotoIntegrity[image.url]?.sha256;
-const { Focusable: Focusable$d, DialogButton: DialogButton$8, Navigation: Navigation$7 } = CompatUI;
+const { Focusable: Focusable$e, DialogButton: DialogButton$9, Navigation: Navigation$8 } = CompatUI;
 const labels$1 = {
     it: ['Accade oggi', 'La storia dei videogiochi, un giorno alla volta', 'In questo giorno', '', 'Dietro la storia', 'Continua su Wikipedia', 'Immagine: crediti e licenza', 'Prepariamo la storia di oggi…', 'Storia non disponibile. Riprova', 'Ultima storia disponibile', 'Fonte: Wikipedia · testo CC BY-SA 4.0'],
     en: ['On this day', 'Video game history, one day at a time', 'On this day', 'Today’s discovery', 'Behind the story', 'Read on Wikipedia', 'Image: credits and license', 'Finding today’s story…', 'Story unavailable. Retry', 'Last available story', 'Source: Wikipedia · text CC BY-SA 4.0'],
@@ -24365,7 +24578,7 @@ const release$1 = { it: 'In questo giorno esce', en: 'Released on this day', de:
 const feature = { it: '', en: '', de: '', es: '', fr: '', pt: '', ru: '', uk: '', ja: '', ko: '', zh: '', hi: '' };
 const commemoration = { it: 'In occasione di', en: 'On the occasion of', de: 'Anlässlich', es: 'Con motivo de', fr: "À l’occasion de", pt: 'Por ocasião de', ru: 'По случаю', uk: 'З нагоди', ja: 'この日に寄せて', ko: '이 날을 기념하며', zh: '值此之际', hi: 'इस अवसर पर' };
 const previewWords = { it: ['Giorno precedente', 'Giorno successivo'], en: ['Previous day', 'Next day'], de: ['Vorheriger Tag', 'Nächster Tag'], es: ['Día anterior', 'Día siguiente'], fr: ['Jour précédent', 'Jour suivant'], pt: ['Dia anterior', 'Dia seguinte'], ru: ['Предыдущий день', 'Следующий день'], uk: ['Попередній день', 'Наступний день'], ja: ['前の日', '次の日'], ko: ['이전 날', '다음 날'], zh: ['前一天', '後一天'], hi: ['पिछला दिन', 'अगला दिन'] };
-const css$4 = `
+const css$5 = `
 .ph-history{color:${CORE.text};padding:0 0 26px;max-width:1480px;margin:auto;font-family:inherit}
  .ph-history-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding:20px 28px;min-height:84px;margin:16px 5px 24px;background:${CORE.gunmetal};border:1px solid ${CORE.gunmetalRaised};border-radius:5px;box-sizing:border-box}
  .ph-history-day-card{cursor:pointer;outline:2px solid transparent;outline-offset:3px;transition:background .2s,outline-color .2s}.ph-history-day-card:hover,.ph-history-day-card.gpfocus,.ph-history-day-card:focus{background:${CORE.gunmetalRaised};outline-color:${CORE.crimson}}
@@ -24448,7 +24661,7 @@ function Block({ story, chapter, index, locale }) {
     const open = () => { const now = Date.now(); if (now - lastActivation.current < 350)
         return; lastActivation.current = now; if (!media)
         return; openHistoryImage(media.url, media.subject, locale, cardRef.current?.ownerDocument.defaultView ?? window); };
-    return SP_JSX.jsxs(Focusable$d, { ref: cardRef, className: `ph-history-card ${index % 2 ? 'reverse' : ''} ${photo ? '' : 'no-image'}`, role: photo ? 'button' : 'article', "aria-label": title, focusable: true, onOKActionDescription: photo ? historyActionCopy(locale)[3] : undefined, onActivate: photo ? open : undefined, onClick: photo ? open : undefined, children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: chapter ? SP_JSX.jsx("span", { className: "ph-history-subject", children: chapter.subject || story.article.title }) : story.relationship ?? (occasion ? `${occasion} · ${story.article.title}` : story.article.title) }), renderTitle(), SP_JSX.jsx("p", { children: chapter?.body ?? story.editorial.intro }), !chapter && story.year && SP_JSX.jsx("div", { className: "ph-history-year", children: story.year })] }), media && photo && SP_JSX.jsxs("div", { className: "ph-history-image", children: [SP_JSX.jsx("img", { className: "ph-history-image-bg", src: photo, alt: "", "aria-hidden": true, role: "presentation" }), SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject, onError: () => setFailed(previous => [...previous, media.url]) })] })] });
+    return SP_JSX.jsxs(Focusable$e, { ref: cardRef, className: `ph-history-card ${index % 2 ? 'reverse' : ''} ${photo ? '' : 'no-image'}`, role: photo ? 'button' : 'article', "aria-label": title, focusable: true, onOKActionDescription: photo ? historyActionCopy(locale)[3] : undefined, onActivate: photo ? open : undefined, onClick: photo ? open : undefined, children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: chapter ? SP_JSX.jsx("span", { className: "ph-history-subject", children: chapter.subject || story.article.title }) : story.relationship ?? (occasion ? `${occasion} · ${story.article.title}` : story.article.title) }), renderTitle(), SP_JSX.jsx("p", { children: chapter?.body ?? story.editorial.intro }), !chapter && story.year && SP_JSX.jsx("div", { className: "ph-history-year", children: story.year })] }), media && photo && SP_JSX.jsxs("div", { className: "ph-history-image", children: [SP_JSX.jsx("img", { className: "ph-history-image-bg", src: photo, alt: "", "aria-hidden": true, role: "presentation" }), SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject, onError: () => setFailed(previous => [...previous, media.url]) })] })] });
 }
 const expandedRelatedStories = new Set();
 function RelatedStory({ story, locale }) {
@@ -24463,7 +24676,7 @@ function RelatedStory({ story, locale }) {
         expandedRelatedStories.delete(storyKey);
     else
         expandedRelatedStories.add(storyKey); return !value; }); };
-    return SP_JSX.jsxs("div", { className: "ph-history-related", children: [SP_JSX.jsxs(Focusable$d, { className: "ph-history-card ph-history-related-summary", role: "button", "aria-expanded": expanded, focusable: true, onActivate: toggle, onClick: toggle, onOKActionDescription: historyActionCopy(locale)[expanded ? 2 : 1], children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: story.relationship ?? words$3(locale)[4] }), SP_JSX.jsx("h3", { children: story.article.title }), SP_JSX.jsx(HistoryConfirmHint, { locale: locale, expanded: expanded })] }), media && photo && SP_JSX.jsx("div", { className: "ph-history-image", children: SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject }) })] }), expanded && SP_JSX.jsxs("div", { className: "ph-history-related-content", children: [SP_JSX.jsx(Block, { story: story, index: 0, locale: locale }), story.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: story, chapter: chapter, index: index + 1, locale: locale }), story.quote && (story.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$d, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: story.quote.quoted ? `«${story.quote.text}»` : story.quote.text }), story.quote.attribution && SP_JSX.jsx("span", { children: story.quote.attribution })] })] }, index))] })] });
+    return SP_JSX.jsxs("div", { className: "ph-history-related", children: [SP_JSX.jsxs(Focusable$e, { className: "ph-history-card ph-history-related-summary", role: "button", "aria-expanded": expanded, focusable: true, onActivate: toggle, onClick: toggle, onOKActionDescription: historyActionCopy(locale)[expanded ? 2 : 1], children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: story.relationship ?? words$3(locale)[4] }), SP_JSX.jsx("h3", { children: story.article.title }), SP_JSX.jsx(HistoryConfirmHint, { locale: locale, expanded: expanded })] }), media && photo && SP_JSX.jsx("div", { className: "ph-history-image", children: SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject }) })] }), expanded && SP_JSX.jsxs("div", { className: "ph-history-related-content", children: [SP_JSX.jsx(Block, { story: story, index: 0, locale: locale }), story.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: story, chapter: chapter, index: index + 1, locale: locale }), story.quote && (story.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$e, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: story.quote.quoted ? `«${story.quote.text}»` : story.quote.text }), story.quote.attribution && SP_JSX.jsx("span", { children: story.quote.attribution })] })] }, index))] })] });
 }
 let historyPreviewOffset = 0;
 function DailyHistory({ getLocale }) {
@@ -24527,17 +24740,17 @@ function DailyHistory({ getLocale }) {
     const dayAppId = story ? libraryAppIdForStory(story) : null;
     const openDayGame = () => { if (!dayAppId)
         return; try {
-        Navigation$7?.Navigate?.(`/library/app/${dayAppId}`);
+        Navigation$8?.Navigate?.(`/library/app/${dayAppId}`);
     }
     catch { } };
     const headingContent = SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-date", children: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(date) }), story ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("div", { className: "ph-history-sub", children: [heading && SP_JSX.jsx("span", { children: heading }), SP_JSX.jsx("strong", { children: story.article.title }), story.year && story.occasion?.kind !== 'feature' && SP_JSX.jsx("span", { className: "ph-history-year", children: story.year })] }), headingMedia(story)] }) : SP_JSX.jsx("div", { className: "ph-history-sub", children: copy[1] })] });
-    return SP_JSX.jsxs(Focusable$d, { className: "ph-history", ref: root, "flow-children": "column", onButtonDown: navigate, actionDescriptionMap: story?.preview ? { [buttons.SECONDARY]: hints[0], [buttons.OPTIONS]: hints[1] } : {}, children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx(Focusable$d, { className: "ph-history-head ph-history-day-card", role: "button", "aria-label": story?.article.title ?? copy[0], focusable: true, onActivate: dayAppId ? openDayGame : undefined, onClick: dayAppId ? openDayGame : undefined, children: headingContent }), !story ? SP_JSX.jsx("div", { className: "ph-history-empty", children: failed ? SP_JSX.jsx(DialogButton$8, { onClick: () => setRetry(v => v + 1), children: copy[8] }) : SP_JSX.jsx("span", { role: "status", children: copy[7] }) }) : [story, ...(story.also ?? [])].map(item => SP_JSX.jsxs("div", { className: "ph-history-story", children: [SP_JSX.jsx(Block, { story: item, index: 0, locale: locale }), item.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: item, chapter: chapter, index: index + 1, locale: locale }), item.quote && (item.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$d, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] })] }, index)), item.quote && !item.editorial.chapters?.length && SP_JSX.jsxs(Focusable$d, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] }), item.connections?.length ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-connections-title", children: copy[4] }), item.connections.map(related => SP_JSX.jsx(RelatedStory, { story: related, locale: locale }, `${related.date}-${related.editorial.id}`))] }) : null] }, `${item.date}-${item.editorial.id}`))] });
+    return SP_JSX.jsxs(Focusable$e, { className: "ph-history", ref: root, "flow-children": "column", onButtonDown: navigate, actionDescriptionMap: story?.preview ? { [buttons.SECONDARY]: hints[0], [buttons.OPTIONS]: hints[1] } : {}, children: [SP_JSX.jsx("style", { children: css$5 }), SP_JSX.jsx(Focusable$e, { className: "ph-history-head ph-history-day-card", role: "button", "aria-label": story?.article.title ?? copy[0], focusable: true, onActivate: dayAppId ? openDayGame : undefined, onClick: dayAppId ? openDayGame : undefined, children: headingContent }), !story ? SP_JSX.jsx("div", { className: "ph-history-empty", children: failed ? SP_JSX.jsx(DialogButton$9, { onClick: () => setRetry(v => v + 1), children: copy[8] }) : SP_JSX.jsx("span", { role: "status", children: copy[7] }) }) : [story, ...(story.also ?? [])].map(item => SP_JSX.jsxs("div", { className: "ph-history-story", children: [SP_JSX.jsx(Block, { story: item, index: 0, locale: locale }), item.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: item, chapter: chapter, index: index + 1, locale: locale }), item.quote && (item.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$e, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] })] }, index)), item.quote && !item.editorial.chapters?.length && SP_JSX.jsxs(Focusable$e, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] }), item.connections?.length ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-connections-title", children: copy[4] }), item.connections.map(related => SP_JSX.jsx(RelatedStory, { story: related, locale: locale }, `${related.date}-${related.editorial.id}`))] }) : null] }, `${item.date}-${item.editorial.id}`))] });
 }
 let historyConfig = { enabled: true, revision: 0 };
 let historyReady = false;
-const listeners$7 = new Set();
-const subscribe$2 = (listener) => { listeners$7.add(listener); return () => { listeners$7.delete(listener); }; };
-const notify$1 = () => listeners$7.forEach(listener => listener());
+const listeners$8 = new Set();
+const subscribe$2 = (listener) => { listeners$8.add(listener); return () => { listeners$8.delete(listener); }; };
+const notify$1 = () => listeners$8.forEach(listener => listener());
 const notifyHistoryLanguageChanged = () => { historyConfig = { ...historyConfig, revision: historyConfig.revision + 1 }; notify$1(); };
 async function loadHistorySettings() { const next = await call("get_daily_history_settings"); historyConfig = { ...next, revision: historyConfig.revision + 1 }; historyReady = true; notify$1(); }
 function HistoryTabs({ native, getLocale }) {
@@ -24568,7 +24781,7 @@ function HomeHistorySettings({ locale }) {
         setBusy(false);
     } };
     const Toggle = CompatUI.ToggleField;
-    return SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Toggle, { label: historyTitle(locale), description: words$3(locale)[1], checked: config.enabled, disabled: !historyReady || busy, onChange: (enabled) => void save(enabled), bottomSeparator: "none" }), failed && SP_JSX.jsx(DialogButton$8, { onClick: () => void loadHistorySettings().then(() => setFailed(false)).catch(() => { }), children: words$3(locale)[8] })] });
+    return SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Toggle, { label: historyTitle(locale), description: words$3(locale)[1], checked: config.enabled, disabled: !historyReady || busy, onChange: (enabled) => void save(enabled), bottomSeparator: "none" }), failed && SP_JSX.jsx(DialogButton$9, { onClick: () => void loadHistorySettings().then(() => setFailed(false)).catch(() => { }), children: words$3(locale)[8] })] });
 }
 
 const words$2 = {
@@ -24587,6 +24800,787 @@ const words$2 = {
 };
 const NEWS_COUNTRIES = ["US", "IT", "DE", "ES", "FR", "BR", "RU", "UA", "JP", "KR", "TW", "IN"];
 function newsCopy(locale) { return words$2[locale] ?? words$2.en; }
+
+// Eternal Core: the "Core UI" setting (Quick Access > Core). On by default; kept in Steam's localStorage under
+// core.ui.enabled ("0" = off, anything else or nothing = on). coreUi.ts subscribes and removes or restores
+// everything Core UI adds as soon as it changes. Self-contained (no imports): tests load it on its own.
+const CORE_UI_SETTING_KEY = "core.ui.enabled";
+function createCoreUiSetting(storage) {
+    const read = () => { try {
+        return storage?.getItem(CORE_UI_SETTING_KEY) !== "0";
+    }
+    catch {
+        return true;
+    } };
+    let value = read();
+    const listeners = new Set();
+    return {
+        get: () => value,
+        set(on) {
+            const next = on === true;
+            try {
+                storage?.setItem(CORE_UI_SETTING_KEY, next ? "1" : "0");
+            }
+            catch { /* Kept for this session only. */ }
+            if (next === value)
+                return;
+            value = next;
+            for (const listener of [...listeners]) {
+                try {
+                    listener();
+                }
+                catch { /* One listener cannot stop the others. */ }
+            }
+        },
+        subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    };
+}
+function defaultStorage() {
+    try {
+        return typeof localStorage === "undefined" ? undefined : localStorage;
+    }
+    catch {
+        return undefined;
+    }
+}
+const coreUiSetting = createCoreUiSetting(defaultStorage());
+
+// Eternal Core: Core Home's text in Core's 12 languages (docs/eternal/CORE-UI.md, "Phase 2: Home"). "Jarvis", "Forge"
+// and the console names are names and stay the same everywhere. Self-contained: tests load it alone.
+const en$7 = {
+    brief: "Jarvis brief", consoles: "Consoles",
+    morning: "Good morning, sir", afternoon: "Good afternoon, sir", evening: "Good evening, sir", night: "Up late, sir",
+    lastPlayed: "You were last playing {game}.", nothingYet: "Nothing on the go yet. Pick something and I'll keep track.",
+    talk: "Talk to Jarvis", mods: "{count} mods have updates in Forge", modsOne: "1 mod has an update in Forge",
+    updates: "News and updates for your games", empty: "No games in this collection yet", vr: "VR", retro: "Retro",
+};
+const copy$c = {
+    en: en$7,
+    it: { brief: "Il punto di Jarvis", consoles: "Console", morning: "Buongiorno, signore", afternoon: "Buon pomeriggio, signore", evening: "Buonasera, signore", night: "Ancora sveglio, signore",
+        lastPlayed: "L'ultima volta giocavi a {game}.", nothingYet: "Ancora niente in corso. Scegli un gioco e ne terrò traccia.", talk: "Parla con Jarvis",
+        mods: "{count} mod hanno aggiornamenti in Forge", modsOne: "1 mod ha un aggiornamento in Forge", updates: "Notizie e aggiornamenti dei tuoi giochi", empty: "Ancora nessun gioco in questa raccolta", vr: "VR", retro: "Retro" },
+    es: { brief: "Resumen de Jarvis", consoles: "Consolas", morning: "Buenos días, señor", afternoon: "Buenas tardes, señor", evening: "Buenas noches, señor", night: "Trasnochando, señor",
+        lastPlayed: "Lo último que jugaste fue {game}.", nothingYet: "Nada en curso todavía. Elige algo y llevaré la cuenta.", talk: "Hablar con Jarvis",
+        mods: "{count} mods tienen actualizaciones en Forge", modsOne: "1 mod tiene una actualización en Forge", updates: "Noticias y actualizaciones de tus juegos", empty: "Aún no hay juegos en esta colección", vr: "RV", retro: "Retro" },
+    fr: { brief: "Le point de Jarvis", consoles: "Consoles", morning: "Bonjour, monsieur", afternoon: "Bon après-midi, monsieur", evening: "Bonsoir, monsieur", night: "Encore debout, monsieur",
+        lastPlayed: "Votre dernière partie : {game}.", nothingYet: "Rien en cours pour l'instant. Choisissez un jeu, je m'occupe du reste.", talk: "Parler à Jarvis",
+        mods: "{count} mods ont des mises à jour dans Forge", modsOne: "1 mod a une mise à jour dans Forge", updates: "Actualités et mises à jour de vos jeux", empty: "Aucun jeu dans cette collection pour l'instant", vr: "VR", retro: "Rétro" },
+    de: { brief: "Jarvis' Überblick", consoles: "Konsolen", morning: "Guten Morgen, Sir", afternoon: "Guten Tag, Sir", evening: "Guten Abend, Sir", night: "Noch wach, Sir",
+        lastPlayed: "Zuletzt hast du {game} gespielt.", nothingYet: "Noch nichts angefangen. Such dir etwas aus, ich behalte den Überblick.", talk: "Mit Jarvis sprechen",
+        mods: "{count} Mods haben Updates in Forge", modsOne: "1 Mod hat ein Update in Forge", updates: "Neuigkeiten und Updates zu deinen Spielen", empty: "Noch keine Spiele in dieser Sammlung", vr: "VR", retro: "Retro" },
+    pt: { brief: "Resumo do Jarvis", consoles: "Consoles", morning: "Bom dia, senhor", afternoon: "Boa tarde, senhor", evening: "Boa noite, senhor", night: "Acordado até tarde, senhor",
+        lastPlayed: "Você jogou {game} por último.", nothingYet: "Nada em andamento ainda. Escolha algo e eu acompanho.", talk: "Falar com o Jarvis",
+        mods: "{count} mods têm atualizações no Forge", modsOne: "1 mod tem uma atualização no Forge", updates: "Notícias e atualizações dos seus jogos", empty: "Ainda não há jogos nesta coleção", vr: "RV", retro: "Retrô" },
+    uk: { brief: "Підсумок від Jarvis", consoles: "Консолі", morning: "Доброго ранку, сер", afternoon: "Добрий день, сер", evening: "Добрий вечір, сер", night: "Не спиться, сер",
+        lastPlayed: "Востаннє ви грали в {game}.", nothingYet: "Поки нічого не розпочато. Оберіть гру, а я стежитиму.", talk: "Поговорити з Jarvis",
+        mods: "Модів з оновленнями у Forge: {count}", modsOne: "1 мод має оновлення у Forge", updates: "Новини й оновлення ваших ігор", empty: "У цій колекції ще немає ігор", vr: "VR", retro: "Ретро" },
+    ru: { brief: "Сводка Jarvis", consoles: "Консоли", morning: "Доброе утро, сэр", afternoon: "Добрый день, сэр", evening: "Добрый вечер, сэр", night: "Не спится, сэр",
+        lastPlayed: "В последний раз вы играли в {game}.", nothingYet: "Пока ничего не начато. Выберите игру, а я буду следить.", talk: "Поговорить с Jarvis",
+        mods: "Модов с обновлениями в Forge: {count}", modsOne: "1 мод получил обновление в Forge", updates: "Новости и обновления ваших игр", empty: "В этой коллекции пока нет игр", vr: "VR", retro: "Ретро" },
+    zh: { brief: "Jarvis 简报", consoles: "主机", morning: "早上好，先生", afternoon: "下午好，先生", evening: "晚上好，先生", night: "这么晚还没睡，先生",
+        lastPlayed: "你上次在玩 {game}。", nothingYet: "还没有进行中的游戏。选一个吧，我会帮你记着。", talk: "与 Jarvis 对话",
+        mods: "Forge 中有 {count} 个模组可更新", modsOne: "Forge 中有 1 个模组可更新", updates: "你的游戏的新闻和更新", empty: "此收藏中还没有游戏", vr: "VR", retro: "复古" },
+    ja: { brief: "Jarvis のブリーフィング", consoles: "コンソール", morning: "おはようございます", afternoon: "こんにちは", evening: "こんばんは", night: "夜更かしですね",
+        lastPlayed: "最後に遊んだのは {game} です。", nothingYet: "進行中のゲームはまだありません。選んでいただければ記録しておきます。", talk: "Jarvis と話す",
+        mods: "Forge で {count} 件の MOD に更新があります", modsOne: "Forge で 1 件の MOD に更新があります", updates: "あなたのゲームのニュースと更新", empty: "このコレクションにはまだゲームがありません", vr: "VR", retro: "レトロ" },
+    ko: { brief: "Jarvis 브리핑", consoles: "콘솔", morning: "좋은 아침입니다", afternoon: "좋은 오후입니다", evening: "좋은 저녁입니다", night: "늦게까지 계시네요",
+        lastPlayed: "마지막으로 {game}을(를) 플레이했습니다.", nothingYet: "아직 진행 중인 게임이 없습니다. 하나 고르시면 기록해 두겠습니다.", talk: "Jarvis와 대화",
+        mods: "Forge에 업데이트가 있는 모드 {count}개", modsOne: "Forge에 업데이트가 있는 모드 1개", updates: "내 게임의 소식과 업데이트", empty: "이 컬렉션에는 아직 게임이 없습니다", vr: "VR", retro: "레트로" },
+    hi: { brief: "Jarvis की ब्रीफ़", consoles: "कंसोल", morning: "सुप्रभात, सर", afternoon: "नमस्कार, सर", evening: "शुभ संध्या, सर", night: "देर तक जाग रहे हैं, सर",
+        lastPlayed: "आपने आख़िरी बार {game} खेला था।", nothingYet: "अभी कुछ चल नहीं रहा। कुछ चुनिए, मैं ध्यान रखूँगा।", talk: "Jarvis से बात करें",
+        mods: "Forge में {count} मॉड के अपडेट हैं", modsOne: "Forge में 1 मॉड का अपडेट है", updates: "आपके गेम की ख़बरें और अपडेट", empty: "इस संग्रह में अभी कोई गेम नहीं है", vr: "VR", retro: "रेट्रो" },
+};
+function coreHomeCopy(locale) {
+    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
+    return copy$c[language === "ua" ? "uk" : language] ?? en$7;
+}
+// The greeting for the hour (local time): night 0-4, morning 5-11, afternoon 12-17, evening 18-23. The household
+// keeps late hours, so 4am is still "up late".
+function greetingKey(hour) {
+    const h = ((Math.floor(hour) % 24) + 24) % 24;
+    return h < 5 ? "night" : h < 12 ? "morning" : h < 18 ? "afternoon" : "evening";
+}
+
+// Eternal Core: Core Home's bottom tabs (docs/eternal/CORE-UI.md, "Phase 2: Home"). Pure: tests drive it with fake
+// Steam tab lists and fake collection stores.
+//
+// Steam's Home tabs come in as `{ id, title, content, ... }`. Core Home answers, in this order:
+//   Jarvis brief (10, takes Steam's "WhatsNew" id so a remembered active tab still opens) - Consoles (20) -
+//   any registered tab (Club, 30, from src/club/) - On this day (40, Steam's "Recommended" slot, filled by
+//   DailyHistory.tsx) - any other Steam tab Core does not know.
+// Steam's "What's new" (its content moves into the brief) and "Friends" are removed.
+//
+// Registration point: registerHomeTab({ id, label, order, component, isAvailable }) adds a tab without touching Home's
+// internals; an unavailable tab (isAvailable() false or throwing) is left out.
+const registry = new Map();
+const listeners$7 = new Set();
+let revision = 0;
+function subscribeHomeTabs(listener) { listeners$7.add(listener); return () => { listeners$7.delete(listener); }; }
+const homeTabsRevision = () => revision;
+// Registered tabs that are available now, by order.
+function availableHomeTabs() {
+    return [...registry.values()].filter(tab => {
+        try {
+            return tab.isAvailable ? tab.isAvailable() === true : true;
+        }
+        catch {
+            return false;
+        }
+    }).sort((a, b) => a.order - b.order);
+}
+const HOME_TAB_ORDER = { brief: 10, consoles: 20, onThisDay: 40 };
+const REMOVED_STEAM_TABS = new Set(["WhatsNew", "Friends"]);
+const ON_THIS_DAY_ID = "Recommended";
+const BRIEF_ID = "WhatsNew";
+// Steam's tabs plus Core's (each with an order) -> the final list. `core` must not contain Steam ids other than the
+// brief's.
+function composeHomeTabs(native, core) {
+    const list = Array.isArray(native) ? native : [];
+    const onThisDay = list.find(tab => tab?.id === ON_THIS_DAY_ID);
+    const known = new Set([...REMOVED_STEAM_TABS, ON_THIS_DAY_ID]);
+    const others = list.filter(tab => tab && !known.has(tab.id));
+    const ordered = [...core, ...(onThisDay ? [{ ...onThisDay, order: HOME_TAB_ORDER.onThisDay }] : [])]
+        .sort((a, b) => a.order - b.order)
+        .map(({ order, ...tab }) => { return tab; });
+    return [...ordered, ...others];
+}
+// The active tab Steam remembers may be one Core removed (Friends): fall back to the brief.
+function activeHomeTab(active, tabs) {
+    return tabs.some(tab => tab.id === active) ? active : tabs[0]?.id ?? active;
+}
+function appsOf(collection) {
+    for (const key of ["allApps", "visibleApps", "apps", "m_rgApps"]) {
+        try {
+            const value = collection?.[key];
+            if (Array.isArray(value))
+                return value;
+            if (value && typeof value.values === "function")
+                return Array.from(value.values());
+        }
+        catch { /* Next shape. */ }
+    }
+    return [];
+}
+function homeApp(app) {
+    const appid = Number(app?.appid ?? app?.unAppID ?? app?.m_unAppID);
+    if (!Number.isFinite(appid) || appid <= 0)
+        return undefined;
+    const name = String(app?.display_name ?? app?.strDisplayName ?? app?.name ?? "").trim();
+    const lastPlayed = Number(app?.rt_last_time_played ?? app?.rtLastTimePlayed ?? 0) || 0;
+    return { appid, name, lastPlayed };
+}
+const SHELF_ORDER = ["playstation", "nintendo", "sega", "xbox", "retro", "vr"];
+// One shelf per family from the user's collections, matched by name through `familyOf` (coreLibraryIcons'
+// matchCollection, or a VR collection). Games de-duplicated, most recently played first, at most `limit`.
+function consoleShelves(collections, familyOf, limit = 24) {
+    const shelves = new Map();
+    for (const collection of Array.isArray(collections) ? collections.slice(0, 400) : []) {
+        let name = "";
+        try {
+            name = String(collection?.displayName ?? collection?.strName ?? collection?.name ?? "");
+        }
+        catch {
+            name = "";
+        }
+        const family = familyOf(name);
+        if (!family)
+            continue;
+        let shelf = shelves.get(family);
+        if (!shelf) {
+            shelf = new Map();
+            shelves.set(family, shelf);
+        }
+        for (const raw of appsOf(collection).slice(0, 5000)) {
+            const app = homeApp(raw);
+            if (app && !shelf.has(app.appid))
+                shelf.set(app.appid, app);
+        }
+    }
+    return SHELF_ORDER.filter(family => shelves.has(family)).map(family => ({
+        family,
+        apps: [...shelves.get(family).values()].sort((a, b) => b.lastPlayed - a.lastPlayed || a.name.localeCompare(b.name)).slice(0, limit),
+    }));
+}
+// The most recently played game among `apps` (any iterable of Steam app overviews), if any was ever played.
+function lastPlayedApp(apps) {
+    let best;
+    let list = [];
+    try {
+        list = Array.isArray(apps) ? apps : apps && typeof apps.values === "function" ? Array.from(apps.values()) : [];
+    }
+    catch {
+        list = [];
+    }
+    for (const raw of list.slice(0, 20000)) {
+        const app = homeApp(raw);
+        if (app && app.lastPlayed > 0 && app.name && (!best || app.lastPlayed > best.lastPlayed))
+            best = app;
+    }
+    return best;
+}
+// Forge's mod updates, if Forge publishes them: window.__eternalForgeUpdates = { version: 1, count } or
+// { version: 1, games: [{ appId, name, count }] }. Forge does not publish this yet (CORE-UI.md); no record, no row.
+function forgeUpdateCount(host) {
+    try {
+        const record = host?.__eternalForgeUpdates;
+        if (!record || record.version !== 1)
+            return 0;
+        if (Number.isFinite(record.count))
+            return Math.max(0, Math.floor(record.count));
+        if (Array.isArray(record.games))
+            return record.games.reduce((sum, game) => sum + (Number.isFinite(game?.count) ? Math.max(0, Math.floor(game.count)) : 0), 0);
+    }
+    catch { /* No row. */ }
+    return 0;
+}
+
+// Eternal Core: the Library's tab icons, family tones and collection tiles (docs/eternal/CORE-UI.md, "Library icons
+// and tones"). Replaces what the CSS Loader themes Enhanced Library and Enhanced Collection did by position: here every
+// tab and tile is matched by its **name**, so adding, hiding or reordering one never shifts the others.
+//
+// - Tabs (TabMaster's or Steam's, by title): All Games, Installed, VR, PlayStation, Nintendo, Sega, Xbox, Retro,
+//   Completed. The icon sits before the label; family tabs get a short marker in their tone.
+// - Collection tiles (Steam's Collections view, by collection name, RomM's "RomM: <platform> (<host>)" form too).
+// - Icons: the user's own set from %APPDATA%\GamingMode\icons\ (map.json, served by Core's plugin backend:
+//   get_core_icons), else Core's original drawings (coreArtwork.ts). A tile without any icon keeps Steam's collage and
+//   only gains its tone.
+//
+// Every write is an attribute or a custom property on Steam's element; undecorate removes them all.
+// Pure apart from coreArtwork.ts: tests drive it with fake DOMs.
+const CORE_FAMILY_TONES$1 = { playstation: "#6E8CB8", nintendo: "#B07A84", sega: "#5E9E9A", xbox: "#7FA36B", retro: "#8F7CB0" };
+const CORE_STEEL = "#C9D1D9";
+const normalName = (value) => String(value ?? "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase()
+    .replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
+// Tab titles, normalised -> icon key. Tones follow the key's family.
+const TABS = {
+    "all games": "all-games", "all": "all-games", "library": "all-games", "games": "all-games",
+    "installed": "installed", "vr": "vr", "virtual reality": "vr",
+    "playstation": "playstation", "sony": "playstation", "nintendo": "nintendo", "sega": "sega", "xbox": "xbox", "microsoft": "xbox",
+    "retro": "retro", "classic": "retro", "classics": "retro",
+    "completed": "completed", "beaten": "completed", "finished": "completed",
+};
+const FAMILY_KEYS = { playstation: "playstation", nintendo: "nintendo", sega: "sega", xbox: "xbox", retro: "retro" };
+const match = (key, family) => ({ key, family, tone: family ? CORE_FAMILY_TONES$1[family] : CORE_STEEL });
+function matchTab(title) {
+    const name = normalName(title);
+    if (!name)
+        return undefined;
+    const key = TABS[name];
+    return key ? match(key, FAMILY_KEYS[key]) : undefined;
+}
+// Collection names (RomM's platform names and their usual variants) -> icon key and family. Checked in order: the
+// first rule whose pattern matches the normalised name wins.
+const COLLECTIONS = [
+    [/^completed$/, "completed", undefined],
+    [/^(vr|virtual reality)$/, "vr", undefined],
+    [/^(playstation|sony playstation|ps1|psx|ps one)$/, "ps1", "playstation"],
+    [/^(playstation 2|ps2)$/, "ps2", "playstation"],
+    [/^(playstation 3|ps3)$/, "ps3", "playstation"],
+    [/^(playstation 4|ps4)$/, "ps4", "playstation"],
+    [/^(playstation 5|ps5)$/, "ps5", "playstation"],
+    [/^(playstation portable|psp)$/, "psp", "playstation"],
+    [/^(playstation vita|ps vita|vita)$/, "vita", "playstation"],
+    [/^(nintendo entertainment system|nes|famicom)$/, "nes", "nintendo"],
+    [/^(super nintendo entertainment system|super nintendo|snes|super famicom)$/, "snes", "nintendo"],
+    [/^(nintendo 64|n64)$/, "n64", "nintendo"],
+    [/^(nintendo gamecube|gamecube|ngc)$/, "gamecube", "nintendo"],
+    [/^wii u$/, "wiiu", "nintendo"],
+    [/^wii$/, "wii", "nintendo"],
+    [/^(nintendo switch|switch)$/, "switch", "nintendo"],
+    [/^game boy advance$|^gba$/, "gba", "nintendo"],
+    [/^game boy colou?r$|^gbc$/, "gbc", "nintendo"],
+    [/^game boy$|^gb$/, "gb", "nintendo"],
+    [/^(nintendo ds|ds|nds)$/, "ds", "nintendo"],
+    [/^(nintendo 3ds|3ds)$/, "3ds", "nintendo"],
+    [/^(virtual boy|nintendo virtual boy)$/, "generic", "nintendo"],
+    [/^sega master system( mark iii)?$|^master system$|^sms$/, "sms", "sega"],
+    [/^sega mega drive( genesis)?$|^sega genesis$|^mega drive$|^genesis$/, "megadrive", "sega"],
+    [/^(sega )?32x$/, "megadrive", "sega"],
+    [/^sega (cd|mega cd)$/, "sega", "sega"],
+    [/^(sega )?saturn$/, "saturn", "sega"],
+    [/^(sega )?dreamcast$/, "dreamcast", "sega"],
+    [/^(sega )?game gear$/, "gamegear", "sega"],
+    [/^xbox 360$/, "xbox360", "xbox"],
+    [/^(microsoft )?xbox( one| series x s| series)?$/, "xbox", "xbox"],
+    [/^arcade|^mame$|^fbneo$/, "arcade", "retro"],
+    [/^atari/, "atari2600", "retro"],
+    [/^neo ?geo/, "neogeo", "retro"],
+    [/^(turbografx|pc engine)/, "pcengine", "retro"],
+    [/^(msx|commodore|amiga|c64|zx spectrum|amstrad|colecovision|intellivision|vectrex|3do|jaguar|wonderswan|neo geo pocket|dos|ms dos)/, "generic", "retro"],
+];
+// "RomM: Nintendo 64 (romm.local)" -> "Nintendo 64"; plain names unchanged.
+function plainCollectionName(name) {
+    return String(name ?? "").replace(/^\s*romm\s*:\s*/i, "").replace(/\s*\([^()]*\)\s*$/, "").trim();
+}
+function matchCollection(name) {
+    const plain = normalName(plainCollectionName(name));
+    if (!plain)
+        return undefined;
+    for (const [pattern, key, family] of COLLECTIONS)
+        if (pattern.test(plain))
+            return match(key, family);
+    return undefined;
+}
+// Core's original drawings for a key; family tabs without an original drawing take the generic pad. Collection keys
+// without one answer undefined (the tile keeps Steam's collage).
+const ORIGINAL_FOR_KEY = {
+    "all-games": "all-games", installed: "installed", vr: "vr", completed: "completed", ps3: "ps3", xbox: "xbox", xbox360: "xbox360",
+};
+const ORIGINAL_FOR_TAB = { ...ORIGINAL_FOR_KEY, playstation: "generic", nintendo: "generic", sega: "generic", retro: "generic" };
+const urlCache = new Map();
+function original(name) {
+    if (!name || !CORE_ORIGINAL_ICONS[name])
+        return undefined;
+    let url = urlCache.get(name);
+    if (!url) {
+        url = svgDataUrl(CORE_ORIGINAL_ICONS[name]);
+        urlCache.set(name, url);
+    }
+    return url;
+}
+const safeUrl = (value) => typeof value === "string" && /^data:image\/(png|svg\+xml|webp|jpeg)[;,]/i.test(value) ? value : undefined;
+function lookup(map, name) {
+    if (!map)
+        return undefined;
+    const wanted = normalName(name);
+    for (const [key, value] of Object.entries(map))
+        if (normalName(key) === wanted)
+            return safeUrl(value);
+    return undefined;
+}
+// Order: the user's map by the exact title, then by Core's key, then Core's original drawing.
+function tabIcon(title, found, set) {
+    return lookup(set?.tabs, title) ?? (found ? lookup(set?.keys, found.key) : undefined) ?? (found ? original(ORIGINAL_FOR_TAB[found.key]) : undefined);
+}
+function collectionIcon(name, found, set) {
+    return lookup(set?.collections, name) ?? lookup(set?.collections, plainCollectionName(name))
+        ?? (found ? lookup(set?.keys, found.key) : undefined) ?? (found ? original(ORIGINAL_FOR_KEY[found.key]) : undefined);
+}
+// ---- The live page ----
+const TAB_ATTRIBUTE = "data-core-tab";
+const TILE_ATTRIBUTE = "data-core-collection";
+const TONE_ATTRIBUTE = "data-core-tone";
+const ICON_ATTRIBUTE = "data-core-icon";
+const ATTRIBUTES = [TAB_ATTRIBUTE, TILE_ATTRIBUTE, TONE_ATTRIBUTE, ICON_ATTRIBUTE];
+function text$2(element) {
+    try {
+        return String(element?.textContent ?? "").replace(/\s+/g, " ").trim();
+    }
+    catch {
+        return "";
+    }
+}
+function setVar(element, name, value) {
+    try {
+        if (value) {
+            if (element.style.getPropertyValue?.(name) !== `url("${value}")`)
+                element.style.setProperty(name, `url("${value}")`);
+        }
+        else
+            element.style.removeProperty?.(name);
+    }
+    catch { /* Left as it is. */ }
+}
+function tag(element, attribute, value) {
+    try {
+        if (value === undefined) {
+            if (element.getAttribute(attribute) !== null)
+                element.removeAttribute(attribute);
+        }
+        else if (element.getAttribute(attribute) !== value)
+            element.setAttribute(attribute, value);
+    }
+    catch { /* Left as it is. */ }
+}
+function apply(element, kind, name, found, icon) {
+    tag(element, kind === "tab" ? TAB_ATTRIBUTE : TILE_ATTRIBUTE, found ? found.key : icon ? "custom" : undefined);
+    tag(element, TONE_ATTRIBUTE, found?.family);
+    tag(element, ICON_ATTRIBUTE, icon ? "1" : undefined);
+    setVar(element, "--core-icon", icon);
+}
+// Steam's Collections view: a collection tile is a focusable element whose label is the collection's name. Steam has
+// no stable class for it across clients, so tiles are the links into /library/collection/<id>, plus anything the
+// caller's selector names.
+const COLLECTION_TILE_SELECTOR = 'a[href*="/library/collection/"],[data-collection-id]';
+function createLibraryDecorator(options) {
+    const touched = new Map();
+    function remember(doc, element) { let set = touched.get(doc); if (!set) {
+        set = new Set();
+        touched.set(doc, set);
+    } set.add(element); }
+    function decorate(doc, dom) {
+        let set;
+        try {
+            set = options.icons();
+        }
+        catch {
+            set = undefined;
+        }
+        if (dom.tab) {
+            let tabs = [];
+            try {
+                tabs = Array.from(doc.querySelectorAll(dom.tab)).slice(0, 60);
+            }
+            catch {
+                tabs = [];
+            }
+            for (const tab of tabs) {
+                let label = tab;
+                try {
+                    if (dom.tabTitle)
+                        label = tab.querySelector(dom.tabTitle) ?? tab;
+                }
+                catch {
+                    label = tab;
+                }
+                const title = text$2(label);
+                const found = matchTab(title);
+                const icon = tabIcon(title, found, set);
+                if (!found && !icon && !touched.get(doc)?.has(tab))
+                    continue;
+                apply(tab, "tab", title, found, icon);
+                remember(doc, tab);
+            }
+        }
+        let tiles = [];
+        const extra = (() => { try {
+            return options.tileSelector?.();
+        }
+        catch {
+            return undefined;
+        } })();
+        try {
+            tiles = Array.from(doc.querySelectorAll(extra ? `${COLLECTION_TILE_SELECTOR},${extra}` : COLLECTION_TILE_SELECTOR)).slice(0, 200);
+        }
+        catch {
+            tiles = [];
+        }
+        for (const tile of tiles) {
+            const name = String(tile.getAttribute?.("aria-label") || tile.getAttribute?.("title") || text$2(tile));
+            const found = matchCollection(name);
+            const icon = collectionIcon(name, found, set);
+            if (!found && !icon && !touched.get(doc)?.has(tile))
+                continue;
+            apply(tile, "tile", name, found, icon);
+            remember(doc, tile);
+        }
+    }
+    function undecorate(doc) {
+        for (const element of touched.get(doc) ?? []) {
+            for (const attribute of ATTRIBUTES)
+                tag(element, attribute, undefined);
+            setVar(element, "--core-icon", undefined);
+        }
+        touched.delete(doc);
+    }
+    return { decorate, undecorate };
+}
+// Loads the set once, again on request (Core UI's setting toggled) and at most every ten minutes; failures keep the
+// last good set (or none: Core's originals).
+function createIconStore(source, now = Date.now) {
+    let current, loading = false, loadedAt = -Infinity;
+    const refresh = async (force = false) => {
+        if (loading || (!force && now() - loadedAt < 10 * 60 * 1000))
+            return;
+        loading = true;
+        try {
+            const answer = await source();
+            if (answer && typeof answer === "object")
+                current = { tabs: answer.tabs ?? {}, collections: answer.collections ?? {}, keys: answer.keys ?? {} };
+        }
+        catch { /* Keep the last good set. */ }
+        finally {
+            loading = false;
+            loadedAt = now();
+        }
+    };
+    return { get: () => { void refresh(); return current; }, refresh };
+}
+
+// Eternal Core: Jarvis in Core UI phase 1 (docs/eternal/CORE-UI.md, docs/eternal/JARVIS.md).
+// - Jarvis's own Quick Access tab: its id, opening or closing it from the talk combo's short tap, and the request
+//   that puts the cursor in its input field.
+// - The presence orb in the top bar: idle (dim steel), busy (a slow crimson pulse while listening or thinking),
+//   ready (a brief crimson ring when an answer arrives), hidden during a game unless Jarvis is active.
+// Self-contained (no imports): tests/coreJarvisTab.test.mjs runs it against fake Steam stores.
+// "JRV". Core's own tab is 0x50484B ("PHK", qam.ts); Steam's tabs are small numbers, Decky's 999.
+const JARVIS_TAB_ID = 0x4A5256;
+const JARVIS_READY_MS = 4000;
+// Steam's side menu numbers (MenuStore.GetOpenSideMenu): 1 = the Steam menu, 2 = Quick Access.
+const QUICK_ACCESS = 2;
+let focusRequested = 0;
+const focusListeners = new Set();
+function requestJarvisFocus(now = Date.now()) {
+    focusRequested = now;
+    for (const listener of [...focusListeners]) {
+        try {
+            listener();
+        }
+        catch { /* A closed tab. */ }
+    }
+}
+// True once per request, within five seconds of it (the tab's input takes the focus when it mounts or hears this).
+function takeJarvisFocus(now = Date.now()) {
+    if (!focusRequested || now - focusRequested > 5000)
+        return false;
+    focusRequested = 0;
+    return true;
+}
+function subscribeJarvisFocus(listener) { focusListeners.add(listener); return () => { focusListeners.delete(listener); }; }
+// A short tap on the talk combo: open Quick Access on Jarvis's tab (the input focused), or close it when it is
+// already open there. Answers what it did; "unavailable" when Steam offers neither path.
+function toggleJarvisTab(deps) {
+    let store;
+    try {
+        store = deps.menuStore();
+    }
+    catch {
+        store = undefined;
+    }
+    let open = false;
+    try {
+        open = store?.GetOpenSideMenu?.() === QUICK_ACCESS && store?.GetQuickAccessTab?.() === JARVIS_TAB_ID;
+    }
+    catch {
+        open = false;
+    }
+    const navigation = (() => { try {
+        return deps.navigation();
+    }
+    catch {
+        return undefined;
+    } })();
+    if (open) {
+        try {
+            if (typeof store?.CloseSideMenus === "function")
+                store.CloseSideMenus();
+            else if (typeof navigation?.CloseSideMenus === "function")
+                navigation.CloseSideMenus();
+            else
+                return "unavailable";
+            return "closed";
+        }
+        catch {
+            return "unavailable";
+        }
+    }
+    try {
+        if (typeof store?.OpenQuickAccessMenu === "function")
+            store.OpenQuickAccessMenu(JARVIS_TAB_ID);
+        else if (typeof navigation?.OpenQuickAccessMenu === "function")
+            navigation.OpenQuickAccessMenu(JARVIS_TAB_ID);
+        else
+            return "unavailable";
+    }
+    catch {
+        return "unavailable";
+    }
+    requestJarvisFocus();
+    return "opened";
+}
+// Steam's overlay window for the running game (its MenuStore opens Quick Access over the game), else the Big
+// Picture window's.
+function jarvisMenuStore(windowStore, runningApp) {
+    try {
+        if (runningApp > 0 && Array.isArray(windowStore?.OverlayWindows)) {
+            const overlay = windowStore.OverlayWindows.find((candidate) => {
+                try {
+                    return candidate?.IsGamepadUIOverlayWindow?.() === true && candidate?.MenuStore && candidate?.BrowserWindow?.closed !== true;
+                }
+                catch {
+                    return false;
+                }
+            });
+            if (overlay?.MenuStore)
+                return overlay.MenuStore;
+        }
+        return windowStore?.GamepadUIMainWindowInstance?.MenuStore ?? undefined;
+    }
+    catch {
+        return undefined;
+    }
+}
+function orbState(input) {
+    if (!input.enabled)
+        return "hidden";
+    if (input.listening || input.working)
+        return "busy";
+    if (input.readyUntil > input.now)
+        return "ready";
+    // During a game the orb shows only while Jarvis is doing something.
+    return input.gameRunning ? "hidden" : "idle";
+}
+// Remembers when an answer arrived, from the runtime's snapshots (talk answers, screen answers) and from the chat.
+function createPresence(now = Date.now) {
+    let readyUntil = 0, lastAnswer, lastScreen;
+    const listeners = new Set();
+    const notify = () => { for (const listener of [...listeners]) {
+        try {
+            listener();
+        }
+        catch { /* A closed view. */ }
+    } };
+    return {
+        ready() { readyUntil = now() + JARVIS_READY_MS; notify(); },
+        observe(snapshot) {
+            if (!snapshot)
+                return;
+            const fresh = (snapshot.answer && snapshot.answer !== lastAnswer) || (snapshot.screen && snapshot.screen !== lastScreen);
+            lastAnswer = snapshot.answer;
+            lastScreen = snapshot.screen;
+            if (fresh)
+                this.ready();
+            else
+                notify();
+        },
+        readyUntil: () => readyUntil,
+        subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    };
+}
+
+const { Focusable: Focusable$d, DialogButton: DialogButton$8, Navigation: Navigation$7 } = CompatUI;
+let iconSet = () => undefined;
+function setCoreHomeIcons(source) { iconSet = source; }
+const css$4 = `
+.core-home{padding:8px 0 32px;color:#E6EAEE;min-width:0}
+.core-home h2{margin:0 0 6px;font-size:30px;font-weight:600;letter-spacing:-.01em;color:#FFFFFF}
+.core-home .core-home-line{font-size:16px;color:#C9D1D9;margin:0 0 18px}
+.core-home .core-home-label{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C9D1D9;margin:22px 0 12px}
+.core-home .core-home-label img{width:26px;height:26px;object-fit:contain}
+.core-home .core-home-label i{display:inline-block;width:24px;height:3px;background:var(--core-tone,#C9D1D9)}
+.core-home .core-home-row{display:flex;gap:16px;overflow-x:auto;overflow-y:visible;padding:8px 2px 10px;scrollbar-width:none}
+.core-home .core-home-tile{flex:0 0 150px;height:225px;position:relative;background:#1A1D21;border-radius:8px;overflow:hidden;transition:translate .15s ease-out}
+.core-home .core-home-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.core-home .core-home-tile span{position:absolute;inset:auto 0 0 0;padding:8px;font-size:13px;color:#E6EAEE;background:#000000}
+.core-home .core-home-tile.gpfocus,.core-home .core-home-tile:focus-visible{outline:3px solid #D7263D;outline-offset:0;translate:0 -6px}
+.core-home .core-home-actions{display:flex;gap:12px;flex-wrap:wrap}
+.core-home .core-home-actions .DialogButton{width:auto;min-width:200px;border-radius:0}
+.core-home .core-home-note{font-size:14px;color:#9AA4AE}
+@media (prefers-reduced-motion: reduce){.core-home .core-home-tile{transition:none}.core-home .core-home-tile.gpfocus{translate:none}}
+`;
+const steamWindow = () => window;
+function appStoreApps() {
+    const host = steamWindow();
+    try {
+        return host.appStore?.allApps ?? host.collectionStore?.allAppsCollection?.allApps ?? [];
+    }
+    catch {
+        return [];
+    }
+}
+function userCollections() {
+    const host = steamWindow();
+    try {
+        const list = host.collectionStore?.userCollections;
+        return Array.isArray(list) ? list : list && typeof list.values === "function" ? Array.from(list.values()) : [];
+    }
+    catch {
+        return [];
+    }
+}
+// The art Steam shows for an app: its own portrait capsule URLs where the store offers them, then the local cache.
+function portraitSources(appid) {
+    const host = steamWindow(), out = [];
+    try {
+        const overview = host.appStore?.GetAppOverviewByAppID?.(appid);
+        for (const name of ["GetCustomVerticalCapsuleURLs", "GetVerticalCapsuleURLs", "GetCustomPortraitImageURLs", "GetCachedPortraitImageURLs"]) {
+            const urls = host.appStore?.[name]?.(overview);
+            if (Array.isArray(urls))
+                out.push(...urls.filter((url) => typeof url === "string"));
+        }
+    }
+    catch { /* The local cache below. */ }
+    out.push(`https://steamloopback.host/assets/${appid}/library_600x900.jpg`, `https://steamloopback.host/customimages/${appid}p.png`, `https://steamloopback.host/customimages/${appid}p.jpg`);
+    return [...new Set(out)];
+}
+function GameTile({ app }) {
+    const sources = _global_SP_REACT.useMemo(() => portraitSources(app.appid), [app.appid]);
+    const [index, setIndex] = _global_SP_REACT.useState(0);
+    return SP_JSX.jsxs(Focusable$d, { className: "core-home-tile", focusable: true, "aria-label": app.name, onActivate: () => { try {
+            Navigation$7?.Navigate?.(`/library/app/${app.appid}`);
+        }
+        catch { /* Stay on Home. */ } }, children: [index < sources.length ? SP_JSX.jsx("img", { alt: "", loading: "lazy", src: sources[index], onError: () => setIndex(i => i + 1) }) : null, index >= sources.length ? SP_JSX.jsx("span", { children: app.name }) : null] });
+}
+function openJarvis() {
+    const host = steamWindow();
+    toggleJarvisTab({
+        menuStore: () => jarvisMenuStore(host.SteamUIStore?.WindowStore ?? CompatUI.Router?.WindowStore, 0),
+        navigation: () => Navigation$7,
+    });
+}
+function JarvisBrief({ locale, native }) {
+    const text = coreHomeCopy(locale);
+    const [now, setNow] = _global_SP_REACT.useState(() => new Date());
+    _global_SP_REACT.useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60 * 1000); return () => window.clearInterval(timer); }, []);
+    const last = _global_SP_REACT.useMemo(() => lastPlayedApp(appStoreApps()), [now]);
+    const mods = forgeUpdateCount(steamWindow());
+    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx("h2", { children: text[greetingKey(now.getHours())] }), SP_JSX.jsx("p", { className: "core-home-line", children: last ? text.lastPlayed.replace("{game}", last.name) : text.nothingYet }), mods > 0 ? SP_JSX.jsx("p", { className: "core-home-line", children: mods === 1 ? text.modsOne : text.mods.replace("{count}", String(mods)) }) : null, SP_JSX.jsx(Focusable$d, { className: "core-home-actions", "flow-children": "row", children: SP_JSX.jsx(DialogButton$8, { onClick: openJarvis, children: text.talk }) }), native ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "core-home-label", children: text.updates }), native] }) : null] });
+}
+const familyName = { playstation: "PlayStation", nintendo: "Nintendo", sega: "Sega", xbox: "Xbox", retro: "Retro", vr: "VR" };
+function shelfFamily(name) {
+    const found = matchCollection(name);
+    if (found?.key === "vr")
+        return "vr";
+    return found?.family;
+}
+function Consoles({ locale }) {
+    const text = coreHomeCopy(locale);
+    const shelves = _global_SP_REACT.useMemo(() => consoleShelves(userCollections(), shelfFamily), []);
+    const icons = iconSet();
+    if (!shelves.length)
+        return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx("p", { className: "core-home-note", children: text.empty })] });
+    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), shelves.map(shelf => {
+                const label = shelf.family === "vr" ? text.vr : shelf.family === "retro" ? text.retro : familyName[shelf.family];
+                const icon = tabIcon(familyName[shelf.family], matchTab(familyName[shelf.family]), icons);
+                const tone = shelf.family === "vr" ? "#C9D1D9" : CORE_FAMILY_TONES$1[shelf.family];
+                return SP_JSX.jsxs("section", { style: { ["--core-tone"]: tone }, "aria-label": label, children: [SP_JSX.jsxs("div", { className: "core-home-label", children: [icon ? SP_JSX.jsx("img", { alt: "", src: icon }) : null, SP_JSX.jsx("span", { children: label }), SP_JSX.jsx("i", {})] }), shelf.apps.length
+                            ? SP_JSX.jsx(Focusable$d, { className: "core-home-row", "flow-children": "row", children: shelf.apps.map(app => SP_JSX.jsx(GameTile, { app: app }, app.appid)) })
+                            : SP_JSX.jsx("p", { className: "core-home-note", children: text.empty })] }, shelf.family);
+            })] });
+}
+class HomeBoundary extends _global_SP_REACT.Component {
+    constructor() {
+        super(...arguments);
+        this.state = { failed: false };
+    }
+    static getDerivedStateFromError() { return { failed: true }; }
+    componentDidCatch(error) { console.warn("[Core Home] Steam's Home restored", error); }
+    render() { return this.state.failed ? this.props.fallback : this.props.children; }
+}
+// `native` is Steam's tab container (props.tabs), with What's new already carrying Core's news; `render` adds On this
+// day (DailyHistory's HistoryTabs). Answers Core Home, or what Core rendered before on any failure.
+function CoreHomeTabs({ native, getLocale, render }) {
+    const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
+    _global_SP_REACT.useSyncExternalStore(subscribeHomeTabs, homeTabsRevision, homeTabsRevision);
+    const fallback = render(native);
+    if (!on)
+        return fallback;
+    let tree;
+    try {
+        const locale = getLocale();
+        const text = coreHomeCopy(locale);
+        const tabs = native.props.tabs;
+        const whatsNew = tabs.find(tab => tab?.id === BRIEF_ID);
+        const core = [
+            { ...(whatsNew ?? {}), id: BRIEF_ID, title: text.brief, content: SP_JSX.jsx(JarvisBrief, { locale: locale, native: whatsNew?.content }), order: HOME_TAB_ORDER.brief },
+            { id: "CoreConsoles", title: text.consoles, content: SP_JSX.jsx(Consoles, { locale: locale }), order: HOME_TAB_ORDER.consoles },
+            ...availableHomeTabs().map(tab => {
+                const Component = tab.component;
+                return { id: tab.id, title: typeof tab.label === "function" ? tab.label(locale) : tab.label, content: SP_JSX.jsx(Component, { locale: locale }), order: tab.order };
+            }),
+        ];
+        const next = composeHomeTabs(tabs, core);
+        const props = { tabs: next };
+        if ("strActiveTab" in native.props)
+            props.strActiveTab = activeHomeTab(native.props.strActiveTab, next);
+        tree = _global_SP_REACT.cloneElement(native, props);
+    }
+    catch (error) {
+        console.warn("[Core Home] Steam's Home kept", error);
+        return fallback;
+    }
+    return SP_JSX.jsx(HomeBoundary, { fallback: fallback, children: render(tree) });
+}
 
 const { Focusable: Focusable$c, DialogButton: DialogButton$7, DropdownItem: DropdownItem$4, ToggleField: ToggleField$7, Navigation: Navigation$6 } = CompatUI;
 let config$1 = { enabled: true, country: "auto" };
@@ -24750,7 +25744,8 @@ function installHomeNews(getLocale) {
         const tabs = tree.props.tabs.map((tab) => tab.id === "WhatsNew"
             ? { ...tab, content: news.apply(tab.content) } : tab);
         const native = _global_SP_REACT.cloneElement(tree, { tabs });
-        return SP_JSX.jsx(HistoryTabs, { native: native, getLocale: getLocale });
+        // Eternal Core: Core Home (coreHome.tsx) arranges the tabs; On this day still comes from HistoryTabs.
+        return SP_JSX.jsx(CoreHomeTabs, { native: native, getLocale: getLocale, render: (tabs) => SP_JSX.jsx(HistoryTabs, { native: tabs, getLocale: getLocale }) });
     }, onError);
     const patch = routerHook.addPatch("/library/home", (props) => {
         const children = alive ? descend.apply(props.children) : props.children;
@@ -52701,7 +53696,10 @@ const PLAYHUB_COVERS = {
 };
 function bundledPluginCover(repository) {
     const key = String(repository ?? "").trim().toLocaleLowerCase("en-US");
-    return Object.prototype.hasOwnProperty.call(PLAYHUB_COVERS, key) ? PLAYHUB_COVERS[key] : "";
+    if (Object.prototype.hasOwnProperty.call(PLAYHUB_COVERS, key))
+        return PLAYHUB_COVERS[key];
+    // Eternal Core: the user's own plugin forks show Core's plugin tiles (corePluginLogos.ts, REBRAND.md).
+    return corePluginTile(key) ?? "";
 }
 /** Try in order on image error. Bundled artwork works offline; README images
  * precede the generated GitHub preview. Never use this for installed-only rows. */
@@ -57005,7 +58003,7 @@ function GpdV1ControllerControls({ locale, deviceKey, profile, active = true }) 
 }
 
 const { DialogButton: DialogButton$4, DropdownItem: DropdownItem$3, Focusable: Focusable$8 } = CompatUI;
-const style$7 = `
+const style$8 = `
 .ph-device-settings{display:grid;gap:12px;min-width:0;padding:4px 4px 0;overflow-wrap:anywhere}
 .ph-device-identity{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:12px;border-radius:9px;background:${CORE.gunmetal}}
 .ph-device-symbol{display:grid;place-items:center;width:42px;height:42px;border-radius:8px;background:${CORE.gunmetalRaised};font-size:22px}
@@ -57106,7 +58104,7 @@ function DeviceSettings({ locale, openVideo, openPerformance, detailsOpen = fals
         }
     };
     if (!profile)
-        return SP_JSX.jsxs(Focusable$8, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$7 }), SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: error === "load" ? copy.loadError : copy.loading }), error === "load" && SP_JSX.jsx(DialogButton$4, { onClick: () => { setError(undefined); setLoadAttempt(value => value + 1); }, children: copy.retry })] });
+        return SP_JSX.jsxs(Focusable$8, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$8 }), SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: error === "load" ? copy.loadError : copy.loading }), error === "load" && SP_JSX.jsx(DialogButton$4, { onClick: () => { setError(undefined); setLoadAttempt(value => value + 1); }, children: copy.retry })] });
     const profileNames = [{ id: "pc", name: copy.pc }, { id: "handheld", name: copy.handheld }, ...profile.handhelds];
     const names = new Map(profileNames.map(({ id, name }) => [id, name]));
     const handheld = profile.effective !== "pc";
@@ -57123,7 +58121,7 @@ function DeviceSettings({ locale, openVideo, openPerformance, detailsOpen = fals
         ? `${copy.batteryRemaining} · ${new Intl.NumberFormat(copy.language, {
             style: "unit", unit: "minute", unitDisplay: "short", maximumFractionDigits: 0,
         }).format(Math.ceil(seconds / 60))}` : undefined;
-    return SP_JSX.jsxs(Focusable$8, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$7 }), SP_JSX.jsxs("div", { className: "ph-device-identity", children: [SP_JSX.jsx("div", { className: "ph-device-symbol", "aria-hidden": "true", children: handheld ? SP_JSX.jsx(TbDeviceGamepad2, {}) : SP_JSX.jsx(TbDeviceDesktop, {}) }), SP_JSX.jsxs("div", { children: [SP_JSX.jsxs("div", { className: "ph-device-title", children: [SP_JSX.jsx("strong", { children: names.get(profile.effective) ?? copy.pc }), handheld && SP_JSX.jsx("span", { className: "ph-device-experimental", children: copy.experimental })] }), modelLabel && SP_JSX.jsxs("div", { className: "ph-device-detail", children: [copy.model, " \u00B7 ", modelLabel] })] })] }), SP_JSX.jsx(DropdownItem$3, { label: copy.profile, layout: "below", bottomSeparator: "none", selectedOption: profile.selection, disabled: saving, rgOptions: [{ label: copy.auto, data: "auto" }, ...profileNames.map(({ id, name }) => ({ label: name, data: id }))], onChange: select }), SP_JSX.jsx("p", { className: "ph-device-hint", children: copy.profileHint }), error === "save" && SP_JSX.jsx("div", { className: "ph-device-detail", role: "alert", children: copy.saveError }), (battery || health || remaining) && SP_JSX.jsxs("div", { className: "ph-device-battery", children: [SP_JSX.jsx(TbBattery, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [battery && SP_JSX.jsx("div", { children: battery }), remaining && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: remaining }), health && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: health })] })] }), display && SP_JSX.jsx("dl", { className: "ph-device-status", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.primaryDisplay }), SP_JSX.jsxs("dd", { children: [display.width, " \u00D7 ", display.height, display.hz ? ` · ${display.hz} Hz` : ""] })] }) }), SP_JSX.jsx(DeviceCapabilities, { selection: profile.selection, effective: profile.effective, detected: profile.detected, locale: locale, openVideo: openVideo, openPerformance: openPerformance }), profile.effective === "ayaneo-3" && profile.detected === "ayaneo-3" && SP_JSX.jsx(Ayaneo3ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), profile.effective === profile.detected && ["gpd-win-4", "gpd-win-mini"].includes(profile.detected) && SP_JSX.jsx(GpdV1ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), profile: profile.detected, locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), SP_JSX.jsxs(DialogButton$4, { className: "ph-device-details", "aria-expanded": detailsOpen, onClick: onDetailsToggle, children: [SP_JSX.jsx("span", { children: copy.details }), detailsOpen ? SP_JSX.jsx(TbChevronDown, { "aria-hidden": "true" }) : SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), detailsOpen && SP_JSX.jsx(DeviceInfo, { copy: copy, model: actualModel })] });
+    return SP_JSX.jsxs(Focusable$8, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$8 }), SP_JSX.jsxs("div", { className: "ph-device-identity", children: [SP_JSX.jsx("div", { className: "ph-device-symbol", "aria-hidden": "true", children: handheld ? SP_JSX.jsx(TbDeviceGamepad2, {}) : SP_JSX.jsx(TbDeviceDesktop, {}) }), SP_JSX.jsxs("div", { children: [SP_JSX.jsxs("div", { className: "ph-device-title", children: [SP_JSX.jsx("strong", { children: names.get(profile.effective) ?? copy.pc }), handheld && SP_JSX.jsx("span", { className: "ph-device-experimental", children: copy.experimental })] }), modelLabel && SP_JSX.jsxs("div", { className: "ph-device-detail", children: [copy.model, " \u00B7 ", modelLabel] })] })] }), SP_JSX.jsx(DropdownItem$3, { label: copy.profile, layout: "below", bottomSeparator: "none", selectedOption: profile.selection, disabled: saving, rgOptions: [{ label: copy.auto, data: "auto" }, ...profileNames.map(({ id, name }) => ({ label: name, data: id }))], onChange: select }), SP_JSX.jsx("p", { className: "ph-device-hint", children: copy.profileHint }), error === "save" && SP_JSX.jsx("div", { className: "ph-device-detail", role: "alert", children: copy.saveError }), (battery || health || remaining) && SP_JSX.jsxs("div", { className: "ph-device-battery", children: [SP_JSX.jsx(TbBattery, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [battery && SP_JSX.jsx("div", { children: battery }), remaining && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: remaining }), health && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: health })] })] }), display && SP_JSX.jsx("dl", { className: "ph-device-status", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.primaryDisplay }), SP_JSX.jsxs("dd", { children: [display.width, " \u00D7 ", display.height, display.hz ? ` · ${display.hz} Hz` : ""] })] }) }), SP_JSX.jsx(DeviceCapabilities, { selection: profile.selection, effective: profile.effective, detected: profile.detected, locale: locale, openVideo: openVideo, openPerformance: openPerformance }), profile.effective === "ayaneo-3" && profile.detected === "ayaneo-3" && SP_JSX.jsx(Ayaneo3ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), profile.effective === profile.detected && ["gpd-win-4", "gpd-win-mini"].includes(profile.detected) && SP_JSX.jsx(GpdV1ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), profile: profile.detected, locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), SP_JSX.jsxs(DialogButton$4, { className: "ph-device-details", "aria-expanded": detailsOpen, onClick: onDetailsToggle, children: [SP_JSX.jsx("span", { children: copy.details }), detailsOpen ? SP_JSX.jsx(TbChevronDown, { "aria-hidden": "true" }) : SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), detailsOpen && SP_JSX.jsx(DeviceInfo, { copy: copy, model: actualModel })] });
 }
 
 // The panel preference store owns expansion across QAM openings and tab changes.
@@ -57553,7 +58551,7 @@ function GameFrameTiming({ appId, locale }) {
     return SP_JSX.jsxs(PanelSection$a, { title: title, children: [SP_JSX.jsx(PanelSectionRow$a, { children: SP_JSX.jsx(ButtonItem$6, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => void gameFrameComparison.capture(appId, id => call("measure_game_frames", id, true)), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: busy ? measuring : measure }) }) }), SP_JSX.jsxs("div", { role: "status", style: { padding: "4px 16px 12px", fontSize: 13, lineHeight: 1.5, overflowWrap: "anywhere" }, children: [SP_JSX.jsx("div", { children: message }), !busy && !error && SP_JSX.jsx("div", { style: { opacity: .74 }, children: prepare }), first && SP_JSX.jsx("dl", { style: { display: "grid", gap: 8, margin: "12px 0 0" }, children: rows.map(({ label, before, after, unit }) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { style: { fontWeight: 650 }, children: label }), SP_JSX.jsxs("dd", { style: { margin: 0, display: "flex", flexWrap: "wrap", columnGap: 12 }, children: [SP_JSX.jsxs("span", { children: [firstLabel, " \u00B7 ", format(before), unit] }), after !== undefined && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { children: [secondLabel, " \u00B7 ", format(after), unit] }), SP_JSX.jsxs("span", { children: [change, " \u00B7 ", format(Number((after - before).toFixed(2)), true), unit] })] })] })] }, label)) })] }), first && SP_JSX.jsx(PanelSectionRow$a, { children: SP_JSX.jsx(ButtonItem$6, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => gameFrameComparison.reset(appId), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: clear }) }) })] });
 }
 
-const style$6 = `
+const style$7 = `
 .ph-store-intro{isolation:isolate;width:100%;min-width:0;padding:0 0 14px;box-sizing:border-box}
 .ph-store-launch{position:relative;z-index:1}
 .ph-store-download{position:relative;z-index:0;width:100%;overflow:hidden;pointer-events:none}
@@ -57612,7 +58610,7 @@ function PluginStoreIntro({ description, button }) {
             observer.observe(target);
         return () => observer.disconnect();
     }, []);
-    return SP_JSX.jsxs("div", { className: "ph-store-intro", ref: container, children: [SP_JSX.jsx("style", { children: style$6 }), SP_JSX.jsx("div", { className: "ph-store-launch", ref: launcher, children: button }), SP_JSX.jsx("div", { className: "ph-store-download", style: { height: Math.max(0, height - overlap), marginTop: -wrapperGap }, "aria-hidden": "true", children: SP_JSX.jsx("div", { className: "ph-store-download-viewport", style: { height, top: -overlap }, children: SP_JSX.jsxs("div", { className: "ph-store-download-stage", children: [SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbPhoto, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbMusic, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbDeviceGamepad2, {}) }), SP_JSX.jsx("span", { className: "ph-store-shelf" }), SP_JSX.jsx(TbCheck, { className: "ph-store-saved" })] }) }) }), SP_JSX.jsx("div", { className: "ph-store-intro-copy", children: description })] });
+    return SP_JSX.jsxs("div", { className: "ph-store-intro", ref: container, children: [SP_JSX.jsx("style", { children: style$7 }), SP_JSX.jsx("div", { className: "ph-store-launch", ref: launcher, children: button }), SP_JSX.jsx("div", { className: "ph-store-download", style: { height: Math.max(0, height - overlap), marginTop: -wrapperGap }, "aria-hidden": "true", children: SP_JSX.jsx("div", { className: "ph-store-download-viewport", style: { height, top: -overlap }, children: SP_JSX.jsxs("div", { className: "ph-store-download-stage", children: [SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbPhoto, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbMusic, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbDeviceGamepad2, {}) }), SP_JSX.jsx("span", { className: "ph-store-shelf" }), SP_JSX.jsx(TbCheck, { className: "ph-store-saved" })] }) }) }), SP_JSX.jsx("div", { className: "ph-store-intro-copy", children: description })] });
 }
 
 /** Three startup checks only. Evidence and the durable session claim live in Python. */
@@ -62590,7 +63588,7 @@ function SteamUpdateCard({ locale }) {
 // the new rows.
 const { PanelSection: PanelSection$7, PanelSectionRow: PanelSectionRow$7, ButtonItem: ButtonItem$3, Focusable: Focusable$6 } = CompatUI;
 const { crimson: CRIMSON$5, crimsonText: CRIMSON_TEXT$4, steel: STEEL$5, gunmetal: GUNMETAL$5, white: WHITE$5 } = CORE;
-const style$5 = `
+const style$6 = `
 .core-health{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-health-summary{padding:8px 12px;font-size:14px;font-weight:650;color:${WHITE$5}}
 .core-health-summary.problem{color:${CRIMSON_TEXT$4}}
@@ -62663,7 +63661,7 @@ function HealthSection({ locale }) {
         .filter(action => action.fix ? line.level === "attention" || line.level === "info" : !!open[line.id])
         .map(action => ({ line, action })));
     const summary = answer ? healthSummary(answer, locale) : undefined;
-    return (SP_JSX.jsxs(PanelSection$7, { title: text.title, children: [SP_JSX.jsx("style", { children: style$5 }), SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsxs(Focusable$6, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id))), result && SP_JSX.jsx("div", { className: `core-health-result${result.problem ? " problem" : ""}`, role: "status", children: result.text })] }) }), buttons.map(({ line, action }) => (SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy, onClick: () => act(action), children: action.label }) }, `action-${line.id}-${action.id}`))), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
+    return (SP_JSX.jsxs(PanelSection$7, { title: text.title, children: [SP_JSX.jsx("style", { children: style$6 }), SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsxs(Focusable$6, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id))), result && SP_JSX.jsx("div", { className: `core-health-result${result.problem ? " problem" : ""}`, role: "status", children: result.text })] }) }), buttons.map(({ line, action }) => (SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy, onClick: () => act(action), children: action.label }) }, `action-${line.id}-${action.id}`))), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
 }
 
 // Eternal Core: the Voice section of Quick Access > Core. Turns the agent's GET /voice/state and
@@ -62878,7 +63876,7 @@ function discordInstalled(inventory) {
 // everything with the toggle) and the mute scope (everything, the default, or calls only).
 const { PanelSection: PanelSection$6, PanelSectionRow: PanelSectionRow$6, Focusable: Focusable$5, DialogButton: DialogButton$2, DropdownItem: DropdownItem$1, ToggleField: ToggleField$4 } = CompatUI;
 const { crimson: CRIMSON$4, crimsonText: CRIMSON_TEXT$3, steel: STEEL$4, gunmetal: GUNMETAL$4, white: WHITE$4 } = CORE;
-const style$4 = `
+const style$5 = `
 .core-voice{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
 .core-voice .core-voice-button{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box;background:${GUNMETAL$4}!important;color:${WHITE$4}!important;border-radius:6px!important;padding:12px 14px!important;display:flex;align-items:center;gap:12px;text-align:left;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important}
 .core-voice .core-voice-button.gpfocus,.core-voice .core-voice-button:focus-visible{outline:2px solid ${CRIMSON$4};outline-offset:-2px}
@@ -63000,7 +63998,7 @@ function VoiceSection({ locale }) {
     const mic = micView(answer, locale);
     const calls = callsMicView(answer, locale);
     const scope = scopeView(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$6, { title: text.title, children: [SP_JSX.jsx("style", { children: style$4 }), SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsxs(Focusable$5, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$2, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs("div", { className: "core-voice-settings", children: [SP_JSX.jsx(DropdownItem$1, { label: text.callsMic, description: text.callsMicHint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: calls.options, selectedOption: calls.selected, onChange: (option) => { if (option.data !== calls.selected)
+    return (SP_JSX.jsxs(PanelSection$6, { title: text.title, children: [SP_JSX.jsx("style", { children: style$5 }), SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsxs(Focusable$5, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$2, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs("div", { className: "core-voice-settings", children: [SP_JSX.jsx(DropdownItem$1, { label: text.callsMic, description: text.callsMicHint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: calls.options, selectedOption: calls.selected, onChange: (option) => { if (option.data !== calls.selected)
                                         void pickCallsMic(option.data, calls.everything); } }), calls.line && SP_JSX.jsx("div", { className: "core-voice-hint", role: "status", children: calls.line }), callsNote && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: callsNote }), SP_JSX.jsx(ToggleField$4, { label: text.everything, description: text.everythingHint, bottomSeparator: "none", checked: calls.everything, disabled: busy || !answer || !calls.canToggleEverything, onChange: (enabled) => void pickCallsMic(calls.selected, enabled) }), SP_JSX.jsx(DropdownItem$1, { label: text.scope, description: scope.hint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: scope.options, selectedOption: scope.selected, onChange: (option) => { if (option.data !== scope.selected)
                                         void pickScope(option.data); } })] }), SP_JSX.jsxs(DialogButton$2, { className: "core-voice-button", disabled: !answer, onClick: openParty, children: [SP_JSX.jsx(PartyIcon, {}), SP_JSX.jsx("span", { className: "core-voice-text", children: SP_JSX.jsx("span", { className: "core-voice-label", children: text.party }) })] }), SP_JSX.jsx("div", { className: "core-voice-hint", children: text.partyHint }), note && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: note }), SP_JSX.jsxs("div", { className: "core-voice-row", children: [SP_JSX.jsx("span", { className: "core-voice-row-title", children: text.discord }), SP_JSX.jsx("span", { className: "core-voice-row-value", children: discord ? text.discordInstalled : text.discordMissing })] })] }) })] }));
 }
@@ -63103,7 +64101,7 @@ function apolloLine(answer, text) {
 // Stream mode is on, Core sends nothing to the TV (GamingMode.Services/MarkIIIHost.Stream.cs).
 const { PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$5, Focusable: Focusable$4, ToggleField: ToggleField$3 } = CompatUI;
 const { crimson: CRIMSON$3, crimsonText: CRIMSON_TEXT$2, steel: STEEL$3, gunmetal: GUNMETAL$3, white: WHITE$3 } = CORE;
-const style$3 = `
+const style$4 = `
 .core-stream{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-stream-row{background:${GUNMETAL$3};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none;box-shadow:none;text-shadow:none}
 .core-stream-row.gpfocus,.core-stream-row:focus-visible{outline:2px solid ${CRIMSON$3};outline-offset:-2px}
@@ -63144,7 +64142,7 @@ function StreamSection({ locale }) {
         }
     };
     const view = streamView(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$5, { title: text.title, children: [SP_JSX.jsx("style", { children: style$3 }), SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsxs(Focusable$4, { className: "core-stream", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$4, { className: `core-stream-row${view.state === "on" ? " on" : ""}`, noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-stream-title", children: text.title }), SP_JSX.jsx("span", { className: "core-stream-value", role: "status", children: view.line })] }), view.detail && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.detail }), view.audio && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.audio }), SP_JSX.jsx("div", { className: "core-stream-settings", children: SP_JSX.jsx(ToggleField$3, { label: text.keep, description: text.keepHint, bottomSeparator: "none", checked: view.forced, disabled: busy || !answer, onChange: (enabled) => void keepTvOut(enabled) }) }), view.apollo && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.apollo })] }) })] }));
+    return (SP_JSX.jsxs(PanelSection$5, { title: text.title, children: [SP_JSX.jsx("style", { children: style$4 }), SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsxs(Focusable$4, { className: "core-stream", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$4, { className: `core-stream-row${view.state === "on" ? " on" : ""}`, noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-stream-title", children: text.title }), SP_JSX.jsx("span", { className: "core-stream-value", role: "status", children: view.line })] }), view.detail && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.detail }), view.audio && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.audio }), SP_JSX.jsx("div", { className: "core-stream-settings", children: SP_JSX.jsx(ToggleField$3, { label: text.keep, description: text.keepHint, bottomSeparator: "none", checked: view.forced, disabled: busy || !answer, onChange: (enabled) => void keepTvOut(enabled) }) }), view.apollo && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.apollo })] }) })] }));
 }
 
 // Eternal Core: Stream mode, Steam's half. The Gaming Mode agent cannot see Steam Remote Play (Steam
@@ -63899,7 +64897,7 @@ const { PanelSection: PanelSection$4, PanelSectionRow: PanelSectionRow$4, Focusa
 const { steel: STEEL$2, gunmetal: GUNMETAL$2, white: WHITE$2, crimson: CRIMSON$2, crimsonText: CRIMSON_TEXT$1, hint: HINT$2 } = CORE;
 let runtime$1;
 function setSwipeTypingRuntime(value) { runtime$1 = value; }
-const style$2 = `
+const style$3 = `
 .core-typing{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-typing-row{background:${GUNMETAL$2};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none}
 .core-typing-row.gpfocus,.core-typing-row:focus-visible{outline:2px solid ${CRIMSON$2};outline-offset:-2px}
@@ -63950,14 +64948,14 @@ function SwipeTypingSection({ locale }) {
         if (!(await typing.openSettingsWhenKeyboardOpens(20000)))
             toaster.toast({ title: "Core", body: text.noKeyboard });
     };
-    return (SP_JSX.jsxs(PanelSection$4, { title: text.typing, children: [SP_JSX.jsx("style", { children: style$2 }), SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsxs(Focusable$3, { className: "core-typing", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$3, { className: "core-typing-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-typing-title", children: text.typing }), SP_JSX.jsx("span", { className: `core-typing-value${status.state === "paused" ? " paused" : ""}`, role: "status", children: typingStatus(status.state, locale, status.error ?? undefined) })] }), SP_JSX.jsx(ToggleField$2, { label: text.typing, description: text.typingHint, bottomSeparator: "none", checked: typing.enabled(), disabled: status.state === "loading" && !typing.enabled(), onChange: (on) => void typing.setEnabled(on) }), running && SP_JSX.jsx(ToggleField$2, { label: text.private, description: text.privateHint, bottomSeparator: "none", checked: typing.settingsValue("privateMode") === true, onChange: (on) => typing.setSetting("privateMode", on) }), running && SP_JSX.jsx(ToggleField$2, { label: text.log, description: text.logHint, bottomSeparator: "none", checked: typing.settingsValue("typingLog") === true, onChange: (on) => typing.setSetting("typingLog", on) }), running && SP_JSX.jsx(ButtonItem$2, { layout: "below", bottomSeparator: "none", onClick: () => void openSettings(), children: text.settings }), SP_JSX.jsx(ButtonItem$2, { layout: "below", bottomSeparator: "none", disabled: forgetting, onClick: () => void forget(), children: forgetting ? text.forgetting : confirm ? text.forgetConfirm : text.forget }), SP_JSX.jsx("div", { className: "core-typing-hint", children: text.english }), SP_JSX.jsx("div", { className: "core-typing-hint", children: text.credit })] }) })] }));
+    return (SP_JSX.jsxs(PanelSection$4, { title: text.typing, children: [SP_JSX.jsx("style", { children: style$3 }), SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsxs(Focusable$3, { className: "core-typing", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$3, { className: "core-typing-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-typing-title", children: text.typing }), SP_JSX.jsx("span", { className: `core-typing-value${status.state === "paused" ? " paused" : ""}`, role: "status", children: typingStatus(status.state, locale, status.error ?? undefined) })] }), SP_JSX.jsx(ToggleField$2, { label: text.typing, description: text.typingHint, bottomSeparator: "none", checked: typing.enabled(), disabled: status.state === "loading" && !typing.enabled(), onChange: (on) => void typing.setEnabled(on) }), running && SP_JSX.jsx(ToggleField$2, { label: text.private, description: text.privateHint, bottomSeparator: "none", checked: typing.settingsValue("privateMode") === true, onChange: (on) => typing.setSetting("privateMode", on) }), running && SP_JSX.jsx(ToggleField$2, { label: text.log, description: text.logHint, bottomSeparator: "none", checked: typing.settingsValue("typingLog") === true, onChange: (on) => typing.setSetting("typingLog", on) }), running && SP_JSX.jsx(ButtonItem$2, { layout: "below", bottomSeparator: "none", onClick: () => void openSettings(), children: text.settings }), SP_JSX.jsx(ButtonItem$2, { layout: "below", bottomSeparator: "none", disabled: forgetting, onClick: () => void forget(), children: forgetting ? text.forgetting : confirm ? text.forgetConfirm : text.forget }), SP_JSX.jsx("div", { className: "core-typing-hint", children: text.english }), SP_JSX.jsx("div", { className: "core-typing-hint", children: text.credit })] }) })] }));
 }
 
 // Eternal Core batch 2 (B17, B8, B13): a read-only summary in Quick Access > Core: the automations that are on, the
 // Home Assistant bridge and sleep after streaming. Editing happens in the desktop app (Gaming Mode > Automations).
 const { PanelSection: PanelSection$3, PanelSectionRow: PanelSectionRow$3, Focusable: Focusable$2 } = CompatUI;
 const { steel: STEEL$1, gunmetal: GUNMETAL$1, white: WHITE$1, crimson: CRIMSON$1, hint: HINT$1 } = CORE;
-const style$1 = `
+const style$2 = `
 .core-autos{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-autos-row{background:${GUNMETAL$1};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none}
 .core-autos-row.gpfocus,.core-autos-row:focus-visible{outline:2px solid ${CRIMSON$1};outline-offset:-2px}
@@ -63985,7 +64983,7 @@ function AutomationsSection({ locale }) {
     if (!answer)
         return null;
     const lines = automationLines(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$3, { title: text.autos, children: [SP_JSX.jsx("style", { children: style$1 }), SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsxs(Focusable$2, { className: "core-autos", "flow-children": "column", children: [(lines.length ? lines : [text.none]).map((line, index) => SP_JSX.jsx("div", { className: "core-autos-rule", children: line }, index)), SP_JSX.jsxs(Focusable$2, { className: "core-autos-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-autos-title", children: text.ha }), SP_JSX.jsx("span", { className: "core-autos-value", role: "status", children: bridgeLine(answer, locale) })] }), SP_JSX.jsxs(Focusable$2, { className: "core-autos-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-autos-title", children: text.sleep }), SP_JSX.jsx("span", { className: "core-autos-value", children: sleepLine(answer, locale) })] }), SP_JSX.jsx("div", { className: "core-autos-hint", children: text.edit })] }) })] }));
+    return (SP_JSX.jsxs(PanelSection$3, { title: text.autos, children: [SP_JSX.jsx("style", { children: style$2 }), SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsxs(Focusable$2, { className: "core-autos", "flow-children": "column", children: [(lines.length ? lines : [text.none]).map((line, index) => SP_JSX.jsx("div", { className: "core-autos-rule", children: line }, index)), SP_JSX.jsxs(Focusable$2, { className: "core-autos-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-autos-title", children: text.ha }), SP_JSX.jsx("span", { className: "core-autos-value", role: "status", children: bridgeLine(answer, locale) })] }), SP_JSX.jsxs(Focusable$2, { className: "core-autos-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-autos-title", children: text.sleep }), SP_JSX.jsx("span", { className: "core-autos-value", children: sleepLine(answer, locale) })] }), SP_JSX.jsx("div", { className: "core-autos-hint", children: text.edit })] }) })] }));
 }
 
 // Eternal Core batch 2 (B13, docs/eternal/BATCH-2.md): when Steam last saw controller input on this PC. Sleep after
@@ -64294,147 +65292,6 @@ function jarvisTapLine(state, locale) {
     return (state?.tapOpens === false ? text.tapOff : text.tap).replace("{talk}", talk);
 }
 
-// Eternal Core: Jarvis in Core UI phase 1 (docs/eternal/CORE-UI.md, docs/eternal/JARVIS.md).
-// - Jarvis's own Quick Access tab: its id, opening or closing it from the talk combo's short tap, and the request
-//   that puts the cursor in its input field.
-// - The presence orb in the top bar: idle (dim steel), busy (a slow crimson pulse while listening or thinking),
-//   ready (a brief crimson ring when an answer arrives), hidden during a game unless Jarvis is active.
-// Self-contained (no imports): tests/coreJarvisTab.test.mjs runs it against fake Steam stores.
-// "JRV". Core's own tab is 0x50484B ("PHK", qam.ts); Steam's tabs are small numbers, Decky's 999.
-const JARVIS_TAB_ID = 0x4A5256;
-const JARVIS_READY_MS = 4000;
-// Steam's side menu numbers (MenuStore.GetOpenSideMenu): 1 = the Steam menu, 2 = Quick Access.
-const QUICK_ACCESS = 2;
-let focusRequested = 0;
-const focusListeners = new Set();
-function requestJarvisFocus(now = Date.now()) {
-    focusRequested = now;
-    for (const listener of [...focusListeners]) {
-        try {
-            listener();
-        }
-        catch { /* A closed tab. */ }
-    }
-}
-// True once per request, within five seconds of it (the tab's input takes the focus when it mounts or hears this).
-function takeJarvisFocus(now = Date.now()) {
-    if (!focusRequested || now - focusRequested > 5000)
-        return false;
-    focusRequested = 0;
-    return true;
-}
-function subscribeJarvisFocus(listener) { focusListeners.add(listener); return () => { focusListeners.delete(listener); }; }
-// A short tap on the talk combo: open Quick Access on Jarvis's tab (the input focused), or close it when it is
-// already open there. Answers what it did; "unavailable" when Steam offers neither path.
-function toggleJarvisTab(deps) {
-    let store;
-    try {
-        store = deps.menuStore();
-    }
-    catch {
-        store = undefined;
-    }
-    let open = false;
-    try {
-        open = store?.GetOpenSideMenu?.() === QUICK_ACCESS && store?.GetQuickAccessTab?.() === JARVIS_TAB_ID;
-    }
-    catch {
-        open = false;
-    }
-    const navigation = (() => { try {
-        return deps.navigation();
-    }
-    catch {
-        return undefined;
-    } })();
-    if (open) {
-        try {
-            if (typeof store?.CloseSideMenus === "function")
-                store.CloseSideMenus();
-            else if (typeof navigation?.CloseSideMenus === "function")
-                navigation.CloseSideMenus();
-            else
-                return "unavailable";
-            return "closed";
-        }
-        catch {
-            return "unavailable";
-        }
-    }
-    try {
-        if (typeof store?.OpenQuickAccessMenu === "function")
-            store.OpenQuickAccessMenu(JARVIS_TAB_ID);
-        else if (typeof navigation?.OpenQuickAccessMenu === "function")
-            navigation.OpenQuickAccessMenu(JARVIS_TAB_ID);
-        else
-            return "unavailable";
-    }
-    catch {
-        return "unavailable";
-    }
-    requestJarvisFocus();
-    return "opened";
-}
-// Steam's overlay window for the running game (its MenuStore opens Quick Access over the game), else the Big
-// Picture window's.
-function jarvisMenuStore(windowStore, runningApp) {
-    try {
-        if (runningApp > 0 && Array.isArray(windowStore?.OverlayWindows)) {
-            const overlay = windowStore.OverlayWindows.find((candidate) => {
-                try {
-                    return candidate?.IsGamepadUIOverlayWindow?.() === true && candidate?.MenuStore && candidate?.BrowserWindow?.closed !== true;
-                }
-                catch {
-                    return false;
-                }
-            });
-            if (overlay?.MenuStore)
-                return overlay.MenuStore;
-        }
-        return windowStore?.GamepadUIMainWindowInstance?.MenuStore ?? undefined;
-    }
-    catch {
-        return undefined;
-    }
-}
-function orbState(input) {
-    if (!input.enabled)
-        return "hidden";
-    if (input.listening || input.working)
-        return "busy";
-    if (input.readyUntil > input.now)
-        return "ready";
-    // During a game the orb shows only while Jarvis is doing something.
-    return input.gameRunning ? "hidden" : "idle";
-}
-// Remembers when an answer arrived, from the runtime's snapshots (talk answers, screen answers) and from the chat.
-function createPresence(now = Date.now) {
-    let readyUntil = 0, lastAnswer, lastScreen;
-    const listeners = new Set();
-    const notify = () => { for (const listener of [...listeners]) {
-        try {
-            listener();
-        }
-        catch { /* A closed view. */ }
-    } };
-    return {
-        ready() { readyUntil = now() + JARVIS_READY_MS; notify(); },
-        observe(snapshot) {
-            if (!snapshot)
-                return;
-            const fresh = (snapshot.answer && snapshot.answer !== lastAnswer) || (snapshot.screen && snapshot.screen !== lastScreen);
-            lastAnswer = snapshot.answer;
-            lastScreen = snapshot.screen;
-            if (fresh)
-                this.ready();
-            else
-                notify();
-        },
-        readyUntil: () => readyUntil,
-        subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    };
-}
-
 // Eternal Core: the Core Starfield for Core UI surfaces (docs/eternal/CORE-UI.md, "Black means starfield").
 //
 // The same flight as the Core Starfield screensaver (screensaver/main.js): the same seeded field (seed 23),
@@ -64455,6 +65312,9 @@ const STARFIELD_SPEED = 0.035;
 const STARFIELD_COUNT = 160;
 const STARFIELD_MAX_ALPHA = 0.24;
 const STARFIELD_FPS = 30;
+// The longest step one frame may take (seconds). A throttled window (a popup Steam draws at a few frames a second)
+// still moves at full speed; a long pause (a closed menu) does not jump.
+const STARFIELD_MAX_STEP = 0.25;
 // The screensaver's generator: Park-Miller from seed 23, three draws per star.
 function makeStars(count = STARFIELD_COUNT, seed = STARFIELD_SEED) {
     let state = seed;
@@ -64470,7 +65330,7 @@ function createStarfield(count = STARFIELD_COUNT) {
     const advance = (seconds) => {
         if (!(seconds > 0))
             return;
-        zoff = (zoff + Math.min(0.05, seconds) * STARFIELD_SPEED) % 1;
+        zoff = (zoff + Math.min(STARFIELD_MAX_STEP, seconds) * STARFIELD_SPEED) % 1;
     };
     return {
         stars,
@@ -64513,50 +65373,6 @@ function sharedStarfield() { return shared ?? (shared = createStarfield()); }
 function starAlpha(z) {
     return Math.max(0, Math.min(1, (1 - z) * 1.2)) * STARFIELD_MAX_ALPHA;
 }
-
-// Eternal Core: the "Core UI" setting (Quick Access > Core). On by default; kept in Steam's localStorage under
-// core.ui.enabled ("0" = off, anything else or nothing = on). coreUi.ts subscribes and removes or restores
-// everything Core UI adds as soon as it changes. Self-contained (no imports): tests load it on its own.
-const CORE_UI_SETTING_KEY = "core.ui.enabled";
-function createCoreUiSetting(storage) {
-    const read = () => { try {
-        return storage?.getItem(CORE_UI_SETTING_KEY) !== "0";
-    }
-    catch {
-        return true;
-    } };
-    let value = read();
-    const listeners = new Set();
-    return {
-        get: () => value,
-        set(on) {
-            const next = on === true;
-            try {
-                storage?.setItem(CORE_UI_SETTING_KEY, next ? "1" : "0");
-            }
-            catch { /* Kept for this session only. */ }
-            if (next === value)
-                return;
-            value = next;
-            for (const listener of [...listeners]) {
-                try {
-                    listener();
-                }
-                catch { /* One listener cannot stop the others. */ }
-            }
-        },
-        subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    };
-}
-function defaultStorage() {
-    try {
-        return typeof localStorage === "undefined" ? undefined : localStorage;
-    }
-    catch {
-        return undefined;
-    }
-}
-const coreUiSetting = createCoreUiSetting(defaultStorage());
 
 // Eternal Core: the Core Starfield behind one of Core's own black pages (the Jarvis page), per "black means
 // starfield" (docs/eternal/CORE-UI.md). The parent must be positioned with isolation: isolate. Shares the one field
@@ -64640,7 +65456,7 @@ let runtime;
 function setJarvisRuntime(value) { runtime = value; }
 let presence;
 function setJarvisPresence(value) { presence = value; }
-const style = `
+const style$1 = `
 .core-jarvis{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
 .core-jarvis-status{padding:0 12px;font-size:12px;line-height:1.4}
 .core-jarvis-log{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;padding:0 2px}
@@ -64782,10 +65598,10 @@ function JarvisPanel({ locale, full = false, tab = false }) {
     const input = (SP_JSX.jsx("div", { ref: field, children: SP_JSX.jsx(TextField, { value: draft, label: text.placeholder, onChange: (event) => setDraft(String(event?.target?.value ?? "").slice(0, 2000)) }) }));
     if (tab) {
         const tapLine = jarvisTapLine(state, locale);
-        return (SP_JSX.jsxs(Focusable$1, { className: "core-jarvis tab", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style }), SP_JSX.jsx("div", { className: "core-jarvis-status", role: "status", style: { color: CORE_STATUS[tone] }, children: statusLine(state, locale) }), SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-ask", "flow-children": "row", children: [input, SP_JSX.jsx(DialogButton$1, { onClick: send, disabled: !draft.trim() || pending, children: text.send })] }), SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-buttons", "flow-children": "row", children: [SP_JSX.jsx(DialogButton$1, { onClick: askScreen, disabled: state?.screenHelper !== true, children: text.screen }), SP_JSX.jsx(DialogButton$1, { onClick: talk, style: listening === "talk" ? { background: CRIMSON, color: WHITE } : undefined, children: listening === "talk" ? text.talkStop : text.talk })] }), listening && SP_JSX.jsxs("div", { className: "core-jarvis-live", role: "status", children: [SP_JSX.jsx("span", { className: "core-jarvis-dot" }), text.listening] }), (pending || live?.working) && SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.thinking }), tapLine && SP_JSX.jsx("div", { className: "core-jarvis-hint", children: tapLine }), state?.screenHelper !== true && SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.helperOff }), lastAnswer && (SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-turn core-jarvis-last", noFocusRing: true, onActivate: () => speak(lastAnswer), children: [SP_JSX.jsx("span", { className: "core-jarvis-who", children: tabText.last }), lastAnswer] })), SP_JSX.jsxs("div", { className: "core-jarvis-log", children: [screen && (SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-turn core-jarvis-screen", noFocusRing: true, onActivate: () => speak(screen.text), children: [SP_JSX.jsx("span", { className: "core-jarvis-who", children: text.screen }), screen.text] })), turns.map((turn, index) => (SP_JSX.jsxs(Focusable$1, { className: `core-jarvis-turn ${turn.role}`, noFocusRing: true, onActivate: () => { if (turn.role === "assistant")
+        return (SP_JSX.jsxs(Focusable$1, { className: "core-jarvis tab", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$1 }), SP_JSX.jsx("div", { className: "core-jarvis-status", role: "status", style: { color: CORE_STATUS[tone] }, children: statusLine(state, locale) }), SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-ask", "flow-children": "row", children: [input, SP_JSX.jsx(DialogButton$1, { onClick: send, disabled: !draft.trim() || pending, children: text.send })] }), SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-buttons", "flow-children": "row", children: [SP_JSX.jsx(DialogButton$1, { onClick: askScreen, disabled: state?.screenHelper !== true, children: text.screen }), SP_JSX.jsx(DialogButton$1, { onClick: talk, style: listening === "talk" ? { background: CRIMSON, color: WHITE } : undefined, children: listening === "talk" ? text.talkStop : text.talk })] }), listening && SP_JSX.jsxs("div", { className: "core-jarvis-live", role: "status", children: [SP_JSX.jsx("span", { className: "core-jarvis-dot" }), text.listening] }), (pending || live?.working) && SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.thinking }), tapLine && SP_JSX.jsx("div", { className: "core-jarvis-hint", children: tapLine }), state?.screenHelper !== true && SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.helperOff }), lastAnswer && (SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-turn core-jarvis-last", noFocusRing: true, onActivate: () => speak(lastAnswer), children: [SP_JSX.jsx("span", { className: "core-jarvis-who", children: tabText.last }), lastAnswer] })), SP_JSX.jsxs("div", { className: "core-jarvis-log", children: [screen && (SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-turn core-jarvis-screen", noFocusRing: true, onActivate: () => speak(screen.text), children: [SP_JSX.jsx("span", { className: "core-jarvis-who", children: text.screen }), screen.text] })), turns.map((turn, index) => (SP_JSX.jsxs(Focusable$1, { className: `core-jarvis-turn ${turn.role}`, noFocusRing: true, onActivate: () => { if (turn.role === "assistant")
                                 speak(turn.text); }, children: [SP_JSX.jsx("span", { className: "core-jarvis-who", children: turn.role === "user" ? text.you : text.title }), turn.text] }, index)))] }), SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-buttons", "flow-children": "row", children: [screen?.more && SP_JSX.jsx(DialogButton$1, { onClick: more, children: text.more }), SP_JSX.jsx(DialogButton$1, { onClick: dictate, style: listening === "dictate" ? { background: CRIMSON, color: WHITE } : undefined, children: listening === "dictate" ? text.dictateStop : text.dictate }), SP_JSX.jsx(DialogButton$1, { onClick: clear, children: text.clear }), SP_JSX.jsx(DialogButton$1, { onClick: openPage, children: text.page })] }), SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.hint })] }));
     }
-    const body = (SP_JSX.jsxs(Focusable$1, { className: `core-jarvis${full ? " full" : ""}`, "flow-children": "column", children: [SP_JSX.jsx("style", { children: style }), SP_JSX.jsx("div", { className: "core-jarvis-status", role: "status", style: { color: CORE_STATUS[tone] }, children: statusLine(state, locale) }), listening && SP_JSX.jsxs("div", { className: "core-jarvis-live", role: "status", children: [SP_JSX.jsx("span", { className: "core-jarvis-dot" }), text.listening] }), (pending || live?.working) && SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.thinking }), SP_JSX.jsxs("div", { className: "core-jarvis-log", children: [turns.map((turn, index) => (SP_JSX.jsxs(Focusable$1, { className: `core-jarvis-turn ${turn.role}`, noFocusRing: true, onActivate: () => { if (turn.role === "assistant")
+    const body = (SP_JSX.jsxs(Focusable$1, { className: `core-jarvis${full ? " full" : ""}`, "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$1 }), SP_JSX.jsx("div", { className: "core-jarvis-status", role: "status", style: { color: CORE_STATUS[tone] }, children: statusLine(state, locale) }), listening && SP_JSX.jsxs("div", { className: "core-jarvis-live", role: "status", children: [SP_JSX.jsx("span", { className: "core-jarvis-dot" }), text.listening] }), (pending || live?.working) && SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.thinking }), SP_JSX.jsxs("div", { className: "core-jarvis-log", children: [turns.map((turn, index) => (SP_JSX.jsxs(Focusable$1, { className: `core-jarvis-turn ${turn.role}`, noFocusRing: true, onActivate: () => { if (turn.role === "assistant")
                             speak(turn.text); }, children: [SP_JSX.jsx("span", { className: "core-jarvis-who", children: turn.role === "user" ? text.you : text.title }), turn.text] }, index))), screen && (SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-turn core-jarvis-screen", noFocusRing: true, onActivate: () => speak(screen.text), children: [SP_JSX.jsx("span", { className: "core-jarvis-who", children: text.screen }), screen.text] }))] }), input, SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-buttons", "flow-children": "row", children: [SP_JSX.jsx(DialogButton$1, { onClick: send, disabled: !draft.trim() || pending, children: text.send }), SP_JSX.jsx(DialogButton$1, { onClick: dictate, style: listening === "dictate" ? { background: CRIMSON, color: WHITE } : undefined, children: listening === "dictate" ? text.dictateStop : text.dictate }), SP_JSX.jsx(DialogButton$1, { onClick: talk, style: listening === "talk" ? { background: CRIMSON, color: WHITE } : undefined, children: listening === "talk" ? text.talkStop : text.talk }), SP_JSX.jsx(DialogButton$1, { onClick: askScreen, disabled: state?.screenHelper !== true, children: text.screen }), screen?.more && SP_JSX.jsx(DialogButton$1, { onClick: more, children: text.more }), lastAnswer && SP_JSX.jsx(DialogButton$1, { onClick: () => speak(lastAnswer), children: text.speak }), SP_JSX.jsx(DialogButton$1, { onClick: clear, children: text.clear }), !full && SP_JSX.jsx(DialogButton$1, { onClick: openPage, children: text.page })] }), state?.screenHelper !== true && SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.helperOff }), SP_JSX.jsx("div", { className: "core-jarvis-hint", children: combosLine(state, locale) }), SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.hint })] }));
     return full ? body : (SP_JSX.jsx(PanelSection$2, { title: text.title, children: SP_JSX.jsx(PanelSectionRow$2, { children: body }) }));
 }
@@ -64960,8 +65776,9 @@ function installJarvisCombos(deps) {
     };
 }
 
-// Eternal Core: Core UI, phase 1 (docs/eternal/CORE-UI.md). Builds the one stylesheet Core's plugin injects
-// for the global chrome (top bar, button-hint bar), the Steam menu and Quick Access.
+// Eternal Core: Core UI (docs/eternal/CORE-UI.md). Builds the one stylesheet Core's plugin injects: phase 1 (the
+// global chrome, the Steam menu, Quick Access, context menus) and phase 2 (Home, the Library's tab bar, grid and
+// collection tiles).
 //
 // Steam's class names are hashed and change between builds, so no hashed name is written here. Every
 // selector comes from one of Steam's class maps (readable key -> hashed class string), found through
@@ -64973,14 +65790,45 @@ function installJarvisCombos(deps) {
 // target class, and every declaration is !important: Core UI wins over a CSS Loader theme on the areas it
 // styles (see CORE-UI.md, "CSS Loader").
 //
-// Pure on purpose (one import, steamModules.ts, itself pure): tests/coreUi.test.mjs runs it against fake
-// Decky 3 and Decky 4 libraries.
+// Some rules key on attributes the runtime sets after looking at the live page (coreUi.ts, coreUiDom.ts,
+// coreLibraryIcons.ts): which Quick Access element is the real panel, which large layers inside it are opaque,
+// whether the top bar sits over art, which Library tab or collection tile is which console family.
+//
+// Pure on purpose (one import, steamModules.ts, itself pure): tests run it against fake Decky 3 and Decky 4
+// libraries.
 const CORE_UI_ATTRIBUTE = "data-core-ui";
 const CORE_UI_STYLE_ID = "core-ui-style";
 const CORE_UI_STARS_ATTRIBUTE = "data-core-ui-stars";
+const CORE_UI_HOST_ATTRIBUTE = "data-core-ui-host";
+// Set by the runtime on large opaque layers inside a black panel (they would hide the stars).
+const CORE_UI_CLEAR_ATTRIBUTE = "data-core-ui-clear";
+// Set by the runtime on the top bar and the button-hint bar: "black" when Steam paints them over a plain page,
+// "clear" over game art.
+const CORE_UI_CHROME_ATTRIBUTE = "data-core-ui-chrome";
+// Library decoration (coreLibraryIcons.ts): the tab or tile's family and key; the icon arrives as --core-icon.
+const CORE_UI_TAB_ATTRIBUTE = "data-core-tab";
+const CORE_UI_TILE_ATTRIBUTE = "data-core-collection";
+const CORE_UI_TONE_ATTRIBUTE = "data-core-tone";
+const CORE_UI_ICON_ATTRIBUTE = "data-core-icon";
 const ROOT = `html[${CORE_UI_ATTRIBUTE}]`;
+// The corner rule (CORE-UI.md, "Corners"): square (0) for the full-height side panels, the top bar, the footer and
+// every focus or selection highlight; one token for floating things only (context menus, submenus, dialogs, modals,
+// toasts, cards). Capsules and art keep Steam's own radius.
+const CORE_RADIUS_FLOAT_VAR = "--core-radius-float";
+const CORE_RADIUS_FLOAT = "10px";
+const FLOAT = `var(${CORE_RADIUS_FLOAT_VAR}, ${CORE_RADIUS_FLOAT})`;
+const SQUARE = "0";
 // Colours: corePalette.ts (CORE), repeated here so this file stays loadable on its own.
 const C = { black: "#000000", gunmetal: "#1A1D21", raised: "#2A2F36", steel: "#C9D1D9", hint: "#9AA4AE", text: "#E6EAEE", white: "#FFFFFF", crimson: "#D7263D", crimsonText: "#EA5A68" };
+// Console-family tones (Library tabs and collection tiles; MAPPING.md of the Core icon set). All Games, Installed,
+// VR and Completed are steel with no tone.
+const CORE_FAMILY_TONES = { playstation: "#6E8CB8", nintendo: "#B07A84", sega: "#5E9E9A", xbox: "#7FA36B", retro: "#8F7CB0" };
+// Core's ring mark (assets/playhub-logo-decky.svg): the only logo on the Steam menu, top left, in its own space.
+const CORE_RING_MARK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 450"><g transform="translate(225,225) scale(3.24812)"><circle r="62" fill="none" stroke="#3A3F46" stroke-width="9"/><circle r="62" fill="none" stroke="#D7263D" stroke-width="9" stroke-linecap="round" transform="rotate(180)" stroke-dasharray="389.6" stroke-dashoffset="194.8"/><g stroke="#C9D1D9" stroke-width="5" stroke-linecap="round"><line x1="0" y1="-48" x2="0" y2="-38"/><line x1="0" y1="38" x2="0" y2="48"/><line x1="-48" y1="0" x2="-38" y2="0"/><line x1="38" y1="0" x2="48" y2="0"/><line x1="-33.9" y1="-33.9" x2="-26.9" y2="-26.9"/><line x1="26.9" y1="26.9" x2="33.9" y2="33.9"/><line x1="33.9" y1="-33.9" x2="26.9" y2="-26.9"/><line x1="-26.9" y1="26.9" x2="-33.9" y2="33.9"/></g><circle r="22" fill="#C9D1D9"/><circle r="9" fill="#D7263D"/></g></svg>';
+const CORE_RING_MARK = "data:image/svg+xml," + encodeURIComponent(CORE_RING_MARK_SVG);
+// The mark's reserved band at the top of the Steam menu: no row and no focus highlight is ever inside it.
+const CORE_MENU_LOGO_BAND = 80;
+const CORE_MENU_LOGO_SIZE = 44;
 // How each class map is recognised: keys only that map has (from Steam's readable module names, e.g.
 // mainmenu_ItemIcon, quickaccessmenu_TabGroupPanel). quickaccess matches @decky/ui's quickAccessMenuClasses.
 const CORE_UI_MAP_FILTERS = {
@@ -64992,6 +65840,15 @@ const CORE_UI_MAP_FILTERS = {
     dropdown: map => has(map, "DropDownControlButton") && !has(map, "GamepadDialogContent"),
     // Big Picture's context menus (gamepadcontextmenu_*), not the desktop client's (no BasicContextMenuHeader).
     contextmenu: map => has(map, "contextMenuContents") && has(map, "contextMenuItem") && has(map, "BasicContextMenuHeader") && has(map, "Focused"),
+    // Phase 2 (readable names from the retired Core CSS Loader theme and @decky/ui's static class maps).
+    gamepadui: map => has(map, "BasicHome") && has(map, "MainNavMenuAnchor") && has(map, "OpaqueBackground"),
+    tabbedpage: map => has(map, "TabRow") && has(map, "TabTitle") && has(map, "TabHeaderRowWrapper") && has(map, "Tab"),
+    library: map => has(map, "GamepadLibrary") && has(map, "CollectionHeader"),
+    appgrid: map => has(map, "AppGridSectionLabel") && has(map, "LibraryImageBackgroundGlow"),
+    portrait: map => has(map, "LibraryItemBox") && !has(map, "TabRow"),
+    recentgames: map => has(map, "RecentGamesContainer") && has(map, "RecentGamesBackgroundContainer"),
+    carousel: map => has(map, "CarouselCapsuleBackgroundGlow"),
+    home: map => has(map, "TabbedContent") && !has(map, "TabRow") && !has(map, "Tab") && !has(map, "BasicHome"),
 };
 function has(map, key) {
     try {
@@ -65051,23 +65908,43 @@ function classSelector(map, key) {
     return "." + names.join(".") + "." + names[0];
 }
 const imp = (block) => Object.entries(block).map(([key, value]) => `${key}:${value} !important`).join(";");
-// Phase 1 rules. Spacing from the approved boards (Context board: 48px rows, 22px inset, 16px label,
-// gunmetal fill with a 3px crimson marker; the Steam menu takes the left-bar form of that marker).
-function rules(wordmark) {
+const CLEAR = { "background-color": "transparent", "background-image": "none", "box-shadow": "none" };
+// Pure black, opaque: no translucency, no tint, no blur behind, no gradient or shadow (item 6 of the TV list).
+const SOLID_BLACK = { "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none", filter: "none", opacity: "1" };
+function rules(mark) {
     const list = [
-        // Global chrome: the top bar and the button-hint bar stay clear, so black or the game art shows through.
-        { id: "chrome-header", needs: [["header", "Header"]], css: s => `${ROOT} ${s("header", "Header")},${ROOT} ${s("header", "Header")}::before,${ROOT} ${s("header", "Header")}::after{${imp({
-                "background-color": "transparent", "background-image": "none", "box-shadow": "none"
-            })}}` },
-        { id: "chrome-header-opaque", needs: [["header", "HeaderOpaque"]], css: s => `${ROOT} ${s("header", "HeaderOpaque")}{${imp({ "background-color": C.black, "background-image": "none" })}}` },
-        { id: "chrome-footer", needs: [["footer", "BasicFooter"]], css: s => `${ROOT} ${s("footer", "BasicFooter")},${ROOT} ${s("footer", "BasicFooter")}::before,${ROOT} ${s("footer", "BasicFooter")}::after{${imp({
-                "background-color": "transparent", "background-image": "none", "box-shadow": "none", "border-top-color": "transparent"
-            })}}` },
-        { id: "chrome-footer-opaque", needs: [["footer", "Opaque"]], css: s => `${ROOT} ${s("footer", "Opaque")}{${imp({ "background-color": C.black, "background-image": "none" })}}` },
-        // Steam menu: AMOLED black panel (stars drawn behind the rows by coreUi.ts), the Core wordmark above Home.
-        { id: "menu-panel", needs: [["mainmenu", "Menu"]], css: s => `${ROOT} ${s("mainmenu", "Menu")}{${imp({ position: "relative", "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` +
-                (wordmark ? `${ROOT} ${s("mainmenu", "Menu")}::before{${imp({ content: '""', position: "absolute", top: "57px", left: "24px", width: "180px", height: "48px",
-                    background: `url(${JSON.stringify(wordmark)}) left center / contain no-repeat`, "pointer-events": "none", "z-index": "1" })}}` : "") },
+        // The float radius token, inherited by everything in the page; Steam's global confirm dialogs use it.
+        { id: "corners", needs: [], css: () => `${ROOT} body{${imp({ [CORE_RADIUS_FLOAT_VAR]: CORE_RADIUS_FLOAT })}}${ROOT} .GenericConfirmDialog{${imp({ "border-radius": FLOAT })}}` },
+        // Global chrome: the top bar and the button-hint bar are clear over game art and pure black anywhere else
+        // (the runtime says which: data-core-ui-chrome), and whenever Steam paints them opaque.
+        { id: "chrome-header", needs: [["header", "Header"]], css: s => {
+                const header = `${ROOT} ${s("header", "Header")}`;
+                return `${header},${header}::before,${header}::after{${imp({ ...CLEAR, "backdrop-filter": "none", filter: "none", "border-bottom-color": "transparent" })}}` +
+                    `${header}[${CORE_UI_CHROME_ATTRIBUTE}="black"]{${imp(SOLID_BLACK)}}${header}{${imp({ "border-radius": SQUARE })}}`;
+            } },
+        { id: "chrome-header-opaque", needs: [["header", "HeaderOpaque"]], css: s => {
+                const opaque = `${ROOT} ${s("header", "HeaderOpaque")}`;
+                return `${opaque}{${imp(SOLID_BLACK)}}${opaque}::before,${opaque}::after{${imp({ ...CLEAR, "backdrop-filter": "none" })}}`;
+            } },
+        { id: "chrome-footer", needs: [["footer", "BasicFooter"]], css: s => {
+                const footer = `${ROOT} ${s("footer", "BasicFooter")}`;
+                return `${footer},${footer}::before,${footer}::after{${imp({ ...CLEAR, "backdrop-filter": "none", filter: "none", "border-top-color": "transparent" })}}` +
+                    `${footer}[${CORE_UI_CHROME_ATTRIBUTE}="black"]{${imp(SOLID_BLACK)}}${footer}{${imp({ "border-radius": SQUARE })}}`;
+            } },
+        { id: "chrome-footer-opaque", needs: [["footer", "Opaque"]], css: s => {
+                const opaque = `${ROOT} ${s("footer", "Opaque")}`;
+                return `${opaque}{${imp(SOLID_BLACK)}}${opaque}::before,${opaque}::after{${imp({ ...CLEAR, "backdrop-filter": "none" })}}`;
+            } },
+        // Steam menu: AMOLED black panel (stars drawn behind the rows by coreUi.ts). Core's ring mark sits top left in a
+        // band of its own: an in-flow block before every row, so no row and no focus fill can ever overlap it (the
+        // runtime also checks the first row starts below it; coreUiDom.ts, keepBelowLogo).
+        { id: "menu-panel", needs: [["mainmenu", "Menu"]], css: s => {
+                const menu = `${ROOT} ${s("mainmenu", "Menu")}`;
+                return `${menu}{${imp({ position: "relative", "background-color": C.black, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` +
+                    (mark ? `${menu}::before{${imp({ content: '""', display: "block", position: "relative", order: "-1", flex: `0 0 ${CORE_MENU_LOGO_BAND}px`,
+                        "box-sizing": "border-box", width: "100%", height: `${CORE_MENU_LOGO_BAND}px`, "min-height": `${CORE_MENU_LOGO_BAND}px`, margin: "0", padding: "0",
+                        background: `url(${JSON.stringify(mark)}) 24px center / ${CORE_MENU_LOGO_SIZE}px ${CORE_MENU_LOGO_SIZE}px no-repeat`, "pointer-events": "none", "z-index": "1" })}}` : "");
+            } },
         // One inset and a fixed-width icon cell for every row, so icons and labels line up. No transforms: the
         // rows must not drift sideways.
         { id: "menu-rows", needs: [["mainmenu", "Menu"], ["mainmenu", "Item"], ["mainmenu", "ItemIcon"], ["mainmenu", "ItemLabel"]], css: s => {
@@ -65080,6 +65957,7 @@ function rules(wordmark) {
                     `${menu} ${s("mainmenu", "Item")}::before,${menu} ${s("mainmenu", "Item")}::after{${imp({ "background-image": "none", "box-shadow": "none" })}}` +
                     `${menu} ${s("mainmenu", "ItemIcon")}{${imp({ flex: "0 0 32px", width: "32px", "min-width": "32px", "max-width": "32px", margin: "0 16px 0 0", padding: "0",
                         display: "flex", "align-items": "center", "justify-content": "center", transform: "none", position: "static" })}}` +
+                    `${menu} ${s("mainmenu", "ItemIcon")} :is(svg,img){${imp({ width: "24px", height: "24px", "max-width": "24px", "max-height": "24px" })}}` +
                     `${menu} ${s("mainmenu", "ItemLabel")}{${imp({ margin: "0", padding: "0", "text-align": "left", transform: "none", color: C.steel, "font-size": "16px" })}}`;
             } },
         // Focused row: gunmetal with a 3px crimson bar on its left edge. No glow, no underline.
@@ -65087,7 +65965,7 @@ function rules(wordmark) {
                 const menu = `${ROOT} ${s("mainmenu", "Menu")}`;
                 const item = s("mainmenu", "Item");
                 return `${menu} ${item}:is(.gpfocus,:focus,:focus-visible,:focus-within){${imp({ "background-color": C.gunmetal, "background-image": "none",
-                    "box-shadow": `inset 3px 0 0 ${C.crimson}`, outline: "none", animation: "none", filter: "none" })}}` +
+                    "box-shadow": `inset 3px 0 0 ${C.crimson}`, outline: "none", animation: "none", filter: "none", "border-radius": SQUARE })}}` +
                     `${menu} ${item}:is(.gpfocus,:focus,:focus-visible,:focus-within) *{${imp({ color: C.white, "text-shadow": "none" })}}`;
             } },
         // The page you are on (Home's marker): crimson, not Steam's blue.
@@ -65095,34 +65973,39 @@ function rules(wordmark) {
         // The "MENU" footer under the panel: black.
         { id: "menu-footer", needs: [["mainmenu", "FooterBoxShadow"]], css: s => `${ROOT} ${s("mainmenu", "FooterBoxShadow")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
         { id: "menu-footer-bar", needs: [["mainmenu", "Menu"], ["footer", "BasicFooter"]], css: s => `${ROOT} ${s("mainmenu", "Menu")} ${s("footer", "BasicFooter")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
-        // Quick Access: one black panel with the Starfield behind the content.
+        // Quick Access: one black panel with the Starfield behind everything. Which element is the real panel differs
+        // between clients (Menu, QuickAccessMenu or Container): each is a candidate, the runtime picks the outermost one
+        // that is panel-sized (CORE_UI_HOSTS) and only that one is painted black; the others go clear.
         { id: "qam-panel", needs: [["quickaccess", "Menu"]], css: s => {
-                const containers = ["Container", "QuickAccessMenu"].filter(key => s("quickaccess", key) !== "")
-                    .map(key => `${ROOT} ${s("quickaccess", key)}`).join(",");
-                return `${ROOT} ${s("quickaccess", "Menu")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` +
-                    (containers ? `${containers}{${imp({ "background-color": C.black, "background-image": "none" })}}` : "");
+                const candidates = ["Container", "QuickAccessMenu", "ViewPlaceholder"].filter(key => s("quickaccess", key) !== "")
+                    .map(key => `${ROOT} ${s("quickaccess", key)}`);
+                return `${ROOT} ${s("quickaccess", "Menu")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` +
+                    (candidates.length ? `${candidates.join(",")}{${imp({ ...CLEAR, "backdrop-filter": "none", "border-radius": SQUARE })}}` +
+                        `${candidates.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}="1"]`).join(",")}{${imp({ "background-color": C.black, "background-image": "none" })}}` : "");
             } },
-        // Everything over the stars is clear.
+        // Everything over the stars is clear: the content column, plugin panels (Decky's and every plugin's own,
+        // CSS Loader's included), and any large opaque layer the runtime finds inside the panel.
         { id: "qam-clear", needs: [["quickaccess", "TabContentColumn"]], css: s => {
-                const keys = ["TabContentColumn", "AllTabContents", "ContentTransition", "TabGroupPanel", "PanelSection", "PanelOuterNav"];
+                const keys = ["TabContentColumn", "AllTabContents", "ContentTransition", "TabGroupPanel", "PanelSection", "PanelOuterNav", "PopupBody", "FriendsListTabPanel"];
                 const list = keys.filter(key => s("quickaccess", key) !== "").map(key => `${ROOT} ${s("quickaccess", key)}`);
                 if (s("controls", "PanelSection") !== "")
                     list.push(`${ROOT} ${s("controls", "PanelSection")}`);
-                return `${list.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}`;
+                list.push(`${ROOT} [${CORE_UI_CLEAR_ATTRIBUTE}]`);
+                return `${list.join(",")}{${imp({ ...CLEAR, "backdrop-filter": "none" })}}`;
             } },
-        // The title strip: flat gunmetal, no gradient bars above or under it.
+        // The title strip: clear over the panel's black and stars (no gradient bars above or under it, no logo).
         { id: "qam-title", needs: [["quickaccess", "Title"]], css: s => {
                 const keys = ["Title", "HeaderContainer"].filter(key => s("quickaccess", key) !== "").map(key => `${ROOT} ${s("quickaccess", key)}`);
                 const pseudo = keys.flatMap(key => [`${key}::before`, `${key}::after`]);
-                return `${keys.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", "border-color": "transparent" })}}` +
+                return `${keys.join(",")}{${imp({ ...CLEAR, "border-color": "transparent", "backdrop-filter": "none" })}}` +
                     `${pseudo.join(",")}{${imp({ "background-image": "none", "background-color": "transparent", "box-shadow": "none" })}}`;
             } },
         // The tab rail: clear over the panel's black and stars, a thin gunmetal divider; the open tab gunmetal (its
         // crimson bar is Core's own).
         { id: "qam-tabs", needs: [["quickaccess", "Tabs"], ["quickaccess", "Tab"]], css: s => `${ROOT} ${s("quickaccess", "Tabs")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": `inset -1px 0 0 ${C.gunmetal}` })}}` +
                 `${ROOT} ${s("quickaccess", "Tab")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
-                `${ROOT} ${s("quickaccess", "Tab")}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", filter: "none" })}}` },
-        { id: "qam-tab-selected", needs: [["quickaccess", "Tab"], ["quickaccess", "Selected"]], css: s => `${ROOT} ${s("quickaccess", "Tab")}${s("quickaccess", "Selected")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none" })}}` },
+                `${ROOT} ${s("quickaccess", "Tab")}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", filter: "none", "border-radius": SQUARE })}}` },
+        { id: "qam-tab-selected", needs: [["quickaccess", "Tab"], ["quickaccess", "Selected"]], css: s => `${ROOT} ${s("quickaccess", "Tab")}${s("quickaccess", "Selected")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` },
         { id: "qam-tabs-footer", needs: [["quickaccess", "TabsWithFooter"]], css: s => `${ROOT} ${s("quickaccess", "TabsWithFooter")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` },
         // The footer bar: black.
         { id: "qam-footer", needs: [["footer", "QuickAccessFooter"]], css: s => `${ROOT} ${s("footer", "QuickAccessFooter")},${ROOT} ${s("footer", "QuickAccessFooter")}::before{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
@@ -65136,13 +66019,13 @@ function rules(wordmark) {
                 const buttons = [`${scope} .DialogButton:not([style*="background"])`, ...(dropdown ? [`${scope} ${dropdown}`] : [])];
                 const focused = buttons.map(sel => `${sel}:is(.gpfocus,:focus-visible)`);
                 return `${buttons.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.text, "box-shadow": "none", "text-shadow": "none" })}}` +
-                    `${focused.join(",")}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 0 0 0 2px ${C.crimson}`, filter: "none", animation: "none" })}}`;
+                    `${focused.join(",")}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 0 0 0 2px ${C.crimson}`, filter: "none", animation: "none", "border-radius": SQUARE })}}`;
             } },
         // Context menus and their submenus (a game's Options / "..." menu, Manage, and the menus the Steam menu and
         // Quick Access open). The Context board: black panel with a 1px gunmetal edge and 10px corners, 8px top and
         // bottom, 48px rows with a 22px inset and 16px text, a 13px hint-grey header, hairline gunmetal separators.
         { id: "context-panel", needs: [["contextmenu", "contextMenuContents"]], css: s => `${ROOT} ${s("contextmenu", "contextMenuContents")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": `inset 0 0 0 1px ${C.gunmetal}`,
-                "border-radius": "10px", "padding-top": "8px", "padding-bottom": "8px", filter: "none", "backdrop-filter": "none" })}}` +
+                "border-radius": FLOAT, overflow: "hidden", "padding-top": "8px", "padding-bottom": "8px", filter: "none", "backdrop-filter": "none" })}}` +
                 (s("contextmenu", "contextMenu") ? `${ROOT} ${s("contextmenu", "contextMenu")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` : "") },
         { id: "context-header", needs: [["contextmenu", "BasicContextMenuHeader"]], css: s => {
                 const headers = ["BasicContextMenuHeader", "MenuSectionHeader"].filter(key => s("contextmenu", key)).map(key => `${ROOT} ${s("contextmenu", key)}`);
@@ -65161,28 +66044,116 @@ function rules(wordmark) {
                 const item = `${ROOT} ${s("contextmenu", "contextMenuItem")}`;
                 const open = s("contextmenu", "SubMenu") && s("contextmenu", "active") ? `,${item}${s("contextmenu", "SubMenu")}${s("contextmenu", "active")}` : "";
                 return `${item}${s("contextmenu", "Focused")},${item}:is(.gpfocus,:focus-visible)${open}{${imp({ "background-color": C.gunmetal, "background-image": "none",
-                    "box-shadow": `inset 3px 0 0 ${C.crimson}`, color: C.white, filter: "none", outline: "none" })}}`;
+                    "box-shadow": `inset 3px 0 0 ${C.crimson}`, color: C.white, filter: "none", outline: "none", "border-radius": SQUARE })}}`;
             } },
         // Danger items (Steam marks them Destructive: Uninstall, Remove...): crimson text, focused or not.
         { id: "context-danger", needs: [["contextmenu", "contextMenuItem"], ["contextmenu", "Destructive"]], css: s => `${ROOT} ${s("contextmenu", "contextMenuItem")}${s("contextmenu", "Destructive")}{${imp({ color: C.crimsonText })}}` },
+        // ---- Phase 2: Home (the Home board: more art, less chrome, black with stars behind the shelves). ----
+        { id: "home-page", needs: [["gamepadui", "BasicHome"]], css: s => {
+                const home = `${ROOT} ${s("gamepadui", "BasicHome")}`;
+                return `${home}{${imp({ "background-color": C.black, "background-image": "none" })}}` +
+                    (s("home", "TabbedContent") ? `${ROOT} ${s("home", "TabbedContent")}{${imp(CLEAR)}}` : "");
+            } },
+        // The hero: Steam's recent-games art runs taller (more art) and fades into the black through a mask, so
+        // nothing is painted over it.
+        { id: "home-hero", needs: [["recentgames", "RecentGamesBackgroundContainer"]], css: s => {
+                const keys = ["RecentGamesBackgroundContainer", "RecentGamesBackgroundImages"].filter(key => s("recentgames", key) !== "")
+                    .map(key => `${ROOT} ${s("recentgames", key)}`);
+                return `${keys.join(",")}{${imp({ "-webkit-mask-image": "linear-gradient(180deg, #000000 45%, transparent 100%)",
+                    "mask-image": "linear-gradient(180deg, #000000 45%, transparent 100%)", "min-height": "62vh" })}}` +
+                    (s("recentgames", "RecentGamesHeaderLabel") ? `${ROOT} ${s("recentgames", "RecentGamesHeaderLabel")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` : "");
+            } },
+        { id: "home-glow", needs: [["carousel", "CarouselCapsuleBackgroundGlow"]], css: s => `${ROOT} ${s("carousel", "CarouselCapsuleBackgroundGlow")}{${imp({ opacity: "0" })}}` },
+        // ---- Phase 2: the Library (the Library board: black grid, tabs like Quick Access, crimson focus ring). ----
+        { id: "library-page", needs: [["library", "GamepadLibrary"]], css: s => {
+                const library = `${ROOT} ${s("library", "GamepadLibrary")}`;
+                return `${library}{${imp({ "background-color": C.black, "background-image": "none" })}}` +
+                    `${ROOT} ${s("library", "CollectionHeader")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}`;
+            } },
+        { id: "library-grid", needs: [["appgrid", "AppGridSectionLabel"]], css: s => `${ROOT} ${s("appgrid", "LibraryImageBackgroundGlow")}{${imp({ opacity: "0" })}}` +
+                `${ROOT} ${s("appgrid", "AppGridSectionLabel")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` +
+                (s("appgrid", "Rule") ? `${ROOT} ${s("appgrid", "Rule")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-color": C.gunmetal })}}` : "") },
+        // Focused capsule (Home and the Library): a 3px crimson ring, no glow, lifted 6px (still under reduced motion).
+        { id: "capsule-focus", needs: [["portrait", "LibraryItemBox"]], css: s => {
+                const scopes = [s("library", "GamepadLibrary"), s("home", "TabbedContent"), s("recentgames", "RecentGamesContainer"), s("gamepadui", "BasicHome")].filter(Boolean);
+                if (!scopes.length)
+                    return "";
+                const box = s("portrait", "LibraryItemBox");
+                const items = scopes.map(scope => `${ROOT} ${scope} ${box}`);
+                const focused = items.map(item => `${item}:is(.gpfocus,:focus)`);
+                return `${items.join(",")}{${imp({ transition: "translate 0.15s ease-out" })}}` +
+                    `${focused.join(",")}{${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "0", animation: "none", filter: "none", translate: "0 -6px" })}}` +
+                    `@media (prefers-reduced-motion: reduce){${[...items, ...focused].join(",")}{${imp({ transition: "none", translate: "none" })}}}`;
+            } },
+        // The tab bar (Library only; the game page keeps Steam's tabs in this phase): black row, steel tabs, the open one
+        // gunmetal with a 3px crimson underline, a focused one also gets a 2px crimson ring.
+        { id: "library-tabs", needs: [["tabbedpage", "Tab"], ["library", "GamepadLibrary"]], css: s => {
+                const lib = s("library", "GamepadLibrary");
+                const page = s("tabbedpage", "GamepadTabbedPage");
+                const scope = (inner) => [`${ROOT} ${lib} ${inner}`, ...(page ? [`${ROOT} ${page}:has(${lib}) ${inner}`] : [])].join(",");
+                const tab = s("tabbedpage", "Tab");
+                const selected = s("tabbedpage", "Selected");
+                const wrapper = s("tabbedpage", "TabHeaderRowWrapper");
+                return (wrapper ? `${scope(wrapper)},${scope(`${wrapper}::before`)}{${imp({ "background-color": C.black, "background-image": "none", "backdrop-filter": "none" })}}` : "") +
+                    `${scope(s("tabbedpage", "TabRow"))}{${imp({ "box-shadow": `inset 0 -1px 0 ${C.gunmetal}` })}}` +
+                    `${scope(tab)}{${imp({ position: "relative", "background-color": "transparent", "background-image": "none", color: C.steel, "box-shadow": "none" })}}` +
+                    (selected ? `${scope(`${tab}${selected}`)}{${imp({ "background-color": C.gunmetal, color: C.white, "border-radius": SQUARE, "box-shadow": `inset 0 -3px 0 ${C.crimson}` })}}` : "") +
+                    `${scope(`${tab}.gpfocus`)}{${imp({ "background-color": C.gunmetal, color: C.white, "border-radius": SQUARE, "box-shadow": `inset 0 -3px 0 ${C.crimson}, inset 0 0 0 2px ${C.crimson}` })}}` +
+                    (s("tabbedpage", "TabCount") ? `${scope(s("tabbedpage", "TabCount"))}{${imp({ display: "none" })}}` : "");
+            } },
+        // Library tab icons and family tones, keyed by tab title (coreLibraryIcons.ts sets data-core-tab, data-core-tone
+        // and --core-icon on each matched tab). The icon sits before the label; the tone is a short 24px marker under
+        // it, above the active tab's crimson underline.
+        { id: "library-tab-icons", needs: [["tabbedpage", "Tab"]], css: s => {
+                const tab = `${ROOT} ${s("tabbedpage", "Tab")}[${CORE_UI_TAB_ATTRIBUTE}]`;
+                const title = s("tabbedpage", "TabTitle");
+                const icon = title ? `${tab}[${CORE_UI_ICON_ATTRIBUTE}] ${title}::before` : `${tab}[${CORE_UI_ICON_ATTRIBUTE}]::before`;
+                return `${icon}{${imp({ content: '""', display: "inline-block", width: "26px", height: "26px", margin: "0 8px 0 0", "vertical-align": "-7px",
+                    background: "var(--core-icon) center / contain no-repeat" })}}` +
+                    `${tab}[${CORE_UI_TONE_ATTRIBUTE}]::after{${imp({ content: '""', position: "absolute", left: "50%", bottom: "6px", width: "24px", height: "3px", "margin-left": "-12px",
+                        "border-radius": "2px", "background-color": "var(--core-tone)", "background-image": "none", "pointer-events": "none" })}}` + toneVariables(tab);
+            } },
     ];
     return list;
 }
-const CORE_UI_HOST_ATTRIBUTE = "data-core-ui-host";
+// --core-tone per family, on any element the runtime tagged with data-core-tone.
+function toneVariables(prefix) {
+    return Object.entries(CORE_FAMILY_TONES).map(([family, tone]) => `${prefix}[${CORE_UI_TONE_ATTRIBUTE}="${family}"]{${imp({ "--core-tone": tone })}}`).join("");
+}
+// Collection tiles in Steam's Collections view (tagged by coreLibraryIcons.ts by collection name): the console's
+// icon over a gunmetal tile, Steam's collage hidden, the family tone as a short bar, a crimson ring on focus.
+function collectionTileCss() {
+    const tile = `${ROOT} [${CORE_UI_TILE_ATTRIBUTE}]`;
+    return `/* library-collection-tiles */${tile}{${imp({ position: "relative", "border-radius": FLOAT, overflow: "hidden", "box-shadow": "none" })}}` +
+        `${tile}[${CORE_UI_ICON_ATTRIBUTE}]{${imp({ "background-color": C.gunmetal, "background-image": "none" })}}` +
+        `${tile}[${CORE_UI_ICON_ATTRIBUTE}] img{${imp({ opacity: "0" })}}` +
+        `${tile}[${CORE_UI_ICON_ATTRIBUTE}]::before{${imp({ content: '""', position: "absolute", left: "18%", right: "18%", top: "10%", bottom: "24%", background: "var(--core-icon) center / contain no-repeat",
+            "pointer-events": "none", "z-index": "2" })}}` +
+        `${tile}[${CORE_UI_TONE_ATTRIBUTE}]::after{${imp({ content: '""', position: "absolute", left: "50%", bottom: "10px", width: "40px", height: "3px", "margin-left": "-20px",
+            "border-radius": "2px", "background-color": "var(--core-tone)", "pointer-events": "none", "z-index": "2" })}}` +
+        `${tile}:is(.gpfocus,:focus){${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "0", filter: "none", animation: "none" })}}` + toneVariables(tile);
+}
 // Every surface Core UI paints black, and so gets the Starfield. Footers and the opaque top bar are thin:
 // they get stars only when large enough (minArea, CSS pixels) to read as a surface. The clear top bar and
 // hint bar over game art are not hosts: no stars behind art or video.
-// fullHeight: the Steam menu and Quick Access run from the top edge of the screen to the bottom one; their
-// stars and black reach past the panel over the top bar and button-hint rows (coreUi.ts measures the gaps).
+// fullHeight: the Steam menu and Quick Access run from the top edge of the screen to the bottom one (coreFullHeight.ts
+// moves the panel; the canvas extension stays as the fallback).
+// panel: only an element at most 60% of the screen wide counts (a Quick Access candidate that turns out to be a
+// full-screen wrapper is never painted black). Earlier entries of one group are tried as the outer host first.
 const CORE_UI_HOSTS = [
-    { id: "menu", map: "mainmenu", key: "Menu", minArea: 0, fullHeight: true },
-    { id: "qam", map: "quickaccess", key: "Menu", minArea: 0, fullHeight: true },
+    { id: "menu", map: "mainmenu", key: "Menu", minArea: 0, fullHeight: true, panel: true },
+    { id: "qam-container", map: "quickaccess", key: "Container", minArea: 0, fullHeight: true, panel: true },
+    { id: "qam-panel", map: "quickaccess", key: "QuickAccessMenu", minArea: 0, fullHeight: true, panel: true },
+    { id: "qam", map: "quickaccess", key: "Menu", minArea: 0, fullHeight: true, panel: true },
     { id: "context", map: "contextmenu", key: "contextMenuContents", minArea: 0 },
     { id: "menu-footer", map: "mainmenu", key: "FooterBoxShadow", minArea: 24000 },
     { id: "qam-footer", map: "footer", key: "QuickAccessFooter", minArea: 24000 },
     { id: "qam-footer-shadow", map: "quickaccess", key: "FooterBoxShadow", minArea: 24000 },
     { id: "footer-opaque", map: "footer", key: "Opaque", minArea: 24000 },
     { id: "header-opaque", map: "header", key: "HeaderOpaque", minArea: 24000 },
+    // Phase 2 pages: the canvas covers the visible part of the page only.
+    { id: "home", map: "gamepadui", key: "BasicHome", minArea: 0, page: true },
+    { id: "library", map: "library", key: "GamepadLibrary", minArea: 0, page: true },
 ];
 // Jarvis's presence orb in the top bar, next to Steam's clock (jarvisPresence.ts decides its state). Dim steel ring
 // when idle, a slow crimson pulse (opacity only, no glow) while listening or thinking, a crimson ring when an answer
@@ -65199,11 +66170,13 @@ function orbCss() {
         `@media (prefers-reduced-motion: reduce){${orb}[data-state="busy"]{animation:none !important}}`;
 }
 // The stylesheet for the maps found, plus where the Starfield goes. `skipped` names each rule whose map or
-// class is missing on this client.
+// class is missing on this client. `mark` is the Steam menu's logo (Core's ring mark by default; `wordmark`, the
+// phase 1 name, is accepted too).
 function buildCoreUiCss(maps, options = {}) {
     const applied = [], skipped = [], parts = [];
-    const wordmark = typeof options.wordmark === "string" && /^(https?:|data:image\/)/.test(options.wordmark) ? options.wordmark : undefined;
-    for (const rule of rules(wordmark)) {
+    const candidate = options.mark ?? options.wordmark ?? CORE_RING_MARK;
+    const mark = typeof candidate === "string" && /^(https?:|data:image\/)/.test(candidate) ? candidate : undefined;
+    for (const rule of rules(mark)) {
         if (!rule.needs.every(([map, key]) => classSelector(maps[map], key))) {
             skipped.push(rule.id);
             continue;
@@ -65223,28 +66196,46 @@ function buildCoreUiCss(maps, options = {}) {
         parts.push(`/* ${rule.id} */${css}`);
         applied.push(rule.id);
     }
+    // Nothing of Steam found (no class map at all): no stylesheet, not even the always-on parts.
+    if (applied.length === 1 && applied[0] === "corners") {
+        parts.length = 0;
+        applied.length = 0;
+    }
     const hosts = [];
     for (const host of CORE_UI_HOSTS) {
         const selector = plainSelector(maps[host.map], host.key);
         if (selector)
-            hosts.push({ id: host.id, selector, minArea: host.minArea, fullHeight: host.fullHeight === true });
+            hosts.push({ id: host.id, selector, minArea: host.minArea, fullHeight: host.fullHeight === true, panel: host.panel === true, page: host.page === true });
     }
     // Black means starfield: every black surface above is a host. The runtime puts one canvas in each (the
     // shared field), behind the surface's content; a host inside another host stays clear instead.
     if (hosts.length) {
         const all = hosts.map(host => `${ROOT} ${host.selector}`);
+        const strong = hosts.map(host => `${ROOT} ${classSelector(maps[CORE_UI_HOSTS.find(item => item.id === host.id).map], CORE_UI_HOSTS.find(item => item.id === host.id).key)}`);
         parts.push(`/* starfield-hosts */${all.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}]`).join(",")}{${imp({ isolation: "isolate" })}}` +
             `${all.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}] > canvas[${CORE_UI_STARS_ATTRIBUTE}]`).join(",")}{${imp({ position: "absolute", left: "0", right: "auto", bottom: "auto", width: "100%",
                 // The canvas follows the surface's scroll position and, for full-height surfaces, reaches the screen's edges.
                 top: "calc(var(--core-ui-scroll, 0px) - var(--core-ui-extend-top, 0px))",
                 height: "calc(100% + var(--core-ui-extend-top, 0px) + var(--core-ui-extend-bottom, 0px))",
                 "z-index": "-1", "pointer-events": "none", margin: "0", padding: "0", border: "0", "border-radius": "inherit", "background-color": C.black })}}` +
-            `${ROOT} [${CORE_UI_HOST_ATTRIBUTE}="nested"]{${imp({ "background-color": "transparent", "background-image": "none" })}}`);
+            // A page host's canvas covers only what is on screen (--core-ui-page-height), not a tall scrolling page.
+            `${hosts.filter(host => host.page).map(host => `${ROOT} ${host.selector}[${CORE_UI_HOST_ATTRIBUTE}] > canvas[${CORE_UI_STARS_ATTRIBUTE}]`).join(",") || `${ROOT} [data-core-ui-none]`}{${imp({ height: "var(--core-ui-page-height, 100vh)" })}}` +
+            // A host inside another host (and a panel candidate that is not the panel) stays clear: the outer surface's
+            // stars show through it. Repeats the host's class so it out-ranks the host's own black rule.
+            `${strong.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}="nested"]`).join(",")}{${imp({ "background-color": "transparent", "background-image": "none" })}}`);
     }
+    if (applied.length)
+        parts.push(collectionTileCss());
     const clock = plainSelector(maps.header, "Clock");
     if (clock)
         parts.push(orbCss());
-    return { css: parts.join("\n"), applied, skipped, hosts, clock };
+    const dom = {
+        header: plainSelector(maps.header, "Header"), footer: plainSelector(maps.footer, "BasicFooter"),
+        menu: plainSelector(maps.mainmenu, "Menu"), menuItem: plainSelector(maps.mainmenu, "Item"), qamTab: plainSelector(maps.quickaccess, "Tab"),
+        tab: plainSelector(maps.tabbedpage, "Tab"), tabTitle: plainSelector(maps.tabbedpage, "TabTitle"), tabSelected: plainSelector(maps.tabbedpage, "Selected"),
+        library: plainSelector(maps.library, "GamepadLibrary"), tabbedPage: plainSelector(maps.tabbedpage, "GamepadTabbedPage"),
+    };
+    return { css: parts.join("\n"), applied, skipped, hosts, clock, dom };
 }
 // The same class without the specificity repeat, for querySelector.
 function plainSelector(map, key) {
@@ -65252,6 +66243,377 @@ function plainSelector(map, key) {
         return undefined;
     const names = String(map[key]).trim().split(/\s+/);
     return names.every(name => CLASS_NAME.test(name)) ? "." + names.join(".") : undefined;
+}
+
+// Eternal Core: Core UI's look at the live page (docs/eternal/CORE-UI.md). What a stylesheet cannot know from class
+// maps alone, checked once a second while Core UI is on:
+//
+// - clearOpaqueLayers: large opaque layers inside the Steam menu or Quick Access (a plugin's panel wrapper,
+//   Decky's, CSS Loader's grey area) would hide the stars; they are tagged data-core-ui-clear and go clear.
+// - chromeState: whether the top bar / button-hint bar sits over game art (stays clear) or over a plain page
+//   (pure black), by looking at what is behind it.
+// - keepBelowLogo: the Steam menu's first row starts below the ring mark's band, whatever Steam's row container does.
+//
+// Every write is an attribute or an inline style recorded in InlineEdits, so turning Core UI off restores
+// Steam's own values exactly. Self-contained (no imports): tests drive it with fake DOM structures.
+// Inline style writes that can be undone: Steam's own value and priority are kept per element and property.
+class InlineEdits {
+    constructor() {
+        this.saved = new Map();
+    }
+    set(element, property, value) {
+        try {
+            const style = element?.style;
+            if (!style)
+                return;
+            let props = this.saved.get(element);
+            if (!props) {
+                props = new Map();
+                this.saved.set(element, props);
+            }
+            if (!props.has(property))
+                props.set(property, { value: String(style.getPropertyValue?.(property) ?? ""), priority: String(style.getPropertyPriority?.(property) ?? "") });
+            style.setProperty?.(property, value, "important");
+        }
+        catch { /* Left as Steam had it. */ }
+    }
+    has(element) { return this.saved.has(element); }
+    restore(element) {
+        const props = this.saved.get(element);
+        if (!props)
+            return;
+        this.saved.delete(element);
+        for (const [property, old] of props) {
+            try {
+                if (old.value)
+                    element.style.setProperty(property, old.value, old.priority);
+                else
+                    element.style.removeProperty?.(property);
+            }
+            catch { /* The element went with its window. */ }
+        }
+    }
+    restoreAll() { for (const element of [...this.saved.keys()])
+        this.restore(element); }
+    elements() { return [...this.saved.keys()]; }
+}
+// "rgb(1, 2, 3)", "rgba(1,2,3,0.5)", "#RRGGBB", "transparent". Unknown: undefined.
+function parseColor(value) {
+    const text = String(value ?? "").trim().toLowerCase();
+    if (!text)
+        return undefined;
+    if (text === "transparent")
+        return { r: 0, g: 0, b: 0, a: 0 };
+    const hex = /^#([0-9a-f]{6})$/.exec(text);
+    if (hex) {
+        const n = Number.parseInt(hex[1], 16);
+        return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255, a: 1 };
+    }
+    const fn = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/.exec(text);
+    if (!fn)
+        return undefined;
+    let a = 1;
+    if (fn[4] !== undefined)
+        a = fn[4].endsWith("%") ? Number.parseFloat(fn[4]) / 100 : Number.parseFloat(fn[4]);
+    return { r: Number(fn[1]), g: Number(fn[2]), b: Number(fn[3]), a: Number.isFinite(a) ? a : 1 };
+}
+function style(view, element) {
+    try {
+        return view.getComputedStyle?.(element) ?? undefined;
+    }
+    catch {
+        return undefined;
+    }
+}
+function rectOf(element) {
+    try {
+        const r = element.getBoundingClientRect();
+        return { left: r.left, top: r.top, width: r.width, height: r.height, right: r.left + r.width, bottom: r.top + r.height };
+    }
+    catch {
+        return undefined;
+    }
+}
+const px$1 = (value) => { const n = Number.parseFloat(String(value ?? "")); return Number.isFinite(n) ? n : 0; };
+const INTERACTIVE_TAGS = new Set(["BUTTON", "INPUT", "SELECT", "TEXTAREA", "CANVAS", "IMG", "VIDEO", "SVG", "PICTURE", "IFRAME"]);
+const INTERACTIVE_ROLES = new Set(["button", "slider", "switch", "checkbox", "option", "tab", "radio", "textbox", "menuitem"]);
+const CLEAR_ATTRIBUTE = "data-core-ui-clear";
+// Tags every descendant of `host` that covers at least `share` of the host's area and paints an opaque or
+// translucent colour (no picture) so the stylesheet makes it clear. Buttons, inputs, sliders and pictures are never
+// touched. Bounded: at most `limit` elements are looked at, `depth` levels down. Answers how many were tagged.
+function clearOpaqueLayers(host, view, options = {}) {
+    const hostRect = rectOf(host);
+    if (!hostRect || hostRect.width <= 0 || hostRect.height <= 0)
+        return 0;
+    const share = options.share ?? 0.3, limit = options.limit ?? 600, maxDepth = options.depth ?? 10;
+    const area = hostRect.width * hostRect.height;
+    let looked = 0, tagged = 0;
+    const queue = [];
+    try {
+        for (const child of Array.from(host.children ?? []))
+            queue.push([child, 1]);
+    }
+    catch {
+        return 0;
+    }
+    while (queue.length && looked < limit) {
+        const [element, depth] = queue.shift();
+        looked++;
+        const tag = String(element?.tagName ?? "").toUpperCase();
+        if (INTERACTIVE_TAGS.has(tag))
+            continue;
+        let role = "", classes = "";
+        try {
+            role = String(element.getAttribute?.("role") ?? "").toLowerCase();
+            classes = String(element.className?.baseVal ?? element.className ?? "");
+        }
+        catch { /* Plain element. */ }
+        if (INTERACTIVE_ROLES.has(role) || /\bDialogButton\b/.test(classes))
+            continue;
+        let already = false;
+        try {
+            already = element.hasAttribute?.(CLEAR_ATTRIBUTE) === true || element.getAttribute?.(CLEAR_ATTRIBUTE) != null;
+        }
+        catch {
+            already = false;
+        }
+        const rect = rectOf(element);
+        if (rect && rect.width * rect.height >= area * share && !already) {
+            const computed = style(view, element);
+            const colour = parseColor(computed?.backgroundColor ?? computed?.["background-color"]);
+            const image = String(computed?.backgroundImage ?? computed?.["background-image"] ?? "none");
+            const picture = /url\(/i.test(image);
+            if (!picture && ((colour && colour.a > 0.02) || /gradient/i.test(image))) {
+                try {
+                    element.setAttribute(CLEAR_ATTRIBUTE, "1");
+                    tagged++;
+                }
+                catch { /* Left as it is. */ }
+            }
+        }
+        if (depth < maxDepth) {
+            try {
+                for (const child of Array.from(element.children ?? []))
+                    queue.push([child, depth + 1]);
+            }
+            catch { /* No children. */ }
+        }
+    }
+    return tagged;
+}
+// What is behind the top bar or the button-hint bar: game art (a picture, a video, an image background) keeps it
+// clear; a plain page makes it pure black. Three points along it are checked; any art among them wins.
+function chromeState(element, doc, view, starsAttribute = "data-core-ui-stars") {
+    const rect = rectOf(element);
+    if (!rect || rect.width <= 0 || rect.height <= 0 || typeof doc?.elementsFromPoint !== "function")
+        return undefined;
+    const y = Math.min(view.innerHeight - 1, Math.max(0, rect.top + rect.height / 2));
+    for (const fraction of [0.25, 0.5, 0.75]) {
+        const x = Math.min(view.innerWidth - 1, Math.max(0, rect.left + rect.width * fraction));
+        let stack = [];
+        try {
+            stack = Array.from(doc.elementsFromPoint(x, y) ?? []);
+        }
+        catch {
+            stack = [];
+        }
+        for (const below of stack) {
+            if (below === element)
+                continue;
+            try {
+                if (element.contains?.(below))
+                    continue;
+            }
+            catch { /* Not ours. */ }
+            const tag = String(below?.tagName ?? "").toUpperCase();
+            if (tag === "CANVAS" && below.getAttribute?.(starsAttribute) != null)
+                break;
+            if (tag === "IMG" || tag === "VIDEO" || tag === "PICTURE")
+                return "clear";
+            const computed = style(view, below);
+            if (/url\(/i.test(String(computed?.backgroundImage ?? computed?.["background-image"] ?? "")))
+                return "clear";
+            const colour = parseColor(computed?.backgroundColor ?? computed?.["background-color"]);
+            if (colour && colour.a >= 0.9)
+                break;
+        }
+    }
+    // Nothing but plain colour (or nothing at all: the page's own black) behind it.
+    return "black";
+}
+// The Steam menu's first row must start below the ring mark's band. If Steam's row container ignores the band (an
+// absolutely placed list, say), the container is pushed down by what is missing. Answers the element moved, if any.
+function keepBelowLogo(menu, itemSelector, band, view, edits) {
+    if (!itemSelector)
+        return undefined;
+    const menuRect = rectOf(menu);
+    if (!menuRect || menuRect.height <= 0)
+        return undefined;
+    let first;
+    try {
+        first = menu.querySelector(itemSelector);
+    }
+    catch {
+        first = undefined;
+    }
+    const itemRect = first ? rectOf(first) : undefined;
+    if (!first || !itemRect || itemRect.height <= 0)
+        return undefined;
+    const padding = px$1(style(view, menu)?.paddingTop);
+    const wanted = menuRect.top + padding + band;
+    const missing = Math.ceil(wanted - itemRect.top);
+    if (missing <= 0)
+        return undefined;
+    // The menu's own child that holds the first row.
+    let container = first;
+    while (container && container.parentElement && container.parentElement !== menu)
+        container = container.parentElement;
+    if (!container || container.parentElement !== menu)
+        return undefined;
+    const computed = style(view, container);
+    const position = String(computed?.position ?? "static");
+    if (position === "absolute" || position === "fixed")
+        edits.set(container, "top", `${px$1(computed?.top) + missing}px`);
+    else
+        edits.set(container, "margin-top", `${px$1(computed?.marginTop) + missing}px`);
+    return container;
+}
+
+// Eternal Core: the Steam menu and Quick Access from the top edge of the screen to the bottom one (Core UI,
+// docs/eternal/CORE-UI.md, "Full height").
+//
+// Steam places both panels between the top bar and the button hints (a top/bottom offset, a max-height, a padded
+// wrapper; it differs between clients). Instead of guessing which, the panel itself is measured and stretched:
+//
+//   margin-top    -= gap above     padding-top    += gap above
+//   margin-bottom -= gap below     padding-bottom += gap below
+//   height         = its height + both gaps (border-box), max-height none
+//
+// so its black box (and stars) reaches both edges while its content, focus and scroll position stay exactly where
+// Steam put them: the clock and icons above and the hints below stay readable on top. Afterwards the panel is
+// measured again; anything but edge-to-edge (an ancestor that scrolls, a flex parent that shrinks it back) undoes
+// every change and the panel is left as Steam had it (the Starfield canvas still reaches the edges, the phase 1
+// fallback). An ancestor that merely clips it (overflow hidden, no scrolling) is opened vertically.
+//
+// All writes go through InlineEdits (coreUiDom.ts), so Core UI off restores Steam's values exactly.
+// Self-contained apart from coreUiDom.ts: tests drive it with fake DOM structures modelled on Steam's.
+const px = (value) => { const n = Number.parseFloat(String(value ?? "")); return Number.isFinite(n) ? n : 0; };
+const MAX_TRIES = 3;
+const TOLERANCE = 2;
+function createFullHeight(edits = new InlineEdits()) {
+    const states = new Map();
+    const opened = new Map();
+    function rect(element) {
+        try {
+            const r = element.getBoundingClientRect();
+            return { top: r.top, height: r.height, width: r.width, bottom: r.top + r.height };
+        }
+        catch {
+            return undefined;
+        }
+    }
+    function computed(view, element) {
+        try {
+            return view.getComputedStyle?.(element) ?? {};
+        }
+        catch {
+            return {};
+        }
+    }
+    function undo(element) {
+        edits.restore(element);
+        for (const ancestor of opened.get(element) ?? [])
+            edits.restore(ancestor);
+        opened.delete(element);
+    }
+    // Opens ancestors that clip the stretched panel without scrolling. Answers false when an ancestor scrolls (moving
+    // the panel inside a scroll container would move what the user sees).
+    function openClippers(element, view, height) {
+        const changed = [];
+        let node = element.parentElement;
+        for (let depth = 0; node && depth < 12; depth++, node = node.parentElement) {
+            const style = computed(view, node);
+            const overflowY = String(style.overflowY ?? style.overflow ?? "visible");
+            if (overflowY === "visible")
+                continue;
+            const box = rect(node);
+            if (box && box.top <= TOLERANCE && box.bottom >= height - TOLERANCE)
+                break;
+            const scrolls = (overflowY === "auto" || overflowY === "scroll") && Number(node.scrollHeight) > Number(node.clientHeight) + 1;
+            if (scrolls) {
+                for (const item of changed)
+                    edits.restore(item);
+                return false;
+            }
+            edits.set(node, "overflow-y", "visible");
+            if (String(style.overflowX ?? "visible") !== "visible")
+                edits.set(node, "overflow-x", "clip");
+            changed.push(node);
+        }
+        opened.set(element, changed);
+        return true;
+    }
+    function apply(element, view) {
+        const height = Number(view.innerHeight) || 0;
+        const box = rect(element);
+        if (!box || height <= 0 || box.height <= 0 || box.width <= 0)
+            return "hidden";
+        let state = states.get(element);
+        if (state && state.height !== height) {
+            undo(element);
+            state = undefined;
+            states.delete(element);
+        }
+        const limit = Math.round(height / 4);
+        const above = Math.round(box.top), below = Math.round(height - box.bottom);
+        if (Math.abs(above) <= TOLERANCE && Math.abs(below) <= TOLERANCE)
+            return state?.result === "stretched" ? "stretched" : "full";
+        if (state && state.tries >= MAX_TRIES)
+            return "gave-up";
+        // Already stretched once and Steam moved it since: start again from Steam's own values.
+        if (edits.has(element)) {
+            undo(element);
+            return apply(element, view);
+        }
+        state ?? (state = { tries: 0, height });
+        state.tries++;
+        states.set(element, state);
+        const top = Math.max(0, Math.min(limit, above)), bottom = Math.max(0, Math.min(limit, below));
+        if (top === 0 && bottom === 0) {
+            state.result = "failed";
+            return "failed";
+        }
+        const style = computed(view, element);
+        edits.set(element, "box-sizing", "border-box");
+        edits.set(element, "height", `${Math.round(box.height + top + bottom)}px`);
+        edits.set(element, "min-height", "0px");
+        edits.set(element, "max-height", "none");
+        edits.set(element, "margin-top", `${px(style.marginTop) - top}px`);
+        edits.set(element, "margin-bottom", `${px(style.marginBottom) - bottom}px`);
+        edits.set(element, "padding-top", `${px(style.paddingTop) + top}px`);
+        edits.set(element, "padding-bottom", `${px(style.paddingBottom) + bottom}px`);
+        if (!openClippers(element, view, height)) {
+            undo(element);
+            state.result = "failed";
+            return "failed";
+        }
+        const after = rect(element);
+        const ok = !!after && Math.abs(after.top - (box.top - top)) <= TOLERANCE && Math.abs(after.bottom - (box.bottom + bottom)) <= TOLERANCE;
+        if (!ok) {
+            undo(element);
+            state.result = "failed";
+            return "failed";
+        }
+        state.result = "stretched";
+        return "stretched";
+    }
+    return {
+        apply,
+        release(element) { undo(element); states.delete(element); },
+        releaseAll() { for (const element of [...states.keys()])
+            undo(element); states.clear(); edits.restoreAll(); },
+        state: (element) => states.get(element),
+    };
 }
 
 // Eternal Core: controller button hints, always (Core UI phase 1, docs/eternal/CORE-UI.md, "Controller prompts").
@@ -65384,7 +66746,7 @@ function promptsMemory(storage) {
     };
 }
 
-// Eternal Core: Core UI, phase 1 (docs/eternal/CORE-UI.md). Core's own look for Steam Big Picture, built into
+// Eternal Core: Core UI, phases 1 and 2 (docs/eternal/CORE-UI.md). Core's own look for Steam Big Picture, built into
 // Core's Decky plugin instead of a CSS Loader theme, so it keeps working when Steam moves to ES modules
 // (Decky 4): the global chrome, the Steam menu and Quick Access.
 //
@@ -65413,6 +66775,11 @@ function createCoreUi(deps) {
     let loop, last, timer, disposed = false;
     let unpin, pinTries = 0;
     const orbs = new Set();
+    // Every inline style Core UI writes on Steam's elements (full height, the logo band), undone on off.
+    const edits = new InlineEdits();
+    const fullHeight = createFullHeight(edits);
+    const chromes = new Set();
+    const diagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {} };
     function orbState() {
         try {
             return deps.orb?.state() ?? "hidden";
@@ -65479,7 +66846,7 @@ function createCoreUi(deps) {
         builds++;
         let next;
         try {
-            next = buildCoreUiCss(findCoreUiMaps(deps.ui), { wordmark: deps.wordmark });
+            next = buildCoreUiCss(findCoreUiMaps(deps.ui), { mark: deps.mark ?? deps.wordmark });
         }
         catch {
             next = undefined;
@@ -65512,8 +66879,13 @@ function createCoreUi(deps) {
                 return false;
             if (rect.width * rect.height < surface.host.minArea)
                 return false;
+            // A closed Steam menu can stay in place with an ancestor hidden or faded out: Chromium's checkVisibility sees
+            // through ancestors (display, visibility, opacity), getComputedStyle only sees the element.
+            const check = element.checkVisibility;
+            if (typeof check === "function" && check.call(element, { checkOpacity: true, checkVisibilityCSS: true, opacityProperty: true, visibilityProperty: true }) === false)
+                return false;
             const style = view?.getComputedStyle?.(element);
-            return !style || (style.visibility !== "hidden" && style.display !== "none");
+            return !style || (style.visibility !== "hidden" && style.display !== "none" && String(style.opacity ?? "1") !== "0");
         }
         catch {
             return false;
@@ -65524,9 +66896,11 @@ function createCoreUi(deps) {
     // quarter of the screen each). Only the canvas moves: the panel's own box, focus and scrolling are untouched.
     // Returns true when anything changed.
     function place(surface) {
-        let top = 0, bottom = 0, scroll = 0;
+        let top = 0, bottom = 0, scroll = 0, pageHeight = 0;
         try {
             scroll = Math.max(0, Math.round(surface.element.scrollTop || 0));
+            if (surface.host.page)
+                pageHeight = Math.max(0, Math.round(Math.min(surface.element.clientHeight || 0, surface.doc.defaultView?.innerHeight ?? 0)));
             if (surface.host.fullHeight) {
                 const rect = surface.element.getBoundingClientRect(), height = surface.doc.defaultView?.innerHeight ?? 0;
                 if (height > 0 && rect.height > 0) {
@@ -65539,16 +66913,19 @@ function createCoreUi(deps) {
         catch {
             top = bottom = scroll = 0;
         }
-        if (top === surface.top && bottom === surface.bottom && scroll === surface.scroll)
+        if (top === surface.top && bottom === surface.bottom && scroll === surface.scroll && pageHeight === surface.pageHeight)
             return false;
         surface.top = top;
         surface.bottom = bottom;
         surface.scroll = scroll;
+        surface.pageHeight = pageHeight;
         try {
             const style = surface.canvas.style;
             style.setProperty?.("--core-ui-extend-top", `${top}px`);
             style.setProperty?.("--core-ui-extend-bottom", `${bottom}px`);
             style.setProperty?.("--core-ui-scroll", `${scroll}px`);
+            if (surface.host.page)
+                style.setProperty?.("--core-ui-page-height", `${pageHeight}px`);
         }
         catch { /* The canvas keeps its last place. */ }
         return true;
@@ -65557,7 +66934,7 @@ function createCoreUi(deps) {
         place(surface);
         const canvas = surface.canvas;
         const width = Math.max(0, Math.round(surface.element.clientWidth));
-        const height = Math.max(0, Math.round(surface.element.clientHeight)) + surface.top + surface.bottom;
+        const height = surface.host.page ? surface.pageHeight : Math.max(0, Math.round(surface.element.clientHeight)) + surface.top + surface.bottom;
         if (canvas.width !== width)
             canvas.width = width;
         if (canvas.height !== height)
@@ -65583,14 +66960,17 @@ function createCoreUi(deps) {
         catch {
             running = false;
         }
-        let moving = false, advanced = false;
+        let moving = false, advanced = false, visible = 0, view, still;
         for (const surface of surfaces.values()) {
             if (!shown(surface)) {
                 surface.still = false;
                 continue;
             }
-            if (running || reduced(surface.doc)) {
+            visible++;
+            const held = running ? "still-game" : reduced(surface.doc) ? "still-reduced" : undefined;
+            if (held) {
                 // Held still: one frame, then nothing until it moves again.
+                still = held;
                 if (!surface.still) {
                     paint(surface);
                     surface.still = true;
@@ -65604,17 +66984,34 @@ function createCoreUi(deps) {
             surface.still = false;
             paint(surface);
             moving = true;
+            view ?? (view = surface.doc.defaultView);
         }
-        if (moving)
-            loop = deps.frame.request(frame);
+        diagnostics.shown = visible;
+        diagnostics.surfaces = surfaces.size;
+        diagnostics.state = moving ? "moving" : still ?? "idle";
+        if (moving) {
+            diagnostics.frames++;
+            loop = deps.frame.request(frame, view);
+        }
         else
             last = undefined;
     }
+    // The window to animate in: the first surface on screen (the Steam menu or Quick Access may be in a popup).
+    function activeView() {
+        for (const surface of surfaces.values())
+            if (shown(surface))
+                return surface.doc.defaultView;
+        return undefined;
+    }
     function wake() {
         if (loop === undefined && !disposed && surfaces.size)
-            loop = deps.frame.request(frame);
+            loop = deps.frame.request(frame, activeView());
     }
     function release(surface) {
+        try {
+            fullHeight.release(surface.element);
+        }
+        catch { /* Already gone with its window. */ }
         try {
             surface.canvas.remove();
         }
@@ -65630,7 +67027,8 @@ function createCoreUi(deps) {
     function attach(doc, hosts) {
         if (!hosts.length)
             return;
-        const any = hosts.map(host => host.selector).join(",");
+        const any = `[${CORE_UI_HOST_ATTRIBUTE}="1"]`;
+        const width = Number(doc.defaultView?.innerWidth) || 0;
         for (const host of hosts) {
             let found = [];
             try {
@@ -65640,13 +67038,23 @@ function createCoreUi(deps) {
                 found = [];
             }
             for (const element of found) {
-                // A host inside another host stays clear: the outer surface's stars show through it.
+                // A host inside another host stays clear: the outer surface's stars show through it. Hosts are listed outer
+                // first, so an outer candidate is already marked when its inner ones are looked at. A panel candidate wider
+                // than 60% of the screen is a full-screen wrapper, never the panel: it stays clear too.
                 let nested = false;
                 try {
                     nested = !!element.parentElement?.closest(any);
                 }
                 catch {
                     nested = false;
+                }
+                if (!nested && host.panel && width > 0) {
+                    try {
+                        nested = element.getBoundingClientRect().width > width * 0.6;
+                    }
+                    catch {
+                        nested = false;
+                    }
                 }
                 if (nested) {
                     const prior = surfaces.get(element);
@@ -65666,7 +67074,7 @@ function createCoreUi(deps) {
                     canvas.setAttribute(CORE_UI_STARS_ATTRIBUTE, host.id);
                     canvas.setAttribute("aria-hidden", "true");
                     element.insertBefore(canvas, element.firstChild);
-                    surface = { element, canvas, host, doc, still: false, top: -1, bottom: -1, scroll: -1 };
+                    surface = { element, canvas, host, doc, still: false, top: -1, bottom: -1, scroll: -1, pageHeight: -1 };
                     // The canvas sits inside the surface: a surface Steam leaves static becomes the containing block.
                     try {
                         if (doc.defaultView?.getComputedStyle?.(element).position === "static") {
@@ -65679,10 +67087,80 @@ function createCoreUi(deps) {
                 }
                 if (element.getAttribute(CORE_UI_HOST_ATTRIBUTE) !== "1")
                     element.setAttribute(CORE_UI_HOST_ATTRIBUTE, "1");
+                const view = doc.defaultView;
+                if (view && host.fullHeight && shown(surface)) {
+                    // The panel itself from the top edge to the bottom one (coreFullHeight.ts); the canvas extension below is
+                    // the fallback when Steam does not let it stretch.
+                    let result = "hidden";
+                    try {
+                        result = fullHeight.apply(element, view);
+                    }
+                    catch {
+                        result = "failed";
+                    }
+                    diagnostics.full[host.id] = result;
+                }
+                if (view && host.panel && shown(surface)) {
+                    // Large opaque layers inside the panel (Decky's plugin panels, CSS Loader's grey area) go clear.
+                    try {
+                        clearOpaqueLayers(element, view);
+                    }
+                    catch { /* Left as Steam had it. */ }
+                }
                 // A held-still surface that moved or scrolled is painted again in its new place.
                 if (place(surface))
                     surface.still = false;
             }
+        }
+    }
+    // The top bar and the button-hint bar: pure black over a plain page, clear over game art.
+    function tagChrome(doc, dom) {
+        const view = doc.defaultView;
+        if (!view)
+            return;
+        for (const selector of [dom.header, dom.footer]) {
+            if (!selector)
+                continue;
+            let found = [];
+            try {
+                found = Array.from(doc.querySelectorAll(selector)).slice(0, 4);
+            }
+            catch {
+                found = [];
+            }
+            for (const element of found) {
+                let state;
+                try {
+                    state = chromeState(element, doc, view, CORE_UI_STARS_ATTRIBUTE);
+                }
+                catch {
+                    state = undefined;
+                }
+                if (!state)
+                    continue;
+                if (element.getAttribute(CORE_UI_CHROME_ATTRIBUTE) !== state)
+                    element.setAttribute(CORE_UI_CHROME_ATTRIBUTE, state);
+                chromes.add(element);
+            }
+        }
+    }
+    // The Steam menu's first row starts below the ring mark's band.
+    function reserveLogo(doc, dom) {
+        const view = doc.defaultView;
+        if (!view || !dom.menu)
+            return;
+        let menus = [];
+        try {
+            menus = Array.from(doc.querySelectorAll(dom.menu)).slice(0, 2);
+        }
+        catch {
+            menus = [];
+        }
+        for (const menu of menus) {
+            try {
+                keepBelowLogo(menu, dom.menuItem, CORE_MENU_LOGO_BAND, view, edits);
+            }
+            catch { /* Left as it is. */ }
         }
     }
     function sync() {
@@ -65728,6 +67206,13 @@ function createCoreUi(deps) {
                 if (doc.documentElement.getAttribute(CORE_UI_ATTRIBUTE) !== "1")
                     doc.documentElement.setAttribute(CORE_UI_ATTRIBUTE, "1");
                 attach(doc, current.hosts);
+                const dom = current.dom ?? {};
+                tagChrome(doc, dom);
+                reserveLogo(doc, dom);
+                try {
+                    deps.decorate?.(doc, dom);
+                }
+                catch { /* The Library keeps Steam's look. */ }
                 placeOrb(doc, current.clock);
             }
             catch { /* A Steam popup may close while it is being styled. */ }
@@ -65772,19 +67257,38 @@ function createCoreUi(deps) {
         last = undefined;
         for (const surface of [...surfaces.values()])
             release(surface);
+        try {
+            fullHeight.releaseAll();
+        }
+        catch { }
+        edits.restoreAll();
+        for (const element of chromes) {
+            try {
+                element.removeAttribute(CORE_UI_CHROME_ATTRIBUTE);
+            }
+            catch { }
+        }
+        chromes.clear();
         for (const [doc, style] of styles) {
             try {
                 style.remove();
             }
             catch { }
             try {
+                deps.undecorate?.(doc);
+            }
+            catch { }
+            try {
                 doc.documentElement.removeAttribute(CORE_UI_ATTRIBUTE);
-                for (const element of Array.from(doc.querySelectorAll(`[${CORE_UI_HOST_ATTRIBUTE}]`)))
-                    element.removeAttribute(CORE_UI_HOST_ATTRIBUTE);
+                for (const attribute of [CORE_UI_HOST_ATTRIBUTE, CORE_UI_CLEAR_ATTRIBUTE, CORE_UI_CHROME_ATTRIBUTE]) {
+                    for (const element of Array.from(doc.querySelectorAll(`[${attribute}]`)))
+                        element.removeAttribute(attribute);
+                }
             }
             catch { }
         }
         styles.clear();
+        diagnostics.state = "off";
     }
     const unsubscribe = deps.setting.subscribe(sync);
     timer = deps.every.start(sync, 1000);
@@ -65794,6 +67298,7 @@ function createCoreUi(deps) {
         frame: (time) => frame(time),
         surfaces: () => [...surfaces.values()],
         sheet: () => sheet,
+        diagnostics: () => diagnostics,
         dispose() {
             if (disposed)
                 return;
@@ -65845,26 +67350,64 @@ function steamUiDocuments(host, router) {
     }
     return [...documents];
 }
+// One animation frame in `view` (the window being drawn), with a timer backstop: a window Steam has stopped
+// compositing never answers requestAnimationFrame, and the stars must not freeze because of it. The time passed on
+// is always the main window's clock, so frames from different windows share one timeline.
+function frameIn(host, view, callback, fps = STARFIELD_FPS) {
+    const target = view && typeof view.requestAnimationFrame === "function" ? view : host;
+    const now = () => (typeof host?.performance?.now === "function" ? host.performance.now() : Date.now());
+    let done = false, id, timer;
+    const fire = () => { if (done)
+        return; done = true; try {
+        host.clearTimeout?.(timer);
+    }
+    catch { } try {
+        if (id !== undefined)
+            target.cancelAnimationFrame?.(id);
+    }
+    catch { } callback(now()); };
+    try {
+        if (typeof target?.requestAnimationFrame === "function")
+            id = target.requestAnimationFrame(fire);
+    }
+    catch {
+        id = undefined;
+    }
+    timer = host.setTimeout(fire, id === undefined ? 1000 / fps : 250);
+    return { cancel() { done = true; try {
+            host.clearTimeout?.(timer);
+        }
+        catch { } try {
+            if (id !== undefined)
+                target.cancelAnimationFrame?.(id);
+        }
+        catch { } } };
+}
 function installCoreUi(options) {
     const host = window;
     const runtime = createCoreUi({
         ui: options.ui,
         documents: () => steamUiDocuments(host, options.ui?.Router),
         setting: options.setting ?? coreUiSetting,
+        mark: options.mark,
         wordmark: options.wordmark,
+        decorate: options.decorate,
+        undecorate: options.undecorate,
         running: () => {
             const id = Number(host.SteamUIStore?.MainRunningAppID ?? options.ui?.Router?.MainRunningAppID ?? 0);
             return Number.isFinite(id) && id > 0;
         },
-        frame: typeof host.requestAnimationFrame === "function"
-            ? { request: callback => host.requestAnimationFrame(callback), cancel: handle => host.cancelAnimationFrame(handle) }
-            : { request: callback => host.setTimeout(() => callback(Date.now()), 1000 / STARFIELD_FPS), cancel: handle => host.clearTimeout(handle) },
+        frame: { request: (callback, view) => frameIn(host, view, callback), cancel: handle => handle?.cancel?.() },
         every: { start: (callback, ms) => host.setInterval(callback, ms), stop: handle => host.clearInterval(handle) },
         now: () => (typeof performance !== "undefined" ? performance.now() : Date.now()),
         log: message => console.info(message),
         orb: options.orb,
         pinPrompts: () => pinControllerPrompts(host, promptsMemory(storage()), message => console.info(message)),
     });
+    try {
+        host[Symbol.for("core.ui.diagnostics")] = runtime.diagnostics;
+    }
+    catch { /* Diagnostics are optional. */ }
     return () => runtime.dispose();
 }
 
@@ -65873,20 +67416,21 @@ function installCoreUi(options) {
 const en = {
     section: "Look", label: "Core UI",
     hint: "Core's black, gunmetal and crimson look, with the Starfield, on the Steam menu, Quick Access and the top and bottom bars. Off gives them back to Steam.",
+    screensaver: "Use Core Starfield as screensaver", screensaverHint: "Steam's screensaver becomes the Core Starfield. Off goes back to Steam's slideshow.",
 };
 const copy = {
     en,
-    it: { section: "Aspetto", label: "Core UI", hint: "L'aspetto di Core in nero, canna di fucile e cremisi, con il campo stellare, sul menu di Steam, sull'Accesso rapido e sulle barre in alto e in basso. Spento li restituisce a Steam." },
-    es: { section: "Aspecto", label: "Core UI", hint: "El aspecto de Core en negro, gris metal y carmesí, con el campo de estrellas, en el menú de Steam, el Acceso rápido y las barras superior e inferior. Desactivado los devuelve a Steam." },
-    fr: { section: "Apparence", label: "Core UI", hint: "L'apparence de Core en noir, gris acier et cramoisi, avec le champ d'étoiles, sur le menu Steam, l'Accès rapide et les barres du haut et du bas. Désactivé, Steam reprend la sienne." },
-    de: { section: "Aussehen", label: "Core UI", hint: "Der Look von Core in Schwarz, Gunmetal und Karmesin mit dem Sternenfeld im Steam-Menü, im Schnellzugriff und in der oberen und unteren Leiste. Aus gibt sie an Steam zurück." },
-    pt: { section: "Aparência", label: "Core UI", hint: "O visual do Core em preto, cinza-chumbo e carmesim, com o campo estelar, no menu Steam, no Acesso rápido e nas barras superior e inferior. Desligado devolve tudo ao Steam." },
-    uk: { section: "Вигляд", label: "Core UI", hint: "Вигляд Core у чорному, сталевому й багряному кольорах із зоряним полем у меню Steam, швидкому доступі та на верхній і нижній панелях. Вимкнення повертає вигляд Steam." },
-    ru: { section: "Внешний вид", label: "Core UI", hint: "Оформление Core в чёрном, стальном и багровом цветах со звёздным полем в меню Steam, быстром доступе и на верхней и нижней панелях. Если выключить, вернётся оформление Steam." },
-    zh: { section: "外观", label: "Core UI", hint: "在 Steam 菜单、快速访问以及顶部和底部栏使用 Core 的黑色、炮铜色和深红色外观，并显示星空。关闭后恢复 Steam 的外观。" },
-    ja: { section: "外観", label: "Core UI", hint: "Steam メニュー、クイックアクセス、上下のバーに、星空と黒・ガンメタル・クリムゾンの Core の外観を使います。オフにすると Steam の外観に戻ります。" },
-    ko: { section: "모양", label: "Core UI", hint: "Steam 메뉴, 빠른 실행, 위아래 막대에 별빛 배경과 검정·건메탈·진홍색의 Core 모양을 적용합니다. 끄면 Steam 모양으로 돌아갑니다." },
-    hi: { section: "रूप", label: "Core UI", hint: "Steam मेनू, क्विक एक्सेस और ऊपर-नीचे की पट्टियों पर तारों भरी पृष्ठभूमि के साथ Core का काला, गनमेटल और क्रिमसन रूप। बंद करने पर Steam का रूप लौट आता है।" },
+    it: { section: "Aspetto", label: "Core UI", hint: "L'aspetto di Core in nero, canna di fucile e cremisi, con il campo stellare, sul menu di Steam, sull'Accesso rapido e sulle barre in alto e in basso. Spento li restituisce a Steam.", screensaver: "Usa Core Starfield come salvaschermo", screensaverHint: "Il salvaschermo di Steam diventa il campo stellare di Core. Spento torna alla presentazione di Steam." },
+    es: { section: "Aspecto", label: "Core UI", hint: "El aspecto de Core en negro, gris metal y carmesí, con el campo de estrellas, en el menú de Steam, el Acceso rápido y las barras superior e inferior. Desactivado los devuelve a Steam.", screensaver: "Usar Core Starfield como salvapantallas", screensaverHint: "El salvapantallas de Steam pasa a ser el campo de estrellas de Core. Desactivado vuelve a la presentación de Steam." },
+    fr: { section: "Apparence", label: "Core UI", hint: "L'apparence de Core en noir, gris acier et cramoisi, avec le champ d'étoiles, sur le menu Steam, l'Accès rapide et les barres du haut et du bas. Désactivé, Steam reprend la sienne.", screensaver: "Utiliser Core Starfield comme économiseur d'écran", screensaverHint: "L'économiseur d'écran de Steam devient le champ d'étoiles de Core. Désactivé, Steam reprend son diaporama." },
+    de: { section: "Aussehen", label: "Core UI", hint: "Der Look von Core in Schwarz, Gunmetal und Karmesin mit dem Sternenfeld im Steam-Menü, im Schnellzugriff und in der oberen und unteren Leiste. Aus gibt sie an Steam zurück.", screensaver: "Core Starfield als Bildschirmschoner", screensaverHint: "Steams Bildschirmschoner wird das Sternenfeld von Core. Aus kehrt zu Steams Diashow zurück." },
+    pt: { section: "Aparência", label: "Core UI", hint: "O visual do Core em preto, cinza-chumbo e carmesim, com o campo estelar, no menu Steam, no Acesso rápido e nas barras superior e inferior. Desligado devolve tudo ao Steam.", screensaver: "Usar Core Starfield como protetor de tela", screensaverHint: "O protetor de tela do Steam passa a ser o campo estelar do Core. Desligado volta à apresentação do Steam." },
+    uk: { section: "Вигляд", label: "Core UI", hint: "Вигляд Core у чорному, сталевому й багряному кольорах із зоряним полем у меню Steam, швидкому доступі та на верхній і нижній панелях. Вимкнення повертає вигляд Steam.", screensaver: "Core Starfield як заставка", screensaverHint: "Заставкою Steam стає зоряне поле Core. Вимкнення повертає слайд-шоу Steam." },
+    ru: { section: "Внешний вид", label: "Core UI", hint: "Оформление Core в чёрном, стальном и багровом цветах со звёздным полем в меню Steam, быстром доступе и на верхней и нижней панелях. Если выключить, вернётся оформление Steam.", screensaver: "Core Starfield как заставка", screensaverHint: "Заставкой Steam станет звёздное поле Core. Если выключить, вернётся слайд-шоу Steam." },
+    zh: { section: "外观", label: "Core UI", hint: "在 Steam 菜单、快速访问以及顶部和底部栏使用 Core 的黑色、炮铜色和深红色外观，并显示星空。关闭后恢复 Steam 的外观。", screensaver: "使用 Core Starfield 作为屏幕保护程序", screensaverHint: "Steam 的屏幕保护程序改为 Core 星空。关闭后恢复 Steam 的幻灯片。" },
+    ja: { section: "外観", label: "Core UI", hint: "Steam メニュー、クイックアクセス、上下のバーに、星空と黒・ガンメタル・クリムゾンの Core の外観を使います。オフにすると Steam の外観に戻ります。", screensaver: "Core Starfield をスクリーンセーバーにする", screensaverHint: "Steam のスクリーンセーバーを Core の星空にします。オフにすると Steam のスライドショーに戻ります。" },
+    ko: { section: "모양", label: "Core UI", hint: "Steam 메뉴, 빠른 실행, 위아래 막대에 별빛 배경과 검정·건메탈·진홍색의 Core 모양을 적용합니다. 끄면 Steam 모양으로 돌아갑니다.", screensaver: "Core Starfield를 화면 보호기로 사용", screensaverHint: "Steam 화면 보호기가 Core 별빛으로 바뀝니다. 끄면 Steam 슬라이드쇼로 돌아갑니다." },
+    hi: { section: "रूप", label: "Core UI", hint: "Steam मेनू, क्विक एक्सेस और ऊपर-नीचे की पट्टियों पर तारों भरी पृष्ठभूमि के साथ Core का काला, गनमेटल और क्रिमसन रूप। बंद करने पर Steam का रूप लौट आता है।", screensaver: "Core Starfield को स्क्रीनसेवर बनाएँ", screensaverHint: "Steam का स्क्रीनसेवर Core का तारामंडल बन जाता है। बंद करने पर Steam का स्लाइडशो लौट आता है।" },
 };
 function coreUiCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
@@ -65900,7 +67444,18 @@ const { PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1, Toggle
 function CoreUiSection({ locale }) {
     const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
     const text = coreUiCopy(locale);
-    return (SP_JSX.jsx(PanelSection$1, { title: text.section, children: SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ToggleField$1, { bottomSeparator: "none", label: text.label, description: text.hint, checked: on, onChange: (value) => coreUiSetting.set(value) }) }) }));
+    return (SP_JSX.jsxs(PanelSection$1, { title: text.section, children: [SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ToggleField$1, { bottomSeparator: "none", label: text.label, description: text.hint, checked: on, onChange: (value) => coreUiSetting.set(value) }) }), SP_JSX.jsx(ScreensaverRow, { locale: locale })] }));
+}
+// "Use Core Starfield as screensaver": selects Core Starfield in Steam's screensaver list, or goes back to Steam's
+// slideshow. Shown only once Steam's settings store is found.
+function ScreensaverRow({ locale }) {
+    const [, redraw] = _global_SP_REACT.useState(0);
+    _global_SP_REACT.useEffect(() => coreScreensaverControl.subscribe(() => redraw(n => n + 1)), []);
+    _global_SP_REACT.useEffect(() => { const timer = window.setInterval(() => redraw(n => n + 1), 3000); return () => window.clearInterval(timer); }, []);
+    if (!coreScreensaverControl.available())
+        return null;
+    const text = coreUiCopy(locale);
+    return (SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ToggleField$1, { bottomSeparator: "none", label: text.screensaver, description: text.screensaverHint, checked: coreScreensaverControl.get(), onChange: (value) => { coreScreensaverControl.set(value); } }) }));
 }
 function openDigitalStores() {
     try {
@@ -66091,7 +67646,16 @@ let hapticSettingsWrite = Promise.resolve();
 function saveHapticSettings(changes) {
     hapticSettingsWrite = hapticSettingsWrite.catch(() => { }).then(async () => { await writeSettings(changes); });
 }
-const playhubTitle = SP_JSX.jsx("img", { src: playhubWordmark$1, alt: "Core", style: { display: "block", width: 144, maxWidth: "100%", height: 36, objectFit: "contain", objectPosition: "left center" } });
+const playhubWordmarkImage = SP_JSX.jsx("img", { src: playhubWordmark$1, alt: "Core", style: { display: "block", width: 144, maxWidth: "100%", height: 36, objectFit: "contain", objectPosition: "left center" } });
+// Core UI: no logo in Quick Access (the ring mark lives in the Steam menu only); the plain name instead. Core UI off
+// brings the wordmark back.
+const noSubscribe = () => () => { };
+const alwaysOff = () => false;
+function CoreTitle() {
+    const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting?.subscribe ?? noSubscribe, coreUiSetting?.get ?? alwaysOff, coreUiSetting?.get ?? alwaysOff);
+    return on ? SP_JSX.jsx("span", { style: { display: "block", lineHeight: "36px", fontSize: 20, fontWeight: 600, color: "#FFFFFF" }, children: "Core" }) : playhubWordmarkImage;
+}
+const playhubTitle = SP_JSX.jsx(CoreTitle, {});
 function ModeButtonLabel({ mode }) {
     return SP_JSX.jsxs("span", { className: "ph-mode-action-label", children: [SP_JSX.jsx("span", { children: mode === "gaming" ? "Gaming" : "Desktop" }), SP_JSX.jsx("span", { children: "Mode" })] });
 }
@@ -67047,14 +68611,29 @@ var index = definePlugin(() => {
     setJarvisPresence(presence);
     let jarvisLive;
     const gameRunning = () => Number(window.SteamUIStore?.MainRunningAppID ?? CompatUI.Router?.MainRunningAppID ?? 0) > 0;
-    const stopCoreUi = installOptionalHook("Core UI", () => installCoreUi({ ui: CompatUI, wordmark: playhubWordmark$1, orb: {
-            state: () => {
-                const live = jarvisLive?.snapshot();
-                return orbState({ enabled: jarvisLive?.enabled() === true, listening: !!live?.listening, working: live?.working === true,
-                    readyUntil: presence.readyUntil(), now: Date.now(), gameRunning: gameRunning() });
-            },
-            subscribe: presence.subscribe,
-        } }));
+    // Core UI phase 2: the Library's icons (the user's own set from %APPDATA%\\GamingMode\\icons, else Core's originals),
+    // Core's plugin logos on the Quick Access rail and Core Home's console icons, all only while Core UI is on
+    // (docs/eternal/CORE-UI.md). Inside the optional hook: a failure here leaves Core UI off, never the plugin.
+    const stopCoreUi = installOptionalHook("Core UI", () => {
+        const coreIcons = createIconStore(() => call("get_core_icons"));
+        const library = createLibraryDecorator({ icons: coreIcons.get });
+        const railIcon = (name) => {
+            const glyph = coreUiSetting.get() ? corePluginGlyph(name) : undefined;
+            return glyph ? SP_JSX.jsx("span", { "aria-hidden": "true", style: { display: "flex", width: "1em", height: "1em" }, dangerouslySetInnerHTML: { __html: glyph.replace("<svg ", '<svg width="100%" height="100%" ') } }) : undefined;
+        };
+        const stopLook = installCoreUi({ ui: CompatUI, decorate: library.decorate, undecorate: library.undecorate, orb: {
+                state: () => {
+                    const live = jarvisLive?.snapshot();
+                    return orbState({ enabled: jarvisLive?.enabled() === true, listening: !!live?.listening, working: live?.working === true,
+                        readyUntil: presence.readyUntil(), now: Date.now(), gameRunning: gameRunning() });
+                },
+                subscribe: presence.subscribe,
+            } });
+        setQamPluginIconFallback(railIcon);
+        setCoreHomeIcons(coreIcons.get);
+        const stopRailIcons = coreUiSetting.subscribe(() => { setQamPluginIconFallback(railIcon); void coreIcons.refresh(true); });
+        return () => { stopRailIcons(); setQamPluginIconFallback(undefined); stopLook(); };
+    });
     const stopStoreLibraryUi = installOptionalHook("Store game actions", () => installStoreLibrarySteamUi(() => currentLocale));
     const stopUpdateNotice = installOptionalHook("Update notice", () => installPlayhubUpdateNotice({
         main: () => {
