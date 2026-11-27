@@ -1,5 +1,6 @@
 // Eternal Core Mark III tests (Linux-runnable): TV protocol and policy, Steam update hold,
-// Steam client backup, Decky heartbeat health, boot sequence decisions and agent text.
+// Steam client backup, Decky heartbeat health, boot sequence decisions, mode-switch transition
+// timing and agent text.
 int passed = 0;
 void Check(bool condition, string name)
 {
@@ -9,6 +10,7 @@ void Check(bool condition, string name)
 }
 
 await BootTests.Run(Check);
+await TransitionTests.Run(Check);
 await TvTests.Run(Check);
 await SteamHoldTests.Run(Check);
 await DeckyTransitionTests.Run(Check);

@@ -26,9 +26,9 @@ namespace GamingMode.Services;
 // splash. Completion always resolves: on the end, on a skip, on a failure, or on Stop.
 internal sealed class BootSequencePlayer
 {
-	private static readonly Color Crimson = Color.FromRgb(0xD7, 0x26, 0x3D);
-	private static readonly Color RingUnlit = Color.FromRgb(0x3A, 0x3F, 0x46);
-	private static readonly Color Glint = Color.FromRgb(0xFF, 0x8A, 0x96);
+	private static readonly Color Crimson = CoreMarkDrawing.Crimson;
+	private static readonly Color RingUnlit = CoreMarkDrawing.RingUnlit;
+	private static readonly Color Glint = CoreMarkDrawing.Glint;
 
 	private readonly Storyboard _storyboard = new();
 	private readonly Canvas _canvas = new() { Width = 1280, Height = 720, Background = Brushes.Black, ClipToBounds = true };
@@ -102,50 +102,11 @@ internal sealed class BootSequencePlayer
 
 	// ---------- drawing (coordinates of the 1280x720 preview) ----------
 
-	private static LinearGradientBrush Chrome(bool absolute = false, double top = 0, double bottom = 1)
-	{
-		var brush = new LinearGradientBrush
-		{
-			StartPoint = new Point(0, top), EndPoint = new Point(0, bottom),
-			MappingMode = absolute ? BrushMappingMode.Absolute : BrushMappingMode.RelativeToBoundingBox,
-			GradientStops =
-			{
-				new GradientStop(Color.FromRgb(0xF4, 0xF7, 0xFA), 0),
-				new GradientStop(Color.FromRgb(0xAE, 0xB8, 0xC2), 0.48),
-				new GradientStop(Color.FromRgb(0x5B, 0x63, 0x6C), 0.52),
-				new GradientStop(Color.FromRgb(0xC9, 0xD1, 0xD9), 1),
-			}
-		};
-		brush.Freeze();
-		return brush;
-	}
-
-	// Widely spaced capitals, centred on x, with the baseline at y.
-	private static FrameworkElement Spaced(string text, double size, double spacing, double centerX, double baseline)
-	{
-		var row = new StackPanel { Orientation = Orientation.Horizontal };
-		var fill = Chrome();
-		for (int i = 0; i < text.Length; i++)
-		{
-			row.Children.Add(new TextBlock
-			{
-				Text = text[i].ToString(), FontFamily = new FontFamily("Segoe UI"), FontSize = size, Foreground = fill,
-				Margin = new Thickness(0, 0, i == text.Length - 1 ? 0 : spacing, 0)
-			});
-		}
-		var holder = new Grid { Width = 1280, Children = { row } };
-		row.HorizontalAlignment = HorizontalAlignment.Center;
-		holder.RenderTransform = new TranslateTransform(centerX - 640, 0);
-		Canvas.SetLeft(holder, 0);
-		Canvas.SetTop(holder, baseline - size * 1.08); // Segoe UI ascent is about 1.08 em
-		return holder;
-	}
-
-	private static Line Stroke(double x1, double y1, double x2, double y2, Brush brush, double width) => new()
-	{
-		X1 = x1, Y1 = y1, X2 = x2, Y2 = y2, Stroke = brush, StrokeThickness = width,
-		StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-	};
+	// Chrome, spaced capitals, strokes, the mark's geometry and the stars are shared with the
+	// mode-switch transitions (CoreMarkDrawing.cs), so boot and transitions stay one family.
+	private static LinearGradientBrush Chrome(bool absolute = false, double top = 0, double bottom = 1) => CoreMarkDrawing.Chrome(absolute, top, bottom);
+	private static FrameworkElement Spaced(string text, double size, double spacing, double centerX, double baseline) => CoreMarkDrawing.Spaced(text, size, spacing, centerX, baseline);
+	private static Line Stroke(double x1, double y1, double x2, double y2, Brush brush, double width) => CoreMarkDrawing.Stroke(x1, y1, x2, y2, brush, width);
 
 	private void Animate(DependencyObject target, DependencyProperty property, double? from, double to, double begin, double seconds, IEasingFunction? ease = null)
 		=> Animate(target, new PropertyPath(property), from, to, begin, seconds, ease);
@@ -170,22 +131,10 @@ internal sealed class BootSequencePlayer
 
 	private void BuildStars()
 	{
-		// Fixed seed: the same sky every boot. Steel and near-white, one in twenty crimson.
-		var random = new Random(7);
-		var field = new Canvas { Width = 1280, Height = 720, Opacity = 0, RenderTransform = new ScaleTransform(1, 1, 640, 345.6) };
-		var steel = new SolidColorBrush(Color.FromRgb(0xC9, 0xD1, 0xD9));
-		var white = new SolidColorBrush(Color.FromRgb(0xE6, 0xEC, 0xF2));
-		var crimson = new SolidColorBrush(Crimson);
-		steel.Freeze(); white.Freeze(); crimson.Freeze();
-		for (int i = 0; i < 220; i++)
-		{
-			double x = random.NextDouble() * 1280, y = random.NextDouble() * 720, size = 1 + random.NextDouble() * 2.2;
-			double pick = random.NextDouble();
-			var star = new Ellipse { Width = size, Height = size, Fill = pick < 0.05 ? crimson : pick < 0.3 ? white : steel, Opacity = 0.25 + random.NextDouble() * 0.6 };
-			Canvas.SetLeft(star, x - size / 2);
-			Canvas.SetTop(star, y - size / 2);
-			field.Children.Add(star);
-		}
+		// Fixed seed: the same sky every boot (and behind every mode switch).
+		var field = CoreMarkDrawing.StarField();
+		field.Opacity = 0;
+		field.RenderTransform = new ScaleTransform(1, 1, 640, 345.6);
 		_canvas.Children.Add(field);
 		KeyFrames(field, new PropertyPath(UIElement.OpacityProperty), 0, (0, 0), (0.8, 1), (4.3, 1), (4.9, 0));
 		var rush = new QuadraticEase { EasingMode = EasingMode.EaseIn };
@@ -276,12 +225,11 @@ internal sealed class BootSequencePlayer
 		// Chrome ticks turn like a lock dial, settle, then light (opacity .3 -> 1 at 6.6 s).
 		var ticks = new Canvas { Width = 1280, Height = 720, Opacity = 0.3, RenderTransform = new RotateTransform(-180, CX, CY) };
 		var chrome = Chrome(absolute: true, top: CY - 48 * S, bottom: CY + 48 * S);
-		var tickLines = new (double, double, double, double)[]
+		for (int index = 0; index < 8; index++)
 		{
-			(0, -48, 0, -38), (0, 38, 0, 48), (-48, 0, -38, 0), (38, 0, 48, 0),
-			(-33.9, -33.9, -26.9, -26.9), (26.9, 26.9, 33.9, 33.9), (33.9, -33.9, 26.9, -26.9), (-26.9, 26.9, -33.9, 33.9),
-		};
-		foreach (var (x1, y1, x2, y2) in tickLines) ticks.Children.Add(Stroke(CX + x1 * S, CY + y1 * S, CX + x2 * S, CY + y2 * S, chrome, 5 * S));
+			var (x1, y1, x2, y2) = CoreMarkDrawing.Tick(index);
+			ticks.Children.Add(Stroke(CX + x1 * S, CY + y1 * S, CX + x2 * S, CY + y2 * S, chrome, 5 * S));
+		}
 		group.Children.Add(ticks);
 		KeyFrames(ticks, new PropertyPath("(UIElement.RenderTransform).(RotateTransform.Angle)"), 4.3,
 			(0, -180), (0.92, -80), (1.84, -12), (2.024, 6), (2.162, -2), (2.3, 0));

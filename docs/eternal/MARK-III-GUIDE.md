@@ -14,6 +14,19 @@ button skips it.** It plays while Steam is starting underneath, so it costs no t
 - Turn it off, or just its sound: Core > Gaming Mode > *Sequenza di avvio* /
   *Boot sequence*. It also follows the startup splash switch.
 
+## Switching modes
+
+Switching to Gaming Mode or back to the desktop plays a short cut of the same animation on
+black with the boot's stars. **Into Gaming Mode:** the stars fade in, Core's ring charges
+and its ticks light one by one, the core pulses with a white flash, then *CORE* and a steel
+*Gaming Mode* line; it fades to black as Big Picture appears. **To Desktop:** the same in
+reverse, the ring drains, the ticks go dark and the stars fade, with the line *Desktop*.
+It never makes the switch slower: it is over in about 1.3 seconds and the switch closes it
+whenever it is done. If the switch takes longer, the ticks pulse softly in turn until it is.
+With Windows' animation effects off, or Core > Gaming Mode > *Attiva animazione* off, the
+logo appears still, with a fade. The animation colour setting no longer changes these
+screens (it still tints the plain startup splash).
+
 ## Quiet Windows
 
 Core > Gaming Mode > **Quiet Windows** turns off the Windows interruptions that can reach
