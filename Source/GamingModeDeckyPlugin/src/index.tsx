@@ -79,8 +79,10 @@ function saveHapticSettings(changes: Parameters<typeof writeSettings>[0]) {
 const playhubWordmarkImage = <img src={playhubWordmark} alt="Core" style={{ display: "block", width: 144, maxWidth: "100%", height: 36, objectFit: "contain", objectPosition: "left center" }} />;
 // Core UI: no logo in Quick Access (the ring mark lives in the Steam menu only); the plain name instead. Core UI off
 // brings the wordmark back.
+const noSubscribe = () => () => {};
+const alwaysOff = () => false;
 function CoreTitle() {
-  const on = React.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
+  const on = React.useSyncExternalStore(coreUiSetting?.subscribe ?? noSubscribe, coreUiSetting?.get ?? alwaysOff, coreUiSetting?.get ?? alwaysOff);
   return on ? <span style={{ display: "block", lineHeight: "36px", fontSize: 20, fontWeight: 600, color: "#FFFFFF" }}>Core</span> : playhubWordmarkImage;
 }
 const playhubTitle = <CoreTitle />;
@@ -1175,25 +1177,29 @@ export default definePlugin(() => {
   let jarvisLive: { enabled: () => boolean; snapshot: () => { listening: unknown; working: boolean } } | undefined;
   const gameRunning = () => Number((window as any).SteamUIStore?.MainRunningAppID ?? (DFL as any).Router?.MainRunningAppID ?? 0) > 0;
   // Core UI phase 2: the Library's icons (the user's own set from %APPDATA%\\GamingMode\\icons, else Core's originals),
-  // Core's plugin logos on the Quick Access rail, both only while Core UI is on (docs/eternal/CORE-UI.md).
-  const coreIcons = createIconStore(() => controlCall<[], any>("get_core_icons"));
-  const library = createLibraryDecorator({ icons: coreIcons.get });
-  const railIcon = (name: string) => {
-    const glyph = coreUiSetting.get() ? corePluginGlyph(name) : undefined;
-    return glyph ? <span aria-hidden="true" style={{ display: "flex", width: "1em", height: "1em" }}
-      dangerouslySetInnerHTML={{ __html: glyph.replace("<svg ", '<svg width="100%" height="100%" ') }} /> : undefined;
-  };
-  setQamPluginIconFallback(railIcon);
-  setCoreHomeIcons(coreIcons.get);
-  const stopRailIcons = coreUiSetting.subscribe(() => { setQamPluginIconFallback(railIcon); void coreIcons.refresh(true); });
-  const stopCoreUi = installOptionalHook("Core UI", () => installCoreUi({ ui: DFL, decorate: library.decorate, undecorate: library.undecorate, orb: {
+  // Core's plugin logos on the Quick Access rail and Core Home's console icons, all only while Core UI is on
+  // (docs/eternal/CORE-UI.md). Inside the optional hook: a failure here leaves Core UI off, never the plugin.
+  const stopCoreUi = installOptionalHook("Core UI", () => {
+    const coreIcons = createIconStore(() => controlCall<[], any>("get_core_icons"));
+    const library = createLibraryDecorator({ icons: coreIcons.get });
+    const railIcon = (name: string) => {
+      const glyph = coreUiSetting.get() ? corePluginGlyph(name) : undefined;
+      return glyph ? <span aria-hidden="true" style={{ display: "flex", width: "1em", height: "1em" }}
+        dangerouslySetInnerHTML={{ __html: glyph.replace("<svg ", '<svg width="100%" height="100%" ') }} /> : undefined;
+    };
+    const stopLook = installCoreUi({ ui: DFL, decorate: library.decorate, undecorate: library.undecorate, orb: {
     state: () => {
       const live = jarvisLive?.snapshot();
       return orbState({ enabled: jarvisLive?.enabled() === true, listening: !!live?.listening, working: live?.working === true,
         readyUntil: presence.readyUntil(), now: Date.now(), gameRunning: gameRunning() });
     },
     subscribe: presence.subscribe,
-  } }));
+  } });
+    setQamPluginIconFallback(railIcon);
+    setCoreHomeIcons(coreIcons.get);
+    const stopRailIcons = coreUiSetting.subscribe(() => { setQamPluginIconFallback(railIcon); void coreIcons.refresh(true); });
+    return () => { stopRailIcons(); setQamPluginIconFallback(undefined); stopLook(); };
+  });
   const stopStoreLibraryUi = installOptionalHook("Store game actions", () => installStoreLibrarySteamUi(() => currentLocale));
   const stopUpdateNotice = installOptionalHook("Update notice", () => installPlayhubUpdateNotice({
     main: () => {

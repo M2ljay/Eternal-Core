@@ -67,6 +67,12 @@ function fixture(failing, runtime = {}) {
     './jarvisPresence':jarvisPresence,
     // Core UI phase 1 is an optional integration like the others.
     './coreUi':{installCoreUi:install('core ui')},
+    // Core UI 3.3.3: the Library icons, plugin logos and Core Home's icons are set up inside the same hook.
+    './coreUiSetting':{coreUiSetting:{get:()=>true,set:noop,subscribe:()=>noop}},
+    './coreLibraryIcons':{createIconStore:()=>({get:()=>undefined,refresh:async()=>{}}),createLibraryDecorator:()=>({decorate:noop,undecorate:noop})},
+    './corePluginLogos':{corePluginGlyph:()=>undefined},
+    './qamLayoutRuntime':{setQamPluginIconFallback:noop},
+    './coreHome':{setCoreHomeIcons:noop},
     './steamNavigationReturn':steamNavigationReturn,
     './steamFocusEvents':steamFocusEvents,
     './steamModeCommands':steamModeCommands,

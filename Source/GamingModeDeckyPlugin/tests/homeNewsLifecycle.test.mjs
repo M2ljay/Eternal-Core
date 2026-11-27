@@ -11,7 +11,7 @@ test('Home editorial survives uninstall/reinstall without mutating native or ano
  const routes=new Set();const routerHook={addPatch:(_,fn)=>(routes.add(fn),fn),removePatch:(_,fn)=>routes.delete(fn)};
  const decky={SP_REACT:React,DFL:{},routerHook}; const helper={};
  vm.runInNewContext(compile(read('reactOutputPatch.ts')),{exports:helper,require:()=>decky});
- function install(){const exports={};vm.runInNewContext(compile(read('HomeNews.tsx')),{exports,window:{},console,require:path=>path==='./decky'?decky:path==='./reactOutputPatch'?helper:path==='./controlBackend'?{call:async()=>({enabled:true,country:'auto'})}:isCorePalette(path)?corePalette:path==='./DailyHistory'?{HistoryTabs:function HistoryTabs(){},notifyHistoryLanguageChanged(){}}:{}});return exports.installHomeNews(()=> 'it');}
+ function install(){const exports={};vm.runInNewContext(compile(read('HomeNews.tsx')),{exports,window:{},console,require:path=>path==='./decky'?decky:path==='./reactOutputPatch'?helper:path==='./controlBackend'?{call:async()=>({enabled:true,country:'auto'})}:isCorePalette(path)?corePalette:path==='./DailyHistory'?{HistoryTabs:function HistoryTabs(){},notifyHistoryLanguageChanged(){}}:path==='./coreHome'?{CoreHomeTabs:function CoreHomeTabs(){}}:{}});return exports.installHomeNews(()=> 'it');}
  const Tabs = () => React.createElement('section',{tabs:[{id:'Recommended',title:'Native'}]});
  const Inner = () => React.createElement(Tabs,{strActiveTab:'Recommended',setActiveTab(){}});
  const Outer = () => React.createElement(Inner);
@@ -21,10 +21,11 @@ test('Home editorial survives uninstall/reinstall without mutating native or ano
  const render = root=>{let node=root;for(let n=0;n<3;n++)node=node.type(node.props);return node;};
  const stop=install();const first=[...routes][0](route);
  assert.equal(route.children.type,OtherPlugin,'native route must not be mutated');
- assert.equal(render(first.children).type.name,'HistoryTabs');
+ // Core UI 3.3.3: Core Home (coreHome.tsx) arranges the tabs and renders HistoryTabs inside.
+ assert.equal(render(first.children).type.name,'CoreHomeTabs');
  assert.equal([...routes][0](first).children.type,first.children.type,'stable identity on repeat patch');
  stop();assert.equal(routes.size,0);assert.equal(render(first.children).type,'section','stopped wrapper renders native');
  const stopSecond=install();const second=[...routes][0](route);
- assert.equal(render(second.children).type.name,'HistoryTabs','new installation owns active output');
+ assert.equal(render(second.children).type.name,'CoreHomeTabs','new installation owns active output');
  stopSecond();await Promise.resolve();
 });
