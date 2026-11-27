@@ -110,7 +110,7 @@ jobs:
 
       - name: Mark III Big Picture plugin tests (heartbeat, Core Repair tile, optional startup, Health, Voice and Stream mode sections)
         working-directory: Source/GamingModeDeckyPlugin
-        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs tests/coreHealthSection.test.mjs tests/coreVoiceSection.test.mjs tests/coreStreamMode.test.mjs
+        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs tests/coreHealthSection.test.mjs tests/coreVoiceSection.test.mjs tests/coreStreamMode.test.mjs tests/steamModules.test.mjs tests/steamUpdateCard.test.mjs
 
       # Core Health: reading the home server's core-status.json, every row's verdict and the notice
       # rules (once a day per problem; a dismissed problem returns only if it changes).
