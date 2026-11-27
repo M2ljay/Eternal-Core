@@ -167,10 +167,29 @@ public partial class App : Application
             {
                 string backup = Path.Combine(AppPaths.LocalDataRoot, "couch-machine.json");
                 var registry = new Playhub.Shared.CouchRegistryWindows();
-                if (string.Equals(parsed[1], "apply", StringComparison.OrdinalIgnoreCase)) { Playhub.Shared.CouchHardening.Apply(registry, Playhub.Shared.CouchHardening.Values(true), backup); code = 0; }
+                if (string.Equals(parsed[1], "apply", StringComparison.OrdinalIgnoreCase)) { Playhub.Shared.CouchHardening.Apply(registry, Playhub.Shared.CouchHardening.MachineValues(registry), backup); code = 0; }
                 else if (string.Equals(parsed[1], "undo", StringComparison.OrdinalIgnoreCase)) { Playhub.Shared.CouchHardening.Undo(registry, true, backup); code = 0; }
             }
             catch (Exception error) { Diag.Crash("Quiet Windows (machine)", error); }
+            Environment.Exit(code);
+            return true;
+        }
+        // Console guards: the BitLocker parts that need administrator rights, started elevated by the app itself
+        // from the desktop (one Windows prompt each; never at the TV). See Shared/BitLockerGuard.cs.
+        if (parsed.Count is 2 or 3 && string.Equals(parsed[0], "console-guard", StringComparison.OrdinalIgnoreCase))
+        {
+            int code = 1;
+            try
+            {
+                string verb = parsed[1].ToLowerInvariant();
+                if (verb == "bitlocker-check" && parsed.Count == 2)
+                    code = Playhub.Shared.BitLockerGuardWindows.Check(Path.Combine(AppPaths.LocalDataRoot, Playhub.Shared.BitLockerGuard.CheckFileName)) is null ? 1 : 0;
+                else if (verb == "bitlocker-guard-on" && parsed.Count == 3 && Playhub.Shared.BitLockerGuard.IsUserSid(parsed[2]))
+                    code = Playhub.Shared.BitLockerGuardWindows.Install(parsed[2]) ? 0 : 1;
+                else if (verb == "bitlocker-guard-off" && parsed.Count == 2)
+                    code = Playhub.Shared.BitLockerGuardWindows.Remove() ? 0 : 1;
+            }
+            catch (Exception error) { Diag.Crash("Console guards (elevated)", error); }
             Environment.Exit(code);
             return true;
         }

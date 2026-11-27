@@ -201,6 +201,44 @@ foreach (var language in LocalizationService.Languages.Where(language => languag
 }
 Check(eternalMarkIII.All(key => LocalizationService.Translate("it", key) == key), "Mark III Italian source strings render as written");
 
+// Console guards (MainWindow.MarkIII.cs, Shared/CouchHardening.cs EditionFixes): the desktop card and the
+// edition-aware Quiet Windows lines, in every language.
+string[] consoleGuards =
+{
+    "Resta una console",
+    "Core controlla che il PC del salotto non chieda mai tastiera, mouse o password e che la TV resti a posto. Lo stato è in Accesso rapido > Core > Salute.",
+    "Rimanda dietro la Big Picture le finestre dei launcher",
+    "Quando Epic, EA app, Ubisoft Connect, l'app Xbox o Battle.net si aprono da sole sopra la Big Picture e non stai giocando, Core le sposta dietro senza chiuderle. Se ne riporti una davanti tre volte in dieci minuti, Core la lascia stare.",
+    "Controlli al risveglio",
+    "Dopo il risveglio Core verifica che la Big Picture sia in primo piano, che la TV sia sull'ingresso di Core e che la rete via cavo funzioni. Se serve, riprende il primo piano o ripete il cambio di ingresso una sola volta.",
+    "BitLocker: il controllo della chiave di ripristino e la protezione per gli aggiornamenti del firmware chiedono i permessi di amministratore una sola volta, qui sul desktop. Core non legge né salva mai la chiave; conferma il backup su account.microsoft.com/devices/recoverykey.",
+    "Controlla BitLocker",
+    "Attiva la protezione BitLocker",
+    "Rimuovi la protezione BitLocker",
+    "Accesso automatico: Core non salva password. Per configurarlo di nuovo usa Autologon di Microsoft Sysinternals, che fa conservare la password a Windows in forma cifrata, e in Impostazioni > Account > Opzioni di accesso disattiva l'accesso solo con Windows Hello.",
+    "Dimentica schermo e audio normali",
+    "BitLocker controllato. Il risultato è in Accesso rapido > Core > Salute.",
+    "Il controllo di BitLocker non è riuscito o il permesso di amministratore è stato negato.",
+    "Protezione BitLocker attiva: prima di un aggiornamento del firmware Core sospende BitLocker per un solo riavvio.",
+    "Protezione BitLocker rimossa.",
+    "Serve il permesso di amministratore.",
+    "Schermo, audio e controller normali dimenticati.",
+    "Windows Home: nessun driver da Windows Update per i dispositivi",
+    "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale"
+};
+foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
+{
+    foreach (var key in consoleGuards)
+    {
+        var translated = LocalizationService.Translate(language.Key, key);
+        if (string.IsNullOrWhiteSpace(translated) || translated == key)
+            throw new Exception($"Console guards string is not translated: {language.Key}/{key}");
+        if (!Tokens(translated).SequenceEqual(Tokens(key)))
+            throw new Exception($"Console guards string format token mismatch: {language.Key}/{key}");
+    }
+    Check(true, $"{language.Key}: {consoleGuards.Length} console guards strings translate");
+}
+
 // Eternal Core rebrand (docs/eternal/REBRAND.md): the app is called Core everywhere the user reads it.
 // "Playhub" stays only where it names something that still carries that name: the upstream project in
 // the credits, the upstream Playhub-* plugin suite, and the Playhub.exe file. Any other product-name use is a missed string.

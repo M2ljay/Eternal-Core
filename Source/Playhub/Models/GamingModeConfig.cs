@@ -71,6 +71,9 @@ public sealed class GamingOptions
     public bool CoreHealthAlertsEnabled { get; set; } = true;
     // Days a pending Steam client version waits before Core updates Steam (agent SteamUpdateHold.cs).
     public int SteamUpdateSoakDays { get; set; } = 10;
+    // Console guards (agent ConsoleGuards.cs): launcher pop-ups pushed behind Big Picture, checks after a wake.
+    public bool ConsoleLauncherFocusGuard { get; set; } = true;
+    public bool ConsoleWakeChecks { get; set; } = true;
     public List<StartupAppConfig> CustomStartupApps { get; set; } = new();
 
     // Qui finiscono le opzioni che vivono solo lato agente - fra cui le app

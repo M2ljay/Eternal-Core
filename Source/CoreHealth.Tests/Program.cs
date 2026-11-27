@@ -1,5 +1,5 @@
 // Core Health tests (Linux-runnable): reading core-status.json, the server path, every row's
-// verdict and the notice rules (once a day per problem, dismissed until it changes).
+// verdict and the notice rules (once a day per problem, dismissed until it changes), and the console guards.
 using System.Text.Json;
 using GamingMode.Services;
 
@@ -171,6 +171,9 @@ try
 	Check(HealthAlertPolicy.Load(file).Count == 0, "alert: a broken ledger starts fresh");
 }
 finally { File.Delete(file); }
+
+// ---------- console guards (ConsoleGuardTests.cs) ----------
+ConsoleGuardTests.Run(Check);
 
 Console.WriteLine($"ALL PASS ({passed} checks)");
 return 0;

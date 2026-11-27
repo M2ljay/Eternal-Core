@@ -20,7 +20,7 @@ namespace GamingMode.Services;
 // check, Core Repair's actions, the wake sequence and their HTTP endpoints. Core Health (the
 // Quick Access health section and its notices) is in MarkIIIHost.Health.cs; Core Voice (microphone
 // mute and the Xbox party button) in MarkIIIHost.Voice.cs; Stream mode (the TV left alone while the PC
-// streams to another device) in MarkIIIHost.Stream.cs.
+// streams to another device) in MarkIIIHost.Stream.cs; the console guards in MarkIIIHost.Console.cs.
 //
 // Fail-safe by construction: every feature runs beside Gaming Mode, never in front of it.
 // Each loop iteration, power event and endpoint catches its own failures, logs them and
@@ -98,6 +98,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 		catch (Exception error) { _logger.Error("Voice: could not start; the microphone mute and party button are unavailable.", error); }
 		try { StartStream(); }
 		catch (Exception error) { _logger.Error("Stream mode: could not start; the TV is handled as usual until the next check.", error); }
+		try { StartConsole(stopping); }
+		catch (Exception error) { _logger.Error("Console guards: could not start; their Health rows still read, launcher pop-ups are left alone.", error); }
 		_ = Task.Run(() => LoopAsync(stopping));
 		// SystemEvents needs a thread it can own: subscribing from a pool (MTA) thread makes
 		// it create its own hidden window and message loop.
@@ -117,6 +119,7 @@ internal sealed partial class MarkIIIHost : IDisposable
 	public void Dispose()
 	{
 		StopVoice();
+		StopConsole();
 		lock (_sync)
 		{
 			if (!_subscribed) return;
@@ -255,6 +258,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 		{
 			case UpdateNightAction.Restart:
 				UpdateNightPolicy.Save(_updateNightPath, state with { ScheduledFor = null, LastNight = now });
+				// Console guards: a staged firmware update with BitLocker on would ask for the recovery key.
+				SuspendBitLockerForFirmware("update night");
 				_logger.Info("Update night: restarting into Gaming Mode for Windows updates.");
 				_manager.RestartInMode(ModeKind.Gaming);
 				return;
@@ -866,6 +871,7 @@ internal sealed partial class MarkIIIHost : IDisposable
 		lock (_streamSync) streamedAtSleep = _streamSettings.StreamingAtSleep;
 		if (!gaming) { ClearStreamAtSleep(); return; }
 		StreamState streamNow = CheckStream();
+		NoteWakeTvOutcome(null);
 		TvSettings tv = config.Gaming.Tv ?? new TvSettings();
 		Task tvReady = tv.Enabled && tv.TurnOnWithCore
 			? Task.Run(async () =>
@@ -876,9 +882,13 @@ internal sealed partial class MarkIIIHost : IDisposable
 				if (held is not null) { _logger.Info($"TV on wake: Stream mode ({held}); nothing sent to the TV."); return; }
 				TvResult result = await _tv.WakeAndSwitchAsync(TimeSpan.FromSeconds(30), CancellationToken.None).ConfigureAwait(false);
 				_logger.Info($"TV on wake: {result.Outcome}.");
+				NoteWakeTvOutcome(result.Outcome);
 				if (result.Outcome == TvOutcome.Done) await Task.Delay(1200).ConfigureAwait(false);
 			})
 			: Task.CompletedTask;
+		// Console guards: after the TV wake, check Big Picture, the TV input and the network (once each).
+		try { StartWakeCheck(tvReady); }
+		catch (Exception error) { _logger.Error("Console guards: wake check could not start.", error); }
 		// No TV wake to make the stream decision: the note from before the sleep has done its job.
 		if (!(tv.Enabled && tv.TurnOnWithCore)) ClearStreamAtSleep();
 		var decision = BootSequencePolicy.Decide(BootSequenceTrigger.Wake, config.Gaming.Splash.BootSequenceEnabled, config.Gaming.Splash.BootSoundEnabled,
@@ -1002,5 +1012,6 @@ internal sealed partial class MarkIIIHost : IDisposable
 		MapHealth(app);
 		MapVoice(app);
 		MapStream(app);
+		MapConsole(app);
 	}
 }

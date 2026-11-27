@@ -100,6 +100,8 @@ public sealed partial class MainWindow
         gaming.QuietWindowsToasts = GetToggle("quietToasts");
         gaming.CoreHealthServer = EmptyToNull(_healthServerBox.Text.Trim());
         gaming.CoreHealthAlertsEnabled = GetToggle("healthAlerts");
+        gaming.ConsoleLauncherFocusGuard = GetToggle("consoleLauncherFocus");
+        gaming.ConsoleWakeChecks = GetToggle("consoleWakeChecks");
         if (int.TryParse(GetComboKey(_steamSoakCombo), NumberStyles.None, CultureInfo.InvariantCulture, out int soak)) gaming.SteamUpdateSoakDays = soak;
     }
 
@@ -115,6 +117,8 @@ public sealed partial class MainWindow
         SetToggle("deckyNotice", gaming.DeckyHealthNoticeEnabled);
         SetToggle("quietToasts", gaming.QuietWindowsToasts);
         SetToggle("healthAlerts", gaming.CoreHealthAlertsEnabled);
+        SetToggle("consoleLauncherFocus", gaming.ConsoleLauncherFocusGuard);
+        SetToggle("consoleWakeChecks", gaming.ConsoleWakeChecks);
         _healthServerBox.Text = gaming.CoreHealthServer ?? "";
         int soakDays = gaming.SteamUpdateSoakDays is >= 1 and <= 60 ? gaming.SteamUpdateSoakDays : 10;
         string soakKey = SteamSoakOptions.Select(option => option.Key).OrderBy(key => Math.Abs(int.Parse(key, CultureInfo.InvariantCulture) - soakDays)).First();
@@ -326,7 +330,8 @@ public sealed partial class MainWindow
         _quietList.Children.Clear();
         if (!OperatingSystem.IsWindows()) return;
         var registry = new CouchRegistryWindows();
-        foreach (var fix in CouchHardening.Fixes)
+        // The fixed list plus the update policy that fits this PC's edition (feature-update pin, or Home's driver switch).
+        foreach (var fix in CouchHardening.Fixes.Concat(CouchHardening.EditionFixes(registry)))
             _quietList.Children.Add(new TextBlock { Text = (CouchHardening.IsApplied(registry, fix) ? "✓  " : "○  ") + T(fix.Label), TextWrapping = TextWrapping.Wrap });
     }
 
@@ -350,6 +355,77 @@ public sealed partial class MainWindow
         _quietStatus.Text = T(machine ? "Modifiche annullate."
             : "Le impostazioni dell'utente sono annullate; quelle del PC richiedono i permessi di amministratore.");
         RefreshQuietWindowsStatus();
+    }
+
+    // ---------- console guards (agent ConsoleGuards.cs, docs/eternal/CONSOLE-GUARDS.md) ----------
+
+    private readonly TextBlock _consoleStatus = new() { TextWrapping = TextWrapping.Wrap, Opacity = 0.8 };
+
+    // The PC stays a console: the switches for the two active guards, and the BitLocker parts that need
+    // administrator rights (asked here on the desktop, never at the TV). Everything else is read by the
+    // agent and shown in Quick Access > Core > Health; Windows' setup screens and the update policy are
+    // applied and undone with Quiet Windows above.
+    private FluentCard BuildConsoleGuardsCard()
+    {
+        var card = Card();
+        card.Children.Add(IconHeader(((char)0xE7FC).ToString(), "Resta una console",
+            "Core controlla che il PC del salotto non chieda mai tastiera, mouse o password e che la TV resti a posto. Lo stato è in Accesso rapido > Core > Salute."));
+        AddExplainedToggle(card, "Rimanda dietro la Big Picture le finestre dei launcher",
+            "Quando Epic, EA app, Ubisoft Connect, l'app Xbox o Battle.net si aprono da sole sopra la Big Picture e non stai giocando, Core le sposta dietro senza chiuderle. Se ne riporti una davanti tre volte in dieci minuti, Core la lascia stare.", "consoleLauncherFocus");
+        AddExplainedToggle(card, "Controlli al risveglio",
+            "Dopo il risveglio Core verifica che la Big Picture sia in primo piano, che la TV sia sull'ingresso di Core e che la rete via cavo funzioni. Se serve, riprende il primo piano o ripete il cambio di ingresso una sola volta.", "consoleWakeChecks");
+        card.Children.Add(Body("BitLocker: il controllo della chiave di ripristino e la protezione per gli aggiornamenti del firmware chiedono i permessi di amministratore una sola volta, qui sul desktop. Core non legge né salva mai la chiave; conferma il backup su account.microsoft.com/devices/recoverykey."));
+        card.Children.Add(ActionRow(
+            Button("Controlla BitLocker", CheckBitLockerAsync),
+            Button("Attiva la protezione BitLocker", BitLockerGuardOnAsync),
+            Button("Rimuovi la protezione BitLocker", BitLockerGuardOffAsync)));
+        card.Children.Add(Body("Accesso automatico: Core non salva password. Per configurarlo di nuovo usa Autologon di Microsoft Sysinternals, che fa conservare la password a Windows in forma cifrata, e in Impostazioni > Account > Opzioni di accesso disattiva l'accesso solo con Windows Hello."));
+        card.Children.Add(ActionRow(Button("Dimentica schermo e audio normali", ForgetConsoleNormalAsync)));
+        card.Children.Add(_consoleStatus);
+        return card;
+    }
+
+    private async Task CheckBitLockerAsync()
+    {
+        bool ok = await RunElevatedAsync("console-guard bitlocker-check", "Console guards BitLocker check");
+        _consoleStatus.Text = T(ok ? "BitLocker controllato. Il risultato è in Accesso rapido > Core > Salute."
+            : "Il controllo di BitLocker non è riuscito o il permesso di amministratore è stato negato.");
+    }
+
+    private async Task BitLockerGuardOnAsync()
+    {
+        // The task lets this user (not whoever approves the prompt) start it from the Gaming Mode agent.
+        string? sid = OperatingSystem.IsWindows() ? System.Security.Principal.WindowsIdentity.GetCurrent().User?.Value : null;
+        if (!BitLockerGuard.IsUserSid(sid)) { _consoleStatus.Text = T("Serve il permesso di amministratore."); return; }
+        bool ok = await RunElevatedAsync("console-guard bitlocker-guard-on " + sid, "Console guards BitLocker guard on");
+        _consoleStatus.Text = T(ok ? "Protezione BitLocker attiva: prima di un aggiornamento del firmware Core sospende BitLocker per un solo riavvio."
+            : "Serve il permesso di amministratore.");
+    }
+
+    private async Task BitLockerGuardOffAsync()
+    {
+        bool ok = await RunElevatedAsync("console-guard bitlocker-guard-off", "Console guards BitLocker guard off");
+        _consoleStatus.Text = T(ok ? "Protezione BitLocker rimossa." : "Serve il permesso di amministratore.");
+    }
+
+    private async Task ForgetConsoleNormalAsync()
+    {
+        var reply = await AgentAsync(HttpMethod.Post, "/health/action?id=normal-forget", TimeSpan.FromSeconds(8));
+        _consoleStatus.Text = T(reply is { } answer && answer.TryGetProperty("ok", out var ok) && ok.ValueKind == JsonValueKind.True
+            ? "Schermo, audio e controller normali dimenticati." : "Il servizio Gaming Mode non risponde.");
+    }
+
+    private static async Task<bool> RunElevatedAsync(string arguments, string what)
+    {
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo(Environment.ProcessPath ?? "", arguments) { UseShellExecute = true, Verb = "runas" });
+            if (process is null) return false;
+            await process.WaitForExitAsync();
+            return process.ExitCode == 0;
+        }
+        catch (System.ComponentModel.Win32Exception) { return false; } // the prompt was declined
+        catch (Exception error) { Diag.Crash(what, error); return false; }
     }
 
     // The machine half runs in this same app, restarted elevated: one Windows prompt.

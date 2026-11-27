@@ -33,6 +33,27 @@ static class CouchTests
 			CouchHardening.Undo(registry, true, machine);
 			Check(registry.Count == before, "machine undo leaves no policy behind");
 
+			// Console guards: the update policy that fits the edition (Home ignores the feature-update pin).
+			const string version = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
+			Check(CouchHardening.EditionFixes("Core", "24H2", "26100").Single() is { Id: "driver-search", Machine: true } home
+				&& home.Values.Single() is { Key: @"SOFTWARE\Microsoft\Windows\CurrentVersion\DriverSearching", Name: "SearchOrderConfig", Value: 0 }, "Home: Device Installation Settings' No instead of a pin");
+			Check(CouchHardening.EditionFixes("Professional", "24H2", "26100").Single() is { Id: "feature-pin" } pin
+				&& pin.Values.Select(value => (value.Name, value.Value)).SequenceEqual(new (string, object)[] { ("ProductVersion", "Windows 11"), ("TargetReleaseVersion", 1), ("TargetReleaseVersionInfo", "24H2") }),
+				"Pro: feature updates pinned to the installed version");
+			Check(CouchHardening.EditionFixes("Professional", "22H2", "19045").Single().Values[0].Value is "Windows 10" && CouchHardening.EditionFixes("Professional", "garbage", "26100").Length == 0,
+				"Windows 10 named as such; an unreadable version pins nothing");
+			registry.Write(true, version, "EditionID", "Professional"); registry.Write(true, version, "DisplayVersion", "24H2"); registry.Write(true, version, "CurrentBuild", "26100");
+			int withEdition = registry.Count;
+			CouchHardening.Apply(registry, CouchHardening.MachineValues(registry), machine);
+			Check((int?)registry.Read(true, @"SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate", "TargetReleaseVersion") == 1
+				&& CouchHardening.EditionFixes(registry).All(fix => CouchHardening.IsApplied(registry, fix)), "machine apply includes the edition's policy");
+			CouchHardening.Undo(registry, true, machine);
+			Check(registry.Count == withEdition && registry.Read(true, @"SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate", "TargetReleaseVersionInfo") is null, "undo removes the pin too");
+			Check(CouchHardening.Fixes.Single(fix => fix.Id == "setup-nag").Values.Any(value => value.Name == "ScoobeSystemSettingEnabled")
+				&& CouchHardening.Fixes.Single(fix => fix.Id == "setup-nag").Values.Any(value => value.Name == "SubscribedContent-310093Enabled")
+				&& CouchHardening.Fixes.Single(fix => fix.Id == "tips").Values.Count(value => value.Name.StartsWith("SubscribedContent-", StringComparison.Ordinal)) == 5,
+				"setup screens: SCOOBE, the post-update welcome and the tips/suggestions content");
+
 			registry.Write(false, CouchHardening.GamingToasts.Key, CouchHardening.GamingToasts.Name, 1);
 			Check(CouchHardening.SetGamingToasts(registry, true, toasts) && (int?)registry.Read(false, CouchHardening.GamingToasts.Key, "ToastEnabled") == 0, "Gaming Mode turns Windows banners off");
 			Check(!CouchHardening.SetGamingToasts(registry, true, toasts), "staying in Gaming Mode changes nothing");

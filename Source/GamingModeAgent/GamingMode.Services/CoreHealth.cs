@@ -10,7 +10,7 @@ namespace GamingMode.Services;
 // Eternal Core: "Core Health". One place that says whether the living-room setup is fine: the
 // home server's nightly backup and health (read from http://<server>:8123/local/core-status.json, written
 // by the Aincrad repo's nightly scripts/backup.sh), Windows restarts and update night, the TV, the PC's system drive
-// and Core's own version. Pure: observations in, rows and problems out. The agent gathers the
+// and Core's own version, plus the console guards (ConsoleGuards.cs). Pure: observations in, rows and problems out. The agent gathers the
 // observations (MarkIIIHost) and the Quick Access tab renders the rows (src/HealthSection.tsx).
 internal enum ServerStatusRead { NotConfigured, Unreachable, Missing, Unreadable, Ok }
 
@@ -93,6 +93,9 @@ internal sealed record CoreHealthInputs
 	public string? SteamPendingVersion { get; init; }
 	public DateTimeOffset? SteamPostponedSince { get; init; }
 	public bool SteamPostponedAttention { get; init; }
+	// Console guards (ConsoleGuards.cs, docs/eternal/CONSOLE-GUARDS.md): the PC stays a console. Null leaves
+	// their rows out (the server-only checks and their tests).
+	public ConsoleGuardInputs? Guards { get; init; }
 }
 
 internal sealed record HealthRow(string Id, HealthLevel Level, string State, IReadOnlyDictionary<string, object?> Data);
@@ -342,6 +345,10 @@ internal static class CoreHealthPolicy
 			_ => new HealthRow("microphone", HealthLevel.Unknown, "unknown", mic),
 		});
 
+		// Console guards: display, sound, controllers, sign-ins, BitLocker, Windows' prompts and update policy,
+		// launchers and the wake checks, between the microphone and the PC's disk (ConsoleGuardPolicy.RowOrder).
+		if (input.Guards is { } guards) rows.AddRange(ConsoleGuardPolicy.Rows(guards with { StreamActive = input.StreamActive }, input.Now, problems));
+
 		// PC system drive.
 		var pc = new Dictionary<string, object?> { ["drive"] = input.PcDrive, ["freeBytes"] = input.PcFreeBytes, ["totalBytes"] = input.PcTotalBytes };
 		if (input.PcFreeBytes is not long free || input.PcTotalBytes is not long total || total <= 0) rows.Add(new HealthRow("pc-disk", HealthLevel.Unknown, "unknown", pc));
@@ -431,7 +438,8 @@ internal static class HealthAlertPolicy
 	{
 		0 => null,
 		1 => due[0].NoticeKey,
-		_ => "health.several",
+		// "A few things on the server" only when they are all the server's; otherwise the PC's wording.
+		_ => due.Any(problem => problem.NoticeKey.StartsWith("console.", StringComparison.Ordinal)) ? "console.several" : "health.several",
 	};
 
 	private static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };

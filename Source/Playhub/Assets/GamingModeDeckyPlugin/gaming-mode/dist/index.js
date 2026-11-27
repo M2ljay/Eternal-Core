@@ -60936,7 +60936,8 @@ function UpdateNightCard({ locale }) {
 
 // Eternal Core: Core Health in Quick Access. Turns the agent's GET /health answer
 // (GamingMode.Services/CoreHealth.cs) into the lines HealthSection.tsx shows, in Core's 12
-// languages. Self-contained on purpose: tests/coreHealthSection.test.mjs loads this file alone.
+// languages, including the console guards' rows and buttons (CONSOLE-GUARDS.md). Self-contained on purpose:
+// tests/coreHealthSection.test.mjs and tests/consoleGuards.test.mjs load this file alone.
 const en$2 = {
     title: "Health", allGood: "All good", attention: "Needs attention: {n}", checking: "Checking…", agentDown: "Core's service is not answering.", dismiss: "Dismiss alert",
     r_backup: "Server backup", r_restore: "Restore check", r_drive: "Server drive", r_romm: "RomM", r_restart: "Windows restart", r_night: "Update night", r_tv: "TV", r_pc: "PC disk space", r_core: "Core update",
@@ -61132,6 +61133,359 @@ const copy$3 = {
         r_steam: "Steam अपडेट", stPostponed: "टाला गया: {reason}", stUnsupported: "नया Steam इंस्टॉल किए गए Decky के साथ काम नहीं करता", stUnknown: "Core अभी नहीं बता सकता कि नया Steam Decky के साथ काम करता है या नहीं", stCantCheck: "Core Decky के साथ संगतता नहीं जाँच पा रहा", stFailed: "पिछली कोशिश जाँच में पास नहीं हुई और वापस ले ली गई", stPending: "इंतज़ार में संस्करण: {version}",
     },
 };
+// Console guards (CONSOLE-GUARDS.md): the rows that keep the PC a console, merged into each language below.
+const consoleCopy = {
+    en: {
+        r_display: "Display", r_sound: "Sound output", r_controllers: "Controllers", r_steamSign: "Steam sign-in", r_autoSign: "Automatic sign-in", r_bitlocker: "BitLocker",
+        r_prompts: "Windows setup screens", r_updPolicy: "Update policy", r_launchUpd: "Launcher updates", r_launchFocus: "Launcher pop-ups", r_wake: "After waking",
+        dpNormal: "Normal · {mode}", dpChanged: "Changed: {what}", dpNotSaved: "Not saved yet", dpMissing: "TV not connected", dpSaved: "Normal: {mode}", dpNow: "Now: {mode}",
+        dpResolution: "resolution", dpRefresh: "refresh rate", dpHdr: "HDR", dpPrimary: "main display", dpVrr: "variable refresh",
+        dpVrrNote: "G-Sync and FreeSync can't be read from Windows; only Windows' variable refresh switch is compared.",
+        soNormal: "{name}", soChanged: "Now: {name}", soNotSaved: "Not saved yet", soMissing: "{name} not connected", soStream: "Left to Stream mode", soSaved: "Normal: {name}",
+        coSeen: "{n} connected", coNone: "None connected", coMissing: "Expected, not seen: {n}",
+        siSigned: "Signed in · {name}", siOffline: "Offline mode · {name}", siOut: "Not signed in", siOutDetail: "A sign-in or Steam Guard screen is probably on the TV: sign in there with the controller.",
+        siNoRemember: "Signed in; the next start will ask for the password", siNoRememberDetail: "Sign out and back in with Remember me ticked.", siNotRunning: "Steam not running",
+        asOn: "On · {user}", asOff: "Off: Windows will ask for the password", asExpires: "Ends after {n} more sign-ins", asHello: "Blocked by Windows Hello-only sign-in",
+        asGuide: "Set it up again on the desktop: Core > Gaming Mode > Stays a console.", asPlain: "Windows keeps this password in plain text; Sysinternals Autologon keeps it encrypted.",
+        blOff: "Off", blOn: "On · recovery key protector", blEncrypting: "Encrypting · recovery key protector", blUnchecked: "On · check it on the desktop", blNoKey: "On · no recovery key",
+        blFw: "Firmware update waiting", blFwNoGuard: "Firmware update waiting: may ask for the key", blSuspended: "Suspended", blSuspendedUpd: "Suspended for one restart", blWaiting: "Waiting for activation",
+        blConfirm: "Confirm the key backup at {url}", blBackup: "Windows logged a backup {when}", blCheckDesktop: "Check it on the desktop: Core > Gaming Mode > Stays a console.",
+        blGuardHint: "Turn on BitLocker protection on the desktop so Core can suspend it for one restart.", blNoKeyDetail: "Add a recovery key on the desktop, then back it up to your Microsoft account.",
+        blSuspendedDetail: "Resume it on the desktop: Control Panel > BitLocker > Resume protection.",
+        prOff: "Off", prOn: "On", prDetail: "Undo it any time from Core > Gaming Mode > Quiet Windows.",
+        upApplied: "Drivers held · feature updates stay on {version}", upHome: "Drivers held · Home can't hold feature updates", upNot: "Not applied",
+        upNotDetail: "Apply it on the desktop: Core > Gaming Mode > Quiet Windows.", upHomeDetail: "Windows Home ignores the feature-update pin.",
+        luNone: "Nothing waiting", luPending: "Waiting: {list}", luDetail: "These may ask for administrator rights: let them finish on the desktop.",
+        lfOn: "Watching · {n} today", lfOff: "Off", lfLast: "Last pushed back: {name}",
+        wkNone: "No wake checked yet", wkOk: "OK · {when}", wkFixed: "Fixed by Core · {when}", wkProblem: "Needs a look · {when}", wkNet: "Network cable unplugged", wkOff: "Off",
+        wkFocus: "Big Picture was brought back to the front.", wkInput: "The TV input switch was sent again.", wkNoBp: "Big Picture was not visible.", wkTvNo: "The TV was not on Core's input.",
+        wkTemps: "Temperatures: not shown (Windows has no driver-free reading).", wkAdapter: "Adapter: {name}",
+        aDisplayRestore: "Restore display settings", aDisplaySave: "Save current display as normal", aSoundRestore: "Switch sound back", aSoundSave: "Save current sound output as normal",
+        aControllersExpect: "Mark these controllers as expected", aPromptsOff: "Turn off setup screens", aBitlockerSuspend: "Suspend BitLocker for one restart", aWakeNow: "Run the wake check now",
+        aDone: "Done", aFailed: "That didn't work", aNotWhilePlaying: "Not while a game runs",
+    },
+    it: {
+        r_display: "Schermo", r_sound: "Uscita audio", r_controllers: "Controller", r_steamSign: "Accesso a Steam", r_autoSign: "Accesso automatico", r_bitlocker: "BitLocker",
+        r_prompts: "Schermate di configurazione", r_updPolicy: "Criteri di aggiornamento", r_launchUpd: "Aggiornamenti dei launcher", r_launchFocus: "Finestre dei launcher", r_wake: "Dopo il risveglio",
+        dpNormal: "Normale · {mode}", dpChanged: "Cambiato: {what}", dpNotSaved: "Non ancora salvato", dpMissing: "TV non collegata", dpSaved: "Normale: {mode}", dpNow: "Ora: {mode}",
+        dpResolution: "risoluzione", dpRefresh: "frequenza", dpHdr: "HDR", dpPrimary: "schermo principale", dpVrr: "frequenza variabile",
+        dpVrrNote: "G-Sync e FreeSync non si leggono da Windows; si confronta solo l'interruttore della frequenza variabile di Windows.",
+        soNormal: "{name}", soChanged: "Ora: {name}", soNotSaved: "Non ancora salvata", soMissing: "{name} non collegato", soStream: "Lasciata alla modalità streaming", soSaved: "Normale: {name}",
+        coSeen: "{n} collegati", coNone: "Nessuno collegato", coMissing: "Attesi, non visti: {n}",
+        siSigned: "Connesso · {name}", siOffline: "Modalità offline · {name}", siOut: "Non connesso", siOutDetail: "Sulla TV c'è probabilmente l'accesso o Steam Guard: accedi lì con il controller.",
+        siNoRemember: "Connesso; al prossimo avvio chiederà la password", siNoRememberDetail: "Esci e rientra con Ricordami selezionato.", siNotRunning: "Steam non è avviato",
+        asOn: "Attivo · {user}", asOff: "Spento: Windows chiederà la password", asExpires: "Finisce tra {n} accessi", asHello: "Bloccato dall'accesso solo con Windows Hello",
+        asGuide: "Configuralo di nuovo dal desktop: Core > Gaming Mode > Resta una console.", asPlain: "Windows conserva questa password in chiaro; Autologon di Sysinternals la conserva cifrata.",
+        blOff: "Spento", blOn: "Attivo · chiave di ripristino presente", blEncrypting: "Crittografia in corso · chiave di ripristino presente", blUnchecked: "Attivo · controllalo dal desktop", blNoKey: "Attivo · nessuna chiave di ripristino",
+        blFw: "Aggiornamento del firmware in attesa", blFwNoGuard: "Firmware in attesa: potrebbe chiedere la chiave", blSuspended: "Sospeso", blSuspendedUpd: "Sospeso per un riavvio", blWaiting: "In attesa di attivazione",
+        blConfirm: "Conferma il backup della chiave su {url}", blBackup: "Windows ha registrato un backup {when}", blCheckDesktop: "Controllalo dal desktop: Core > Gaming Mode > Resta una console.",
+        blGuardHint: "Attiva la protezione BitLocker dal desktop così Core può sospenderlo per un riavvio.", blNoKeyDetail: "Aggiungi una chiave di ripristino dal desktop e salvala nel tuo account Microsoft.",
+        blSuspendedDetail: "Riattivalo dal desktop: Pannello di controllo > BitLocker > Riprendi la protezione.",
+        prOff: "Spente", prOn: "Attive", prDetail: "Puoi annullare quando vuoi da Core > Gaming Mode > Windows tranquillo.",
+        upApplied: "Driver bloccati · funzionalità ferme alla {version}", upHome: "Driver bloccati · Home non può fermare le funzionalità", upNot: "Non applicati",
+        upNotDetail: "Applicali dal desktop: Core > Gaming Mode > Windows tranquillo.", upHomeDetail: "Windows Home ignora il blocco della versione.",
+        luNone: "Niente in attesa", luPending: "In attesa: {list}", luDetail: "Potrebbero chiedere i permessi di amministratore: lasciali finire sul desktop.",
+        lfOn: "Attivo · {n} oggi", lfOff: "Spento", lfLast: "Ultima rimandata dietro: {name}",
+        wkNone: "Nessun risveglio controllato", wkOk: "OK · {when}", wkFixed: "Sistemato da Core · {when}", wkProblem: "Da controllare · {when}", wkNet: "Cavo di rete scollegato", wkOff: "Spento",
+        wkFocus: "La Big Picture è stata riportata in primo piano.", wkInput: "Il cambio di ingresso della TV è stato ripetuto.", wkNoBp: "La Big Picture non era visibile.", wkTvNo: "La TV non era sull'ingresso di Core.",
+        wkTemps: "Temperature: non mostrate (Windows non le legge senza driver).", wkAdapter: "Scheda: {name}",
+        aDisplayRestore: "Ripristina le impostazioni dello schermo", aDisplaySave: "Salva lo schermo attuale come normale", aSoundRestore: "Riporta indietro l'audio", aSoundSave: "Salva l'uscita audio attuale come normale",
+        aControllersExpect: "Segna questi controller come attesi", aPromptsOff: "Spegni le schermate di configurazione", aBitlockerSuspend: "Sospendi BitLocker per un riavvio", aWakeNow: "Controlla ora il risveglio",
+        aDone: "Fatto", aFailed: "Non ha funzionato", aNotWhilePlaying: "Non durante un gioco",
+    },
+    es: {
+        r_display: "Pantalla", r_sound: "Salida de sonido", r_controllers: "Mandos", r_steamSign: "Sesión de Steam", r_autoSign: "Inicio de sesión automático", r_bitlocker: "BitLocker",
+        r_prompts: "Pantallas de configuración", r_updPolicy: "Directiva de actualizaciones", r_launchUpd: "Actualizaciones de launchers", r_launchFocus: "Ventanas de launchers", r_wake: "Al despertar",
+        dpNormal: "Normal · {mode}", dpChanged: "Cambiado: {what}", dpNotSaved: "Aún sin guardar", dpMissing: "TV no conectada", dpSaved: "Normal: {mode}", dpNow: "Ahora: {mode}",
+        dpResolution: "resolución", dpRefresh: "frecuencia", dpHdr: "HDR", dpPrimary: "pantalla principal", dpVrr: "frecuencia variable",
+        dpVrrNote: "G-Sync y FreeSync no se pueden leer desde Windows; solo se compara el interruptor de frecuencia variable de Windows.",
+        soNormal: "{name}", soChanged: "Ahora: {name}", soNotSaved: "Aún sin guardar", soMissing: "{name} no conectado", soStream: "En manos del modo streaming", soSaved: "Normal: {name}",
+        coSeen: "{n} conectados", coNone: "Ninguno conectado", coMissing: "Esperados, no vistos: {n}",
+        siSigned: "Sesión iniciada · {name}", siOffline: "Modo sin conexión · {name}", siOut: "Sin sesión", siOutDetail: "Probablemente hay una pantalla de inicio de sesión o Steam Guard en la TV: inicia sesión allí con el mando.",
+        siNoRemember: "Sesión iniciada; el próximo arranque pedirá la contraseña", siNoRememberDetail: "Cierra sesión y vuelve a entrar con Recordarme marcado.", siNotRunning: "Steam no está abierto",
+        asOn: "Activado · {user}", asOff: "Desactivado: Windows pedirá la contraseña", asExpires: "Termina tras {n} inicios más", asHello: "Bloqueado por el inicio solo con Windows Hello",
+        asGuide: "Vuelve a configurarlo en el escritorio: Core > Gaming Mode > Sigue siendo una consola.", asPlain: "Windows guarda esta contraseña en texto plano; Autologon de Sysinternals la guarda cifrada.",
+        blOff: "Desactivado", blOn: "Activado · con clave de recuperación", blEncrypting: "Cifrando · con clave de recuperación", blUnchecked: "Activado · compruébalo en el escritorio", blNoKey: "Activado · sin clave de recuperación",
+        blFw: "Actualización de firmware pendiente", blFwNoGuard: "Firmware pendiente: puede pedir la clave", blSuspended: "Suspendido", blSuspendedUpd: "Suspendido durante un reinicio", blWaiting: "Esperando activación",
+        blConfirm: "Confirma la copia de la clave en {url}", blBackup: "Windows registró una copia {when}", blCheckDesktop: "Compruébalo en el escritorio: Core > Gaming Mode > Sigue siendo una consola.",
+        blGuardHint: "Activa la protección de BitLocker en el escritorio para que Core pueda suspenderlo durante un reinicio.", blNoKeyDetail: "Añade una clave de recuperación en el escritorio y guárdala en tu cuenta Microsoft.",
+        blSuspendedDetail: "Reanúdalo en el escritorio: Panel de control > BitLocker > Reanudar protección.",
+        prOff: "Desactivadas", prOn: "Activadas", prDetail: "Puedes deshacerlo cuando quieras en Core > Gaming Mode > Windows tranquilo.",
+        upApplied: "Controladores retenidos · características en {version}", upHome: "Controladores retenidos · Home no puede retener características", upNot: "No aplicada",
+        upNotDetail: "Aplícala en el escritorio: Core > Gaming Mode > Windows tranquilo.", upHomeDetail: "Windows Home ignora la fijación de versión.",
+        luNone: "Nada pendiente", luPending: "Pendiente: {list}", luDetail: "Pueden pedir permisos de administrador: deja que terminen en el escritorio.",
+        lfOn: "Vigilando · {n} hoy", lfOff: "Desactivado", lfLast: "Última enviada detrás: {name}",
+        wkNone: "Ningún despertar comprobado", wkOk: "OK · {when}", wkFixed: "Arreglado por Core · {when}", wkProblem: "Revisar · {when}", wkNet: "Cable de red desconectado", wkOff: "Desactivado",
+        wkFocus: "Big Picture volvió al frente.", wkInput: "Se repitió el cambio de entrada de la TV.", wkNoBp: "Big Picture no estaba visible.", wkTvNo: "La TV no estaba en la entrada de Core.",
+        wkTemps: "Temperaturas: no se muestran (Windows no las lee sin controladores).", wkAdapter: "Adaptador: {name}",
+        aDisplayRestore: "Restaurar la configuración de pantalla", aDisplaySave: "Guardar la pantalla actual como normal", aSoundRestore: "Volver al sonido anterior", aSoundSave: "Guardar la salida de sonido actual como normal",
+        aControllersExpect: "Marcar estos mandos como esperados", aPromptsOff: "Desactivar las pantallas de configuración", aBitlockerSuspend: "Suspender BitLocker durante un reinicio", aWakeNow: "Comprobar el despertar ahora",
+        aDone: "Hecho", aFailed: "No funcionó", aNotWhilePlaying: "No durante una partida",
+    },
+    fr: {
+        r_display: "Affichage", r_sound: "Sortie audio", r_controllers: "Manettes", r_steamSign: "Connexion Steam", r_autoSign: "Connexion automatique", r_bitlocker: "BitLocker",
+        r_prompts: "Écrans de configuration", r_updPolicy: "Stratégie de mise à jour", r_launchUpd: "Mises à jour des launchers", r_launchFocus: "Fenêtres des launchers", r_wake: "Au réveil",
+        dpNormal: "Normal · {mode}", dpChanged: "Modifié : {what}", dpNotSaved: "Pas encore enregistré", dpMissing: "TV non connectée", dpSaved: "Normal : {mode}", dpNow: "Actuel : {mode}",
+        dpResolution: "résolution", dpRefresh: "fréquence", dpHdr: "HDR", dpPrimary: "écran principal", dpVrr: "fréquence variable",
+        dpVrrNote: "G-Sync et FreeSync ne sont pas lisibles depuis Windows ; seul l'interrupteur de fréquence variable de Windows est comparé.",
+        soNormal: "{name}", soChanged: "Actuel : {name}", soNotSaved: "Pas encore enregistrée", soMissing: "{name} non connecté", soStream: "Laissée au mode streaming", soSaved: "Normal : {name}",
+        coSeen: "{n} connectées", coNone: "Aucune connectée", coMissing: "Attendues, non vues : {n}",
+        siSigned: "Connecté · {name}", siOffline: "Mode hors ligne · {name}", siOut: "Non connecté", siOutDetail: "Un écran de connexion ou Steam Guard est sans doute sur la TV : connectez-vous là avec la manette.",
+        siNoRemember: "Connecté ; le prochain démarrage demandera le mot de passe", siNoRememberDetail: "Déconnectez-vous puis reconnectez-vous en cochant Se souvenir de moi.", siNotRunning: "Steam n'est pas lancé",
+        asOn: "Active · {user}", asOff: "Désactivée : Windows demandera le mot de passe", asExpires: "S'arrête après {n} connexions", asHello: "Bloquée par la connexion Windows Hello uniquement",
+        asGuide: "Reconfigurez-la depuis le bureau : Core > Gaming Mode > Reste une console.", asPlain: "Windows garde ce mot de passe en clair ; Autologon de Sysinternals le garde chiffré.",
+        blOff: "Désactivé", blOn: "Actif · clé de récupération présente", blEncrypting: "Chiffrement en cours · clé de récupération présente", blUnchecked: "Actif · vérifiez-le depuis le bureau", blNoKey: "Actif · aucune clé de récupération",
+        blFw: "Mise à jour du firmware en attente", blFwNoGuard: "Firmware en attente : la clé pourrait être demandée", blSuspended: "Suspendu", blSuspendedUpd: "Suspendu pour un redémarrage", blWaiting: "En attente d'activation",
+        blConfirm: "Vérifiez la sauvegarde de la clé sur {url}", blBackup: "Windows a noté une sauvegarde {when}", blCheckDesktop: "Vérifiez-le depuis le bureau : Core > Gaming Mode > Reste une console.",
+        blGuardHint: "Activez la protection BitLocker depuis le bureau pour que Core puisse le suspendre pour un redémarrage.", blNoKeyDetail: "Ajoutez une clé de récupération depuis le bureau, puis sauvegardez-la dans votre compte Microsoft.",
+        blSuspendedDetail: "Reprenez-le depuis le bureau : Panneau de configuration > BitLocker > Reprendre la protection.",
+        prOff: "Désactivés", prOn: "Actifs", prDetail: "Annulable à tout moment dans Core > Gaming Mode > Windows tranquille.",
+        upApplied: "Pilotes bloqués · fonctionnalités en {version}", upHome: "Pilotes bloqués · Famille ne peut pas bloquer les fonctionnalités", upNot: "Non appliquée",
+        upNotDetail: "Appliquez-la depuis le bureau : Core > Gaming Mode > Windows tranquille.", upHomeDetail: "Windows Famille ignore le blocage de version.",
+        luNone: "Rien en attente", luPending: "En attente : {list}", luDetail: "Elles peuvent demander les droits d'administrateur : laissez-les finir sur le bureau.",
+        lfOn: "Surveillance · {n} aujourd'hui", lfOff: "Désactivé", lfLast: "Dernière renvoyée derrière : {name}",
+        wkNone: "Aucun réveil vérifié", wkOk: "OK · {when}", wkFixed: "Corrigé par Core · {when}", wkProblem: "À vérifier · {when}", wkNet: "Câble réseau débranché", wkOff: "Désactivé",
+        wkFocus: "Big Picture a été ramené au premier plan.", wkInput: "Le changement d'entrée de la TV a été renvoyé.", wkNoBp: "Big Picture n'était pas visible.", wkTvNo: "La TV n'était pas sur l'entrée de Core.",
+        wkTemps: "Températures : non affichées (Windows ne les lit pas sans pilote).", wkAdapter: "Carte : {name}",
+        aDisplayRestore: "Restaurer les réglages d'affichage", aDisplaySave: "Enregistrer l'affichage actuel comme normal", aSoundRestore: "Revenir à la sortie audio", aSoundSave: "Enregistrer la sortie audio actuelle comme normale",
+        aControllersExpect: "Marquer ces manettes comme attendues", aPromptsOff: "Désactiver les écrans de configuration", aBitlockerSuspend: "Suspendre BitLocker pour un redémarrage", aWakeNow: "Vérifier le réveil maintenant",
+        aDone: "Fait", aFailed: "Cela n'a pas marché", aNotWhilePlaying: "Pas pendant une partie",
+    },
+    de: {
+        r_display: "Anzeige", r_sound: "Tonausgabe", r_controllers: "Controller", r_steamSign: "Steam-Anmeldung", r_autoSign: "Automatische Anmeldung", r_bitlocker: "BitLocker",
+        r_prompts: "Windows-Einrichtungsseiten", r_updPolicy: "Update-Richtlinie", r_launchUpd: "Launcher-Updates", r_launchFocus: "Launcher-Fenster", r_wake: "Nach dem Aufwachen",
+        dpNormal: "Normal · {mode}", dpChanged: "Geändert: {what}", dpNotSaved: "Noch nicht gespeichert", dpMissing: "TV nicht verbunden", dpSaved: "Normal: {mode}", dpNow: "Jetzt: {mode}",
+        dpResolution: "Auflösung", dpRefresh: "Bildwiederholrate", dpHdr: "HDR", dpPrimary: "Hauptanzeige", dpVrr: "variable Bildwiederholrate",
+        dpVrrNote: "G-Sync und FreeSync sind unter Windows nicht lesbar; verglichen wird nur der Windows-Schalter für variable Bildwiederholrate.",
+        soNormal: "{name}", soChanged: "Jetzt: {name}", soNotSaved: "Noch nicht gespeichert", soMissing: "{name} nicht verbunden", soStream: "Dem Streaming-Modus überlassen", soSaved: "Normal: {name}",
+        coSeen: "{n} verbunden", coNone: "Keiner verbunden", coMissing: "Erwartet, nicht gesehen: {n}",
+        siSigned: "Angemeldet · {name}", siOffline: "Offlinemodus · {name}", siOut: "Nicht angemeldet", siOutDetail: "Auf dem Fernseher ist wohl eine Anmeldung oder Steam Guard zu sehen: melde dich dort mit dem Controller an.",
+        siNoRemember: "Angemeldet; der nächste Start fragt nach dem Passwort", siNoRememberDetail: "Ab- und wieder anmelden, dabei Angemeldet bleiben ankreuzen.", siNotRunning: "Steam läuft nicht",
+        asOn: "An · {user}", asOff: "Aus: Windows fragt nach dem Passwort", asExpires: "Endet nach {n} weiteren Anmeldungen", asHello: "Blockiert durch Anmeldung nur mit Windows Hello",
+        asGuide: "Am Desktop neu einrichten: Core > Gaming Mode > Bleibt eine Konsole.", asPlain: "Windows speichert dieses Passwort im Klartext; Sysinternals Autologon speichert es verschlüsselt.",
+        blOff: "Aus", blOn: "An · Wiederherstellungsschlüssel vorhanden", blEncrypting: "Verschlüsselt gerade · Wiederherstellungsschlüssel vorhanden", blUnchecked: "An · am Desktop prüfen", blNoKey: "An · kein Wiederherstellungsschlüssel",
+        blFw: "Firmware-Update wartet", blFwNoGuard: "Firmware wartet: fragt evtl. nach dem Schlüssel", blSuspended: "Ausgesetzt", blSuspendedUpd: "Für einen Neustart ausgesetzt", blWaiting: "Wartet auf Aktivierung",
+        blConfirm: "Prüfe die Schlüsselsicherung unter {url}", blBackup: "Windows hat {when} eine Sicherung vermerkt", blCheckDesktop: "Am Desktop prüfen: Core > Gaming Mode > Bleibt eine Konsole.",
+        blGuardHint: "Schalte am Desktop den BitLocker-Schutz ein, damit Core BitLocker für einen Neustart aussetzen kann.", blNoKeyDetail: "Füge am Desktop einen Wiederherstellungsschlüssel hinzu und sichere ihn in deinem Microsoft-Konto.",
+        blSuspendedDetail: "Am Desktop fortsetzen: Systemsteuerung > BitLocker > Schutz fortsetzen.",
+        prOff: "Aus", prOn: "An", prDetail: "Jederzeit rückgängig unter Core > Gaming Mode > Ruhiges Windows.",
+        upApplied: "Treiber gesperrt · Funktionsupdates bleiben bei {version}", upHome: "Treiber gesperrt · Home kann Funktionsupdates nicht halten", upNot: "Nicht angewendet",
+        upNotDetail: "Am Desktop anwenden: Core > Gaming Mode > Ruhiges Windows.", upHomeDetail: "Windows Home ignoriert die Versionsfixierung.",
+        luNone: "Nichts wartet", luPending: "Wartet: {list}", luDetail: "Diese fragen evtl. nach Administratorrechten: lass sie am Desktop fertig werden.",
+        lfOn: "Wacht · {n} heute", lfOff: "Aus", lfLast: "Zuletzt nach hinten geschoben: {name}",
+        wkNone: "Noch kein Aufwachen geprüft", wkOk: "OK · {when}", wkFixed: "Von Core behoben · {when}", wkProblem: "Bitte prüfen · {when}", wkNet: "Netzwerkkabel getrennt", wkOff: "Aus",
+        wkFocus: "Big Picture wurde wieder nach vorn geholt.", wkInput: "Der Eingangswechsel des Fernsehers wurde erneut gesendet.", wkNoBp: "Big Picture war nicht sichtbar.", wkTvNo: "Der Fernseher war nicht auf dem Eingang von Core.",
+        wkTemps: "Temperaturen: nicht angezeigt (Windows liest sie nicht ohne Treiber).", wkAdapter: "Adapter: {name}",
+        aDisplayRestore: "Anzeigeeinstellungen wiederherstellen", aDisplaySave: "Aktuelle Anzeige als normal speichern", aSoundRestore: "Ton zurückwechseln", aSoundSave: "Aktuelle Tonausgabe als normal speichern",
+        aControllersExpect: "Diese Controller als erwartet markieren", aPromptsOff: "Einrichtungsseiten ausschalten", aBitlockerSuspend: "BitLocker für einen Neustart aussetzen", aWakeNow: "Aufwach-Prüfung jetzt ausführen",
+        aDone: "Erledigt", aFailed: "Hat nicht geklappt", aNotWhilePlaying: "Nicht während eines Spiels",
+    },
+    pt: {
+        r_display: "Tela", r_sound: "Saída de som", r_controllers: "Controles", r_steamSign: "Login no Steam", r_autoSign: "Login automático", r_bitlocker: "BitLocker",
+        r_prompts: "Telas de configuração", r_updPolicy: "Política de atualizações", r_launchUpd: "Atualizações de launchers", r_launchFocus: "Janelas de launchers", r_wake: "Ao despertar",
+        dpNormal: "Normal · {mode}", dpChanged: "Alterada: {what}", dpNotSaved: "Ainda não salva", dpMissing: "TV não conectada", dpSaved: "Normal: {mode}", dpNow: "Agora: {mode}",
+        dpResolution: "resolução", dpRefresh: "taxa de atualização", dpHdr: "HDR", dpPrimary: "tela principal", dpVrr: "taxa variável",
+        dpVrrNote: "G-Sync e FreeSync não podem ser lidos pelo Windows; só o botão de taxa variável do Windows é comparado.",
+        soNormal: "{name}", soChanged: "Agora: {name}", soNotSaved: "Ainda não salva", soMissing: "{name} não conectado", soStream: "Deixada ao modo streaming", soSaved: "Normal: {name}",
+        coSeen: "{n} conectados", coNone: "Nenhum conectado", coMissing: "Esperados, não vistos: {n}",
+        siSigned: "Conectado · {name}", siOffline: "Modo offline · {name}", siOut: "Não conectado", siOutDetail: "Provavelmente há uma tela de login ou do Steam Guard na TV: entre lá com o controle.",
+        siNoRemember: "Conectado; a próxima inicialização pedirá a senha", siNoRememberDetail: "Saia e entre de novo com Lembrar de mim marcado.", siNotRunning: "Steam não está aberto",
+        asOn: "Ativo · {user}", asOff: "Desativado: o Windows pedirá a senha", asExpires: "Termina após mais {n} logins", asHello: "Bloqueado pela entrada somente com Windows Hello",
+        asGuide: "Configure de novo na área de trabalho: Core > Gaming Mode > Continua sendo um console.", asPlain: "O Windows guarda esta senha em texto simples; o Autologon do Sysinternals a guarda criptografada.",
+        blOff: "Desativado", blOn: "Ativo · com chave de recuperação", blEncrypting: "Criptografando · com chave de recuperação", blUnchecked: "Ativo · verifique na área de trabalho", blNoKey: "Ativo · sem chave de recuperação",
+        blFw: "Atualização de firmware aguardando", blFwNoGuard: "Firmware aguardando: pode pedir a chave", blSuspended: "Suspenso", blSuspendedUpd: "Suspenso por um reinício", blWaiting: "Aguardando ativação",
+        blConfirm: "Confirme o backup da chave em {url}", blBackup: "O Windows registrou um backup {when}", blCheckDesktop: "Verifique na área de trabalho: Core > Gaming Mode > Continua sendo um console.",
+        blGuardHint: "Ative a proteção do BitLocker na área de trabalho para o Core poder suspendê-lo por um reinício.", blNoKeyDetail: "Adicione uma chave de recuperação na área de trabalho e salve-a na sua conta Microsoft.",
+        blSuspendedDetail: "Retome na área de trabalho: Painel de Controle > BitLocker > Retomar proteção.",
+        prOff: "Desativadas", prOn: "Ativas", prDetail: "Desfaça quando quiser em Core > Gaming Mode > Windows tranquilo.",
+        upApplied: "Drivers retidos · recursos ficam na {version}", upHome: "Drivers retidos · o Home não retém recursos", upNot: "Não aplicada",
+        upNotDetail: "Aplique na área de trabalho: Core > Gaming Mode > Windows tranquilo.", upHomeDetail: "O Windows Home ignora a fixação de versão.",
+        luNone: "Nada aguardando", luPending: "Aguardando: {list}", luDetail: "Podem pedir permissão de administrador: deixe terminar na área de trabalho.",
+        lfOn: "Vigiando · {n} hoje", lfOff: "Desativado", lfLast: "Última mandada para trás: {name}",
+        wkNone: "Nenhum despertar verificado", wkOk: "OK · {when}", wkFixed: "Corrigido pelo Core · {when}", wkProblem: "Verificar · {when}", wkNet: "Cabo de rede desconectado", wkOff: "Desativado",
+        wkFocus: "O Big Picture voltou para a frente.", wkInput: "A troca de entrada da TV foi enviada de novo.", wkNoBp: "O Big Picture não estava visível.", wkTvNo: "A TV não estava na entrada do Core.",
+        wkTemps: "Temperaturas: não mostradas (o Windows não as lê sem driver).", wkAdapter: "Adaptador: {name}",
+        aDisplayRestore: "Restaurar as configurações de tela", aDisplaySave: "Salvar a tela atual como normal", aSoundRestore: "Voltar o som", aSoundSave: "Salvar a saída de som atual como normal",
+        aControllersExpect: "Marcar estes controles como esperados", aPromptsOff: "Desativar as telas de configuração", aBitlockerSuspend: "Suspender o BitLocker por um reinício", aWakeNow: "Verificar o despertar agora",
+        aDone: "Feito", aFailed: "Não funcionou", aNotWhilePlaying: "Não durante um jogo",
+    },
+    uk: {
+        r_display: "Екран", r_sound: "Виведення звуку", r_controllers: "Контролери", r_steamSign: "Вхід у Steam", r_autoSign: "Автоматичний вхід", r_bitlocker: "BitLocker",
+        r_prompts: "Екрани налаштування Windows", r_updPolicy: "Політика оновлень", r_launchUpd: "Оновлення лаунчерів", r_launchFocus: "Вікна лаунчерів", r_wake: "Після пробудження",
+        dpNormal: "Звичайно · {mode}", dpChanged: "Змінено: {what}", dpNotSaved: "Ще не збережено", dpMissing: "Телевізор не підключено", dpSaved: "Звичайно: {mode}", dpNow: "Зараз: {mode}",
+        dpResolution: "роздільна здатність", dpRefresh: "частота оновлення", dpHdr: "HDR", dpPrimary: "основний екран", dpVrr: "змінна частота",
+        dpVrrNote: "G-Sync і FreeSync не читаються з Windows; порівнюється лише перемикач змінної частоти Windows.",
+        soNormal: "{name}", soChanged: "Зараз: {name}", soNotSaved: "Ще не збережено", soMissing: "{name} не підключено", soStream: "Залишено режиму трансляції", soSaved: "Звичайно: {name}",
+        coSeen: "Підключено: {n}", coNone: "Немає підключених", coMissing: "Очікувані, не видно: {n}",
+        siSigned: "Вхід виконано · {name}", siOffline: "Офлайн-режим · {name}", siOut: "Вхід не виконано", siOutDetail: "На телевізорі, мабуть, екран входу або Steam Guard: увійдіть там контролером.",
+        siNoRemember: "Вхід виконано; наступний запуск попросить пароль", siNoRememberDetail: "Вийдіть і увійдіть знову з позначкою Запам'ятати мене.", siNotRunning: "Steam не запущено",
+        asOn: "Увімкнено · {user}", asOff: "Вимкнено: Windows попросить пароль", asExpires: "Закінчиться через {n} входів", asHello: "Заблоковано входом лише через Windows Hello",
+        asGuide: "Налаштуйте знову на робочому столі: Core > Gaming Mode > Лишається консоллю.", asPlain: "Windows зберігає цей пароль відкритим текстом; Autologon від Sysinternals зберігає його зашифрованим.",
+        blOff: "Вимкнено", blOn: "Увімкнено · є ключ відновлення", blEncrypting: "Шифрування · є ключ відновлення", blUnchecked: "Увімкнено · перевірте на робочому столі", blNoKey: "Увімкнено · немає ключа відновлення",
+        blFw: "Оновлення прошивки чекає", blFwNoGuard: "Прошивка чекає: може знадобитися ключ", blSuspended: "Призупинено", blSuspendedUpd: "Призупинено на один перезапуск", blWaiting: "Чекає активації",
+        blConfirm: "Перевірте резервну копію ключа на {url}", blBackup: "Windows записала резервну копію {when}", blCheckDesktop: "Перевірте на робочому столі: Core > Gaming Mode > Лишається консоллю.",
+        blGuardHint: "Увімкніть захист BitLocker на робочому столі, щоб Core міг призупинити його на один перезапуск.", blNoKeyDetail: "Додайте ключ відновлення на робочому столі й збережіть його в обліковому записі Microsoft.",
+        blSuspendedDetail: "Відновіть на робочому столі: Панель керування > BitLocker > Відновити захист.",
+        prOff: "Вимкнено", prOn: "Увімкнено", prDetail: "Скасувати можна будь-коли в Core > Gaming Mode > Тихий Windows.",
+        upApplied: "Драйвери затримано · функції лишаються на {version}", upHome: "Драйвери затримано · Home не може затримати функції", upNot: "Не застосовано",
+        upNotDetail: "Застосуйте на робочому столі: Core > Gaming Mode > Тихий Windows.", upHomeDetail: "Windows Home ігнорує фіксацію версії.",
+        luNone: "Нічого не чекає", luPending: "Чекають: {list}", luDetail: "Вони можуть попросити права адміністратора: дайте їм завершитися на робочому столі.",
+        lfOn: "Стежить · {n} сьогодні", lfOff: "Вимкнено", lfLast: "Останнє відсунуте: {name}",
+        wkNone: "Пробудження ще не перевірялося", wkOk: "OK · {when}", wkFixed: "Виправлено Core · {when}", wkProblem: "Варто глянути · {when}", wkNet: "Мережевий кабель від'єднано", wkOff: "Вимкнено",
+        wkFocus: "Big Picture повернуто наперед.", wkInput: "Перемикання входу телевізора надіслано знову.", wkNoBp: "Big Picture не було видно.", wkTvNo: "Телевізор був не на вході Core.",
+        wkTemps: "Температури: не показано (Windows не читає їх без драйвера).", wkAdapter: "Адаптер: {name}",
+        aDisplayRestore: "Відновити налаштування екрана", aDisplaySave: "Зберегти поточний екран як звичайний", aSoundRestore: "Повернути звук", aSoundSave: "Зберегти поточне виведення звуку як звичайне",
+        aControllersExpect: "Позначити ці контролери як очікувані", aPromptsOff: "Вимкнути екрани налаштування", aBitlockerSuspend: "Призупинити BitLocker на один перезапуск", aWakeNow: "Перевірити пробудження зараз",
+        aDone: "Готово", aFailed: "Не вдалося", aNotWhilePlaying: "Не під час гри",
+    },
+    ru: {
+        r_display: "Экран", r_sound: "Вывод звука", r_controllers: "Контроллеры", r_steamSign: "Вход в Steam", r_autoSign: "Автоматический вход", r_bitlocker: "BitLocker",
+        r_prompts: "Экраны настройки Windows", r_updPolicy: "Политика обновлений", r_launchUpd: "Обновления лаунчеров", r_launchFocus: "Окна лаунчеров", r_wake: "После пробуждения",
+        dpNormal: "Обычно · {mode}", dpChanged: "Изменено: {what}", dpNotSaved: "Ещё не сохранено", dpMissing: "Телевизор не подключён", dpSaved: "Обычно: {mode}", dpNow: "Сейчас: {mode}",
+        dpResolution: "разрешение", dpRefresh: "частота обновления", dpHdr: "HDR", dpPrimary: "основной экран", dpVrr: "переменная частота",
+        dpVrrNote: "G-Sync и FreeSync не читаются из Windows; сравнивается только переключатель переменной частоты Windows.",
+        soNormal: "{name}", soChanged: "Сейчас: {name}", soNotSaved: "Ещё не сохранено", soMissing: "{name} не подключено", soStream: "Оставлено режиму трансляции", soSaved: "Обычно: {name}",
+        coSeen: "Подключено: {n}", coNone: "Нет подключённых", coMissing: "Ожидаемые, не видны: {n}",
+        siSigned: "Вход выполнен · {name}", siOffline: "Автономный режим · {name}", siOut: "Вход не выполнен", siOutDetail: "На телевизоре, вероятно, экран входа или Steam Guard: войдите там с контроллера.",
+        siNoRemember: "Вход выполнен; следующий запуск спросит пароль", siNoRememberDetail: "Выйдите и войдите снова с отметкой Запомнить меня.", siNotRunning: "Steam не запущен",
+        asOn: "Включён · {user}", asOff: "Выключен: Windows спросит пароль", asExpires: "Закончится через {n} входов", asHello: "Заблокирован входом только через Windows Hello",
+        asGuide: "Настройте снова на рабочем столе: Core > Gaming Mode > Остаётся консолью.", asPlain: "Windows хранит этот пароль открытым текстом; Autologon от Sysinternals хранит его зашифрованным.",
+        blOff: "Выключен", blOn: "Включён · есть ключ восстановления", blEncrypting: "Шифрование · есть ключ восстановления", blUnchecked: "Включён · проверьте на рабочем столе", blNoKey: "Включён · нет ключа восстановления",
+        blFw: "Обновление прошивки ждёт", blFwNoGuard: "Прошивка ждёт: может понадобиться ключ", blSuspended: "Приостановлен", blSuspendedUpd: "Приостановлен на одну перезагрузку", blWaiting: "Ждёт активации",
+        blConfirm: "Проверьте резервную копию ключа на {url}", blBackup: "Windows записала резервную копию {when}", blCheckDesktop: "Проверьте на рабочем столе: Core > Gaming Mode > Остаётся консолью.",
+        blGuardHint: "Включите защиту BitLocker на рабочем столе, чтобы Core мог приостановить его на одну перезагрузку.", blNoKeyDetail: "Добавьте ключ восстановления на рабочем столе и сохраните его в учётной записи Microsoft.",
+        blSuspendedDetail: "Возобновите на рабочем столе: Панель управления > BitLocker > Возобновить защиту.",
+        prOff: "Выключены", prOn: "Включены", prDetail: "Отменить можно в любой момент в Core > Gaming Mode > Тихий Windows.",
+        upApplied: "Драйверы задержаны · компоненты остаются на {version}", upHome: "Драйверы задержаны · Home не может задержать компоненты", upNot: "Не применена",
+        upNotDetail: "Примените на рабочем столе: Core > Gaming Mode > Тихий Windows.", upHomeDetail: "Windows Home игнорирует фиксацию версии.",
+        luNone: "Ничего не ждёт", luPending: "Ждут: {list}", luDetail: "Они могут запросить права администратора: дайте им завершиться на рабочем столе.",
+        lfOn: "Следит · {n} сегодня", lfOff: "Выключено", lfLast: "Последнее отодвинутое: {name}",
+        wkNone: "Пробуждение ещё не проверялось", wkOk: "OK · {when}", wkFixed: "Исправлено Core · {when}", wkProblem: "Стоит взглянуть · {when}", wkNet: "Сетевой кабель отключён", wkOff: "Выключено",
+        wkFocus: "Big Picture возвращён вперёд.", wkInput: "Переключение входа телевизора отправлено снова.", wkNoBp: "Big Picture не был виден.", wkTvNo: "Телевизор был не на входе Core.",
+        wkTemps: "Температуры: не показаны (Windows не читает их без драйвера).", wkAdapter: "Адаптер: {name}",
+        aDisplayRestore: "Восстановить настройки экрана", aDisplaySave: "Сохранить текущий экран как обычный", aSoundRestore: "Вернуть звук", aSoundSave: "Сохранить текущий вывод звука как обычный",
+        aControllersExpect: "Отметить эти контроллеры как ожидаемые", aPromptsOff: "Выключить экраны настройки", aBitlockerSuspend: "Приостановить BitLocker на одну перезагрузку", aWakeNow: "Проверить пробуждение сейчас",
+        aDone: "Готово", aFailed: "Не получилось", aNotWhilePlaying: "Не во время игры",
+    },
+    zh: {
+        r_display: "显示", r_sound: "声音输出", r_controllers: "控制器", r_steamSign: "Steam 登录", r_autoSign: "自动登录", r_bitlocker: "BitLocker",
+        r_prompts: "Windows 设置页面", r_updPolicy: "更新策略", r_launchUpd: "启动器更新", r_launchFocus: "启动器弹窗", r_wake: "唤醒后",
+        dpNormal: "常用 · {mode}", dpChanged: "已更改：{what}", dpNotSaved: "尚未保存", dpMissing: "电视未连接", dpSaved: "常用：{mode}", dpNow: "当前：{mode}",
+        dpResolution: "分辨率", dpRefresh: "刷新率", dpHdr: "HDR", dpPrimary: "主显示器", dpVrr: "可变刷新率",
+        dpVrrNote: "Windows 无法读取 G-Sync 和 FreeSync；只比较 Windows 的可变刷新率开关。",
+        soNormal: "{name}", soChanged: "当前：{name}", soNotSaved: "尚未保存", soMissing: "{name} 未连接", soStream: "交给串流模式", soSaved: "常用：{name}",
+        coSeen: "已连接 {n} 个", coNone: "未连接", coMissing: "预期但未见：{n}",
+        siSigned: "已登录 · {name}", siOffline: "离线模式 · {name}", siOut: "未登录", siOutDetail: "电视上可能是登录或 Steam 令牌页面：请用控制器在那里登录。",
+        siNoRemember: "已登录；下次启动会要求密码", siNoRememberDetail: "退出后勾选“记住我”重新登录。", siNotRunning: "Steam 未运行",
+        asOn: "已开启 · {user}", asOff: "已关闭：Windows 会要求密码", asExpires: "再登录 {n} 次后结束", asHello: "被“仅允许 Windows Hello 登录”阻止",
+        asGuide: "请在桌面上重新设置：Core > Gaming Mode > 保持主机体验。", asPlain: "Windows 以明文保存此密码；Sysinternals Autologon 会加密保存。",
+        blOff: "已关闭", blOn: "已开启 · 有恢复密钥", blEncrypting: "正在加密 · 有恢复密钥", blUnchecked: "已开启 · 请在桌面上检查", blNoKey: "已开启 · 没有恢复密钥",
+        blFw: "固件更新等待中", blFwNoGuard: "固件等待中：可能要求输入密钥", blSuspended: "已暂停", blSuspendedUpd: "暂停一次重启", blWaiting: "等待激活",
+        blConfirm: "请在 {url} 确认密钥备份", blBackup: "Windows 于 {when} 记录了备份", blCheckDesktop: "请在桌面上检查：Core > Gaming Mode > 保持主机体验。",
+        blGuardHint: "请在桌面上开启 BitLocker 保护，以便 Core 暂停它一次重启。", blNoKeyDetail: "请在桌面上添加恢复密钥，并备份到你的 Microsoft 帐户。",
+        blSuspendedDetail: "请在桌面上恢复：控制面板 > BitLocker > 恢复保护。",
+        prOff: "已关闭", prOn: "已开启", prDetail: "可随时在 Core > Gaming Mode > 安静的 Windows 中撤销。",
+        upApplied: "驱动已暂缓 · 功能更新保持在 {version}", upHome: "驱动已暂缓 · 家庭版无法暂缓功能更新", upNot: "未应用",
+        upNotDetail: "请在桌面上应用：Core > Gaming Mode > 安静的 Windows。", upHomeDetail: "Windows 家庭版会忽略版本固定。",
+        luNone: "没有等待中的更新", luPending: "等待中：{list}", luDetail: "它们可能会要求管理员权限：请在桌面上让它们完成。",
+        lfOn: "监视中 · 今天 {n} 次", lfOff: "已关闭", lfLast: "上次移到后面：{name}",
+        wkNone: "尚未检查唤醒", wkOk: "正常 · {when}", wkFixed: "已由 Core 修复 · {when}", wkProblem: "需要查看 · {when}", wkNet: "网线已断开", wkOff: "已关闭",
+        wkFocus: "Big Picture 已调回前台。", wkInput: "已重新发送电视输入切换。", wkNoBp: "Big Picture 不可见。", wkTvNo: "电视不在 Core 的输入源。",
+        wkTemps: "温度：不显示（Windows 无驱动时无法读取）。", wkAdapter: "网卡：{name}",
+        aDisplayRestore: "恢复显示设置", aDisplaySave: "将当前显示保存为常用", aSoundRestore: "切换回声音设备", aSoundSave: "将当前声音输出保存为常用",
+        aControllersExpect: "将这些控制器标为预期", aPromptsOff: "关闭设置页面", aBitlockerSuspend: "暂停 BitLocker 一次重启", aWakeNow: "立即检查唤醒",
+        aDone: "完成", aFailed: "没有成功", aNotWhilePlaying: "游戏运行时不可用",
+    },
+    ja: {
+        r_display: "画面", r_sound: "サウンド出力", r_controllers: "コントローラー", r_steamSign: "Steam のサインイン", r_autoSign: "自動サインイン", r_bitlocker: "BitLocker",
+        r_prompts: "Windows の設定画面", r_updPolicy: "更新ポリシー", r_launchUpd: "ランチャーの更新", r_launchFocus: "ランチャーのポップアップ", r_wake: "スリープ解除後",
+        dpNormal: "通常 · {mode}", dpChanged: "変更あり：{what}", dpNotSaved: "まだ保存していません", dpMissing: "テレビ未接続", dpSaved: "通常：{mode}", dpNow: "現在：{mode}",
+        dpResolution: "解像度", dpRefresh: "リフレッシュレート", dpHdr: "HDR", dpPrimary: "メイン ディスプレイ", dpVrr: "可変リフレッシュレート",
+        dpVrrNote: "G-Sync と FreeSync は Windows から読めません。Windows の可変リフレッシュレートの設定だけを比べます。",
+        soNormal: "{name}", soChanged: "現在：{name}", soNotSaved: "まだ保存していません", soMissing: "{name} は未接続", soStream: "ストリーミング モードに任せています", soSaved: "通常：{name}",
+        coSeen: "{n} 台接続", coNone: "接続なし", coMissing: "見当たらない予定のもの：{n}",
+        siSigned: "サインイン中 · {name}", siOffline: "オフライン モード · {name}", siOut: "サインインしていません", siOutDetail: "テレビにサインインか Steam Guard の画面が出ているはずです。コントローラーでサインインしてください。",
+        siNoRemember: "サインイン中。次回起動時にパスワードを求められます", siNoRememberDetail: "「ログイン情報を保存」にチェックして入り直してください。", siNotRunning: "Steam は起動していません",
+        asOn: "オン · {user}", asOff: "オフ：Windows がパスワードを求めます", asExpires: "あと {n} 回のサインインで終了", asHello: "Windows Hello のみのサインインでブロック",
+        asGuide: "デスクトップで設定し直してください：Core > Gaming Mode > ゲーム機のまま。", asPlain: "Windows はこのパスワードを平文で保管しています。Sysinternals Autologon なら暗号化されます。",
+        blOff: "オフ", blOn: "オン · 回復キーあり", blEncrypting: "暗号化中 · 回復キーあり", blUnchecked: "オン · デスクトップで確認してください", blNoKey: "オン · 回復キーなし",
+        blFw: "ファームウェア更新が待機中", blFwNoGuard: "ファームウェア待機中：キーを求められる可能性", blSuspended: "一時停止中", blSuspendedUpd: "再起動 1 回分だけ一時停止", blWaiting: "アクティブ化待ち",
+        blConfirm: "キーのバックアップを {url} で確認してください", blBackup: "Windows が {when} にバックアップを記録", blCheckDesktop: "デスクトップで確認してください：Core > Gaming Mode > ゲーム機のまま。",
+        blGuardHint: "デスクトップで BitLocker 保護をオンにすると、Core が再起動 1 回分だけ一時停止できます。", blNoKeyDetail: "デスクトップで回復キーを追加し、Microsoft アカウントにバックアップしてください。",
+        blSuspendedDetail: "デスクトップで再開してください：コントロール パネル > BitLocker > 保護の再開。",
+        prOff: "オフ", prOn: "オン", prDetail: "Core > Gaming Mode > 静かな Windows からいつでも元に戻せます。",
+        upApplied: "ドライバーを保留 · 機能更新は {version} のまま", upHome: "ドライバーを保留 · Home は機能更新を保留できません", upNot: "未適用",
+        upNotDetail: "デスクトップで適用してください：Core > Gaming Mode > 静かな Windows。", upHomeDetail: "Windows Home はバージョンの固定を無視します。",
+        luNone: "待機中のものはありません", luPending: "待機中：{list}", luDetail: "管理者権限を求められる場合があります。デスクトップで完了させてください。",
+        lfOn: "監視中 · 今日 {n} 回", lfOff: "オフ", lfLast: "最後に後ろへ回したもの：{name}",
+        wkNone: "まだスリープ解除を確認していません", wkOk: "OK · {when}", wkFixed: "Core が修正 · {when}", wkProblem: "確認が必要 · {when}", wkNet: "LAN ケーブルが抜けています", wkOff: "オフ",
+        wkFocus: "Big Picture を前面に戻しました。", wkInput: "テレビの入力切り替えをもう一度送りました。", wkNoBp: "Big Picture が見えていませんでした。", wkTvNo: "テレビが Core の入力になっていませんでした。",
+        wkTemps: "温度：表示しません（Windows はドライバーなしで読めません）。", wkAdapter: "アダプター：{name}",
+        aDisplayRestore: "画面の設定を元に戻す", aDisplaySave: "今の画面を通常として保存", aSoundRestore: "音を元に戻す", aSoundSave: "今のサウンド出力を通常として保存",
+        aControllersExpect: "これらのコントローラーを予定として登録", aPromptsOff: "設定画面をオフにする", aBitlockerSuspend: "BitLocker を再起動 1 回分だけ一時停止", aWakeNow: "今すぐスリープ解除チェック",
+        aDone: "完了", aFailed: "うまくいきませんでした", aNotWhilePlaying: "ゲーム中はできません",
+    },
+    ko: {
+        r_display: "디스플레이", r_sound: "소리 출력", r_controllers: "컨트롤러", r_steamSign: "Steam 로그인", r_autoSign: "자동 로그인", r_bitlocker: "BitLocker",
+        r_prompts: "Windows 설정 화면", r_updPolicy: "업데이트 정책", r_launchUpd: "런처 업데이트", r_launchFocus: "런처 팝업", r_wake: "절전 해제 후",
+        dpNormal: "기본 · {mode}", dpChanged: "변경됨: {what}", dpNotSaved: "아직 저장 안 함", dpMissing: "TV 연결 안 됨", dpSaved: "기본: {mode}", dpNow: "현재: {mode}",
+        dpResolution: "해상도", dpRefresh: "주사율", dpHdr: "HDR", dpPrimary: "주 디스플레이", dpVrr: "가변 주사율",
+        dpVrrNote: "G-Sync와 FreeSync는 Windows에서 읽을 수 없습니다. Windows의 가변 주사율 스위치만 비교합니다.",
+        soNormal: "{name}", soChanged: "현재: {name}", soNotSaved: "아직 저장 안 함", soMissing: "{name} 연결 안 됨", soStream: "스트리밍 모드에 맡김", soSaved: "기본: {name}",
+        coSeen: "{n}개 연결됨", coNone: "연결된 컨트롤러 없음", coMissing: "예상했지만 안 보임: {n}",
+        siSigned: "로그인됨 · {name}", siOffline: "오프라인 모드 · {name}", siOut: "로그인 안 됨", siOutDetail: "TV에 로그인 또는 Steam Guard 화면이 떠 있을 것입니다. 컨트롤러로 로그인하세요.",
+        siNoRemember: "로그인됨. 다음 시작 때 암호를 묻습니다", siNoRememberDetail: "로그아웃한 뒤 '로그인 정보 기억'을 체크하고 다시 로그인하세요.", siNotRunning: "Steam 실행 안 됨",
+        asOn: "켜짐 · {user}", asOff: "꺼짐: Windows가 암호를 묻습니다", asExpires: "로그인 {n}번 후 종료", asHello: "Windows Hello 전용 로그인으로 차단됨",
+        asGuide: "데스크톱에서 다시 설정하세요: Core > Gaming Mode > 콘솔처럼 유지.", asPlain: "Windows가 이 암호를 일반 텍스트로 보관합니다. Sysinternals Autologon은 암호화해 보관합니다.",
+        blOff: "꺼짐", blOn: "켜짐 · 복구 키 있음", blEncrypting: "암호화 중 · 복구 키 있음", blUnchecked: "켜짐 · 데스크톱에서 확인하세요", blNoKey: "켜짐 · 복구 키 없음",
+        blFw: "펌웨어 업데이트 대기 중", blFwNoGuard: "펌웨어 대기 중: 키를 물을 수 있음", blSuspended: "일시 중단됨", blSuspendedUpd: "재시작 한 번 동안 일시 중단", blWaiting: "활성화 대기 중",
+        blConfirm: "{url}에서 키 백업을 확인하세요", blBackup: "Windows가 {when} 백업을 기록함", blCheckDesktop: "데스크톱에서 확인하세요: Core > Gaming Mode > 콘솔처럼 유지.",
+        blGuardHint: "데스크톱에서 BitLocker 보호를 켜면 Core가 재시작 한 번 동안 일시 중단할 수 있습니다.", blNoKeyDetail: "데스크톱에서 복구 키를 추가하고 Microsoft 계정에 백업하세요.",
+        blSuspendedDetail: "데스크톱에서 다시 시작하세요: 제어판 > BitLocker > 보호 다시 시작.",
+        prOff: "꺼짐", prOn: "켜짐", prDetail: "Core > Gaming Mode > 조용한 Windows에서 언제든 되돌릴 수 있습니다.",
+        upApplied: "드라이버 보류 · 기능 업데이트는 {version} 유지", upHome: "드라이버 보류 · Home은 기능 업데이트를 보류할 수 없음", upNot: "적용 안 됨",
+        upNotDetail: "데스크톱에서 적용하세요: Core > Gaming Mode > 조용한 Windows.", upHomeDetail: "Windows Home은 버전 고정을 무시합니다.",
+        luNone: "대기 중인 항목 없음", luPending: "대기 중: {list}", luDetail: "관리자 권한을 요구할 수 있습니다. 데스크톱에서 마치게 하세요.",
+        lfOn: "감시 중 · 오늘 {n}회", lfOff: "꺼짐", lfLast: "마지막으로 뒤로 보냄: {name}",
+        wkNone: "아직 확인한 절전 해제 없음", wkOk: "정상 · {when}", wkFixed: "Core가 해결 · {when}", wkProblem: "확인 필요 · {when}", wkNet: "네트워크 케이블 빠짐", wkOff: "꺼짐",
+        wkFocus: "Big Picture를 다시 앞으로 가져왔습니다.", wkInput: "TV 입력 전환을 다시 보냈습니다.", wkNoBp: "Big Picture가 보이지 않았습니다.", wkTvNo: "TV가 Core의 입력에 있지 않았습니다.",
+        wkTemps: "온도: 표시 안 함(Windows는 드라이버 없이 읽을 수 없음).", wkAdapter: "어댑터: {name}",
+        aDisplayRestore: "디스플레이 설정 복원", aDisplaySave: "현재 디스플레이를 기본으로 저장", aSoundRestore: "소리 되돌리기", aSoundSave: "현재 소리 출력을 기본으로 저장",
+        aControllersExpect: "이 컨트롤러를 예상 목록에 추가", aPromptsOff: "설정 화면 끄기", aBitlockerSuspend: "재시작 한 번 동안 BitLocker 일시 중단", aWakeNow: "지금 절전 해제 확인",
+        aDone: "완료", aFailed: "실패했습니다", aNotWhilePlaying: "게임 중에는 안 됨",
+    },
+    hi: {
+        r_display: "डिस्प्ले", r_sound: "आवाज़ आउटपुट", r_controllers: "कंट्रोलर", r_steamSign: "Steam साइन-इन", r_autoSign: "अपने-आप साइन-इन", r_bitlocker: "BitLocker",
+        r_prompts: "Windows सेटअप स्क्रीन", r_updPolicy: "अपडेट नीति", r_launchUpd: "लॉन्चर अपडेट", r_launchFocus: "लॉन्चर पॉप-अप", r_wake: "जागने के बाद",
+        dpNormal: "सामान्य · {mode}", dpChanged: "बदला: {what}", dpNotSaved: "अभी सेव नहीं", dpMissing: "TV जुड़ा नहीं", dpSaved: "सामान्य: {mode}", dpNow: "अभी: {mode}",
+        dpResolution: "रिज़ॉल्यूशन", dpRefresh: "रिफ़्रेश रेट", dpHdr: "HDR", dpPrimary: "मुख्य डिस्प्ले", dpVrr: "वेरिएबल रिफ़्रेश",
+        dpVrrNote: "G-Sync और FreeSync को Windows से पढ़ा नहीं जा सकता; सिर्फ़ Windows का वेरिएबल रिफ़्रेश स्विच मिलाया जाता है।",
+        soNormal: "{name}", soChanged: "अभी: {name}", soNotSaved: "अभी सेव नहीं", soMissing: "{name} जुड़ा नहीं", soStream: "स्ट्रीम मोड पर छोड़ा", soSaved: "सामान्य: {name}",
+        coSeen: "{n} जुड़े", coNone: "कोई नहीं जुड़ा", coMissing: "अपेक्षित, नहीं दिखे: {n}",
+        siSigned: "साइन-इन · {name}", siOffline: "ऑफ़लाइन मोड · {name}", siOut: "साइन-इन नहीं", siOutDetail: "TV पर शायद साइन-इन या Steam Guard स्क्रीन है: कंट्रोलर से वहीं साइन-इन करें।",
+        siNoRemember: "साइन-इन है; अगली बार शुरू होने पर पासवर्ड माँगेगा", siNoRememberDetail: "साइन-आउट करके 'मुझे याद रखें' चुनकर फिर साइन-इन करें।", siNotRunning: "Steam नहीं चल रहा",
+        asOn: "चालू · {user}", asOff: "बंद: Windows पासवर्ड माँगेगा", asExpires: "{n} और साइन-इन के बाद खत्म", asHello: "सिर्फ़ Windows Hello साइन-इन ने रोका",
+        asGuide: "डेस्कटॉप पर फिर से सेट करें: Core > Gaming Mode > कंसोल बना रहे।", asPlain: "Windows यह पासवर्ड सादे टेक्स्ट में रखता है; Sysinternals Autologon इसे एन्क्रिप्ट करके रखता है।",
+        blOff: "बंद", blOn: "चालू · रिकवरी कुंजी मौजूद", blEncrypting: "एन्क्रिप्ट हो रहा · रिकवरी कुंजी मौजूद", blUnchecked: "चालू · डेस्कटॉप पर जाँचें", blNoKey: "चालू · कोई रिकवरी कुंजी नहीं",
+        blFw: "फ़र्मवेयर अपडेट इंतज़ार में", blFwNoGuard: "फ़र्मवेयर इंतज़ार में: कुंजी माँग सकता है", blSuspended: "रुका हुआ", blSuspendedUpd: "एक रीस्टार्ट के लिए रुका", blWaiting: "सक्रिय होने का इंतज़ार",
+        blConfirm: "कुंजी का बैकअप {url} पर पक्का करें", blBackup: "Windows ने {when} बैकअप दर्ज किया", blCheckDesktop: "डेस्कटॉप पर जाँचें: Core > Gaming Mode > कंसोल बना रहे।",
+        blGuardHint: "डेस्कटॉप पर BitLocker सुरक्षा चालू करें ताकि Core इसे एक रीस्टार्ट के लिए रोक सके।", blNoKeyDetail: "डेस्कटॉप पर रिकवरी कुंजी जोड़ें और उसे अपने Microsoft खाते में बैकअप करें।",
+        blSuspendedDetail: "डेस्कटॉप पर फिर शुरू करें: कंट्रोल पैनल > BitLocker > सुरक्षा फिर शुरू करें।",
+        prOff: "बंद", prOn: "चालू", prDetail: "Core > Gaming Mode > शांत Windows से कभी भी वापस लें।",
+        upApplied: "ड्राइवर रोके · फ़ीचर अपडेट {version} पर", upHome: "ड्राइवर रोके · Home फ़ीचर अपडेट नहीं रोक सकता", upNot: "लागू नहीं",
+        upNotDetail: "डेस्कटॉप पर लागू करें: Core > Gaming Mode > शांत Windows।", upHomeDetail: "Windows Home वर्ज़न पिन को नहीं मानता।",
+        luNone: "कुछ इंतज़ार में नहीं", luPending: "इंतज़ार में: {list}", luDetail: "ये एडमिनिस्ट्रेटर अनुमति माँग सकते हैं: इन्हें डेस्कटॉप पर पूरा होने दें।",
+        lfOn: "निगरानी · आज {n}", lfOff: "बंद", lfLast: "आख़िरी बार पीछे भेजा: {name}",
+        wkNone: "अभी कोई जागना नहीं जाँचा", wkOk: "ठीक · {when}", wkFixed: "Core ने ठीक किया · {when}", wkProblem: "देखना चाहिए · {when}", wkNet: "नेटवर्क केबल निकला है", wkOff: "बंद",
+        wkFocus: "Big Picture को फिर सामने लाया गया।", wkInput: "TV का इनपुट बदलना फिर भेजा गया।", wkNoBp: "Big Picture दिख नहीं रहा था।", wkTvNo: "TV, Core के इनपुट पर नहीं था।",
+        wkTemps: "तापमान: नहीं दिखाया (Windows बिना ड्राइवर के इसे नहीं पढ़ता)।", wkAdapter: "अडैप्टर: {name}",
+        aDisplayRestore: "डिस्प्ले सेटिंग्स वापस लाएँ", aDisplaySave: "मौजूदा डिस्प्ले को सामान्य के रूप में सेव करें", aSoundRestore: "आवाज़ वापस बदलें", aSoundSave: "मौजूदा आवाज़ आउटपुट को सामान्य के रूप में सेव करें",
+        aControllersExpect: "इन कंट्रोलरों को अपेक्षित चिह्नित करें", aPromptsOff: "सेटअप स्क्रीन बंद करें", aBitlockerSuspend: "BitLocker को एक रीस्टार्ट के लिए रोकें", aWakeNow: "अभी जागने की जाँच करें",
+        aDone: "हो गया", aFailed: "काम नहीं हुआ", aNotWhilePlaying: "गेम चलते समय नहीं",
+    },
+};
+for (const [language, table] of Object.entries(consoleCopy))
+    Object.assign(copy$3[language] ?? {}, table);
 function healthCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
     const table = copy$3[language === "ua" ? "uk" : language] ?? en$2;
@@ -61184,8 +61538,20 @@ function formatTime(value, locale, hour) {
 }
 const titles = {
     "server-backup": "r_backup", "restore-check": "r_restore", "server-drive": "r_drive", romm: "r_romm",
-    "windows-restart": "r_restart", "update-night": "r_night", tv: "r_tv", streaming: "r_stream", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
+    "windows-restart": "r_restart", "update-night": "r_night", "steam-update": "r_steam", tv: "r_tv", streaming: "r_stream", microphone: "r_mic", "pc-disk": "r_pc", "core-update": "r_core",
+    // Console guards (ConsoleGuards.cs).
+    display: "r_display", "sound-output": "r_sound", controllers: "r_controllers", "steam-sign-in": "r_steamSign", "auto-sign-in": "r_autoSign", bitlocker: "r_bitlocker",
+    "windows-prompts": "r_prompts", "update-policy": "r_updPolicy", "launcher-updates": "r_launchUpd", "launcher-focus": "r_launchFocus", "wake-check": "r_wake",
 };
+// The console guards' actions the agent accepts, and their labels.
+const actionLabels = {
+    "display-restore": "aDisplayRestore", "display-save": "aDisplaySave", "sound-restore": "aSoundRestore", "sound-save": "aSoundSave",
+    "controllers-expect": "aControllersExpect", "prompts-off": "aPromptsOff", "bitlocker-suspend": "aBitlockerSuspend", "wake-check-now": "aWakeNow",
+};
+// Short, single-line text from the PC (device and monitor names): no control characters, at most 64 characters.
+function clean$1(value, max = 64) {
+    return typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, max) : "";
+}
 const serverStates = { "not-configured": "notConfigured", unreachable: "unreachable", missing: "missing", unreadable: "unreadable" };
 function rowValue(row, text, locale, now) {
     const data = row.data ?? {};
@@ -61289,8 +61655,200 @@ function rowValue(row, text, locale, now) {
         case "core-update":
             return { value: row.state === "available" ? fill$2(text.cAvail, { latest: String(data.latest ?? "?") })
                     : row.state === "current" ? fill$2(text.cCurrent, { current: String(data.current ?? "?") }) : text.unknown, details };
+        default:
+            return consoleValue(row, text, locale, now);
+    }
+}
+// Console guards (CONSOLE-GUARDS.md): what each row says, and its one-line instruction where Windows offers no
+// one-button fix at the TV.
+function consoleValue(row, text, locale, now) {
+    const data = row.data ?? {};
+    const details = [];
+    const when = (key) => formatWhen(data[key], locale, now);
+    switch (row.id) {
+        case "display": {
+            const saved = clean$1(data.saved), current = clean$1(data.current), monitor = clean$1(data.monitor);
+            if (monitor)
+                details.push(monitor);
+            if (row.state === "changed") {
+                const names = { resolution: text.dpResolution, refresh: text.dpRefresh, hdr: text.dpHdr, primary: text.dpPrimary, vrr: text.dpVrr };
+                const what = (Array.isArray(data.differences) ? data.differences : []).map(item => names[String(item)]).filter(Boolean).join(", ");
+                if (saved)
+                    details.push(fill$2(text.dpSaved, { mode: saved }));
+                if (current)
+                    details.push(fill$2(text.dpNow, { mode: current }));
+                if (data.vrrReadable !== true)
+                    details.push(text.dpVrrNote);
+                return { value: fill$2(text.dpChanged, { what: what || "?" }), details };
+            }
+            if (data.vrrReadable !== true && row.state !== "unknown")
+                details.push(text.dpVrrNote);
+            if (row.state === "normal")
+                return { value: fill$2(text.dpNormal, { mode: current || saved || "?" }), details };
+            if (row.state === "not-saved") {
+                if (current)
+                    details.push(fill$2(text.dpNow, { mode: current }));
+                return { value: text.dpNotSaved, details };
+            }
+            if (row.state === "missing") {
+                if (saved)
+                    details.push(fill$2(text.dpSaved, { mode: saved }));
+                return { value: text.dpMissing, details };
+            }
+            return { value: text.unknown, details };
+        }
+        case "sound-output": {
+            const saved = clean$1(data.saved, 80) || "?", current = clean$1(data.current, 80) || "?";
+            if (row.state === "normal")
+                return { value: fill$2(text.soNormal, { name: current }), details };
+            if (row.state === "changed") {
+                details.push(fill$2(text.soSaved, { name: saved }));
+                return { value: fill$2(text.soChanged, { name: current }), details };
+            }
+            if (row.state === "missing") {
+                details.push(fill$2(text.soChanged, { name: current }));
+                return { value: fill$2(text.soMissing, { name: saved }), details };
+            }
+            if (row.state === "stream-mode")
+                return { value: text.soStream, details };
+            if (row.state === "not-saved")
+                return { value: text.soNotSaved, details };
+            return { value: text.unknown, details };
+        }
+        case "controllers": {
+            const list = Array.isArray(data.controllers) ? data.controllers : [];
+            for (const controller of list.slice(0, 12)) {
+                const name = clean$1(controller?.name), key = clean$1(controller?.key, 9);
+                if (name)
+                    details.push(key ? `${name} (${key})` : name);
+            }
+            const missing = Array.isArray(data.missing) ? data.missing.length : 0;
+            if (row.state === "expected-missing")
+                return { value: fill$2(text.coMissing, { n: missing }), details };
+            if (row.state === "seen")
+                return { value: fill$2(text.coSeen, { n: list.length }), details };
+            if (row.state === "none")
+                return { value: text.coNone, details };
+            return { value: text.unknown, details };
+        }
+        case "steam-sign-in": {
+            const name = clean$1(data.persona) || "Steam";
+            if (row.state === "signed-in")
+                return { value: fill$2(text.siSigned, { name }), details };
+            if (row.state === "offline")
+                return { value: fill$2(text.siOffline, { name }), details };
+            if (row.state === "signed-out") {
+                details.push(text.siOutDetail);
+                return { value: text.siOut, details };
+            }
+            if (row.state === "no-remember") {
+                details.push(text.siNoRememberDetail);
+                return { value: text.siNoRemember, details };
+            }
+            if (row.state === "not-running")
+                return { value: text.siNotRunning, details };
+            return { value: text.unknown, details };
+        }
+        case "auto-sign-in": {
+            const user = clean$1(data.user) || "?";
+            if (data.plainTextPassword === true)
+                details.push(text.asPlain);
+            if (row.state === "on")
+                return { value: fill$2(text.asOn, { user }), details };
+            details.push(text.asGuide);
+            if (row.state === "off")
+                return { value: text.asOff, details };
+            if (row.state === "expires")
+                return { value: fill$2(text.asExpires, { n: Number(data.count) || 0 }), details };
+            if (row.state === "passwordless")
+                return { value: text.asHello, details };
+            return { value: text.unknown, details: [] };
+        }
+        case "bitlocker": {
+            const url = clean$1(data.confirmAt) || "account.microsoft.com/devices/recoverykey";
+            const states = { off: text.blOff, on: text.blOn, encrypting: text.blEncrypting, unchecked: text.blUnchecked, "no-recovery-key": text.blNoKey,
+                "firmware-pending": text.blFw, "firmware-no-guard": text.blFwNoGuard, suspended: text.blSuspended, "suspended-for-update": text.blSuspendedUpd, waiting: text.blWaiting };
+            if (row.state === "unchecked")
+                details.push(text.blCheckDesktop);
+            if (row.state === "no-recovery-key")
+                details.push(text.blNoKeyDetail);
+            if (row.state === "firmware-no-guard")
+                details.push(text.blGuardHint);
+            if (row.state === "suspended")
+                details.push(text.blSuspendedDetail);
+            if (["on", "encrypting", "unchecked", "no-recovery-key", "firmware-pending", "firmware-no-guard", "waiting"].includes(row.state)) {
+                if (data.backupSeenAt)
+                    details.push(fill$2(text.blBackup, { when: when("backupSeenAt") }));
+                details.push(fill$2(text.blConfirm, { url }));
+            }
+            return { value: states[row.state] ?? text.unknown, details };
+        }
+        case "windows-prompts":
+            if (row.state === "on" || row.state === "off")
+                details.push(text.prDetail);
+            return { value: row.state === "off" ? text.prOff : row.state === "on" ? text.prOn : text.unknown, details };
+        case "update-policy": {
+            if (row.state === "applied")
+                return { value: fill$2(text.upApplied, { version: clean$1(data.pinnedVersion, 8) || "?" }), details };
+            if (row.state === "applied-home") {
+                details.push(text.upHomeDetail);
+                return { value: text.upHome, details };
+            }
+            if (row.state === "not-applied") {
+                details.push(text.upNotDetail);
+                if (data.home === true)
+                    details.push(text.upHomeDetail);
+                return { value: text.upNot, details };
+            }
+            return { value: text.unknown, details };
+        }
+        case "launcher-updates": {
+            const list = (Array.isArray(data.pending) ? data.pending : []).map(item => clean$1(item, 40)).filter(Boolean);
+            if (row.state === "pending") {
+                details.push(text.luDetail);
+                return { value: fill$2(text.luPending, { list: list.join(", ") || "?" }), details };
+            }
+            return { value: row.state === "none" ? text.luNone : text.unknown, details };
+        }
+        case "launcher-focus": {
+            const last = clean$1(data.last, 40);
+            if (last)
+                details.push(fill$2(text.lfLast, { name: last }));
+            return { value: row.state === "watching" ? fill$2(text.lfOn, { n: Number(data.pushedToday) || 0 }) : row.state === "off" ? text.lfOff : text.unknown, details };
+        }
+        case "wake-check": {
+            if (data.focusRetaken === true)
+                details.push(text.wkFocus);
+            if (data.inputResent === true)
+                details.push(text.wkInput);
+            if (data.bigPicture === false)
+                details.push(text.wkNoBp);
+            if (data.tvOnCore === false)
+                details.push(text.wkTvNo);
+            if (clean$1(data.adapter))
+                details.push(fill$2(text.wkAdapter, { name: clean$1(data.adapter) }));
+            details.push(text.wkTemps);
+            const states = { ok: text.wkOk, fixed: text.wkFixed, problem: text.wkProblem };
+            if (states[row.state])
+                return { value: fill$2(states[row.state], { when: when("at") }), details };
+            if (row.state === "network-down")
+                return { value: text.wkNet, details };
+            return { value: row.state === "none-yet" ? text.wkNone : row.state === "off" ? text.wkOff : text.unknown, details };
+        }
     }
     return { value: text.unknown, details };
+}
+// A row's buttons: its fix (from data.fix) first, then the others it offers (data.actions).
+function rowActions(row, text) {
+    const data = row.data ?? {};
+    const actions = [];
+    const fix = typeof data.fix === "string" && actionLabels[data.fix] ? data.fix : undefined;
+    if (fix)
+        actions.push({ id: fix, label: text[actionLabels[fix]], fix: true });
+    for (const id of Array.isArray(data.actions) ? data.actions : [])
+        if (typeof id === "string" && actionLabels[id] && id !== fix)
+            actions.push({ id, label: text[actionLabels[id]], fix: false });
+    return actions;
 }
 function healthSummary(answer, locale) {
     const text = healthCopy(locale);
@@ -61307,6 +61865,9 @@ function healthLines(answer, locale, now = new Date()) {
         const line = { id: row.id, level, title: text[titles[row.id]], value, details, alertId: answer?.alertsEnabled !== false ? alert?.id : undefined };
         if (row.id === "microphone" && (row.state === "muted" || row.state === "partial"))
             line.tone = "crimson";
+        const actions = rowActions(row, text);
+        if (actions.length)
+            line.actions = actions;
         return line;
     });
 }
@@ -61406,6 +61967,10 @@ function SteamUpdateCard({ locale }) {
 // The agent does the gathering (GamingMode.Services/MarkIIIHost.Health.cs); this only renders.
 // Rows are focusable: D-pad moves between them, A shows or hides a row's details, and a row with
 // an active alert offers "Dismiss alert" (it comes back only if the problem changes).
+// Console guards (CONSOLE-GUARDS.md): a row that needs a fix offers its one button under the list
+// ("Restore display settings", "Switch sound back"...); an open row also offers its other actions
+// ("Save current display as normal"...). The agent runs them (POST /health/action) and answers with
+// the new rows.
 const { PanelSection: PanelSection$3, PanelSectionRow: PanelSectionRow$3, ButtonItem: ButtonItem$1, Focusable: Focusable$3 } = CompatUI;
 const { black: BLACK$2, crimson: CRIMSON$2, crimsonText: CRIMSON_TEXT$2, steel: STEEL$2, gunmetal: GUNMETAL$2, white: WHITE$2 } = CORE;
 const style$2 = `
@@ -61421,6 +61986,8 @@ const style$2 = `
 .core-health-row.info .core-health-value{color:${CORE_STATUS.warning}}
 .core-health-row.attention .core-health-value,.core-health-row.crimson .core-health-value{color:${CORE_STATUS.error};font-weight:600}
 .core-health-detail{margin-top:6px;font-size:11px;line-height:1.45;color:${STEEL$2};word-break:break-word}
+.core-health-result{padding:0 12px 6px;font-size:12px;color:${STEEL$2}}
+.core-health-result.problem{color:${CORE_STATUS.error}}
 `;
 function Row({ line, open, onToggle }) {
     return (SP_JSX.jsxs(Focusable$3, { className: `core-health-row ${line.level}${line.tone ? " " + line.tone : ""}`, onActivate: onToggle, "aria-expanded": open, noFocusRing: true, children: [SP_JSX.jsxs("div", { className: "core-health-head", children: [SP_JSX.jsx("span", { className: "core-health-title", children: line.title }), SP_JSX.jsx("span", { className: "core-health-value", children: line.value })] }), open && line.details.length > 0 && SP_JSX.jsx("div", { className: "core-health-detail", children: line.details.map((detail, index) => SP_JSX.jsx("div", { children: detail }, index)) })] }));
@@ -61429,6 +61996,7 @@ function HealthSection({ locale }) {
     const [answer, setAnswer] = _global_SP_REACT.useState(undefined);
     const [open, setOpen] = _global_SP_REACT.useState({});
     const [busy, setBusy] = _global_SP_REACT.useState(false);
+    const [result, setResult] = _global_SP_REACT.useState(null);
     const text = healthCopy(locale);
     _global_SP_REACT.useEffect(() => {
         let alive = true;
@@ -61455,9 +62023,30 @@ function HealthSection({ locale }) {
             setBusy(false);
         }
     };
+    const act = async (action) => {
+        setBusy(true);
+        setResult(null);
+        try {
+            const value = await call("core_health_action", action.id);
+            if (value?.health && Array.isArray(value.health.rows))
+                setAnswer(value.health);
+            const ok = value?.ok === true;
+            setResult({ text: ok ? `${action.label}: ${text.aDone}` : value?.result === "not-while-playing" ? text.aNotWhilePlaying : `${action.label}: ${text.aFailed}`, problem: !ok });
+        }
+        catch {
+            setResult({ text: `${action.label}: ${text.aFailed}`, problem: true });
+        }
+        finally {
+            setBusy(false);
+        }
+    };
     const lines = answer ? healthLines(answer, locale) : [];
+    // Fixes for rows that need them, then the other actions of the rows that are open.
+    const buttons = lines.flatMap(line => (line.actions ?? [])
+        .filter(action => action.fix ? line.level === "attention" || line.level === "info" : !!open[line.id])
+        .map(action => ({ line, action })));
     const summary = answer ? healthSummary(answer, locale) : undefined;
-    return (SP_JSX.jsxs(PanelSection$3, { title: text.title, children: [SP_JSX.jsx("style", { children: style$2 }), SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsxs(Focusable$3, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id)))] }) }), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsx(ButtonItem$1, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
+    return (SP_JSX.jsxs(PanelSection$3, { title: text.title, children: [SP_JSX.jsx("style", { children: style$2 }), SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsxs(Focusable$3, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id))), result && SP_JSX.jsx("div", { className: `core-health-result${result.problem ? " problem" : ""}`, role: "status", children: result.text })] }) }), buttons.map(({ line, action }) => (SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsx(ButtonItem$1, { layout: "below", disabled: busy, onClick: () => act(action), children: action.label }) }, `action-${line.id}-${action.id}`))), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsx(ButtonItem$1, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
 }
 
 // Eternal Core: the Voice section of Quick Access > Core. Turns the agent's GET /voice/state and

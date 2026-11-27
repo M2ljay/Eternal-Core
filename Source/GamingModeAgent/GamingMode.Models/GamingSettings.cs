@@ -116,6 +116,11 @@ public sealed class GamingSettings
 	// version waits before Core updates Steam on an update night (1-60).
 	public int SteamUpdateSoakDays { get; set; } = 10;
 
+	// Console guards (ConsoleGuards.cs, docs/eternal/CONSOLE-GUARDS.md): launcher windows that pop over Big Picture
+	// are pushed back behind it (never closed), and Big Picture, the TV input and the network are checked after a wake.
+	public bool ConsoleLauncherFocusGuard { get; set; } = true;
+	public bool ConsoleWakeChecks { get; set; } = true;
+
 	// Core Voice (MarkIIIHost.Voice.cs), config-only. A keyboard combination that toggles the
 	// microphone mute (bind it to a Steam Input chord); empty turns it off. An ms-gamebar: URI
 	// the Xbox party button opens instead of Win+G, for a widget link found to work on this PC.

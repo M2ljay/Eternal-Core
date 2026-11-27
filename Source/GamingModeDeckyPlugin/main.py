@@ -163,6 +163,8 @@ _VOICE_DEVICE_ID = re.compile(r"\{[0-9.]{1,32}\}\.\{[0-9A-Fa-f-]{36}\}")
 _VOICE_STATE_MAXIMUM = 32768
 # Stream mode's state (src/StreamSection.tsx): a few short fields.
 _STREAM_STATE_MAXIMUM = 8192
+# Console guards: the actions Quick Access may ask the agent for (ConsoleGuardPolicy.Actions).
+_HEALTH_ACTIONS = ("display-restore", "display-save", "sound-restore", "sound-save", "controllers-expect", "prompts-off", "bitlocker-suspend", "wake-check-now")
 
 
 class Plugin(QuickSettingsPlugin):
@@ -228,12 +230,19 @@ class Plugin(QuickSettingsPlugin):
     # Core Health (src/HealthSection.tsx, agent MarkIIIHost.Health.cs). The agent may wait up to
     # 4 s for the home server's share, so these calls get a longer time box and a larger answer.
     async def core_health(self):
-        return await asyncio.to_thread(self._agent_local, "GET", "/health", timeout=8, maximum=65536)
+        return await asyncio.to_thread(self._agent_local, "GET", "/health", timeout=8, maximum=131072)
 
     async def core_health_dismiss(self, problem_id):
         if not isinstance(problem_id, str) or not re.fullmatch(r"[a-z-]{1,40}", problem_id):
             return {}
         return await asyncio.to_thread(self._agent_local, "POST", "/health/dismiss?id=" + problem_id, timeout=8, maximum=65536)
+
+    # Console guards (src/HealthSection.tsx, agent MarkIIIHost.Console.cs): the one-button fixes and the "save as
+    # normal" actions. A display restore can take a few seconds while Windows re-applies the mode.
+    async def core_health_action(self, action):
+        if action not in _HEALTH_ACTIONS:
+            return {}
+        return await asyncio.to_thread(self._agent_local, "POST", "/health/action?id=" + action, timeout=20, maximum=131072)
 
     # Core Voice (src/VoiceSection.tsx, agent MarkIIIHost.Voice.cs): microphone mute and the Xbox party
     # button. A mute change also refreshes the top-bar mark at once instead of at the next poll.

@@ -123,6 +123,10 @@ internal sealed partial class MarkIIIHost
 		(bool known, PlayhubUpdateService.UpdateInfo? update) = PlayhubUpdateNotice.Shared?.Peek() ?? (false, (PlayhubUpdateService.UpdateInfo?)null);
 		bool? updateAvailable = known && update is not null ? update.IsNewer && !string.IsNullOrWhiteSpace(update.DownloadUrl) : null;
 		(string? State, string? CallsMicName, string? CallsMicStatus) mic = MicHealth();
+		// Console guards (MarkIIIHost.Console.cs): their own probes, time-boxed; a failure leaves their rows out.
+		ConsoleGuardInputs? guards = null;
+		try { guards = await GatherConsoleAsync(fresh).ConfigureAwait(false); }
+		catch (Exception error) { _logger.Error("Console guards: observations failed this round.", error); }
 		// Steam updates: a row only while an automatic update is postponed (SteamUpdateHold.cs).
 		SteamHoldState steamHold = SteamUpdateHoldPolicy.Load(_holdPath);
 		SteamHoldView steamView = SteamUpdateHoldPolicy.View(steamHold, SteamUpdateHoldPolicy.IsHoldFilePresent(SteamRoot()), SoakDays(), Fingerprint(steamHold), now);
@@ -144,6 +148,7 @@ internal sealed partial class MarkIIIHost
 			StreamVirtualDisplay = stream.VirtualDisplay, TvHeld = stream.Active,
 			SteamPostponedReason = steamReason, SteamFailedCheck = steamReason == "rolled-back" ? steamHold.FailedCheck : null, SteamPendingVersion = steamHold.PendingVersion,
 			SteamPostponedSince = steamHold.PostponedSince ?? steamHold.LastUpdateAt, SteamPostponedAttention = steamView.Attention,
+			Guards = guards,
 		});
 	}
 

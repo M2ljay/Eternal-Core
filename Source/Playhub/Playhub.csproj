@@ -40,6 +40,8 @@
     <Compile Include="../Shared/SteamClientKindProbe.cs" Link="SteamClientKindProbe.cs" />
     <Compile Include="../Shared/CouchHardening.cs" Link="CouchHardening.cs" />
     <Compile Include="../Shared/CouchRegistryWindows.cs" Link="CouchRegistryWindows.cs" />
+    <Compile Include="../Shared/BitLockerGuard.cs" Link="BitLockerGuard.cs" />
+    <Compile Include="../Shared/BitLockerGuard.Windows.cs" Link="BitLockerGuard.Windows.cs" />
     <Compile Include="../Shared/LegacyXboxGameBarWatcher.cs" Link="LegacyXboxGameBarWatcher.cs" />
     <Compile Include="../Shared/GamingModeInstallationPolicy.cs" Link="GamingModeInstallationPolicy.cs" />
     <Compile Include="../Shared/EditorialPhotoMigration.cs" Link="EditorialPhotoMigration.cs" />

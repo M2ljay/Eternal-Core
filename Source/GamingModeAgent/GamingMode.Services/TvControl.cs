@@ -216,6 +216,28 @@ internal sealed class TvController
 		}).ConfigureAwait(false);
 	}
 
+	// Console guards' wake check: read only, whether the TV shows Core's input right now. Null when it
+	// cannot tell (TV control off, not paired, off or not answering, or Stream mode holds the TV).
+	internal async Task<bool?> ShowsCoreInputAsync(TimeSpan budget, CancellationToken cancellation)
+	{
+		TvSettings settings = _settings();
+		if (!settings.Enabled || string.IsNullOrWhiteSpace(settings.Address) || _pairing.ClientKey is not { } key) return null;
+		if (Held("input check")) return null;
+		string input = CoreInput(settings);
+		bool? shows = null;
+		try
+		{
+			TvResult result = await WithSessionAsync(settings.Address!, key, budget, cancellation, async session =>
+			{
+				var foreground = await session.RequestAsync(LgWebOsProtocol.ForegroundAppMessage, budget, cancellation).ConfigureAwait(false);
+				shows = LgWebOsProtocol.ForegroundIsInput(foreground.AppId, input);
+				return new TvResult(TvOutcome.Done, foreground.AppId);
+			}).ConfigureAwait(false);
+			return result.Outcome == TvOutcome.Done ? shows : null;
+		}
+		catch (OperationCanceledException) when (!cancellation.IsCancellationRequested) { return null; }
+	}
+
 	internal Task<IReadOnlyList<LgWebOsProtocol.DiscoveredTv>> DiscoverAsync(CancellationToken cancellation) =>
 		LgWebOsClient.DiscoverAsync(TimeSpan.FromSeconds(3), cancellation);
 

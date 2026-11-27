@@ -42,9 +42,16 @@ internal static class CouchHardening
             U(@"Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement", "ScoobeSystemSettingEnabled", 0),
             U(Delivery, "SubscribedContent-310093Enabled", 0),
         }),
+        // Console guards (docs/eternal/CONSOLE-GUARDS.md): 310093 is the "Windows welcome experience" after
+        // updates, ScoobeSystemSettingEnabled the "Let's finish setting up your device" screen; 338389 tips,
+        // 338388 Start suggestions, 338393/353694/353696 suggested content in Settings.
         new("tips", "Niente consigli, suggerimenti e pubblicità di Windows", false, new[]
         {
             U(Delivery, "SubscribedContent-338389Enabled", 0),
+            U(Delivery, "SubscribedContent-338388Enabled", 0),
+            U(Delivery, "SubscribedContent-338393Enabled", 0),
+            U(Delivery, "SubscribedContent-353694Enabled", 0),
+            U(Delivery, "SubscribedContent-353696Enabled", 0),
             U(Delivery, "SoftLandingEnabled", 0),
             U(Delivery, "SystemPaneSuggestionsEnabled", 0),
             U(Delivery, "RotatingLockScreenOverlayEnabled", 0),
@@ -95,6 +102,45 @@ internal static class CouchHardening
     };
 
     internal static IEnumerable<CouchValue> Values(bool machine) => Fixes.Where(fix => fix.Machine == machine).SelectMany(fix => fix.Values);
+
+    // ---------- update policy that fits this PC's edition (console guards) ----------
+
+    private const string CurrentVersion = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
+    private const string DriverSearching = @"SOFTWARE\Microsoft\Windows\CurrentVersion\DriverSearching";
+
+    // EditionID Core* is Windows Home.
+    internal static bool IsHome(string? edition) => edition is not null && edition.StartsWith("Core", StringComparison.OrdinalIgnoreCase);
+
+    // Pro and up honour TargetReleaseVersion: feature updates stay on the version installed when Core applied
+    // it (security updates continue). Home ignores that policy and does not reliably honour
+    // ExcludeWUDriversInQualityUpdate, so Home also gets Device Installation Settings' "No"
+    // (DriverSearching\SearchOrderConfig = 0). Both are machine values, applied with the others.
+    internal static CouchFix[] EditionFixes(string? edition, string? displayVersion, string? currentBuild)
+    {
+        if (IsHome(edition))
+            return new[] { new CouchFix("driver-search", "Windows Home: nessun driver da Windows Update per i dispositivi", true, new[] { M(DriverSearching, "SearchOrderConfig", 0) }) };
+        if (string.IsNullOrWhiteSpace(displayVersion) || !System.Text.RegularExpressions.Regex.IsMatch(displayVersion.Trim(), "^[0-9]{2}H[12]$")) return Array.Empty<CouchFix>();
+        string product = int.TryParse(currentBuild, out int build) && build >= 22000 ? "Windows 11" : "Windows 10";
+        return new[]
+        {
+            new CouchFix("feature-pin", "Gli aggiornamenti di funzionalità di Windows restano sulla versione attuale", true, new[]
+            {
+                M(Update, "ProductVersion", product), M(Update, "TargetReleaseVersion", 1), M(Update, "TargetReleaseVersionInfo", displayVersion.Trim()),
+            }),
+        };
+    }
+
+    internal static CouchFix[] EditionFixes(ICouchRegistry registry) =>
+        EditionFixes(Text(registry, CurrentVersion, "EditionID"), Text(registry, CurrentVersion, "DisplayVersion"), Text(registry, CurrentVersion, "CurrentBuild"));
+
+    // Every machine value Quiet Windows applies on this PC: the fixed list plus the edition's update policy.
+    internal static IEnumerable<CouchValue> MachineValues(ICouchRegistry registry) => Values(true).Concat(EditionFixes(registry).SelectMany(fix => fix.Values));
+
+    private static string? Text(ICouchRegistry registry, string key, string name)
+    {
+        try { return registry.Read(true, key, name) as string; }
+        catch (Exception error) when (error is UnauthorizedAccessException or IOException or System.Security.SecurityException) { return null; }
+    }
 
     internal static bool IsApplied(ICouchRegistry registry, CouchFix fix) => fix.Values.All(value => Same(Safe(registry, value), value.Value));
 
