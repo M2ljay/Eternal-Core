@@ -525,6 +525,8 @@ public static class Installer
                 winlogon!.DeleteValue("Shell", throwOnMissingValue: false);
         }
 
+        RestoreSteamStartupMovie();
+
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var startup = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
@@ -534,6 +536,24 @@ public static class Installer
         SafeDelete(Path.Combine(startup, "Gaming Mode Agent.lnk"));          // avvio automatico
         SafeDelete(Path.Combine(desktop, "Gaming Mode.lnk"));               // scorciatoia desktop
         DeleteDir(Path.Combine(appData, "Microsoft", "Windows", "Start Menu", "Programs", "Gaming Mode")); // menu Start
+    }
+
+    // Eternal Core: put back the Steam startup movie Core replaced (Shared/SteamStartupMovie.cs).
+    // With Steam running, config.vdf is left alone (Steam rewrites it from memory): Core's black
+    // movie then stays selected and in place, which only means Big Picture still opens on black.
+    private static void RestoreSteamStartupMovie()
+    {
+        try
+        {
+            using var steam = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
+            if (steam?.GetValue("SteamPath") is not string path || string.IsNullOrWhiteSpace(path)) return;
+            string root = Path.GetFullPath(path.Replace('/', Path.DirectorySeparatorChar));
+            string record = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GamingMode",
+                Playhub.Shared.SteamStartupMovie.RecordFileName);
+            Playhub.Shared.SteamStartupMovie.Apply(root, record, skip: false,
+                steamRunning: Process.GetProcessesByName("steam").Length > 0, openMovie: null);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or System.Security.SecurityException or NotSupportedException) { }
     }
 
     private static void StopRunningPlayhub()

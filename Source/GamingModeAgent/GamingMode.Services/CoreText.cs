@@ -518,5 +518,17 @@ internal static class CoreText
 			"Screenshot per Jarvis", "Screenshot taken for Jarvis", "Captura para Jarvis", "Capture d'écran pour Jarvis", "Screenshot für Jarvis", "Captura de tela para o Jarvis",
 			"Знімок екрана для Jarvis", "已为 Jarvis 截图", "Jarvis 用にスクリーンショットを撮りました", "Jarvis용 스크린샷을 찍었어요", "Jarvis के लिए स्क्रीनशॉट लिया गया", "Снимок экрана для Jarvis",
 		},
+		// The steel line under "CORE" on the mode-switch transitions (ModeTransitionVisual). "Gaming Mode" is a
+		// name and stays in English where the app's own transition title keeps it.
+		["transition.gaming"] = new[]
+		{
+			"Gaming Mode", "Gaming Mode", "Gaming Mode", "Gaming Mode", "Gaming Mode", "Gaming Mode",
+			"Gaming Mode", "游戏模式", "ゲーミングモード", "게이밍 모드", "Gaming Mode", "Gaming Mode",
+		},
+		["transition.desktop"] = new[]
+		{
+			"Desktop", "Desktop", "Escritorio", "Bureau", "Desktop", "Área de trabalho",
+			"Робочий стіл", "桌面", "デスクトップ", "데스크톱", "डेस्कटॉप", "Рабочий стол",
+		},
 	};
 }

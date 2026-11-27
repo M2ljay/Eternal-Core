@@ -31,6 +31,8 @@ public sealed class SplashScreenService : IDisposable
 		internal WinEventCallback? Callback;
 		// Mark III boot sequence on this surface, if one plays (created on the splash thread).
 		internal BootSequencePlayer? Player;
+		// Mode-switch transitions hand off by fading their scene to black (ModeTransitionVisual).
+		internal bool FadeToBlack;
 	}
 	private Surface? _surface;
 	private Func<bool>? _foregroundGuard;
@@ -103,8 +105,9 @@ public sealed class SplashScreenService : IDisposable
 	}
 	public void ShowTransition(ModeKind mode, string? language, GamingSplashSettings? settings = null, int failSafeCloseMs = 90000)
 	{
-		ShowCore(_ =>
+		ShowCore(surface =>
 		{
+			surface.FadeToBlack = true;
 			Window window = CreateSplashWindow(null);
 			window.Left = 0; window.Top = 0;
 			window.Width = SystemParameters.PrimaryScreenWidth; window.Height = SystemParameters.PrimaryScreenHeight;
@@ -219,9 +222,13 @@ public sealed class SplashScreenService : IDisposable
 			{
 				if (surface.Cancellation.IsCancellationRequested) { completion.TrySetResult(); return; }
 				if (!fade || surface.Window is not { } window) { CancelSurface(surface); completion.TrySetResult(); return; }
-				var animation = new DoubleAnimation { From = window.Opacity, To = 0, Duration = TimeSpan.FromMilliseconds(Math.Clamp(fadeMs,100,3000)), FillBehavior = FillBehavior.HoldEnd };
+				// A transition fades its scene to the window's black, from whatever frame is showing,
+				// then the window closes onto Big Picture or the desktop. Same duration as before: the
+				// hand-off never waits for the animation.
+				UIElement target = surface.FadeToBlack && window.Content is UIElement scene ? scene : window;
+				var animation = new DoubleAnimation { From = target.Opacity, To = 0, Duration = TimeSpan.FromMilliseconds(Math.Clamp(fadeMs,100,3000)), FillBehavior = FillBehavior.HoldEnd };
 				animation.Completed += (_, _) => { CancelSurface(surface); completion.TrySetResult(); };
-				window.BeginAnimation(UIElement.OpacityProperty, animation);
+				target.BeginAnimation(UIElement.OpacityProperty, animation);
 			}, DispatcherPriority.Send);
 			await completion.Task.WaitAsync(TimeSpan.FromMilliseconds(Math.Clamp(fadeMs,100,3000)+1000)).ConfigureAwait(false);
 		}
@@ -286,7 +293,7 @@ public sealed class SplashScreenService : IDisposable
 		{
 			grid.Children.Add(new TextBlock
 			{
-				Text = "playhub",
+				Text = "CORE",
 				Effect = ModeTransitionVisual.TextShadow(),
 				Foreground = Brushes.White,
 				FontSize = 56.0,

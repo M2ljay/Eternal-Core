@@ -7,7 +7,7 @@ namespace Playhub.Shared;
 // 3.0.0, and patch releases of a Mark keep its name (3.1.1 is still Mark I).
 internal static class EternalRelease
 {
-    internal const string Version = "3.3.1";
+    internal const string Version = "3.3.2";
     internal const string MarkName = "Mark III";
 
     internal const string AssemblyVersion = Version + ".0";

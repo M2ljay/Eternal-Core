@@ -10,6 +10,7 @@
     <!-- Eternal Core Mark III: the platform-neutral halves only. The Windows wiring
          (WPF, DPAPI, power events, XInput) is compiled by the agent build in CI. -->
     <Compile Include="../GamingModeAgent/GamingMode.Services/BootSequencePolicy.cs" Link="BootSequencePolicy.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/ModeTransitionTimeline.cs" Link="ModeTransitionTimeline.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Models/TvSettings.cs" Link="TvSettings.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/LgWebOsProtocol.cs" Link="LgWebOsProtocol.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/LgWebOsClient.cs" Link="LgWebOsClient.cs" />
@@ -20,6 +21,7 @@
     <Compile Include="../GamingModeAgent/GamingMode.Services/CoreText.cs" Link="CoreText.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/UpdateNight.cs" Link="UpdateNight.cs" />
     <Compile Include="../Shared/CouchHardening.cs" Link="CouchHardening.cs" />
+    <Compile Include="../Shared/SteamStartupMovie.cs" Link="SteamStartupMovie.cs" />
     <Compile Include="../Shared/DeckySteamPairing.cs" Link="DeckySteamPairing.cs" />
     <Compile Include="../Shared/SteamClientKindProbe.cs" Link="SteamClientKindProbe.cs" />
   </ItemGroup>

@@ -16,6 +16,7 @@
 Source/Playhub/Assets/DeckyRuntime/Official-3.3.1/LICENSE -text
 *.wav binary
 *.ogg binary
+*.webm binary
 # Eternal Core batch 2: VaporType's keyboard runtime ships byte-for-byte as upstream (LF), including its
 # template literals; see dist/keyboard/CORE-CHANGES.md.
 Source/Playhub/Assets/GamingModeDeckyPlugin/gaming-mode/dist/keyboard/** -text

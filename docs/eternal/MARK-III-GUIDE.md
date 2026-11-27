@@ -14,6 +14,46 @@ button skips it.** It plays while Steam is starting underneath, so it costs no t
 - Turn it off, or just its sound: Core > Gaming Mode > *Sequenza di avvio* /
   *Boot sequence*. It also follows the startup splash switch.
 
+## Switching modes
+
+Switching to Gaming Mode or back to the desktop plays a short cut of the same animation on
+black with the boot's stars. **Into Gaming Mode:** the stars fade in, Core's ring charges
+and its ticks light one by one, the core pulses with a white flash, then *CORE* and a steel
+*Gaming Mode* line; it fades to black as Big Picture appears. **To Desktop:** the same in
+reverse, the ring drains, the ticks go dark and the stars fade, with the line *Desktop*.
+It never makes the switch slower: it is over in about 1.3 seconds and the switch closes it
+whenever it is done. If the switch takes longer, the ticks pulse softly in turn until it is.
+With Windows' animation effects off, or Core > Gaming Mode > *Attiva animazione* off, the
+logo appears still, with a fade. The animation colour setting no longer changes these
+screens (it still tints the plain startup splash).
+
+## Steam's startup animation
+
+Big Picture plays its own startup movie each time it opens. Core skips it, so its boot
+sequence and transitions hand straight to Big Picture: Core > Gaming Mode > *Salta
+l'animazione di avvio di Steam* / *Skip Steam's startup animation* (on by default).
+
+- How: Steam has no documented switch or launch option for this, so Core puts a 0.3 second
+  black movie in `<Steam>\config\uioverrides\movies\core_skip_startup.webm` and selects
+  it, just as Settings > Customization > Startup Movie would. It writes the choice to
+  `<Steam>\config\config.vdf` (`Customization` > `StartupMovie`: `MovieID` `"0"`,
+  `LocalPath` `"/uioverrides/movies/core_skip_startup.webm"`, `Shuffle` off), and to the
+  older `Software\Valve\Steam\StartupMovie` section if Steam has one. Where Steam keeps
+  this comes from community tools that set startup movies (DroidDeck), not from Valve.
+- When: just before Core starts Steam, and only while Steam is not running, because Steam
+  rewrites `config.vdf` from memory. A change made while Steam is open applies at its next
+  start.
+- Reversible: the movie Core replaced (including a Points Shop movie and Shuffle) is kept in
+  `%APPDATA%\GamingMode\steam-startup-movie.json`. Turning the option off, or uninstalling
+  Core, puts it back and removes Core's movie. If you pick another movie in Steam while the
+  option is on, Core selects black again at the next start and remembers your new pick as
+  the one to bring back. If you pick one after turning the option off, Core leaves it alone.
+  An uninstall while Steam is open leaves the black movie selected and in place.
+- The movie: `Source/GamingModeAgent/Assets/core-skip-startup.webm` (3.4 KB, VP8 and silent
+  Opus, 1280x720, 0.3 s), made with
+  `ffmpeg -f lavfi -i color=c=black:s=1280x720:r=30:d=0.3 -f lavfi -i anullsrc=r=48000:cl=stereo -t 0.3 -c:v libvpx -b:v 50k -auto-alt-ref 0 -c:a libopus -b:a 16k -shortest -map_metadata -1 core_skip_startup.webm`.
+  Logic and tests: `Source/Shared/SteamStartupMovie.cs`, `Source/MarkIII.Tests/StartupMovieTests.cs`.
+
 ## Quiet Windows
 
 Core > Gaming Mode > **Quiet Windows** turns off the Windows interruptions that can reach
@@ -208,7 +248,8 @@ are folded in here. Logs: `%APPDATA%\GamingMode\agent.log`.
 ### At the TV
 
 1. **Boot:** power on. The TV turns on and switches to Core's HDMI; the boot sequence and sound play; Big Picture
-   appears normally. `agent.log`: *Boot sequence finished*. On a second boot press **A** during the sequence: it skips
+   appears straight after, with no Steam startup movie and no grey frame (`agent.log`: *Steam startup movie: Selected*
+   the first time). `agent.log`: *Boot sequence finished*. On a second boot press **A** during the sequence: it skips
    (*Boot sequence skipped*).
 2. **Plugins:** `agent.log` shows *Decky heartbeat received* and *Decky health: Healthy*. The **Core Repair** tile is in
    the Steam library and opens with the controller; **Restart plugins** answers *Fixed*. (Ending *PluginLoader* in

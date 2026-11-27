@@ -31,6 +31,7 @@
     <AssemblyMetadata Include="PlayhubControllerDriverRequired" Value="true" Condition="'$(PlayhubControllerDriverRequired)' == 'true'" />
     <Compile Include="../Shared/EditorialPhotoMigration.cs" Link="EditorialPhotoMigration.cs" />
     <Compile Include="../Shared/GamingModeInstallationPolicy.cs" Link="GamingModeInstallationPolicy.cs" />
+    <Compile Include="../Shared/SteamStartupMovie.cs" Link="SteamStartupMovie.cs" />
     <Compile Include="../Shared/ShellIdentity.cs" Link="ShellIdentity.cs" />
     <Compile Include="../Playhub/Services/DeckyPluginService.cs" Link="BundledPlugins/DeckyPluginService.cs" />
     <Compile Include="../Shared/PluginForkProtection.cs" Link="BundledPlugins/PluginForkProtection.cs" />
