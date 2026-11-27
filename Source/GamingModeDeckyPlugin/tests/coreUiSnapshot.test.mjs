@@ -143,6 +143,23 @@ test("snapshot: surfaces found through the table, keyed per Quick Access tab, wi
   assert.ok(out.icons);
 });
 
+test("snapshot (3.3.7): every host with its selector and source; The Collector's ROM page as a surface, without labels", () => {
+  const sheet = styles.buildCoreUiCss(maps);
+  const out = JSON.parse(snap.assembleSnapshot({ reason: "manual", version: "", now: new Date(0), docs: [docWith({})], main: undefined, styleId: "core-ui-style",
+    sheet, surfaces: new Map() }).json);
+  const collector = out.coreUi.hosts.find(host => host.id === "collector-rom-page");
+  assert.deepEqual(collector, { id: "collector-rom-page", selector: ".romm-core-page", source: "plugin", kind: "page" });
+  assert.deepEqual(out.coreUi.hosts.find(host => host.id === "menu"), { id: "menu", selector: "._Mm", source: "steam", kind: "panel" });
+  assert.deepEqual(out.coreUi.selectors.collectorRomPage, [{ strategy: ".romm-core-page", selector: ".romm-core-page" }]);
+  assert.equal(snap.hostList(undefined).length, 0);
+
+  const page = el("div", { cls: ["_Overview", "romm-core-page"], rect: [0, 560, 1920, 1800], children: [el("div", { cls: ["romm-core-title"], text: "A Game Name", rect: [0, 600, 900, 60] })] });
+  const found = snap.findSurfaces([docWith({ ".romm-core-page": [page] })], maps);
+  assert.deepEqual([...found.map(f => f.key)], ["collector-rom-page"]);
+  const record = snap.recordSurface(found[0], view, {}, 50, "2026-11-27T00:00:00.000Z");
+  assert.ok(!JSON.stringify(record).includes("A Game Name"), "no game names in the snapshot");
+});
+
 test("snapshot: held under 2 MB (recaptured smaller, then the largest trees dropped)", () => {
   const long = Array.from({ length: 12 }, (_, i) => `class-${"x".repeat(50)}-${i}`);
   const bigTree = nodes => ({ t: "div", r: [0, 0, 1, 1], k: Array.from({ length: nodes }, () => ({ t: "div", c: long, r: [0, 0, 1, 1] })) });

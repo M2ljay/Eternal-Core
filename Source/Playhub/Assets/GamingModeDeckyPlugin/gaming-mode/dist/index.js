@@ -67719,6 +67719,8 @@ const CORE_UI_TARGETS = {
     libraryGrid: ["{library.GamepadLibrary} {appgrid.AppGrid}", "{library.GamepadLibrary} {appgrid.LibraryAppGrid}", "{library.GamepadLibrary}"],
     libraryCapsule: ["{library.GamepadLibrary} {portrait.LibraryItemBox}"],
     collectionTile: ['a[href*="/library/collection/"]', "[data-collection-id]"],
+    // Hosts from other plugins (3.3.7): The Collector's ROM game page (CORE_UI_HOSTS, "collector-rom-page").
+    collectorRomPage: [".romm-core-page"],
 };
 const TOKEN = /\{([a-z]+)\.([A-Za-z0-9_]+)\}/g;
 // One template against the maps: the strong form (with Core UI's specificity) and the plain form (querySelector).
@@ -68024,13 +68026,6 @@ function collectionTileCss(tiles = [""]) {
         `${toned.map(sel => `${sel}[${CORE_UI_TONE_ATTRIBUTE}]`).join(",")}{${imp({ "box-shadow": "inset 0 -3px 0 var(--core-tone)" })}}` +
         `${all(":is(.gpfocus,:focus)")}{${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "0", filter: "none", animation: "none" })}}` + toneVariables(toned);
 }
-// Every surface Core UI paints black, and so gets the Starfield. Footers and the opaque top bar are thin:
-// they get stars only when large enough (minArea, CSS pixels) to read as a surface. The clear top bar and
-// hint bar over game art are not hosts: no stars behind art or video.
-// fullHeight: the Steam menu and Quick Access run from the top edge of the screen to the bottom one (coreFullHeight.ts
-// moves the panel; the canvas extension stays as the fallback).
-// panel: only an element at most 60% of the screen wide counts (a Quick Access candidate that turns out to be a
-// full-screen wrapper is never painted black). Earlier entries of one group are tried as the outer host first.
 const CORE_UI_HOSTS = [
     { id: "menu", map: "mainmenu", key: "Menu", minArea: 0, fullHeight: true, panel: true },
     { id: "qam-container", map: "quickaccess", key: "Container", minArea: 0, fullHeight: true, panel: true },
@@ -68045,7 +68040,25 @@ const CORE_UI_HOSTS = [
     // Phase 2 pages: the canvas covers the visible part of the page only.
     { id: "home", map: "gamepadui", key: "BasicHome", minArea: 0, page: true },
     { id: "library", map: "library", key: "GamepadLibrary", minArea: 0, page: true },
+    // Hosts from other plugins (3.3.7). The Collector's ROM game page (Eternal-Collector, corePageStyles.ts): the
+    // wrapper in place of Steam's overview panel, below the hero art.
+    { id: "collector-rom-page", selector: ".romm-core-page", minArea: 0, page: true },
 ];
+// A plugin host's selector: one or more plain class names, nothing else (no combinators, attributes or ids).
+const PLUGIN_HOST_SELECTOR = /^(\.[A-Za-z_][\w-]*)+$/;
+// Where a host is found: plain (querySelector) and strong (stylesheet: the class repeated plus the boost). Undefined
+// when its class map or key is missing on this client, or a plugin host's selector is not a plain class list.
+function resolveHostSelector(maps, host) {
+    if ("selector" in host) {
+        const plain = String(host.selector ?? "").trim();
+        if (!PLUGIN_HOST_SELECTOR.test(plain))
+            return undefined;
+        const first = plain.slice(0, plain.indexOf(".", 1) > 0 ? plain.indexOf(".", 1) : undefined);
+        return { plain, strong: plain + first + CORE_UI_BOOST };
+    }
+    const plain = plainSelector(maps[host.map], host.key), strong = classSelector(maps[host.map], host.key);
+    return plain && strong ? { plain, strong } : undefined;
+}
 // Jarvis's presence orb in the top bar, next to Steam's clock (jarvisPresence.ts decides its state). Dim steel ring
 // when idle, a slow crimson pulse (opacity only, no glow) while listening or thinking, a crimson ring when an answer
 // is ready. Still under reduced motion.
@@ -68095,15 +68108,22 @@ function buildCoreUiCss(maps, options = {}) {
     }
     const hosts = [];
     for (const host of CORE_UI_HOSTS) {
-        const selector = plainSelector(maps[host.map], host.key);
-        if (selector)
-            hosts.push({ id: host.id, selector, minArea: host.minArea, fullHeight: host.fullHeight === true, panel: host.panel === true, page: host.page === true });
+        const plugin = "selector" in host;
+        // A plugin's page is a host only next to Steam's own surfaces: without any class map there is no Core UI.
+        if (plugin && !applied.length)
+            continue;
+        const found = resolveHostSelector(maps, host);
+        if (!found)
+            continue;
+        hosts.push({ id: host.id, selector: found.plain, strong: found.strong, minArea: host.minArea,
+            fullHeight: !plugin && host.fullHeight === true, panel: !plugin && host.panel === true,
+            page: host.page === true, source: plugin ? "plugin" : "steam", viewport: plugin });
     }
     // Black means starfield: every black surface above is a host. The runtime puts one canvas in each (the
     // shared field), behind the surface's content; a host inside another host stays clear instead.
     if (hosts.length) {
         const all = hosts.map(host => `${ROOT} ${host.selector}`);
-        const strong = hosts.map(host => `${ROOT} ${classSelector(maps[CORE_UI_HOSTS.find(item => item.id === host.id).map], CORE_UI_HOSTS.find(item => item.id === host.id).key)}`);
+        const strong = hosts.map(host => `${ROOT} ${host.strong}`);
         parts.push(`/* starfield-hosts */${all.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}]`).join(",")}{${imp({ isolation: "isolate" })}}` +
             `${all.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}] > canvas[${CORE_UI_STARS_ATTRIBUTE}]`).join(",")}{${imp({ position: "absolute", left: "0", right: "auto", bottom: "auto", width: "100%",
                 // The canvas follows the surface's scroll position and, for full-height surfaces, reaches the screen's edges.
@@ -68731,7 +68751,7 @@ function createCoreUi(deps) {
     const edits = new InlineEdits();
     const fullHeight = createFullHeight(edits);
     const chromes = new Set();
-    const diagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {}, restyled: 0 };
+    const diagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {}, restyled: 0, hosts: {} };
     function orbState() {
         try {
             return deps.orb?.state() ?? "hidden";
@@ -68848,12 +68868,20 @@ function createCoreUi(deps) {
     // Where the canvas goes: at the surface's scroll position, and for the Steam menu and Quick Access from the
     // screen's top edge to its bottom edge (the gaps Steam leaves for the top bar and the button hints, at most a
     // quarter of the screen each). Only the canvas moves: the panel's own box, focus and scrolling are untouched.
-    // Returns true when anything changed.
+    // A plugin's page (viewport) scrolls inside Steam's page: its canvas covers exactly the part of the element on
+    // screen, so it never reaches outside the element (the hero art above it stays clear). Returns true when anything
+    // changed.
     function place(surface) {
         let top = 0, bottom = 0, scroll = 0, pageHeight = 0;
         try {
             scroll = Math.max(0, Math.round(surface.element.scrollTop || 0));
-            if (surface.host.page)
+            if (surface.host.viewport) {
+                const rect = surface.element.getBoundingClientRect(), height = surface.doc.defaultView?.innerHeight ?? 0;
+                const from = Math.max(0, rect.top), to = Math.min(height, rect.bottom);
+                scroll += Math.max(0, Math.round(from - rect.top));
+                pageHeight = Math.max(0, Math.round(to - from));
+            }
+            else if (surface.host.page)
                 pageHeight = Math.max(0, Math.round(Math.min(surface.element.clientHeight || 0, surface.doc.defaultView?.innerHeight ?? 0)));
             if (surface.host.fullHeight) {
                 const rect = surface.element.getBoundingClientRect(), height = surface.doc.defaultView?.innerHeight ?? 0;
@@ -69177,6 +69205,10 @@ function createCoreUi(deps) {
             }
             catch { /* A Steam popup may close while it is being styled. */ }
         }
+        const counts = {};
+        for (const surface of surfaces.values())
+            counts[surface.host.id] = (counts[surface.host.id] ?? 0) + 1;
+        diagnostics.hosts = counts;
         updateOrbs();
         try {
             deps.probe?.tick(docs);
@@ -69253,6 +69285,7 @@ function createCoreUi(deps) {
         }
         styles.clear();
         diagnostics.state = "off";
+        diagnostics.hosts = {};
     }
     const unsubscribe = deps.setting.subscribe(sync);
     timer = deps.every.start(sync, 1000);
@@ -69430,6 +69463,8 @@ const SNAPSHOT_SURFACES = [
     { id: "home", targets: ["home"], labels: false },
     { id: "footer", targets: ["footer"], labels: true },
     { id: "top-bar", targets: ["header"], labels: false },
+    // 3.3.7, a host from another plugin: The Collector's ROM game page (no labels: game names).
+    { id: "collector-rom-page", targets: ["collectorRomPage"], labels: false },
 ];
 const STYLE_KEYS = [
     // [short key, computed property, defaults left out]
@@ -69752,7 +69787,9 @@ function assembleSnapshot(input, recapture) {
         screen: { width: Number(firstView.innerWidth) || 0, height: Number(firstView.innerHeight) || 0, dpr: Number(firstView.devicePixelRatio) || 1,
             screenWidth: Number(firstView.screen?.width) || 0, screenHeight: Number(firstView.screen?.height) || 0 },
         coreUi: { applied: input.sheet?.applied ?? [], skipped: input.sheet?.skipped ?? [], mapRoutes: input.sheet?.routes ?? {},
-            selectors: input.sheet?.maps ? resolvedTargetTable(input.sheet.maps) : {} },
+            selectors: input.sheet?.maps ? resolvedTargetTable(input.sheet.maps) : {},
+            // 3.3.7: every Starfield host resolved on this client (Steam's and other plugins'), with its selector.
+            hosts: hostList(input.sheet?.hosts) },
         documents: input.docs.map((doc, index) => documentRecord(doc, index, input.main, input.styleId)),
         ...(input.extra ?? {}),
     };
@@ -69780,6 +69817,13 @@ function assembleSnapshot(input, recapture) {
     for (const record of surfaces.values())
         nodes += record.nodes;
     return { json, bytes: size(json), nodes, dropped };
+}
+// The host list as the snapshot records it: id, plain selector, where it came from and its kind.
+function hostList(hosts) {
+    if (!Array.isArray(hosts))
+        return [];
+    return hosts.slice(0, 64).map(host => ({ id: String(host.id), selector: String(host.selector).slice(0, 200), source: host.source === "plugin" ? "plugin" : "steam",
+        kind: host.page ? "page" : host.panel ? "panel" : "surface" }));
 }
 function utf8Length(text) {
     let bytes = 0;

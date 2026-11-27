@@ -113,6 +113,8 @@ paddles as A and B, Vibepollo and per-device game settings, Jarvis tap to talk):
 [EMULATOR-UPDATES.md](EMULATOR-UPDATES.md), [CORE-STREAM-MODE.md](CORE-STREAM-MODE.md), [JARVIS.md](JARVIS.md).
 3.3.6 (the Club tab reads the club's real pages; Log completion through Eternal-Assemble):
 [CORE-UI.md](CORE-UI.md#the-club-tab-play-retro-games-club).
+3.3.7 (The Collector's ROM game page takes the Core Starfield: hosts from other plugins):
+[CORE-UI.md](CORE-UI.md#hosts-from-other-plugins-337).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

@@ -56,7 +56,9 @@ export type CoreUiDeps = {
 // What the Starfield is doing, for the TV checklist (window[Symbol.for("core.ui.diagnostics")]).
 export type CoreUiDiagnostics = { surfaces: number; shown: number; state: "off" | "idle" | "moving" | "still-game" | "still-reduced"; frames: number; full: Record<string, string>;
   // 3.3.4: how often Core UI's stylesheet was moved back to the end of <head> (after CSS Loader's or another's).
-  restyled: number };
+  restyled: number;
+  // 3.3.7: per host id, how many elements carry its Starfield right now (Steam's hosts and other plugins' alike).
+  hosts: Record<string, number> };
 
 type Surface = { element: HTMLElement; canvas: HTMLCanvasElement; host: CoreUiHost; doc: Document; position?: string; still: boolean; top: number; bottom: number; scroll: number; pageHeight: number };
 
@@ -74,7 +76,7 @@ export function createCoreUi(deps: CoreUiDeps) {
   const edits = new InlineEdits();
   const fullHeight = createFullHeight(edits);
   const chromes = new Set<Element>();
-  const diagnostics: CoreUiDiagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {}, restyled: 0 };
+  const diagnostics: CoreUiDiagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {}, restyled: 0, hosts: {} };
 
   function orbState(): string {
     try { return deps.orb?.state() ?? "hidden"; } catch { return "hidden"; }
@@ -152,12 +154,19 @@ export function createCoreUi(deps: CoreUiDeps) {
   // Where the canvas goes: at the surface's scroll position, and for the Steam menu and Quick Access from the
   // screen's top edge to its bottom edge (the gaps Steam leaves for the top bar and the button hints, at most a
   // quarter of the screen each). Only the canvas moves: the panel's own box, focus and scrolling are untouched.
-  // Returns true when anything changed.
+  // A plugin's page (viewport) scrolls inside Steam's page: its canvas covers exactly the part of the element on
+  // screen, so it never reaches outside the element (the hero art above it stays clear). Returns true when anything
+  // changed.
   function place(surface: Surface): boolean {
     let top = 0, bottom = 0, scroll = 0, pageHeight = 0;
     try {
       scroll = Math.max(0, Math.round(surface.element.scrollTop || 0));
-      if (surface.host.page) pageHeight = Math.max(0, Math.round(Math.min(surface.element.clientHeight || 0, surface.doc.defaultView?.innerHeight ?? 0)));
+      if (surface.host.viewport) {
+        const rect = surface.element.getBoundingClientRect(), height = surface.doc.defaultView?.innerHeight ?? 0;
+        const from = Math.max(0, rect.top), to = Math.min(height, rect.bottom);
+        scroll += Math.max(0, Math.round(from - rect.top));
+        pageHeight = Math.max(0, Math.round(to - from));
+      } else if (surface.host.page) pageHeight = Math.max(0, Math.round(Math.min(surface.element.clientHeight || 0, surface.doc.defaultView?.innerHeight ?? 0)));
       if (surface.host.fullHeight) {
         const rect = surface.element.getBoundingClientRect(), height = surface.doc.defaultView?.innerHeight ?? 0;
         if (height > 0 && rect.height > 0) {
@@ -355,6 +364,9 @@ export function createCoreUi(deps: CoreUiDeps) {
         placeOrb(doc, current.clock);
       } catch { /* A Steam popup may close while it is being styled. */ }
     }
+    const counts: Record<string, number> = {};
+    for (const surface of surfaces.values()) counts[surface.host.id] = (counts[surface.host.id] ?? 0) + 1;
+    diagnostics.hosts = counts;
     updateOrbs();
     try { deps.probe?.tick(docs); } catch { /* The snapshot is diagnostics only. */ }
     if (!unpin && deps.pinPrompts && pinTries < 120) {
@@ -389,6 +401,7 @@ export function createCoreUi(deps: CoreUiDeps) {
     }
     styles.clear();
     diagnostics.state = "off";
+    diagnostics.hosts = {};
   }
 
   const unsubscribe = deps.setting.subscribe(sync);

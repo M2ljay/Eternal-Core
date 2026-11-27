@@ -44,6 +44,8 @@ export const SNAPSHOT_SURFACES: SnapshotSurface[] = [
   { id: "home", targets: ["home"], labels: false },
   { id: "footer", targets: ["footer"], labels: true },
   { id: "top-bar", targets: ["header"], labels: false },
+  // 3.3.7, a host from another plugin: The Collector's ROM game page (no labels: game names).
+  { id: "collector-rom-page", targets: ["collectorRomPage"], labels: false },
 ];
 
 export type SnapshotView = { innerWidth?: number; innerHeight?: number; devicePixelRatio?: number; getComputedStyle?: (element: any) => any; screen?: any };
@@ -277,7 +279,8 @@ export function documentRecord(doc: any, index: number, main: any, styleId: stri
 export type SnapshotInput = {
   reason: string; version: string; now: Date;
   docs: any[]; main: any; styleId: string;
-  sheet?: { applied?: string[]; skipped?: string[]; routes?: Record<string, string>; maps?: CoreUiMaps; ruleTargets?: Record<string, string> };
+  sheet?: { applied?: string[]; skipped?: string[]; routes?: Record<string, string>; maps?: CoreUiMaps; ruleTargets?: Record<string, string>;
+    hosts?: Array<{ id: string; selector: string; source?: string; page?: boolean; fullHeight?: boolean; panel?: boolean }> };
   surfaces: Map<string, SurfaceRecord>;
   extra?: Record<string, unknown>;
 };
@@ -291,7 +294,9 @@ export function assembleSnapshot(input: SnapshotInput, recapture?: (nodes: numbe
     screen: { width: Number(firstView.innerWidth) || 0, height: Number(firstView.innerHeight) || 0, dpr: Number(firstView.devicePixelRatio) || 1,
       screenWidth: Number(firstView.screen?.width) || 0, screenHeight: Number(firstView.screen?.height) || 0 },
     coreUi: { applied: input.sheet?.applied ?? [], skipped: input.sheet?.skipped ?? [], mapRoutes: input.sheet?.routes ?? {},
-      selectors: input.sheet?.maps ? resolvedTargetTable(input.sheet.maps) : {} },
+      selectors: input.sheet?.maps ? resolvedTargetTable(input.sheet.maps) : {},
+      // 3.3.7: every Starfield host resolved on this client (Steam's and other plugins'), with its selector.
+      hosts: hostList(input.sheet?.hosts) },
     documents: input.docs.map((doc, index) => documentRecord(doc, index, input.main, input.styleId)),
     ...(input.extra ?? {}),
   };
@@ -315,6 +320,13 @@ export function assembleSnapshot(input: SnapshotInput, recapture?: (nodes: numbe
   let nodes = 0;
   for (const record of surfaces.values()) nodes += record.nodes;
   return { json, bytes: size(json), nodes, dropped };
+}
+
+// The host list as the snapshot records it: id, plain selector, where it came from and its kind.
+export function hostList(hosts: NonNullable<SnapshotInput["sheet"]>["hosts"]): Array<{ id: string; selector: string; source: string; kind: string }> {
+  if (!Array.isArray(hosts)) return [];
+  return hosts.slice(0, 64).map(host => ({ id: String(host.id), selector: String(host.selector).slice(0, 200), source: host.source === "plugin" ? "plugin" : "steam",
+    kind: host.page ? "page" : host.panel ? "panel" : "surface" }));
 }
 
 export function utf8Length(text: string): number {

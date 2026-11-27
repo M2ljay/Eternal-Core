@@ -443,6 +443,35 @@ renders its own game detail UI, so it should reuse Steam's play-bar and tab clas
 `data-core-ui-host` / `data-core-collection`-style attributes Core UI already styles), the `--core-radius-float` token,
 the family tones (`CORE_FAMILY_TONES`) and the focus rules (gunmetal plus crimson, square).
 
+The Collector already draws its ROM page in the Core design (Eternal-Collector, `src/utils/corePageStyles.ts`) and, from
+3.3.7, Core gives that page the animated Starfield (below).
+
+### Hosts from other plugins (3.3.7)
+
+A cooperating plugin can have its own black page take the Core Starfield, as Home and the Library do. The contract:
+
+- **Root class.** The plugin gives the page's root element a fixed class that Core lists in `CORE_UI_HOSTS`
+  (`src/coreUiStyles.ts`) as `{ id, selector, minArea, page }` instead of a Steam class map (`map` + `key`). The
+  selector must be plain class names only (`resolveHostSelector` refuses anything else). Today: The Collector's ROM game
+  page, `{ id: "collector-rom-page", selector: ".romm-core-page", page: true, minArea: 0 }`.
+- **Attribute.** While Core UI is on, Core sets `data-core-ui-host="1"` on that element and puts its canvas
+  (`canvas[data-core-ui-stars="collector-rom-page"]`) first inside it, behind the content. Core UI off (or the page
+  closing) removes both. A plugin keys off the attribute: The Collector shows its still fallback field only under
+  `html[data-core-ui] .romm-core-page:not([data-core-ui-host="1"])`, so the animated field replaces it, and the page is
+  plain black without Core UI.
+- **The plugin paints the page**, black, and keeps any art outside the element (The Collector's hero art is Steam's
+  header above it). Core paints nothing else on it. The canvas covers only the part of the element on screen
+  (`viewport`: `--core-ui-scroll` is how far the element's top is above the screen, `--core-ui-page-height` the visible
+  height), so stars never reach past the element and never go behind the art.
+- Such a host is never full height and never a panel (no stretch, no clear layers), is held still under reduced motion
+  and while a game runs like every page host, and is used only when Core UI found Steam's class maps.
+- Diagnostics: `window[Symbol.for("core.ui.diagnostics")]().hosts` counts the elements carrying each host's canvas
+  (`{ "collector-rom-page": 1 }` on a ROM page). The snapshot lists every host under `coreUi.hosts` (`id`, `selector`,
+  `source`: `steam` or `plugin`, `kind`) and records the page as the surface `collector-rom-page`, without labels.
+
+Another plugin adds a line to `CORE_UI_HOSTS` (and its target to `CORE_UI_TARGETS` for the snapshot); nothing else in
+Core changes.
+
 ## Screensaver
 
 Core registers **Core Starfield** in Steam's screensaver list (`src/circlesScreensaver.ts`). From 3.3.3 it is also the
@@ -500,7 +529,9 @@ Home's tabs and registry, the screensaver default, frames per window), `tests/co
 pruning, the size cap and scheduling, the selector table, stylesheet order, rail icons, tab, row, tile and capsule
 builders, the Starfield's density, the brief's data, the legacy CSS Loader guard), `tests/test_core_ui_snapshot.py`
 (3.3.4: the snapshot file, legacy themes off and back on, the AppData and icon folder choice),
-`tests/test_core_icons.py` (the icon folder) and
+`tests/test_core_icons.py` (the icon folder), the 3.3.7 plugin host tests in `tests/coreUi.test.mjs` and
+`tests/coreUiSnapshot.test.mjs` (The Collector's page found by its class, the attribute on and off, the canvas only over
+the visible part, reduced motion, the snapshot's host list) and
 `tests/coreJarvisTab.test.mjs` (tap/hold split, opening and closing the Jarvis tab, the tab
 after Core's, the orb states, defaults, text).
 
@@ -577,3 +608,13 @@ Same setup, Core 3.3.4.
    tabs (the snapshot's `icons.library.tabs` says `user-name`); collection tiles with the icon centred and the name below;
    smaller capsules with black gutters.
 6. Home: the Jarvis brief hero (greeting, date, time, weather, Continue with art, the Club's pick, chips, orb, Talk).
+
+## TV checklist (3.3.7)
+
+Same setup, Core 3.3.7, The Collector with the Core game page (`collector-core-look`).
+
+1. Open a ROM's game page: the black part below the hero art has drifting stars (diagnostics `hosts` shows
+   `collector-rom-page: 1`, `state` `moving`); the hero art itself has no stars over it.
+2. Scroll down the page: the stars stay behind the whole visible black area and do not slide over the art.
+3. Core UI off (Quick Access > Core > Look): the page is plain black, with no stars; on again: the animated
+   field is back. With reduced motion, the stars hold still.

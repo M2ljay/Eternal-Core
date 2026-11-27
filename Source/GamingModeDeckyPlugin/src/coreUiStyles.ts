@@ -181,6 +181,8 @@ export const CORE_UI_TARGETS: Record<string, string[]> = {
   libraryGrid: ["{library.GamepadLibrary} {appgrid.AppGrid}", "{library.GamepadLibrary} {appgrid.LibraryAppGrid}", "{library.GamepadLibrary}"],
   libraryCapsule: ["{library.GamepadLibrary} {portrait.LibraryItemBox}"],
   collectionTile: ['a[href*="/library/collection/"]', "[data-collection-id]"],
+  // Hosts from other plugins (3.3.7): The Collector's ROM game page (CORE_UI_HOSTS, "collector-rom-page").
+  collectorRomPage: [".romm-core-page"],
 };
 
 const TOKEN = /\{([a-z]+)\.([A-Za-z0-9_]+)\}/g;
@@ -522,7 +524,14 @@ export function collectionTileCss(tiles: string[] = [""]): string {
 // moves the panel; the canvas extension stays as the fallback).
 // panel: only an element at most 60% of the screen wide counts (a Quick Access candidate that turns out to be a
 // full-screen wrapper is never painted black). Earlier entries of one group are tried as the outer host first.
-export const CORE_UI_HOSTS: Array<{ id: string; map: CoreUiMapName; key: string; minArea: number; fullHeight?: boolean; panel?: boolean; page?: boolean }> = [
+// selector (3.3.7): a host from another plugin, found by a fixed class selector instead of a Steam class map
+// (CORE-UI.md, "Hosts from other plugins"). The plugin paints its own page black and keeps any art outside that
+// element; Core only marks it (data-core-ui-host="1") and puts the Starfield inside it, over the part on screen.
+// Such a host is never full height and never a panel, and is used only when Core UI found Steam's maps.
+export type CoreUiMapHostSpec = { id: string; map: CoreUiMapName; key: string; minArea: number; fullHeight?: boolean; panel?: boolean; page?: boolean };
+export type CoreUiSelectorHostSpec = { id: string; selector: string; minArea: number; page?: boolean };
+export type CoreUiHostSpec = CoreUiMapHostSpec | CoreUiSelectorHostSpec;
+export const CORE_UI_HOSTS: CoreUiHostSpec[] = [
   { id: "menu", map: "mainmenu", key: "Menu", minArea: 0, fullHeight: true, panel: true },
   { id: "qam-container", map: "quickaccess", key: "Container", minArea: 0, fullHeight: true, panel: true },
   { id: "qam-panel", map: "quickaccess", key: "QuickAccessMenu", minArea: 0, fullHeight: true, panel: true },
@@ -536,9 +545,30 @@ export const CORE_UI_HOSTS: Array<{ id: string; map: CoreUiMapName; key: string;
   // Phase 2 pages: the canvas covers the visible part of the page only.
   { id: "home", map: "gamepadui", key: "BasicHome", minArea: 0, page: true },
   { id: "library", map: "library", key: "GamepadLibrary", minArea: 0, page: true },
+  // Hosts from other plugins (3.3.7). The Collector's ROM game page (Eternal-Collector, corePageStyles.ts): the
+  // wrapper in place of Steam's overview panel, below the hero art.
+  { id: "collector-rom-page", selector: ".romm-core-page", minArea: 0, page: true },
 ];
 
-export type CoreUiHost = { id: string; selector: string; minArea: number; fullHeight: boolean; panel: boolean; page: boolean };
+// A plugin host's selector: one or more plain class names, nothing else (no combinators, attributes or ids).
+const PLUGIN_HOST_SELECTOR = /^(\.[A-Za-z_][\w-]*)+$/;
+
+// Where a host is found: plain (querySelector) and strong (stylesheet: the class repeated plus the boost). Undefined
+// when its class map or key is missing on this client, or a plugin host's selector is not a plain class list.
+export function resolveHostSelector(maps: CoreUiMaps, host: CoreUiHostSpec): { plain: string; strong: string } | undefined {
+  if ("selector" in host) {
+    const plain = String(host.selector ?? "").trim();
+    if (!PLUGIN_HOST_SELECTOR.test(plain)) return undefined;
+    const first = plain.slice(0, plain.indexOf(".", 1) > 0 ? plain.indexOf(".", 1) : undefined);
+    return { plain, strong: plain + first + CORE_UI_BOOST };
+  }
+  const plain = plainSelector(maps[host.map], host.key), strong = classSelector(maps[host.map], host.key);
+  return plain && strong ? { plain, strong } : undefined;
+}
+
+// source: "steam" (a class map) or "plugin" (a fixed selector from a cooperating plugin). viewport: the canvas covers
+// only the part of the element on screen (a plugin page scrolls inside Steam's page, not inside itself).
+export type CoreUiHost = { id: string; selector: string; strong: string; minArea: number; fullHeight: boolean; panel: boolean; page: boolean; source: "steam" | "plugin"; viewport: boolean };
 export type CoreUiSheet = {
   css: string; applied: string[]; skipped: string[]; hosts: CoreUiHost[]; clock?: string;
   // 3.3.4, for the snapshot: the maps found, how each was found, and per rule the plain selectors it targets.
@@ -583,14 +613,20 @@ export function buildCoreUiCss(maps: CoreUiMaps, options: { mark?: string; wordm
   if (applied.length === 1 && applied[0] === "corners") { parts.length = 0; applied.length = 0; }
   const hosts: CoreUiHost[] = [];
   for (const host of CORE_UI_HOSTS) {
-    const selector = plainSelector(maps[host.map], host.key);
-    if (selector) hosts.push({ id: host.id, selector, minArea: host.minArea, fullHeight: host.fullHeight === true, panel: host.panel === true, page: host.page === true });
+    const plugin = "selector" in host;
+    // A plugin's page is a host only next to Steam's own surfaces: without any class map there is no Core UI.
+    if (plugin && !applied.length) continue;
+    const found = resolveHostSelector(maps, host);
+    if (!found) continue;
+    hosts.push({ id: host.id, selector: found.plain, strong: found.strong, minArea: host.minArea,
+      fullHeight: !plugin && (host as CoreUiMapHostSpec).fullHeight === true, panel: !plugin && (host as CoreUiMapHostSpec).panel === true,
+      page: host.page === true, source: plugin ? "plugin" : "steam", viewport: plugin });
   }
   // Black means starfield: every black surface above is a host. The runtime puts one canvas in each (the
   // shared field), behind the surface's content; a host inside another host stays clear instead.
   if (hosts.length) {
     const all = hosts.map(host => `${ROOT} ${host.selector}`);
-    const strong = hosts.map(host => `${ROOT} ${classSelector(maps[CORE_UI_HOSTS.find(item => item.id === host.id)!.map], CORE_UI_HOSTS.find(item => item.id === host.id)!.key)}`);
+    const strong = hosts.map(host => `${ROOT} ${host.strong}`);
     parts.push(`/* starfield-hosts */${all.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}]`).join(",")}{${imp({ isolation: "isolate" })}}` +
       `${all.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}] > canvas[${CORE_UI_STARS_ATTRIBUTE}]`).join(",")}{${imp({ position: "absolute", left: "0", right: "auto", bottom: "auto", width: "100%",
         // The canvas follows the surface's scroll position and, for full-height surfaces, reaches the screen's edges.

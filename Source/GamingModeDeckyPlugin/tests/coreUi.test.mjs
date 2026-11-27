@@ -142,9 +142,11 @@ function checkSheet(sheet) {
   // Full height: the menu's and Quick Access's stars reach the screen edges through the canvas only.
   assert.match(css, /canvas\[data-core-ui-stars\]\{[^}]*top:calc\(var\(--core-ui-scroll, 0px\) - var\(--core-ui-extend-top, 0px\)\)[^}]*background-color:#000000/);
   const hosts = JSON.parse(JSON.stringify(sheet.hosts));
-  assert.deepEqual(hosts.map(host => host.id), ["menu", "qam-container", "qam-panel", "qam", "context", "menu-footer", "qam-footer", "qam-footer-shadow", "footer-opaque", "header-opaque", "home", "library"]);
-  assert.deepEqual(hosts.filter(host => host.page).map(host => host.id), ["home", "library"]);
+  assert.deepEqual(hosts.map(host => host.id), ["menu", "qam-container", "qam-panel", "qam", "context", "menu-footer", "qam-footer", "qam-footer-shadow", "footer-opaque", "header-opaque", "home", "library", "collector-rom-page"]);
+  assert.deepEqual(hosts.filter(host => host.page).map(host => host.id), ["home", "library", "collector-rom-page"]);
   assert.deepEqual(hosts.filter(host => host.fullHeight).map(host => host.id), ["menu", "qam-container", "qam-panel", "qam"]);
+  assert.deepEqual(hosts.filter(host => host.panel).map(host => host.id), ["menu", "qam-container", "qam-panel", "qam"]);
+  assert.deepEqual(hosts.filter(host => host.source === "plugin").map(host => host.id), ["collector-rom-page"]);
   assert.deepEqual(JSON.parse(JSON.stringify(sheet.skipped)), []);
 }
 
@@ -485,3 +487,119 @@ test("the controller-prompt pin is part of the Core UI setting", () => {
 });
 
 function plainObject(value) { return JSON.parse(JSON.stringify(value)); }
+
+// 3.3.7: hosts from other plugins (CORE-UI.md, "Hosts from other plugins"). The Collector's ROM game page is found by
+// its own root class, `.romm-core-page`, and marked data-core-ui-host="1" while Core UI is on.
+test("plugin hosts: The Collector's page is a page host by its fixed selector, never full height or a panel", () => {
+  const sheet = styles.buildCoreUiCss(styles.findCoreUiMaps(decky3(all)), { wordmark });
+  const host = JSON.parse(JSON.stringify(sheet.hosts.find(item => item.id === "collector-rom-page")));
+  assert.deepEqual(host, { id: "collector-rom-page", selector: ".romm-core-page", strong: ".romm-core-page.romm-core-page:not(#core-ui-boost)", minArea: 0,
+    fullHeight: false, panel: false, page: true, source: "plugin", viewport: true });
+  // Its canvas: behind the content, the visible height only, in the shared host rules.
+  assert.match(sheet.css, /html\[data-core-ui\] \.romm-core-page\[data-core-ui-host\] > canvas\[data-core-ui-stars\][,{]/);
+  assert.match(sheet.css, /html\[data-core-ui\] \.romm-core-page\[data-core-ui-host\] > canvas\[data-core-ui-stars\]\{height:var\(--core-ui-page-height, 100vh\) !important\}/);
+  assert.match(sheet.css, /\.romm-core-page\.romm-core-page:not\(#core-ui-boost\)\[data-core-ui-host="nested"\]/);
+  // Core UI paints nothing else on it: no rule targets the page or Steam's header art for it.
+  const other = sheet.css.split("\n").filter(line => !line.startsWith("/* starfield-hosts */"));
+  assert.ok(other.every(line => !line.includes("romm-core-page")), "only the Starfield host rules name the page");
+  // A selector that is not a plain class list is refused.
+  assert.equal(styles.resolveHostSelector({}, { id: "x", selector: "div > .a", minArea: 0 }), undefined);
+  assert.equal(styles.resolveHostSelector({}, { id: "x", selector: ".a[data-x]", minArea: 0 }), undefined);
+  assert.deepEqual(JSON.parse(JSON.stringify(styles.resolveHostSelector({}, { id: "x", selector: ".a.b", minArea: 0 }))), { plain: ".a.b", strong: ".a.b.a:not(#core-ui-boost)" });
+  // No Steam class map at all: no Core UI, so no plugin host either.
+  const none = styles.buildCoreUiCss({});
+  assert.equal(none.css, "");
+  assert.equal(none.hosts.length, 0);
+  // The selector table and the snapshot can find it.
+  assert.deepEqual(JSON.parse(JSON.stringify(styles.targetSelectors({}, "collectorRomPage", true))), [".romm-core-page"]);
+});
+
+function collectorFixture(options = {}) {
+  const f = runtimeFixture(options);
+  const { doc } = f;
+  // Steam's game page: the header art above, The Collector's page (its own still field first) below it.
+  const details = doc.body.appendChild(new Node(doc, "div", ["_AppDetails"]));
+  const art = details.appendChild(new Node(doc, "div", ["_HeaderArt"]));
+  art.rect = { left: 0, top: 0, width: 1920, height: 560 };
+  const page = details.appendChild(new Node(doc, "div", ["_OverviewPanel", "romm-core-page"]));
+  page.style.position = "relative";
+  page.appendChild(new Node(doc, "div", ["romm-core-stars"]));
+  page.rect = { left: 0, top: 560, width: 1920, height: 1800 };
+  f.runtime.sync();
+  return { ...f, art, page };
+}
+
+test("plugin hosts: data-core-ui-host=\"1\" and the Starfield on The Collector's page while Core UI is on, gone when it is off", () => {
+  const f = collectorFixture();
+  const { doc, page, art } = f;
+  assert.equal(page.getAttribute("data-core-ui-host"), "1");
+  const canvas = page.firstChild;
+  assert.equal(canvas.tagName, "canvas");
+  assert.equal(canvas.getAttribute("data-core-ui-stars"), "collector-rom-page");
+  assert.ok(page.children.some(child => child.classes.includes("romm-core-stars")), "the plugin's own still field stays in place (its CSS hides it)");
+  assert.equal(art.children.length, 0, "nothing is put in the hero art");
+  assert.equal(art.getAttribute("data-core-ui-host"), null);
+  assert.equal(page.style.position, "relative", "the page's own position is kept");
+  // Never full height, never a panel: no inline edits, no clear layers.
+  assert.equal(f.runtime.diagnostics().full["collector-rom-page"], undefined);
+  assert.equal(page.style.props.size, 0, "no full-height stretch on the page");
+  assert.equal(f.runtime.diagnostics().hosts["collector-rom-page"], 1);
+
+  // The page starts below the art: the canvas covers from the page's top to the screen's bottom (520px), never above.
+  assert.equal(canvas.style.props.get("--core-ui-scroll"), "0px");
+  assert.equal(canvas.style.props.get("--core-ui-page-height"), "520px");
+  assert.equal(canvas.style.props.get("--core-ui-extend-top"), "0px");
+  f.step(0);
+  assert.equal(canvas.height, 520);
+  assert.equal(canvas.width, 1920);
+  assert.ok(f.frames.length > 0, "animated");
+
+  // Scrolled down past the art: the canvas follows to the part on screen.
+  page.rect = { left: 0, top: -300, width: 1920, height: 1800 };
+  f.step(40);
+  assert.equal(canvas.style.props.get("--core-ui-scroll"), "300px");
+  assert.equal(canvas.style.props.get("--core-ui-page-height"), "1080px");
+  assert.equal(canvas.height, 1080);
+
+  // Near the end of the page: only the page's remaining height.
+  page.rect = { left: 0, top: -1500, width: 1920, height: 1800 };
+  f.step(80);
+  assert.equal(canvas.style.props.get("--core-ui-scroll"), "1500px");
+  assert.equal(canvas.style.props.get("--core-ui-page-height"), "300px");
+
+  f.setting.set(false);
+  assert.equal(page.getAttribute("data-core-ui-host"), null, "the attribute goes with Core UI off");
+  assert.ok(!page.children.some(child => child.tagName === "canvas"));
+  assert.ok(page.children.some(child => child.classes.includes("romm-core-stars")), "the plugin's still field is untouched");
+  assert.deepEqual({ ...f.runtime.diagnostics().hosts }, {});
+  f.setting.set(true);
+  assert.equal(page.getAttribute("data-core-ui-host"), "1", "and comes back with it on");
+  f.runtime.dispose();
+  assert.equal(page.getAttribute("data-core-ui-host"), null);
+});
+
+test("plugin hosts: The Collector's page is held still under reduced motion and while a game runs, and released when it closes", () => {
+  const reduced = collectorFixture({ reduce: true });
+  reduced.menu.remove(); reduced.qam.remove();
+  reduced.runtime.sync();
+  reduced.step(0);
+  assert.ok(reduced.doc.draws > 0, "one still frame");
+  assert.equal(reduced.frames.length, 0, "no animation");
+  assert.equal(reduced.runtime.diagnostics().state, "still-reduced");
+  reduced.runtime.dispose();
+
+  const f = collectorFixture();
+  f.menu.remove(); f.qam.remove();
+  f.runtime.sync();
+  f.step(0);
+  f.setRunning(true);
+  f.step(40);
+  assert.equal(f.frames.length, 0);
+  assert.equal(f.runtime.diagnostics().state, "still-game");
+  // The ROM page closes: its surface is released.
+  f.page.remove();
+  f.runtime.sync();
+  assert.equal(f.runtime.diagnostics().hosts["collector-rom-page"], undefined);
+  assert.equal(f.runtime.surfaces().length, 0);
+  f.runtime.dispose();
+});
