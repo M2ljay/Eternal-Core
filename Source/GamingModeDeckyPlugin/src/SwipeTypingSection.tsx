@@ -13,7 +13,7 @@ let runtime: SwipeTyping | undefined;
 export function setSwipeTypingRuntime(value: SwipeTyping | undefined) { runtime = value; }
 
 const style = `
-.core-typing{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-typing{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-typing-row{background:${GUNMETAL};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none}
 .core-typing-row.gpfocus,.core-typing-row:focus-visible{outline:2px solid ${CRIMSON};outline-offset:-2px}
 .core-typing-title{font-size:13px;color:${WHITE};font-weight:600;white-space:nowrap}

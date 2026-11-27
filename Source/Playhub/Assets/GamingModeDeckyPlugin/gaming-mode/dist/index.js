@@ -62589,9 +62589,9 @@ function SteamUpdateCard({ locale }) {
 // ("Save current display as normal"...). The agent runs them (POST /health/action) and answers with
 // the new rows.
 const { PanelSection: PanelSection$7, PanelSectionRow: PanelSectionRow$7, ButtonItem: ButtonItem$3, Focusable: Focusable$6 } = CompatUI;
-const { black: BLACK$5, crimson: CRIMSON$5, crimsonText: CRIMSON_TEXT$4, steel: STEEL$5, gunmetal: GUNMETAL$5, white: WHITE$5 } = CORE;
+const { crimson: CRIMSON$5, crimsonText: CRIMSON_TEXT$4, steel: STEEL$5, gunmetal: GUNMETAL$5, white: WHITE$5 } = CORE;
 const style$5 = `
-.core-health{background:${BLACK$5};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-health{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-health-summary{padding:8px 12px;font-size:14px;font-weight:650;color:${WHITE$5}}
 .core-health-summary.problem{color:${CRIMSON_TEXT$4}}
 .core-health-row{background:${GUNMETAL$5};border-radius:6px;padding:9px 12px;outline:none;box-shadow:none;text-shadow:none}
@@ -62877,9 +62877,9 @@ function discordInstalled(inventory) {
 // Below the button: the calls mic picker (makes a device Windows' default for calls, and for
 // everything with the toggle) and the mute scope (everything, the default, or calls only).
 const { PanelSection: PanelSection$6, PanelSectionRow: PanelSectionRow$6, Focusable: Focusable$5, DialogButton: DialogButton$2, DropdownItem: DropdownItem$1, ToggleField: ToggleField$4 } = CompatUI;
-const { black: BLACK$4, crimson: CRIMSON$4, crimsonText: CRIMSON_TEXT$3, steel: STEEL$4, gunmetal: GUNMETAL$4, white: WHITE$4 } = CORE;
+const { crimson: CRIMSON$4, crimsonText: CRIMSON_TEXT$3, steel: STEEL$4, gunmetal: GUNMETAL$4, white: WHITE$4 } = CORE;
 const style$4 = `
-.core-voice{background:${BLACK$4};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
+.core-voice{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
 .core-voice .core-voice-button{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box;background:${GUNMETAL$4}!important;color:${WHITE$4}!important;border-radius:6px!important;padding:12px 14px!important;display:flex;align-items:center;gap:12px;text-align:left;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important}
 .core-voice .core-voice-button.gpfocus,.core-voice .core-voice-button:focus-visible{outline:2px solid ${CRIMSON$4};outline-offset:-2px}
 .core-voice .core-voice-button.muted.gpfocus,.core-voice .core-voice-button.muted:focus-visible{outline-color:${WHITE$4}}
@@ -63102,9 +63102,9 @@ function apolloLine(answer, text) {
 // short lines say what happens to the PC's sound and whether Apollo's virtual display is active. While
 // Stream mode is on, Core sends nothing to the TV (GamingMode.Services/MarkIIIHost.Stream.cs).
 const { PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$5, Focusable: Focusable$4, ToggleField: ToggleField$3 } = CompatUI;
-const { black: BLACK$3, crimson: CRIMSON$3, crimsonText: CRIMSON_TEXT$2, steel: STEEL$3, gunmetal: GUNMETAL$3, white: WHITE$3 } = CORE;
+const { crimson: CRIMSON$3, crimsonText: CRIMSON_TEXT$2, steel: STEEL$3, gunmetal: GUNMETAL$3, white: WHITE$3 } = CORE;
 const style$3 = `
-.core-stream{background:${BLACK$3};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-stream{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-stream-row{background:${GUNMETAL$3};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none;box-shadow:none;text-shadow:none}
 .core-stream-row.gpfocus,.core-stream-row:focus-visible{outline:2px solid ${CRIMSON$3};outline-offset:-2px}
 .core-stream-row.on{border-left:3px solid ${CRIMSON$3}}
@@ -63896,11 +63896,11 @@ function sleepLine(answer, locale) {
 // app); private mode, the typing log, the keyboard's own settings and "forget everything" are VaporType's
 // (src/swipeTyping.ts). The keyboard's own settings panel is VaporType's and in English.
 const { PanelSection: PanelSection$4, PanelSectionRow: PanelSectionRow$4, Focusable: Focusable$3, ToggleField: ToggleField$2, ButtonItem: ButtonItem$2, Navigation: Navigation$3 } = CompatUI;
-const { black: BLACK$2, steel: STEEL$2, gunmetal: GUNMETAL$2, white: WHITE$2, crimson: CRIMSON$2, crimsonText: CRIMSON_TEXT$1, hint: HINT$2 } = CORE;
+const { steel: STEEL$2, gunmetal: GUNMETAL$2, white: WHITE$2, crimson: CRIMSON$2, crimsonText: CRIMSON_TEXT$1, hint: HINT$2 } = CORE;
 let runtime$1;
 function setSwipeTypingRuntime(value) { runtime$1 = value; }
 const style$2 = `
-.core-typing{background:${BLACK$2};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-typing{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-typing-row{background:${GUNMETAL$2};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none}
 .core-typing-row.gpfocus,.core-typing-row:focus-visible{outline:2px solid ${CRIMSON$2};outline-offset:-2px}
 .core-typing-title{font-size:13px;color:${WHITE$2};font-weight:600;white-space:nowrap}
@@ -63956,9 +63956,9 @@ function SwipeTypingSection({ locale }) {
 // Eternal Core batch 2 (B17, B8, B13): a read-only summary in Quick Access > Core: the automations that are on, the
 // Home Assistant bridge and sleep after streaming. Editing happens in the desktop app (Gaming Mode > Automations).
 const { PanelSection: PanelSection$3, PanelSectionRow: PanelSectionRow$3, Focusable: Focusable$2 } = CompatUI;
-const { black: BLACK$1, steel: STEEL$1, gunmetal: GUNMETAL$1, white: WHITE$1, crimson: CRIMSON$1, hint: HINT$1 } = CORE;
+const { steel: STEEL$1, gunmetal: GUNMETAL$1, white: WHITE$1, crimson: CRIMSON$1, hint: HINT$1 } = CORE;
 const style$1 = `
-.core-autos{background:${BLACK$1};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-autos{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-autos-row{background:${GUNMETAL$1};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none}
 .core-autos-row.gpfocus,.core-autos-row:focus-visible{outline:2px solid ${CRIMSON$1};outline-offset:-2px}
 .core-autos-title{font-size:13px;color:${WHITE$1};font-weight:600;white-space:nowrap}
@@ -65132,7 +65132,8 @@ function rules(wordmark) {
         { id: "qam-controls", needs: [["quickaccess", "Menu"]], css: s => {
                 const scope = `${ROOT} ${s("quickaccess", "Menu")}`;
                 const dropdown = s("dropdown", "DropDownControlButton");
-                const buttons = [`${scope} .DialogButton`, ...(dropdown ? [`${scope} ${dropdown}`] : [])];
+                // A button that sets its own background inline (Jarvis's crimson "listening" buttons) keeps it.
+                const buttons = [`${scope} .DialogButton:not([style*="background"])`, ...(dropdown ? [`${scope} ${dropdown}`] : [])];
                 const focused = buttons.map(sel => `${sel}:is(.gpfocus,:focus-visible)`);
                 return `${buttons.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.text, "box-shadow": "none", "text-shadow": "none" })}}` +
                     `${focused.join(",")}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 0 0 0 2px ${C.crimson}`, filter: "none", animation: "none" })}}`;

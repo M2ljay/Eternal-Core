@@ -182,7 +182,8 @@ function rules(wordmark: string | undefined): Rule[] {
     { id: "qam-controls", needs: [["quickaccess", "Menu"]], css: s => {
       const scope = `${ROOT} ${s("quickaccess", "Menu")}`;
       const dropdown = s("dropdown", "DropDownControlButton");
-      const buttons = [`${scope} .DialogButton`, ...(dropdown ? [`${scope} ${dropdown}`] : [])];
+      // A button that sets its own background inline (Jarvis's crimson "listening" buttons) keeps it.
+      const buttons = [`${scope} .DialogButton:not([style*="background"])`, ...(dropdown ? [`${scope} ${dropdown}`] : [])];
       const focused = buttons.map(sel => `${sel}:is(.gpfocus,:focus-visible)`);
       return `${buttons.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.text, "box-shadow": "none", "text-shadow": "none" })}}` +
         `${focused.join(",")}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 0 0 0 2px ${C.crimson}`, filter: "none", animation: "none" })}}`;

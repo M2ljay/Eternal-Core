@@ -20,7 +20,7 @@ const { PanelSection, PanelSectionRow, ButtonItem, Focusable } = DFL as any;
 const { black: BLACK, crimson: CRIMSON, crimsonText: CRIMSON_TEXT, steel: STEEL, gunmetal: GUNMETAL, white: WHITE } = CORE;
 
 const style = `
-.core-health{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-health{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-health-summary{padding:8px 12px;font-size:14px;font-weight:650;color:${WHITE}}
 .core-health-summary.problem{color:${CRIMSON_TEXT}}
 .core-health-row{background:${GUNMETAL};border-radius:6px;padding:9px 12px;outline:none;box-shadow:none;text-shadow:none}

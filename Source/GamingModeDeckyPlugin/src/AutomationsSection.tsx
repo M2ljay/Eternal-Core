@@ -9,7 +9,7 @@ const { PanelSection, PanelSectionRow, Focusable } = DFL as any;
 const { black: BLACK, steel: STEEL, gunmetal: GUNMETAL, white: WHITE, crimson: CRIMSON, hint: HINT } = CORE;
 
 const style = `
-.core-autos{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-autos{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-autos-row{background:${GUNMETAL};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none}
 .core-autos-row.gpfocus,.core-autos-row:focus-visible{outline:2px solid ${CRIMSON};outline-offset:-2px}
 .core-autos-title{font-size:13px;color:${WHITE};font-weight:600;white-space:nowrap}

@@ -15,7 +15,7 @@ const { PanelSection, PanelSectionRow, Focusable, DialogButton, DropdownItem, To
 const { black: BLACK, crimson: CRIMSON, crimsonText: CRIMSON_TEXT, steel: STEEL, gunmetal: GUNMETAL, white: WHITE } = CORE;
 
 const style = `
-.core-voice{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
+.core-voice{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
 .core-voice .core-voice-button{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box;background:${GUNMETAL}!important;color:${WHITE}!important;border-radius:6px!important;padding:12px 14px!important;display:flex;align-items:center;gap:12px;text-align:left;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important}
 .core-voice .core-voice-button.gpfocus,.core-voice .core-voice-button:focus-visible{outline:2px solid ${CRIMSON};outline-offset:-2px}
 .core-voice .core-voice-button.muted.gpfocus,.core-voice .core-voice-button.muted:focus-visible{outline-color:${WHITE}}

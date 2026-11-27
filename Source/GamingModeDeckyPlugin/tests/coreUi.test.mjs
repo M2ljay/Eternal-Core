@@ -112,7 +112,7 @@ function checkSheet(sheet) {
   assert.match(css, /_QamTitle\._QamTitle,[^{]*_QamHead\._QamHead\{[^}]*background-color:#1A1D21[^}]*background-image:none/, "gunmetal title strip");
   assert.match(css, /_QamTab\._QamTab\._QamSel\._QamSel\{[^}]*background-color:#1A1D21/, "selected tab gunmetal");
   assert.match(css, /_FtQam\._FtQam[^{]*\{[^}]*background-color:#000000/, "black Quick Access footer");
-  assert.match(css, /_QamMenu\._QamMenu \.DialogButton[^{]*\{[^}]*background-color:#1A1D21/, "neutral buttons inside Quick Access");
+  assert.match(css, /_QamMenu\._QamMenu \.DialogButton:not\(\[style\*="background"\]\)[^{]*\{[^}]*background-color:#1A1D21/, "neutral buttons inside Quick Access, inline colours kept");
   assert.match(css, /_QamMenu\._QamMenu \._DdButton\._DdButton/, "neutral dropdowns inside Quick Access");
   assert.match(css, /_HdHeader\._HdHeader[^{]*\{[^}]*background-color:transparent/, "clear top bar");
   assert.match(css, /_FtBasic\._FtBasic[^{]*\{[^}]*background-color:transparent/, "clear button-hint bar");

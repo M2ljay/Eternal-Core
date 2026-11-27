@@ -12,7 +12,7 @@ const { PanelSection, PanelSectionRow, Focusable, ToggleField } = DFL as any;
 const { black: BLACK, crimson: CRIMSON, crimsonText: CRIMSON_TEXT, steel: STEEL, gunmetal: GUNMETAL, white: WHITE } = CORE;
 
 const style = `
-.core-stream{background:${BLACK};border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
+.core-stream{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
 .core-stream-row{background:${GUNMETAL};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none;box-shadow:none;text-shadow:none}
 .core-stream-row.gpfocus,.core-stream-row:focus-visible{outline:2px solid ${CRIMSON};outline-offset:-2px}
 .core-stream-row.on{border-left:3px solid ${CRIMSON}}
