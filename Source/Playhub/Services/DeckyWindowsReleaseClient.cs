@@ -1,4 +1,5 @@
 using Playhub.Models;
+using Playhub.Shared;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -131,6 +132,16 @@ internal sealed partial class DeckyWindowsReleaseClient(HttpClient http, Archite
             return bytes;
         }
         throw new InvalidDataException("Troppi reindirizzamenti durante il download di Decky.");
+    }
+
+    // Eternal Core: Decky 3.x runs only on webpack Steam, Decky 4.x only on the ES-module client
+    // (DeckySteamPairing.RequiredClient). A wrong pair is refused before anything is downloaded or
+    // stopped; an unknown Steam (not running, debug port closed) keeps the old behaviour.
+    internal static void RequireSteamPairing(DeckyWindowsRelease summary, SteamUiKind steam)
+    {
+        if (!DeckySteamPairing.TryParseDeckyVersion(summary.Tag, out var version)) return;
+        var verdict = DeckySteamPairing.CheckInstall(version, steam);
+        if (!verdict.Allowed) throw new InvalidOperationException(verdict.Reason);
     }
 
     internal static bool DigestMatches(byte[] hash, string digest) =>

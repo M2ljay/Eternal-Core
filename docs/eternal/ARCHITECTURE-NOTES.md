@@ -405,21 +405,23 @@ endpoint catches and logs its own failures, and no Mark III feature is on the pa
   unattended wake timer does not turn the TV on.
 - Endpoints (loopback only): `GET /tv/state`, `POST /tv/discover|pair|unpair|on|input|off`.
 
-### Steam update hold
+### Steam updates
 
+- Policy and reasons: [STEAM-UPDATES.md](STEAM-UPDATES.md). Each pending Steam version (Valve's published client
+  manifest) soaks 10 days, then a release gate checks it against `Source/Shared/SteamCompatibility.json` (embedded in
+  the agent) and the client-kind probe. It updates only on an update night while idle, with a backup, a smoke test
+  and an automatic rollback. A failure is not retried until the file, the Decky or the pending version changes.
 - Verification of `steam.cfg` on the current client: not possible from sources. Valve does not document
-  `BootStrapperInhibitAll`; community sources predate the 64-bit client (December 2025). Treated as "probably works,
-  verify on Core" (`Steam\logs\bootstrap_log.txt`). The design does not depend on it:
-  `SteamUpdateHoldPolicy.Observe` detects a client version change while held (`package\steam_client_win64.manifest`),
-  logs it and restarts the hold; the Decky health check then judges the new version.
-- The app's toggle still writes or removes `steam.cfg` (`ExtraService`); its presence is the hold. The agent stores
-  `heldSince`/`heldVersion` in `steam-update-hold.json`, notifies once at 30 days and runs the update job at an idle
-  moment (Gaming Mode, Steam up, no game and no protected game for 10 minutes, counted from agent start too).
+  `BootStrapperInhibitAll`; community sources predate the 64-bit client (December 2025). The design does not depend
+  on it: `SteamUpdateHoldPolicy.Observe` notices a client version change while blocked
+  (`package\steam_client_win64.manifest`) and the agent runs the same smoke test and rollback.
+- The app's toggle still writes or removes `steam.cfg` (`ExtraService`); its presence is the block. State lives in
+  `steam-update-hold.json`.
 - `SteamUpdateJob` (pure orchestration over `ISteamUpdateHost`) and `SteamClientBackup.cs` (same folder, layout,
   marker and exclusions as `ExtraService`, checked by a test; keeps its own newest two backups). A hand-edited
   `steam.cfg` is put back as it was. `ModeManager.BeginSteamMaintenance` keeps the Desktop safety watchdog quiet while
   Steam is closed on purpose (it only acts when Explorer is also gone, i.e. the shell-free trial).
-- Endpoints: `GET /steam/update/state`, `POST /steam/update/now`.
+- Endpoints: `GET /steam/update/state`, `POST /steam/update/now?confirm=N`. Core Health's `steam-update` row.
 
 ### Decky health and Core Repair
 

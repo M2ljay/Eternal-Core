@@ -25,6 +25,7 @@ const en: Copy = {
   r_mic: "Microphone", micMuted: "Muted", micLive: "Live", micNone: "No microphone", micPartial: "Partly muted",
   micCalls: "Calls mic: {name}", micAway: "calls mic not connected", micAwayDetail: "Not connected. Calls use Windows' default microphone.", micActiveDetail: "Connected and used for calls.", micChangedDetail: "Connected; Windows uses another microphone for calls.", micFailedDetail: "Windows did not let Core make it the default.",
   r_stream: "Streaming", sIdle: "Idle", sTo: "Streaming to {device}", sVia: "Streaming · {source}", sKept: "TV kept out by you", tHeld: "Left alone (Stream mode)", sThrough: "Through {source}", sVd: "Apollo's virtual display is active",
+  r_steam: "Steam update", stPostponed: "Postponed: {reason}", stUnsupported: "the new Steam doesn't work with the installed Decky", stUnknown: "Core can't tell yet if the new Steam works with Decky", stCantCheck: "Core can't check compatibility with Decky", stFailed: "the last try failed its check and was undone", stPending: "Waiting version: {version}",
 };
 
 const copy: Record<string, Copy> = {
@@ -43,6 +44,7 @@ const copy: Record<string, Copy> = {
     r_mic: "Microfono", micMuted: "Silenziato", micLive: "Attivo", micNone: "Nessun microfono", micPartial: "Silenziato in parte",
     micCalls: "Microfono per le chiamate: {name}", micAway: "microfono per le chiamate non collegato", micAwayDetail: "Non collegato. Le chiamate usano il microfono predefinito di Windows.", micActiveDetail: "Collegato e usato per le chiamate.", micChangedDetail: "Collegato; Windows usa un altro microfono per le chiamate.", micFailedDetail: "Windows non ha permesso a Core di impostarlo come predefinito.",
     r_stream: "Streaming", sIdle: "Inattivo", sTo: "Streaming verso {device}", sVia: "Streaming · {source}", sKept: "TV lasciata stare da te", tHeld: "Lasciata stare (modalità streaming)", sThrough: "Tramite {source}", sVd: "Lo schermo virtuale di Apollo è attivo",
+    r_steam: "Aggiornamento di Steam", stPostponed: "Rimandato: {reason}", stUnsupported: "il nuovo Steam non funziona con il Decky installato", stUnknown: "Core non sa ancora se il nuovo Steam funziona con Decky", stCantCheck: "Core non riesce a verificare la compatibilità con Decky", stFailed: "l'ultimo tentativo non ha superato il controllo ed è stato annullato", stPending: "Versione in attesa: {version}",
   },
   es: {
     title: "Estado", allGood: "Todo bien", attention: "Necesita atención: {n}", checking: "Comprobando…", agentDown: "El servicio de Core no responde.", dismiss: "Descartar aviso",
@@ -58,6 +60,7 @@ const copy: Record<string, Copy> = {
     r_mic: "Micrófono", micMuted: "Silenciado", micLive: "Activo", micNone: "No hay micrófono", micPartial: "Silenciado en parte",
     micCalls: "Micrófono de llamadas: {name}", micAway: "micrófono de llamadas no conectado", micAwayDetail: "No conectado. Las llamadas usan el micrófono predeterminado de Windows.", micActiveDetail: "Conectado y usado para llamadas.", micChangedDetail: "Conectado; Windows usa otro micrófono para llamadas.", micFailedDetail: "Windows no dejó que Core lo pusiera como predeterminado.",
     r_stream: "Streaming", sIdle: "Inactivo", sTo: "Transmitiendo a {device}", sVia: "Transmitiendo · {source}", sKept: "TV apartada por ti", tHeld: "Sin tocar (modo streaming)", sThrough: "Mediante {source}", sVd: "La pantalla virtual de Apollo está activa",
+    r_steam: "Actualización de Steam", stPostponed: "Aplazada: {reason}", stUnsupported: "el nuevo Steam no funciona con el Decky instalado", stUnknown: "Core aún no sabe si el nuevo Steam funciona con Decky", stCantCheck: "Core no puede comprobar la compatibilidad con Decky", stFailed: "el último intento no pasó la comprobación y se deshizo", stPending: "Versión en espera: {version}",
   },
   fr: {
     title: "Santé", allGood: "Tout va bien", attention: "À vérifier : {n}", checking: "Vérification…", agentDown: "Le service de Core ne répond pas.", dismiss: "Ignorer l'alerte",
@@ -73,6 +76,7 @@ const copy: Record<string, Copy> = {
     r_mic: "Micro", micMuted: "Coupé", micLive: "Actif", micNone: "Aucun micro", micPartial: "Coupé en partie",
     micCalls: "Micro des appels : {name}", micAway: "micro des appels non connecté", micAwayDetail: "Non connecté. Les appels utilisent le micro par défaut de Windows.", micActiveDetail: "Connecté et utilisé pour les appels.", micChangedDetail: "Connecté ; Windows utilise un autre micro pour les appels.", micFailedDetail: "Windows n'a pas laissé Core le définir par défaut.",
     r_stream: "Streaming", sIdle: "Inactif", sTo: "Streaming vers {device}", sVia: "Streaming · {source}", sKept: "TV tenue à l'écart par vous", tHeld: "Laissée tranquille (mode streaming)", sThrough: "Via {source}", sVd: "L'écran virtuel d'Apollo est actif",
+    r_steam: "Mise à jour de Steam", stPostponed: "Reportée : {reason}", stUnsupported: "le nouveau Steam ne fonctionne pas avec le Decky installé", stUnknown: "Core ne sait pas encore si le nouveau Steam fonctionne avec Decky", stCantCheck: "Core ne parvient pas à vérifier la compatibilité avec Decky", stFailed: "la dernière tentative n'a pas passé la vérification et a été annulée", stPending: "Version en attente : {version}",
   },
   de: {
     title: "Status", allGood: "Alles in Ordnung", attention: "Zu prüfen: {n}", checking: "Wird geprüft…", agentDown: "Der Core-Dienst antwortet nicht.", dismiss: "Warnung ausblenden",
@@ -88,6 +92,7 @@ const copy: Record<string, Copy> = {
     r_mic: "Mikrofon", micMuted: "Stumm", micLive: "An", micNone: "Kein Mikrofon", micPartial: "Teilweise stumm",
     micCalls: "Anruf-Mikrofon: {name}", micAway: "Anruf-Mikrofon nicht verbunden", micAwayDetail: "Nicht verbunden. Anrufe nutzen das Standardmikrofon von Windows.", micActiveDetail: "Verbunden und für Anrufe genutzt.", micChangedDetail: "Verbunden; Windows nutzt ein anderes Mikrofon für Anrufe.", micFailedDetail: "Windows hat Core nicht erlaubt, es als Standard festzulegen.",
     r_stream: "Streaming", sIdle: "Inaktiv", sTo: "Streamt an {device}", sVia: "Streamt · {source}", sKept: "Fernseher von dir ausgenommen", tHeld: "In Ruhe gelassen (Streaming-Modus)", sThrough: "Über {source}", sVd: "Der virtuelle Bildschirm von Apollo ist aktiv",
+    r_steam: "Steam-Update", stPostponed: "Verschoben: {reason}", stUnsupported: "das neue Steam funktioniert nicht mit dem installierten Decky", stUnknown: "Core weiß noch nicht, ob das neue Steam mit Decky funktioniert", stCantCheck: "Core kann die Kompatibilität mit Decky nicht prüfen", stFailed: "der letzte Versuch hat die Prüfung nicht bestanden und wurde rückgängig gemacht", stPending: "Wartende Version: {version}",
   },
   pt: {
     title: "Saúde", allGood: "Tudo certo", attention: "Precisa de atenção: {n}", checking: "Verificando…", agentDown: "O serviço do Core não responde.", dismiss: "Dispensar alerta",
@@ -103,6 +108,7 @@ const copy: Record<string, Copy> = {
     r_mic: "Microfone", micMuted: "Silenciado", micLive: "Ativo", micNone: "Sem microfone", micPartial: "Silenciado em parte",
     micCalls: "Microfone das chamadas: {name}", micAway: "microfone das chamadas não conectado", micAwayDetail: "Não conectado. As chamadas usam o microfone padrão do Windows.", micActiveDetail: "Conectado e usado nas chamadas.", micChangedDetail: "Conectado; o Windows usa outro microfone nas chamadas.", micFailedDetail: "O Windows não deixou o Core defini-lo como padrão.",
     r_stream: "Streaming", sIdle: "Inativo", sTo: "Transmitindo para {device}", sVia: "Transmitindo · {source}", sKept: "TV deixada de fora por você", tHeld: "Deixada em paz (modo streaming)", sThrough: "Via {source}", sVd: "A tela virtual do Apollo está ativa",
+    r_steam: "Atualização do Steam", stPostponed: "Adiada: {reason}", stUnsupported: "o novo Steam não funciona com o Decky instalado", stUnknown: "o Core ainda não sabe se o novo Steam funciona com o Decky", stCantCheck: "o Core não consegue verificar a compatibilidade com o Decky", stFailed: "a última tentativa não passou na verificação e foi desfeita", stPending: "Versão em espera: {version}",
   },
   uk: {
     title: "Стан", allGood: "Усе гаразд", attention: "Потребує уваги: {n}", checking: "Перевірка…", agentDown: "Служба Core не відповідає.", dismiss: "Приховати сповіщення",
@@ -118,6 +124,7 @@ const copy: Record<string, Copy> = {
     r_mic: "Мікрофон", micMuted: "Вимкнено", micLive: "Увімкнено", micNone: "Немає мікрофона", micPartial: "Вимкнено частково",
     micCalls: "Мікрофон для дзвінків: {name}", micAway: "мікрофон для дзвінків не підключено", micAwayDetail: "Не підключено. Дзвінки використовують мікрофон Windows за замовчуванням.", micActiveDetail: "Підключено й використовується для дзвінків.", micChangedDetail: "Підключено; Windows використовує інший мікрофон для дзвінків.", micFailedDetail: "Windows не дозволила Core зробити його мікрофоном за замовчуванням.",
     r_stream: "Трансляція", sIdle: "Немає", sTo: "Трансляція на {device}", sVia: "Трансляція · {source}", sKept: "Телевізор не чіпати (вами)", tHeld: "Не чіпаємо (режим трансляції)", sThrough: "Через {source}", sVd: "Віртуальний екран Apollo активний",
+    r_steam: "Оновлення Steam", stPostponed: "Відкладено: {reason}", stUnsupported: "новий Steam не працює з установленим Decky", stUnknown: "Core ще не знає, чи працює новий Steam з Decky", stCantCheck: "Core не може перевірити сумісність із Decky", stFailed: "остання спроба не пройшла перевірку й була скасована", stPending: "Версія в очікуванні: {version}",
   },
   ru: {
     title: "Состояние", allGood: "Всё в порядке", attention: "Требует внимания: {n}", checking: "Проверка…", agentDown: "Служба Core не отвечает.", dismiss: "Скрыть оповещение",
@@ -133,6 +140,7 @@ const copy: Record<string, Copy> = {
     r_mic: "Микрофон", micMuted: "Выключен", micLive: "Включён", micNone: "Нет микрофона", micPartial: "Выключен частично",
     micCalls: "Микрофон для звонков: {name}", micAway: "микрофон для звонков не подключён", micAwayDetail: "Не подключён. Звонки используют микрофон Windows по умолчанию.", micActiveDetail: "Подключён и используется для звонков.", micChangedDetail: "Подключён; Windows использует другой микрофон для звонков.", micFailedDetail: "Windows не позволила Core сделать его микрофоном по умолчанию.",
     r_stream: "Трансляция", sIdle: "Нет", sTo: "Трансляция на {device}", sVia: "Трансляция · {source}", sKept: "Телевизор не трогать (вами)", tHeld: "Не трогаем (режим трансляции)", sThrough: "Через {source}", sVd: "Виртуальный экран Apollo активен",
+    r_steam: "Обновление Steam", stPostponed: "Отложено: {reason}", stUnsupported: "новый Steam не работает с установленным Decky", stUnknown: "Core пока не знает, работает ли новый Steam с Decky", stCantCheck: "Core не может проверить совместимость с Decky", stFailed: "последняя попытка не прошла проверку и была отменена", stPending: "Ожидающая версия: {version}",
   },
   zh: {
     title: "健康", allGood: "一切正常", attention: "需要注意：{n}", checking: "正在检查…", agentDown: "Core 服务没有响应。", dismiss: "忽略提醒",
@@ -148,6 +156,7 @@ const copy: Record<string, Copy> = {
     r_mic: "麦克风", micMuted: "已静音", micLive: "已开启", micNone: "没有麦克风", micPartial: "部分静音",
     micCalls: "通话麦克风：{name}", micAway: "通话麦克风未连接", micAwayDetail: "未连接。通话使用 Windows 的默认麦克风。", micActiveDetail: "已连接，用于通话。", micChangedDetail: "已连接；Windows 正在用另一个麦克风通话。", micFailedDetail: "Windows 不允许 Core 将其设为默认。",
     r_stream: "串流", sIdle: "空闲", sTo: "正在串流到 {device}", sVia: "正在串流 · {source}", sKept: "你已设置不动电视", tHeld: "不动电视（串流模式）", sThrough: "通过 {source}", sVd: "Apollo 虚拟显示器已启用",
+    r_steam: "Steam 更新", stPostponed: "已推迟：{reason}", stUnsupported: "新版 Steam 无法与已安装的 Decky 配合使用", stUnknown: "Core 还无法判断新版 Steam 是否能与 Decky 配合使用", stCantCheck: "Core 无法检查与 Decky 的兼容性", stFailed: "上次尝试未通过检查，已被撤销", stPending: "等待中的版本：{version}",
   },
   ja: {
     title: "状態", allGood: "問題なし", attention: "要確認: {n}", checking: "確認中…", agentDown: "Core のサービスが応答しません。", dismiss: "お知らせを閉じる",
@@ -163,6 +172,7 @@ const copy: Record<string, Copy> = {
     r_mic: "マイク", micMuted: "ミュート中", micLive: "オン", micNone: "マイクなし", micPartial: "一部ミュート中",
     micCalls: "通話用マイク：{name}", micAway: "通話用マイク未接続", micAwayDetail: "未接続です。通話には Windows の既定のマイクが使われます。", micActiveDetail: "接続済みで、通話に使われています。", micChangedDetail: "接続済み。Windows は通話に別のマイクを使っています。", micFailedDetail: "Windows が Core による既定の設定を許可しませんでした。",
     r_stream: "ストリーミング", sIdle: "待機中", sTo: "{device} にストリーミング中", sVia: "ストリーミング中 · {source}", sKept: "手動でテレビに触れない設定", tHeld: "触れていません（ストリーミングモード）", sThrough: "{source} 経由", sVd: "Apollo の仮想ディスプレイが有効です",
+    r_steam: "Steam の更新", stPostponed: "延期：{reason}", stUnsupported: "新しい Steam はインストール済みの Decky では動作しません", stUnknown: "新しい Steam が Decky で動くか Core にはまだわかりません", stCantCheck: "Core は Decky との互換性を確認できません", stFailed: "前回の試行はチェックに通らず、元に戻されました", stPending: "待機中のバージョン：{version}",
   },
   ko: {
     title: "상태", allGood: "모두 정상", attention: "확인 필요: {n}", checking: "확인 중…", agentDown: "Core 서비스가 응답하지 않습니다.", dismiss: "알림 닫기",
@@ -178,6 +188,7 @@ const copy: Record<string, Copy> = {
     r_mic: "마이크", micMuted: "음소거됨", micLive: "켜짐", micNone: "마이크 없음", micPartial: "일부 음소거됨",
     micCalls: "통화용 마이크: {name}", micAway: "통화용 마이크 연결 안 됨", micAwayDetail: "연결되지 않았습니다. 통화에는 Windows 기본 마이크가 쓰입니다.", micActiveDetail: "연결되어 통화에 쓰이고 있습니다.", micChangedDetail: "연결됨. Windows가 통화에 다른 마이크를 쓰고 있습니다.", micFailedDetail: "Windows가 Core의 기본값 설정을 허용하지 않았습니다.",
     r_stream: "스트리밍", sIdle: "대기 중", sTo: "{device}(으)로 스트리밍 중", sVia: "스트리밍 중 · {source}", sKept: "직접 TV 건드리지 않기 켬", tHeld: "건드리지 않음 (스트리밍 모드)", sThrough: "{source} 통해", sVd: "Apollo 가상 디스플레이 사용 중",
+    r_steam: "Steam 업데이트", stPostponed: "연기됨: {reason}", stUnsupported: "새 Steam은 설치된 Decky와 작동하지 않습니다", stUnknown: "Core는 새 Steam이 Decky와 작동하는지 아직 알 수 없습니다", stCantCheck: "Core가 Decky와의 호환성을 확인할 수 없습니다", stFailed: "마지막 시도가 확인을 통과하지 못해 취소되었습니다", stPending: "대기 중인 버전: {version}",
   },
   hi: {
     title: "हेल्थ", allGood: "सब ठीक है", attention: "ध्यान चाहिए: {n}", checking: "जाँच हो रही है…", agentDown: "Core की सेवा जवाब नहीं दे रही।", dismiss: "अलर्ट हटाएँ",
@@ -193,6 +204,7 @@ const copy: Record<string, Copy> = {
     r_mic: "माइक्रोफ़ोन", micMuted: "म्यूट", micLive: "चालू", micNone: "कोई माइक्रोफ़ोन नहीं", micPartial: "आंशिक रूप से म्यूट",
     micCalls: "कॉल माइक: {name}", micAway: "कॉल माइक कनेक्ट नहीं", micAwayDetail: "कनेक्ट नहीं है। कॉल Windows का डिफ़ॉल्ट माइक्रोफ़ोन इस्तेमाल करती हैं।", micActiveDetail: "कनेक्ट है और कॉल के लिए इस्तेमाल हो रहा है।", micChangedDetail: "कनेक्ट है; Windows कॉल के लिए दूसरा माइक्रोफ़ोन इस्तेमाल कर रहा है।", micFailedDetail: "Windows ने Core को इसे डिफ़ॉल्ट बनाने नहीं दिया।",
     r_stream: "स्ट्रीमिंग", sIdle: "निष्क्रिय", sTo: "{device} पर स्ट्रीमिंग", sVia: "स्ट्रीमिंग · {source}", sKept: "आपने टीवी को अलग रखा", tHeld: "नहीं छुआ गया (स्ट्रीम मोड)", sThrough: "{source} के ज़रिए", sVd: "Apollo का वर्चुअल डिस्प्ले चालू है",
+    r_steam: "Steam अपडेट", stPostponed: "टाला गया: {reason}", stUnsupported: "नया Steam इंस्टॉल किए गए Decky के साथ काम नहीं करता", stUnknown: "Core अभी नहीं बता सकता कि नया Steam Decky के साथ काम करता है या नहीं", stCantCheck: "Core Decky के साथ संगतता नहीं जाँच पा रहा", stFailed: "पिछली कोशिश जाँच में पास नहीं हुई और वापस ले ली गई", stPending: "इंतज़ार में संस्करण: {version}",
   },
 };
 
@@ -314,6 +326,14 @@ function rowValue(row: HealthRowData, text: Copy, locale: string, now: Date): { 
       if (typeof data.drive === "string" && data.drive) details.push(data.drive);
       const free = formatBytes(data.freeBytes, locale);
       return { value: row.state === "ok" ? fill(text.pcOk, { free }) : row.state === "low" ? fill(text.pcLow, { free }) : text.unknown, details };
+    }
+    case "steam-update": {
+      // Steam updates (STEAM-UPDATES.md): a row only while an automatic update is postponed.
+      const reasons: Record<string, string> = { "pending-unsupported": text.stUnsupported, "pending-unknown": text.stUnknown, "rolled-back": text.stFailed };
+      const reason = reasons[String(data.reason ?? "")] ?? text.stCantCheck;
+      if (typeof data.pending === "string" && /^\d{1,20}$/.test(data.pending)) details.push(fill(text.stPending, { version: data.pending }));
+      if (typeof data.failedCheck === "string" && /^[a-z-]{1,20}$/.test(data.failedCheck)) details.push(data.failedCheck);
+      return { value: fill(text.stPostponed, { reason }), details };
     }
     case "core-update":
       return { value: row.state === "available" ? fill(text.cAvail, { latest: String(data.latest ?? "?") })

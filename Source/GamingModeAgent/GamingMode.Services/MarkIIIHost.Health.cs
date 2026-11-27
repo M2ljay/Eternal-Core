@@ -123,6 +123,15 @@ internal sealed partial class MarkIIIHost
 		(bool known, PlayhubUpdateService.UpdateInfo? update) = PlayhubUpdateNotice.Shared?.Peek() ?? (false, (PlayhubUpdateService.UpdateInfo?)null);
 		bool? updateAvailable = known && update is not null ? update.IsNewer && !string.IsNullOrWhiteSpace(update.DownloadUrl) : null;
 		(string? State, string? CallsMicName, string? CallsMicStatus) mic = MicHealth();
+		// Steam updates: a row only while an automatic update is postponed (SteamUpdateHold.cs).
+		SteamHoldState steamHold = SteamUpdateHoldPolicy.Load(_holdPath);
+		SteamHoldView steamView = SteamUpdateHoldPolicy.View(steamHold, SteamUpdateHoldPolicy.IsHoldFilePresent(SteamRoot()), SoakDays(), Fingerprint(steamHold), now);
+		string? steamReason = steamView.Phase switch
+		{
+			SteamHoldPhase.Postponed => steamHold.PostponedReason ?? "pending-unknown",
+			SteamHoldPhase.WaitingForChange => "rolled-back",
+			_ => null,
+		};
 		return CoreHealthPolicy.Evaluate(new CoreHealthInputs
 		{
 			Now = now, ServerName = gaming.CoreHealthServer, ServerRead = read, Server = status,
@@ -133,6 +142,8 @@ internal sealed partial class MarkIIIHost
 			Microphone = mic.State, CallsMicName = mic.CallsMicName, CallsMicStatus = mic.CallsMicStatus,
 			StreamActive = stream.Active, StreamForced = stream.Forced, StreamDetected = stream.Detected, StreamSource = stream.Source, StreamDevice = stream.Device,
 			StreamVirtualDisplay = stream.VirtualDisplay, TvHeld = stream.Active,
+			SteamPostponedReason = steamReason, SteamFailedCheck = steamReason == "rolled-back" ? steamHold.FailedCheck : null, SteamPendingVersion = steamHold.PendingVersion,
+			SteamPostponedSince = steamHold.PostponedSince ?? steamHold.LastUpdateAt, SteamPostponedAttention = steamView.Attention,
 		});
 	}
 

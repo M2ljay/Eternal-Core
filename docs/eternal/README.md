@@ -15,6 +15,10 @@ the list of what deliberately still says Playhub, and the image inventory: [REBR
   (LoZazaMastro), MIT licence."
 - **Technical notes:** [ARCHITECTURE-NOTES.md](ARCHITECTURE-NOTES.md) covers the update mechanism, every remote
   source that points at upstream, and the build system.
+- **Decky 4 / new Steam client:** [DECKY-4.md](DECKY-4.md) covers how Core stays paired with Steam while Decky moves
+  from 3.x (webpack Steam) to 4.x (ES-module Steam), and what changes on the day Decky 4.0 ships.
+- **Steam updates:** [STEAM-UPDATES.md](STEAM-UPDATES.md) covers when Core lets Steam update (a 10-day soak per version,
+  a compatibility gate) and the backup, smoke test and rollback around every update.
 
 ## Releases: the Mark scheme
 
@@ -99,7 +103,7 @@ Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-
 | ------- | ------------ | ----------- |
 | Boot sequence | Eternal, then Core, with the arcade sound, at power-on and wake; any controller button skips | Plain splash, or nothing; Steam starts regardless (time box 16 s) |
 | LG webOS TV | On + Core's HDMI at boot/wake into Gaming Mode; off on sleep/shutdown only while it shows Core | Logged; the TV is left as it is |
-| Steam update hold | Steam held until you choose, at most 30 days; update = backup, update, plugin check, rollback offer | A Steam update that bypasses `steam.cfg` starts a new hold; the plugin check judges it |
+| Steam updates | Each new Steam version soaks 10 days, passes a Decky compatibility gate, then updates on an update night: backup, update, smoke test, automatic rollback | A Steam update that bypasses `steam.cfg` gets the same smoke test and rollback ([STEAM-UPDATES.md](STEAM-UPDATES.md)) |
 | Decky health check | Core's plugin heartbeats; no heartbeat 90 s after Big Picture: one calm notice | Decky is optional: Steam and Core keep working |
 | Core Repair | Controller-friendly repair window from a Steam library tile, works without Decky | Every step reports *Fixed* or *Still not working* |
 | Steam Controller wake | BIOS and Device Manager steps in the guide | No code |

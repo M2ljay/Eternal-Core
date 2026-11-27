@@ -46,6 +46,7 @@ import { installLivePerformance } from "./quickSettings/livePerformanceRuntime";
 import { installPlayhubUpdateNotice, updateNoticeBody, type UpdateNotice } from "./playhubUpdateNotice";
 import { installCoreHeartbeat, ensureCoreRepairTile, type CoreRepairShortcut } from "./coreHealth";
 import { UpdateNightCard } from "./UpdateNightCard";
+import { SteamUpdateCard } from "./SteamUpdateCard";
 import { HealthSection } from "./HealthSection";
 import { VoiceSection } from "./VoiceSection";
 import { StreamSection } from "./StreamSection";
@@ -969,6 +970,7 @@ function Content({ origin = "decky" }: { origin?: "qam" | "decky" }) {
       {status && <VoiceSection locale={locale} />}
       {status && <StreamSection locale={locale} />}
       {status && <UpdateNightCard locale={locale} />}
+      {status && <SteamUpdateCard locale={locale} />}
       {status && <HealthSection locale={locale} />}
       {!status && <PanelSection><PanelSectionRow>
         <div role="status" style={{ margin: "8px 0 16px", padding: "16px", borderRadius: 10,

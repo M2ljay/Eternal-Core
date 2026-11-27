@@ -14,8 +14,12 @@ function documents():Document[]{
 }
 export function installCirclesScreensaver(locale:()=>string){
  const ui=DFL as any;
- const service=ui.findModule((m:any)=>typeof m?.b3?.GetLocalScreensavers==="function")?.b3;
- const settings=ui.findModule((m:any)=>m?.rV?.clientSettings&&typeof m?.qt==="function");
+ // b3/rV are today's webpack export names (stable Steam, Decky 3). The ES-module client renames
+ // everything, so the same objects are also looked up by what they do; neither found = no Starfield.
+ const service=ui.findModule((m:any)=>typeof m?.b3?.GetLocalScreensavers==="function")?.b3
+  ??ui.findModuleExport((v:any)=>typeof v?.GetLocalScreensavers==="function"&&typeof v?.GetActiveState==="function");
+ const settingsStore=ui.findModule((m:any)=>m?.rV?.clientSettings&&typeof m?.qt==="function")?.rV
+  ??ui.findModuleExport((v:any)=>v?.clientSettings&&typeof v.clientSettings==="object"&&"screensaver_current_id" in v.clientSettings);
  let disposed=false,busy=false,restore=()=>{};
  async function register(){
   const result=await call<[],{ok:boolean}>("install_circles_screensaver");if(disposed||!result.ok||!service)return;
@@ -39,7 +43,7 @@ export function installCirclesScreensaver(locale:()=>string){
   decorate();void client.invalidateQueries({queryKey:key});
  }
  async function tick(){
-  if(disposed||busy||settings?.rV.clientSettings.screensaver_current_id!==MODE)return;
+  if(disposed||busy||settingsStore?.clientSettings?.screensaver_current_id!==MODE)return;
   busy=true;
   try{
    if(!(await service.GetActiveState({})).Body().active())return;

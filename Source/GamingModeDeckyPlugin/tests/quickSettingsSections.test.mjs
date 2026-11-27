@@ -135,6 +135,7 @@ const context = { React: { createElement, Fragment: 'Fragment' },
   QuickSlider: 'QuickSlider', QuickDropdown: 'QuickDropdown', PanelBrightness: 'PanelBrightness',
   PerformanceSettings: 'PerformanceSettings', SteamDownloadPower: 'SteamDownloadPower',
   quickSettingsGroups: groups.quickSettingsGroups, locale: 'en',
+  qsClassSelectors: css => css, // Eternal Core: class-map selector mapping (no class map in the fixture)
   local: new Proxy({}, { get: (_, key) => String(key) }),
   caps: { lossless: true, amd_radeon: true }, amd: { available: true }, lossless: { installed: true, can_scale: true },
   loadFailed: false, amdPending: false, amdReadbackUnknown: false, losslessPending: false,

@@ -3662,10 +3662,11 @@ public sealed partial class MainWindow : Window
         // Un interruttore, non due pulsanti: lo stato attuale si legge dalla presenza di
         // steam.cfg, così la card dice sempre come sta davvero il sistema.
         var steamUpdates = Card();
-        // Mark III: a hold, not a permanent block. The agent counts at most 30 days, then
-        // updates Steam at the next idle moment, after a backup and with a plugin check.
+        // Steam updates (agent SteamUpdateHold.cs, docs/eternal/STEAM-UPDATES.md): each new Steam version
+        // waits a few days, is checked against Decky, and is installed on an update night with a backup,
+        // a smoke test and an automatic rollback.
         steamUpdates.Children.Add(IconHeader(((char)0xE72E).ToString(), "Aggiornamenti di Steam",
-            "Core tiene ferma la versione di Steam finché scegli tu, al massimo per 30 giorni. Prima di aggiornare salva una copia di Steam e controlla che i plugin tornino; se si rompono puoi tornare indietro."));
+            "Core lascia passare qualche giorno da ogni nuova versione di Steam, controlla che vada d'accordo con Decky e la installa di notte, quando non giochi. Prima salva una copia di Steam e, se dopo l'aggiornamento qualcosa non funziona, torna indietro da solo."));
         var steamUpdatesToggle = new ToggleSwitch
         {
             Header = "Trattieni gli aggiornamenti di Steam",

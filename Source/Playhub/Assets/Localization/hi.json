@@ -1517,5 +1517,20 @@
   "Controlla ora": "अभी जाँचें",
   "Tutto a posto.": "सब ठीक है।",
   "Cose da controllare: {0}": "जाँचने योग्य चीज़ें: {0}",
-  "Modalità streaming attiva: Core lascia stare la TV.": "स्ट्रीम मोड चालू है: Core टीवी को नहीं छूता।"
+  "Modalità streaming attiva: Core lascia stare la TV.": "स्ट्रीम मोड चालू है: Core टीवी को नहीं छूता।",
+  "Questa versione di Decky richiede il nuovo client di Steam, che su questo PC non c'è ancora. Decky resta alla versione installata.": "Decky के इस संस्करण को नया Steam क्लाइंट चाहिए, जो इस PC पर अभी नहीं है। Decky इंस्टॉल किए गए संस्करण पर ही रहेगा।",
+  "Questo Steam usa il nuovo client, che Decky 3 non sa caricare. Serve Decky 4: Decky resta alla versione installata.": "यह Steam नया क्लाइंट इस्तेमाल करता है, जिसे Decky 3 लोड नहीं कर सकता। Decky 4 चाहिए: Decky इंस्टॉल किए गए संस्करण पर ही रहेगा।",
+  "Core lascia passare qualche giorno da ogni nuova versione di Steam, controlla che vada d'accordo con Decky e la installa di notte, quando non giochi. Prima salva una copia di Steam e, se dopo l'aggiornamento qualcosa non funziona, torna indietro da solo.": "Core हर नए Steam संस्करण को कुछ दिन इंतज़ार कराता है, जाँचता है कि वह Decky के साथ ठीक चलता है, और रात में जब आप नहीं खेल रहे होते तब उसे इंस्टॉल करता है। पहले Steam की एक कॉपी सहेजता है और अपडेट के बाद कुछ काम न करे तो खुद वापस लौट जाता है।",
+  "Giorni di attesa per una nuova versione di Steam": "नए Steam संस्करण के लिए इंतज़ार के दिन",
+  "Steam è aggiornato.": "Steam अपडेट है।",
+  "C'è una nuova versione di Steam: Core la installa tra {0} giorni, di notte, se va d'accordo con Decky.": "Steam का नया संस्करण आया है: अगर वह Decky के साथ ठीक चलता है तो Core उसे {0} दिन बाद रात में इंस्टॉल करेगा।",
+  "Core aggiornerà Steam la prossima notte degli aggiornamenti, se non stai giocando.": "अगर आप नहीं खेल रहे होंगे तो Core अगली अपडेट वाली रात Steam को अपडेट करेगा।",
+  "Aggiornamento di Steam rimandato: {0}": "Steam अपडेट टाला गया: {0}",
+  "il nuovo Steam non funziona con la versione di Decky installata.": "नया Steam इंस्टॉल किए गए Decky के साथ काम नहीं करता।",
+  "Core non sa ancora se il nuovo Steam funziona con Decky.": "Core अभी नहीं बता सकता कि नया Steam Decky के साथ काम करता है या नहीं।",
+  "Core non riesce a verificare la compatibilità con Decky.": "Core Decky के साथ संगतता नहीं जाँच पा रहा।",
+  "L'ultimo aggiornamento di Steam non ha superato il controllo ed è stato annullato. Core riprova quando arriva una correzione.": "पिछला Steam अपडेट जाँच में पास नहीं हुआ और वापस ले लिया गया। सुधार आने पर Core फिर कोशिश करेगा।",
+  "Core non sa se il nuovo Steam funziona con Decky. Premi di nuovo per aggiornare comunque: Core salva prima una copia e torna indietro se qualcosa non va.": "Core नहीं बता सकता कि नया Steam Decky के साथ काम करता है या नहीं। फिर भी अपडेट करने के लिए दोबारा दबाएँ: Core पहले एक कॉपी सहेजता है और कुछ गलत हो तो वापस लौट जाता है।",
+  "Il nuovo Steam non funziona con la versione di Decky installata: i plugin smetteranno di caricarsi. Premi di nuovo se vuoi aggiornare lo stesso.": "नया Steam इंस्टॉल किए गए Decky के साथ काम नहीं करता: प्लगइन लोड होना बंद हो जाएँगे। फिर भी अपडेट करना हो तो दोबारा दबाएँ।",
+  "Ultima conferma: premi ancora una volta per aggiornare Steam sapendo che i plugin non funzioneranno.": "आख़िरी पुष्टि: यह जानते हुए कि प्लगइन काम नहीं करेंगे, Steam अपडेट करने के लिए एक बार और दबाएँ।"
 }

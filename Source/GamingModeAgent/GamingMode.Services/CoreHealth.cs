@@ -85,6 +85,14 @@ internal sealed record CoreHealthInputs
 	public string? StreamDevice { get; init; }
 	public bool? StreamVirtualDisplay { get; init; }
 	public bool TvHeld { get; init; }
+	// Steam updates (SteamUpdateHold.cs): set only while an automatic Steam update is postponed (the gate said
+	// no or could not tell, or the last try failed and waits for a change). The reason is a gate code, or
+	// "rolled-back" with the failed smoke check. Attention once postponed PostponeAttentionDays past the soak.
+	public string? SteamPostponedReason { get; init; }
+	public string? SteamFailedCheck { get; init; }
+	public string? SteamPendingVersion { get; init; }
+	public DateTimeOffset? SteamPostponedSince { get; init; }
+	public bool SteamPostponedAttention { get; init; }
 }
 
 internal sealed record HealthRow(string Id, HealthLevel Level, string State, IReadOnlyDictionary<string, object?> Data);
@@ -104,7 +112,7 @@ internal static class CoreHealthPolicy
 	internal const long PcMinFreeBytes = 20L * 1000 * 1000 * 1000;
 
 	// The order the Quick Access section shows the rows in.
-	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "tv", "streaming", "microphone", "pc-disk", "core-update" };
+	internal static readonly string[] RowOrder = { "server-backup", "restore-check", "server-drive", "romm", "windows-restart", "update-night", "steam-update", "tv", "streaming", "microphone", "pc-disk", "core-update" };
 
 	// The home server running Aincrad: "serverv3", "192.168.1.109", "serverv3:8123" or a full http(s) URL.
 	// Its nightly backup writes core-status.json into Home Assistant's www/ folder, served without a
@@ -298,6 +306,13 @@ internal static class CoreHealthPolicy
 		if (input.UpdateNightScheduledFor is not null) rows.Add(new HealthRow("update-night", HealthLevel.Ok, "scheduled", night));
 		else if (input.UpdateNightOffer) rows.Add(new HealthRow("update-night", HealthLevel.Attention, "waiting", night));
 		else rows.Add(new HealthRow("update-night", HealthLevel.Ok, "nothing", night));
+
+		// Steam updates: a row only while an automatic update is postponed ("Steam update postponed: <reason>").
+		if (input.SteamPostponedReason is { Length: > 0 } steamReason)
+		{
+			var steam = new Dictionary<string, object?> { ["reason"] = steamReason, ["failedCheck"] = input.SteamFailedCheck, ["pending"] = input.SteamPendingVersion, ["since"] = Stamp(input.SteamPostponedSince) };
+			rows.Add(new HealthRow("steam-update", input.SteamPostponedAttention ? HealthLevel.Attention : HealthLevel.Info, "postponed", steam));
+		}
 
 		// TV: read only; never woken for this.
 		var tv = new Dictionary<string, object?> { ["enabled"] = input.TvEnabled, ["paired"] = input.TvPaired, ["reachable"] = input.TvReachable };

@@ -69,6 +69,8 @@ public sealed class GamingOptions
     public bool QuietWindowsToasts { get; set; } = true;
     public string? CoreHealthServer { get; set; }
     public bool CoreHealthAlertsEnabled { get; set; } = true;
+    // Days a pending Steam client version waits before Core updates Steam (agent SteamUpdateHold.cs).
+    public int SteamUpdateSoakDays { get; set; } = 10;
     public List<StartupAppConfig> CustomStartupApps { get; set; } = new();
 
     // Qui finiscono le opzioni che vivono solo lato agente - fra cui le app

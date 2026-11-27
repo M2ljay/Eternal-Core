@@ -22,6 +22,7 @@ public partial class App : Application
         // light mode can materialize light card brushes that remain in place
         // even after the window itself is switched to dark mode.
         Diag.Step("App ctor begin");
+        DeckyInstallerService.PairingLog = Diag.Step;
 #if PLAYHUB_UI_REVIEW
         // Capture the originating managed error before DispatcherQueue converts
         // a callback failure into a native fail-fast. Private review builds only.

@@ -1,8 +1,10 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +16,7 @@ using Playhub.Shared;
 
 namespace GamingMode.Services;
 
-// Eternal Core Mark III in the agent: TV control, the Steam update hold, the Decky health
+// Eternal Core Mark III in the agent: TV control, Steam updates (soak, gate, smoke test), the Decky health
 // check, Core Repair's actions, the wake sequence and their HTTP endpoints. Core Health (the
 // Quick Access health section and its notices) is in MarkIIIHost.Health.cs; Core Voice (microphone
 // mute and the Xbox party button) in MarkIIIHost.Voice.cs; Stream mode (the TV left alone while the PC
@@ -139,7 +141,7 @@ internal sealed partial class MarkIIIHost : IDisposable
 			try { CheckStream(); }
 			catch (Exception error) { _logger.Error("Stream mode: check failed this round.", error); }
 			if (++tick % 12 != 0) continue; // once a minute
-			try { CheckSteamHold(); }
+			try { await CheckSteamHoldAsync().ConfigureAwait(false); }
 			catch (Exception error) { _logger.Error("Mark III: Steam update hold check failed this round.", error); }
 			try { CheckUpdateNight(); }
 			catch (Exception error) { _logger.Error("Mark III: update night check failed this round.", error); }
@@ -333,37 +335,222 @@ internal sealed partial class MarkIIIHost : IDisposable
 		catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
 	}
 
-	// ---------- Steam update hold ----------
+	// ---------- Steam updates (SteamUpdateHold.cs, docs/eternal/STEAM-UPDATES.md) ----------
 
-	private void CheckSteamHold()
+	private static readonly HttpClient ManifestClient = new() { Timeout = TimeSpan.FromSeconds(10) };
+	private static readonly TimeSpan PendingCheckEvery = TimeSpan.FromHours(6), SteamKindFor = TimeSpan.FromMinutes(10), PluginSnapshotEvery = TimeSpan.FromMinutes(15);
+	private static readonly Lazy<SteamCompatibility?> Compatibility = new(LoadCompatibility);
+	private (DateTimeOffset At, SteamClientKindReading Reading)? _steamKind;
+	private DateTimeOffset _pluginSnapshotAt = DateTimeOffset.MinValue;
+	private IReadOnlyList<string>? _pluginSnapshot;
+	private volatile bool _coreUpdatingSteam;
+
+	// The known-good file shipped inside the agent. Missing or broken: the gate cannot tell, and says so.
+	private static SteamCompatibility? LoadCompatibility()
+	{
+		try
+		{
+			using Stream? stream = typeof(MarkIIIHost).Assembly.GetManifestResourceStream("SteamCompatibility.json");
+			if (stream is null) return null;
+			using var reader = new StreamReader(stream);
+			return SteamCompatibility.Parse(reader.ReadToEnd());
+		}
+		catch (Exception error) when (error is IOException or InvalidOperationException) { return null; }
+	}
+
+	// Installed Decky: present at all, and its PluginLoader product version when readable.
+	private (bool Installed, Version? Version) InstalledDecky()
+	{
+		GamingSettings gaming = _store.LoadConfig().Gaming;
+		string?[] candidates;
+		try { candidates = new string?[] { gaming.DeckyPath }.Concat(_processTools.GetDeckyFallbackPaths()).ToArray(); }
+		catch { candidates = new string?[] { gaming.DeckyPath }; }
+		bool installed = false;
+		foreach (string? path in candidates)
+		{
+			try
+			{
+				if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) continue;
+				installed = true;
+				if (DeckySteamPairing.TryParseDeckyVersion(FileVersionInfo.GetVersionInfo(path).ProductVersion, out Version version) && version.Major > 0)
+					return (true, version);
+			}
+			catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException) { }
+		}
+		return (installed, null);
+	}
+
+	// Which UI the running Steam loads, asked at most every SteamKindFor (each ask opens a debug session).
+	private async Task<SteamClientKindReading> SteamKindAsync(bool fresh = false)
+	{
+		if (!fresh && _steamKind is { } cached && DateTimeOffset.Now - cached.At < SteamKindFor) return cached.Reading;
+		SteamClientKindReading reading = SteamProcessId() is null ? new(SteamUiKind.Unknown, "Steam is not running") : await SteamClientKindProbe.DetectAsync().ConfigureAwait(false);
+		_steamKind = (DateTimeOffset.Now, reading);
+		return reading;
+	}
+
+	// The pending client version: Valve's published manifest for this PC's channel, fetched at most every
+	// PendingCheckEvery. Null when not fetched this round or when the fetch failed (the policy keeps what it knew).
+	private async Task<string?> PendingVersionAsync(string root, SteamHoldState state, DateTimeOffset now)
+	{
+		if (state.PendingCheckedAt is { } last && now - last < PendingCheckEvery && now >= last) return null;
+		Uri url = SteamUpdateHoldPolicy.PublishedManifest(SteamUpdateHoldPolicy.ReadBetaName(root));
+		try
+		{
+			using HttpResponseMessage response = await ManifestClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+			if (!response.IsSuccessStatusCode || response.Content.Headers.ContentLength > 256 * 1024) { _logger.Info($"Steam updates: Valve's client manifest answered {(int)response.StatusCode}; pending version unknown this round."); return ""; }
+			string text = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+			string? version = text.Length <= 256 * 1024 ? SteamUpdateHoldPolicy.ParseClientManifestVersion(text) : null;
+			if (version is null) _logger.Info("Steam updates: Valve's client manifest had no version; pending version unknown this round.");
+			return version ?? "";
+		}
+		catch (Exception error) when (error is HttpRequestException or TaskCanceledException or InvalidOperationException)
+		{
+			_logger.Info($"Steam updates: Valve's client manifest could not be read ({error.GetType().Name}); pending version unknown this round.");
+			return "";
+		}
+	}
+
+	private async Task<SteamGateVerdict> GateAsync(SteamHoldState state, bool freshProbe = false)
+	{
+		(bool installed, Version? decky) = InstalledDecky();
+		SteamClientKindReading steam = installed ? await SteamKindAsync(freshProbe).ConfigureAwait(false) : new(SteamUiKind.Unknown, "Decky not installed");
+		SteamGateVerdict gate = SteamReleaseGate.Evaluate(Compatibility.Value, installed, decky, state.InstalledVersion ?? SteamVersion(), steam.Kind, state.PendingVersion);
+		_logger.Info($"Steam update gate: {gate.Result} ({gate.Reason}). Installed Decky {(installed ? decky?.ToString() ?? "unknown version" : "none")}, "
+			+ $"bundled {Compatibility.Value?.BundledDecky ?? "unknown"}, Steam {state.InstalledVersion ?? "unknown"} running {steam.Kind} ({steam.Detail}), pending {state.PendingVersion ?? "unknown"}.");
+		return gate;
+	}
+
+	private string Fingerprint(SteamHoldState state) => SteamReleaseGate.Fingerprint(Compatibility.Value, InstalledDecky().Version, state.PendingVersion);
+
+	private int SoakDays() => SteamUpdateHoldPolicy.SoakDays(_store.LoadConfig().Gaming.SteamUpdateSoakDays);
+
+	// Decky's own list of loaded plugins, read through Steam's debug port. Null: no answer.
+	private static async Task<IReadOnlyList<string>?> LoadedPluginsAsync()
+	{
+		SteamEvaluation answer = await SteamClientKindProbe.EvaluateAsync(DeckySteamPairing.LoadedPluginsExpression).ConfigureAwait(false);
+		return DeckySteamPairing.ParseLoadedPlugins(answer.Value);
+	}
+
+	// While plugins work, remember which ones Decky loaded: the smoke test after an update that happened
+	// by itself expects them back.
+	private async Task RefreshPluginSnapshotAsync(DateTimeOffset now)
+	{
+		if (now - _pluginSnapshotAt < PluginSnapshotEvery || _decky.Verdict != DeckyVerdict.Healthy) return;
+		_pluginSnapshotAt = now;
+		if (await LoadedPluginsAsync().ConfigureAwait(false) is { } loaded) _pluginSnapshot = loaded;
+	}
+
+	private SmokeExpectations Expectations(IReadOnlyList<string>? plugins) =>
+		PluginsExpected() && _decky.EverHealthy ? new SmokeExpectations(true, plugins ?? _pluginSnapshot ?? Array.Empty<string>()) : SmokeExpectations.None;
+
+	private async Task CheckSteamHoldAsync()
 	{
 		if (GameRunning()) _quietSince = DateTimeOffset.Now;
 		string? root = SteamRoot();
 		if (root is null) return;
 		DateTimeOffset now = DateTimeOffset.Now;
+		bool holdOn = SteamUpdateHoldPolicy.IsHoldFilePresent(root);
 		SteamHoldState state = SteamUpdateHoldPolicy.Load(_holdPath);
-		SteamHoldObservation seen = SteamUpdateHoldPolicy.Observe(state, SteamUpdateHoldPolicy.IsHoldFilePresent(root), SteamVersion(), now);
+		string? fetched = holdOn ? await PendingVersionAsync(root, state, now).ConfigureAwait(false) : null;
+		bool updating = _coreUpdatingSteam;
+		SteamHoldObservation seen = SteamUpdateHoldPolicy.Observe(state, holdOn, SteamVersion(), string.IsNullOrEmpty(fetched) ? null : fetched, now, updating);
 		SteamHoldState next = seen.Next;
+		// A failed fetch is tried again in an hour, a good one in PendingCheckEvery.
+		if (fetched is not null) next = next with { PendingCheckedAt = fetched.Length > 0 ? now : now - PendingCheckEvery + TimeSpan.FromHours(1) };
+		if (next.PendingVersion != state.PendingVersion && next.PendingVersion is not null)
+			_logger.Info($"Steam updates: Steam {next.PendingVersion} is pending (installed {next.InstalledVersion ?? "unknown"}); day one of its soak is the night of {next.PendingDayOne:yyyy-MM-dd}.");
 		if (seen.UpdatedDespiteHold)
-			_logger.Info($"Steam updated to {next.HeldVersion} although its updates were on hold (steam.cfg present). The hold restarts from this version; the Decky health check judges it.");
-		if (seen.Phase == SteamHoldPhase.Expired && !next.ExpiryNotified)
 		{
-			_logger.Info($"Steam updates have been on hold for {SteamUpdateHoldPolicy.MaxHoldDays} days; Core updates Steam at the next idle moment.");
-			Notice("notice.steamHoldExpired");
-			next = next with { ExpiryNotified = true };
+			_logger.Info($"Steam updated from {state.InstalledVersion} to {next.InstalledVersion} although its updates were blocked (steam.cfg present). Running the smoke test.");
+			// Not started (another job runs): keep the old version so the next round tries again.
+			if (!TryRunJob("verify-steam", automatic: true)) next = next with { InstalledVersion = state.InstalledVersion };
+		}
+		try { await RefreshPluginSnapshotAsync(now).ConfigureAwait(false); }
+		catch (Exception error) { _logger.Error("Steam updates: Decky's plugin list could not be read this round.", error); }
+		SteamHoldView view = SteamUpdateHoldPolicy.View(next, holdOn, SoakDays(), Fingerprint(next), now);
+		if (view.Phase is SteamHoldPhase.Due or SteamHoldPhase.Postponed && SteamUpdateHoldPolicy.IsUpdateNight(now) && !SteamUpdateHoldPolicy.DecidedTonight(next, now) && !updating)
+		{
+			DateTimeOffset quiet = _quietSince > _started ? _quietSince : _started;
+			bool idle = SteamUpdateHoldPolicy.IsIdleMoment(InGamingMode(), SteamProcessId() is not null, RunningAppId() != 0, _antiCheat.Engaged, quiet, now);
+			if (idle)
+			{
+				SteamGateVerdict gate = await GateAsync(next, freshProbe: true).ConfigureAwait(false);
+				switch (SteamUpdateHoldPolicy.DecideNight(view, next, idle, gate, now))
+				{
+					case SteamNightAction.Postpone:
+						next = SteamUpdateHoldPolicy.Postponed(next, gate.Reason, now);
+						_logger.Info($"Steam updates: Steam {next.PendingVersion} postponed ({gate.Reason}); asked again next update night.");
+						break;
+					case SteamNightAction.Update:
+						_logger.Info($"Steam updates: Steam {next.PendingVersion} has soaked {SoakDays()} days and the gate passes: updating now.");
+						if (TryRunJob("update-steam", automatic: true)) next = next with { LastNightDecision = now };
+						break;
+				}
+			}
 		}
 		if (next != state) SteamUpdateHoldPolicy.Save(_holdPath, next);
-		DateTimeOffset quiet = _quietSince > _started ? _quietSince : _started;
-		if (seen.Phase == SteamHoldPhase.Expired && SteamUpdateHoldPolicy.IsIdleMoment(InGamingMode(), SteamProcessId() is not null, RunningAppId() != 0, _antiCheat.Engaged, quiet, now))
+	}
+
+	// The answer to "Update Steam now": go, or which confirmation is still needed.
+	private async Task<(SteamManualAnswer Answer, SteamGateVerdict Gate)> ManualAsync(int confirmations)
+	{
+		SteamGateVerdict gate = await GateAsync(SteamUpdateHoldPolicy.Load(_holdPath), freshProbe: true).ConfigureAwait(false);
+		return (SteamManualPolicy.Decide(gate, confirmations), gate);
+	}
+
+	private async Task<IResult> UpdateSteamNowAsync(HttpContext context)
+	{
+		int confirmations = int.TryParse(context.Request.Query["confirm"].ToString(), out int count) ? Math.Clamp(count, 0, 2) : 0;
+		(SteamManualAnswer answer, SteamGateVerdict gate) = await ManualAsync(confirmations).ConfigureAwait(false);
+		if (answer != SteamManualAnswer.Go)
+			return Results.Json(new { ok = false, confirm = SteamManualPolicy.Code(answer), reason = gate.Reason });
+		_logger.Info($"Steam updates: \"Update Steam now\" ({gate.Reason}, {confirmations} confirmation(s)).");
+		return TryRunJob("update-steam") ? Results.Json(new { ok = true, reason = gate.Reason }, statusCode: 202) : Results.Json(new { ok = false, busy = true }, statusCode: 409);
+	}
+
+	// Runs inside the job: the update (automatic on update night, or "Update Steam now") or the check of
+	// an update that happened by itself; the outcome goes into the hold state and a Core notice.
+	private async Task<(string Key, string? Detail)> SteamUpdateJobAsync(bool verifyOnly, bool automatic, CancellationToken cancellation)
+	{
+		SteamHoldState before = SteamUpdateHoldPolicy.Load(_holdPath);
+		string fingerprint = Fingerprint(before);
+		SteamUpdateResult result;
+		_coreUpdatingSteam = true;
+		try
 		{
-			_logger.Info("Idle moment after an expired hold: updating Steam now.");
-			_ = TryRunJob("update-steam", automatic: true);
+			using (_manager.BeginSteamMaintenance())
+				result = verifyOnly
+					? await SteamUpdateJob.VerifyAsync(_steamHost, Expectations(null), cancellation).ConfigureAwait(false)
+					: await SteamUpdateJob.RunAsync(_steamHost, cancellation).ConfigureAwait(false);
+		}
+		finally { _coreUpdatingSteam = false; }
+		string? version = SteamVersion();
+		_logger.Info($"Steam {(verifyOnly ? "update check" : "update")}: {result.Outcome}{(result.Smoke.Ok ? "" : $", failed check {SmokeTestPolicy.Code(result.Smoke.Failed)}{(result.Smoke.Detail is null ? "" : " (" + result.Smoke.Detail + ")")}")} (client {version ?? "unknown"}).");
+		DateTimeOffset now = DateTimeOffset.Now;
+		switch (result.Outcome)
+		{
+			case SteamUpdateOutcome.Updated:
+				SaveHold(state => SteamUpdateHoldPolicy.Updated(state, version, now, automatic && !verifyOnly));
+				if (!verifyOnly) Notice("repair.steamUpdated");
+				return (verifyOnly ? "repair.done" : "repair.steamUpdated", null);
+			case SteamUpdateOutcome.RolledBack:
+			case SteamUpdateOutcome.RollbackFailed:
+				bool restored = result.Outcome == SteamUpdateOutcome.RolledBack;
+				SaveHold(state => SteamUpdateHoldPolicy.Failed(state, result.Smoke, fingerprint, restored, SteamVersion(), now, automatic && !verifyOnly));
+				string key = SmokeTestPolicy.NoticeKey(result.Smoke.Failed, restored);
+				Notice(key);
+				return (key, result.Smoke.Detail);
+			case SteamUpdateOutcome.NotWhilePlaying: return ("repair.notWhilePlaying", null);
+			default: return ("repair.failed", result.Outcome.ToString());
 		}
 	}
 
 	// ---------- Core Repair actions (one at a time) ----------
 
-	private static readonly string[] Actions = { "restart-plugins", "reenable-access", "update-decky", "rollback-steam", "update-steam", "continue" };
+	// "verify-steam" is internal (an update that happened by itself); the endpoint does not accept it.
+	private static readonly string[] Actions = { "restart-plugins", "reenable-access", "update-decky", "rollback-steam", "update-steam", "verify-steam", "continue" };
+	private static readonly string[] RequestableActions = { "restart-plugins", "reenable-access", "update-decky", "rollback-steam", "update-steam", "continue" };
 
 	private bool TryRunJob(string action, bool automatic = false)
 	{
@@ -461,7 +648,7 @@ internal sealed partial class MarkIIIHost : IDisposable
 					case SteamRollbackOutcome.NoBackup: return ("repair.noBackup", null);
 					case SteamRollbackOutcome.NotWhilePlaying: return ("repair.notWhilePlaying", null);
 					case SteamRollbackOutcome.RolledBack:
-						SaveHold(state => state with { RollbackSuggested = false, HeldSince = DateTimeOffset.Now, HeldVersion = SteamVersion(), ExpiryNotified = false, LastOutcome = "rolled-back" });
+						SaveHold(state => state with { RollbackSuggested = false, InstalledVersion = SteamVersion() ?? state.InstalledVersion, LastOutcome = "rolled-back" });
 						bool fixedNow = await WaitForHeartbeatAsync(since, TimeSpan.FromMinutes(2), cancellation).ConfigureAwait(false);
 						Notice(fixedNow ? "repair.fixed" : "repair.stillBroken");
 						return (fixedNow ? "repair.fixed" : "repair.stillBroken", null);
@@ -469,26 +656,12 @@ internal sealed partial class MarkIIIHost : IDisposable
 				}
 			}
 			case "update-steam":
+			case "verify-steam":
 			{
 				await WaitForNoGameAsync(TimeSpan.FromSeconds(15)).ConfigureAwait(false);
 				if (GameRunning()) return ("repair.notWhilePlaying", null);
-				if (automatic) Notice("notice.steamUpdating");
-				SteamUpdateOutcome outcome;
-				using (_manager.BeginSteamMaintenance()) outcome = await SteamUpdateJob.RunAsync(_steamHost, cancellation).ConfigureAwait(false);
-				_logger.Info($"Steam update: {outcome} (client {SteamVersion() ?? "unknown"}).");
-				switch (outcome)
-				{
-					case SteamUpdateOutcome.Updated:
-						SaveHold(state => state with { HeldSince = DateTimeOffset.Now, HeldVersion = SteamVersion(), KnownGoodVersion = SteamVersion(), LastUpdateAt = DateTimeOffset.Now, LastOutcome = "updated", ExpiryNotified = false, RollbackSuggested = false });
-						Notice("repair.steamUpdated");
-						return ("repair.steamUpdated", null);
-					case SteamUpdateOutcome.UpdatedPluginsBroken:
-						SaveHold(state => state with { HeldSince = DateTimeOffset.Now, HeldVersion = SteamVersion(), LastUpdateAt = DateTimeOffset.Now, LastOutcome = "plugins-broken", ExpiryNotified = false, RollbackSuggested = true });
-						Notice("notice.steamUpdatedPluginsBroken");
-						return ("notice.steamUpdatedPluginsBroken", null);
-					case SteamUpdateOutcome.NotWhilePlaying: return ("repair.notWhilePlaying", null);
-					default: return ("repair.failed", outcome.ToString());
-				}
+				if (automatic && action == "update-steam") Notice("notice.steamUpdating");
+				return await SteamUpdateJobAsync(action == "verify-steam", automatic, cancellation).ConfigureAwait(false);
 			}
 			case "continue":
 			{
@@ -530,8 +703,33 @@ internal sealed partial class MarkIIIHost : IDisposable
 		public bool GameRunning() => _owner.GameRunning();
 		public DateTimeOffset Now() => DateTimeOffset.Now;
 		public void Stage(SteamUpdateStage stage) { _owner.Stage(stage.ToString()); _owner._logger.Info($"Steam update job: {stage}."); }
-		public bool PluginsWereHealthy() => _owner.PluginsExpected() && _owner._decky.EverHealthy;
-		public Task<bool> WaitForPluginsAsync(DateTimeOffset since, TimeSpan timeout, CancellationToken cancellation) => _owner.WaitForHeartbeatAsync(since, timeout, cancellation);
+		// Read while Steam still runs: the plugins Decky has loaded now are the ones expected back.
+		public async Task<SmokeExpectations> ExpectationsAsync(CancellationToken cancellation)
+		{
+			IReadOnlyList<string>? loaded = _owner._decky.Verdict == DeckyVerdict.Healthy ? await LoadedPluginsAsync().ConfigureAwait(false) : null;
+			SmokeExpectations expected = _owner.Expectations(loaded);
+			_owner._logger.Info($"Steam update smoke test expects: {(expected.PluginsMatter ? "Big Picture, Decky's loader, Core's plugin and " + (expected.Plugins.Count == 0 ? "no listed plugins" : string.Join(", ", expected.Plugins)) : "Big Picture only (plugins did not work before)")}.");
+			return expected;
+		}
+
+		// Polls every few seconds until each check passes or the limit ends. Big Picture counts only in
+		// Gaming Mode (a desktop update starts Steam's normal window); Decky's loader is checked as Core's
+		// Decky installer checks it (port 1337 has a listener); Core's plugin by a heartbeat since `since`.
+		public async Task<SmokeResult> SmokeTestAsync(DateTimeOffset since, TimeSpan limit, SmokeExpectations expected, CancellationToken cancellation)
+		{
+			DateTimeOffset giveUp = DateTimeOffset.Now + limit;
+			while (true)
+			{
+				bool steam = SteamProcessId() is not null;
+				bool bigPicture = steam && (!_owner.InGamingMode() || SteamFullscreenDetector.IsBigPictureUp());
+				bool loader = false;
+				try { loader = DeckyStartupGuard.ListenerOwner(1337) is not null; } catch (Exception error) { _owner._logger.Error("Smoke test: Decky's port could not be checked.", error); }
+				IReadOnlyList<string>? loaded = expected.PluginsMatter && expected.Plugins.Count > 0 && bigPicture && loader ? await LoadedPluginsAsync().ConfigureAwait(false) : null;
+				SmokeResult result = SmokeTestPolicy.Judge(bigPicture, loader, expected, loaded, _owner._decky.HealthySince(since));
+				if (result.Ok || DateTimeOffset.Now >= giveUp) return result;
+				await Task.Delay(TimeSpan.FromSeconds(5), cancellation).ConfigureAwait(false);
+			}
+		}
 		public Task RestartPluginsAsync(CancellationToken cancellation) => _owner._manager.RestartDeckyAsync();
 		private static string BackupsRoot => global::Playhub.Services.AppPaths.SteamClientBackupsRoot;
 		public bool HasClientBackup() => SteamClientBackup.Newest(BackupsRoot) is not null;
@@ -707,13 +905,15 @@ internal sealed partial class MarkIIIHost : IDisposable
 		JobState job; lock (_sync) job = _jobState;
 		string? root = SteamRoot();
 		SteamHoldState hold = SteamUpdateHoldPolicy.Load(_holdPath);
-		SteamHoldObservation seen = SteamUpdateHoldPolicy.Observe(hold, SteamUpdateHoldPolicy.IsHoldFilePresent(root), SteamVersion(), DateTimeOffset.Now);
+		int soak = SoakDays();
+		SteamHoldView view = SteamUpdateHoldPolicy.View(hold, SteamUpdateHoldPolicy.IsHoldFilePresent(root), soak, Fingerprint(hold), DateTimeOffset.Now);
 		return new
 		{
 			busy = job.Busy, action = job.Action, stage = job.Stage, messageKey = job.MessageKey, detail = job.Detail,
 			rollbackSuggested = hold.RollbackSuggested, hasBackup = SteamClientBackup.Newest(global::Playhub.Services.AppPaths.SteamClientBackupsRoot) is not null,
-			holdPhase = seen.Phase.ToString(), daysLeft = seen.DaysLeft, heldSince = seen.Next.HeldSince, steamVersion = SteamVersion(),
-			lastUpdateAt = hold.LastUpdateAt, lastOutcome = hold.LastOutcome,
+			holdPhase = view.Phase.ToString(), daysLeft = view.DaysLeft, soakDays = soak, soakEnds = view.SoakEnds?.ToString("yyyy-MM-dd"), attention = view.Attention,
+			steamVersion = SteamVersion(), pendingVersion = hold.PendingVersion, postponedSince = hold.PostponedSince, postponedReason = hold.PostponedReason,
+			failedCheck = hold.FailedCheck, failedDetail = hold.FailedDetail, lastUpdateAt = hold.LastUpdateAt, lastOutcome = hold.LastOutcome,
 			plugins = _decky.Verdict.ToString(), lastHeartbeat = _decky.EverHealthy ? _decky.LastHeartbeat : null,
 		};
 	}
@@ -743,20 +943,19 @@ internal sealed partial class MarkIIIHost : IDisposable
 			string exe = Environment.ProcessPath ?? "";
 			return Results.Json(new { name = "Core Repair", exe, startDir = Path.GetDirectoryName(exe) ?? "", launchOptions = "repair" });
 		}));
-		app.MapPost("/core/repair/run", (Func<HttpContext, IResult>)(context =>
+		app.MapPost("/core/repair/run", (Func<HttpContext, Task<IResult>>)(async context =>
 		{
 			if (!Local(context)) return Results.StatusCode(403);
 			string action = context.Request.Query["action"].ToString();
-			if (!Actions.Contains(action)) return Results.Json(new { ok = false, error = "unknown action" }, statusCode: 400);
+			if (!RequestableActions.Contains(action)) return Results.Json(new { ok = false, error = "unknown action" }, statusCode: 400);
+			// Core Repair's "Update Steam now" goes through the same gate and confirmations as the app's.
+			if (action == "update-steam") return await UpdateSteamNowAsync(context).ConfigureAwait(false);
 			return TryRunJob(action) ? Results.Json(new { ok = true, started = action }, statusCode: 202) : Results.Json(new { ok = false, busy = true }, statusCode: 409);
 		}));
 		app.MapGet("/core/repair/state", (Func<HttpContext, IResult>)(context => Local(context) ? Results.Json(RepairState()) : Results.StatusCode(403)));
 		app.MapGet("/steam/update/state", (Func<HttpContext, IResult>)(context => Local(context) ? Results.Json(RepairState()) : Results.StatusCode(403)));
-		app.MapPost("/steam/update/now", (Func<HttpContext, IResult>)(context =>
-		{
-			if (!Local(context)) return Results.StatusCode(403);
-			return TryRunJob("update-steam") ? Results.Json(new { ok = true }, statusCode: 202) : Results.Json(new { ok = false, busy = true }, statusCode: 409);
-		}));
+		app.MapPost("/steam/update/now", (Func<HttpContext, Task<IResult>>)(async context =>
+			Local(context) ? await UpdateSteamNowAsync(context).ConfigureAwait(false) : Results.StatusCode(403)));
 
 		app.MapGet("/windows/update-night", (Func<HttpContext, IResult>)(context => Local(context) ? Results.Json(UpdateNightView()) : Results.StatusCode(403)));
 		app.MapPost("/windows/update-night/schedule", (Func<HttpContext, IResult>)(context =>

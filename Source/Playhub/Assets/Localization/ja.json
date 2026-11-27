@@ -1518,5 +1518,20 @@
   "Controlla ora": "今すぐ確認",
   "Tutto a posto.": "問題ありません。",
   "Cose da controllare: {0}": "確認が必要な項目: {0}",
-  "Modalità streaming attiva: Core lascia stare la TV.": "ストリーミングモードがオンです。Core はテレビを操作しません。"
+  "Modalità streaming attiva: Core lascia stare la TV.": "ストリーミングモードがオンです。Core はテレビを操作しません。",
+  "Questa versione di Decky richiede il nuovo client di Steam, che su questo PC non c'è ancora. Decky resta alla versione installata.": "この Decky のバージョンには新しい Steam クライアントが必要ですが、この PC にはまだありません。Decky はインストール済みのバージョンのままです。",
+  "Questo Steam usa il nuovo client, che Decky 3 non sa caricare. Serve Decky 4: Decky resta alla versione installata.": "この Steam は新しいクライアントを使っており、Decky 3 では読み込めません。Decky 4 が必要です。Decky はインストール済みのバージョンのままです。",
+  "Core lascia passare qualche giorno da ogni nuova versione di Steam, controlla che vada d'accordo con Decky e la installa di notte, quando non giochi. Prima salva una copia di Steam e, se dopo l'aggiornamento qualcosa non funziona, torna indietro da solo.": "Core は新しい Steam のバージョンを数日待たせ、Decky と問題なく動くか確認してから、プレイしていない夜間にインストールします。先に Steam のコピーを保存し、更新後に何かが動かなければ自動で元に戻します。",
+  "Giorni di attesa per una nuova versione di Steam": "新しい Steam バージョンを待つ日数",
+  "Steam è aggiornato.": "Steam は最新です。",
+  "C'è una nuova versione di Steam: Core la installa tra {0} giorni, di notte, se va d'accordo con Decky.": "新しい Steam があります。Decky と問題なく動くなら、Core が {0} 日後の夜にインストールします。",
+  "Core aggiornerà Steam la prossima notte degli aggiornamenti, se non stai giocando.": "プレイしていなければ、Core は次の更新の夜に Steam を更新します。",
+  "Aggiornamento di Steam rimandato: {0}": "Steam の更新を延期しました：{0}",
+  "il nuovo Steam non funziona con la versione di Decky installata.": "新しい Steam はインストール済みの Decky では動作しません。",
+  "Core non sa ancora se il nuovo Steam funziona con Decky.": "新しい Steam が Decky で動くかどうか、Core にはまだわかりません。",
+  "Core non riesce a verificare la compatibilità con Decky.": "Core は Decky との互換性を確認できません。",
+  "L'ultimo aggiornamento di Steam non ha superato il controllo ed è stato annullato. Core riprova quando arriva una correzione.": "前回の Steam の更新はチェックに通らず、元に戻されました。修正が届いたら Core がもう一度試します。",
+  "Core non sa se il nuovo Steam funziona con Decky. Premi di nuovo per aggiornare comunque: Core salva prima una copia e torna indietro se qualcosa non va.": "新しい Steam が Decky で動くかどうか Core にはわかりません。それでも更新するにはもう一度押してください。Core は先にコピーを保存し、問題があれば元に戻します。",
+  "Il nuovo Steam non funziona con la versione di Decky installata: i plugin smetteranno di caricarsi. Premi di nuovo se vuoi aggiornare lo stesso.": "新しい Steam はインストール済みの Decky では動作せず、プラグインが読み込まれなくなります。それでも更新する場合はもう一度押してください。",
+  "Ultima conferma: premi ancora una volta per aggiornare Steam sapendo che i plugin non funzioneranno.": "最終確認：プラグインが動かなくなることを承知で Steam を更新するには、もう一度押してください。"
 }

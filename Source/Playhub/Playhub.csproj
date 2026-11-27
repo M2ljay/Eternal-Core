@@ -36,6 +36,8 @@
   <ItemGroup>
     <Compile Include="../PerfectArtwork/*.cs" Link="Integrations/%(Filename)%(Extension)" />
     <Compile Include="../Shared/DeckyStartupGuard.cs" Link="DeckyStartupGuard.cs" />
+    <Compile Include="../Shared/DeckySteamPairing.cs" Link="DeckySteamPairing.cs" />
+    <Compile Include="../Shared/SteamClientKindProbe.cs" Link="SteamClientKindProbe.cs" />
     <Compile Include="../Shared/CouchHardening.cs" Link="CouchHardening.cs" />
     <Compile Include="../Shared/CouchRegistryWindows.cs" Link="CouchRegistryWindows.cs" />
     <Compile Include="../Shared/LegacyXboxGameBarWatcher.cs" Link="LegacyXboxGameBarWatcher.cs" />

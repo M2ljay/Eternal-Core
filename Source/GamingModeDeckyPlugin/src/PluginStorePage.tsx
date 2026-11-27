@@ -395,13 +395,15 @@ function MediaViewer({ item, copy, closeModal }: { item: PluginMedia; copy: Plug
   );
 }
 
+const STORE_MEDIA_STYLE = `
+      [class*="ArtworkModal"]:has(.ph-store-native-media-controls) [class*="ModalArtCloseButton"],
+      [class*="ArtworkModal"]:has(.ph-store-native-media-controls) [class*="ScrollForMore"] { display:none !important; }
+    `;
+
 function StoreMediaControls() {
   return <Focusable autoFocus flow-children="none" noFocusRing
     onMenuButton={(event: any) => { stopEvent(event); return true; }} onMenuActionDescription="">
-    <style>{`
-      [class*="ArtworkModal"]:has(.ph-store-native-media-controls) [class*="ModalArtCloseButton"],
-      [class*="ArtworkModal"]:has(.ph-store-native-media-controls) [class*="ScrollForMore"] { display:none !important; }
-    `}</style>
+    <style>{((DFL as any).coreClassSelectors?.(STORE_MEDIA_STYLE) ?? STORE_MEDIA_STYLE)}</style>
     <span className="ph-store-native-media-controls" />
   </Focusable>;
 }
@@ -1223,7 +1225,7 @@ export function PluginStorePage() {
   if (error) {
     return (
       <div className="ph-store-page">
-        <style>{STORE_STYLE}</style>
+        <style>{((DFL as any).coreClassSelectors?.(STORE_STYLE) ?? STORE_STYLE)}</style>
         <div className="ph-store-empty">
           <div>
             <p>{copy.catalogUnavailable}</p>
@@ -1236,7 +1238,7 @@ export function PluginStorePage() {
   if (!plugins) {
     return (
       <div className="ph-store-page">
-        <style>{STORE_STYLE}</style>
+        <style>{((DFL as any).coreClassSelectors?.(STORE_STYLE) ?? STORE_STYLE)}</style>
         <div className="ph-store-empty"><SteamSpinner /><span>{copy.loading}</span></div>
       </div>
     );
@@ -1252,7 +1254,7 @@ export function PluginStorePage() {
   };
   return (
     <div className="ph-store-page">
-      <style>{STORE_STYLE}</style>
+      <style>{((DFL as any).coreClassSelectors?.(STORE_STYLE) ?? STORE_STYLE)}</style>
       <div className="ph-store-tabs">
         <Tabs
           activeTab={tab}

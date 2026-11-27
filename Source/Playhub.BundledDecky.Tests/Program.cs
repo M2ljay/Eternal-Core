@@ -2,7 +2,9 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Playhub.Models;
 using Playhub.Services;
+using Playhub.Shared;
 
 var repository = new DirectoryInfo(AppContext.BaseDirectory);
 while (repository is not null && !Directory.Exists(Path.Combine(repository.FullName, "Source", "Playhub"))) repository = repository.Parent;
@@ -23,6 +25,17 @@ async Task Reject<T>(Func<Task> action, string label) where T : Exception
 }
 try
 {
+    // Eternal Core: the install guard refuses a Decky/Steam client-kind mismatch before anything is downloaded
+    // or stopped, and keeps today's behaviour when Steam cannot be checked (docs/eternal/DECKY-4.md).
+    var publishedAt = new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.Zero);
+    try { DeckyWindowsReleaseClient.RequireSteamPairing(new DeckyWindowsRelease("v4.0.0", publishedAt), SteamUiKind.Webpack); throw new InvalidOperationException("Decky 4 on webpack Steam was allowed"); }
+    catch (InvalidOperationException error) when (error.Message == DeckySteamPairing.NeedsModuleClient) { Check(true, "Decky 4 on today's webpack Steam is refused with a clear reason"); }
+    try { DeckyWindowsReleaseClient.RequireSteamPairing(new DeckyWindowsRelease("v3.3.1", publishedAt), SteamUiKind.EsModules); throw new InvalidOperationException("Decky 3 on the new client was allowed"); }
+    catch (InvalidOperationException error) when (error.Message == DeckySteamPairing.NeedsWebpackClient) { Check(true, "Decky 3 on the ES-module Steam client is refused with a clear reason"); }
+    DeckyWindowsReleaseClient.RequireSteamPairing(new DeckyWindowsRelease("v3.3.1", publishedAt), SteamUiKind.Webpack);
+    DeckyWindowsReleaseClient.RequireSteamPairing(new DeckyWindowsRelease("v4.0.0", publishedAt), SteamUiKind.Unknown);
+    DeckyWindowsReleaseClient.RequireSteamPairing(new DeckyWindowsRelease("latest", publishedAt), SteamUiKind.Webpack);
+    Check(true, "A matching pair, an uncheckable Steam or an unversioned tag install as before");
     var offlineHandler = new Handler(_ => throw new HttpRequestException("Offline fixture"));
     using var offline = new HttpClient(offlineHandler);
     var client = new DeckyWindowsReleaseClient(offline, Architecture.X64, bundle);

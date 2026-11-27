@@ -262,7 +262,7 @@ export function markDashboardChrome(): void {
           `html.${DASHBOARD_ACTIVE_CLASS} ${selector}`,
           `body.${DASHBOARD_ACTIVE_CLASS} ${selector}`,
         ]);
-        style.textContent = `${selectors.join(",")}{display:none!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:none!important;animation:none!important}html.${DASHBOARD_ACTIVE_CLASS},body.${DASHBOARD_ACTIVE_CLASS}{overflow:hidden!important}`;
+        style.textContent = `${((DFL as any).coreClassSelectors?.(selectors.join(",")) ?? selectors.join(","))}{display:none!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:none!important;animation:none!important}html.${DASHBOARD_ACTIVE_CLASS},body.${DASHBOARD_ACTIVE_CLASS}{overflow:hidden!important}`;
         targetDocument.head?.appendChild(style);
       }
     } catch {}

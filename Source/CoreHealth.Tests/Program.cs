@@ -51,7 +51,7 @@ using (JsonDocument nullPool = JsonDocument.Parse(sample.Replace("\"pool\": {", 
 // ---------- verdicts ----------
 HealthReport report = CoreHealthPolicy.Evaluate(Base(server: status));
 Check(report.Attention == 0 && report.Problems.Count == 0, "verdict: sample is all good");
-Check(report.Rows.Select(row => row.Id).SequenceEqual(CoreHealthPolicy.RowOrder), "verdict: rows in display order");
+Check(report.Rows.Select(row => row.Id).SequenceEqual(CoreHealthPolicy.RowOrder.Where(id => id != "steam-update")), "verdict: rows in display order (Steam updates only when postponed)");
 Check(Row(report, "server-backup").State == "ok" && Row(report, "server-backup").Data["skippedPlatforms"] is IReadOnlyList<string> { Count: 2 }, "verdict: backup ok with skipped platforms");
 
 report = CoreHealthPolicy.Evaluate(Base(ServerStatusRead.NotConfigured) with { ServerName = null });
@@ -85,6 +85,15 @@ report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now })
 Check(Row(report, "update-night") is { Level: HealthLevel.Attention, State: "waiting" } && report.Attention == 1, "verdict: an unscheduled update night needs attention once");
 report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { UpdateNightOffer = true, UpdateNightScheduledFor = now.AddHours(9) });
 Check(Row(report, "update-night").State == "scheduled" && report.Attention == 0, "verdict: scheduled update night is fine");
+
+// Steam updates (STEAM-UPDATES.md): a row only while an automatic update is postponed; amber after 21 days past the soak.
+report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { SteamPostponedReason = "pending-unknown", SteamPendingVersion = "1795000000", SteamPostponedSince = now.AddDays(-3) });
+Check(Row(report, "steam-update") is { Level: HealthLevel.Info, State: "postponed" } && (string?)Row(report, "steam-update").Data["reason"] == "pending-unknown" && report.Attention == 0,
+    "verdict: a postponed Steam update is shown with its reason, calmly at first");
+Check(report.Rows.Select(row => row.Id).SequenceEqual(CoreHealthPolicy.RowOrder), "verdict: the Steam update row sits after update night");
+report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { SteamPostponedReason = "rolled-back", SteamFailedCheck = "plugins", SteamPostponedAttention = true });
+Check(Row(report, "steam-update") is { Level: HealthLevel.Attention } && (string?)Row(report, "steam-update").Data["failedCheck"] == "plugins" && report.Attention == 1,
+    "verdict: postponed 21 days past the soak turns amber (attention)");
 
 report = CoreHealthPolicy.Evaluate(Base(server: status with { WrittenAt = now }) with { TvEnabled = false });
 Check(Row(report, "tv") is { Level: HealthLevel.Info, State: "off" }, "verdict: TV control off");

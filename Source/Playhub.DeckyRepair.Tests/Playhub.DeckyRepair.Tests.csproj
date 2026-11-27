@@ -2,7 +2,7 @@
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0-windows10.0.19041.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.cs;SteamStub.cs" />
-    <Compile Include="../Playhub/Services/DeckyInstallerService.cs;../Playhub/Services/DeckyWindowsReleaseClient.cs;../Playhub/Services/DeckyWindowsReleaseClient.Web.cs;../Playhub/Services/DeckyFileUpgrade.cs;../Playhub/Services/RestartSequence.cs;../Playhub/Models/DeckyWindowsRelease.cs;../Shared/DeckyStartupGuard.cs;../Playhub.DeckyHost/DeckyProcessTree.cs" />
+    <Compile Include="../Playhub/Services/DeckyInstallerService.cs;../Playhub/Services/DeckyWindowsReleaseClient.cs;../Playhub/Services/DeckyWindowsReleaseClient.Web.cs;../Playhub/Services/DeckyFileUpgrade.cs;../Playhub/Services/RestartSequence.cs;../Playhub/Models/DeckyWindowsRelease.cs;../Shared/DeckyStartupGuard.cs;../Shared/DeckySteamPairing.cs;../Shared/SteamClientKindProbe.cs;../Playhub.DeckyHost/DeckyProcessTree.cs" />
     <Compile Include="../Playhub/Services/BundledDeckyWindowsRelease.cs" />
   </ItemGroup>
 </Project>

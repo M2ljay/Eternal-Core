@@ -33,6 +33,10 @@ public sealed class DeckyInstallerService
     private const int DeckyPort = 1337;
     private static readonly HttpClient SharedHttp = CreateHttpClient();
     private static readonly SemaphoreSlim DesktopOperationGate = new(1, 1);
+    // Eternal Core: where the Steam pairing check writes what it saw (the app sets Diag.Step).
+    internal static Action<string> PairingLog { get; set; } = _ => { };
+    // Replaceable for tests; the real one asks Steam over its CEF debug port.
+    internal static Func<Task<SteamClientKindReading>> DetectSteamClient { get; set; } = () => SteamClientKindProbe.DetectAsync();
     private readonly DeckyWindowsReleaseClient _releases;
 
     public DeckyInstallerService() : this(SharedHttp) { }
@@ -70,6 +74,15 @@ public sealed class DeckyInstallerService
     private async Task<string> InstallWindowsReleaseCoreAsync(string? tag, bool? console, bool reinstall)
     {
         var release = await _releases.GetAsync(tag).ConfigureAwait(false);
+        // Decky 3 needs webpack Steam, Decky 4 the ES-module client: refuse a wrong pair before
+        // anything is downloaded or stopped (docs/eternal/DECKY-4.md).
+        SteamClientKindReading steam;
+        try { steam = await DetectSteamClient().ConfigureAwait(false); }
+        catch (Exception error) { steam = new(SteamUiKind.Unknown, error.GetType().Name); }
+        PairingLog(steam.Kind == SteamUiKind.Unknown
+            ? $"Decky {release.Summary.Tag}: Steam's client could not be checked ({steam.Detail}); installing as before."
+            : $"Decky {release.Summary.Tag}: Steam client {steam.Kind} ({steam.Detail}).");
+        DeckyWindowsReleaseClient.RequireSteamPairing(release.Summary, steam.Kind);
         var assets = release.Assets;
         var services = ServicesDir;
         var matches = await Task.Run(() => DeckyFileUpgrade.Matches(services, assets)).ConfigureAwait(false);

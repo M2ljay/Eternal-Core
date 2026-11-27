@@ -112,6 +112,10 @@ public sealed class GamingSettings
 	public string? CoreHealthServer { get; set; }
 	public bool CoreHealthAlertsEnabled { get; set; } = true;
 
+	// Steam updates (SteamUpdateHold.cs, docs/eternal/STEAM-UPDATES.md): how many days a pending Steam client
+	// version waits before Core updates Steam on an update night (1-60).
+	public int SteamUpdateSoakDays { get; set; } = 10;
+
 	// Core Voice (MarkIIIHost.Voice.cs), config-only. A keyboard combination that toggles the
 	// microphone mute (bind it to a Steam Input chord); empty turns it off. An ms-gamebar: URI
 	// the Xbox party button opens instead of Win+G, for a widget link found to work on this PC.

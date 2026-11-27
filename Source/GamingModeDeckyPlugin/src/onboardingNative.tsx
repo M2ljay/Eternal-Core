@@ -54,6 +54,8 @@ export function createOnboardingNativeAdapter(ui: any = DFL) {
   if (!Glyph || !glyphModule) {
     let factories: Record<string, Function> | undefined;
     try {
+      // Webpack Steam only. The ES-module client has no chunk array: this pass is skipped and the
+      // findModuleExport above (with decky.ts's findVar fallback on Decky 4) is the only source.
       const chunks = (window as any).webpackChunksteamui;
       if (typeof chunks?.push === "function" && ui.modules?.get) {
         chunks.push([[Symbol("playhub-onboarding-native")], {}, (require: any) => { factories = require.m; }]);

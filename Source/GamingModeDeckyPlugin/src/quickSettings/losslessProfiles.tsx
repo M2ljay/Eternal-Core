@@ -7,7 +7,6 @@ import {
   fakeRenderComponent,
   findInReactTree,
   findInTree,
-  findModuleByExport,
   Focusable,
   GamepadButton,
   MenuItem,
@@ -20,6 +19,7 @@ import {
   useParams,
 } from "@decky/ui";
 import { routerHook, toaster } from "@decky/api";
+import { DFL } from "../decky";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { gameSettingsLabel } from "./gameSettingsLocale";
 import { FaArrowLeft, FaBolt, FaCropAlt, FaDesktop, FaImage, FaMagic, FaMicrochip, FaMousePointer } from "react-icons/fa";
@@ -96,7 +96,7 @@ function markGamePageChrome() {
           `html.${GAME_PAGE_ACTIVE_CLASS} ${selector}`,
           `body.${GAME_PAGE_ACTIVE_CLASS} ${selector}`,
         ]);
-        style.textContent = `${selectors.join(",")}{display:none!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:none!important;animation:none!important}`;
+        style.textContent = `${((DFL as any).coreClassSelectors?.(selectors.join(",")) ?? selectors.join(","))}{display:none!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:none!important;animation:none!important}`;
         targetDocument.head?.appendChild(style);
       }
     } catch {}
@@ -812,7 +812,7 @@ function patchMenuItems(children: any, fallbackAppId: number | null): number | n
 
 function patchGameContextMenu(): (() => void) | null {
   try {
-    const module = findModuleByExport(
+    const module = DFL.findModuleByExport(
       (exported: Export) => exported?.toString && exported.toString().includes("().LibraryContextMenu"),
     );
     const candidate = Object.values(module ?? {}).find((value: any) => value?.toString?.().includes("navigator:"));

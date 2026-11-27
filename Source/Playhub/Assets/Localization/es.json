@@ -1535,5 +1535,20 @@
   "Controlla ora": "Comprobar ahora",
   "Tutto a posto.": "Todo bien.",
   "Cose da controllare: {0}": "Cosas que revisar: {0}",
-  "Modalità streaming attiva: Core lascia stare la TV.": "El modo streaming está activado: Core deja la TV tranquila."
+  "Modalità streaming attiva: Core lascia stare la TV.": "El modo streaming está activado: Core deja la TV tranquila.",
+  "Questa versione di Decky richiede il nuovo client di Steam, che su questo PC non c'è ancora. Decky resta alla versione installata.": "Esta versión de Decky necesita el nuevo cliente de Steam, que este PC aún no tiene. Decky se queda en la versión instalada.",
+  "Questo Steam usa il nuovo client, che Decky 3 non sa caricare. Serve Decky 4: Decky resta alla versione installata.": "Este Steam usa el nuevo cliente, que Decky 3 no puede cargar. Hace falta Decky 4: Decky se queda en la versión instalada.",
+  "Core lascia passare qualche giorno da ogni nuova versione di Steam, controlla che vada d'accordo con Decky e la installa di notte, quando non giochi. Prima salva una copia di Steam e, se dopo l'aggiornamento qualcosa non funziona, torna indietro da solo.": "Core deja pasar unos días desde cada nueva versión de Steam, comprueba que se lleve bien con Decky y la instala de noche, cuando no juegas. Antes guarda una copia de Steam y, si algo deja de funcionar tras la actualización, vuelve atrás solo.",
+  "Giorni di attesa per una nuova versione di Steam": "Días de espera para una nueva versión de Steam",
+  "Steam è aggiornato.": "Steam está actualizado.",
+  "C'è una nuova versione di Steam: Core la installa tra {0} giorni, di notte, se va d'accordo con Decky.": "Hay una nueva versión de Steam: Core la instalará dentro de {0} días, de noche, si se lleva bien con Decky.",
+  "Core aggiornerà Steam la prossima notte degli aggiornamenti, se non stai giocando.": "Core actualizará Steam la próxima noche de actualizaciones, si no estás jugando.",
+  "Aggiornamento di Steam rimandato: {0}": "Actualización de Steam aplazada: {0}",
+  "il nuovo Steam non funziona con la versione di Decky installata.": "el nuevo Steam no funciona con la versión de Decky instalada.",
+  "Core non sa ancora se il nuovo Steam funziona con Decky.": "Core aún no sabe si el nuevo Steam funciona con Decky.",
+  "Core non riesce a verificare la compatibilità con Decky.": "Core no puede comprobar la compatibilidad con Decky.",
+  "L'ultimo aggiornamento di Steam non ha superato il controllo ed è stato annullato. Core riprova quando arriva una correzione.": "La última actualización de Steam no pasó la comprobación y se deshizo. Core lo volverá a intentar cuando llegue una corrección.",
+  "Core non sa se il nuovo Steam funziona con Decky. Premi di nuovo per aggiornare comunque: Core salva prima una copia e torna indietro se qualcosa non va.": "Core no sabe si el nuevo Steam funciona con Decky. Pulsa de nuevo para actualizar igualmente: Core guarda antes una copia y vuelve atrás si algo falla.",
+  "Il nuovo Steam non funziona con la versione di Decky installata: i plugin smetteranno di caricarsi. Premi di nuovo se vuoi aggiornare lo stesso.": "El nuevo Steam no funciona con la versión de Decky instalada: los plugins dejarán de cargarse. Pulsa de nuevo si quieres actualizar igualmente.",
+  "Ultima conferma: premi ancora una volta per aggiornare Steam sapendo che i plugin non funzioneranno.": "Última confirmación: pulsa una vez más para actualizar Steam sabiendo que los plugins no funcionarán."
 }

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "note": "Eternal Core known-good file, read by the agent's Steam update gate and the Decky install guard (docs/eternal/STEAM-UPDATES.md, docs/eternal/DECKY-4.md). bundledDecky must equal the Decky that Core ships (BundledDeckyWindowsRelease.BuildVersion; Playhub.BundledDecky.Tests checks it). decky: the Steam client kind each Decky version supports, by exact version or by major. steamClients: Steam client versions (package/steam_client_win64.manifest, a build timestamp) and their kind; a version no range covers is 'cannot tell', and an automatic Steam update waits. Extend a range only after checking that client on a real PC.",
+  "bundledDecky": "3.3.1",
+  "decky": {
+    "3.3.1": "webpack",
+    "3": "webpack",
+    "4": "modules"
+  },
+  "steamClients": [
+    {
+      "from": "0",
+      "through": "1793491199",
+      "client": "webpack",
+      "note": "Every client built before 1 November 2026 UTC, well before the first ES-module beta (18 November 2026)."
+    }
+  ]
+}

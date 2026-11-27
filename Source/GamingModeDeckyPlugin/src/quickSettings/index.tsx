@@ -1,4 +1,5 @@
 import { definePlugin, toaster } from "@decky/api";
+import { DFL } from "../decky";
 import {
   DialogButton,
   Dropdown,
@@ -81,6 +82,9 @@ import { SteamDownloadPower, stopSteamDownloadPower } from "./SteamDownloadPower
 import { PanelBrightness, softwareBrightnessLabel } from "./PanelBrightness";
 import { quickSettingsGroups } from "./groups";
 import { SpatialAudioControls } from "./SpatialAudioControls";
+
+// Eternal Core: [class*=] selectors also reach the ES-module Steam client through its class map (decky.ts).
+const qsClassSelectors = (css: string): string => (DFL as any).coreClassSelectors?.(css) ?? css;
 
 const REFRESH_INTERVAL = 15000;
 const SLIDER_DEBOUNCE = 260;
@@ -1072,7 +1076,7 @@ export function QuickSettingsContent({ page, expanded = [], onToggle, locale, ga
   return (
     <div>
       <Focusable flow-children="column" className="qsRedesign">
-        <style>{`
+        <style>{qsClassSelectors(`
           .qsRedesign,.qsRedesign *{box-sizing:border-box;min-width:0;letter-spacing:0}
           .qsRedesign{width:100%;padding:0 16px 18px;overflow-x:hidden;color:inherit}
           .qsCardBody{display:flex;flex-direction:column;gap:8px;width:100%;padding:0}
@@ -1087,7 +1091,7 @@ export function QuickSettingsContent({ page, expanded = [], onToggle, locale, ga
           .qsButtonInner svg{width:17px;height:17px;flex:none}
           .qsMeta{font-size:12px;line-height:1.45;opacity:.7;overflow-wrap:anywhere}
           .qsStatus{font-size:13px;line-height:1.4;padding:4px 0}
-        `}</style>
+        `)}</style>
 
         {!caps && <div className="qsMeta">{loadFailed ? local.notConnected : controlLocale(locale).loading}
           {loadFailed && <DialogButton onClick={() => { setLoadFailed(false); setLoadAttempt(value => value + 1); }}>{controlLocale(locale).retry}</DialogButton>}

@@ -54,6 +54,7 @@ internal static class CoreRepairWindow
 		private readonly DispatcherTimer _pad = new() { Interval = TimeSpan.FromMilliseconds(60) };
 		private int _selected;
 		private bool _busy;
+		private int _steamConfirmations;
 		private ushort _lastButtons;
 		private long _nextRepeat;
 
@@ -189,8 +190,34 @@ internal static class CoreRepairWindow
 			_status.Text = CoreText.Get(_language, "repair.working");
 			try
 			{
-				using var start = await _http.PostAsync($"{_baseUrl}/core/repair/run?action={Uri.EscapeDataString(item.Action)}", null);
+				// "Update Steam now" passes the agent's Steam update gate: it may ask for one confirmation (Core
+				// cannot tell whether the new Steam works with Decky) or two (it knows it does not). Each is
+				// another press of A on the same row.
+				string confirm = item.Action == "update-steam" ? "&confirm=" + _steamConfirmations.ToString(System.Globalization.CultureInfo.InvariantCulture) : "";
+				using var start = await _http.PostAsync($"{_baseUrl}/core/repair/run?action={Uri.EscapeDataString(item.Action)}{confirm}", null);
 				if (!start.IsSuccessStatusCode) { _status.Text = CoreText.Format(_language, "repair.failed", "HTTP " + (int)start.StatusCode); return; }
+				if (item.Action == "update-steam")
+				{
+					string? ask = null;
+					try
+					{
+						using JsonDocument answer = JsonDocument.Parse(await start.Content.ReadAsStringAsync());
+						if (answer.RootElement.TryGetProperty("confirm", out JsonElement code) && code.ValueKind == JsonValueKind.String) ask = code.GetString();
+					}
+					catch (JsonException) { }
+					if (ask is not null)
+					{
+						_steamConfirmations = Math.Min(_steamConfirmations + 1, 2);
+						_status.Text = CoreText.Get(_language, ask switch
+						{
+							"confirm-incompatible" => "repair.confirmIncompatible",
+							"confirm-incompatible-again" => "repair.confirmIncompatibleAgain",
+							_ => "repair.confirmCantTell",
+						});
+						return;
+					}
+					_steamConfirmations = 0;
+				}
 				if (item.Action is "reenable-access" or "rollback-steam" or "update-steam")
 				{
 					// These restart Steam, and Steam counts this window as a running game:

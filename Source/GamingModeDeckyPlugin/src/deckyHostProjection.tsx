@@ -106,6 +106,8 @@ export function installDeckyTabProjection(onConflict?: () => void) {
       // Discovery belongs to this installation, not every pending fiber retry.
       // Keep the exact export while the QAM waits to mount; a fresh installation
       // resolves its own module after teardown or reload.
+      // Decky 3 copies this lookup from its TabsHook; Decky 4 finds the same renderers with
+      // findModuleScopeByVar, which decky.ts's DFL falls back to when the export search misses.
       rendererModule ??= DFL.findModuleByExport((value: any) => value?.type?.toString?.()?.includes("QuickAccessMenuBrowserView"));
       if (!rendererModule) return;
       const rootElement = document.getElementById("root");

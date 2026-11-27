@@ -215,6 +215,16 @@ class Plugin(QuickSettingsPlugin):
     async def core_update_night_cancel(self):
         return await asyncio.to_thread(self._agent_local, "POST", "/windows/update-night/cancel")
 
+    # Steam updates (src/SteamUpdateCard.tsx, agent SteamUpdateHold.cs): where Steam stands and "Update Steam now".
+    # confirm counts the warnings the user has already accepted (the agent asks for at most two).
+    async def core_steam_update(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/steam/update/state", timeout=4, maximum=8192)
+
+    async def core_steam_update_now(self, confirm=0):
+        if isinstance(confirm, bool) or not isinstance(confirm, int) or confirm < 0 or confirm > 2:
+            return {}
+        return await asyncio.to_thread(self._agent_local, "POST", "/steam/update/now?confirm=" + str(confirm), timeout=20, maximum=4096)
+
     # Core Health (src/HealthSection.tsx, agent MarkIIIHost.Health.cs). The agent may wait up to
     # 4 s for the home server's share, so these calls get a longer time box and a larger answer.
     async def core_health(self):

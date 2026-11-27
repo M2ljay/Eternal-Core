@@ -24,6 +24,16 @@ public sealed partial class MainWindow
     private ComboBox _tvInputCombo = new();
     private readonly TextBlock _tvStatus = new() { TextWrapping = TextWrapping.Wrap, Opacity = 0.8 };
     private readonly TextBlock _steamHoldStatus = new() { TextWrapping = TextWrapping.Wrap, Opacity = 0.8 };
+    private ComboBox _steamSoakCombo = new();
+    // "Update Steam now": how many times the user has confirmed the warning in front of them (agent SteamManualPolicy).
+    private int _steamConfirmations;
+    private DateTimeOffset _steamConfirmedAt;
+
+    // Days a new Steam version waits before Core installs it (agent SteamUpdateHoldPolicy, 1-60; 10 by default).
+    private static readonly ComboOption[] SteamSoakOptions =
+    {
+        new("3", "3"), new("5", "5"), new("7", "7"), new("10", "10"), new("14", "14"), new("21", "21"), new("30", "30")
+    };
 
     private static readonly ComboOption[] TvInputOptions =
     {
@@ -90,6 +100,7 @@ public sealed partial class MainWindow
         gaming.QuietWindowsToasts = GetToggle("quietToasts");
         gaming.CoreHealthServer = EmptyToNull(_healthServerBox.Text.Trim());
         gaming.CoreHealthAlertsEnabled = GetToggle("healthAlerts");
+        if (int.TryParse(GetComboKey(_steamSoakCombo), NumberStyles.None, CultureInfo.InvariantCulture, out int soak)) gaming.SteamUpdateSoakDays = soak;
     }
 
     private void WriteMarkIIIIntoControls()
@@ -105,6 +116,9 @@ public sealed partial class MainWindow
         SetToggle("quietToasts", gaming.QuietWindowsToasts);
         SetToggle("healthAlerts", gaming.CoreHealthAlertsEnabled);
         _healthServerBox.Text = gaming.CoreHealthServer ?? "";
+        int soakDays = gaming.SteamUpdateSoakDays is >= 1 and <= 60 ? gaming.SteamUpdateSoakDays : 10;
+        string soakKey = SteamSoakOptions.Select(option => option.Key).OrderBy(key => Math.Abs(int.Parse(key, CultureInfo.InvariantCulture) - soakDays)).First();
+        SelectComboKey(_steamSoakCombo, soakKey);
         RefreshQuietWindowsStatus();
         _tvAddressBox.Text = gaming.Tv.Address ?? "";
         _tvMacBox.Text = gaming.Tv.MacAddress ?? "";
@@ -172,6 +186,9 @@ public sealed partial class MainWindow
     private FrameworkElement BuildSteamHoldActions()
     {
         var panel = new StackPanel { Spacing = 8 };
+        _steamSoakCombo = ChoiceCombo(SteamSoakOptions);
+        _steamSoakCombo.SelectionChanged += (_, _) => AutoSaveGaming();
+        panel.Children.Add(Labeled("Giorni di attesa per una nuova versione di Steam", _steamSoakCombo));
         panel.Children.Add(_steamHoldStatus);
         panel.Children.Add(ActionRow(
             Button("Aggiorna Steam ora", UpdateSteamNowAsync),
@@ -190,10 +207,26 @@ public sealed partial class MainWindow
         return card;
     }
 
+    // Same safety net as the automatic update (backup, smoke test, rollback). The agent's gate may ask for a
+    // confirmation first: one when it cannot tell whether the new Steam works with Decky, two when it knows it does not.
     private async Task UpdateSteamNowAsync()
     {
-        var reply = await AgentAsync(HttpMethod.Post, "/steam/update/now", TimeSpan.FromSeconds(10));
+        if (DateTimeOffset.Now - _steamConfirmedAt > TimeSpan.FromMinutes(2)) _steamConfirmations = 0;
+        var reply = await AgentAsync(HttpMethod.Post, "/steam/update/now?confirm=" + _steamConfirmations.ToString(CultureInfo.InvariantCulture), TimeSpan.FromSeconds(20));
         if (reply is null) { SetStatus(T("Il servizio Gaming Mode non risponde."), InfoBarSeverity.Warning); return; }
+        if (reply.Value.TryGetProperty("confirm", out var confirm) && confirm.ValueKind == JsonValueKind.String)
+        {
+            _steamConfirmations++;
+            _steamConfirmedAt = DateTimeOffset.Now;
+            SetStatus(T(confirm.GetString() switch
+            {
+                "confirm-incompatible" => "Il nuovo Steam non funziona con la versione di Decky installata: i plugin smetteranno di caricarsi. Premi di nuovo se vuoi aggiornare lo stesso.",
+                "confirm-incompatible-again" => "Ultima conferma: premi ancora una volta per aggiornare Steam sapendo che i plugin non funzioneranno.",
+                _ => "Core non sa se il nuovo Steam funziona con Decky. Premi di nuovo per aggiornare comunque: Core salva prima una copia e torna indietro se qualcosa non va."
+            }), InfoBarSeverity.Warning);
+            return;
+        }
+        _steamConfirmations = 0;
         bool busy = reply.Value.TryGetProperty("busy", out var b) && b.ValueKind == JsonValueKind.True;
         SetStatus(T(busy ? "Un aggiornamento è già in corso." : "Aggiornamento di Steam avviato. Core salva prima una copia di Steam e torna tra qualche minuto."),
             busy ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
@@ -213,10 +246,20 @@ public sealed partial class MainWindow
         if (reply is not { } state) { _steamHoldStatus.Text = ""; return; }
         string phase = state.TryGetProperty("holdPhase", out var p) ? p.GetString() ?? "" : "";
         int days = state.TryGetProperty("daysLeft", out var d) && d.TryGetInt32(out int left) ? left : 0;
+        string reason = state.TryGetProperty("postponedReason", out var r) && r.ValueKind == JsonValueKind.String ? r.GetString() ?? "" : "";
+        string because = T(reason switch
+        {
+            "pending-unsupported" => "il nuovo Steam non funziona con la versione di Decky installata.",
+            "pending-unknown" => "Core non sa ancora se il nuovo Steam funziona con Decky.",
+            _ => "Core non riesce a verificare la compatibilità con Decky."
+        });
         _steamHoldStatus.Text = phase switch
         {
-            "Holding" => string.Format(CultureInfo.CurrentCulture, T("Steam resta a questa versione ancora per {0} giorni, o finché scegli di aggiornarlo."), days),
-            "Expired" => T("Trenta giorni passati: Core aggiornerà Steam la prossima volta che non stai giocando."),
+            "Current" => T("Steam è aggiornato."),
+            "Soaking" => string.Format(CultureInfo.CurrentCulture, T("C'è una nuova versione di Steam: Core la installa tra {0} giorni, di notte, se va d'accordo con Decky."), days),
+            "Due" => T("Core aggiornerà Steam la prossima notte degli aggiornamenti, se non stai giocando."),
+            "Postponed" => string.Format(CultureInfo.CurrentCulture, T("Aggiornamento di Steam rimandato: {0}"), because),
+            "WaitingForChange" => T("L'ultimo aggiornamento di Steam non ha superato il controllo ed è stato annullato. Core riprova quando arriva una correzione."),
             _ => T("Steam si aggiorna da solo, come al solito.")
         };
         var tv = await AgentAsync(HttpMethod.Get, "/tv/state", TimeSpan.FromSeconds(4));

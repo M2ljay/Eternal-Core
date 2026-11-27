@@ -101,25 +101,36 @@ If the TV is reset or its certificate changes, press **Pair** again.
 A 3 a.m. Windows maintenance wake does not turn the TV on: Core reacts only to a wake you
 caused (controller, keyboard or power button).
 
-## Steam updates: held until you choose
+## Steam updates: checked before they happen
 
-*Hold Steam updates* (on the Steam updates card) keeps Steam on its current version for
-at most 30 days. You can update whenever you like:
+With *Hold Steam updates* on (on the Steam updates card), Steam does not update by itself.
+Instead, each new Steam version waits a few days (10 by default; change it on the same
+card), Core checks that it works with the Decky you have, and then installs it during an
+update night (between 5:00 and 7:00, in Gaming Mode, with no game open). It never updates
+during a game.
 
-- From the couch: open **Core Repair** in your library and choose **Update Steam now**.
+If Core knows the new Steam does not work with your Decky, or cannot tell yet, it waits and
+asks again every night. Quick Access > Core > Health then shows **Steam update: Postponed**
+with the reason, and the row turns amber if it has waited three weeks past the usual days.
+
+Every update saves a copy of Steam first (in the same place as *Backup della versione di
+Steam*), then checks that Big Picture opens, Decky answers, your plugins load and Core's own
+plugin answers. If anything fails, Core puts the previous Steam back by itself and a notice
+says what failed. It does not try that version again until something changes (a Core update,
+a new Decky or a newer Steam).
+
+You can update whenever you like:
+
+- From the couch: Quick Access > Core > **Update Steam now**, or **Core Repair** in your
+  library.
 - On the PC: Core > Settings > Steam updates > **Update Steam now**.
 
-Updating closes Steam, saves a copy of it first (in the same place as *Backup della
-versione di Steam*), lets Steam update, then checks that Big Picture's plugins came back.
-If they did not, Core restarts them once; if they still do not load, a notice tells you
-to open Core Repair, which offers **Roll back Steam** first.
+If Core cannot tell whether the new Steam works with Decky, it asks you to press once more.
+If it knows it does not, it asks twice. The same copy, check and rollback apply.
 
-After 30 days Core says so once and updates at the next quiet moment: in Gaming Mode,
-with no game open for 10 minutes. It never updates during a game.
-
-The hold uses Steam's `steam.cfg`, which Valve does not document. If a Steam version
-ignores it and updates anyway, nothing breaks: Core starts a new hold from the new version
-and the plugin check below tells you if anything went wrong.
+The hold uses Steam's `steam.cfg`, which Valve does not document. If Steam updates anyway,
+Core notices and runs the same check, and puts the previous Steam back if plugins broke.
+Details: [STEAM-UPDATES.md](STEAM-UPDATES.md).
 
 ## When Big Picture's plugins do not load
 

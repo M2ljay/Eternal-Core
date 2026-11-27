@@ -35,6 +35,8 @@
     <Compile Include="../Shared/SplashLogoScale.cs" Link="SplashLogoScale.cs" />
     <Compile Include="../Shared/CouchHardening.cs" Link="CouchHardening.cs" />
     <Compile Include="../Shared/CouchRegistryWindows.cs" Link="CouchRegistryWindows.cs" />
+    <Compile Include="../Shared/DeckySteamPairing.cs" Link="DeckySteamPairing.cs" />
+    <Compile Include="../Shared/SteamClientKindProbe.cs" Link="SteamClientKindProbe.cs" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <!-- Private, default-OFF HUD trial. Does not enable the mirror or input. -->
@@ -57,6 +59,8 @@
   <ItemGroup><Compile Include="../Shared/EpicLaunchPayload.cs" Link="EpicLaunchPayload.cs" /></ItemGroup>
   <!-- Mark III boot sound (docs/eternal/brand/sound/eternal-core-boot.ogg as 16-bit PCM WAV), played by BootSequenceSound. -->
   <ItemGroup><EmbeddedResource Include="Assets/eternal-core-boot.wav" LogicalName="GamingMode.BootSound.wav" /></ItemGroup>
+  <!-- Eternal Core: the Steam update gate's known-good file (docs/eternal/STEAM-UPDATES.md). -->
+  <ItemGroup><EmbeddedResource Include="../Shared/SteamCompatibility.json" LogicalName="SteamCompatibility.json" /></ItemGroup>
   <!-- Private first-content cover is independent of HUD/menu/input and OFF without exact pins. -->
   <ItemGroup Condition="'$(PlayhubCurtainDisplaySha256)' != '' and '$(PlayhubCurtainCallbackSha256)' != ''">
     <CurtainDisplayAssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
