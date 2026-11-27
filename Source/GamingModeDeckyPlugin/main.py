@@ -239,7 +239,9 @@ def _core_ui_snapshot_path(appdata=None):
     if not base:
         return ""
     parts = [part.lower() for part in os.path.normpath(os.path.abspath(base)).replace("\\", "/").split("/")]
-    if "appdata" not in parts or "systemprofile" in parts:
+    # Only a roaming AppData folder (...\AppData\Roaming, the user's %APPDATA%), never a service account's.
+    roaming = any(parts[i] == "appdata" and parts[i + 1] == "roaming" for i in range(len(parts) - 1))
+    if not roaming or "systemprofile" in parts:
         return ""
     return os.path.join(base, "GamingMode", "diagnostics", "core-ui-snapshot.json")
 
