@@ -58,7 +58,11 @@ import { SwipeTypingSection, setSwipeTypingRuntime } from "./SwipeTypingSection"
 import { AutomationsSection } from "./AutomationsSection";
 import { installLocalInputWatch } from "./localInput";
 import { keyboardBase } from "./keyboardBase";
-import { JarvisPage, JarvisSection, JARVIS_ROUTE, setJarvisRuntime } from "./JarvisSection";
+import { JarvisOrbIcon, JarvisPage, JarvisSection, JarvisTab, JARVIS_ROUTE, setJarvisPresence, setJarvisRuntime } from "./JarvisSection";
+import { createPresence, jarvisMenuStore, orbState, toggleJarvisTab, JARVIS_TAB_ID } from "./jarvisPresence";
+import { jarvisRelease } from "./jarvisCombos";
+import { installCoreUi } from "./coreUi";
+import { CoreUiSection, DigitalStoresEntry } from "./CoreUiSection";
 import { createJarvisRuntime, type ListenMode } from "./jarvisRuntime";
 import { installJarvisCombos, type ComboKind } from "./jarvisCombos";
 
@@ -978,13 +982,14 @@ function Content({ origin = "decky" }: { origin?: "qam" | "decky" }) {
     <><ControlCenter locale={locale} origin={origin} homeTitle={local.controlCentre} gameAppId={gameAppId} gamingMode={status?.currentMode === "Gaming"} downloads={<StoreDownloadsQam locale={locale} />}
       frameTiming={origin === "qam" && status && gameAppId !== 0 ? <GameFrameTiming key={gameAppId} appId={gameAppId} locale={locale} /> : null} session={<>
       {status && <VoiceSection locale={locale} />}
-      {status && <JarvisSection locale={locale} />}
+      {status && origin !== "qam" && <JarvisSection locale={locale} />}
       {status && <StreamSection locale={locale} />}
       {status && <AutomationsSection locale={locale} />}
       {status && <SwipeTypingSection locale={locale} />}
       {status && <UpdateNightCard locale={locale} />}
       {status && <SteamUpdateCard locale={locale} />}
       {status && <HealthSection locale={locale} />}
+      <CoreUiSection locale={locale} />
       {!status && <PanelSection><PanelSectionRow>
         <div role="status" style={{ margin: "8px 0 16px", padding: "16px", borderRadius: 10,
           background: CORE.gunmetal, border: `1px solid ${CORE.gunmetalRaised}`, borderLeft: `3px solid ${CORE.warning}` }}>
@@ -1073,6 +1078,7 @@ function Content({ origin = "decky" }: { origin?: "qam" | "decky" }) {
       </PanelSection>
 
     </>} store={<PanelSection>
+        <DigitalStoresEntry locale={locale} />
         <PanelSectionRow>
           <PluginStoreIntro description={getPlayhubDiscoverCopy(locale)[1]} button={<ButtonItem bottomSeparator="none" layout="below" onClick={openPluginStore}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "10px" }}>
@@ -1150,6 +1156,20 @@ function installOptionalHook(name: string, install: () => () => void): () => voi
 export default definePlugin(() => {
   const stopStoreLibrary = installOptionalHook("Store library", installStoreLibraryRuntime);
   const stopStoreDigitalPortal = installOptionalHook("Digital stores portal", () => installStoreDigitalPortal(() => currentLocale));
+  // Core UI phase 1 (docs/eternal/CORE-UI.md): Core's look for the global chrome, the Steam menu and Quick Access,
+  // with Jarvis's presence orb next to the clock (src/jarvisPresence.ts; fed by the Jarvis hook below).
+  const presence = createPresence();
+  setJarvisPresence(presence);
+  let jarvisLive: { enabled: () => boolean; snapshot: () => { listening: unknown; working: boolean } } | undefined;
+  const gameRunning = () => Number((window as any).SteamUIStore?.MainRunningAppID ?? (DFL as any).Router?.MainRunningAppID ?? 0) > 0;
+  const stopCoreUi = installOptionalHook("Core UI", () => installCoreUi({ ui: DFL, wordmark: playhubWordmark, orb: {
+    state: () => {
+      const live = jarvisLive?.snapshot();
+      return orbState({ enabled: jarvisLive?.enabled() === true, listening: !!live?.listening, working: live?.working === true,
+        readyUntil: presence.readyUntil(), now: Date.now(), gameRunning: gameRunning() });
+    },
+    subscribe: presence.subscribe,
+  } }));
   const stopStoreLibraryUi = installOptionalHook("Store game actions", () => installStoreLibrarySteamUi(() => currentLocale));
   const stopUpdateNotice = installOptionalHook("Update notice", () => installPlayhubUpdateNotice({
     main: () => {
@@ -1259,13 +1279,13 @@ export default definePlugin(() => {
   // Jarvis (docs/eternal/JARVIS.md): push-to-talk and the screen helper on controller combos, watched inside Steam
   // (src/jarvisCombos.ts); the agent records, transcribes, answers and takes the screenshot.
   const stopJarvis = installOptionalHook("Jarvis", () => {
-    let settings: { enabled: boolean; combos: Partial<Record<ComboKind, string | null>> } = { enabled: false, combos: {} };
+    let settings: { enabled: boolean; combos: Partial<Record<ComboKind, string | null>>; tapOpens: boolean } = { enabled: false, combos: {}, tapOpens: true };
     let refresh: number | undefined;
     let stopped = false;
     const load = async () => {
-      let state: { enabled?: boolean; combos?: Partial<Record<ComboKind, string | null>> } | undefined;
-      try { state = await controlCall<[], { enabled?: boolean; combos?: Partial<Record<ComboKind, string | null>> }>("core_jarvis_state"); } catch { state = undefined; }
-      if (state && typeof state === "object") settings = { enabled: state.enabled === true, combos: state.combos ?? {} };
+      let state: { enabled?: boolean; combos?: Partial<Record<ComboKind, string | null>>; tapOpens?: boolean } | undefined;
+      try { state = await controlCall<[], { enabled?: boolean; combos?: Partial<Record<ComboKind, string | null>>; tapOpens?: boolean }>("core_jarvis_state"); } catch { state = undefined; }
+      if (state && typeof state === "object") settings = { enabled: state.enabled === true, combos: state.combos ?? {}, tapOpens: state.tapOpens !== false };
       if (!stopped) refresh = window.setTimeout(() => { void load(); }, 30000);
     };
     const runtime = createJarvisRuntime({
@@ -1282,14 +1302,25 @@ export default definePlugin(() => {
       enabled: () => settings.enabled,
     });
     setJarvisRuntime(runtime);
+    jarvisLive = { enabled: () => settings.enabled, snapshot: () => runtime.snapshot() };
+    const stopPresence = runtime.subscribe(() => presence.observe(runtime.snapshot()));
     const watch = installJarvisCombos({
       input: () => (window as any).SteamClient?.Input,
       combos: () => (settings.enabled ? settings.combos : {}),
       onPress: kind => runtime.press(kind),
-      onRelease: kind => runtime.release(kind),
+      // Core UI phase 1: a short tap on the talk combo opens or closes Jarvis's Quick Access tab (also over a game);
+      // holding it is push-to-talk. Recording began on the press, so a tap cancels it.
+      onRelease: (kind, heldMs) => {
+        if (jarvisRelease(kind, heldMs, settings.tapOpens) !== "tap") { runtime.release(kind); return; }
+        void runtime.cancel();
+        toggleJarvisTab({
+          menuStore: () => jarvisMenuStore((window as any).SteamUIStore?.WindowStore ?? (DFL as any).Router?.WindowStore, gameRunning() ? 1 : 0),
+          navigation: () => (DFL as any).Navigation,
+        });
+      },
     });
     void load();
-    return () => { stopped = true; if (refresh !== undefined) window.clearTimeout(refresh); watch.stop(); setJarvisRuntime(undefined); };
+    return () => { stopped = true; if (refresh !== undefined) window.clearTimeout(refresh); watch.stop(); stopPresence(); jarvisLive = undefined; setJarvisRuntime(undefined); };
   });
   // Stream mode: tell the agent when Steam streams from this PC (Remote Play, Steam Link, a Steam Frame).
   const stopSteamStreamWatch = installOptionalHook("Core stream watch", () => installSteamStreamWatch({
@@ -1341,7 +1372,10 @@ export default definePlugin(() => {
   const stopOpenRequestWatcher = startOpenRequestWatcher(configuratorReturn);
   const uninstallNavigationHaptics = installOptionalHook("Navigation haptics", installNavigationHaptics);
   const uninstallVirtualControllerName = installOptionalHook("Virtual controller name", installVirtualControllerName);
-  const uninstallPlayhubQam = initPlayhubQam({ content: <Content origin="qam" />, icon: <PlayhubIcon />, title: <div style={{ paddingInline: 16, boxSizing: "border-box" }}>{playhubTitle}</div> });
+  const uninstallPlayhubQam = initPlayhubQam({ content: <Content origin="qam" />, icon: <PlayhubIcon />, title: <div style={{ paddingInline: 16, boxSizing: "border-box" }}>{playhubTitle}</div>,
+    // Core UI phase 1: Jarvis's own tab, right after Core's.
+    extraTabs: [{ id: JARVIS_TAB_ID, name: "Jarvis", content: <JarvisTab locale={() => currentLocale} />, icon: <JarvisOrbIcon />,
+      title: <div style={{ paddingInline: 16, boxSizing: "border-box" }}>Jarvis</div> }] });
   const uninstallPowerMenuPatch = installOptionalHook("Power menu", () => installPowerMenuPatch(
     () => ({ gaming: t().switchGaming, desktop: t().switchDesktop }),
     (mode) => confirmModeSwitch(mode, () => { void post(`/mode/${mode}/switch`).catch((error) => toaster.toast({ title: "Core", body: String(error) })); })
@@ -1386,7 +1420,7 @@ export default definePlugin(() => {
         uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,
         clearDashboardChrome,
         stopOpenRequestWatcher, uninstallNavigationHaptics, uninstallVirtualControllerName,
-        uninstallPowerMenuPatch, uninstallPlayhubQam,
+        uninstallPowerMenuPatch, stopCoreUi, uninstallPlayhubQam,
       ];
       for (const cleanup of cleanups) {
         try { cleanup(); } catch (error) {

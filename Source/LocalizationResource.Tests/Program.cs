@@ -383,7 +383,9 @@ string[] jarvis =
     "Solo con la chiave per Whisper nel cloud. Di solito la voce si trascrive con Whisper sul server di casa, gratis e in locale.",
     "Jarvis in Core: chat in Accesso rapido, aiuto con quello che c'è sullo schermo e dettatura con il microfono. Non viene inviato niente finché non lo chiedi.",
     "Jarvis di Home Assistant (consigliato)",
-    "API di Claude diretta"
+    "API di Claude diretta",
+    "Tocco breve: apri Jarvis in Accesso rapido",
+    "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis."
 };
 foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
 {

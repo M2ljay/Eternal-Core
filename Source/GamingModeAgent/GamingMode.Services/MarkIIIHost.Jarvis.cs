@@ -50,7 +50,7 @@ internal sealed partial class MarkIIIHost
 	private bool _screenRevealed;
 
 	private sealed record JarvisRuntime(bool Enabled, string Backend, string HaUrl, string? HaAgent, string Model, JarvisCombosView Combos,
-		bool SpoilerSafe, bool Voice, bool SpeakScreen, bool CloudWhisper, string? WyomingHost, int WyomingPort, string SttEntity, string TtsEntity, string OpenAiUrl);
+		bool SpoilerSafe, bool Voice, bool SpeakScreen, bool CloudWhisper, bool TapOpens, string? WyomingHost, int WyomingPort, string SttEntity, string TtsEntity, string OpenAiUrl);
 
 	private JarvisRuntime JarvisSettings()
 	{
@@ -58,7 +58,7 @@ internal sealed partial class MarkIIIHost
 		return new JarvisRuntime(gaming.JarvisEnabled, JarvisConfig.CleanBackend(gaming.JarvisBackend), JarvisConfig.HaUrl(gaming.JarvisHaUrl),
 			gaming.JarvisHaAgent is { Length: 0 } ? null : JarvisConfig.CleanEntity(gaming.JarvisHaAgent, "conversation") ?? JarvisConfig.DefaultHaAgent,
 			JarvisConfig.Model(gaming.JarvisModel), JarvisCombosPolicy.Clean(gaming.JarvisDictateCombo, gaming.JarvisTalkCombo, gaming.JarvisScreenCombo),
-			gaming.JarvisSpoilerSafe, gaming.JarvisVoice, gaming.JarvisSpeakScreen, gaming.JarvisCloudWhisper,
+			gaming.JarvisSpoilerSafe, gaming.JarvisVoice, gaming.JarvisSpeakScreen, gaming.JarvisCloudWhisper, gaming.JarvisTapOpensQuickAccess,
 			JarvisConfig.CleanHost(gaming.JarvisWyomingHost), JarvisConfig.CleanPort(gaming.JarvisWyomingPort, JarvisConfig.DefaultWyomingPort),
 			JarvisConfig.CleanEntity(gaming.JarvisSttEntity, "stt") ?? JarvisConfig.DefaultSttEntity, JarvisConfig.CleanEntity(gaming.JarvisTtsEntity, "tts") ?? JarvisConfig.DefaultTtsEntity,
 			JarvisConfig.CleanBaseUrl(gaming.JarvisOpenAiUrl, allowPath: true) ?? JarvisConfig.DefaultOpenAiUrl);
@@ -393,6 +393,8 @@ internal sealed partial class MarkIIIHost
 			status = settings.Enabled ? JarvisStatus.Code(settings.Backend, saved[JarvisSecretStore.HaToken], saved[JarvisSecretStore.AnthropicKey], error, answered) : "off",
 			screenHelper = saved[JarvisSecretStore.AnthropicKey], spoilerSafe = settings.SpoilerSafe, voice = settings.Voice, speakScreen = settings.SpeakScreen,
 			combos = new { dictate = settings.Combos.Dictate, talk = settings.Combos.Talk, screen = settings.Combos.Screen },
+			// Core UI phase 1: a short tap on the talk combo opens Jarvis's Quick Access tab (src/jarvisCombos.ts).
+			tapOpens = settings.TapOpens,
 			listening = new { active = listening, mode = listening ? mode.ToString().ToLowerInvariant() : null },
 			history = turns.Select(turn => new { role = turn.Role, text = turn.Text }).ToArray(),
 			screen = shown is null ? null : new { text = shown, more },

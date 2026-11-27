@@ -46,11 +46,22 @@ export function comboHeld(combo: JarvisCombo, buttons: unknown, upperButtons: un
   return (lower & combo.lower) >>> 0 === combo.lower && (upper & combo.upper) >>> 0 === combo.upper;
 }
 
+// Core UI phase 1: the talk combo has two behaviours. A short tap (released within JARVIS_TAP_MS) opens or closes
+// Jarvis's Quick Access tab, also during a game; holding it is push-to-talk as before. Recording starts on the press
+// either way (no lost first syllable); a tap cancels it.
+export const JARVIS_TAP_MS = 300;
+export type ReleaseAction = "tap" | "release";
+export function jarvisRelease(kind: ComboKind, heldMs: number, tapOpens: boolean): ReleaseAction {
+  return kind === "talk" && tapOpens && Number.isFinite(heldMs) && heldMs >= 0 && heldMs < JARVIS_TAP_MS ? "tap" : "release";
+}
+
 export type ComboDeps = {
   input: () => any;
   combos: () => Partial<Record<ComboKind, string | null | undefined>>;
   onPress: (kind: ComboKind) => void;
-  onRelease: (kind: ComboKind) => void;
+  // heldMs: how long the combo was held, by `now`.
+  onRelease: (kind: ComboKind, heldMs: number) => void;
+  now?: () => number;
 };
 
 export type ComboWatch = { stop: () => void; held: () => ComboKind[] };
@@ -60,29 +71,32 @@ export type ComboWatch = { stop: () => void; held: () => ComboKind[] };
 export function installJarvisCombos(deps: ComboDeps): ComboWatch {
   const perController = new Map<number, { lower: number; upper: number }>();
   const held = new Set<ComboKind>();
+  const since = new Map<ComboKind, number>();
+  const now = () => { try { return Number(deps.now ? deps.now() : Date.now()); } catch { return Date.now(); } };
+  const heldFor = (kind: ComboKind) => { const start = since.get(kind); since.delete(kind); return start === undefined ? Infinity : Math.max(0, now() - start); };
   let registration: any;
   const evaluate = () => {
     const configured = deps.combos();
-    const now = new Set<ComboKind>();
+    const current = new Set<ComboKind>();
     const parsed: [ComboKind, JarvisCombo][] = [];
     for (const kind of ["dictate", "talk", "screen"] as ComboKind[]) {
       const combo = parseCombo(configured?.[kind]);
       if (combo) parsed.push([kind, combo]);
     }
     for (const [kind, combo] of parsed) {
-      for (const state of perController.values()) if (comboHeld(combo, state.lower, state.upper)) now.add(kind);
+      for (const state of perController.values()) if (comboHeld(combo, state.lower, state.upper)) current.add(kind);
     }
     // The bigger of two held combos wins (L4+R4+A held does not also fire L4+R4).
     for (const [kind, combo] of parsed) {
-      if (!now.has(kind)) continue;
+      if (!current.has(kind)) continue;
       for (const [other, otherCombo] of parsed) {
-        if (other === kind || !now.has(other)) continue;
+        if (other === kind || !current.has(other)) continue;
         const contains = (otherCombo.lower & combo.lower) >>> 0 === combo.lower && (otherCombo.upper & combo.upper) >>> 0 === combo.upper;
-        if (contains && (otherCombo.lower !== combo.lower || otherCombo.upper !== combo.upper)) now.delete(kind);
+        if (contains && (otherCombo.lower !== combo.lower || otherCombo.upper !== combo.upper)) current.delete(kind);
       }
     }
-    for (const kind of now) if (!held.has(kind)) { held.add(kind); try { deps.onPress(kind); } catch { /* The runtime reports its own failures. */ } }
-    for (const kind of [...held]) if (!now.has(kind)) { held.delete(kind); try { deps.onRelease(kind); } catch { /* Same. */ } }
+    for (const kind of current) if (!held.has(kind)) { held.add(kind); since.set(kind, now()); try { deps.onPress(kind); } catch { /* The runtime reports its own failures. */ } }
+    for (const kind of [...held]) if (!current.has(kind)) { held.delete(kind); const ms = heldFor(kind); try { deps.onRelease(kind, ms); } catch { /* Same. */ } }
   };
   try {
     const input = deps.input();
@@ -104,7 +118,8 @@ export function installJarvisCombos(deps: ComboDeps): ComboWatch {
     held: () => [...held],
     stop: () => {
       try { registration?.unregister?.(); } catch { /* Already gone. */ }
-      for (const kind of [...held]) { held.delete(kind); try { deps.onRelease(kind); } catch { /* Same. */ } }
+      // Stopping is never a tap: a held combo ends as a release.
+      for (const kind of [...held]) { held.delete(kind); since.delete(kind); try { deps.onRelease(kind, Infinity); } catch { /* Same. */ } }
     },
   };
 }

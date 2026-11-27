@@ -1661,5 +1661,7 @@
   "Solo con la chiave per Whisper nel cloud. Di solito la voce si trascrive con Whisper sul server di casa, gratis e in locale.": "클라우드 Whisper 키가 있을 때만요. 보통은 집 서버의 Whisper가 무료로, 로컬에서 받아써요.",
   "Jarvis in Core: chat in Accesso rapido, aiuto con quello che c'è sullo schermo e dettatura con il microfono. Non viene inviato niente finché non lo chiedi.": "Core의 Jarvis: 빠른 실행에서 채팅, 화면 내용 도움, 마이크 받아쓰기. 요청하기 전에는 아무것도 보내지 않아요.",
   "Jarvis di Home Assistant (consigliato)": "Home Assistant의 Jarvis(추천)",
-  "API di Claude diretta": "Claude API 직접"
+  "API di Claude diretta": "Claude API 직접",
+  "Tocco breve: apri Jarvis in Accesso rapido": "짧게 누르기: 빠른 실행에서 Jarvis 열기",
+  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "Jarvis와 대화 조합을 짧게 누르면 게임 중에도 빠른 실행의 Jarvis 탭을 열거나 닫습니다. 누르고 있으면 Jarvis와 대화합니다."
 }

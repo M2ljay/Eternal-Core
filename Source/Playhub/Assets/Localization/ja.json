@@ -1659,5 +1659,7 @@
   "Solo con la chiave per Whisper nel cloud. Di solito la voce si trascrive con Whisper sul server di casa, gratis e in locale.": "クラウド Whisper のキーがある場合のみ。通常は家のサーバーの Whisper が、無料かつローカルで文字起こしします。",
   "Jarvis in Core: chat in Accesso rapido, aiuto con quello che c'è sullo schermo e dettatura con il microfono. Non viene inviato niente finché non lo chiedi.": "Core の Jarvis：クイックアクセスでのチャット、画面の内容のヘルプ、マイクでの音声入力。頼むまで何も送信されません。",
   "Jarvis di Home Assistant (consigliato)": "Home Assistant の Jarvis（おすすめ）",
-  "API di Claude diretta": "Claude API に直接"
+  "API di Claude diretta": "Claude API に直接",
+  "Tocco breve: apri Jarvis in Accesso rapido": "短く押す: クイックアクセスで Jarvis を開く",
+  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "「Jarvis と話す」の組み合わせを短く押すと、ゲーム中でもクイックアクセスの Jarvis タブを開閉します。長押しすると Jarvis と話せます。"
 }

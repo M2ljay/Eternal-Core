@@ -35,6 +35,8 @@ export type JarvisRuntime = {
   release: (kind: ComboKind) => void;
   start: (mode: ListenMode) => Promise<boolean>;
   stop: (options?: { intoField?: boolean }) => Promise<StopAnswer | undefined>;
+  // Drops a recording without transcribing it (a short tap on the talk combo).
+  cancel: () => Promise<void>;
   screen: (question?: string) => Promise<ScreenAnswer | undefined>;
   snapshot: () => RuntimeSnapshot;
   subscribe: (listener: () => void) => () => void;
@@ -124,7 +126,15 @@ export function createJarvisRuntime(deps: RuntimeDeps): JarvisRuntime {
     return answer;
   };
 
+  const cancel = async (): Promise<void> => {
+    if (starting) await starting.catch(() => false);
+    if (!snapshot.listening) return;
+    set({ listening: null });
+    try { await deps.backend.listenCancel(); } catch { /* The agent drops an orphaned recording on its own. */ }
+  };
+
   return {
+    cancel,
     press: kind => { if (kind === "screen") void screen(); else void start(kind); },
     release: kind => { if (kind !== "screen" && (snapshot.listening === kind || starting)) void stop(); },
     start, stop, screen,

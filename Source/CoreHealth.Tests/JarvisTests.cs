@@ -51,7 +51,7 @@ static class JarvisTests
 		Check(JarvisCombos.Clean("", "L5+R5") is null && JarvisCombos.Clean("junk", "L5+R5") == "L5+R5" && JarvisCombos.Clean(null, "L4+R4") == "L4+R4", "combo: empty is off, junk falls back to the default");
 		Check(JarvisCombos.Overlap(JarvisCombos.Parse("L4+R4")!, JarvisCombos.Parse("L4+R4+A")!) && !JarvisCombos.Overlap(JarvisCombos.Parse("L4+R4")!, JarvisCombos.Parse("L4+L5")!), "combo: containment is a clash, sharing one button is not");
 		JarvisCombosView view = JarvisCombosPolicy.Clean(null, null, null);
-		Check(view == new JarvisCombosView("L5+R5", "L4+R4", "L4+L5"), "combo: defaults on the four grips, no clash");
+		Check(view == new JarvisCombosView("L4+R4", "L5+R5", "L4+L5"), "combo: defaults on the four grips (dictation L4+R4, talk L5+R5), no clash");
 		view = JarvisCombosPolicy.Clean("L4+R4", "L4+R4+A", "");
 		Check(view == new JarvisCombosView("L4+R4", null, null), "combo: a clashing combo is turned off, an empty one stays off");
 	}

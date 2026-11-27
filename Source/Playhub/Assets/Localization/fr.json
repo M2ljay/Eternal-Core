@@ -1676,5 +1676,7 @@
   "Solo con la chiave per Whisper nel cloud. Di solito la voce si trascrive con Whisper sul server di casa, gratis e in locale.": "Uniquement avec la clé Whisper dans le cloud. Normalement, la voix est transcrite par Whisper sur le serveur de la maison, gratuitement et en local.",
   "Jarvis in Core: chat in Accesso rapido, aiuto con quello che c'è sullo schermo e dettatura con il microfono. Non viene inviato niente finché non lo chiedi.": "Jarvis dans Core : discussion dans l'accès rapide, aide sur ce qui est à l'écran et dictée au micro. Rien n'est envoyé tant que tu ne le demandes pas.",
   "Jarvis di Home Assistant (consigliato)": "Jarvis de Home Assistant (recommandé)",
-  "API di Claude diretta": "API Claude directe"
+  "API di Claude diretta": "API Claude directe",
+  "Tocco breve: apri Jarvis in Accesso rapido": "Appui bref : ouvrir Jarvis dans l'accès rapide",
+  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "Un appui bref sur la combinaison Parler à Jarvis ouvre ou ferme l'onglet Jarvis de l'accès rapide, même en jeu ; la maintenir permet de parler à Jarvis."
 }

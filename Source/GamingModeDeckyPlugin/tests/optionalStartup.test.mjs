@@ -15,6 +15,9 @@ vm.runInNewContext(compile('../src/steamModeCommands.ts'), {exports:steamModeCom
 const steamOwnedLaunch = {};
 vm.runInNewContext(compile("../src/steamOwnedLaunchDispatcher.ts"),{exports:steamOwnedLaunch});
 const steamConfiguratorReturn = {};
+// Core UI phase 1: Jarvis's presence (self-contained) runs as is.
+const jarvisPresence = {};
+vm.runInNewContext(compile('../src/jarvisPresence.ts'), {exports:jarvisPresence, Date, Set});
 vm.runInNewContext(compile("../src/steamConfiguratorReturn.ts"), {exports:steamConfiguratorReturn});
 function fixture(failing, runtime = {}) {
   let factory;
@@ -58,9 +61,12 @@ function fixture(failing, runtime = {}) {
     './swipeTyping':{createSwipeTyping:()=>{const stop=install('swipe typing')();return {start:()=>Promise.resolve(),shutdown:stop};},keyboardLookups:()=>({}),vaporTypeInstalled:()=>false},
     './SwipeTypingSection':{SwipeTypingSection:noop,setSwipeTypingRuntime:noop},
     // Jarvis: the combo watch is an optional integration like the others.
-    './jarvisCombos':{installJarvisCombos:()=>({stop:install('jarvis combos')(),held:()=>[]})},
-    './jarvisRuntime':{createJarvisRuntime:()=>({press:noop,release:noop})},
-    './JarvisSection':{JarvisSection:noop,JarvisPage:noop,setJarvisRuntime:noop,JARVIS_ROUTE:'/core-jarvis'},
+    './jarvisCombos':{installJarvisCombos:()=>({stop:install('jarvis combos')(),held:()=>[]}),jarvisRelease:()=>'release'},
+    './jarvisRuntime':{createJarvisRuntime:()=>({press:noop,release:noop,cancel:async()=>{},subscribe:()=>noop,snapshot:()=>({listening:null,working:false})})},
+    './JarvisSection':{JarvisSection:noop,JarvisPage:noop,JarvisTab:noop,JarvisOrbIcon:noop,setJarvisRuntime:noop,setJarvisPresence:noop,JARVIS_ROUTE:'/core-jarvis'},
+    './jarvisPresence':jarvisPresence,
+    // Core UI phase 1 is an optional integration like the others.
+    './coreUi':{installCoreUi:install('core ui')},
     './steamNavigationReturn':steamNavigationReturn,
     './steamFocusEvents':steamFocusEvents,
     './steamModeCommands':steamModeCommands,
@@ -77,8 +83,8 @@ function fixture(failing, runtime = {}) {
   vm.runInNewContext(compiled,{exports:{},require:name=>modules[name]??{}, window,document:{documentElement:{lang:'en'}},navigator:{language:'en'},console:{warn:(...items)=>warnings.push(items),log:noop,debug:noop},Promise,Set,performance,Date:{now:runtime.now??Date.now}});
   return {factory,calls,disposed,warnings,tick:()=>tick()};
 }
-const integrations = ['store library','digital stores portal','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','home news','haptics','virtual controller name','qam','power menu'];
-for (const name of ['store library','digital stores portal','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','haptics','virtual controller name','power menu']) {
+const integrations = ['store library','digital stores portal','core ui','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','home news','haptics','virtual controller name','qam','power menu'];
+for (const name of ['store library','digital stores portal','core ui','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','haptics','virtual controller name','power menu']) {
   test(`Unavailable ${name} hook does not prevent the real plugin and QAM from loading`, async () => {
     const f = fixture(name);
     const plugin = f.factory();

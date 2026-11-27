@@ -34,9 +34,10 @@ public static class JarvisConfig
 	public const string DefaultSttEntity = "stt.faster_whisper";
 	public const string DefaultTtsEntity = "tts.piper";
 	public const string DefaultOpenAiUrl = "https://api.openai.com/v1";
-	// Combos on the 2026 Steam Controller's four grip buttons, which Steam Input leaves unbound by default.
-	public const string DefaultDictateCombo = "L5+R5";
-	public const string DefaultTalkCombo = "L4+R4";
+	// Combos on the 2026 Steam Controller's four grip buttons, which Steam Input leaves unbound by default. Core UI
+	// phase 1 swapped the first two: talking to Jarvis (a short tap opens Jarvis in Quick Access) is on the lower grips.
+	public const string DefaultDictateCombo = "L4+R4";
+	public const string DefaultTalkCombo = "L5+R5";
 	public const string DefaultScreenCombo = "L4+L5";
 	public const int MaxPromptChars = 2000;
 	public const int MaxQuestionChars = 500;

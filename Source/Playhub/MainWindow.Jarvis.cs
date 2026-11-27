@@ -66,6 +66,7 @@ public sealed partial class MainWindow
         _jarvisScreenBox = TextBox(JarvisConfig.DefaultScreenCombo);
         card.Children.Add(TwoColumn(Labeled("Dettatura (tieni premuto)", _jarvisDictateBox), Labeled("Parla con Jarvis (tieni premuto)", _jarvisTalkBox)));
         card.Children.Add(Labeled("Cosa c'è sullo schermo?", _jarvisScreenBox));
+        AddExplainedToggle(card, "Tocco breve: apri Jarvis in Accesso rapido", "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.", "jarvisTapOpens");
         card.Children.Add(Body("Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. I quattro pulsanti posteriori dello Steam Controller sono liberi in Steam Input se non li assegni tu."));
         AddExplainedToggle(card, "Modalità senza spoiler", "La prima risposta sullo schermo è solo un indizio; \"Altro\" mostra la risposta completa.", "jarvisSpoiler");
         AddExplainedToggle(card, "Risposte a voce", "Parlando con Jarvis, la risposta si sente con la voce Piper di Home Assistant, oppure con la voce inglese britannica di Windows.", "jarvisVoice");
@@ -183,6 +184,7 @@ public sealed partial class MainWindow
         gaming.JarvisVoice = GetToggle("jarvisVoice");
         gaming.JarvisSpeakScreen = GetToggle("jarvisSpeakScreen");
         gaming.JarvisCloudWhisper = GetToggle("jarvisCloudWhisper");
+        gaming.JarvisTapOpensQuickAccess = GetToggle("jarvisTapOpens");
     }
 
     private static string? ComboText(string text, string? saved) =>
@@ -196,6 +198,7 @@ public sealed partial class MainWindow
         SetToggle("jarvisVoice", gaming.JarvisVoice);
         SetToggle("jarvisSpeakScreen", gaming.JarvisSpeakScreen);
         SetToggle("jarvisCloudWhisper", gaming.JarvisCloudWhisper);
+        SetToggle("jarvisTapOpens", gaming.JarvisTapOpensQuickAccess);
         SelectComboKey(_jarvisBackendCombo, JarvisConfig.CleanBackend(gaming.JarvisBackend));
         _jarvisHaUrlBox.Text = JarvisConfig.HaUrl(gaming.JarvisHaUrl);
         _jarvisHaAgentBox.Text = gaming.JarvisHaAgent ?? JarvisConfig.DefaultHaAgent;

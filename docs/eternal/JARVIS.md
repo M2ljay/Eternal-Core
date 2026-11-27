@@ -2,8 +2,11 @@
 
 Jarvis, the household's assistant (Aincrad's Home Assistant agent), now lives in Core too:
 
-- **Chat** in Quick Access > Core > **Jarvis**, and on a full page (*Open full page*). Type with Steam's keyboard
-  (swipe typing works there) or dictate into the field.
+- **Chat** in Jarvis's own Quick Access tab (the orb icon, right after Core's tab; Core UI phase 1, see
+  [CORE-UI.md](CORE-UI.md)), and on a full page (*Open full page*). Type with Steam's keyboard (swipe typing works
+  there) or dictate into the field. A short tap on the talk combo opens or closes the tab with the cursor in the field.
+- **Presence orb** in the top bar, next to the clock: dim steel when idle, a slow crimson pulse while Jarvis listens or
+  thinks, a crimson ring for a few seconds when an answer is ready. During a game it shows only while Jarvis is active.
 - **"What's on screen?"**: a screen-aware game helper. Core takes one screenshot of the game, sends it with your
   question to Claude, and shows the answer, spoiler-safe by default (a nudge first, **More** for the full answer).
 - **Push-to-talk**: hold a controller combo and speak. Either the words are **typed** into the focused text field
@@ -72,11 +75,17 @@ Ideas from Quest Compendium (BSD-3-Clause, as of 2026-11-24) and Decky AI; **no 
 
 ## Push-to-talk
 
-| Combo (hold) | Default | What happens on release |
-| ------------ | ------- | ----------------------- |
-| Dictation | **L5+R5** (both lower grips) | Whisper transcribes; the text is typed into the focused Steam text field |
-| Talk to Jarvis | **L4+R4** (both upper grips) | Whisper transcribes; Jarvis answers in Quick Access and a toast, and speaks it |
+| Combo | Default | What happens |
+| ----- | ------- | ------------ |
+| Talk to Jarvis | **L5+R5** (both lower grips) | **Tap** (released within 300 ms): opens Jarvis's Quick Access tab with the input focused, or closes it if it is already open there; also during a game (Quick Access opens over it). **Hold**: Whisper transcribes on release; Jarvis answers in Quick Access and a toast, and speaks it |
+| Dictation | **L4+R4** (both upper grips) | (held) Whisper transcribes; the text is typed into the focused Steam text field |
 | What's on screen? | **L4+L5** (both left grips) | (pressed, not held) the screen helper above |
+
+- **Defaults changed in Core UI phase 1 (3.3.1):** talking moved to L5+R5 and dictation to L4+R4. Saved settings keep
+  what you set; only a new or reset configuration gets the new defaults.
+- **Tap or hold:** recording starts on the press either way, so a hold loses no syllable; a tap cancels the recording
+  (nothing is transcribed or sent) and toggles the tab. The desktop card's *Short tap: open Jarvis in Quick Access*
+  (`jarvisTapOpensQuickAccess`, on by default) turns the tap off; then every press is push-to-talk.
 
 - **Combos** are two to four buttons held together; Steam's own buttons (Steam, Quick Access) are not allowed, and a
   combo that contains another is turned off rather than firing both. The defaults use the 2026 Steam Controller's
@@ -165,7 +174,7 @@ the game.
 
 `config.json` keys (`gaming`): `jarvisEnabled`, `jarvisBackend` (`home-assistant` or `claude`), `jarvisHaUrl`,
 `jarvisHaAgent`, `jarvisModel`, `jarvisDictateCombo`, `jarvisTalkCombo`, `jarvisScreenCombo`, `jarvisSpoilerSafe`,
-`jarvisVoice`, `jarvisSpeakScreen`, `jarvisCloudWhisper`; config-only: `jarvisWyomingHost` (`serverv3`),
+`jarvisVoice`, `jarvisSpeakScreen`, `jarvisCloudWhisper`, `jarvisTapOpensQuickAccess`; config-only: `jarvisWyomingHost` (`serverv3`),
 `jarvisWyomingPort` (10300), `jarvisSttEntity` (`stt.faster_whisper`), `jarvisTtsEntity` (`tts.piper`),
 `jarvisOpenAiUrl` (`https://api.openai.com/v1`). The entity ids are the ones the Wyoming integration usually creates
 (inferred; change them if yours differ).
@@ -227,10 +236,12 @@ in game), Home Assistant's conversation, speech-to-text and text-to-speech endpo
    nothing.
 4. **Clear**: the conversation is gone. Turn sleep mode on in Home Assistant: the session clears (`agent.log`:
    *session cleared (Aincrad's sleep mode)*).
-5. In Big Picture, hold **L5+R5**: the crimson "Jarvis is listening" pill appears; say a sentence into a Steam search
+5. In Big Picture, hold **L4+R4** (dictation): the crimson "Jarvis is listening" pill appears; say a sentence into a Steam search
    field; release: the text appears in the field. Note whether the grips fired (if not: the combo bits differ on the
    2026 controller; try `L1+R1+SELECT`).
-6. Hold **L4+R4**, ask "What time is it?", release: the answer appears and Piper's British voice speaks it.
+6. Hold **L5+R5**, ask "What time is it?", release: the answer appears and Piper's British voice speaks it, and the
+   top-bar orb pulses while it thinks, then shows a crimson ring. Tap **L5+R5**: Quick Access opens on the Jarvis tab
+   with the cursor in the field; tap again: it closes. In a game, tap: Quick Access opens over the game on the Jarvis tab.
 7. Mute in Quick Access > Voice (*Mute everything*), hold a combo: "Microphone muted", no pill. Switch to *Mute calls
    only* with a second microphone: it records from that one. Start recording, then mute: the pill disappears at once.
 8. In a game without anti-cheat: hold **L4+L5** (or Quick Access > *What's on screen?*): "Screenshot taken for

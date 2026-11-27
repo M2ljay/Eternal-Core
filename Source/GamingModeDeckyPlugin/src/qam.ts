@@ -10,7 +10,10 @@ const STORAGE = "playhub.qam.visible.v1";
 const TAB_ID = 0x50484B;
 type Tab = { key?: number | string; id?: number | string; decky?: boolean; [key: string]: any };
 type Hook = { tabs: Tab[]; render: (tabs: Tab[], visible: boolean) => unknown };
-export interface PlayhubQamOptions { content: ReactNode; icon: ReactNode; title?: ReactNode }
+// Core UI phase 1: Core can own more than one tab (Jarvis's, right after Core's). Each extra tab is rendered by
+// Decky's own renderer exactly like Core's, and removed with it.
+export interface QamExtraTab { id: number; name: string; content: ReactNode; icon: ReactNode; title?: ReactNode }
+export interface PlayhubQamOptions { content: ReactNode; icon: ReactNode; title?: ReactNode; extraTabs?: QamExtraTab[] }
 interface Bridge {
   protocol: number;
   register(entry: PlayhubQamOptions & { name: string; defaultVisible: boolean }): Promise<() => void>;
@@ -61,8 +64,14 @@ export function installStandaloneQam(hook: Hook, options: PlayhubQamOptions, isV
   } catch { return null; }
   const WeakReference = (globalThis as any).WeakRef;
   if (typeof WeakReference !== "function") return null;
+  const extras = (options.extraTabs ?? []).filter(extra => Number.isSafeInteger(extra.id) && extra.id !== TAB_ID && !hook.tabs.some((tab) => String(tab.id) === String(extra.id)))
+    .map(extra => {
+      const extraProbe = Object.create(hook);
+      Object.defineProperty(extraProbe, "tabs", { value: [{ id: extra.id, content: extra.content, icon: extra.icon, title: extra.title ?? extra.name }] });
+      return { id: extra.id, probe: extraProbe };
+    });
   const arrays = new Set<{ deref(): Tab[] | undefined }>();
-  const arrayStates = new WeakMap<Tab[], { visible: boolean; tab?: Tab }>();
+  const arrayStates = new WeakMap<Tab[], { visible: boolean; tab?: Tab; extras?: Map<number, Tab> }>();
   const own = new WeakSet<object>();
   const clean = (tabs: Tab[]) => {
     for (let i = tabs.length - 1; i >= 0; i--) if (own.has(tabs[i])) tabs.splice(i, 1);
@@ -93,6 +102,18 @@ export function installStandaloneQam(hook: Hook, options: PlayhubQamOptions, isV
         const created: Tab[] = record.tab ? [record.tab] : [];
         previous.call(probe, created, visible);
         if (created.length === 1) { record.tab = created[0]; own.add(created[0]); tabs.unshift(created[0]); }
+      }
+      // Extra tabs (Jarvis) go right after Core's, or first when Core's is hidden.
+      for (const extra of extras) {
+        if (tabs.some((tab) => String(tab.key) === String(extra.id))) continue;
+        record.extras ??= new Map();
+        const known = record.extras.get(extra.id);
+        const created: Tab[] = known ? [known] : [];
+        previous.call(extra.probe, created, visible);
+        if (created.length !== 1 || String(created[0].key) !== String(extra.id)) continue;
+        record.extras.set(extra.id, created[0]); own.add(created[0]);
+        const core = tabs.findIndex((tab) => String(tab.key) === String(TAB_ID));
+        tabs.splice(core >= 0 ? core + 1 : 0, 0, created[0]);
       }
       layout.afterRender(tabs, visible);
       deckyHost.afterRender(tabs, visible);
@@ -136,6 +157,7 @@ export function initPlayhubQam(options: PlayhubQamOptions): () => void {
   let generation = 0;
   let bridge: Bridge | undefined;
   let unregister: (() => void) | undefined;
+  let unregisterExtras: Array<() => void> = [];
   let unsubscribe: (() => void) | undefined;
   let standalone: ReturnType<typeof installStandaloneQam> = null;
   let boundHook: Hook | undefined;
@@ -156,6 +178,7 @@ export function initPlayhubQam(options: PlayhubQamOptions): () => void {
     if (candidate !== bridge) {
       generation++;
       unregister?.(); unsubscribe?.(); unregister = unsubscribe = undefined;
+      for (const release of unregisterExtras.splice(0)) { try { release(); } catch { /* Already gone. */ } }
       standalone?.stop(); standalone = null; boundHook = undefined;
       bridge = candidate;
       if (bridge) {
@@ -167,6 +190,11 @@ export function initPlayhubQam(options: PlayhubQamOptions): () => void {
           unregister = release;
           unsubscribe = activeBridge.subscribe(sync);
           sync();
+          // Extra tabs through the same bridge, each under its own name.
+          for (const extra of options.extraTabs ?? []) {
+            void activeBridge.register({ content: extra.content, icon: extra.icon, title: extra.title ?? extra.name, name: extra.name, defaultVisible: true })
+              .then(releaseExtra => { if (stopped || generation !== current) releaseExtra(); else unregisterExtras.push(releaseExtra); }).catch(() => { /* Core's tab still works. */ });
+          }
         }).catch(() => { if (!stopped && generation === current) publish({ visible, available: false, pending: false }); });
       }
     }
@@ -195,6 +223,7 @@ export function initPlayhubQam(options: PlayhubQamOptions): () => void {
     window.removeEventListener(EVENT, reconcile);
     window.removeEventListener("storage", onStorage);
     unsubscribe?.(); unregister?.(); standalone?.stop();
+    for (const release of unregisterExtras.splice(0)) { try { release(); } catch { /* Already gone. */ } }
     if (host[INSTANCE] === stop) { delete host[INSTANCE]; changeVisibility = undefined; }
   };
   host[INSTANCE] = stop;

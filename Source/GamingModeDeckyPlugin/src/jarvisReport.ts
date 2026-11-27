@@ -195,6 +195,8 @@ export type JarvisState = {
   enabled?: boolean; backend?: string; status?: string; screenHelper?: boolean; spoilerSafe?: boolean; voice?: boolean;
   combos?: { dictate?: string | null; talk?: string | null; screen?: string | null };
   listening?: { active?: boolean; mode?: string | null }; history?: JarvisTurn[]; screen?: { text?: string; more?: boolean } | null; busy?: boolean; antiCheat?: boolean;
+  // Core UI phase 1: a short tap on the talk combo opens Jarvis's Quick Access tab (default on).
+  tapOpens?: boolean;
 };
 
 // The status line under the title.

@@ -1658,5 +1658,7 @@
   "Solo con la chiave per Whisper nel cloud. Di solito la voce si trascrive con Whisper sul server di casa, gratis e in locale.": "सिर्फ़ क्लाउड Whisper कुंजी होने पर। आम तौर पर आवाज़ घर के सर्वर पर Whisper से, मुफ़्त और लोकल रूप से लिखी जाती है।",
   "Jarvis in Core: chat in Accesso rapido, aiuto con quello che c'è sullo schermo e dettatura con il microfono. Non viene inviato niente finché non lo chiedi.": "Core में Jarvis: क्विक एक्सेस में चैट, स्क्रीन पर जो है उसमें मदद, और माइक्रोफ़ोन से डिक्टेशन। जब तक आप न कहें, कुछ नहीं भेजा जाता।",
   "Jarvis di Home Assistant (consigliato)": "Home Assistant का Jarvis (अनुशंसित)",
-  "API di Claude diretta": "सीधा Claude API"
+  "API di Claude diretta": "सीधा Claude API",
+  "Tocco breve: apri Jarvis in Accesso rapido": "छोटा टैप: क्विक एक्सेस में Jarvis खोलें",
+  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "Jarvis से बात करें कॉम्बो पर छोटा टैप क्विक एक्सेस में Jarvis टैब खोलता या बंद करता है, गेम के दौरान भी; दबाए रखने पर Jarvis से बात होती है।"
 }

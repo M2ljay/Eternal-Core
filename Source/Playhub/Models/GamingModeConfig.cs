@@ -99,9 +99,10 @@ public sealed class GamingOptions
     public string JarvisHaUrl { get; set; } = "http://serverv3:8123";
     public string? JarvisHaAgent { get; set; } = "conversation.jarvis";
     public string JarvisModel { get; set; } = "claude-haiku-5-5";
-    public string? JarvisDictateCombo { get; set; } = "L5+R5";
-    public string? JarvisTalkCombo { get; set; } = "L4+R4";
+    public string? JarvisDictateCombo { get; set; } = "L4+R4";
+    public string? JarvisTalkCombo { get; set; } = "L5+R5";
     public string? JarvisScreenCombo { get; set; } = "L4+L5";
+    public bool JarvisTapOpensQuickAccess { get; set; } = true;
     public bool JarvisSpoilerSafe { get; set; } = true;
     public bool JarvisVoice { get; set; } = true;
     public bool JarvisSpeakScreen { get; set; }
