@@ -6,9 +6,14 @@ import {registerSteamMenu} from "./StoreDigitalMenuRegistry";
 import {STORE_DIGITAL_ROUTE,installStoreDigitalIntentPump} from "./StoreDigitalNavigation";
 import {getSteamLocale,subscribeSteamLocale,startSteamLocaleObservation} from "./StoreDigitalSteamLocale";
 import {TbMusic} from "react-icons/tb";
-import {coreSteamMenuEntries,type CoreMenuEntry} from "./coreMenuEntries";
+import {coreSteamMenuEntries,AWESOME_MIX_PLUGIN,type CoreMenuEntry} from "./coreMenuEntries";
+import {corePluginGlyph} from "./corePluginLogos";
 export function StoreDigitalMenuIcon(){return <span style={{display:"flex",width:"1em",height:"1em"}}><StoreDigitalStoreIcon/></span>;}
-export function AwesomeMixMenuIcon(){return <span style={{display:"flex",width:"1em",height:"1em"}}><TbMusic style={{width:"100%",height:"100%"}}/></span>;}
+// Eternal Core: the Awesome Mix entry shows Core's awesome-mix mark (corePluginLogos.ts), single colour like Steam's own
+// menu icons; Steam's music note only if the mark is missing.
+export function AwesomeMixMenuIcon(){const glyph=corePluginGlyph(AWESOME_MIX_PLUGIN);return glyph
+ ?<span aria-hidden="true" style={{display:"flex",width:"1em",height:"1em"}} dangerouslySetInnerHTML={{__html:glyph.replace("<svg ",'<svg width="100%" height="100%" ')}}/>
+ :<span style={{display:"flex",width:"1em",height:"1em"}}><TbMusic style={{width:"100%",height:"100%"}}/></span>;}
 // Eternal Core (Core UI phase 1, docs/eternal/CORE-UI.md): Digital stores keeps its route but no longer has a
 // Steam menu entry (it opens from Quick Access > Core). The Steam menu gets Awesome Mix instead, only while
 // Decky has that plugin loaded; checked at start, on Decky's plugin updates and every 5 seconds.

@@ -62,6 +62,11 @@ import { JarvisOrbIcon, JarvisPage, JarvisSection, JarvisTab, JARVIS_ROUTE, setJ
 import { createPresence, jarvisMenuStore, orbState, toggleJarvisTab, JARVIS_TAB_ID } from "./jarvisPresence";
 import { jarvisRelease } from "./jarvisCombos";
 import { installCoreUi } from "./coreUi";
+import { coreUiSetting } from "./coreUiSetting";
+import { createIconStore, createLibraryDecorator } from "./coreLibraryIcons";
+import { corePluginGlyph } from "./corePluginLogos";
+import { setQamPluginIconFallback } from "./qamLayoutRuntime";
+import { setCoreHomeIcons } from "./coreHome";
 import { CoreUiSection, DigitalStoresEntry } from "./CoreUiSection";
 import { createJarvisRuntime, type ListenMode } from "./jarvisRuntime";
 import { installJarvisCombos, type ComboKind } from "./jarvisCombos";
@@ -71,7 +76,14 @@ let hapticSettingsWrite = Promise.resolve();
 function saveHapticSettings(changes: Parameters<typeof writeSettings>[0]) {
   hapticSettingsWrite = hapticSettingsWrite.catch(() => {}).then(async () => { await writeSettings(changes); });
 }
-const playhubTitle = <img src={playhubWordmark} alt="Core" style={{ display: "block", width: 144, maxWidth: "100%", height: 36, objectFit: "contain", objectPosition: "left center" }} />;
+const playhubWordmarkImage = <img src={playhubWordmark} alt="Core" style={{ display: "block", width: 144, maxWidth: "100%", height: 36, objectFit: "contain", objectPosition: "left center" }} />;
+// Core UI: no logo in Quick Access (the ring mark lives in the Steam menu only); the plain name instead. Core UI off
+// brings the wordmark back.
+function CoreTitle() {
+  const on = React.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
+  return on ? <span style={{ display: "block", lineHeight: "36px", fontSize: 20, fontWeight: 600, color: "#FFFFFF" }}>Core</span> : playhubWordmarkImage;
+}
+const playhubTitle = <CoreTitle />;
 function ModeButtonLabel({ mode }: { mode: "gaming" | "desktop" }) {
   return <span className="ph-mode-action-label"><span>{mode === "gaming" ? "Gaming" : "Desktop"}</span><span>Mode</span></span>;
 }
@@ -1162,7 +1174,19 @@ export default definePlugin(() => {
   setJarvisPresence(presence);
   let jarvisLive: { enabled: () => boolean; snapshot: () => { listening: unknown; working: boolean } } | undefined;
   const gameRunning = () => Number((window as any).SteamUIStore?.MainRunningAppID ?? (DFL as any).Router?.MainRunningAppID ?? 0) > 0;
-  const stopCoreUi = installOptionalHook("Core UI", () => installCoreUi({ ui: DFL, wordmark: playhubWordmark, orb: {
+  // Core UI phase 2: the Library's icons (the user's own set from %APPDATA%\\GamingMode\\icons, else Core's originals),
+  // Core's plugin logos on the Quick Access rail, both only while Core UI is on (docs/eternal/CORE-UI.md).
+  const coreIcons = createIconStore(() => controlCall<[], any>("get_core_icons"));
+  const library = createLibraryDecorator({ icons: coreIcons.get });
+  const railIcon = (name: string) => {
+    const glyph = coreUiSetting.get() ? corePluginGlyph(name) : undefined;
+    return glyph ? <span aria-hidden="true" style={{ display: "flex", width: "1em", height: "1em" }}
+      dangerouslySetInnerHTML={{ __html: glyph.replace("<svg ", '<svg width="100%" height="100%" ') }} /> : undefined;
+  };
+  setQamPluginIconFallback(railIcon);
+  setCoreHomeIcons(coreIcons.get);
+  const stopRailIcons = coreUiSetting.subscribe(() => { setQamPluginIconFallback(railIcon); void coreIcons.refresh(true); });
+  const stopCoreUi = installOptionalHook("Core UI", () => installCoreUi({ ui: DFL, decorate: library.decorate, undecorate: library.undecorate, orb: {
     state: () => {
       const live = jarvisLive?.snapshot();
       return orbState({ enabled: jarvisLive?.enabled() === true, listening: !!live?.listening, working: live?.working === true,

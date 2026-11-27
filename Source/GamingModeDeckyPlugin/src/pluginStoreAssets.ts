@@ -15,6 +15,7 @@ import trailerHero from "../../Playhub/Assets/PluginImages/TrailerHero.jpg";
 import weather from "../../Playhub/Assets/PluginImages/Weather.jpg";
 import discord from "../../Playhub/Assets/PluginImages/Discord.png";
 import { isSafeHttpsUrl, isSafeRepository } from "./pluginStoreCatalog";
+import { corePluginTile } from "./corePluginLogos";
 import deckyStoreBadge from "../assets/source-badges/decky-store.png";
 import playhubBadge from "../assets/source-badges/playhub.png";
 
@@ -37,7 +38,9 @@ const PLAYHUB_COVERS: Record<string, string> = {
 
 export function bundledPluginCover(repository: string): string {
   const key = String(repository ?? "").trim().toLocaleLowerCase("en-US");
-  return Object.prototype.hasOwnProperty.call(PLAYHUB_COVERS, key) ? PLAYHUB_COVERS[key] : "";
+  if (Object.prototype.hasOwnProperty.call(PLAYHUB_COVERS, key)) return PLAYHUB_COVERS[key];
+  // Eternal Core: the user's own plugin forks show Core's plugin tiles (corePluginLogos.ts, REBRAND.md).
+  return corePluginTile(key) ?? "";
 }
 
 /** Try in order on image error. Bundled artwork works offline; README images

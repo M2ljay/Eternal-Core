@@ -25,8 +25,16 @@ export function setQamLayoutPreferences(value: QamLayoutPreferences) {
   if (JSON.stringify(next) === JSON.stringify(preferences)) return;
   preferences = next; refreshers.forEach(fn => fn()); notify();
 }
+// Eternal Core (Core UI, docs/eternal/CORE-UI.md, "Plugin logos"): Core's own logo for the user's Eternal plugin forks,
+// set by index.tsx while Core UI is on. A user-chosen icon still wins; a plugin without a Core logo keeps its own.
+let pluginIconFallback: ((name: string) => ReactNode | undefined) | undefined;
+export function setQamPluginIconFallback(fallback: ((name: string) => ReactNode | undefined) | undefined) {
+  pluginIconFallback = fallback; refreshers.forEach(fn => fn()); notify();
+}
 function icon(name: string, original: ReactNode) {
-  return renderQamIcon(preferences.icons[name], original);
+  let core: ReactNode | undefined;
+  try { core = pluginIconFallback?.(name); } catch { core = undefined; }
+  return renderQamIcon(preferences.icons[name], core ?? original);
 }
 /** Projects preferences through the existing owner. Does not wrap or change Decky's registry. */
 export function createQamLayoutRuntime(hook: Hook, nativeRender: Hook["render"], ownId: number, refresh: () => void,

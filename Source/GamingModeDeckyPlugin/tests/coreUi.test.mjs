@@ -19,11 +19,12 @@ function load(file, stubs = {}, globals = {}) {
   const require = name => {
     if (name in stubs) return stubs[name];
     const local = { "./steamModules": "steamModules.ts", "./coreUiStyles": "coreUiStyles.ts", "./coreStarfield": "coreStarfield.ts",
-      "./coreUiSetting": "coreUiSetting.ts", "./coreMenuEntries": "coreMenuEntries.ts" }[name];
+      "./coreUiSetting": "coreUiSetting.ts", "./coreMenuEntries": "coreMenuEntries.ts", "./coreUiDom": "coreUiDom.ts",
+      "./coreFullHeight": "coreFullHeight.ts", "./coreArtwork": "coreArtwork.ts" }[name];
     if (local) return load(local);
     return {};
   };
-  vm.runInNewContext(code, { exports, require, Proxy, Reflect, Map, Set, WeakMap, Array, Object, JSON, Math, Number, String, console, ...globals });
+  vm.runInNewContext(code, { exports, require, Proxy, Reflect, Map, Set, WeakMap, Array, Object, JSON, Math, Number, String, console, encodeURIComponent, ...globals });
   if (!Object.keys(globals).length) cache.set(key, exports);
   return exports;
 }
@@ -47,6 +48,15 @@ const maps = {
   dropdown: { DropDownControlButton: "_DdButton" },
   contextmenu: { contextMenu: "_CmMenu", contextMenuContents: "_CmContents", contextMenuItem: "_CmItem", BasicContextMenuHeader: "_CmHeader",
     MenuSectionHeader: "_CmSection", ContextMenuSeparator: "_CmSep", Focused: "_CmFocused", Destructive: "_CmDanger", SubMenu: "_CmSub", active: "_CmActive", Positive: "_CmPos" },
+  // Phase 2 (Home, the Library).
+  gamepadui: { BasicHome: "_GuHome", MainNavMenuAnchor: "_GuAnchor", OpaqueBackground: "_GuOpaque" },
+  tabbedpage: { TabRow: "_TpRow", TabTitle: "_TpTitle", TabHeaderRowWrapper: "_TpWrap", Tab: "_TpTab", Selected: "_TpSel", GamepadTabbedPage: "_TpPage", TabCount: "_TpCount" },
+  library: { GamepadLibrary: "_LbLib", CollectionHeader: "_LbHead" },
+  appgrid: { AppGridSectionLabel: "_AgLabel", LibraryImageBackgroundGlow: "_AgGlow", Rule: "_AgRule" },
+  portrait: { LibraryItemBox: "_PtBox" },
+  recentgames: { RecentGamesContainer: "_RgCont", RecentGamesBackgroundContainer: "_RgBg", RecentGamesBackgroundImages: "_RgImgs", RecentGamesHeaderLabel: "_RgLabel" },
+  carousel: { CarouselCapsuleBackgroundGlow: "_CaGlow" },
+  home: { TabbedContent: "_HmTabbed" },
 };
 // Lookalikes: a dialog map with a dropdown key, a desktop context menu (no BasicContextMenuHeader).
 const unrelated = [{ GamepadDialogContent: "_gdc", DropDownControlButton: "_wrongDd" }, { Item: "_otherItem", Menu: "_otherMenu" },
@@ -86,7 +96,7 @@ function splitTop(list) {
 function checkSheet(sheet) {
   const { css } = sheet;
   for (const value of Object.values(maps).flatMap(map => Object.values(map))) {
-    if (["_OpenM", "_RunIcon", "_QamBat", "_CtlPst", "_CtlRow", "_FtLegend", "_HdDl", "_HdClock", "_CmPos"].includes(value)) continue;
+    if (["_OpenM", "_RunIcon", "_QamBat", "_CtlPst", "_CtlRow", "_FtLegend", "_HdDl", "_HdClock", "_CmPos", "_QamTab", "_GuAnchor", "_GuOpaque"].includes(value) && !css.includes("." + value)) continue;
     assert.ok(css.includes("." + value), `class ${value} used`);
   }
   assert.ok(!/mainmenu_|quickaccessmenu_|_23IDiI-F_FxXotrgpY71r8/.test(css), "no readable or hard-coded hashed Steam class names");
@@ -101,24 +111,26 @@ function checkSheet(sheet) {
     for (const declaration of body.split(";").filter(Boolean)) assert.match(declaration, /!important$/, `important: ${declaration}`);
   }
   // Brand: no gold, no Steam blue, no gradients or haze, no glow (blurred shadows).
-  assert.doesNotMatch(css, /gradient|#1a9fff|#FFD700|#D4AF37|gold|drop-shadow|text-shadow:(?!none)/i);
-  for (const [, value] of css.matchAll(/box-shadow:([^;}]*)/g)) assert.match(value, /^(none|inset [^,]*) !important$/, `no glow: ${value}`);
+  // The hero's fade into black is a mask (no colour painted), the one gradient allowed.
+  assert.doesNotMatch(css.replace(/(-webkit-)?mask-image:linear-gradient\(180deg, #000000 45%, transparent 100%\) !important/g, ""), /gradient|#1a9fff|#FFD700|#D4AF37|gold|drop-shadow|text-shadow:(?!none)/i);
+  for (const [, value] of css.matchAll(/box-shadow:([^;}]*)/g)) assert.match(value, /^(none|inset [^,]*(, inset [^,]*)*) !important$/, `no glow: ${value}`);
+  for (const [, value] of css.matchAll(/box-shadow:([^;}]*)/g)) for (const part of value.replace(" !important", "").split(",")) assert.doesNotMatch(part.trim(), /^inset \S+ \S+ [1-9]/, `no blur: ${value}`);
   assert.match(css, /inset 3px 0 0 #D7263D/, "focused Steam menu row: crimson left bar");
   assert.match(css, /_23IDiIFxX\._23IDiIFxX \._2w9TpItem\._2w9TpItem:is\(\.gpfocus/, "focus targets the menu's rows");
   assert.match(css, /_1uLVHdot\._1uLVHdot\{[^}]*background-color:#D7263D/, "Home's active marker is crimson");
   assert.match(css, /_3IconQ\._3IconQ\{[^}]*flex:0 0 32px/, "fixed-width icon cells");
   assert.match(css, /_2w9TpItem\._2w9TpItem\{[^}]*padding-left:24px[^}]*transform:none/, "one left inset, no drift");
   assert.match(css, /_FbsMain\._FbsMain\{[^}]*background-color:#000000/, "the MENU footer is black");
-  assert.match(css, /_QamTitle\._QamTitle,[^{]*_QamHead\._QamHead\{[^}]*background-color:#1A1D21[^}]*background-image:none/, "gunmetal title strip");
+  assert.match(css, /_QamTitle\._QamTitle,[^{]*_QamHead\._QamHead\{[^}]*background-color:transparent[^}]*background-image:none/, "clear title strip over the stars");
   assert.match(css, /_QamTab\._QamTab\._QamSel\._QamSel\{[^}]*background-color:#1A1D21/, "selected tab gunmetal");
   assert.match(css, /_FtQam\._FtQam[^{]*\{[^}]*background-color:#000000/, "black Quick Access footer");
   assert.match(css, /_QamMenu\._QamMenu \.DialogButton:not\(\[style\*="background"\]\)[^{]*\{[^}]*background-color:#1A1D21/, "neutral buttons inside Quick Access, inline colours kept");
   assert.match(css, /_QamMenu\._QamMenu \._DdButton\._DdButton/, "neutral dropdowns inside Quick Access");
   assert.match(css, /_HdHeader\._HdHeader[^{]*\{[^}]*background-color:transparent/, "clear top bar");
   assert.match(css, /_FtBasic\._FtBasic[^{]*\{[^}]*background-color:transparent/, "clear button-hint bar");
-  assert.match(css, /url\("http:\/\/127\.0\.0\.1:1337\/plugins\/Playhub\/assets\/w\.png"\)/, "the Core wordmark on the Steam menu");
+  assert.match(css, /url\("http:\/\/127\.0\.0\.1:1337\/plugins\/Playhub\/assets\/w\.png"\) 24px center \/ 44px 44px/, "the mark on the Steam menu, 44px, top left");
   // Context menus: the Context board, with the Steam menu's left bar for focus and crimson danger text.
-  assert.match(css, /_CmContents\._CmContents\{[^}]*background-color:#000000[^}]*inset 0 0 0 1px #1A1D21[^}]*border-radius:10px/, "black panel, hairline edge, board corners");
+  assert.match(css, /_CmContents\._CmContents\{[^}]*background-color:#000000[^}]*inset 0 0 0 1px #1A1D21[^}]*border-radius:var\(--core-radius-float, 10px\)/, "black panel, hairline edge, the float corner token");
   assert.match(css, /_CmItem\._CmItem\{[^}]*min-height:48px[^}]*padding:0 22px[^}]*font-size:16px[^}]*color:#C9D1D9/, "board rows, steel text");
   assert.match(css, /_CmItem\._CmItem\._CmFocused\._CmFocused,[^{]*\{[^}]*background-color:#1A1D21[^}]*inset 3px 0 0 #D7263D/, "focused: gunmetal and crimson left bar");
   assert.match(css, /_CmItem\._CmItem\._CmSub\._CmSub\._CmActive\._CmActive/, "an open submenu's item keeps the marker");
@@ -129,8 +141,9 @@ function checkSheet(sheet) {
   // Full height: the menu's and Quick Access's stars reach the screen edges through the canvas only.
   assert.match(css, /canvas\[data-core-ui-stars\]\{[^}]*top:calc\(var\(--core-ui-scroll, 0px\) - var\(--core-ui-extend-top, 0px\)\)[^}]*background-color:#000000/);
   const hosts = JSON.parse(JSON.stringify(sheet.hosts));
-  assert.deepEqual(hosts.map(host => host.id), ["menu", "qam", "context", "menu-footer", "qam-footer", "qam-footer-shadow", "footer-opaque", "header-opaque"]);
-  assert.deepEqual(hosts.filter(host => host.fullHeight).map(host => host.id), ["menu", "qam"]);
+  assert.deepEqual(hosts.map(host => host.id), ["menu", "qam-container", "qam-panel", "qam", "context", "menu-footer", "qam-footer", "qam-footer-shadow", "footer-opaque", "header-opaque", "home", "library"]);
+  assert.deepEqual(hosts.filter(host => host.page).map(host => host.id), ["home", "library"]);
+  assert.deepEqual(hosts.filter(host => host.fullHeight).map(host => host.id), ["menu", "qam-container", "qam-panel", "qam"]);
   assert.deepEqual(JSON.parse(JSON.stringify(sheet.skipped)), []);
 }
 
@@ -183,7 +196,7 @@ test("the Starfield: the screensaver's field, one shared clock, readable text ov
   assert.ok(field.draw(context, 400, 1000) > 0);
   for (const style of draws) assert.ok(Number(/,([\d.]+)\)$/.exec(style)[1]) <= starfield.STARFIELD_MAX_ALPHA);
   field.advance(10);
-  assert.ok(field.depth() <= 0.05 * starfield.STARFIELD_SPEED + 1e-9, "a long pause does not jump the field");
+  assert.ok(field.depth() <= starfield.STARFIELD_MAX_STEP * starfield.STARFIELD_SPEED + 1e-9, "a long pause does not jump the field");
 });
 
 test("Steam menu: Awesome Mix replaces Digital stores, only while the plugin is loaded", () => {
@@ -249,8 +262,8 @@ class Node {
   matches(selector) {
     return selector.split(",").some(part => {
       part = part.trim();
-      const attr = /^\[([\w-]+)\]$/.exec(part);
-      if (attr) return this.attrs.has(attr[1]);
+      const attr = /^\[([\w-]+)(?:="([^"]*)")?\]$/.exec(part);
+      if (attr) return attr[2] === undefined ? this.attrs.has(attr[1]) : this.attrs.get(attr[1]) === attr[2];
       return part.split(".").filter(Boolean).every(name => this.classes.includes(name));
     });
   }

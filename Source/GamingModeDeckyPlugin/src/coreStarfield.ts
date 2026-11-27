@@ -19,6 +19,9 @@ export const STARFIELD_SPEED = 0.035;
 export const STARFIELD_COUNT = 160;
 export const STARFIELD_MAX_ALPHA = 0.24;
 export const STARFIELD_FPS = 30;
+// The longest step one frame may take (seconds). A throttled window (a popup Steam draws at a few frames a second)
+// still moves at full speed; a long pause (a closed menu) does not jump.
+export const STARFIELD_MAX_STEP = 0.25;
 
 export type Star = { x: number; y: number; z: number; c: string };
 
@@ -55,7 +58,7 @@ export function createStarfield(count = STARFIELD_COUNT): Starfield {
   let zoff = 0, clock: number | undefined;
   const advance = (seconds: number) => {
     if (!(seconds > 0)) return;
-    zoff = (zoff + Math.min(0.05, seconds) * STARFIELD_SPEED) % 1;
+    zoff = (zoff + Math.min(STARFIELD_MAX_STEP, seconds) * STARFIELD_SPEED) % 1;
   };
   return {
     stars,

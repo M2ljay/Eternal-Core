@@ -171,6 +171,72 @@ _STREAM_STATE_MAXIMUM = 8192
 _HEALTH_ACTIONS = ("display-restore", "display-save", "sound-restore", "sound-save", "controllers-expect", "prompts-off", "bitlocker-suspend", "wake-check-now")
 
 
+# Eternal Core: the user's own icon set for Core UI's Library tabs and collection tiles (docs/eternal/CORE-UI.md,
+# "Your own icons"). Read from %APPDATA%\GamingMode\icons\map.json; never shipped with Core. Answers image data URLs
+# by tab title, collection name and Core icon key. Only plain file names inside that folder are read (no paths), only
+# images, at most 1 MB each and 16 MB in all.
+_CORE_ICON_TYPES = {".png": "image/png", ".svg": "image/svg+xml", ".webp": "image/webp", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
+_CORE_ICON_MAX = 1024 * 1024
+_CORE_ICON_TOTAL = 16 * 1024 * 1024
+
+
+def _core_icon_folder():
+    base = os.environ.get("APPDATA")
+    return os.path.join(base, "GamingMode", "icons") if base else ""
+
+
+def _core_icon_set(folder):
+    answer = {"ok": False, "folder": folder, "tabs": {}, "collections": {}, "keys": {}, "errors": []}
+    if not folder or not os.path.isdir(folder):
+        answer["errors"].append("folder_missing")
+        return answer
+    try:
+        with open(os.path.join(folder, "map.json"), "r", encoding="utf-8-sig") as handle:
+            mapping = json.load(handle)
+    except FileNotFoundError:
+        answer["errors"].append("map_missing")
+        return answer
+    except Exception:
+        answer["errors"].append("map_unreadable")
+        return answer
+    if not isinstance(mapping, dict):
+        answer["errors"].append("map_not_object")
+        return answer
+    sections = {name: mapping.get(name) for name in ("tabs", "collections", "keys") if isinstance(mapping.get(name), dict)}
+    if not sections:
+        flat = {key: value for key, value in mapping.items() if not str(key).startswith("$") and key != "version"}
+        sections = {"tabs": flat, "collections": flat}
+    cache, total = {}, 0
+    for section, entries in sections.items():
+        for name, file_name in list(entries.items())[:400]:
+            if not isinstance(name, str) or not isinstance(file_name, str) or not name.strip():
+                continue
+            base_name = os.path.basename(file_name.replace("\\", "/"))
+            extension = os.path.splitext(base_name)[1].lower()
+            if base_name != file_name or base_name in ("", ".", "..") or extension not in _CORE_ICON_TYPES:
+                answer["errors"].append("bad_name:" + file_name[:80])
+                continue
+            if base_name not in cache:
+                path = os.path.join(folder, base_name)
+                try:
+                    size = os.path.getsize(path)
+                    if size > _CORE_ICON_MAX or total + size > _CORE_ICON_TOTAL:
+                        answer["errors"].append("too_large:" + base_name)
+                        cache[base_name] = None
+                        continue
+                    with open(path, "rb") as handle:
+                        data = handle.read(_CORE_ICON_MAX + 1)
+                    total += len(data)
+                    cache[base_name] = "data:" + _CORE_ICON_TYPES[extension] + ";base64," + base64.b64encode(data).decode("ascii")
+                except OSError:
+                    answer["errors"].append("missing:" + base_name)
+                    cache[base_name] = None
+            if cache.get(base_name):
+                answer[section][name.strip()] = cache[base_name]
+    answer["ok"] = True
+    return answer
+
+
 class Plugin(QuickSettingsPlugin):
     def _store_sign_in_launcher(self):
         launcher = getattr(self, '_store_sign_in_helper', None)
@@ -1219,6 +1285,14 @@ class Plugin(QuickSettingsPlugin):
         if self._home_news is None:
             raise RuntimeError("News unavailable; see Playhub log")
         return await asyncio.to_thread(self._home_news.save, enabled, country)
+
+    async def get_core_icons(self):
+        # Core UI's Library icons (the user's own set); an absent folder is the normal case.
+        try:
+            return await asyncio.to_thread(_core_icon_set, _core_icon_folder())
+        except Exception:
+            logging.exception("Core UI icons unavailable")
+            return {"ok": False, "tabs": {}, "collections": {}, "keys": {}, "errors": ["failed"]}
 
     async def get_home_news(self, locale="en"):
         if self._home_news is None:

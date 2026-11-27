@@ -1,8 +1,12 @@
 import { DFL } from "./decky";
 import { call } from "./controlBackend";
+import { applyStarfieldDefault, createScreensaverControl } from "./coreScreensaverDefault";
 // Core Starfield (Mark III) replaces Playhub Circles in the same uioverride folder. The
 // screensaver list shows this id as its name; the old name is renamed in place.
 const MODE="Core Starfield",LEGACY="Playhub Circles";
+// Eternal Core: the Look section's "Use Core Starfield as screensaver" switch (coreScreensaverDefault.ts).
+let currentSettingsStore:any;
+export const coreScreensaverControl=createScreensaverControl(()=>currentSettingsStore);
 function documents():Document[]{
  const docs=[document];
  const add=(value:any)=>{try{if(value?.document&&!docs.includes(value.document))docs.push(value.document);}catch{}};
@@ -20,6 +24,7 @@ export function installCirclesScreensaver(locale:()=>string){
   ??ui.findModuleExport((v:any)=>typeof v?.GetLocalScreensavers==="function"&&typeof v?.GetActiveState==="function");
  const settingsStore=ui.findModule((m:any)=>m?.rV?.clientSettings&&typeof m?.qt==="function")?.rV
   ??ui.findModuleExport((v:any)=>v?.clientSettings&&typeof v.clientSettings==="object"&&"screensaver_current_id" in v.clientSettings);
+ currentSettingsStore=settingsStore;
  let disposed=false,busy=false,restore=()=>{};
  async function register(){
   const result=await call<[],{ok:boolean}>("install_circles_screensaver");if(disposed||!result.ok||!service)return;
@@ -41,6 +46,8 @@ export function installCirclesScreensaver(locale:()=>string){
   const unsubscribe=client.getQueryCache().subscribe((event:any)=>{if(JSON.stringify(event?.query?.queryKey)===JSON.stringify(key))decorate();});
   restore=()=>{unsubscribe();rename(MODE,"uioverride-playhub-circles");};
   decorate();void client.invalidateQueries({queryKey:key});
+  // One-time default: Steam's slideshow (or no choice) becomes Core Starfield, once; never over a later choice.
+  try{const result=applyStarfieldDefault(settingsStore,window.localStorage);if(result!=="already-applied")console.info(`[Core] Starfield screensaver default: ${result}`);}catch(error){console.debug("Core Starfield default",error);}
  }
  async function tick(){
   if(disposed||busy||settingsStore?.clientSettings?.screensaver_current_id!==MODE)return;
@@ -66,5 +73,5 @@ export function installCirclesScreensaver(locale:()=>string){
  }
  void register().catch(error=>console.warn("Core Starfield registration",error));
  const timer=window.setInterval(tick,1500);
- return()=>{disposed=true;window.clearInterval(timer);restore();};
+ return()=>{disposed=true;window.clearInterval(timer);restore();currentSettingsStore=undefined;};
 }

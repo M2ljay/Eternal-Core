@@ -1,6 +1,7 @@
 import { DFL, SP_REACT as React } from "./decky";
 import { coreUiSetting } from "./coreUiSetting";
 import { coreUiCopy } from "./coreUiLocale";
+import { coreScreensaverControl } from "./circlesScreensaver";
 import { storeDigitalCopy } from "./StoreDigitalLocale";
 import { StoreDigitalStoreIcon } from "./StoreDigitalPage";
 import { STORE_DIGITAL_ROUTE } from "./StoreDigitalNavigation";
@@ -18,7 +19,24 @@ export function CoreUiSection({ locale }: { locale: string }) {
       <PanelSectionRow>
         <ToggleField bottomSeparator="none" label={text.label} description={text.hint} checked={on} onChange={(value: boolean) => coreUiSetting.set(value)} />
       </PanelSectionRow>
+      <ScreensaverRow locale={locale} />
     </PanelSection>
+  );
+}
+
+// "Use Core Starfield as screensaver": selects Core Starfield in Steam's screensaver list, or goes back to Steam's
+// slideshow. Shown only once Steam's settings store is found.
+function ScreensaverRow({ locale }: { locale: string }) {
+  const [, redraw] = React.useState(0);
+  React.useEffect(() => coreScreensaverControl.subscribe(() => redraw(n => n + 1)), []);
+  React.useEffect(() => { const timer = window.setInterval(() => redraw(n => n + 1), 3000); return () => window.clearInterval(timer); }, []);
+  if (!coreScreensaverControl.available()) return null;
+  const text = coreUiCopy(locale);
+  return (
+    <PanelSectionRow>
+      <ToggleField bottomSeparator="none" label={text.screensaver} description={text.screensaverHint} checked={coreScreensaverControl.get()}
+        onChange={(value: boolean) => { coreScreensaverControl.set(value); }} />
+    </PanelSectionRow>
   );
 }
 
