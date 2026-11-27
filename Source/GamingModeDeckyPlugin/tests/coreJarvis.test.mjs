@@ -58,7 +58,8 @@ test("status, tone, errors and combos in words", () => {
   assert.equal(report.errorLine("muted", "en"), "Microphone muted: unmute it in Voice first");
   assert.equal(report.errorLine("needs-key", "it").startsWith("L'aiuto sullo schermo"), true);
   assert.equal(report.errorLine("<script>", "en"), "Something went wrong; nothing was changed");
-  assert.equal(report.combosLine({ combos: { dictate: "L5+R5", talk: null, screen: "<b>" } }, "en"), "Hold L5+R5 to dictate · off to talk · off for the screen");
+  assert.equal(report.combosLine({ combos: { talk: "L5+R5" } }, "en"), "Tap L5+R5 to talk (it stops on a pause) · hold it to open Jarvis · dictation and the screen helper: the buttons above, or ask by voice");
+  assert.ok(report.combosLine({ combos: { talk: "<b>" } }, "en").startsWith("Tap off to talk"), "a broken combo reads as off");
   const history = report.historyLines({ history: [{ role: "user", text: "hi" }, { role: "system", text: "x" }, { role: "assistant", text: " Good evening, sir. " }, { role: "assistant", text: 5 }] });
   assert.deepEqual(plain(history), [{ role: "user", text: "hi" }, { role: "assistant", text: "Good evening, sir." }]);
 });
@@ -74,13 +75,13 @@ test("health row: Jarvis connected, not set up, Home Assistant unreachable", () 
   assert.deepEqual(plain(line({ id: "jarvis", level: "info", state: "off", data: {} }).details), []);
 });
 
-test("combos: parsing mirrors the C# parser (L4/R4 in the upper word)", () => {
+test("combos: parsing mirrors the C# parser; L4 and R4 are A and B, so never in a combo (3.3.5)", () => {
   assert.deepEqual(plain(combos.parseCombo("r5 + l5")), { text: "L5+R5", lower: (1 << 15 | 1 << 16) >>> 0, upper: 0 });
-  assert.deepEqual(plain(combos.parseCombo("L4+R4")), { text: "L4+R4", lower: 0, upper: (1 << 9 | 1 << 10) >>> 0 });
+  for (const paddles of ["L4+R4", "L4+L5", "R4+R5", "L5+R5+L4"]) assert.equal(combos.parseCombo(paddles), undefined, paddles);
   assert.equal(combos.parseCombo("LB+RB+View").text, "L1+R1+SELECT");
   for (const bad of ["A", "A+B+X+Y+L1", "A+A", "STEAM+A", "QAM+L4", "L9+R9", "", null, 5]) assert.equal(combos.parseCombo(bad), undefined, String(bad));
-  assert.equal(combos.comboHeld(combos.parseCombo("L4+L5"), 1 << 15, 1 << 9), true);
-  assert.equal(combos.comboHeld(combos.parseCombo("L4+L5"), 1 << 15, 0), false);
+  assert.equal(combos.comboHeld(combos.parseCombo("L1+L5"), (1 << 3 | 1 << 15) >>> 0, 0), true);
+  assert.equal(combos.comboHeld(combos.parseCombo("L1+L5"), 1 << 15, 0), false);
 });
 
 function fakeInput() {
@@ -97,19 +98,19 @@ test("combo watch: press and release once, any controller, the bigger combo wins
   const events = [];
   const watch = combos.installJarvisCombos({
     input: () => input,
-    combos: () => ({ dictate: "L5+R5", talk: "L4+R4", screen: "L4+R4+A" }),
+    combos: () => ({ talk: "L5+R5", screen: "L5+R5+A" }),
     onPress: kind => events.push(["press", kind]),
     onRelease: kind => events.push(["release", kind]),
   });
-  const L5R5 = (1 << 15 | 1 << 16) >>> 0, L4R4 = (1 << 9 | 1 << 10) >>> 0;
+  const L5R5 = (1 << 15 | 1 << 16) >>> 0;
   input.send([{ unControllerIndex: 0, ulButtons: 1 << 15, ulUpperButtons: 0 }]);
   input.send([{ unControllerIndex: 0, ulButtons: L5R5, ulUpperButtons: 0 }]);
   input.send([{ unControllerIndex: 0, ulButtons: L5R5, ulUpperButtons: 0, sLeftStickX: 100 }]);
   input.send([{ unControllerIndex: 0, ulButtons: 0, ulUpperButtons: 0 }]);
-  assert.deepEqual(events, [["press", "dictate"], ["release", "dictate"]]);
+  assert.deepEqual(events, [["press", "talk"], ["release", "talk"]]);
   events.length = 0;
-  input.send([{ unControllerIndex: 1, ulButtons: 1 << 7, ulUpperButtons: L4R4 }]);
-  assert.deepEqual(events, [["press", "screen"]], "L4+R4+A held fires only the screen combo");
+  input.send([{ unControllerIndex: 1, ulButtons: (L5R5 | 1 << 7) >>> 0, ulUpperButtons: 0 }]);
+  assert.deepEqual(events, [["press", "screen"]], "L5+R5+A held fires only the bigger combo");
   input.send([{ unControllerIndex: 1, ulButtons: 0, ulUpperButtons: 0 }]);
   watch.stop();
   assert.equal(input.registered, false);
@@ -233,4 +234,40 @@ test("backend calls exist in main.py, text is cleaned and capped, never logged",
   const section = readFileSync(new URL("../src/JarvisSection.tsx", import.meta.url), "utf8");
   assert.ok(!/#[0-9A-Fa-f]{6}/.test(section.replace(/\/\/.*$/gm, "")), "colours come from the Core palette");
   assert.match(section, /CloseSideMenus/, "Quick Access closes before the screenshot");
+});
+
+test("tap to talk (3.3.5): the recording keeps going after a tap and ends on the agent's pause, or on a second tap", async () => {
+  const states = [{ recording: true }, { recording: true }, { ended: true }];
+  const timers = [];
+  const { backend, calls } = fakeBackend({
+    listenStart: async (mode, auto) => { calls.push(["start", mode, auto]); return { ok: true, pillHidden: true }; },
+    listenStop: async () => { calls.push(["stop"]); return { ok: true, mode: "talk", text: "how far", answer: "Two more rooms, sir." }; },
+    listenState: async () => { calls.push(["state"]); return states.shift() ?? { ended: true }; },
+  });
+  const toasts = [];
+  const runtime = createJarvisRuntime({ backend, input: () => ({}), toast: (title, body) => toasts.push(body), locale: () => "en", enabled: () => true, schedule: callback => timers.push(callback) });
+  runtime.press("talk");
+  await flush();
+  runtime.release("talk", "talk");
+  assert.equal(runtime.snapshot().listening, "talk", "still listening after the tap: nothing opens");
+  for (let i = 0; i < 5 && timers.length; i++) { timers.shift()(); await flush(); await flush(); }
+  assert.deepEqual(calls.filter(call => call[0] !== "state"), [["start", "talk", true], ["stop"]], "started in auto mode, stopped once the agent heard the pause");
+  assert.ok(toasts.includes("Listening… press again to stop"), "exclusive fullscreen: a toast stands in for the pill");
+  assert.ok(toasts.includes("Two more rooms, sir."));
+
+  const second = fakeBackend({ listenState: async () => ({ recording: true }) });
+  const again = createJarvisRuntime({ backend: second.backend, input: () => ({}), toast: () => {}, locale: () => "en", enabled: () => true, schedule: () => {} });
+  again.press("talk"); await flush();
+  again.release("talk", "talk");
+  again.press("talk");
+  again.release("talk", "talk");
+  await flush(); await flush();
+  assert.deepEqual(second.calls.map(call => call[0]), ["start", "stop"], "a second tap ends the recording");
+
+  const hold = fakeBackend();
+  const opened = createJarvisRuntime({ backend: hold.backend, input: () => ({}), toast: () => {}, locale: () => "en", enabled: () => true, schedule: () => {} });
+  opened.press("talk"); await flush();
+  opened.release("talk", "open");
+  await flush(); await flush();
+  assert.deepEqual(hold.calls.map(call => call[0]), ["start", "cancel"], "a hold cancels the recording (the tab opens instead)");
 });

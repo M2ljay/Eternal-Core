@@ -35,7 +35,7 @@ internal sealed partial class MarkIIIHost
 	private int _launcherPushBusy;
 	// How the TV wake on the last resume ended (only Done means Core itself switched the TV to its input).
 	private TvOutcome? _wakeTvOutcome;
-	private static readonly Regex ActionId = new("^[a-z-]{1,40}$", RegexOptions.CultureInvariant);
+	private static readonly Regex ActionId = new("^[a-z0-9-]{1,40}$", RegexOptions.CultureInvariant);
 
 	private static string BitLockerCheckPath => Path.Combine(global::Playhub.Services.AppPaths.LocalDataRoot, BitLockerGuard.CheckFileName);
 	// The same backup Core's desktop "Quiet Windows" card writes and undoes, so its Undo reverts this too.
@@ -159,6 +159,7 @@ internal sealed partial class MarkIIIHost
 			UpdatePolicy = slow?.UpdatePolicy,
 			PendingLauncherUpdates = slow?.LauncherUpdates ?? Array.Empty<string>(),
 			LauncherFocusEnabled = gaming.ConsoleLauncherFocusGuard, LauncherPushedToday = ConsoleGuardStore.PushesToday(state, now), LauncherLastPushed = state.LauncherLastPushed,
+				LauncherClosedToday = GameExitStore.ClosedToday(GameExitStore.Load(_gameExitPath), now), LauncherLastClosed = GameExitStore.Load(_gameExitPath).LastLauncherClosed,
 			WakeChecksEnabled = gaming.ConsoleWakeChecks, LastWake = state.LastWake, EthernetUp = ethernet, EthernetName = adapter,
 		};
 	}
@@ -349,9 +350,9 @@ internal sealed partial class MarkIIIHost
 		{
 			if (!Local(context)) return Results.StatusCode(403);
 			string id = context.Request.Query["id"].ToString();
-			if (!ActionId.IsMatch(id) || !(ConsoleGuardPolicy.Actions.Contains(id) || id == "normal-forget")) return Results.Json(new { ok = false, result = "unknown-action" }, statusCode: 400);
+			if (!ActionId.IsMatch(id) || !(ConsoleGuardPolicy.Actions.Contains(id) || id == "normal-forget" || EmulatorActionAllowed(id))) return Results.Json(new { ok = false, result = "unknown-action" }, statusCode: 400);
 			(bool ok, string result) = (false, "failed");
-			try { (ok, result) = await RunConsoleActionAsync(id).ConfigureAwait(false); }
+			try { (ok, result) = EmulatorActionAllowed(id) ? await RunEmulatorActionAsync(id).ConfigureAwait(false) : await RunConsoleActionAsync(id).ConfigureAwait(false); }
 			catch (Exception error) { _logger.Error($"Console guards: action \"{id}\" failed; nothing else changed.", error); }
 			lock (_consoleSync) _consoleSlow = null;
 			HealthReport report = await GatherHealthAsync(fresh: false).ConfigureAwait(false);

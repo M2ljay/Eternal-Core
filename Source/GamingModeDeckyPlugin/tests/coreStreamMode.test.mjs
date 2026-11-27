@@ -141,3 +141,17 @@ test("the section and the backend: Core palette, validated calls, wired in", () 
   assert.match(index, /installSteamStreamWatch\(\{/);
   assert.match(index, /stopSteamStreamWatch,/);
 });
+
+test("3.3.5: Vibepollo in Apollo's folder is named as itself", async () => {
+  const { readFileSync } = await import("node:fs");
+  const vm = await import("node:vm");
+  const ts = (await import("typescript")).default;
+  const exports = {};
+  vm.runInNewContext(ts.transpileModule(readFileSync(new URL("../src/streamReport.ts", import.meta.url), "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, { exports });
+  const view = exports.streamView({ active: true, detected: true, source: "apollo", device: "", apollo: { installed: true, running: true, virtualDisplay: true, flavour: "vibepollo" } }, "en");
+  const assert = (await import("node:assert/strict")).default;
+  assert.equal(view.line, "On · Vibepollo");
+  assert.equal(view.apollo, "Vibepollo: virtual display active");
+  const plain = exports.streamView({ active: false, apollo: { installed: true, flavour: "apollo" } }, "en");
+  assert.equal(plain.apollo, "Apollo: installed, not streaming");
+});

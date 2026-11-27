@@ -1659,5 +1659,17 @@
   "Jarvis di Home Assistant (consigliato)": "Home Assistant 的 Jarvis（推荐）",
   "API di Claude diretta": "直接 Claude API",
   "Tocco breve: apri Jarvis in Accesso rapido": "短按：在快速访问中打开 Jarvis",
-  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "短按“与 Jarvis 对话”组合键会打开或关闭快速访问中的 Jarvis 标签页，游戏中也可以；按住则与 Jarvis 对话。"
+  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "短按“与 Jarvis 对话”组合键会打开或关闭快速访问中的 Jarvis 标签页，游戏中也可以；按住则与 Jarvis 对话。",
+  "Parla con Jarvis (tocca per parlare)": "和 Jarvis 说话（轻按说话）",
+  "Tieni premuto: apri Jarvis in Accesso rapido": "按住：在快速访问中打开 Jarvis",
+  "Un tocco di L5+R5 parla con Jarvis senza aprire nulla e si ferma quando smetti di parlare; tenerla premuta apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco. Spento, tenerla premuta parla finché la tieni.": "轻按 L5+R5 即可与 Jarvis 对话，不打开任何界面，你停止说话时自动结束；按住则在快速访问中打开或关闭 Jarvis 标签，游戏中也可以。关闭此项时，按住期间一直对话。",
+  "Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. L4 e R4 fanno da A e B, quindi nessuna combinazione li usa. Dettatura e aiuto sullo schermo restano nella scheda Jarvis e si chiedono anche a voce.": "同时按下两到四个按键，例如 L5+R5。留空则关闭组合键。L4 和 R4 相当于 A 和 B，因此任何组合键都不使用它们。听写和屏幕助手保留在 Jarvis 标签中，也可用语音请求。",
+  "Chiudi i launcher dei negozi dopo un gioco": "游戏结束后关闭商店启动器",
+  "Quando un gioco ha aperto Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar o Amazon Games, Core lo chiude con garbo alla fine del gioco, a meno che fosse già aperto, un altro suo gioco sia in corso o stia scaricando. Si può spegnere per ogni launcher.": "当游戏打开了 Epic、EA app、Ubisoft Connect、Battle.net、GOG Galaxy、Rockstar 或 Amazon Games 时，Core 会在游戏结束后礼貌地关闭它，除非它之前就开着、它的另一款游戏在运行或它正在下载。可按启动器分别关闭。",
+  "Aggiornamenti degli emulatori": "模拟器更新",
+  "Core aggiorna gli emulatori di EmuDeck che hanno un progetto ufficiale su GitHub: ogni versione aspetta 10 giorni, poi si installa di notte con backup, prova di avvio e ripristino automatico. I tuoi salvataggi e le impostazioni non vengono toccati. Se un progetto non pubblica un'impronta (hash) del file, va confermato qui una volta per versione, perché altrimenti solo GitHub garantisce che il file sia quello caricato.": "Core 会更新在 GitHub 上有官方项目的 EmuDeck 模拟器：每个版本先等待 10 天，然后在夜间安装，带备份、启动测试和自动回滚。你的存档和设置不会被改动。如果项目没有发布文件的指纹（哈希），请在这里为每个版本确认一次，否则只有 GitHub 能保证文件就是上传的那个。",
+  "Controlla le conferme": "检查待确认项",
+  "Conferma {0} {1}": "确认 {0} {1}",
+  "Confermato. L'aggiornamento seguirà la sua attesa.": "已确认。更新会在等待期后进行。",
+  "Nessun aggiornamento da confermare.": "没有需要确认的更新。"
 }

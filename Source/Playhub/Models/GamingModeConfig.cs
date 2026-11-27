@@ -73,6 +73,8 @@ public sealed class GamingOptions
     public int SteamUpdateSoakDays { get; set; } = 10;
     // Console guards (agent ConsoleGuards.cs): launcher pop-ups pushed behind Big Picture, checks after a wake.
     public bool ConsoleLauncherFocusGuard { get; set; } = true;
+    // 3.3.5: close a store launcher after the game it was started for; per launcher id, on unless false here.
+    public Dictionary<string, bool>? AutoCloseLaunchers { get; set; }
     public bool ConsoleWakeChecks { get; set; } = true;
     // Batch 1 (docs/eternal/BATCH-1.md): Ludusavi save backup before update night and Steam updates, the bedtime
     // wind-down reminders, and adding 100% games to the Steam collection "Completed".
@@ -99,9 +101,10 @@ public sealed class GamingOptions
     public string JarvisHaUrl { get; set; } = "http://serverv3:8123";
     public string? JarvisHaAgent { get; set; } = "conversation.jarvis";
     public string JarvisModel { get; set; } = "claude-haiku-5-5";
-    public string? JarvisDictateCombo { get; set; } = "L4+R4";
+    // 3.3.5: dictation and the screen helper have no combo (L4/R4 are A and B); kept so old files still load, ignored.
+    public string? JarvisDictateCombo { get; set; } = "";
     public string? JarvisTalkCombo { get; set; } = "L5+R5";
-    public string? JarvisScreenCombo { get; set; } = "L4+L5";
+    public string? JarvisScreenCombo { get; set; } = "";
     public bool JarvisTapOpensQuickAccess { get; set; } = true;
     public bool JarvisSpoilerSafe { get; set; } = true;
     public bool JarvisVoice { get; set; } = true;

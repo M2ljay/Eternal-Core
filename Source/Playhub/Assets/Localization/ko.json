@@ -1665,5 +1665,17 @@
   "Jarvis di Home Assistant (consigliato)": "Home Assistant의 Jarvis(추천)",
   "API di Claude diretta": "Claude API 직접",
   "Tocco breve: apri Jarvis in Accesso rapido": "짧게 누르기: 빠른 실행에서 Jarvis 열기",
-  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "Jarvis와 대화 조합을 짧게 누르면 게임 중에도 빠른 실행의 Jarvis 탭을 열거나 닫습니다. 누르고 있으면 Jarvis와 대화합니다."
+  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "Jarvis와 대화 조합을 짧게 누르면 게임 중에도 빠른 실행의 Jarvis 탭을 열거나 닫습니다. 누르고 있으면 Jarvis와 대화합니다.",
+  "Parla con Jarvis (tocca per parlare)": "Jarvis와 말하기 (짧게 눌러 말하기)",
+  "Tieni premuto: apri Jarvis in Accesso rapido": "길게 누르기: 빠른 실행에서 Jarvis 열기",
+  "Un tocco di L5+R5 parla con Jarvis senza aprire nulla e si ferma quando smetti di parlare; tenerla premuta apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco. Spento, tenerla premuta parla finché la tieni.": "L5+R5를 짧게 누르면 아무것도 열지 않고 Jarvis와 말하며, 말을 멈추면 끝나요. 길게 누르면 빠른 실행의 Jarvis 탭을 열거나 닫아요(게임 중에도). 끄면 누르고 있는 동안 말해요.",
+  "Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. L4 e R4 fanno da A e B, quindi nessuna combinazione li usa. Dettatura e aiuto sullo schermo restano nella scheda Jarvis e si chiedono anche a voce.": "함께 누르는 버튼 2~4개, 예: L5+R5. 비우면 조합이 꺼져요. L4와 R4는 A와 B로 쓰이므로 어떤 조합에도 쓰지 않아요. 받아쓰기와 화면 도우미는 Jarvis 탭에 있고 음성으로도 요청할 수 있어요.",
+  "Chiudi i launcher dei negozi dopo un gioco": "게임 후 스토어 런처 닫기",
+  "Quando un gioco ha aperto Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar o Amazon Games, Core lo chiude con garbo alla fine del gioco, a meno che fosse già aperto, un altro suo gioco sia in corso o stia scaricando. Si può spegnere per ogni launcher.": "게임이 Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar 또는 Amazon Games를 열었다면 Core가 게임이 끝날 때 부드럽게 닫아요. 원래 열려 있었거나, 다른 게임이 실행 중이거나, 다운로드 중이면 닫지 않아요. 런처별로 끌 수 있어요.",
+  "Aggiornamenti degli emulatori": "에뮬레이터 업데이트",
+  "Core aggiorna gli emulatori di EmuDeck che hanno un progetto ufficiale su GitHub: ogni versione aspetta 10 giorni, poi si installa di notte con backup, prova di avvio e ripristino automatico. I tuoi salvataggi e le impostazioni non vengono toccati. Se un progetto non pubblica un'impronta (hash) del file, va confermato qui una volta per versione, perché altrimenti solo GitHub garantisce che il file sia quello caricato.": "Core는 GitHub에 공식 프로젝트가 있는 EmuDeck 에뮬레이터를 업데이트해요. 각 버전은 10일을 기다린 뒤 밤에 백업, 시작 테스트, 자동 되돌리기와 함께 설치돼요. 세이브와 설정은 건드리지 않아요. 프로젝트가 파일의 지문(해시)을 공개하지 않으면 여기서 버전마다 한 번 확인하세요. 그렇지 않으면 업로드된 파일임을 보증하는 건 GitHub뿐이에요.",
+  "Controlla le conferme": "확인할 항목 보기",
+  "Conferma {0} {1}": "{0} {1} 확인",
+  "Confermato. L'aggiornamento seguirà la sua attesa.": "확인했어요. 업데이트는 대기 기간 뒤에 진행돼요.",
+  "Nessun aggiornamento da confermare.": "확인할 업데이트가 없어요."
 }

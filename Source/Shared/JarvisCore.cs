@@ -34,11 +34,12 @@ public static class JarvisConfig
 	public const string DefaultSttEntity = "stt.faster_whisper";
 	public const string DefaultTtsEntity = "tts.piper";
 	public const string DefaultOpenAiUrl = "https://api.openai.com/v1";
-	// Combos on the 2026 Steam Controller's four grip buttons, which Steam Input leaves unbound by default. Core UI
-	// phase 1 swapped the first two: talking to Jarvis (a short tap opens Jarvis in Quick Access) is on the lower grips.
-	public const string DefaultDictateCombo = "L4+R4";
+	// 3.3.5: the back paddles L4 and R4 are A and B everywhere, so Jarvis has only L5+R5: a tap talks (listening ends on
+	// a pause), a hold opens Jarvis in Quick Access. Dictation and the screen helper have no combo any more; they stay
+	// on the Jarvis tab's buttons and by voice. The two settings remain for old config files and are ignored.
+	public const string DefaultDictateCombo = "";
 	public const string DefaultTalkCombo = "L5+R5";
-	public const string DefaultScreenCombo = "L4+L5";
+	public const string DefaultScreenCombo = "";
 	public const int MaxPromptChars = 2000;
 	public const int MaxQuestionChars = 500;
 
@@ -123,8 +124,8 @@ public static class JarvisCombos
 		["LB"] = "L1", ["RB"] = "R1", ["LT"] = "L2", ["RT"] = "R2", ["VIEW"] = "SELECT", ["BACK"] = "SELECT", ["MENU"] = "START",
 		["LS"] = "L3", ["RS"] = "R3", ["DUP"] = "UP", ["DDOWN"] = "DOWN", ["DLEFT"] = "LEFT", ["DRIGHT"] = "RIGHT",
 	};
-	// Steam owns these (its guide chords and Quick Access); a combo never includes them.
-	private static readonly string[] Reserved = { "STEAM", "GUIDE", "QAM", "HOME" };
+	// Steam owns these (its guide chords and Quick Access); a combo never includes them. L4 and R4 are A and B (3.3.5).
+	private static readonly string[] Reserved = { "STEAM", "GUIDE", "QAM", "HOME", "L4", "R4" };
 	private static readonly string[] Order = { "L4", "R4", "L5", "R5", "L1", "R1", "L2", "R2", "L3", "R3", "SELECT", "START", "UP", "DOWN", "LEFT", "RIGHT", "A", "B", "X", "Y" };
 
 	public static JarvisCombo? Parse(string? text)

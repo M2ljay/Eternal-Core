@@ -6,14 +6,16 @@
 // Self-contained with injected dependencies: tests/coreJarvis.test.mjs runs it against fakes.
 
 import { errorLine, fill, jarvisCopy } from "./jarvisReport";
-import type { ComboKind } from "./jarvisCombos";
+import type { ComboKind, ReleaseAction } from "./jarvisCombos";
 
 export type ListenMode = "dictate" | "talk";
 export type StopAnswer = { ok?: boolean; mode?: string; text?: string; typed?: boolean; answer?: string | null; error?: string | null; refused?: boolean };
 export type ScreenAnswer = { ok?: boolean; text?: string; more?: boolean; error?: string | null };
 
 export type JarvisBackend = {
-  listenStart: (mode: ListenMode) => Promise<{ ok?: boolean; error?: string | null; mic?: string | null; partyHears?: boolean }>;
+  // auto: tap to talk, the agent ends the recording on a pause (3.3.5).
+  listenStart: (mode: ListenMode, auto?: boolean) => Promise<{ ok?: boolean; error?: string | null; mic?: string | null; partyHears?: boolean; pillHidden?: boolean }>;
+  listenState?: () => Promise<{ recording?: boolean; ended?: boolean }>;
   listenStop: (steamTyping: boolean) => Promise<StopAnswer>;
   listenCancel: () => Promise<unknown>;
   screen: (question: string) => Promise<ScreenAnswer>;
@@ -26,13 +28,15 @@ export type RuntimeDeps = {
   toast: (title: string, body: string) => void;
   locale: () => string;
   enabled: () => boolean;
+  schedule?: (callback: () => void, delay: number) => unknown;
 };
 
 export type RuntimeSnapshot = { listening: ListenMode | null; working: boolean; heard?: string; answer?: string; screen?: ScreenAnswer; error?: string };
 
 export type JarvisRuntime = {
   press: (kind: ComboKind) => void;
-  release: (kind: ComboKind) => void;
+  // action: what the combo watch decided on release (jarvisRelease): "talk" keeps a tap's recording going until a pause.
+  release: (kind: ComboKind, action?: ReleaseAction) => void;
   start: (mode: ListenMode) => Promise<boolean>;
   stop: (options?: { intoField?: boolean }) => Promise<StopAnswer | undefined>;
   // Drops a recording without transcribing it (a short tap on the talk combo).
@@ -57,13 +61,28 @@ export function createJarvisRuntime(deps: RuntimeDeps): JarvisRuntime {
     deps.toast(text().title, line);
   };
 
-  const start = (mode: ListenMode): Promise<boolean> => {
+  // Tap to talk: the recording keeps going after the tap; a pause (the agent), a second tap or the cap ends it.
+  let latched = false, secondTap = false, polls = 0;
+  const later = (callback: () => void, delay: number) => (deps.schedule ?? ((run, wait) => setTimeout(run, wait)))(callback, delay);
+  const poll = () => {
+    if (!latched || !deps.backend.listenState) return;
+    if (++polls > 200) { latched = false; void stop(); return; }
+    deps.backend.listenState().then(state => {
+      if (!latched) return;
+      if (state?.ended || state?.recording === false) { latched = false; void stop(); }
+      else later(poll, 150);
+    }).catch(() => { if (latched) later(poll, 300); });
+  };
+
+  const start = (mode: ListenMode, auto = false): Promise<boolean> => {
     if (!deps.enabled()) { fail("off"); return Promise.resolve(false); }
     if (snapshot.listening || starting || snapshot.working) return Promise.resolve(false);
     set({ listening: mode, error: undefined });
-    starting = deps.backend.listenStart(mode).then(answer => {
+    starting = deps.backend.listenStart(mode, auto).then(answer => {
       if (!answer?.ok) { set({ listening: null }); fail(answer?.error); return false; }
       if (answer.partyHears) deps.toast(text().title, text().party);
+      // Exclusive fullscreen can hide the agent's pill: say it here instead (the orb pulses as well).
+      if (answer.pillHidden) deps.toast(text().title, text().listening);
       return true;
     }).catch(() => { set({ listening: null }); fail("unreachable"); return false; })
       .finally(() => { starting = undefined; });
@@ -79,6 +98,7 @@ export function createJarvisRuntime(deps: RuntimeDeps): JarvisRuntime {
   };
 
   const stop = async (options: { intoField?: boolean } = {}): Promise<StopAnswer | undefined> => {
+    latched = false;
     if (starting && !(await starting)) return undefined;
     const mode = snapshot.listening;
     if (!mode) return undefined;
@@ -127,6 +147,7 @@ export function createJarvisRuntime(deps: RuntimeDeps): JarvisRuntime {
   };
 
   const cancel = async (): Promise<void> => {
+    latched = false;
     if (starting) await starting.catch(() => false);
     if (!snapshot.listening) return;
     set({ listening: null });
@@ -135,8 +156,23 @@ export function createJarvisRuntime(deps: RuntimeDeps): JarvisRuntime {
 
   return {
     cancel,
-    press: kind => { if (kind === "screen") void screen(); else void start(kind); },
-    release: kind => { if (kind !== "screen" && (snapshot.listening === kind || starting)) void stop(); },
+    press: kind => {
+      if (kind === "screen") { void screen(); return; }
+      // A second tap while a tap's recording runs ends it (on its release).
+      if (kind === "talk" && latched) { secondTap = true; return; }
+      void start(kind, kind === "talk");
+    },
+    release: (kind, action = "release") => {
+      if (kind === "screen") return;
+      if (secondTap) { secondTap = false; latched = false; void stop(); return; }
+      if (kind === "talk" && action === "talk") {
+        if (!(snapshot.listening === "talk" || starting)) return;
+        latched = true; polls = 0; later(poll, 150);
+        return;
+      }
+      if (action === "open") { void cancel(); return; }
+      if (snapshot.listening === kind || starting) void stop();
+    },
     start, stop, screen,
     snapshot: () => snapshot,
     subscribe: listener => { listeners.add(listener); return () => listeners.delete(listener); },

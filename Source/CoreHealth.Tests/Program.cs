@@ -184,5 +184,8 @@ BatchTwoTests.Run(Check);
 // ---------- Jarvis: chat, screen helper, push-to-talk (JarvisTests.cs, docs/eternal/JARVIS.md) ----------
 JarvisTests.Run(Check);
 
+// 3.3.5: emulators, game exit, launchers, stream profiles, back paddles.
+EmulatorTests.Run(Check);
+
 Console.WriteLine($"ALL PASS ({passed} checks)");
 return 0;

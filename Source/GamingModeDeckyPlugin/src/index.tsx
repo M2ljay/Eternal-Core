@@ -53,6 +53,8 @@ import { HealthSection } from "./HealthSection";
 import { VoiceSection } from "./VoiceSection";
 import { StreamSection } from "./StreamSection";
 import { installSteamStreamWatch } from "./streamMode";
+import { installGameExitWatch } from "./gameExit";
+import { ControlsSection } from "./ControlsSection";
 import { createSwipeTyping, keyboardLookups, vaporTypeInstalled, type TypingBackendState } from "./swipeTyping";
 import { SwipeTypingSection, setSwipeTypingRuntime } from "./SwipeTypingSection";
 import { AutomationsSection } from "./AutomationsSection";
@@ -1005,6 +1007,7 @@ function Content({ origin = "decky" }: { origin?: "qam" | "decky" }) {
       {status && <SwipeTypingSection locale={locale} />}
       {status && <UpdateNightCard locale={locale} />}
       {status && <SteamUpdateCard locale={locale} />}
+      {status && <ControlsSection locale={locale} />}
       {status && <HealthSection locale={locale} />}
       <CoreUiSection locale={locale} />
       {!status && <PanelSection><PanelSectionRow>
@@ -1358,7 +1361,8 @@ export default definePlugin(() => {
     };
     const runtime = createJarvisRuntime({
       backend: {
-        listenStart: (mode: ListenMode) => controlCall<[string], any>("core_jarvis_listen_start", mode),
+        listenStart: (mode: ListenMode, auto?: boolean) => controlCall<[string, boolean], any>("core_jarvis_listen_start", mode, auto === true),
+        listenState: () => controlCall<[], any>("core_jarvis_listen_state"),
         listenStop: (steamTyping: boolean) => controlCall<[boolean], any>("core_jarvis_listen_stop", steamTyping),
         listenCancel: () => controlCall<[], unknown>("core_jarvis_listen_cancel"),
         screen: (question: string) => controlCall<[string], any>("core_jarvis_screen", question),
@@ -1368,6 +1372,7 @@ export default definePlugin(() => {
       toast: (title, body) => toaster.toast({ title, body, duration: 8000 }),
       locale: () => currentLocale,
       enabled: () => settings.enabled,
+      schedule: (callback, delay) => window.setTimeout(callback, delay),
     });
     setJarvisRuntime(runtime);
     jarvisLive = { enabled: () => settings.enabled, snapshot: () => runtime.snapshot() };
@@ -1376,11 +1381,12 @@ export default definePlugin(() => {
       input: () => (window as any).SteamClient?.Input,
       combos: () => (settings.enabled ? settings.combos : {}),
       onPress: kind => runtime.press(kind),
-      // Core UI phase 1: a short tap on the talk combo opens or closes Jarvis's Quick Access tab (also over a game);
-      // holding it is push-to-talk. Recording began on the press, so a tap cancels it.
+      // 3.3.5: tap L5+R5 to talk (the game stays on screen; listening ends on a pause or another tap), hold it to open
+      // or close Jarvis's Quick Access tab (also over a game). Recording began on the press, so a hold cancels it.
       onRelease: (kind, heldMs) => {
-        if (jarvisRelease(kind, heldMs, settings.tapOpens) !== "tap") { runtime.release(kind); return; }
-        void runtime.cancel();
+        const action = jarvisRelease(kind, heldMs, settings.tapOpens);
+        runtime.release(kind, action);
+        if (action !== "open") return;
         toggleJarvisTab({
           menuStore: () => jarvisMenuStore((window as any).SteamUIStore?.WindowStore ?? (DFL as any).Router?.WindowStore, gameRunning() ? 1 : 0),
           navigation: () => (DFL as any).Navigation,
@@ -1396,6 +1402,14 @@ export default definePlugin(() => {
     report: report => controlCall<[boolean, string], unknown>("core_stream_report", report.active, report.device),
     schedule: (callback, delay) => window.setTimeout(callback, delay),
     cancel: timer => window.clearTimeout(timer as number),
+  }));
+  // 3.3.5: exiting games through Steam. Steam's app lifetime and its Exit Game go to the agent, which closes what a
+  // launch leaves running (docs/eternal/CONSOLE-GUARDS.md, "Exiting games").
+  const stopGameExitWatch = installOptionalHook("Core game exit watch", () => installGameExitWatch({
+    steam: () => (window as any).SteamClient,
+    title: appId => String((window as any).appStore?.GetAppOverviewByAppID?.(appId)?.display_name ?? ""),
+    lifetime: (appId, running, title) => controlCall<[number, boolean, string], unknown>("core_game_lifetime", appId, running, title),
+    exitChosen: () => controlCall<[], unknown>("core_game_exit_chosen"),
   }));
   const coreRepairTileTimer = window.setTimeout(() => {
     void ensureCoreRepairTile({
@@ -1482,7 +1496,7 @@ export default definePlugin(() => {
       const cleanups = [
         stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
         stopUpdateNotice,
-        stopCoreHeartbeat, stopLocalInput, stopSwipeTyping, stopJarvis, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
+        stopCoreHeartbeat, stopLocalInput, stopSwipeTyping, stopJarvis, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch, stopGameExitWatch,
         stopDeckyIpcRecovery,
         uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
         uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,

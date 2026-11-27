@@ -64,10 +64,11 @@ public sealed partial class MainWindow
         _jarvisDictateBox = TextBox(JarvisConfig.DefaultDictateCombo);
         _jarvisTalkBox = TextBox(JarvisConfig.DefaultTalkCombo);
         _jarvisScreenBox = TextBox(JarvisConfig.DefaultScreenCombo);
-        card.Children.Add(TwoColumn(Labeled("Dettatura (tieni premuto)", _jarvisDictateBox), Labeled("Parla con Jarvis (tieni premuto)", _jarvisTalkBox)));
-        card.Children.Add(Labeled("Cosa c'è sullo schermo?", _jarvisScreenBox));
-        AddExplainedToggle(card, "Tocco breve: apri Jarvis in Accesso rapido", "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.", "jarvisTapOpens");
-        card.Children.Add(Body("Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. I quattro pulsanti posteriori dello Steam Controller sono liberi in Steam Input se non li assegni tu."));
+        // 3.3.5: only the talk combo (L5+R5). Dictation and the screen helper have no combo (L4 and R4 are A and B); their
+        // boxes stay off the card and save empty.
+        card.Children.Add(Labeled("Parla con Jarvis (tocca per parlare)", _jarvisTalkBox));
+        AddExplainedToggle(card, "Tieni premuto: apri Jarvis in Accesso rapido", "Un tocco di L5+R5 parla con Jarvis senza aprire nulla e si ferma quando smetti di parlare; tenerla premuta apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco. Spento, tenerla premuta parla finché la tieni.", "jarvisTapOpens");
+        card.Children.Add(Body("Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. L4 e R4 fanno da A e B, quindi nessuna combinazione li usa. Dettatura e aiuto sullo schermo restano nella scheda Jarvis e si chiedono anche a voce."));
         AddExplainedToggle(card, "Modalità senza spoiler", "La prima risposta sullo schermo è solo un indizio; \"Altro\" mostra la risposta completa.", "jarvisSpoiler");
         AddExplainedToggle(card, "Risposte a voce", "Parlando con Jarvis, la risposta si sente con la voce Piper di Home Assistant, oppure con la voce inglese britannica di Windows.", "jarvisVoice");
         AddExplainedToggle(card, "Leggi ad alta voce l'aiuto sullo schermo", "Anche le risposte su quello che c'è sullo schermo si sentono.", "jarvisSpeakScreen");

@@ -189,7 +189,8 @@ internal sealed partial class MarkIIIHost
 
 	// ---------- push-to-talk ----------
 
-	private (bool Ok, string? Error, string? Mic, bool PartyHears) StartListening(JarvisListenMode mode)
+	// auto: tap to talk (3.3.5), the recording ends by itself on a pause (JarvisListenLevels).
+	private (bool Ok, string? Error, string? Mic, bool PartyHears) StartListening(JarvisListenMode mode, bool auto = false)
 	{
 		JarvisRuntime settings = JarvisSettings();
 		if (!settings.Enabled) return (false, "off", null, false);
@@ -199,7 +200,7 @@ internal sealed partial class MarkIIIHost
 		lock (_jarvisSync)
 		{
 			if (_recorder is not null) return (false, "busy", null, false);
-			JarvisRecorder? recorder = JarvisRecorder.Start(choice.Id!, out string? failure);
+			JarvisRecorder? recorder = JarvisRecorder.Start(choice.Id!, out string? failure, auto, level => JarvisIndicator.Level(level, _logger));
 			if (recorder is null) { _logger.Info($"Jarvis: the microphone could not be opened ({failure})."); return (false, failure ?? "refused", null, false); }
 			_recorder = recorder;
 			_recordMode = mode;
@@ -217,11 +218,21 @@ internal sealed partial class MarkIIIHost
 	private async Task WatchListeningAsync(int generation)
 	{
 		DateTimeOffset until = DateTimeOffset.Now + JarvisAudio.MaximumRecording + TimeSpan.FromSeconds(2);
+		int round = 0;
 		while (DateTimeOffset.Now < until)
 		{
-			await Task.Delay(400).ConfigureAwait(false);
+			await Task.Delay(100).ConfigureAwait(false);
 			string? micId;
-			lock (_jarvisSync) { if (_recorder is null || generation != _recordGeneration) return; micId = _recordMicId; }
+			bool ended;
+			lock (_jarvisSync) { if (_recorder is null || generation != _recordGeneration) return; micId = _recordMicId; ended = _recorder.Ended; }
+			// Tap to talk ended on a pause: the microphone is closed, so the pill stops saying "Listening" at once.
+			if (ended)
+			{
+				JarvisIndicator.Thinking(CoreText.Get(Language(), "jarvis.thinking"), _logger);
+				_logger.Info("Jarvis: tap to talk heard a pause; recording stopped.");
+				return;
+			}
+			if (++round % 4 != 0) continue;
 			JarvisMicChoice choice = ChooseJarvisMic();
 			if (choice.Refusal is not null || choice.Id != micId) { CancelListening(choice.Refusal == "muted" ? "the microphone was muted" : "the microphone changed"); return; }
 		}
@@ -249,7 +260,27 @@ internal sealed partial class MarkIIIHost
 		_logger.Info($"Jarvis: push-to-talk cancelled ({why}); nothing was sent.");
 	}
 
+	// The pill says "Thinking..." from the end of the recording until the answer, then shows the answer card (talk) or
+	// goes away.
 	private async Task<object> StopListeningAsync(bool steamTyping)
+	{
+		object result = new { ok = false, error = "failed" };
+		try { return result = await StopListeningCoreAsync(steamTyping).ConfigureAwait(false); }
+		finally
+		{
+			string? answer = null;
+			try
+			{
+				using JsonDocument document = JsonDocument.Parse(JsonSerializer.Serialize(result));
+				if (document.RootElement.TryGetProperty("answer", out JsonElement value) && value.ValueKind == JsonValueKind.String) answer = value.GetString();
+			}
+			catch (JsonException) { }
+			if (!string.IsNullOrWhiteSpace(answer)) JarvisIndicator.Answer("JARVIS", answer!, CoreText.Get(Language(), "jarvis.answerHint"), _logger);
+			else JarvisIndicator.Done(_logger);
+		}
+	}
+
+	private async Task<object> StopListeningCoreAsync(bool steamTyping)
 	{
 		JarvisRecorder? recorder;
 		JarvisListenMode mode;
@@ -258,6 +289,7 @@ internal sealed partial class MarkIIIHost
 		short[] samples = recorder.Stop();
 		recorder.Dispose();
 		JarvisIndicator.Listening(false, "", _logger);
+		JarvisIndicator.Thinking(CoreText.Get(Language(), "jarvis.thinking"), _logger);
 		string? skip = JarvisListenPolicy.AfterRecording(samples);
 		if (skip is not null) { Array.Clear(samples); return new { ok = false, error = skip }; }
 		(string? text, string? route, string? failure) = await TranscribeAsync(JarvisAudio.Bytes(samples)).ConfigureAwait(false);
@@ -446,8 +478,20 @@ internal sealed partial class MarkIIIHost
 			if (!Local(context)) return Results.StatusCode(403);
 			JarvisListenMode? mode = JarvisListenPolicy.ParseMode(context.Request.Query["mode"].ToString());
 			if (mode is null) return Results.Json(new { ok = false, error = "bad-request" }, statusCode: 400);
-			var started = StartListening(mode.Value);
-			return Results.Json(new { ok = started.Ok, error = started.Error, mic = started.Mic, partyHears = started.PartyHears });
+			bool auto = context.Request.Query["auto"].ToString() == "true";
+			var started = StartListening(mode.Value, auto);
+			// Over a game in exclusive fullscreen the pill may not show: the plugin then uses the orb and a toast.
+			bool pillHidden = started.Ok && JarvisIndicator.ExclusiveFullscreen();
+			if (pillHidden) _logger.Info("Jarvis: a game runs in exclusive fullscreen; the listening pill may be hidden, the plugin shows a toast instead.");
+			return Results.Json(new { ok = started.Ok, error = started.Error, mic = started.Mic, partyHears = started.PartyHears, pillHidden });
+		}));
+		// Tap to talk: whether the recording is still running or ended on a pause (the plugin then asks for the answer).
+		app.MapGet("/jarvis/listen/state", (Func<HttpContext, IResult>)(context =>
+		{
+			if (!Local(context)) return Results.StatusCode(403);
+			bool recording, ended;
+			lock (_jarvisSync) { recording = _recorder is not null && !_recorder.Ended; ended = _recorder?.Ended == true; }
+			return Results.Json(new { recording, ended });
 		}));
 		app.MapPost("/jarvis/listen/stop", (Func<HttpContext, Task<IResult>>)(async context =>
 		{

@@ -17,7 +17,7 @@ const presence = load("jarvisPresence.ts");
 const tabLocale = load("jarvisTabLocale.ts");
 const plain = value => JSON.parse(JSON.stringify(value));
 
-// L5+R5 (the talk default) and L4+R4 (dictation) as Steam reports them.
+// L5+R5 (Jarvis's only combo since 3.3.5) as Steam reports it; L4+R4 are A and B and fire nothing.
 const L5R5 = { lower: (1 << 15 | 1 << 16) >>> 0, upper: 0 };
 const L4R4 = { lower: 0, upper: (1 << 9 | 1 << 10) >>> 0 };
 
@@ -26,7 +26,7 @@ function watch({ tapOpens = true } = {}) {
   const events = [];
   const stop = combos.installJarvisCombos({
     input: () => ({ RegisterForControllerStateChanges: fn => { callback = fn; return { unregister() {} }; } }),
-    combos: () => ({ dictate: "L4+R4", talk: "L5+R5", screen: "L4+L5" }),
+    combos: () => ({ dictate: "L4+R4", talk: "L5+R5", screen: "L4+L5" }), // old settings: the paddle combos no longer parse
     onPress: kind => events.push(["press", kind, clock]),
     onRelease: (kind, held) => events.push([combos.jarvisRelease(kind, held, tapOpens), kind, held]),
     now: () => clock,
@@ -36,40 +36,42 @@ function watch({ tapOpens = true } = {}) {
   return { events, press, release, advance: ms => { clock += ms; }, stop };
 }
 
-test("the talk combo: a short tap opens Jarvis, a hold talks; other combos never tap", () => {
+test("L5+R5: a tap talks, a hold opens Jarvis; the paddles L4/R4 fire nothing (3.3.5)", () => {
   assert.equal(combos.JARVIS_TAP_MS, 300);
   const w = watch();
   w.press(L5R5); w.advance(120); w.release();
-  assert.deepEqual(plain(w.events), [["press", "talk", 1000], ["tap", "talk", 120]], "a 120 ms tap is a tap");
+  assert.deepEqual(plain(w.events), [["press", "talk", 1000], ["talk", "talk", 120]], "a 120 ms tap talks");
   w.events.length = 0;
   w.press(L5R5); w.advance(300); w.release();
-  assert.deepEqual(plain(w.events.map(event => event[0])), ["press", "release"], "300 ms or more is a hold");
-  w.events.length = 0;
-  w.press(L5R5); w.advance(2500); w.release();
-  assert.equal(w.events[1][0], "release", "push-to-talk as before");
+  assert.deepEqual(plain(w.events.map(event => event[0])), ["press", "open"], "300 ms or more opens Jarvis");
   w.events.length = 0;
   w.press(L4R4); w.advance(50); w.release();
-  assert.deepEqual(plain(w.events.map(event => event.slice(0, 2))), [["press", "dictate"], ["release", "dictate"]], "dictation never taps");
+  assert.deepEqual(plain(w.events), [], "L4+R4 are A and B: no combo fires");
   w.events.length = 0;
   w.press(L5R5); w.advance(50); w.stop.stop();
-  assert.equal(w.events[1][0], "release", "stopping the watch is never a tap");
+  assert.equal(w.events[1][0], "release", "stopping the watch never talks");
 
   const off = watch({ tapOpens: false });
   off.press(L5R5); off.advance(80); off.release();
-  assert.equal(off.events[1][0], "release", "with the desktop toggle off a tap is a short hold");
+  assert.equal(off.events[1][0], "talk", "with the desktop toggle off a tap still talks");
+  off.events.length = 0;
+  off.press(L5R5); off.advance(1500); off.release();
+  assert.equal(off.events[1][0], "release", "and a hold is push-to-talk");
   assert.equal(combos.jarvisRelease("talk", Infinity, true), "release");
   assert.equal(combos.jarvisRelease("talk", -5, true), "release");
   assert.equal(combos.jarvisRelease("screen", 10, true), "release");
 });
 
-test("new defaults: talk L5+R5, dictation L4+R4, screen L4+L5 (C# and TypeScript agree)", () => {
+test("defaults since 3.3.5: only L5+R5; dictation and the screen helper have no combo (C# and TypeScript agree)", () => {
   const core = readFileSync(new URL("../../Shared/JarvisCore.cs", import.meta.url), "utf8");
-  assert.match(core, /DefaultDictateCombo = "L4\+R4"/);
+  assert.match(core, /DefaultDictateCombo = ""/);
   assert.match(core, /DefaultTalkCombo = "L5\+R5"/);
-  assert.match(core, /DefaultScreenCombo = "L4\+L5"/);
+  assert.match(core, /DefaultScreenCombo = ""/);
+  assert.match(core, /Reserved = \{ "STEAM", "GUIDE", "QAM", "HOME", "L4", "R4" \}/);
   for (const file of ["../../GamingModeAgent/GamingMode.Models/GamingSettings.cs", "../../Playhub/Models/GamingModeConfig.cs"]) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
-    assert.match(source, /JarvisDictateCombo \{ get; set; \} = "L4\+R4"/, file);
+    assert.match(source, /JarvisDictateCombo \{ get; set; \} = ""/, file);
+    assert.match(source, /JarvisScreenCombo \{ get; set; \} = ""/, file);
     assert.match(source, /JarvisTalkCombo \{ get; set; \} = "L5\+R5"/, file);
     assert.match(source, /JarvisTapOpensQuickAccess \{ get; set; \} = true/, file);
   }
@@ -170,8 +172,8 @@ test("the tab's text: 12 languages, the hold-to-talk line follows the combo and 
     const copy = tabLocale.jarvisTabCopy(language);
     assert.ok(copy.tap.includes("{talk}") && copy.tapOff.includes("{talk}") && copy.last, language);
   }
-  assert.equal(tabLocale.jarvisTapLine({ combos: { talk: "L5+R5" } }, "en"), "Tap L5+R5 to open or close Jarvis · hold it to talk");
-  assert.equal(tabLocale.jarvisTapLine({ combos: { talk: "L5+R5" }, tapOpens: false }, "en"), "Hold L5+R5 to talk to Jarvis");
+  assert.equal(tabLocale.jarvisTapLine({ combos: { talk: "L5+R5" } }, "en"), "Tap L5+R5 to talk · hold it to open or close Jarvis");
+  assert.equal(tabLocale.jarvisTapLine({ combos: { talk: "L5+R5" }, tapOpens: false }, "en"), "Tap L5+R5 to talk · or hold it while you speak");
   assert.equal(tabLocale.jarvisTapLine({ combos: { talk: null } }, "en"), "");
   assert.equal(tabLocale.jarvisTapLine({ combos: { talk: "<b>" } }, "en"), "");
   assert.equal(tabLocale.jarvisTabCopy("it-IT").last, "Ultima risposta");

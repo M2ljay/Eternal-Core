@@ -102,6 +102,8 @@ internal sealed partial class MarkIIIHost : IDisposable
 		catch (Exception error) { _logger.Error("Batch 2: could not start; Home Assistant, automations and sleep after streaming are off until the next start.", error); }
 		try { StartConsole(stopping); }
 		catch (Exception error) { _logger.Error("Console guards: could not start; their Health rows still read, launcher pop-ups are left alone.", error); }
+		try { StartEmulators(stopping); }
+		catch (Exception error) { _logger.Error("Emulators and game exit: could not start; their Health rows still read.", error); }
 		_ = Task.Run(() => LoopAsync(stopping));
 		// SystemEvents needs a thread it can own: subscribing from a pool (MTA) thread makes
 		// it create its own hidden window and message loop.
@@ -1059,5 +1061,6 @@ internal sealed partial class MarkIIIHost : IDisposable
 		MapBatch(app);
 		MapBatchTwo(app);
 		MapJarvis(app);
+		MapEmulators(app);
 	}
 }

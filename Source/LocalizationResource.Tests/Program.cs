@@ -363,12 +363,11 @@ string[] jarvis =
     "Modello",
     "Chiave API di Anthropic",
     "Chiave per Whisper nel cloud (facoltativa)",
-    "Dettatura (tieni premuto)",
-    "Parla con Jarvis (tieni premuto)",
+    "Parla con Jarvis (tocca per parlare)",
     "Cosa c'è sullo schermo?",
     "Jarvis di Home Assistant ha la stessa memoria e la stessa personalità degli altoparlanti e può comandare la casa. L'API diretta usa la tua chiave di Anthropic e non comanda la casa. Serrature, garage e allarme non sono mai disponibili da Core: richiedono sempre la conferma sul telefono.",
     "Il token di Home Assistant si crea nel tuo profilo di Home Assistant > Sicurezza > Token di accesso a lunga durata. L'aiuto sullo schermo usa sempre la chiave di Anthropic, perché Home Assistant non accetta immagini nella conversazione. Token e chiavi restano su questo PC, cifrati per il tuo utente di Windows: non finiscono mai in config.json né nei log.",
-    "Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. I quattro pulsanti posteriori dello Steam Controller sono liberi in Steam Input se non li assegni tu.",
+    "Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. L4 e R4 fanno da A e B, quindi nessuna combinazione li usa. Dettatura e aiuto sullo schermo restano nella scheda Jarvis e si chiedono anche a voce.",
     "Costi: ogni messaggio a Claude si paga a consumo, sia con l'agente di Home Assistant sia con l'API diretta. Uno screenshot vale circa 1.200 token in più. Trascrizione e voce sul server di casa sono gratis.",
     "Salva token e chiavi",
     "Prova la connessione",
@@ -386,8 +385,8 @@ string[] jarvis =
     "Jarvis in Core: chat in Accesso rapido, aiuto con quello che c'è sullo schermo e dettatura con il microfono. Non viene inviato niente finché non lo chiedi.",
     "Jarvis di Home Assistant (consigliato)",
     "API di Claude diretta",
-    "Tocco breve: apri Jarvis in Accesso rapido",
-    "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis."
+    "Tieni premuto: apri Jarvis in Accesso rapido",
+    "Un tocco di L5+R5 parla con Jarvis senza aprire nulla e si ferma quando smetti di parlare; tenerla premuta apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco. Spento, tenerla premuta parla finché la tieni."
 };
 foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
 {
@@ -402,6 +401,33 @@ foreach (var language in LocalizationService.Languages.Where(language => languag
     Check(true, $"{language.Key}: {jarvis.Length} Jarvis strings translate");
 }
 Check(jarvis.All(key => LocalizationService.Translate("it", key) == key), "Jarvis Italian source strings render as written");
+
+// 3.3.5 (MainWindow.MarkIII.cs BuildConsoleGuardsCard): closing store launchers after a game and the emulator update
+// confirmations, in every language.
+string[] coreFiveFive =
+{
+    "Chiudi i launcher dei negozi dopo un gioco",
+    "Quando un gioco ha aperto Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar o Amazon Games, Core lo chiude con garbo alla fine del gioco, a meno che fosse già aperto, un altro suo gioco sia in corso o stia scaricando. Si può spegnere per ogni launcher.",
+    "Aggiornamenti degli emulatori",
+    "Core aggiorna gli emulatori di EmuDeck che hanno un progetto ufficiale su GitHub: ogni versione aspetta 10 giorni, poi si installa di notte con backup, prova di avvio e ripristino automatico. I tuoi salvataggi e le impostazioni non vengono toccati. Se un progetto non pubblica un'impronta (hash) del file, va confermato qui una volta per versione, perché altrimenti solo GitHub garantisce che il file sia quello caricato.",
+    "Controlla le conferme",
+    "Conferma {0} {1}",
+    "Confermato. L'aggiornamento seguirà la sua attesa.",
+    "Nessun aggiornamento da confermare."
+};
+foreach (var language in LocalizationService.Languages.Where(language => language.Key != "it"))
+{
+    foreach (var key in coreFiveFive)
+    {
+        var translated = LocalizationService.Translate(language.Key, key);
+        if (string.IsNullOrWhiteSpace(translated) || translated == key)
+            throw new Exception($"3.3.5 string is not translated: {language.Key}/{key}");
+        if (!Tokens(translated).SequenceEqual(Tokens(key)))
+            throw new Exception($"3.3.5 string format token mismatch: {language.Key}/{key}");
+    }
+    Check(true, $"{language.Key}: {coreFiveFive.Length} 3.3.5 strings translate");
+}
+Check(coreFiveFive.All(key => LocalizationService.Translate("it", key) == key), "3.3.5 Italian source strings render as written");
 
 // Eternal Core rebrand (docs/eternal/REBRAND.md): the app is called Core everywhere the user reads it.
 // "Playhub" stays only where it names something that still carries that name: the upstream project in

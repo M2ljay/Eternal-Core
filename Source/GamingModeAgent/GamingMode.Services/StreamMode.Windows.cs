@@ -35,6 +35,21 @@ internal static class StreamProbes
 		yield return (StreamSource.Sunshine, Path.Combine(SunshineFolder, "config", "sunshine.log"));
 	}
 
+	// 3.3.5: Vibepollo or Apollo in %ProgramFiles%\Apollo. Verified in Vibepollo's source (Nonary/Vibepollo,
+	// cmake/packaging/windows.cmake: CPACK_PACKAGE_INSTALL_DIRECTORY "Apollo"; cmake/targets/windows.cmake installs
+	// vibepollo_dualsense_haptics.exe; src/logging.cpp writes per-run logs under config\logs). Either marker means Vibepollo.
+	internal static string? ApolloFlavour()
+	{
+		try
+		{
+			if (!Directory.Exists(ApolloFolder)) return null;
+			bool vibepollo = Directory.Exists(Path.Combine(ApolloFolder, "config", "logs"))
+				|| Directory.EnumerateFiles(ApolloFolder, "vibepollo*.exe").Any();
+			return vibepollo ? "vibepollo" : "apollo";
+		}
+		catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return null; }
+	}
+
 	internal static string? NewestVibepolloLog()
 	{
 		try

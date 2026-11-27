@@ -103,6 +103,8 @@ internal sealed record CoreHealthInputs
 	// Batch 2 (docs/eternal/BATCH-2.md): sleep after streaming, Wake-on-LAN readiness and the Home Assistant bridge, already
 	// judged by their own policies (StreamPower.cs, HomeAssistantBridge.cs); shown after the Streaming row. Null leaves them out.
 	public IReadOnlyList<HealthRow>? BatchTwoRows { get; init; }
+	// 3.3.5 (docs/eternal/CONSOLE-GUARDS.md, EMULATOR-UPDATES.md): already judged by their own policies. Null leaves them out.
+	public IReadOnlyList<HealthRow>? EmulatorRows { get; init; }
 }
 
 internal sealed record HealthRow(string Id, HealthLevel Level, string State, IReadOnlyDictionary<string, object?> Data);
@@ -363,6 +365,16 @@ internal static class CoreHealthPolicy
 		// Console guards: display, sound, controllers, sign-ins, BitLocker, Windows' prompts and update policy,
 		// launchers and the wake checks, between the microphone and the PC's disk (ConsoleGuardPolicy.RowOrder).
 		if (input.Guards is { } guards) rows.AddRange(ConsoleGuardPolicy.Rows(guards with { StreamActive = input.StreamActive }, input.Now, problems));
+
+		// 3.3.5: exiting games, back paddles, emulator updates, then one row per emulator and one hotkeys row per emulator
+		// (GameExit.cs, StreamProfiles.cs, EmulatorUpdates.cs, EmulatorHealth.cs), after the console guards. A game that
+		// did not exit raises a notice; the emulator rows never do.
+		if (input.EmulatorRows is { } emulatorRows)
+		{
+			rows.AddRange(emulatorRows);
+			if (emulatorRows.FirstOrDefault(row => row.Id == "game-exit" && row.Level == HealthLevel.Attention) is { } exit)
+				problems.Add(new HealthProblem("game-not-exited", "game-exit", "exit|" + exit.State + "|" + (exit.Data.TryGetValue("title", out object? title) ? title : null) + "|" + (exit.Data.TryGetValue("at", out object? at) ? at : null), "console.gameNotExited"));
+		}
 
 		// PC system drive.
 		var pc = new Dictionary<string, object?> { ["drive"] = input.PcDrive, ["freeBytes"] = input.PcFreeBytes, ["totalBytes"] = input.PcTotalBytes };

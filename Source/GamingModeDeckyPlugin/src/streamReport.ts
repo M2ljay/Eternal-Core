@@ -5,7 +5,7 @@
 export type StreamAnswer = {
   active?: boolean; forced?: boolean; detected?: boolean; source?: string; device?: string | null; sources?: string[]; since?: string | null;
   audio?: { enabled?: boolean; mode?: string | null; device?: string | null; pending?: number };
-  apollo?: { installed?: boolean; running?: boolean; virtualDisplay?: boolean };
+  apollo?: { installed?: boolean; running?: boolean; virtualDisplay?: boolean; flavour?: string | null };
   sunshine?: { installed?: boolean; running?: boolean };
 };
 // state: "on" or "off" ("unknown" without an answer). line: the row's value. detail: what it means.
@@ -81,9 +81,11 @@ export function streamView(answer: StreamAnswer | null | undefined, locale: stri
   const text = streamCopy(locale);
   if (!answer || typeof answer.active !== "boolean") return { state: "unknown", line: answer === null ? text.agentDown : "…", detail: "", forced: false, audio: "", apollo: "" };
   const forced = answer.forced === true;
-  const apollo = apolloLine(answer, text);
+  // 3.3.5: Vibepollo installs into Apollo's folder and is named as itself.
+  const vibepollo = answer.apollo?.flavour === "vibepollo";
+  const apollo = vibepollo ? apolloLine(answer, text).replace(/Apollo/g, "Vibepollo") : apolloLine(answer, text);
   if (!answer.active) return { state: "off", line: text.off, detail: text.offDetail, forced, audio: "", apollo };
-  const device = clean(answer.device), source = streamSourceLabel(answer.source);
+  const device = clean(answer.device), source = vibepollo && answer.source === "apollo" ? "Vibepollo" : streamSourceLabel(answer.source);
   const line = answer.detected ? (device ? fill(text.onDevice, { device }) : source ? fill(text.onSource, { source }) : text.forcedOn) : text.forcedOn;
   return { state: "on", line, detail: text.heldDetail, forced, audio: audioLine(answer, text), apollo };
 }

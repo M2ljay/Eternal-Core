@@ -106,6 +106,9 @@ public sealed partial class MainWindow
         gaming.CoreHealthServer = EmptyToNull(_healthServerBox.Text.Trim());
         gaming.CoreHealthAlertsEnabled = GetToggle("healthAlerts");
         gaming.ConsoleLauncherFocusGuard = GetToggle("consoleLauncherFocus");
+        var autoClose = new System.Collections.Generic.Dictionary<string, bool>(StringComparer.Ordinal);
+        foreach ((string id, _) in AutoCloseLaunchers) autoClose[id] = GetToggle("autoCloseAll") && GetToggle("autoClose:" + id);
+        gaming.AutoCloseLaunchers = autoClose;
         gaming.ConsoleWakeChecks = GetToggle("consoleWakeChecks");
         gaming.SaveBackupBeforeUpdates = GetToggle("saveBackup");
         gaming.WindDownEnabled = GetToggle("windDown");
@@ -132,6 +135,8 @@ public sealed partial class MainWindow
         SetToggle("quietToasts", gaming.QuietWindowsToasts);
         SetToggle("healthAlerts", gaming.CoreHealthAlertsEnabled);
         SetToggle("consoleLauncherFocus", gaming.ConsoleLauncherFocusGuard);
+        SetToggle("autoCloseAll", gaming.AutoCloseLaunchers is null || gaming.AutoCloseLaunchers.Values.Any(on => on));
+        foreach ((string id, _) in AutoCloseLaunchers) SetToggle("autoClose:" + id, gaming.AutoCloseLaunchers is null || !gaming.AutoCloseLaunchers.TryGetValue(id, out bool on) || on);
         SetToggle("consoleWakeChecks", gaming.ConsoleWakeChecks);
         SetToggle("saveBackup", gaming.SaveBackupBeforeUpdates);
         SetToggle("windDown", gaming.WindDownEnabled);
@@ -420,6 +425,15 @@ public sealed partial class MainWindow
             "Quando Epic, EA app, Ubisoft Connect, l'app Xbox o Battle.net si aprono da sole sopra la Big Picture e non stai giocando, Core le sposta dietro senza chiuderle. Se ne riporti una davanti tre volte in dieci minuti, Core la lascia stare.", "consoleLauncherFocus");
         AddExplainedToggle(card, "Controlli al risveglio",
             "Dopo il risveglio Core verifica che la Big Picture sia in primo piano, che la TV sia sull'ingresso di Core e che la rete via cavo funzioni. Se serve, riprende il primo piano o ripete il cambio di ingresso una sola volta.", "consoleWakeChecks");
+        // 3.3.5: close a store launcher after the game it was started for (GamingMode.Services/GameExit.cs), per launcher.
+        AddExplainedToggle(card, "Chiudi i launcher dei negozi dopo un gioco",
+            "Quando un gioco ha aperto Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar o Amazon Games, Core lo chiude con garbo alla fine del gioco, a meno che fosse già aperto, un altro suo gioco sia in corso o stia scaricando. Si può spegnere per ogni launcher.", "autoCloseAll");
+        foreach ((string id, string name) in AutoCloseLaunchers) AddToggle(card, name, "autoClose:" + id);
+        // 3.3.5: emulator updates (EMULATOR-UPDATES.md): the once-per-version confirmation for downloads without a project hash.
+        card.Children.Add(Body("Aggiornamenti degli emulatori"));
+        card.Children.Add(Body("Core aggiorna gli emulatori di EmuDeck che hanno un progetto ufficiale su GitHub: ogni versione aspetta 10 giorni, poi si installa di notte con backup, prova di avvio e ripristino automatico. I tuoi salvataggi e le impostazioni non vengono toccati. Se un progetto non pubblica un'impronta (hash) del file, va confermato qui una volta per versione, perché altrimenti solo GitHub garantisce che il file sia quello caricato."));
+        card.Children.Add(ActionRow(Button("Controlla le conferme", LoadEmulatorConfirmationsAsync)));
+        card.Children.Add(_emulatorConfirmations);
         card.Children.Add(Body("BitLocker: il controllo della chiave di ripristino e la protezione per gli aggiornamenti del firmware chiedono i permessi di amministratore una sola volta, qui sul desktop. Core non legge né salva mai la chiave; conferma il backup su account.microsoft.com/devices/recoverykey."));
         card.Children.Add(ActionRow(
             Button("Controlla BitLocker", CheckBitLockerAsync),
@@ -429,6 +443,43 @@ public sealed partial class MainWindow
         card.Children.Add(ActionRow(Button("Dimentica schermo e audio normali", ForgetConsoleNormalAsync)));
         card.Children.Add(_consoleStatus);
         return card;
+    }
+
+    private static readonly (string Id, string Name)[] AutoCloseLaunchers =
+    {
+        ("epic", "Epic Games Launcher"), ("ea", "EA app"), ("ubisoft", "Ubisoft Connect"), ("battlenet", "Battle.net"),
+        ("gog", "GOG Galaxy"), ("rockstar", "Rockstar Games Launcher"), ("amazon", "Amazon Games"),
+    };
+    private readonly StackPanel _emulatorConfirmations = new() { Spacing = 6 };
+
+    private async Task LoadEmulatorConfirmationsAsync()
+    {
+        _emulatorConfirmations.Children.Clear();
+        var reply = await AgentAsync(HttpMethod.Get, "/emulators/updates", TimeSpan.FromSeconds(8));
+        if (reply is not { } state || !state.TryGetProperty("emulators", out var emulators) || emulators.ValueKind != JsonValueKind.Object)
+        {
+            _emulatorConfirmations.Children.Add(Body("Il servizio Gaming Mode non risponde."));
+            return;
+        }
+        int shown = 0;
+        foreach (var entry in emulators.EnumerateObject())
+        {
+            if (!entry.Value.TryGetProperty("pending", out var pending) || pending.ValueKind != JsonValueKind.Object) continue;
+            string version = pending.TryGetProperty("version", out var v) ? v.GetString() ?? "" : "";
+            string verification = pending.TryGetProperty("verification", out var how) ? how.ToString() : "";
+            bool confirmed = entry.Value.TryGetProperty("confirmed", out var list) && list.ValueKind == JsonValueKind.Array && list.EnumerateArray().Any(item => item.GetString() == version);
+            if (version.Length == 0 || verification == "Project" || confirmed) continue;
+            string id = entry.Name;
+            _emulatorConfirmations.Children.Add(Button(string.Format(CultureInfo.CurrentCulture, T("Conferma {0} {1}"), id, version), async () =>
+            {
+                var answer = await AgentAsync(HttpMethod.Post, "/emulators/update/confirm?id=" + Uri.EscapeDataString(id) + "&version=" + Uri.EscapeDataString(version), TimeSpan.FromSeconds(8));
+                _consoleStatus.Text = T(answer is { } ok && ok.TryGetProperty("ok", out var done) && done.ValueKind == JsonValueKind.True
+                    ? "Confermato. L'aggiornamento seguirà la sua attesa." : "Il servizio Gaming Mode non risponde.");
+                await LoadEmulatorConfirmationsAsync();
+            }));
+            shown++;
+        }
+        if (shown == 0) _emulatorConfirmations.Children.Add(Body("Nessun aggiornamento da confermare."));
     }
 
     private async Task CheckBitLockerAsync()

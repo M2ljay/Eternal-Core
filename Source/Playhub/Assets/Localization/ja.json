@@ -1663,5 +1663,17 @@
   "Jarvis di Home Assistant (consigliato)": "Home Assistant の Jarvis（おすすめ）",
   "API di Claude diretta": "Claude API に直接",
   "Tocco breve: apri Jarvis in Accesso rapido": "短く押す: クイックアクセスで Jarvis を開く",
-  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "「Jarvis と話す」の組み合わせを短く押すと、ゲーム中でもクイックアクセスの Jarvis タブを開閉します。長押しすると Jarvis と話せます。"
+  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "「Jarvis と話す」の組み合わせを短く押すと、ゲーム中でもクイックアクセスの Jarvis タブを開閉します。長押しすると Jarvis と話せます。",
+  "Parla con Jarvis (tocca per parlare)": "Jarvis と話す（軽く押して話す）",
+  "Tieni premuto: apri Jarvis in Accesso rapido": "長押し：クイックアクセスで Jarvis を開く",
+  "Un tocco di L5+R5 parla con Jarvis senza aprire nulla e si ferma quando smetti di parlare; tenerla premuta apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco. Spento, tenerla premuta parla finché la tieni.": "L5+R5 を軽く押すと何も開かずに Jarvis と話せ、話し終えると止まります。長押しするとクイックアクセスの Jarvis タブを開閉します（ゲーム中も可）。オフにすると、押している間だけ話します。",
+  "Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. L4 e R4 fanno da A e B, quindi nessuna combinazione li usa. Dettatura e aiuto sullo schermo restano nella scheda Jarvis e si chiedono anche a voce.": "同時に押す 2～4 個のボタン（例：L5+R5）。空にすると組み合わせはオフ。L4 と R4 は A と B として働くため、どの組み合わせにも使いません。音声入力と画面ヘルパーは Jarvis タブにあり、声でも頼めます。",
+  "Chiudi i launcher dei negozi dopo un gioco": "ゲーム後にストアのランチャーを閉じる",
+  "Quando un gioco ha aperto Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar o Amazon Games, Core lo chiude con garbo alla fine del gioco, a meno che fosse già aperto, un altro suo gioco sia in corso o stia scaricando. Si può spegnere per ogni launcher.": "ゲームが Epic、EA app、Ubisoft Connect、Battle.net、GOG Galaxy、Rockstar、Amazon Games を開いた場合、Core はゲーム終了後に丁寧に閉じます。前から開いていた場合、別のゲームが実行中の場合、ダウンロード中の場合は閉じません。ランチャーごとにオフにできます。",
+  "Aggiornamenti degli emulatori": "エミュレーターの更新",
+  "Core aggiorna gli emulatori di EmuDeck che hanno un progetto ufficiale su GitHub: ogni versione aspetta 10 giorni, poi si installa di notte con backup, prova di avvio e ripristino automatico. I tuoi salvataggi e le impostazioni non vengono toccati. Se un progetto non pubblica un'impronta (hash) del file, va confermato qui una volta per versione, perché altrimenti solo GitHub garantisce che il file sia quello caricato.": "Core は GitHub に公式プロジェクトがある EmuDeck のエミュレーターを更新します。各バージョンは 10 日待ってから、夜間にバックアップ、起動テスト、自動ロールバック付きでインストールされます。セーブと設定は変更しません。プロジェクトがファイルのフィンガープリント（ハッシュ）を公開していない場合は、ここでバージョンごとに一度確認してください。そうでなければアップロードされたファイルだと保証するのは GitHub だけです。",
+  "Controlla le conferme": "確認待ちをチェック",
+  "Conferma {0} {1}": "{0} {1} を確認",
+  "Confermato. L'aggiornamento seguirà la sua attesa.": "確認しました。更新は待機期間の後に行われます。",
+  "Nessun aggiornamento da confermare.": "確認するものはありません。"
 }

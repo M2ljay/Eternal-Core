@@ -1662,5 +1662,17 @@
   "Jarvis di Home Assistant (consigliato)": "Home Assistant का Jarvis (अनुशंसित)",
   "API di Claude diretta": "सीधा Claude API",
   "Tocco breve: apri Jarvis in Accesso rapido": "छोटा टैप: क्विक एक्सेस में Jarvis खोलें",
-  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "Jarvis से बात करें कॉम्बो पर छोटा टैप क्विक एक्सेस में Jarvis टैब खोलता या बंद करता है, गेम के दौरान भी; दबाए रखने पर Jarvis से बात होती है।"
+  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "Jarvis से बात करें कॉम्बो पर छोटा टैप क्विक एक्सेस में Jarvis टैब खोलता या बंद करता है, गेम के दौरान भी; दबाए रखने पर Jarvis से बात होती है।",
+  "Parla con Jarvis (tocca per parlare)": "Jarvis से बात करें (बात करने के लिए टैप करें)",
+  "Tieni premuto: apri Jarvis in Accesso rapido": "दबाए रखें: क्विक एक्सेस में Jarvis खोलें",
+  "Un tocco di L5+R5 parla con Jarvis senza aprire nulla e si ferma quando smetti di parlare; tenerla premuta apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco. Spento, tenerla premuta parla finché la tieni.": "L5+R5 टैप करने पर कुछ खोले बिना Jarvis से बात होती है और बोलना बंद करते ही रुकती है; दबाए रखने पर क्विक एक्सेस में Jarvis टैब खुलता या बंद होता है, गेम के दौरान भी। बंद होने पर, जब तक दबाए रखें तब तक बात होती है।",
+  "Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. L4 e R4 fanno da A e B, quindi nessuna combinazione li usa. Dettatura e aiuto sullo schermo restano nella scheda Jarvis e si chiedono anche a voce.": "दो से चार बटन एक साथ, जैसे L5+R5। खाली छोड़ने पर कॉम्बो बंद। L4 और R4, A और B का काम करते हैं, इसलिए कोई कॉम्बो इन्हें इस्तेमाल नहीं करता। डिक्टेशन और स्क्रीन सहायक Jarvis टैब में हैं और आवाज़ से भी माँगे जा सकते हैं।",
+  "Chiudi i launcher dei negozi dopo un gioco": "गेम के बाद स्टोर लॉन्चर बंद करें",
+  "Quando un gioco ha aperto Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar o Amazon Games, Core lo chiude con garbo alla fine del gioco, a meno che fosse già aperto, un altro suo gioco sia in corso o stia scaricando. Si può spegnere per ogni launcher.": "जब किसी गेम ने Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar या Amazon Games खोला हो, तो गेम खत्म होने पर Core उसे आराम से बंद करता है, जब तक वह पहले से खुला न हो, उसका दूसरा गेम न चल रहा हो या वह डाउनलोड न कर रहा हो। हर लॉन्चर के लिए बंद किया जा सकता है।",
+  "Aggiornamenti degli emulatori": "एम्युलेटर अपडेट",
+  "Core aggiorna gli emulatori di EmuDeck che hanno un progetto ufficiale su GitHub: ogni versione aspetta 10 giorni, poi si installa di notte con backup, prova di avvio e ripristino automatico. I tuoi salvataggi e le impostazioni non vengono toccati. Se un progetto non pubblica un'impronta (hash) del file, va confermato qui una volta per versione, perché altrimenti solo GitHub garantisce che il file sia quello caricato.": "Core उन EmuDeck एम्युलेटर को अपडेट करता है जिनका GitHub पर आधिकारिक प्रोजेक्ट है: हर वर्ज़न 10 दिन इंतज़ार करता है, फिर रात में बैकअप, स्टार्ट टेस्ट और अपने-आप रोलबैक के साथ इंस्टॉल होता है। आपके सेव और सेटिंग्स नहीं छुए जाते। अगर प्रोजेक्ट फ़ाइल का फ़िंगरप्रिंट (हैश) प्रकाशित नहीं करता, तो हर वर्ज़न के लिए यहाँ एक बार पुष्टि करें, वरना सिर्फ़ GitHub ही गारंटी देता है कि फ़ाइल वही है जो अपलोड हुई।",
+  "Controlla le conferme": "पुष्टियाँ देखें",
+  "Conferma {0} {1}": "{0} {1} की पुष्टि करें",
+  "Confermato. L'aggiornamento seguirà la sua attesa.": "पुष्टि हो गई। अपडेट अपने इंतज़ार के बाद होगा।",
+  "Nessun aggiornamento da confermare.": "पुष्टि के लिए कुछ नहीं।"
 }

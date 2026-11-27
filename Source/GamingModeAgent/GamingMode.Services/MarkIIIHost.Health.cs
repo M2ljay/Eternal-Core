@@ -127,6 +127,10 @@ internal sealed partial class MarkIIIHost
 		ConsoleGuardInputs? guards = null;
 		try { guards = await GatherConsoleAsync(fresh).ConfigureAwait(false); }
 		catch (Exception error) { _logger.Error("Console guards: observations failed this round.", error); }
+		// 3.3.5: exiting games, back paddles, emulator updates and the emulators (MarkIIIHost.Emulators.cs), time-boxed.
+		IReadOnlyList<HealthRow>? emulatorRows = null;
+		try { emulatorRows = await EmulatorRowsAsync(fresh).ConfigureAwait(false); }
+		catch (Exception error) { _logger.Error("Emulators: observations failed this round.", error); }
 		// Steam updates: a row only while an automatic update is postponed (SteamUpdateHold.cs).
 		SteamHoldState steamHold = SteamUpdateHoldPolicy.Load(_holdPath);
 		SteamHoldView steamView = SteamUpdateHoldPolicy.View(steamHold, SteamUpdateHoldPolicy.IsHoldFilePresent(SteamRoot()), SoakDays(), Fingerprint(steamHold), now);
@@ -153,6 +157,7 @@ internal sealed partial class MarkIIIHost
 			SaveBackup = SaveBackupHealth(),
 			DeckyPlugins = new DeckyPluginInputs(_decky.Verdict.ToString(), DeckyLogs()),
 			BatchTwoRows = BatchTwoRows().Append(JarvisRow()).ToList(),
+			EmulatorRows = emulatorRows,
 		});
 	}
 

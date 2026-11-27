@@ -296,6 +296,8 @@ internal sealed partial class MarkIIIHost
 				installed = apolloInstalled,
 				running = apolloRunning,
 				virtualDisplay,
+				// 3.3.5: "vibepollo" when Vibepollo is the one installed in Apollo's folder (StreamProbes.ApolloFlavour).
+				flavour = StreamProbes.ApolloFlavour(),
 			},
 			sunshine = new { installed = Directory.Exists(StreamProbes.SunshineFolder), running = sunshineRunning },
 		};

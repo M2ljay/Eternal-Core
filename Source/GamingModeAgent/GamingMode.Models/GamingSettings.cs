@@ -119,6 +119,16 @@ public sealed class GamingSettings
 	// Console guards (ConsoleGuards.cs, docs/eternal/CONSOLE-GUARDS.md): launcher windows that pop over Big Picture
 	// are pushed back behind it (never closed), and Big Picture, the TV input and the network are checked after a wake.
 	public bool ConsoleLauncherFocusGuard { get; set; } = true;
+	// 3.3.5 (docs/eternal/CONSOLE-GUARDS.md, EMULATOR-UPDATES.md). Emulator health is read-only except its one-tap fixes and the
+	// shared hotkey scheme, which Core applies on its first run, to a new emulator and after an emulator update.
+	public bool EmulatorHotkeysEnabled { get; set; } = true;
+	public bool EmulatorUpdatesEnabled { get; set; } = true;
+	public int EmulatorUpdateSoakDays { get; set; } = 10;
+	// After Steam ends a game (or Exit Game is chosen), Core closes what the launch left running.
+	public bool GameExitCleanup { get; set; } = true;
+	// Close a store launcher after the game it was started for exits; per launcher id ("epic", "ea", "ubisoft",
+	// "battlenet", "gog", "rockstar", "amazon"), on unless set to false here.
+	public Dictionary<string, bool>? AutoCloseLaunchers { get; set; }
 	public bool ConsoleWakeChecks { get; set; } = true;
 
 	// Batch 1 (docs/eternal/BATCH-1.md). Save backup: before the update-night restart and an automatic Steam update,
@@ -154,10 +164,12 @@ public sealed class GamingSettings
 	public string JarvisHaUrl { get; set; } = "http://serverv3:8123";
 	public string? JarvisHaAgent { get; set; } = "conversation.jarvis";
 	public string JarvisModel { get; set; } = "claude-haiku-5-5";
-	public string? JarvisDictateCombo { get; set; } = "L4+R4";
+	// 3.3.5: dictation and the screen helper have no combo (L4/R4 are A and B); kept so old files still load, ignored.
+	public string? JarvisDictateCombo { get; set; } = "";
 	public string? JarvisTalkCombo { get; set; } = "L5+R5";
-	public string? JarvisScreenCombo { get; set; } = "L4+L5";
-	// A short tap (under about 300 ms) on the talk combo opens or closes Jarvis's Quick Access tab; holding it talks.
+	public string? JarvisScreenCombo { get; set; } = "";
+	// 3.3.5: a tap (under about 300 ms) on L5+R5 talks (listening ends on a pause); with this on, holding it opens or closes
+	// Jarvis's Quick Access tab, with it off holding it is push-to-talk. The key keeps its old name so settings carry over.
 	public bool JarvisTapOpensQuickAccess { get; set; } = true;
 	public bool JarvisSpoilerSafe { get; set; } = true;
 	public bool JarvisVoice { get; set; } = true;

@@ -16,7 +16,7 @@ const en: Copy = {
   eFailed: "Something went wrong; nothing was changed", eUnreachable: "Can't reach Jarvis", eAntiCheat: "Typing is paused while anti-cheat protection is on; the text is in Quick Access",
   eNoRoute: "No speech recognition available: save the Home Assistant token", eRate: "Too many requests; try again in a moment", eOff: "Jarvis is off",
   screenshot: "Screenshot taken", party: "Your Xbox party hears you too", typed: "Typed: {text}", heard: "Heard: {text}",
-  combos: "Hold {dictate} to dictate · {talk} to talk · {screen} for the screen", comboOff: "off",
+  combos: "Tap {talk} to talk (it stops on a pause) · hold it to open Jarvis · dictation and the screen helper: the buttons above, or ask by voice", comboOff: "off",
   hint: "Nothing is sent until you ask. Locks, the garage and the alarm need your phone.", helperOff: "Screen helper: add your Anthropic key on the desktop to use it",
 };
 
@@ -33,7 +33,7 @@ const copy: Record<string, Copy> = {
     eFailed: "Qualcosa è andato storto; non è cambiato niente", eUnreachable: "Non riesco a raggiungere Jarvis", eAntiCheat: "La scrittura è in pausa mentre la protezione anti-cheat è attiva; il testo è in Accesso rapido",
     eNoRoute: "Nessun riconoscimento vocale disponibile: salva il token di Home Assistant", eRate: "Troppe richieste; riprova tra poco", eOff: "Jarvis è spento",
     screenshot: "Screenshot fatto", party: "Anche il tuo party Xbox ti sente", typed: "Scritto: {text}", heard: "Sentito: {text}",
-    combos: "Tieni {dictate} per dettare · {talk} per parlare · {screen} per lo schermo", comboOff: "spenta",
+    combos: "Tocca {talk} per parlare (si ferma a una pausa) · tienilo premuto per aprire Jarvis · dettatura e aiuto sullo schermo: i pulsanti qui sopra, o chiedi a voce", comboOff: "spenta",
     hint: "Non viene inviato niente finché non lo chiedi. Serrature, garage e allarme richiedono il telefono.", helperOff: "Aiuto sullo schermo: aggiungi la chiave di Anthropic sul desktop per usarlo",
   },
   es: {
@@ -47,7 +47,7 @@ const copy: Record<string, Copy> = {
     eFailed: "Algo salió mal; no se cambió nada", eUnreachable: "No se puede contactar con Jarvis", eAntiCheat: "La escritura está en pausa con la protección antitrampas activa; el texto está en Acceso rápido",
     eNoRoute: "No hay reconocimiento de voz disponible: guarda el token de Home Assistant", eRate: "Demasiadas solicitudes; inténtalo de nuevo en un momento", eOff: "Jarvis está desactivado",
     screenshot: "Captura hecha", party: "Tu grupo de Xbox también te oye", typed: "Escrito: {text}", heard: "Oído: {text}",
-    combos: "Mantén {dictate} para dictar · {talk} para hablar · {screen} para la pantalla", comboOff: "desactivada",
+    combos: "Toca {talk} para hablar (se detiene en una pausa) · mantenlo para abrir Jarvis · dictado y ayuda en pantalla: los botones de arriba, o pídelo por voz", comboOff: "desactivada",
     hint: "No se envía nada hasta que lo pidas. Cerraduras, garaje y alarma necesitan tu teléfono.", helperOff: "Ayuda en pantalla: añade tu clave de Anthropic en el escritorio para usarla",
   },
   fr: {
@@ -61,7 +61,7 @@ const copy: Record<string, Copy> = {
     eFailed: "Un problème est survenu ; rien n'a été modifié", eUnreachable: "Jarvis est injoignable", eAntiCheat: "La saisie est en pause tant que la protection anti-triche est active ; le texte est dans l'accès rapide",
     eNoRoute: "Aucune reconnaissance vocale disponible : enregistre le jeton Home Assistant", eRate: "Trop de requêtes ; réessaie dans un instant", eOff: "Jarvis est désactivé",
     screenshot: "Capture prise", party: "Ta partie Xbox t'entend aussi", typed: "Écrit : {text}", heard: "Entendu : {text}",
-    combos: "Maintiens {dictate} pour dicter · {talk} pour parler · {screen} pour l'écran", comboOff: "désactivée",
+    combos: "Touchez {talk} pour parler (s'arrête à une pause) · maintenez pour ouvrir Jarvis · dictée et aide à l'écran : les boutons ci-dessus, ou demandez à voix haute", comboOff: "désactivée",
     hint: "Rien n'est envoyé tant que tu ne le demandes pas. Serrures, garage et alarme passent par ton téléphone.", helperOff: "Aide à l'écran : ajoute ta clé Anthropic sur le bureau pour l'utiliser",
   },
   de: {
@@ -75,7 +75,7 @@ const copy: Record<string, Copy> = {
     eFailed: "Etwas ist schiefgegangen; nichts wurde geändert", eUnreachable: "Jarvis ist nicht erreichbar", eAntiCheat: "Tippen ist pausiert, solange der Anti-Cheat-Schutz aktiv ist; der Text steht im Schnellzugriff",
     eNoRoute: "Keine Spracherkennung verfügbar: Home-Assistant-Token speichern", eRate: "Zu viele Anfragen; gleich noch einmal versuchen", eOff: "Jarvis ist aus",
     screenshot: "Screenshot gemacht", party: "Deine Xbox-Party hört dich auch", typed: "Geschrieben: {text}", heard: "Gehört: {text}",
-    combos: "{dictate} halten zum Diktieren · {talk} zum Sprechen · {screen} für den Bildschirm", comboOff: "aus",
+    combos: "{talk} tippen zum Sprechen (endet bei einer Pause) · halten öffnet Jarvis · Diktat und Bildschirmhilfe: die Tasten oben, oder per Sprache", comboOff: "aus",
     hint: "Es wird nichts gesendet, bis du es willst. Schlösser, Garage und Alarmanlage brauchen dein Handy.", helperOff: "Bildschirmhilfe: Anthropic-Schlüssel auf dem Desktop hinzufügen, um sie zu nutzen",
   },
   pt: {
@@ -89,7 +89,7 @@ const copy: Record<string, Copy> = {
     eFailed: "Algo deu errado; nada foi alterado", eUnreachable: "Não foi possível alcançar o Jarvis", eAntiCheat: "A digitação está pausada com a proteção anti-cheat ativa; o texto está no Acesso rápido",
     eNoRoute: "Nenhum reconhecimento de voz disponível: salve o token do Home Assistant", eRate: "Pedidos demais; tente de novo em instantes", eOff: "O Jarvis está desligado",
     screenshot: "Captura feita", party: "Sua party do Xbox também ouve você", typed: "Digitado: {text}", heard: "Ouvido: {text}",
-    combos: "Segure {dictate} para ditar · {talk} para falar · {screen} para a tela", comboOff: "desligada",
+    combos: "Toque em {talk} para falar (para numa pausa) · segure para abrir o Jarvis · ditado e ajuda na tela: os botões acima, ou peça por voz", comboOff: "desligada",
     hint: "Nada é enviado até você pedir. Fechaduras, garagem e alarme precisam do seu celular.", helperOff: "Ajuda na tela: adicione sua chave da Anthropic no desktop para usá-la",
   },
   uk: {
@@ -103,7 +103,7 @@ const copy: Record<string, Copy> = {
     eFailed: "Щось пішло не так; нічого не змінено", eUnreachable: "Не вдається зв’язатися з Jarvis", eAntiCheat: "Друк призупинено, поки ввімкнено захист від читів; текст у Швидкому доступі",
     eNoRoute: "Розпізнавання мовлення недоступне: збережіть токен Home Assistant", eRate: "Забагато запитів; спробуйте трохи згодом", eOff: "Jarvis вимкнено",
     screenshot: "Знімок екрана зроблено", party: "Ваша вечірка Xbox теж вас чує", typed: "Надруковано: {text}", heard: "Почуто: {text}",
-    combos: "Утримуйте {dictate}, щоб диктувати · {talk}, щоб говорити · {screen} для екрана", comboOff: "вимкнено",
+    combos: "Торкніться {talk}, щоб говорити (зупиняється на паузі) · утримуйте, щоб відкрити Jarvis · диктування й допомога з екраном: кнопки вище або голосом", comboOff: "вимкнено",
     hint: "Нічого не надсилається, доки ви не попросите. Замки, гараж і сигналізація — лише через телефон.", helperOff: "Допомога з екраном: додайте ключ Anthropic на робочому столі",
   },
   zh: {
@@ -117,7 +117,7 @@ const copy: Record<string, Copy> = {
     eFailed: "出了点问题；没有做任何更改", eUnreachable: "无法连接 Jarvis", eAntiCheat: "反作弊保护开启时暂停输入；文字在快速访问中",
     eNoRoute: "没有可用的语音识别：请保存 Home Assistant 令牌", eRate: "请求太多；请稍后再试", eOff: "Jarvis 已关闭",
     screenshot: "已截图", party: "你的 Xbox 派对也能听到你", typed: "已输入：{text}", heard: "听到：{text}",
-    combos: "按住 {dictate} 听写 · {talk} 对话 · {screen} 看屏幕", comboOff: "关闭",
+    combos: "轻按 {talk} 对话（停顿时结束）· 按住打开 Jarvis · 听写和屏幕助手：用上方按钮或语音", comboOff: "关闭",
     hint: "在你要求之前不会发送任何内容。门锁、车库和警报需要你的手机。", helperOff: "屏幕助手：在桌面上添加 Anthropic 密钥即可使用",
   },
   ja: {
@@ -131,7 +131,7 @@ const copy: Record<string, Copy> = {
     eFailed: "問題が起きました。何も変更していません", eUnreachable: "Jarvis に接続できません", eAntiCheat: "チート対策保護が有効な間は入力を止めています。テキストはクイックアクセスにあります",
     eNoRoute: "音声認識が使えません：Home Assistant のトークンを保存してください", eRate: "リクエストが多すぎます。少し待ってから試してください", eOff: "Jarvis はオフです",
     screenshot: "スクリーンショットを撮りました", party: "Xbox パーティーにも聞こえています", typed: "入力しました：{text}", heard: "聞こえた内容：{text}",
-    combos: "{dictate} 長押しで音声入力 · {talk} で会話 · {screen} で画面", comboOff: "オフ",
+    combos: "{talk} を軽く押して話す（間があくと終了）· 長押しで Jarvis を開く · 音声入力と画面ヘルパーは上のボタンか声で", comboOff: "オフ",
     hint: "頼むまで何も送信されません。鍵、ガレージ、アラームはスマホが必要です。", helperOff: "画面ヘルパー：デスクトップで Anthropic のキーを追加すると使えます",
   },
   ko: {
@@ -145,7 +145,7 @@ const copy: Record<string, Copy> = {
     eFailed: "문제가 생겼어요. 아무것도 바뀌지 않았어요", eUnreachable: "Jarvis에 연결할 수 없어요", eAntiCheat: "안티치트 보호가 켜져 있는 동안 입력을 멈춰요. 텍스트는 빠른 실행에 있어요",
     eNoRoute: "음성 인식을 쓸 수 없어요: Home Assistant 토큰을 저장하세요", eRate: "요청이 너무 많아요. 잠시 후 다시 시도하세요", eOff: "Jarvis가 꺼져 있어요",
     screenshot: "스크린샷을 찍었어요", party: "Xbox 파티에도 들려요", typed: "입력함: {text}", heard: "들은 내용: {text}",
-    combos: "{dictate} 누르고 받아쓰기 · {talk} 대화 · {screen} 화면", comboOff: "꺼짐",
+    combos: "{talk}을(를) 짧게 눌러 대화(말이 멈추면 끝) · 길게 누르면 Jarvis 열기 · 받아쓰기와 화면 도우미: 위 버튼 또는 음성으로", comboOff: "꺼짐",
     hint: "요청하기 전에는 아무것도 보내지 않아요. 잠금장치, 차고, 경보는 휴대폰이 필요해요.", helperOff: "화면 도우미: 데스크톱에서 Anthropic 키를 추가하면 쓸 수 있어요",
   },
   hi: {
@@ -159,7 +159,7 @@ const copy: Record<string, Copy> = {
     eFailed: "कुछ गड़बड़ हुई; कुछ नहीं बदला गया", eUnreachable: "Jarvis तक नहीं पहुँच पा रहे", eAntiCheat: "एंटी-चीट सुरक्षा चालू रहते टाइपिंग रुकी है; टेक्स्ट क्विक एक्सेस में है",
     eNoRoute: "कोई वाक् पहचान उपलब्ध नहीं: Home Assistant टोकन सहेजें", eRate: "बहुत ज़्यादा अनुरोध; थोड़ी देर में फिर कोशिश करें", eOff: "Jarvis बंद है",
     screenshot: "स्क्रीनशॉट लिया गया", party: "आपकी Xbox पार्टी भी आपको सुन रही है", typed: "लिखा गया: {text}", heard: "सुना गया: {text}",
-    combos: "बोलकर लिखने के लिए {dictate} · बात के लिए {talk} · स्क्रीन के लिए {screen} दबाए रखें", comboOff: "बंद",
+    combos: "बात करने के लिए {talk} टैप करें (रुकने पर बंद) · Jarvis खोलने के लिए दबाए रखें · डिक्टेशन और स्क्रीन सहायक: ऊपर के बटन, या आवाज़ से", comboOff: "बंद",
     hint: "जब तक आप न कहें, कुछ नहीं भेजा जाता। ताले, गैराज और अलार्म के लिए फ़ोन चाहिए।", helperOff: "स्क्रीन सहायक: इस्तेमाल के लिए डेस्कटॉप पर Anthropic कुंजी जोड़ें",
   },
   ru: {
@@ -173,7 +173,7 @@ const copy: Record<string, Copy> = {
     eFailed: "Что-то пошло не так; ничего не изменено", eUnreachable: "Не удаётся связаться с Jarvis", eAntiCheat: "Печать приостановлена, пока включена защита от читов; текст в Быстром доступе",
     eNoRoute: "Распознавание речи недоступно: сохраните токен Home Assistant", eRate: "Слишком много запросов; попробуйте чуть позже", eOff: "Jarvis выключен",
     screenshot: "Снимок экрана сделан", party: "Ваша вечеринка Xbox тоже вас слышит", typed: "Напечатано: {text}", heard: "Услышано: {text}",
-    combos: "Удерживайте {dictate} для диктовки · {talk} для разговора · {screen} для экрана", comboOff: "выкл.",
+    combos: "Коснитесь {talk}, чтобы говорить (останавливается на паузе) · удерживайте, чтобы открыть Jarvis · диктовка и помощь с экраном: кнопки выше или голосом", comboOff: "выкл.",
     hint: "Ничего не отправляется, пока вы не попросите. Замки, гараж и сигнализация — только через телефон.", helperOff: "Помощь с экраном: добавьте ключ Anthropic на рабочем столе",
   },
 };
@@ -240,7 +240,8 @@ export function errorLine(code: unknown, locale: string): string {
 export function combosLine(state: JarvisState | null | undefined, locale: string): string {
   const text = jarvisCopy(locale);
   const show = (value: unknown) => (typeof value === "string" && /^[A-Z0-9+]{3,40}$/.test(value) ? value : text.comboOff);
-  return fill(text.combos, { dictate: show(state?.combos?.dictate), talk: show(state?.combos?.talk), screen: show(state?.combos?.screen) });
+  // 3.3.5: only L5+R5 (tap talks, hold opens); dictation and the screen helper are buttons and voice.
+  return fill(text.combos, { talk: show(state?.combos?.talk) });
 }
 
 // The last few turns, cleaned: only user/assistant, strings, at most `limit` entries, each capped.

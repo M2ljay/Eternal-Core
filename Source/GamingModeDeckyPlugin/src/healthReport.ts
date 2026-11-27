@@ -664,6 +664,198 @@ const jarvisCopy: Record<string, Copy> = {
 };
 for (const [language, table] of Object.entries(jarvisCopy)) Object.assign(copy[language] ?? {}, table);
 
+// 3.3.5 (CONSOLE-GUARDS.md "Exiting games", "Back paddles", "Emulators"; EMULATOR-UPDATES.md): exiting games, the back
+// paddles, emulator updates, one row per emulator and one hotkeys row per emulator. Emulator rows are titled with the
+// emulator's own name.
+const emuCopy: Record<string, Copy> = {
+  en: {
+    r_gameExit: "Exiting games", r_paddles: "Back paddles", r_emuUpdates: "Emulator updates", r_hotkeys: "Hotkeys · {name}",
+    geWatching: "Watching", geClean: "{title} closed cleanly", geCleaned: "{title}: Core closed {n} leftover processes", geLeft: "{title} did not exit: {n} still running", geUntracked: "Steam lost track of {title}",
+    geUntrackedDetail: "Steam no longer offers Exit Game for it. Use the Exit button below.", geNames: "Processes: {list}",
+    bpIn: "L4 = A, R4 = B", bpNot: "Not set in Steam's layout", bpUnknown: "Steam's layouts not found", bpDetail: "In Steam's controller layout, set L4 to A and R4 to B (the button below opens it; use the controller).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Desktop", bpSet: "set", bpUnset: "not set",
+    euCurrent: "Up to date", euSoaking: "Waiting: {list}", euNeeds: "Needs you: {list}", euSoakItem: "{name} {version} ({n} days left)", euConfirm: "{name} {version}: confirm it once on the desktop (only GitHub's own digest vouches for this download)", euRolled: "{name}: the last update was rolled back", euNotOffered: "Updated by EmuDeck: {list}",
+    emOk: "All set · {version}", emOkNoVersion: "All set", emCheck: "Check: {what}", emSettings: "settings", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "Starts fullscreen", "k_exit-prompt": "No exit prompt", k_shaders: "Shaders prepared before starting", sYes: "yes", sNo: "no", sNoConfig: "start it once first",
+    emRaIn: "RetroAchievements: signed in", emRaOut: "RetroAchievements: not signed in", emRaOff: "RetroAchievements: off", emBiosOk: "BIOS {system}: present", emBiosMissing: "BIOS {system}: missing", emBiosNone: "No BIOS needed", emVersion: "Version {version}", emRunning: "Running now: fixes wait until it closes",
+    hkMatch: "Match the shared table", hkDrift: "Drifted: {list}", hkNoConfig: "Start it once, then Core applies them", hkUnsupported: "Can't: {reason}", hkCant: "Can't do: {list}", hkGuard: "a quit or clashing combo",
+    "hr_keyboard-only": "its hotkeys are keyboard-only", "hr_no-save-states": "it has no save states", hr_unknown: "unknown emulator",
+    fn_save: "save state", fn_load: "load state", "fn_slot-next": "next slot", "fn_slot-prev": "previous slot", "fn_fast-forward": "fast-forward", fn_rewind: "rewind", fn_pause: "pause", fn_menu: "emulator menu", fn_fps: "FPS display",
+    aEmuFix: "Fix {name} settings", aEmuHotkeys: "Re-apply hotkeys to {name}", aEmuUpdate: "Update {name} now", aGameExit: "Exit {title}", aPaddles: "Open Steam's controller layout",
+  },
+  it: {
+    r_gameExit: "Uscita dai giochi", r_paddles: "Tasti posteriori", r_emuUpdates: "Aggiornamenti emulatori", r_hotkeys: "Scorciatoie · {name}",
+    geWatching: "In osservazione", geClean: "{title} chiuso correttamente", geCleaned: "{title}: Core ha chiuso {n} processi rimasti", geLeft: "{title} non si è chiuso: {n} ancora attivi", geUntracked: "Steam ha perso traccia di {title}",
+    geUntrackedDetail: "Steam non offre più Esci dal gioco. Usa il pulsante Esci qui sotto.", geNames: "Processi: {list}",
+    bpIn: "L4 = A, R4 = B", bpNot: "Non impostati nel layout di Steam", bpUnknown: "Layout di Steam non trovati", bpDetail: "Nel layout del controller di Steam imposta L4 su A e R4 su B (il pulsante qui sotto lo apre; usa il controller).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Desktop", bpSet: "impostati", bpUnset: "non impostati",
+    euCurrent: "Aggiornati", euSoaking: "In attesa: {list}", euNeeds: "Serve te: {list}", euSoakItem: "{name} {version} (mancano {n} giorni)", euConfirm: "{name} {version}: confermalo una volta sul desktop (lo garantisce solo l'impronta di GitHub)", euRolled: "{name}: l'ultimo aggiornamento è stato annullato", euNotOffered: "Aggiornati da EmuDeck: {list}",
+    emOk: "Tutto a posto · {version}", emOkNoVersion: "Tutto a posto", emCheck: "Da controllare: {what}", emSettings: "impostazioni", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "Si avvia a schermo intero", "k_exit-prompt": "Nessuna conferma all'uscita", k_shaders: "Shader preparati prima di avviare", sYes: "sì", sNo: "no", sNoConfig: "avvialo prima una volta",
+    emRaIn: "RetroAchievements: accesso eseguito", emRaOut: "RetroAchievements: accesso non eseguito", emRaOff: "RetroAchievements: spento", emBiosOk: "BIOS {system}: presente", emBiosMissing: "BIOS {system}: mancante", emBiosNone: "Nessun BIOS necessario", emVersion: "Versione {version}", emRunning: "In esecuzione: le correzioni aspettano che si chiuda",
+    hkMatch: "Uguali alla tabella comune", hkDrift: "Diverse: {list}", hkNoConfig: "Avvialo una volta, poi Core le applica", hkUnsupported: "Non possibile: {reason}", hkCant: "Non può: {list}", hkGuard: "una combinazione di uscita o in conflitto",
+    "hr_keyboard-only": "le sue scorciatoie sono solo da tastiera", "hr_no-save-states": "non ha salvataggi rapidi", hr_unknown: "emulatore sconosciuto",
+    fn_save: "salva stato", fn_load: "carica stato", "fn_slot-next": "slot successivo", "fn_slot-prev": "slot precedente", "fn_fast-forward": "avanti veloce", fn_rewind: "riavvolgi", fn_pause: "pausa", fn_menu: "menu dell'emulatore", fn_fps: "indicatore FPS",
+    aEmuFix: "Correggi le impostazioni di {name}", aEmuHotkeys: "Riapplica le scorciatoie a {name}", aEmuUpdate: "Aggiorna {name} ora", aGameExit: "Esci da {title}", aPaddles: "Apri il layout del controller di Steam",
+  },
+  es: {
+    r_gameExit: "Salir de los juegos", r_paddles: "Botones traseros", r_emuUpdates: "Actualizaciones de emuladores", r_hotkeys: "Atajos · {name}",
+    geWatching: "Vigilando", geClean: "{title} se cerró bien", geCleaned: "{title}: Core cerró {n} procesos sobrantes", geLeft: "{title} no se cerró: {n} siguen abiertos", geUntracked: "Steam perdió el rastro de {title}",
+    geUntrackedDetail: "Steam ya no ofrece Salir del juego. Usa el botón Salir de abajo.", geNames: "Procesos: {list}",
+    bpIn: "L4 = A, R4 = B", bpNot: "Sin asignar en el diseño de Steam", bpUnknown: "No se encontraron los diseños de Steam", bpDetail: "En el diseño del mando de Steam asigna A a L4 y B a R4 (el botón de abajo lo abre; usa el mando).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Escritorio", bpSet: "asignados", bpUnset: "sin asignar",
+    euCurrent: "Al día", euSoaking: "En espera: {list}", euNeeds: "Te necesita: {list}", euSoakItem: "{name} {version} (faltan {n} días)", euConfirm: "{name} {version}: confírmalo una vez en el escritorio (solo lo avala el resumen de GitHub)", euRolled: "{name}: la última actualización se deshizo", euNotOffered: "Los actualiza EmuDeck: {list}",
+    emOk: "Todo listo · {version}", emOkNoVersion: "Todo listo", emCheck: "Revisar: {what}", emSettings: "ajustes", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "Arranca en pantalla completa", "k_exit-prompt": "Sin confirmación al salir", k_shaders: "Sombreadores preparados antes de empezar", sYes: "sí", sNo: "no", sNoConfig: "ábrelo antes una vez",
+    emRaIn: "RetroAchievements: sesión iniciada", emRaOut: "RetroAchievements: sin sesión", emRaOff: "RetroAchievements: desactivado", emBiosOk: "BIOS {system}: presente", emBiosMissing: "BIOS {system}: falta", emBiosNone: "No necesita BIOS", emVersion: "Versión {version}", emRunning: "En marcha: los arreglos esperan a que se cierre",
+    hkMatch: "Iguales a la tabla común", hkDrift: "Diferentes: {list}", hkNoConfig: "Ábrelo una vez y Core los aplica", hkUnsupported: "No puede: {reason}", hkCant: "No puede: {list}", hkGuard: "una combinación de salida o en conflicto",
+    "hr_keyboard-only": "sus atajos son solo de teclado", "hr_no-save-states": "no tiene guardados rápidos", hr_unknown: "emulador desconocido",
+    fn_save: "guardar estado", fn_load: "cargar estado", "fn_slot-next": "ranura siguiente", "fn_slot-prev": "ranura anterior", "fn_fast-forward": "avance rápido", fn_rewind: "rebobinar", fn_pause: "pausa", fn_menu: "menú del emulador", fn_fps: "indicador de FPS",
+    aEmuFix: "Corregir ajustes de {name}", aEmuHotkeys: "Volver a aplicar atajos a {name}", aEmuUpdate: "Actualizar {name} ahora", aGameExit: "Salir de {title}", aPaddles: "Abrir el diseño del mando de Steam",
+  },
+  fr: {
+    r_gameExit: "Quitter les jeux", r_paddles: "Palettes arrière", r_emuUpdates: "Mises à jour des émulateurs", r_hotkeys: "Raccourcis · {name}",
+    geWatching: "Surveillance", geClean: "{title} s'est bien fermé", geCleaned: "{title} : Core a fermé {n} processus restants", geLeft: "{title} ne s'est pas fermé : {n} encore actifs", geUntracked: "Steam a perdu la trace de {title}",
+    geUntrackedDetail: "Steam ne propose plus Quitter le jeu. Utilisez le bouton Quitter ci-dessous.", geNames: "Processus : {list}",
+    bpIn: "L4 = A, R4 = B", bpNot: "Non réglées dans la configuration Steam", bpUnknown: "Configurations Steam introuvables", bpDetail: "Dans la configuration de manette Steam, réglez L4 sur A et R4 sur B (le bouton ci-dessous l'ouvre ; utilisez la manette).", bpLayout: "{layout} : {state}", bpBig: "Big Picture", bpDesktop: "Bureau", bpSet: "réglées", bpUnset: "non réglées",
+    euCurrent: "À jour", euSoaking: "En attente : {list}", euNeeds: "Votre avis : {list}", euSoakItem: "{name} {version} (encore {n} jours)", euConfirm: "{name} {version} : confirmez une fois sur le bureau (seule l'empreinte de GitHub garantit ce téléchargement)", euRolled: "{name} : la dernière mise à jour a été annulée", euNotOffered: "Mis à jour par EmuDeck : {list}",
+    emOk: "Tout est prêt · {version}", emOkNoVersion: "Tout est prêt", emCheck: "À vérifier : {what}", emSettings: "réglages", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "Démarre en plein écran", "k_exit-prompt": "Pas de confirmation pour quitter", k_shaders: "Shaders préparés avant le lancement", sYes: "oui", sNo: "non", sNoConfig: "lancez-le d'abord une fois",
+    emRaIn: "RetroAchievements : connecté", emRaOut: "RetroAchievements : non connecté", emRaOff: "RetroAchievements : désactivé", emBiosOk: "BIOS {system} : présent", emBiosMissing: "BIOS {system} : manquant", emBiosNone: "Aucun BIOS nécessaire", emVersion: "Version {version}", emRunning: "En cours : les corrections attendent sa fermeture",
+    hkMatch: "Conformes au tableau commun", hkDrift: "Différents : {list}", hkNoConfig: "Lancez-le une fois, puis Core les applique", hkUnsupported: "Impossible : {reason}", hkCant: "Ne peut pas : {list}", hkGuard: "une combinaison pour quitter ou en conflit",
+    "hr_keyboard-only": "ses raccourcis sont au clavier uniquement", "hr_no-save-states": "il n'a pas de sauvegardes instantanées", hr_unknown: "émulateur inconnu",
+    fn_save: "sauvegarde d'état", fn_load: "chargement d'état", "fn_slot-next": "emplacement suivant", "fn_slot-prev": "emplacement précédent", "fn_fast-forward": "avance rapide", fn_rewind: "retour arrière", fn_pause: "pause", fn_menu: "menu de l'émulateur", fn_fps: "affichage des FPS",
+    aEmuFix: "Corriger les réglages de {name}", aEmuHotkeys: "Réappliquer les raccourcis à {name}", aEmuUpdate: "Mettre à jour {name} maintenant", aGameExit: "Quitter {title}", aPaddles: "Ouvrir la configuration de manette Steam",
+  },
+  de: {
+    r_gameExit: "Spiele beenden", r_paddles: "Rücktasten", r_emuUpdates: "Emulator-Updates", r_hotkeys: "Tastenkürzel · {name}",
+    geWatching: "Wird beobachtet", geClean: "{title} sauber beendet", geCleaned: "{title}: Core hat {n} übrige Prozesse beendet", geLeft: "{title} wurde nicht beendet: {n} laufen noch", geUntracked: "Steam hat {title} aus den Augen verloren",
+    geUntrackedDetail: "Steam bietet „Spiel beenden“ dafür nicht mehr an. Nutze die Beenden-Taste unten.", geNames: "Prozesse: {list}",
+    bpIn: "L4 = A, R4 = B", bpNot: "Im Steam-Layout nicht belegt", bpUnknown: "Steam-Layouts nicht gefunden", bpDetail: "Belege im Controller-Layout von Steam L4 mit A und R4 mit B (die Taste unten öffnet es; mit dem Controller).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Desktop", bpSet: "belegt", bpUnset: "nicht belegt",
+    euCurrent: "Aktuell", euSoaking: "Wartet: {list}", euNeeds: "Braucht dich: {list}", euSoakItem: "{name} {version} (noch {n} Tage)", euConfirm: "{name} {version}: einmal am Desktop bestätigen (nur GitHubs eigener Hash bürgt für diesen Download)", euRolled: "{name}: das letzte Update wurde zurückgenommen", euNotOffered: "Aktualisiert EmuDeck: {list}",
+    emOk: "Alles bereit · {version}", emOkNoVersion: "Alles bereit", emCheck: "Prüfen: {what}", emSettings: "Einstellungen", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "Startet im Vollbild", "k_exit-prompt": "Keine Rückfrage beim Beenden", k_shaders: "Shader vor dem Start vorbereitet", sYes: "ja", sNo: "nein", sNoConfig: "erst einmal starten",
+    emRaIn: "RetroAchievements: angemeldet", emRaOut: "RetroAchievements: nicht angemeldet", emRaOff: "RetroAchievements: aus", emBiosOk: "BIOS {system}: vorhanden", emBiosMissing: "BIOS {system}: fehlt", emBiosNone: "Kein BIOS nötig", emVersion: "Version {version}", emRunning: "Läuft gerade: Korrekturen warten, bis es geschlossen ist",
+    hkMatch: "Wie in der gemeinsamen Tabelle", hkDrift: "Abweichend: {list}", hkNoConfig: "Einmal starten, dann setzt Core sie", hkUnsupported: "Geht nicht: {reason}", hkCant: "Kann nicht: {list}", hkGuard: "eine Beenden- oder doppelte Kombination",
+    "hr_keyboard-only": "seine Tastenkürzel gehen nur mit der Tastatur", "hr_no-save-states": "es hat keine Speicherstände", hr_unknown: "unbekannter Emulator",
+    fn_save: "Zustand speichern", fn_load: "Zustand laden", "fn_slot-next": "nächster Platz", "fn_slot-prev": "vorheriger Platz", "fn_fast-forward": "Vorspulen", fn_rewind: "Zurückspulen", fn_pause: "Pause", fn_menu: "Emulatormenü", fn_fps: "FPS-Anzeige",
+    aEmuFix: "Einstellungen von {name} korrigieren", aEmuHotkeys: "Tastenkürzel für {name} neu setzen", aEmuUpdate: "{name} jetzt aktualisieren", aGameExit: "{title} beenden", aPaddles: "Steam-Controller-Layout öffnen",
+  },
+  pt: {
+    r_gameExit: "Sair dos jogos", r_paddles: "Botões traseiros", r_emuUpdates: "Atualizações de emuladores", r_hotkeys: "Atalhos · {name}",
+    geWatching: "Observando", geClean: "{title} fechou corretamente", geCleaned: "{title}: o Core fechou {n} processos restantes", geLeft: "{title} não fechou: {n} ainda abertos", geUntracked: "O Steam perdeu o rastro de {title}",
+    geUntrackedDetail: "O Steam não oferece mais Sair do jogo. Use o botão Sair abaixo.", geNames: "Processos: {list}",
+    bpIn: "L4 = A, R4 = B", bpNot: "Não definidos no layout do Steam", bpUnknown: "Layouts do Steam não encontrados", bpDetail: "No layout do controle no Steam, defina L4 como A e R4 como B (o botão abaixo abre; use o controle).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Área de trabalho", bpSet: "definidos", bpUnset: "não definidos",
+    euCurrent: "Atualizados", euSoaking: "Aguardando: {list}", euNeeds: "Precisa de você: {list}", euSoakItem: "{name} {version} (faltam {n} dias)", euConfirm: "{name} {version}: confirme uma vez na área de trabalho (só o resumo do próprio GitHub garante este download)", euRolled: "{name}: a última atualização foi desfeita", euNotOffered: "Atualizados pelo EmuDeck: {list}",
+    emOk: "Tudo pronto · {version}", emOkNoVersion: "Tudo pronto", emCheck: "Verificar: {what}", emSettings: "configurações", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "Abre em tela cheia", "k_exit-prompt": "Sem confirmação ao sair", k_shaders: "Shaders preparados antes de iniciar", sYes: "sim", sNo: "não", sNoConfig: "abra-o uma vez antes",
+    emRaIn: "RetroAchievements: conectado", emRaOut: "RetroAchievements: não conectado", emRaOff: "RetroAchievements: desligado", emBiosOk: "BIOS {system}: presente", emBiosMissing: "BIOS {system}: faltando", emBiosNone: "Não precisa de BIOS", emVersion: "Versão {version}", emRunning: "Em execução: as correções esperam ele fechar",
+    hkMatch: "Iguais à tabela comum", hkDrift: "Diferentes: {list}", hkNoConfig: "Abra-o uma vez e o Core os aplica", hkUnsupported: "Não dá: {reason}", hkCant: "Não faz: {list}", hkGuard: "uma combinação de saída ou em conflito",
+    "hr_keyboard-only": "os atalhos dele são só de teclado", "hr_no-save-states": "ele não tem save states", hr_unknown: "emulador desconhecido",
+    fn_save: "salvar estado", fn_load: "carregar estado", "fn_slot-next": "próximo slot", "fn_slot-prev": "slot anterior", "fn_fast-forward": "avanço rápido", fn_rewind: "rebobinar", fn_pause: "pausa", fn_menu: "menu do emulador", fn_fps: "indicador de FPS",
+    aEmuFix: "Corrigir configurações do {name}", aEmuHotkeys: "Reaplicar atalhos no {name}", aEmuUpdate: "Atualizar {name} agora", aGameExit: "Sair de {title}", aPaddles: "Abrir o layout do controle no Steam",
+  },
+  uk: {
+    r_gameExit: "Вихід з ігор", r_paddles: "Задні кнопки", r_emuUpdates: "Оновлення емуляторів", r_hotkeys: "Гарячі клавіші · {name}",
+    geWatching: "Спостереження", geClean: "{title} закрито коректно", geCleaned: "{title}: Core закрив {n} залишкових процесів", geLeft: "{title} не закрився: ще працює {n}", geUntracked: "Steam втратив стеження за {title}",
+    geUntrackedDetail: "Steam більше не пропонує «Вийти з гри». Скористайтеся кнопкою «Вийти» нижче.", geNames: "Процеси: {list}",
+    bpIn: "L4 = A, R4 = B", bpNot: "Не призначено в розкладці Steam", bpUnknown: "Розкладки Steam не знайдено", bpDetail: "У розкладці контролера Steam призначте L4 на A і R4 на B (кнопка нижче відкриває її; використовуйте контролер).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Робочий стіл", bpSet: "призначено", bpUnset: "не призначено",
+    euCurrent: "Актуальні", euSoaking: "Очікують: {list}", euNeeds: "Потрібні ви: {list}", euSoakItem: "{name} {version} (залишилось днів: {n})", euConfirm: "{name} {version}: підтвердьте один раз на робочому столі (за це завантаження ручається лише відбиток GitHub)", euRolled: "{name}: останнє оновлення скасовано", euNotOffered: "Оновлює EmuDeck: {list}",
+    emOk: "Усе готово · {version}", emOkNoVersion: "Усе готово", emCheck: "Перевірити: {what}", emSettings: "налаштування", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "Запуск на весь екран", "k_exit-prompt": "Без підтвердження виходу", k_shaders: "Шейдери готуються перед запуском", sYes: "так", sNo: "ні", sNoConfig: "спершу запустіть один раз",
+    emRaIn: "RetroAchievements: вхід виконано", emRaOut: "RetroAchievements: вхід не виконано", emRaOff: "RetroAchievements: вимкнено", emBiosOk: "BIOS {system}: є", emBiosMissing: "BIOS {system}: немає", emBiosNone: "BIOS не потрібен", emVersion: "Версія {version}", emRunning: "Зараз працює: виправлення чекають, доки він закриється",
+    hkMatch: "Збігаються зі спільною таблицею", hkDrift: "Відрізняються: {list}", hkNoConfig: "Запустіть один раз, потім Core їх застосує", hkUnsupported: "Неможливо: {reason}", hkCant: "Не вміє: {list}", hkGuard: "комбінація виходу або конфлікт",
+    "hr_keyboard-only": "його гарячі клавіші лише для клавіатури", "hr_no-save-states": "у нього немає збережень стану", hr_unknown: "невідомий емулятор",
+    fn_save: "зберегти стан", fn_load: "завантажити стан", "fn_slot-next": "наступний слот", "fn_slot-prev": "попередній слот", "fn_fast-forward": "прискорення", fn_rewind: "перемотування", fn_pause: "пауза", fn_menu: "меню емулятора", fn_fps: "показ FPS",
+    aEmuFix: "Виправити налаштування {name}", aEmuHotkeys: "Знову застосувати гарячі клавіші до {name}", aEmuUpdate: "Оновити {name} зараз", aGameExit: "Вийти з {title}", aPaddles: "Відкрити розкладку контролера Steam",
+  },
+  ru: {
+    r_gameExit: "Выход из игр", r_paddles: "Задние кнопки", r_emuUpdates: "Обновления эмуляторов", r_hotkeys: "Горячие клавиши · {name}",
+    geWatching: "Наблюдение", geClean: "{title} закрыта корректно", geCleaned: "{title}: Core закрыл {n} оставшихся процессов", geLeft: "{title} не закрылась: ещё работает {n}", geUntracked: "Steam потерял {title} из виду",
+    geUntrackedDetail: "Steam больше не предлагает «Выйти из игры». Используйте кнопку «Выйти» ниже.", geNames: "Процессы: {list}",
+    bpIn: "L4 = A, R4 = B", bpNot: "Не назначены в раскладке Steam", bpUnknown: "Раскладки Steam не найдены", bpDetail: "В раскладке контроллера Steam назначьте L4 на A и R4 на B (кнопка ниже открывает её; используйте контроллер).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Рабочий стол", bpSet: "назначены", bpUnset: "не назначены",
+    euCurrent: "Актуальны", euSoaking: "Ожидают: {list}", euNeeds: "Нужны вы: {list}", euSoakItem: "{name} {version} (осталось дней: {n})", euConfirm: "{name} {version}: подтвердите один раз на рабочем столе (за эту загрузку ручается только отпечаток GitHub)", euRolled: "{name}: последнее обновление отменено", euNotOffered: "Обновляет EmuDeck: {list}",
+    emOk: "Всё готово · {version}", emOkNoVersion: "Всё готово", emCheck: "Проверить: {what}", emSettings: "настройки", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "Запуск во весь экран", "k_exit-prompt": "Без подтверждения выхода", k_shaders: "Шейдеры готовятся перед запуском", sYes: "да", sNo: "нет", sNoConfig: "сначала запустите один раз",
+    emRaIn: "RetroAchievements: вход выполнен", emRaOut: "RetroAchievements: вход не выполнен", emRaOff: "RetroAchievements: выключено", emBiosOk: "BIOS {system}: есть", emBiosMissing: "BIOS {system}: нет", emBiosNone: "BIOS не нужен", emVersion: "Версия {version}", emRunning: "Сейчас работает: исправления ждут, пока он закроется",
+    hkMatch: "Совпадают с общей таблицей", hkDrift: "Отличаются: {list}", hkNoConfig: "Запустите один раз, затем Core их применит", hkUnsupported: "Невозможно: {reason}", hkCant: "Не умеет: {list}", hkGuard: "комбинация выхода или конфликт",
+    "hr_keyboard-only": "его горячие клавиши только для клавиатуры", "hr_no-save-states": "у него нет сохранений состояния", hr_unknown: "неизвестный эмулятор",
+    fn_save: "сохранить состояние", fn_load: "загрузить состояние", "fn_slot-next": "следующий слот", "fn_slot-prev": "предыдущий слот", "fn_fast-forward": "ускорение", fn_rewind: "перемотка", fn_pause: "пауза", fn_menu: "меню эмулятора", fn_fps: "показ FPS",
+    aEmuFix: "Исправить настройки {name}", aEmuHotkeys: "Снова применить горячие клавиши к {name}", aEmuUpdate: "Обновить {name} сейчас", aGameExit: "Выйти из {title}", aPaddles: "Открыть раскладку контроллера Steam",
+  },
+  zh: {
+    r_gameExit: "退出游戏", r_paddles: "背键", r_emuUpdates: "模拟器更新", r_hotkeys: "快捷键 · {name}",
+    geWatching: "监视中", geClean: "{title} 已正常关闭", geCleaned: "{title}：Core 关闭了 {n} 个残留进程", geLeft: "{title} 没有退出：仍有 {n} 个在运行", geUntracked: "Steam 已失去对 {title} 的跟踪",
+    geUntrackedDetail: "Steam 不再为它提供“退出游戏”。请使用下方的退出按钮。", geNames: "进程：{list}",
+    bpIn: "L4 = A，R4 = B", bpNot: "Steam 布局中未设置", bpUnknown: "未找到 Steam 布局", bpDetail: "在 Steam 的控制器布局中把 L4 设为 A、R4 设为 B（下方按钮可打开；用手柄操作）。", bpLayout: "{layout}：{state}", bpBig: "Big Picture", bpDesktop: "桌面", bpSet: "已设置", bpUnset: "未设置",
+    euCurrent: "已是最新", euSoaking: "等待中：{list}", euNeeds: "需要你处理：{list}", euSoakItem: "{name} {version}（还剩 {n} 天）", euConfirm: "{name} {version}：请在桌面确认一次（此下载仅有 GitHub 自身的摘要作保证）", euRolled: "{name}：上次更新已回滚", euNotOffered: "由 EmuDeck 更新：{list}",
+    emOk: "一切就绪 · {version}", emOkNoVersion: "一切就绪", emCheck: "需检查：{what}", emSettings: "设置", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "以全屏启动", "k_exit-prompt": "退出时不确认", k_shaders: "启动前预编译着色器", sYes: "是", sNo: "否", sNoConfig: "请先启动一次",
+    emRaIn: "RetroAchievements：已登录", emRaOut: "RetroAchievements：未登录", emRaOff: "RetroAchievements：已关闭", emBiosOk: "BIOS {system}：已有", emBiosMissing: "BIOS {system}：缺失", emBiosNone: "无需 BIOS", emVersion: "版本 {version}", emRunning: "正在运行：修复会等它关闭后进行",
+    hkMatch: "与通用表一致", hkDrift: "不一致：{list}", hkNoConfig: "先启动一次，之后 Core 会应用", hkUnsupported: "无法：{reason}", hkCant: "不支持：{list}", hkGuard: "退出或冲突的组合键",
+    "hr_keyboard-only": "它的快捷键只能用键盘", "hr_no-save-states": "它没有即时存档", hr_unknown: "未知模拟器",
+    fn_save: "即时存档", fn_load: "读取存档", "fn_slot-next": "下一个存档位", "fn_slot-prev": "上一个存档位", "fn_fast-forward": "快进", fn_rewind: "倒带", fn_pause: "暂停", fn_menu: "模拟器菜单", fn_fps: "FPS 显示",
+    aEmuFix: "修复 {name} 的设置", aEmuHotkeys: "重新为 {name} 应用快捷键", aEmuUpdate: "立即更新 {name}", aGameExit: "退出 {title}", aPaddles: "打开 Steam 控制器布局",
+  },
+  ja: {
+    r_gameExit: "ゲームの終了", r_paddles: "背面ボタン", r_emuUpdates: "エミュレーターの更新", r_hotkeys: "ホットキー · {name}",
+    geWatching: "監視中", geClean: "{title} は正常に閉じました", geCleaned: "{title}：Core が残ったプロセスを {n} 個閉じました", geLeft: "{title} が終了していません：{n} 個が実行中", geUntracked: "Steam が {title} を見失いました",
+    geUntrackedDetail: "Steam はこのゲームの「ゲームを終了」を出さなくなりました。下の終了ボタンを使ってください。", geNames: "プロセス：{list}",
+    bpIn: "L4 = A、R4 = B", bpNot: "Steam のレイアウトで未設定", bpUnknown: "Steam のレイアウトが見つかりません", bpDetail: "Steam のコントローラーレイアウトで L4 を A、R4 を B に設定してください（下のボタンで開きます。コントローラーで操作）。", bpLayout: "{layout}：{state}", bpBig: "Big Picture", bpDesktop: "デスクトップ", bpSet: "設定済み", bpUnset: "未設定",
+    euCurrent: "最新", euSoaking: "待機中：{list}", euNeeds: "確認が必要：{list}", euSoakItem: "{name} {version}（残り {n} 日）", euConfirm: "{name} {version}：デスクトップで一度確認してください（このダウンロードを保証するのは GitHub 自身のダイジェストだけです）", euRolled: "{name}：前回の更新は元に戻されました", euNotOffered: "EmuDeck が更新：{list}",
+    emOk: "準備完了 · {version}", emOkNoVersion: "準備完了", emCheck: "確認：{what}", emSettings: "設定", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "全画面で起動", "k_exit-prompt": "終了時の確認なし", k_shaders: "起動前にシェーダーを準備", sYes: "はい", sNo: "いいえ", sNoConfig: "先に一度起動してください",
+    emRaIn: "RetroAchievements：サインイン済み", emRaOut: "RetroAchievements：未サインイン", emRaOff: "RetroAchievements：オフ", emBiosOk: "BIOS {system}：あり", emBiosMissing: "BIOS {system}：なし", emBiosNone: "BIOS は不要", emVersion: "バージョン {version}", emRunning: "実行中：修正は終了するまで待ちます",
+    hkMatch: "共通の表どおり", hkDrift: "異なる：{list}", hkNoConfig: "一度起動すると Core が適用します", hkUnsupported: "不可：{reason}", hkCant: "できないこと：{list}", hkGuard: "終了または重複する組み合わせ",
+    "hr_keyboard-only": "ホットキーがキーボード専用です", "hr_no-save-states": "ステートセーブがありません", hr_unknown: "不明なエミュレーター",
+    fn_save: "ステートセーブ", fn_load: "ステートロード", "fn_slot-next": "次のスロット", "fn_slot-prev": "前のスロット", "fn_fast-forward": "早送り", fn_rewind: "巻き戻し", fn_pause: "一時停止", fn_menu: "エミュレーターのメニュー", fn_fps: "FPS 表示",
+    aEmuFix: "{name} の設定を修正", aEmuHotkeys: "{name} にホットキーを再適用", aEmuUpdate: "{name} を今すぐ更新", aGameExit: "{title} を終了", aPaddles: "Steam のコントローラーレイアウトを開く",
+  },
+  ko: {
+    r_gameExit: "게임 종료", r_paddles: "후면 버튼", r_emuUpdates: "에뮬레이터 업데이트", r_hotkeys: "단축키 · {name}",
+    geWatching: "지켜보는 중", geClean: "{title}이(가) 깔끔하게 닫혔어요", geCleaned: "{title}: Core가 남은 프로세스 {n}개를 닫았어요", geLeft: "{title}이(가) 종료되지 않았어요: {n}개 실행 중", geUntracked: "Steam이 {title}을(를) 놓쳤어요",
+    geUntrackedDetail: "Steam이 더 이상 게임 종료를 제공하지 않아요. 아래 종료 버튼을 쓰세요.", geNames: "프로세스: {list}",
+    bpIn: "L4 = A, R4 = B", bpNot: "Steam 레이아웃에 설정 안 됨", bpUnknown: "Steam 레이아웃을 찾을 수 없음", bpDetail: "Steam 컨트롤러 레이아웃에서 L4를 A, R4를 B로 설정하세요(아래 버튼으로 열기, 컨트롤러로 조작).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "데스크톱", bpSet: "설정됨", bpUnset: "설정 안 됨",
+    euCurrent: "최신", euSoaking: "대기 중: {list}", euNeeds: "확인 필요: {list}", euSoakItem: "{name} {version}({n}일 남음)", euConfirm: "{name} {version}: 데스크톱에서 한 번 확인하세요(이 다운로드는 GitHub 자체 다이제스트만 보증해요)", euRolled: "{name}: 지난 업데이트를 되돌렸어요", euNotOffered: "EmuDeck이 업데이트: {list}",
+    emOk: "모두 준비됨 · {version}", emOkNoVersion: "모두 준비됨", emCheck: "확인: {what}", emSettings: "설정", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "전체 화면으로 시작", "k_exit-prompt": "종료 확인 없음", k_shaders: "시작 전에 셰이더 준비", sYes: "예", sNo: "아니요", sNoConfig: "먼저 한 번 실행하세요",
+    emRaIn: "RetroAchievements: 로그인됨", emRaOut: "RetroAchievements: 로그인 안 됨", emRaOff: "RetroAchievements: 꺼짐", emBiosOk: "BIOS {system}: 있음", emBiosMissing: "BIOS {system}: 없음", emBiosNone: "BIOS 필요 없음", emVersion: "버전 {version}", emRunning: "실행 중: 수정은 닫힌 뒤에 해요",
+    hkMatch: "공통 표와 같음", hkDrift: "다름: {list}", hkNoConfig: "한 번 실행하면 Core가 적용해요", hkUnsupported: "불가: {reason}", hkCant: "못 하는 것: {list}", hkGuard: "종료 또는 겹치는 조합",
+    "hr_keyboard-only": "단축키가 키보드 전용이에요", "hr_no-save-states": "세이브 스테이트가 없어요", hr_unknown: "알 수 없는 에뮬레이터",
+    fn_save: "상태 저장", fn_load: "상태 불러오기", "fn_slot-next": "다음 슬롯", "fn_slot-prev": "이전 슬롯", "fn_fast-forward": "빨리 감기", fn_rewind: "되감기", fn_pause: "일시 정지", fn_menu: "에뮬레이터 메뉴", fn_fps: "FPS 표시",
+    aEmuFix: "{name} 설정 고치기", aEmuHotkeys: "{name}에 단축키 다시 적용", aEmuUpdate: "지금 {name} 업데이트", aGameExit: "{title} 종료", aPaddles: "Steam 컨트롤러 레이아웃 열기",
+  },
+  hi: {
+    r_gameExit: "गेम से बाहर निकलना", r_paddles: "पीछे के बटन", r_emuUpdates: "एम्युलेटर अपडेट", r_hotkeys: "हॉटकी · {name}",
+    geWatching: "नज़र रखी जा रही है", geClean: "{title} ठीक से बंद हुआ", geCleaned: "{title}: Core ने बचे हुए {n} प्रोसेस बंद किए", geLeft: "{title} बंद नहीं हुआ: {n} अब भी चल रहे हैं", geUntracked: "Steam ने {title} का ट्रैक खो दिया",
+    geUntrackedDetail: "Steam अब इसके लिए गेम से बाहर निकलें नहीं देता। नीचे का बाहर निकलें बटन इस्तेमाल करें।", geNames: "प्रोसेस: {list}",
+    bpIn: "L4 = A, R4 = B", bpNot: "Steam लेआउट में सेट नहीं", bpUnknown: "Steam लेआउट नहीं मिले", bpDetail: "Steam के कंट्रोलर लेआउट में L4 को A और R4 को B पर सेट करें (नीचे का बटन इसे खोलता है; कंट्रोलर से चलाएँ)।", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "डेस्कटॉप", bpSet: "सेट", bpUnset: "सेट नहीं",
+    euCurrent: "अप टू डेट", euSoaking: "इंतज़ार में: {list}", euNeeds: "आपकी ज़रूरत: {list}", euSoakItem: "{name} {version} ({n} दिन बाकी)", euConfirm: "{name} {version}: डेस्कटॉप पर एक बार पुष्टि करें (इस डाउनलोड की गारंटी सिर्फ़ GitHub का अपना डाइजेस्ट देता है)", euRolled: "{name}: पिछला अपडेट वापस लिया गया", euNotOffered: "EmuDeck अपडेट करता है: {list}",
+    emOk: "सब तैयार · {version}", emOkNoVersion: "सब तैयार", emCheck: "जाँचें: {what}", emSettings: "सेटिंग्स", emRa: "RetroAchievements", emBios: "BIOS",
+    k_fullscreen: "फ़ुलस्क्रीन में शुरू होता है", "k_exit-prompt": "बाहर निकलने पर पुष्टि नहीं", k_shaders: "शुरू होने से पहले शेडर तैयार", sYes: "हाँ", sNo: "नहीं", sNoConfig: "पहले एक बार चलाएँ",
+    emRaIn: "RetroAchievements: साइन इन", emRaOut: "RetroAchievements: साइन इन नहीं", emRaOff: "RetroAchievements: बंद", emBiosOk: "BIOS {system}: मौजूद", emBiosMissing: "BIOS {system}: नहीं है", emBiosNone: "BIOS की ज़रूरत नहीं", emVersion: "वर्ज़न {version}", emRunning: "अभी चल रहा है: सुधार इसके बंद होने तक रुकेंगे",
+    hkMatch: "साझा टेबल जैसी", hkDrift: "अलग: {list}", hkNoConfig: "एक बार चलाएँ, फिर Core इन्हें लगाएगा", hkUnsupported: "संभव नहीं: {reason}", hkCant: "नहीं कर सकता: {list}", hkGuard: "बाहर निकलने वाला या टकराता कॉम्बो",
+    "hr_keyboard-only": "इसकी हॉटकी सिर्फ़ कीबोर्ड से चलती हैं", "hr_no-save-states": "इसमें सेव स्टेट नहीं हैं", hr_unknown: "अनजान एम्युलेटर",
+    fn_save: "स्टेट सेव", fn_load: "स्टेट लोड", "fn_slot-next": "अगला स्लॉट", "fn_slot-prev": "पिछला स्लॉट", "fn_fast-forward": "फ़ास्ट-फ़ॉरवर्ड", fn_rewind: "रिवाइंड", fn_pause: "रोकें", fn_menu: "एम्युलेटर मेन्यू", fn_fps: "FPS दिखाएँ",
+    aEmuFix: "{name} की सेटिंग्स ठीक करें", aEmuHotkeys: "{name} पर हॉटकी फिर से लगाएँ", aEmuUpdate: "{name} अभी अपडेट करें", aGameExit: "{title} से बाहर निकलें", aPaddles: "Steam का कंट्रोलर लेआउट खोलें",
+  },
+};
+for (const [language, table] of Object.entries(emuCopy)) Object.assign(copy[language] ?? {}, table);
+
+// 3.3.5: the Launcher pop-ups row also counts the store launchers Core closed after a game.
+const launcherClosedCopy: Record<string, string> = {
+  en: "Closed after games today: {n} (last: {name})",
+  it: "Chiusi dopo i giochi oggi: {n} (l'ultimo: {name})",
+  es: "Cerrados tras los juegos hoy: {n} (el último: {name})",
+  fr: "Fermés après les jeux aujourd'hui : {n} (dernier : {name})",
+  de: "Heute nach Spielen geschlossen: {n} (zuletzt: {name})",
+  pt: "Fechados após jogos hoje: {n} (último: {name})",
+  uk: "Закрито після ігор сьогодні: {n} (останній: {name})",
+  ru: "Закрыто после игр сегодня: {n} (последний: {name})",
+  zh: "今天游戏后关闭：{n} 个（最近：{name}）",
+  ja: "今日ゲーム後に閉じた数：{n}（最後：{name}）",
+  ko: "오늘 게임 후 닫음: {n}개(마지막: {name})",
+  hi: "आज गेम के बाद बंद किए: {n} (आख़िरी: {name})",
+};
+for (const [language, value] of Object.entries(launcherClosedCopy)) if (copy[language]) copy[language].lfClosed = value;
+
 export const healthLanguages = Object.keys(copy);
 
 export function healthCopy(locale: string): Copy {
@@ -876,6 +1068,7 @@ function rowValue(row: HealthRowData, text: Copy, locale: string, now: Date): { 
       return { value: row.state === "available" ? fill(text.cAvail, { latest: String(data.latest ?? "?") })
         : row.state === "current" ? fill(text.cCurrent, { current: String(data.current ?? "?") }) : text.unknown, details };
     default:
+      if (isEmulatorRow(row.id)) return emulatorValue(row, text, locale, now);
       return consoleValue(row, text, locale, now);
   }
   return { value: text.unknown, details };
@@ -976,6 +1169,7 @@ function consoleValue(row: HealthRowData, text: Copy, locale: string, now: Date)
     case "launcher-focus": {
       const last = clean(data.last, 40);
       if (last) details.push(fill(text.lfLast, { name: last }));
+      if (Number(data.closedToday) > 0) details.push(fill(text.lfClosed, { n: Number(data.closedToday) || 0, name: clean(data.lastClosed, 40) || "?" }));
       return { value: row.state === "watching" ? fill(text.lfOn, { n: Number(data.pushedToday) || 0 }) : row.state === "off" ? text.lfOff : text.unknown, details };
     }
     case "wake-check": {
@@ -994,14 +1188,114 @@ function consoleValue(row: HealthRowData, text: Copy, locale: string, now: Date)
   return { value: text.unknown, details };
 }
 
+// 3.3.5 rows: exiting games, back paddles, emulator updates, "emulator-<id>" and "hotkeys-<id>" (titled with the emulator's name).
+const emulatorRowIds = ["game-exit", "back-paddles", "emulator-updates"];
+function isEmulatorRow(id: string): boolean {
+  return emulatorRowIds.includes(id) || /^(emulator|hotkeys)-[a-z0-9]{2,20}$/.test(id) && id !== "emulator-updates";
+}
+
+function rowTitle(row: HealthRowData, text: Copy): string {
+  if (titles[row.id]) return text[titles[row.id]];
+  const name = clean(row.data?.name, 40) || "?";
+  if (row.id === "game-exit") return text.r_gameExit;
+  if (row.id === "back-paddles") return text.r_paddles;
+  if (row.id === "emulator-updates") return text.r_emuUpdates;
+  if (row.id.startsWith("hotkeys-")) return fill(text.r_hotkeys, { name });
+  return name;
+}
+
+function emulatorActionLabel(id: string, data: Record<string, unknown>, text: Copy): string | undefined {
+  const name = clean(data.name, 40) || "?";
+  if (id === "game-exit-now") return fill(text.aGameExit, { title: clean(data.untracked, 60) || clean(data.title, 60) || "?" });
+  if (id === "paddles-setup") return text.aPaddles;
+  if (/^emu-fix-[a-z0-9]{2,20}$/.test(id)) return fill(text.aEmuFix, { name });
+  if (/^emu-hotkeys-[a-z0-9]{2,20}$/.test(id)) return fill(text.aEmuHotkeys, { name });
+  if (/^emu-update-[a-z0-9]{2,20}$/.test(id)) return fill(text.aEmuUpdate, { name });
+  return undefined;
+}
+
+function emulatorValue(row: HealthRowData, text: Copy, locale: string, now: Date): { value: string; details: string[] } {
+  const data = row.data ?? {};
+  const details: string[] = [];
+  const list = (value: unknown, max = 12) => (Array.isArray(value) ? value : []).map(item => clean(item, 40)).filter(Boolean).slice(0, max);
+  const fn = (name: string) => text["fn_" + name] && !/^fn_/.test(text["fn_" + name]) ? text["fn_" + name] : name;
+  if (row.id === "game-exit") {
+    const title = clean(data.title, 60) || "?";
+    if (row.state === "untracked") { details.push(text.geUntrackedDetail); return { value: fill(text.geUntracked, { title: clean(data.untracked, 60) || "?" }), details }; }
+    if (row.state === "did-not-exit") return { value: fill(text.geLeft, { title, n: Number(data.left) || 0 }), details };
+    if (row.state === "cleaned") return { value: fill(text.geCleaned, { title, n: Number(data.closed) || 0 }), details };
+    if (row.state === "clean") return { value: fill(text.geClean, { title }), details };
+    return { value: text.geWatching, details };
+  }
+  if (row.id === "back-paddles") {
+    const layouts = Array.isArray(data.layouts) ? data.layouts as Array<Record<string, unknown>> : [];
+    for (const layout of layouts.slice(0, 4))
+      details.push(fill(text.bpLayout, { layout: layout?.layout === "desktop" ? text.bpDesktop : text.bpBig, state: layout?.verdict === "a-b" ? text.bpSet : text.bpUnset }));
+    if (row.state !== "in-place") details.push(text.bpDetail);
+    return { value: row.state === "in-place" ? text.bpIn : row.state === "not-set" ? text.bpNot : text.bpUnknown, details };
+  }
+  if (row.id === "emulator-updates") {
+    const items = Array.isArray(data.emulators) ? data.emulators as Array<Record<string, unknown>> : [];
+    const soaking: string[] = [], needs: string[] = [];
+    for (const item of items.slice(0, 16)) {
+      const name = clean(item?.name, 30) || "?", version = clean(item?.pending, 30) || "?";
+      if (item?.phase === "NeedsConfirmation") { needs.push(name); details.push(fill(text.euConfirm, { name, version })); }
+      else if (item?.phase === "WaitingForChange") { needs.push(name); details.push(fill(text.euRolled, { name })); }
+      else if (item?.phase === "Soaking" || item?.phase === "Due") soaking.push(fill(text.euSoakItem, { name, version, n: Number(item?.daysLeft) || 0 }));
+    }
+    const notOffered = list(data.notOffered);
+    if (notOffered.length) details.push(fill(text.euNotOffered, { list: notOffered.join(", ") }));
+    if (row.state === "needs-you") return { value: fill(text.euNeeds, { list: needs.join(", ") || "?" }), details };
+    if (row.state === "soaking") return { value: fill(text.euSoaking, { list: soaking.join(", ") || "?" }), details };
+    return { value: text.euCurrent, details };
+  }
+  if (row.id.startsWith("hotkeys-")) {
+    const cant = list(data.cantDo).map(fn);
+    if (row.state === "unsupported") {
+      const reason = clean(data.unsupported, 30);
+      return { value: fill(text.hkUnsupported, { reason: text["hr_" + reason] && !/^hr_/.test(text["hr_" + reason]) ? text["hr_" + reason] : reason || "?" }), details };
+    }
+    if (cant.length) details.push(fill(text.hkCant, { list: cant.join(", ") }));
+    if (data.running === true) details.push(text.emRunning);
+    if (row.state === "matches") return { value: text.hkMatch, details };
+    if (row.state === "no-config") return { value: text.hkNoConfig, details };
+    const drifted = list(data.drifted).map(item => item.startsWith("guard:") ? text.hkGuard : fn(item));
+    return { value: fill(text.hkDrift, { list: Array.from(new Set(drifted)).join(", ") || "?" }), details };
+  }
+  // emulator-<id>
+  const version = clean(data.version, 40);
+  const settings = Array.isArray(data.settings) ? data.settings as Array<Record<string, unknown>> : [];
+  for (const setting of settings) {
+    const label = text["k_" + String(setting?.kind)];
+    if (!label || /^k_/.test(label)) continue;
+    details.push(`${label}: ${setting?.state === "ok" ? text.sYes : setting?.state === "no-config" ? text.sNoConfig : text.sNo}`);
+  }
+  const ra = String(data.ra ?? "");
+  if (ra === "signed-in") details.push(text.emRaIn); else if (ra === "signed-out") details.push(text.emRaOut); else if (ra === "off") details.push(text.emRaOff);
+  const bios = Array.isArray(data.bios) ? data.bios as Array<Record<string, unknown>> : [];
+  if (bios.length === 0 && data.biosNote === "none-needed") details.push(text.emBiosNone);
+  for (const entry of bios.slice(0, 8)) {
+    const system = clean(entry?.system, 20).toUpperCase() || "?";
+    if (entry?.state === "ok") details.push(fill(text.emBiosOk, { system })); else if (entry?.state === "missing") details.push(fill(text.emBiosMissing, { system }));
+  }
+  if (version) details.push(fill(text.emVersion, { version }));
+  if (data.running === true) details.push(text.emRunning);
+  void locale; void now;
+  if (row.state === "ok") return { value: version ? fill(text.emOk, { version }) : text.emOkNoVersion, details };
+  const issues = list(data.issues).map(item => item === "settings" ? text.emSettings : item === "ra" ? text.emRa : item === "bios" ? text.emBios : item);
+  return { value: fill(text.emCheck, { what: issues.join(", ") || "?" }), details };
+}
+
 // A row's buttons: its fix (from data.fix) first, then the others it offers (data.actions).
 function rowActions(row: HealthRowData, text: Copy): HealthAction[] {
   const data = row.data ?? {};
   const actions: HealthAction[] = [];
+  const dynamic = typeof data.fix === "string" ? emulatorActionLabel(data.fix, data, text) : undefined;
+  if (dynamic && typeof data.fix === "string") { actions.push({ id: data.fix, label: dynamic, fix: true }); }
   const fix = typeof data.fix === "string" && actionLabels[data.fix] ? data.fix : undefined;
   if (fix) actions.push({ id: fix, label: text[actionLabels[fix]], fix: true });
   for (const id of Array.isArray(data.actions) ? data.actions : [])
-    if (typeof id === "string" && actionLabels[id] && id !== fix) actions.push({ id, label: text[actionLabels[id]], fix: false });
+    if (typeof id === "string" && id !== data.fix && (actionLabels[id] || emulatorActionLabel(id, data, text)) && id !== fix) actions.push({ id, label: actionLabels[id] ? text[actionLabels[id]] : emulatorActionLabel(id, data, text)!, fix: false });
   return actions;
 }
 
@@ -1014,11 +1308,11 @@ export function healthSummary(answer: HealthAnswer | undefined, locale: string):
 export function healthLines(answer: HealthAnswer | undefined, locale: string, now = new Date()): HealthLine[] {
   const text = healthCopy(locale);
   const alerts = Array.isArray(answer?.alerts) ? answer!.alerts : [];
-  return (Array.isArray(answer?.rows) ? answer!.rows : []).filter(row => row && typeof row.id === "string" && titles[row.id]).map(row => {
+  return (Array.isArray(answer?.rows) ? answer!.rows : []).filter(row => row && typeof row.id === "string" && (titles[row.id] || isEmulatorRow(row.id))).map(row => {
     const { value, details } = rowValue(row, text, locale, now);
     const alert = alerts.find(item => item?.rowId === row.id && !item.dismissed);
     const level: HealthLevel = ["ok", "attention", "info", "unknown"].includes(row.level) ? row.level : "unknown";
-    const line: HealthLine = { id: row.id, level, title: text[titles[row.id]], value, details, alertId: answer?.alertsEnabled !== false ? alert?.id : undefined };
+    const line: HealthLine = { id: row.id, level, title: rowTitle(row, text), value, details, alertId: answer?.alertsEnabled !== false ? alert?.id : undefined };
     if (row.id === "microphone" && (row.state === "muted" || row.state === "partial")) line.tone = "crimson";
     const actions = rowActions(row, text);
     if (actions.length) line.actions = actions;

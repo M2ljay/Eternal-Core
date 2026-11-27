@@ -66,6 +66,9 @@ function fixture(failing, runtime = {}) {
     './JarvisSection':{JarvisSection:noop,JarvisPage:noop,JarvisTab:noop,JarvisOrbIcon:noop,setJarvisRuntime:noop,setJarvisPresence:noop,JARVIS_ROUTE:'/core-jarvis'},
     './jarvisPresence':jarvisPresence,
     // Core UI phase 1 is an optional integration like the others.
+    // 3.3.5: the game exit watch (Steam's app lifetime and Exit Game) is an optional integration like the others.
+    './gameExit':{installGameExitWatch:install('game exit watch')},
+    './ControlsSection':{ControlsSection:noop},
     './coreUi':{installCoreUi:install('core ui')},
     // Core UI 3.3.3: the Library icons, plugin logos and Core Home's icons are set up inside the same hook.
     './coreUiSetting':{coreUiSetting:{get:()=>true,set:noop,subscribe:()=>noop}},
@@ -92,8 +95,8 @@ function fixture(failing, runtime = {}) {
   vm.runInNewContext(compiled,{exports:{},require:name=>modules[name]??{}, window,document:{documentElement:{lang:'en'}},navigator:{language:'en'},console:{warn:(...items)=>warnings.push(items),log:noop,debug:noop},Promise,Set,performance,Date:{now:runtime.now??Date.now}});
   return {factory,calls,disposed,warnings,tick:()=>tick()};
 }
-const integrations = ['store library','digital stores portal','core ui','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','home news','haptics','virtual controller name','qam','power menu'];
-for (const name of ['store library','digital stores portal','core ui','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','haptics','virtual controller name','power menu']) {
+const integrations = ['store library','digital stores portal','core ui','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','home news','haptics','virtual controller name','qam','power menu','game exit watch'];
+for (const name of ['store library','digital stores portal','core ui','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','haptics','virtual controller name','power menu','game exit watch']) {
   test(`Unavailable ${name} hook does not prevent the real plugin and QAM from loading`, async () => {
     const f = fixture(name);
     const plugin = f.factory();

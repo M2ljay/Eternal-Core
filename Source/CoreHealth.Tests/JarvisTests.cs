@@ -44,16 +44,33 @@ static class JarvisTests
 	{
 		JarvisCombo? combo = JarvisCombos.Parse("r5 + l5");
 		Check(combo is { Text: "L5+R5", Lower: (1UL << 15) | (1UL << 16), Upper: 0 }, "combo: L5+R5 normalised, lower word bits 15 and 16");
-		combo = JarvisCombos.Parse("L4+R4");
-		Check(combo is { Lower: 0, Upper: (1UL << 9) | (1UL << 10) }, "combo: L4+R4 in the upper word (bits 9 and 10)");
+		Check(JarvisCombos.Parse("L4+R4") is null && JarvisCombos.Parse("L4+L5") is null && JarvisCombos.Parse("R4+R5+A") is null, "combo: L4 and R4 are A and B (3.3.5), never in a combo");
 		Check(JarvisCombos.Parse("LB+RB+View")?.Text == "L1+R1+SELECT", "combo: Xbox names as aliases");
-		Check(JarvisCombos.Parse("A") is null && JarvisCombos.Parse("A+B+X+Y+L1") is null && JarvisCombos.Parse("A+A") is null && JarvisCombos.Parse("STEAM+A") is null && JarvisCombos.Parse("QAM+L4") is null && JarvisCombos.Parse("L9+R9") is null, "combo: one button, five buttons, repeats, Steam's own buttons and unknown names refused");
-		Check(JarvisCombos.Clean("", "L5+R5") is null && JarvisCombos.Clean("junk", "L5+R5") == "L5+R5" && JarvisCombos.Clean(null, "L4+R4") == "L4+R4", "combo: empty is off, junk falls back to the default");
-		Check(JarvisCombos.Overlap(JarvisCombos.Parse("L4+R4")!, JarvisCombos.Parse("L4+R4+A")!) && !JarvisCombos.Overlap(JarvisCombos.Parse("L4+R4")!, JarvisCombos.Parse("L4+L5")!), "combo: containment is a clash, sharing one button is not");
+		Check(JarvisCombos.Parse("A") is null && JarvisCombos.Parse("A+B+X+Y+L1") is null && JarvisCombos.Parse("A+A") is null && JarvisCombos.Parse("STEAM+A") is null, "combo: too short, too long, repeated, Steam's own");
+		Check(JarvisCombos.Clean("", "L5+R5") is null && JarvisCombos.Clean("junk", "L5+R5") == "L5+R5" && JarvisCombos.Clean(null, "L5+R5") == "L5+R5", "combo: empty is off, junk falls back to the default");
+		Check(JarvisCombos.Overlap(JarvisCombos.Parse("L5+R5")!, JarvisCombos.Parse("L5+R5+A")!) && !JarvisCombos.Overlap(JarvisCombos.Parse("L5+R5")!, JarvisCombos.Parse("L1+L5")!), "combo: containment is a clash, sharing one button is not");
 		JarvisCombosView view = JarvisCombosPolicy.Clean(null, null, null);
-		Check(view == new JarvisCombosView("L4+R4", "L5+R5", "L4+L5"), "combo: defaults on the four grips (dictation L4+R4, talk L5+R5), no clash");
-		view = JarvisCombosPolicy.Clean("L4+R4", "L4+R4+A", "");
-		Check(view == new JarvisCombosView("L4+R4", null, null), "combo: a clashing combo is turned off, an empty one stays off");
+		Check(view == new JarvisCombosView(null, "L5+R5", null), "combo: only L5+R5 since 3.3.5 (dictation and the screen helper are buttons and voice)");
+		view = JarvisCombosPolicy.Clean("L4+R4", "L5+R5", "L4+L5");
+		Check(view == new JarvisCombosView(null, "L5+R5", null), "combo: old paddle settings are ignored");
+		// Tap to talk: a pause after speech ends the recording; no speech at all ends it after 8 s.
+		var silence = new JarvisListenLevels.SilenceState(false, TimeSpan.Zero, TimeSpan.Zero);
+		var window = TimeSpan.FromMilliseconds(50);
+		bool ended = false;
+		for (int i = 0; i < 10; i++) (silence, ended) = JarvisListenLevels.Next(silence, 0.1f, window);
+		Check(!ended && silence.HeardSpeech, "listen: speech keeps recording");
+		for (int i = 0; i < 23; i++) (silence, ended) = JarvisListenLevels.Next(silence, 0.001f, window);
+		Check(!ended, "listen: a short gap (1.15 s) does not end it");
+		(silence, ended) = JarvisListenLevels.Next(silence, 0.001f, window);
+		Check(ended, "listen: 1.2 s of quiet after speech ends it");
+		silence = new JarvisListenLevels.SilenceState(false, TimeSpan.Zero, TimeSpan.Zero);
+		for (int i = 0; i < 159; i++) (silence, ended) = JarvisListenLevels.Next(silence, 0f, window);
+		Check(!ended && JarvisListenLevels.Next(silence, 0f, window).End, "listen: no speech at all ends after 8 s");
+		Check(JarvisListenLevels.Rms(new[] { 0.5f, -0.5f }) == 0.5f && JarvisListenLevels.Rms(Array.Empty<float>()) == 0, "listen: RMS level");
+		double[] bars = JarvisListenLevels.Heights(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 1f }, null, false);
+		Check(bars.Length == 9 && bars[0] == 6 && bars[8] > 6 && bars[8] <= 30, "listen: nine bars from 6 px, the loudest window tallest");
+		Check(JarvisListenLevels.Heights(Array.Empty<float>(), null, false).All(height => height == 6), "listen: a muted or dead microphone gives flat bars");
+		Check(JarvisListenLevels.Heights(new[] { 1f }, null, true).All(height => height == 18), "listen: reduced motion shows static mid-height bars");
 	}
 
 	private static void History(Action<bool, string> Check)

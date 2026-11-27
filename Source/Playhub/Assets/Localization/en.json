@@ -1680,5 +1680,17 @@
   "Jarvis di Home Assistant (consigliato)": "Home Assistant's Jarvis (recommended)",
   "API di Claude diretta": "Direct Claude API",
   "Tocco breve: apri Jarvis in Accesso rapido": "Short tap: open Jarvis in Quick Access",
-  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "A short tap on the Talk to Jarvis combo opens or closes the Jarvis tab in Quick Access, even during a game; holding it talks to Jarvis."
+  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "A short tap on the Talk to Jarvis combo opens or closes the Jarvis tab in Quick Access, even during a game; holding it talks to Jarvis.",
+  "Parla con Jarvis (tocca per parlare)": "Talk to Jarvis (tap to talk)",
+  "Tieni premuto: apri Jarvis in Accesso rapido": "Hold: open Jarvis in Quick Access",
+  "Un tocco di L5+R5 parla con Jarvis senza aprire nulla e si ferma quando smetti di parlare; tenerla premuta apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco. Spento, tenerla premuta parla finché la tieni.": "A tap on L5+R5 talks to Jarvis without opening anything and stops when you stop speaking; holding it opens or closes the Jarvis tab in Quick Access, even during a game. Off, holding it talks for as long as you hold.",
+  "Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. L4 e R4 fanno da A e B, quindi nessuna combinazione li usa. Dettatura e aiuto sullo schermo restano nella scheda Jarvis e si chiedono anche a voce.": "Two to four buttons pressed together, for example L5+R5. Empty turns the combo off. L4 and R4 act as A and B, so no combo uses them. Dictation and the screen helper stay on the Jarvis tab and can also be asked for by voice.",
+  "Chiudi i launcher dei negozi dopo un gioco": "Close store launchers after a game",
+  "Quando un gioco ha aperto Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar o Amazon Games, Core lo chiude con garbo alla fine del gioco, a meno che fosse già aperto, un altro suo gioco sia in corso o stia scaricando. Si può spegnere per ogni launcher.": "When a game opened Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar or Amazon Games, Core closes it politely when the game ends, unless it was already open, another of its games is running or it is downloading. It can be switched off per launcher.",
+  "Aggiornamenti degli emulatori": "Emulator updates",
+  "Core aggiorna gli emulatori di EmuDeck che hanno un progetto ufficiale su GitHub: ogni versione aspetta 10 giorni, poi si installa di notte con backup, prova di avvio e ripristino automatico. I tuoi salvataggi e le impostazioni non vengono toccati. Se un progetto non pubblica un'impronta (hash) del file, va confermato qui una volta per versione, perché altrimenti solo GitHub garantisce che il file sia quello caricato.": "Core updates the EmuDeck emulators that have an official project on GitHub: each version waits 10 days, then installs at night with a backup, a start test and an automatic rollback. Your saves and settings are not touched. If a project publishes no fingerprint (hash) of the file, confirm it here once per version, because otherwise only GitHub vouches that the file is the one uploaded.",
+  "Controlla le conferme": "Check confirmations",
+  "Conferma {0} {1}": "Confirm {0} {1}",
+  "Confermato. L'aggiornamento seguirà la sua attesa.": "Confirmed. The update follows its waiting period.",
+  "Nessun aggiornamento da confermare.": "Nothing to confirm."
 }

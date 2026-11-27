@@ -1,7 +1,7 @@
 // Eternal Core: Jarvis's controller combos (docs/eternal/JARVIS.md). Steam owns the controller and the agent never reads
 // one (DashboardShortcutService.cs), so the combos are watched here, inside Steam, through
-// SteamClient.Input.RegisterForControllerStateChanges: two to four buttons held together. Dictation and "talk to Jarvis"
-// record while the combo is held; the screen helper fires once per press. Bit positions follow Steam's
+// SteamClient.Input.RegisterForControllerStateChanges: two to four buttons held together. Since 3.3.5 only the talk combo
+// (L5+R5) is set; the dictation and screen-helper kinds stay in the type for old settings but are never configured. Bit positions follow Steam's
 // ControllerStateChange as @decky/ui's typings describe it (ulButtons; ulUpperButtons holds the back grips L4/R4). The
 // 2026 Steam Controller is assumed to report its grips like the Steam Deck (inferred; TV checklist). The same parser
 // exists in C# (Shared/JarvisCore.cs, JarvisCombos) for the desktop app and the agent.
@@ -19,7 +19,8 @@ const ALIASES: Record<string, string> = {
   LB: "L1", RB: "R1", LT: "L2", RT: "R2", VIEW: "SELECT", BACK: "SELECT", MENU: "START", LS: "L3", RS: "R3",
   DUP: "UP", DDOWN: "DOWN", DLEFT: "LEFT", DRIGHT: "RIGHT",
 };
-const RESERVED = new Set(["STEAM", "GUIDE", "QAM", "HOME"]);
+// 3.3.5: L4 and R4 are A and B everywhere, so no combo may use them.
+const RESERVED = new Set(["STEAM", "GUIDE", "QAM", "HOME", "L4", "R4"]);
 const ORDER = ["L4", "R4", "L5", "R5", "L1", "R1", "L2", "R2", "L3", "R3", "SELECT", "START", "UP", "DOWN", "LEFT", "RIGHT", "A", "B", "X", "Y"];
 
 export function parseCombo(text: unknown): JarvisCombo | undefined {
@@ -46,13 +47,16 @@ export function comboHeld(combo: JarvisCombo, buttons: unknown, upperButtons: un
   return (lower & combo.lower) >>> 0 === combo.lower && (upper & combo.upper) >>> 0 === combo.upper;
 }
 
-// Core UI phase 1: the talk combo has two behaviours. A short tap (released within JARVIS_TAP_MS) opens or closes
-// Jarvis's Quick Access tab, also during a game; holding it is push-to-talk as before. Recording starts on the press
-// either way (no lost first syllable); a tap cancels it.
+// 3.3.5: tap to talk, hold to open (the other way round would break immersion). A tap on L5+R5 (released within
+// JARVIS_TAP_MS) talks: recording started on the press and keeps going, without opening anything, until a pause in
+// speech, another tap, the 30 s cap or a mute. A hold past the threshold cancels that recording and opens or closes
+// Jarvis's Quick Access tab (holdOpens, the desktop setting); with holdOpens off a hold is push-to-talk ("release").
 export const JARVIS_TAP_MS = 300;
-export type ReleaseAction = "tap" | "release";
-export function jarvisRelease(kind: ComboKind, heldMs: number, tapOpens: boolean): ReleaseAction {
-  return kind === "talk" && tapOpens && Number.isFinite(heldMs) && heldMs >= 0 && heldMs < JARVIS_TAP_MS ? "tap" : "release";
+export type ReleaseAction = "talk" | "open" | "release";
+export function jarvisRelease(kind: ComboKind, heldMs: number, holdOpens: boolean): ReleaseAction {
+  if (kind !== "talk" || !Number.isFinite(heldMs) || heldMs < 0) return "release";
+  if (heldMs < JARVIS_TAP_MS) return "talk";
+  return holdOpens ? "open" : "release";
 }
 
 export type ComboDeps = {

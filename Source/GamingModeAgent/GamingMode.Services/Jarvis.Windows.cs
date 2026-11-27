@@ -37,11 +37,19 @@ internal sealed class JarvisRecorder : IDisposable
 
 	internal string? Failure => _failure;
 	internal DateTimeOffset StartedAt { get; private set; }
+	// Tap to talk (3.3.5): end the recording on a pause (JarvisListenLevels.Next). Ended says it stopped by itself.
+	internal bool AutoStop { get; init; }
+	internal volatile bool Ended;
+	// One input level per ~50 ms window of exactly what is being recorded (the listening pill's bars).
+	internal Action<float>? OnLevel { get; init; }
+	private double _windowSum;
+	private int _windowCount;
+	private JarvisListenLevels.SilenceState _silence = new(false, TimeSpan.Zero, TimeSpan.Zero);
 
 	// Opens the endpoint and starts capturing on its own thread; null when Windows refuses (the reason in failure).
-	internal static JarvisRecorder? Start(string endpointId, out string? failure)
+	internal static JarvisRecorder? Start(string endpointId, out string? failure, bool autoStop = false, Action<float>? onLevel = null)
 	{
-		var recorder = new JarvisRecorder();
+		var recorder = new JarvisRecorder { AutoStop = autoStop, OnLevel = onLevel };
 		var ready = new ManualResetEventSlim(false);
 		recorder._thread = new Thread(() => recorder.Run(endpointId, ready)) { IsBackground = true, Name = "Core Jarvis microphone" };
 		recorder._thread.SetApartmentState(ApartmentState.MTA);
@@ -106,7 +114,9 @@ internal sealed class JarvisRecorder : IDisposable
 					if ((flags & BufferSilent) == 0 && data != 0) Marshal.Copy(data, chunk, 0, length);
 					lock (_audio) _audio.Write(chunk, 0, length);
 					capture.ReleaseBuffer(frames);
+					if (Measure(chunk)) { Ended = true; break; }
 				}
+				if (Ended) break;
 			}
 			client.Stop();
 		}
@@ -120,6 +130,30 @@ internal sealed class JarvisRecorder : IDisposable
 			WindowsMicrophone.Release(enumerator);
 			ready.Set();
 		}
+	}
+
+	// Levels per ~50 ms window of the captured samples (all channels), and the end of speech when AutoStop is on.
+	// Returns true when tap to talk should end the recording.
+	private bool Measure(byte[] chunk)
+	{
+		int bytes = _bits / 8;
+		if (bytes is not (2 or 4) || _rate <= 0 || _channels <= 0) return false;
+		int perWindow = Math.Max(1, _rate * _channels * JarvisListenLevels.WindowMs / 1000);
+		bool end = false;
+		for (int offset = 0; offset + bytes <= chunk.Length; offset += bytes)
+		{
+			double sample = _float && bytes == 4 ? BitConverter.ToSingle(chunk, offset) : bytes == 2 ? BitConverter.ToInt16(chunk, offset) / 32768.0 : BitConverter.ToInt32(chunk, offset) / 2147483648.0;
+			_windowSum += sample * sample;
+			if (++_windowCount < perWindow) continue;
+			float level = (float)Math.Min(1, Math.Sqrt(_windowSum / _windowCount));
+			_windowSum = 0;
+			_windowCount = 0;
+			try { OnLevel?.Invoke(level); } catch { }
+			if (!AutoStop) continue;
+			(_silence, bool stop) = JarvisListenLevels.Next(_silence, level, TimeSpan.FromMilliseconds(JarvisListenLevels.WindowMs));
+			end |= stop;
+		}
+		return end;
 	}
 
 	// WAVEFORMATEX, or WAVEFORMATEXTENSIBLE (tag 0xFFFE) whose SubFormat says PCM or IEEE float.
@@ -438,43 +472,116 @@ internal static class JarvisTyper
 
 // ---------- the indicator ----------
 
-// A small pill in the top-right corner: a crimson microphone dot and "Jarvis is listening" while push-to-talk records,
-// "Screenshot taken for Jarvis" for two seconds after every screenshot. Like Core's notices it takes no focus or input
-// (no activation, click-through, tool window), and it never pauses or minimises anything.
+// Top right, 32 px from the top and 40 px from the right edge (at 1920x1080, scaled): a glass pill (black at 72%,
+// a 1 px #1A1D21 border, 10 px corners, 52 px high, 19 px semibold text) that takes no focus or input (no activation,
+// click-through, tool window) and never pauses or minimises anything (board 8/9 of "Core: current vision").
+// - Listening: nine crimson bars (4 px wide, 3 px apart, 2 px corners) whose heights follow the input level of the
+//   recording itself (JarvisRecorder.OnLevel, ~50 ms windows, smoothed, 6 to 30 px), and "Listening". It shows from
+//   the first sample to the moment recording stops (a pause, a second tap, the 30 s cap, a mute) and at no other time.
+//   Height and opacity only, no glow; with Windows' animations off the bars stand still at mid height.
+// - Thinking: a 12 px outlined steel dot and "Thinking..." until the answer starts, then it goes.
+// - Answer: a 480-560 px card in the same spot: the orb, a small crimson "JARVIS", the short answer for a few seconds
+//   while he speaks, and the hint to hold L5 + R5 for the full answer.
+// - "Screenshot taken for Jarvis" for two seconds after every screenshot.
+// WPF layered windows cannot blur what is behind them, so the glass is a plain 72% black (the 16 px backdrop blur of
+// the design is not drawn). A game in exclusive fullscreen can hide any topmost window; the agent then tells the
+// plugin, which shows the orb and a toast instead (MarkIIIHost.Jarvis.cs, JarvisIndicator.ExclusiveFullscreen).
 internal static class JarvisIndicator
 {
+	private enum Mode { Hidden, Listening, Thinking, Answer, Flash }
 	private static System.Windows.Threading.Dispatcher? _dispatcher;
 	private static System.Windows.Window? _window;
-	private static System.Windows.Controls.TextBlock? _label;
+	private static System.Windows.Controls.Border? _pill;
+	private static System.Windows.Controls.TextBlock? _label, _answer, _hint, _brand;
+	private static System.Windows.Controls.StackPanel? _bars, _answerPanel;
+	private static System.Windows.Shapes.Ellipse? _dot, _orb;
 	private static System.Windows.Threading.DispatcherTimer? _hide;
-	private static bool _listening;
+	private static Mode _mode = Mode.Hidden;
+	private static readonly List<float> Levels = new();
+	private static double[]? _heights;
 	private static readonly object Sync = new();
+	private static double Scale => Math.Clamp(System.Windows.SystemParameters.PrimaryScreenHeight / 1080.0, 0.75, 2.0);
+	private static readonly System.Windows.Media.Color Crimson = System.Windows.Media.Color.FromRgb(0xD7, 0x26, 0x3D), Steel = System.Windows.Media.Color.FromRgb(0x9A, 0xA4, 0xAE);
 
+	// Recording started (on) or stopped (off). Stopping leaves the pill to Thinking or hides it.
 	internal static void Listening(bool on, string text, FileLogger logger)
 	{
-		_listening = on;
+		lock (Levels) { Levels.Clear(); _heights = null; }
 		Post(() =>
 		{
-			if (on) Show(text, null);
-			else if (_hide is null || !_hide.IsEnabled) _window?.Hide();
+			if (on) Show(Mode.Listening, text, null);
+			else if (_mode == Mode.Listening) Hide();
 		}, logger);
 	}
 
-	internal static void Flash(string text, FileLogger logger) => Post(() => Show(text, TimeSpan.FromSeconds(2)), logger);
-
-	private static void Show(string text, TimeSpan? duration)
+	internal static void Level(float level, FileLogger logger)
 	{
-		if (_window is null || _label is null) return;
+		lock (Levels) { Levels.Add(level); if (Levels.Count > 32) Levels.RemoveAt(0); }
+		Post(UpdateBars, logger);
+	}
+
+	internal static void Thinking(string text, FileLogger logger) => Post(() => Show(Mode.Thinking, text, null), logger);
+
+	internal static void Done(FileLogger logger) => Post(() => { if (_mode == Mode.Thinking) Hide(); }, logger);
+
+	internal static void Answer(string brand, string text, string hint, FileLogger logger) => Post(() =>
+	{
+		if (_brand is not null) _brand.Text = brand;
+		if (_answer is not null) _answer.Text = text.Length > 180 ? text[..179] + "\u2026" : text;
+		if (_hint is not null) _hint.Text = hint;
+		Show(Mode.Answer, "", TimeSpan.FromSeconds(Math.Clamp(text.Length / 15.0, 4, 9)));
+	}, logger);
+
+	internal static void Flash(string text, FileLogger logger) => Post(() => Show(Mode.Flash, text, TimeSpan.FromSeconds(2)), logger);
+
+	// Windows reports a Direct3D exclusive-fullscreen app (SHQueryUserNotificationState: QUNS_RUNNING_D3D_FULL_SCREEN),
+	// over which a topmost window may not show.
+	internal static bool ExclusiveFullscreen()
+	{
+		try { return SHQueryUserNotificationState(out int state) == 0 && state == 3; }
+		catch (Exception error) when (error is DllNotFoundException or EntryPointNotFoundException) { return false; }
+	}
+
+	private static void Show(Mode mode, string text, TimeSpan? duration)
+	{
+		if (_window is null || _label is null || _bars is null || _dot is null || _answerPanel is null || _pill is null) return;
+		_mode = mode;
+		bool listening = mode == Mode.Listening, thinking = mode == Mode.Thinking, answer = mode == Mode.Answer;
 		_label.Text = text;
+		_label.Foreground = new System.Windows.Media.SolidColorBrush(thinking ? Steel : System.Windows.Media.Color.FromRgb(0xF4, 0xF7, 0xFA));
+		_label.Visibility = answer ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+		_bars.Visibility = listening ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+		_dot.Visibility = thinking || mode == Mode.Flash ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+		_dot.Fill = mode == Mode.Flash ? new System.Windows.Media.SolidColorBrush(Crimson) : System.Windows.Media.Brushes.Transparent;
+		_dot.Stroke = new System.Windows.Media.SolidColorBrush(mode == Mode.Flash ? Crimson : Steel);
+		_answerPanel.Visibility = answer ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+		_pill.MinWidth = answer ? 480 * Scale : 0;
+		_pill.MaxWidth = answer ? 560 * Scale : double.PositiveInfinity;
+		if (listening) foreach (System.Windows.Shapes.Rectangle bar in _bars.Children) bar.Height = 18 * Scale;
 		_window.Show();
 		Place(_window);
 		_hide?.Stop();
 		if (duration is { } visible)
 		{
 			_hide = new System.Windows.Threading.DispatcherTimer { Interval = visible };
-			_hide.Tick += (_, _) => { _hide!.Stop(); if (!_listening) _window?.Hide(); };
+			_hide.Tick += (_, _) => { _hide!.Stop(); if (_mode is Mode.Answer or Mode.Flash) Hide(); };
 			_hide.Start();
 		}
+	}
+
+	private static void Hide()
+	{
+		_mode = Mode.Hidden;
+		_window?.Hide();
+	}
+
+	private static void UpdateBars()
+	{
+		if (_mode != Mode.Listening || _bars is null) return;
+		bool reduced = !System.Windows.SystemParameters.ClientAreaAnimation;
+		double[] heights;
+		lock (Levels) { heights = JarvisListenLevels.Heights(Levels, _heights, reduced); _heights = heights; }
+		for (int i = 0; i < _bars.Children.Count && i < heights.Length; i++) ((System.Windows.Shapes.Rectangle)_bars.Children[i]).Height = heights[i] * Scale;
 	}
 
 	private static void Post(Action action, FileLogger logger)
@@ -498,7 +605,7 @@ internal static class JarvisIndicator
 				try
 				{
 					_dispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
-					(_window, _label) = Create();
+					_window = Create();
 					_window.SourceInitialized += (_, _) =>
 					{
 						nint handle = new System.Windows.Interop.WindowInteropHelper(_window).Handle;
@@ -516,42 +623,61 @@ internal static class JarvisIndicator
 		}
 	}
 
-	private static (System.Windows.Window, System.Windows.Controls.TextBlock) Create()
+	private static System.Windows.Window Create()
 	{
-		double scale = Math.Clamp(System.Windows.SystemParameters.PrimaryScreenHeight / 1080.0, 0.75, 2.0);
-		var crimson = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xD7, 0x26, 0x3D));
-		var dot = new System.Windows.Shapes.Ellipse { Width = 12 * scale, Height = 12 * scale, Fill = crimson, VerticalAlignment = System.Windows.VerticalAlignment.Center };
-		var label = new System.Windows.Controls.TextBlock
+		double s = Scale;
+		var crimson = new System.Windows.Media.SolidColorBrush(Crimson);
+		var white = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xF4, 0xF7, 0xFA));
+		var font = new System.Windows.Media.FontFamily("Segoe UI");
+		_bars = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Height = 30 * s, VerticalAlignment = System.Windows.VerticalAlignment.Center };
+		for (int i = 0; i < JarvisListenLevels.Bars; i++)
+			_bars.Children.Add(new System.Windows.Shapes.Rectangle { Width = 4 * s, Height = 6 * s, RadiusX = 2 * s, RadiusY = 2 * s, Fill = crimson,
+				Margin = new System.Windows.Thickness(i == 0 ? 0 : 3 * s, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center });
+		_dot = new System.Windows.Shapes.Ellipse { Width = 12 * s, Height = 12 * s, StrokeThickness = 1.5 * s, VerticalAlignment = System.Windows.VerticalAlignment.Center };
+		_label = new System.Windows.Controls.TextBlock { Foreground = white, FontFamily = font, FontSize = 19 * s, FontWeight = System.Windows.FontWeights.SemiBold,
+			Margin = new System.Windows.Thickness(14 * s, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center };
+		_orb = new System.Windows.Shapes.Ellipse { Width = 36 * s, Height = 36 * s, Stroke = crimson, StrokeThickness = 3 * s, VerticalAlignment = System.Windows.VerticalAlignment.Top };
+		_brand = new System.Windows.Controls.TextBlock { Foreground = crimson, FontFamily = font, FontSize = 12 * s, FontWeight = System.Windows.FontWeights.Bold };
+		_answer = new System.Windows.Controls.TextBlock { Foreground = white, FontFamily = font, FontSize = 19 * s, FontWeight = System.Windows.FontWeights.SemiBold, TextWrapping = System.Windows.TextWrapping.Wrap, Margin = new System.Windows.Thickness(0, 4 * s, 0, 4 * s) };
+		_hint = new System.Windows.Controls.TextBlock { Foreground = new System.Windows.Media.SolidColorBrush(Steel), FontFamily = font, FontSize = 14 * s };
+		var text = new System.Windows.Controls.StackPanel { Margin = new System.Windows.Thickness(14 * s, 0, 0, 0) };
+		text.Children.Add(_brand);
+		text.Children.Add(_answer);
+		text.Children.Add(_hint);
+		var answerRow = new System.Windows.Controls.DockPanel();
+		answerRow.Children.Add(_orb);
+		answerRow.Children.Add(text);
+		_answerPanel = new System.Windows.Controls.StackPanel { Visibility = System.Windows.Visibility.Collapsed };
+		_answerPanel.Children.Add(answerRow);
+		var row = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, VerticalAlignment = System.Windows.VerticalAlignment.Center };
+		row.Children.Add(_bars);
+		row.Children.Add(_dot);
+		row.Children.Add(_label);
+		var content = new System.Windows.Controls.Grid();
+		content.Children.Add(row);
+		content.Children.Add(_answerPanel);
+		_pill = new System.Windows.Controls.Border
 		{
-			Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xF4, 0xF7, 0xFA)),
-			FontFamily = new System.Windows.Media.FontFamily("Segoe UI"), FontSize = 18 * scale, FontWeight = System.Windows.FontWeights.SemiBold,
-			Margin = new System.Windows.Thickness(10 * scale, 0, 0, 0), VerticalAlignment = System.Windows.VerticalAlignment.Center,
+			Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0xB8, 0, 0, 0)),
+			BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1A, 0x1D, 0x21)), BorderThickness = new System.Windows.Thickness(1),
+			CornerRadius = new System.Windows.CornerRadius(10 * s), Padding = new System.Windows.Thickness(22 * s, 11 * s, 22 * s, 11 * s), MinHeight = 52 * s, Child = content,
 		};
-		var row = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
-		row.Children.Add(dot);
-		row.Children.Add(label);
-		var pill = new System.Windows.Controls.Border
-		{
-			Background = System.Windows.Media.Brushes.Black, BorderBrush = crimson, BorderThickness = new System.Windows.Thickness(2 * scale),
-			CornerRadius = new System.Windows.CornerRadius(22 * scale), Padding = new System.Windows.Thickness(16 * scale, 8 * scale, 18 * scale, 8 * scale), Child = row,
-		};
-		var window = new System.Windows.Window
+		return new System.Windows.Window
 		{
 			WindowStyle = System.Windows.WindowStyle.None, AllowsTransparency = true, Background = System.Windows.Media.Brushes.Transparent,
 			Topmost = true, ShowInTaskbar = false, ShowActivated = false, Focusable = false, IsHitTestVisible = false,
-			SizeToContent = System.Windows.SizeToContent.WidthAndHeight, ResizeMode = System.Windows.ResizeMode.NoResize, Content = pill,
+			SizeToContent = System.Windows.SizeToContent.WidthAndHeight, ResizeMode = System.Windows.ResizeMode.NoResize, Content = _pill,
 		};
-		return (window, label);
 	}
 
 	private static void Place(System.Windows.Window window)
 	{
 		window.UpdateLayout();
-		double margin = 28 * Math.Clamp(System.Windows.SystemParameters.PrimaryScreenHeight / 1080.0, 0.75, 2.0);
-		window.Left = System.Windows.SystemParameters.PrimaryScreenWidth - window.ActualWidth - margin;
-		window.Top = margin;
+		window.Left = System.Windows.SystemParameters.PrimaryScreenWidth - window.ActualWidth - 40 * Scale;
+		window.Top = 32 * Scale;
 	}
 
 	[DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")] private static extern nint GetWindowLongPtr(nint window, int index);
 	[DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")] private static extern nint SetWindowLongPtr(nint window, int index, nint value);
+	[DllImport("shell32.dll")] private static extern int SHQueryUserNotificationState(out int state);
 }

@@ -80,6 +80,9 @@ internal sealed record ConsoleGuardInputs
 	public bool LauncherFocusEnabled { get; init; }
 	public int LauncherPushedToday { get; init; }
 	public string? LauncherLastPushed { get; init; }
+	// 3.3.5: store launchers Core closed after the game they were started for (GameExit.cs), shown on the same row.
+	public int LauncherClosedToday { get; init; }
+	public string? LauncherLastClosed { get; init; }
 	public bool WakeChecksEnabled { get; init; }
 	public WakeCheckResult? LastWake { get; init; }
 	public bool? EthernetUp { get; init; }
@@ -307,7 +310,7 @@ internal static class ConsoleGuardPolicy
 
 	private static HealthRow LauncherFocus(ConsoleGuardInputs input)
 	{
-		var data = Data(("pushedToday", input.LauncherPushedToday), ("last", input.LauncherLastPushed));
+		var data = Data(("pushedToday", input.LauncherPushedToday), ("last", input.LauncherLastPushed), ("closedToday", input.LauncherClosedToday), ("lastClosed", input.LauncherLastClosed));
 		if (!input.LauncherFocusEnabled) return new HealthRow("launcher-focus", HealthLevel.Info, "off", data);
 		return new HealthRow("launcher-focus", HealthLevel.Ok, "watching", data);
 	}

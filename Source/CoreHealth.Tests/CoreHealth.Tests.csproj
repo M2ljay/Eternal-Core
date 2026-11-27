@@ -31,6 +31,11 @@
     <Compile Include="../Shared/JarvisWyoming.cs" Link="JarvisWyoming.cs" />
     <Compile Include="../Shared/JarvisSecretStore.cs" Link="JarvisSecretStore.cs" />
     <Compile Include="../GamingModeAgent/GamingMode.Services/Jarvis.cs" Link="Jarvis.cs" />
+    <!-- 3.3.5: emulator health and hotkeys, emulator updates, game exit and store launchers, stream profiles, back paddles. -->
+    <Compile Include="../GamingModeAgent/GamingMode.Services/EmulatorHealth.cs" Link="EmulatorHealth.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/EmulatorUpdates.cs" Link="EmulatorUpdates.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/GameExit.cs" Link="GameExit.cs" />
+    <Compile Include="../GamingModeAgent/GamingMode.Services/StreamProfiles.cs" Link="StreamProfiles.cs" />
     <!-- The full schema 1 shape (every optional section filled). -->
     <None Include="core-status.sample.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- Exactly what Aincrad's scripts/backup.sh writes. -->

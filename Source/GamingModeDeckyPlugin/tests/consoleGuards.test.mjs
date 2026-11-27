@@ -101,7 +101,7 @@ test("the Steam update row shows in Quick Access again", () => {
 test("action labels and results exist in every language", () => {
   const en = healthCopy("en");
   const keys = Object.keys({ ...en }).filter(key => /^(a[A-Z]|r_(display|sound|controllers|steamSign|autoSign|bitlocker|prompts|updPolicy|launchUpd|launchFocus|wake))/.test(key));
-  assert.equal(keys.length, 22, "11 row titles, 8 actions and 3 results");
+  assert.equal(keys.length, 27, "11 row titles, 8 actions, 3 results and the 5 actions of 3.3.5 (CoreHealth emulator rows)");
   for (const language of healthLanguages) {
     const table = healthCopy(language);
     for (const key of keys) {
@@ -119,7 +119,7 @@ test("the section calls the backend, which forwards only the agent's actions", (
   const agent = readFileSync(new URL("../../GamingModeAgent/GamingMode.Services/ConsoleGuards.cs", import.meta.url), "utf8");
   const csharp = agent.match(/internal static readonly string\[\] Actions = \{([^}]*)\}/)[1].match(/"([a-z-]+)"/g).map(text => text.slice(1, -1));
   assert.deepEqual(python, csharp, "main.py forwards exactly the agent's actions");
-  assert.match(main, /async def core_health_action\(self, action\):\s+if action not in _HEALTH_ACTIONS:\s+return \{\}/);
+  assert.match(main, /async def core_health_action\(self, action\):\s+if action not in _HEALTH_ACTIONS and not \(isinstance\(action, str\) and re\.fullmatch\(_EMULATOR_ACTION, action\)\):\s+return \{\}/);
   const bundled = readFileSync(new URL("../../Playhub/Assets/GamingModeDeckyPlugin/gaming-mode/main.py", import.meta.url), "utf8");
   assert.equal(bundled, main, "the bundled main.py matches");
 });

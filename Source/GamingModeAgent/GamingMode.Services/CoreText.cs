@@ -491,6 +491,36 @@ internal static class CoreText
 			"PC का नेटवर्क केबल निकला हुआ लगता है या नेटवर्क बंद है। जानकारी क्विक एक्सेस > Core में है।",
 			"Сетевой кабель ПК, похоже, отключён, или сеть не работает. Подробности в Быстром доступе > Core.",
 		},
+		["console.gameNotExited"] = new[]
+		{
+			"Un gioco non si è chiuso del tutto dopo l'uscita da Steam. I dettagli sono in Accesso rapido > Core.",
+			"A game did not fully close after leaving it through Steam. Details are in Quick Access > Core.",
+			"Un juego no se cerró del todo al salir desde Steam. Los detalles están en Acceso rápido > Core.",
+			"Un jeu ne s'est pas entièrement fermé après l'avoir quitté via Steam. Les détails sont dans Accès rapide > Core.",
+			"Ein Spiel wurde nach dem Beenden über Steam nicht ganz geschlossen. Details unter Schnellzugriff > Core.",
+			"Um jogo não fechou por completo ao sair pelo Steam. Os detalhes estão em Acesso rápido > Core.",
+			"Гра не закрилася повністю після виходу через Steam. Подробиці в Швидкому доступі > Core.",
+			"通过 Steam 退出后，有游戏没有完全关闭。详情见 快速访问 > Core。",
+			"Steam から終了したゲームが完全には閉じていません。詳細はクイックアクセス > Core にあります。",
+			"Steam에서 종료한 게임이 완전히 닫히지 않았습니다. 자세한 내용은 빠른 실행 > Core에 있습니다.",
+			"Steam से बाहर निकलने के बाद एक गेम पूरी तरह बंद नहीं हुआ। जानकारी क्विक एक्सेस > Core में है।",
+			"Игра не закрылась полностью после выхода через Steam. Подробности в Быстром доступе > Core.",
+		},
+		["notice.emulatorRolledBack"] = new[]
+		{
+			"L'aggiornamento di {0} non ha superato il controllo ed è stato annullato.",
+			"The {0} update failed its check and was undone.",
+			"La actualización de {0} no pasó la comprobación y se deshizo.",
+			"La mise à jour de {0} n'a pas passé la vérification et a été annulée.",
+			"Das Update von {0} hat die Prüfung nicht bestanden und wurde rückgängig gemacht.",
+			"A atualização do {0} não passou na verificação e foi desfeita.",
+			"Оновлення {0} не пройшло перевірку й було скасоване.",
+			"{0} 的更新未通过检查，已撤销。",
+			"{0} の更新はチェックに通らず、元に戻しました。",
+			"{0} 업데이트가 확인을 통과하지 못해 되돌렸습니다.",
+			"{0} का अपडेट जाँच में विफल रहा और वापस ले लिया गया।",
+			"Обновление {0} не прошло проверку и было отменено.",
+		},
 		["console.several"] = new[]
 		{
 			"Alcune cose richiedono attenzione. I dettagli sono in Accesso rapido > Core.",
@@ -510,8 +540,20 @@ internal static class CoreText
 		// screen helper takes a screenshot.
 		["jarvis.listening"] = new[]
 		{
-			"Jarvis ascolta", "Jarvis is listening", "Jarvis escucha", "Jarvis écoute", "Jarvis hört zu", "Jarvis está ouvindo",
-			"Jarvis слухає", "Jarvis 正在聆听", "Jarvis が聞いています", "Jarvis가 듣고 있어요", "Jarvis सुन रहा है", "Jarvis слушает",
+			"In ascolto", "Listening", "Escuchando", "À l'écoute", "Hört zu", "Ouvindo",
+			"Слухаю", "正在聆听", "聞いています", "듣는 중", "सुन रहा है", "Слушаю",
+		},
+		// 3.3.5: the pill after the recording, until the answer starts; and the answer card's hint.
+		["jarvis.thinking"] = new[]
+		{
+			"Sto pensando…", "Thinking…", "Pensando…", "Réflexion…", "Denkt nach…", "Pensando…",
+			"Думаю…", "正在思考…", "考えています…", "생각하는 중…", "सोच रहा है…", "Думаю…",
+		},
+		["jarvis.answerHint"] = new[]
+		{
+			"Tieni premuti L5 + R5 per la risposta completa", "Hold L5 + R5 for the full answer", "Mantén L5 + R5 para la respuesta completa", "Maintenez L5 + R5 pour la réponse complète",
+			"L5 + R5 halten für die ganze Antwort", "Segure L5 + R5 para a resposta completa", "Утримуйте L5 + R5 для повної відповіді", "按住 L5 + R5 查看完整回答",
+			"全文は L5 + R5 を長押し", "전체 답변은 L5 + R5 길게 누르기", "पूरा जवाब: L5 + R5 दबाए रखें", "Удерживайте L5 + R5 для полного ответа",
 		},
 		["jarvis.screenshot"] = new[]
 		{

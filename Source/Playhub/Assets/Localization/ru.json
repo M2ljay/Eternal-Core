@@ -1671,5 +1671,17 @@
   "Jarvis di Home Assistant (consigliato)": "Jarvis из Home Assistant (рекомендуется)",
   "API di Claude diretta": "Прямой API Claude",
   "Tocco breve: apri Jarvis in Accesso rapido": "Короткое нажатие: открыть Jarvis в Быстром доступе",
-  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "Короткое нажатие комбинации «Говорить с Jarvis» открывает или закрывает вкладку Jarvis в Быстром доступе, даже во время игры; удержание — разговор с Jarvis."
+  "Un tocco breve della combinazione Parla con Jarvis apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco; tenerla premuta parla con Jarvis.": "Короткое нажатие комбинации «Говорить с Jarvis» открывает или закрывает вкладку Jarvis в Быстром доступе, даже во время игры; удержание — разговор с Jarvis.",
+  "Parla con Jarvis (tocca per parlare)": "Говорить с Jarvis (коснитесь, чтобы говорить)",
+  "Tieni premuto: apri Jarvis in Accesso rapido": "Удерживать: открыть Jarvis в Быстром доступе",
+  "Un tocco di L5+R5 parla con Jarvis senza aprire nulla e si ferma quando smetti di parlare; tenerla premuta apre o chiude la scheda Jarvis in Accesso rapido, anche durante un gioco. Spento, tenerla premuta parla finché la tieni.": "Касание L5+R5 говорит с Jarvis, ничего не открывая, и останавливается, когда вы замолкаете; удержание открывает или закрывает вкладку Jarvis в Быстром доступе, даже в игре. Выключено: удержание говорит, пока держите.",
+  "Da due a quattro pulsanti premuti insieme, per esempio L5+R5. Vuoto spegne la combinazione. L4 e R4 fanno da A e B, quindi nessuna combinazione li usa. Dettatura e aiuto sullo schermo restano nella scheda Jarvis e si chiedono anche a voce.": "От двух до четырёх кнопок одновременно, например L5+R5. Пусто выключает комбинацию. L4 и R4 работают как A и B, поэтому ни одна комбинация их не использует. Диктовка и помощь с экраном остаются во вкладке Jarvis и доступны голосом.",
+  "Chiudi i launcher dei negozi dopo un gioco": "Закрывать лаунчеры магазинов после игры",
+  "Quando un gioco ha aperto Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar o Amazon Games, Core lo chiude con garbo alla fine del gioco, a meno che fosse già aperto, un altro suo gioco sia in corso o stia scaricando. Si può spegnere per ogni launcher.": "Когда игра открыла Epic, EA app, Ubisoft Connect, Battle.net, GOG Galaxy, Rockstar или Amazon Games, Core вежливо закрывает его после игры, если он не был открыт раньше, не идёт другая его игра и он ничего не загружает. Можно выключить для каждого лаунчера.",
+  "Aggiornamenti degli emulatori": "Обновления эмуляторов",
+  "Core aggiorna gli emulatori di EmuDeck che hanno un progetto ufficiale su GitHub: ogni versione aspetta 10 giorni, poi si installa di notte con backup, prova di avvio e ripristino automatico. I tuoi salvataggi e le impostazioni non vengono toccati. Se un progetto non pubblica un'impronta (hash) del file, va confermato qui una volta per versione, perché altrimenti solo GitHub garantisce che il file sia quello caricato.": "Core обновляет эмуляторы EmuDeck с официальным проектом на GitHub: каждая версия ждёт 10 дней, затем ставится ночью с резервной копией, проверкой запуска и автоматическим откатом. Ваши сохранения и настройки не меняются. Если проект не публикует отпечаток (хеш) файла, подтвердите его здесь один раз для версии, иначе за файл ручается только GitHub.",
+  "Controlla le conferme": "Проверить подтверждения",
+  "Conferma {0} {1}": "Подтвердить {0} {1}",
+  "Confermato. L'aggiornamento seguirà la sua attesa.": "Подтверждено. Обновление пройдёт своё ожидание.",
+  "Nessun aggiornamento da confermare.": "Нечего подтверждать."
 }

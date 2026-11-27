@@ -169,6 +169,9 @@ _JARVIS_TEXT_MAXIMUM = 2000
 _STREAM_STATE_MAXIMUM = 8192
 # Console guards: the actions Quick Access may ask the agent for (ConsoleGuardPolicy.Actions).
 _HEALTH_ACTIONS = ("display-restore", "display-save", "sound-restore", "sound-save", "controllers-expect", "prompts-off", "bitlocker-suspend", "wake-check-now")
+# 3.3.5: Core's Exit for a game Steam lost track of, Steam's controller layout, and the emulators' one-tap fixes,
+# hotkey re-apply and "Update now" (agent MarkIIIHost.Emulators.cs checks each id against its catalogue again).
+_EMULATOR_ACTION = r"game-exit-now|paddles-setup|emu-(?:fix|hotkeys|update)-[a-z0-9]{2,20}"
 
 
 # Eternal Core: the user's own icon set for Core UI's Library tabs and collection tiles (docs/eternal/CORE-UI.md,
@@ -559,9 +562,30 @@ class Plugin(QuickSettingsPlugin):
     # Console guards (src/HealthSection.tsx, agent MarkIIIHost.Console.cs): the one-button fixes and the "save as
     # normal" actions. A display restore can take a few seconds while Windows re-applies the mode.
     async def core_health_action(self, action):
-        if action not in _HEALTH_ACTIONS:
+        if action not in _HEALTH_ACTIONS and not (isinstance(action, str) and re.fullmatch(_EMULATOR_ACTION, action)):
             return {}
         return await asyncio.to_thread(self._agent_local, "POST", "/health/action?id=" + action, timeout=20, maximum=131072)
+
+    # 3.3.5 (src/EmulatorSection.tsx, src/gameExit.ts; agent MarkIIIHost.Emulators.cs): the hotkey table, the store-launcher
+    # switches, Steam's app lifetime and Exit Game. Titles are trimmed to 64 printable characters.
+    async def core_emulators_state(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/emulators/state", timeout=4, maximum=65536)
+
+    async def core_launcher_auto_close(self, launcher, on):
+        if not isinstance(launcher, str) or not re.fullmatch(r"[a-z]{2,12}", launcher) or not isinstance(on, bool):
+            return {}
+        query = urllib.parse.urlencode({"id": launcher, "on": "true" if on else "false"})
+        return await asyncio.to_thread(self._agent_local, "POST", "/launchers/auto-close?" + query, timeout=4, maximum=65536)
+
+    async def core_game_lifetime(self, app_id, running, title):
+        if isinstance(app_id, bool) or not isinstance(app_id, int) or app_id < 0 or app_id > 0xFFFFFFFF or not isinstance(running, bool) or not isinstance(title, str):
+            return {}
+        title = "".join(character for character in title if character.isprintable())[:64]
+        query = urllib.parse.urlencode({"appId": str(app_id), "running": "true" if running else "false", "title": title})
+        return await asyncio.to_thread(self._agent_local, "POST", "/game/lifetime?" + query, timeout=3)
+
+    async def core_game_exit_chosen(self):
+        return await asyncio.to_thread(self._agent_local, "POST", "/game/exit-chosen", timeout=3)
 
     # Core Voice (src/VoiceSection.tsx, agent MarkIIIHost.Voice.cs): microphone mute and the Xbox party
     # button. A mute change also refreshes the top-bar mark at once instead of at the next poll.
@@ -610,10 +634,14 @@ class Plugin(QuickSettingsPlugin):
     async def core_jarvis_clear(self):
         return await asyncio.to_thread(self._agent_local, "POST", "/jarvis/clear", timeout=4)
 
-    async def core_jarvis_listen_start(self, mode):
-        if mode not in _JARVIS_LISTEN_MODES:
+    # 3.3.5: auto is tap to talk (the agent ends the recording on a pause); core_jarvis_listen_state says when it has.
+    async def core_jarvis_listen_start(self, mode, auto=False):
+        if mode not in _JARVIS_LISTEN_MODES or not isinstance(auto, bool):
             return {}
-        return await asyncio.to_thread(self._agent_local, "POST", "/jarvis/listen/start?mode=" + mode, timeout=6)
+        return await asyncio.to_thread(self._agent_local, "POST", "/jarvis/listen/start?mode=" + mode + ("&auto=true" if auto else ""), timeout=6)
+
+    async def core_jarvis_listen_state(self):
+        return await asyncio.to_thread(self._agent_local, "GET", "/jarvis/listen/state", timeout=2)
 
     async def core_jarvis_listen_stop(self, steam_typing=False):
         path = "/jarvis/listen/stop?steamTyping=" + ("true" if steam_typing is True else "false")

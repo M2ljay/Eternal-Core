@@ -4720,7 +4720,7 @@ const storeDigitalTranslations = {
 };
 
 // SPDX-License-Identifier: MIT. Playhub, Copyright (c) 2026 LoZazaMastro.
-const en$b = {
+const en$c = {
     errorQueueChanged: "The download list changed. Refresh it and try again.",
     partnerInstallEa: "This game requires EA app. Installation from Digital Stores is not available yet.",
     partnerInstallUbisoft: "This game requires Ubisoft Connect. Installation from Digital Stores is not available yet.",
@@ -4743,7 +4743,7 @@ const en$b = {
     canceled: "Canceled", failed: "Failed", interrupted: "Interrupted", installing: "Installing", verifying: "Verifying", canceling: "Canceling", waiting: "Queued", signInCanceled: "Sign-in canceled. You can try again from Accounts.", signInFailed: "Sign-in failed. Try again from Accounts.", title: "Digital stores", subtitle: "Install and manage your games", library: "Your games", accounts: "Accounts", downloads: "Downloads", search: "Search your games", filters: "Filters", allStores: "All stores", allGames: "All games", installed: "Installed", notInstalled: "Not installed", install: "Install", manage: "Manage", uninstall: "Uninstall", refresh: "Refresh", signIn: "Sign in", signOut: "Sign out", connected: "Connected", disconnected: "Not connected", connecting: "Connecting…", expired: "Sign in again", unavailable: "Unavailable", signInNote: "Complete sign-in in the window that opened.", accountHint: "Sign in to see the games you own.", automaticSteam: "Installed games appear automatically in your Steam library, grouped by store.", installIntentLoading: "Finding this game in your library…", gameMissing: "This game is not available in the connected account. Refresh the library or check your account.", back: "Back", cancel: "Cancel", close: "Close", continue: "Continue", review: "Review installation", confirmInstall: "Install now", chooseFolder: "Choose folder", useFolder: "Use this folder", parentFolder: "Parent folder", thisPc: "This PC", directoryEmpty: "No folders here", directoryTruncated: "Showing the first 512 folders. Open a subfolder to continue.", pathNote: "A separate folder for this game will be created here.", loading: "Loading…", retry: "Retry", errorRead: "Couldn’t read your library. Your last confirmed data is still shown.", errorCommand: "The store couldn’t confirm this action. Refresh and try again.", errorPrepare: "Couldn’t prepare this installation. Try again.", errorDestination: "Choose a valid installation folder.", errorNotEmpty: "This game folder is not empty or writable. Choose another location.", errorSpace: "There is not enough free space in this location.", errorChanged: "The game or account changed. Review the current details and try again.", errorProviderBusy: "Another store operation is in progress. Try again when it finishes.", errorUninstall: "Couldn’t prepare this uninstall. Refresh and try again.", free: "Free space", required: "Required space", folder: "Installation folder", drive: "Drive", selectedDestination: "Selected destination", clearCompleted: "Clear completed", completed: "Completed", paused: "Paused", active: "In progress", downloadNow: "Download now", pause: "Pause", resume: "Resume", cancelDownload: "Cancel download", confirmCancel: "Cancel this download?", confirmUninstall: "Uninstall this game?", uninstallNote: "The selected game will be removed from this PC.", uninstallUnavailable: "Uninstall is unavailable for this installation.", emptyLibrary: "No games to show", emptyLibraryHelp: "Connect an account or adjust your filters.", emptyDownloads: "No downloads yet", emptyDownloadsHelp: "Choose a game to install from Your games.", xboxInstallNote: "Installation and its location are managed by Microsoft Store.", xboxRequested: "Installation requested. Progress appears here after the store confirms it.", unknown: "Not available", sort: "Sort by", titleOrder: "Title A–Z", installedFirst: "Installed first", refreshing: "Refreshing library…", games: "games", directoryError: "Couldn’t open this folder. Choose another location.", statusRetry: "Refresh installation status", accountRefreshFailed: "Couldn’t refresh this store. The previous library is kept."
 };
 function storeDigitalCopy(locale = getSteamLocale()) {
-    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$b };
+    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$c };
     for (const key of Object.keys(result)) {
         const value = translated?.[key];
         if (typeof value === "string" && value.trim())
@@ -6341,7 +6341,7 @@ function deviceInfoLocale(locale) {
         profile: profile[0], auto: profile[1], pc: profile[2], handheld: profile[3], experimental: profile[4], profileHint: profile[5], battery: profile[6], ac: profile[7], primaryDisplay: profile[8], video: profile[9], power: profile[10], details: profile[11], saveError: profile[12], retry: profile[13], batteryHealth: batteryHealth[language] ?? batteryHealth.en };
 }
 
-const copy$k = {
+const copy$l = {
     "en": {
         "StoreLibrary.WindowsManaged": "Installation managed by Microsoft Store",
         "StoreLibrary.Stores": "Digital stores",
@@ -7423,9 +7423,9 @@ const copy$k = {
         "StoreLibrary.ConfirmCancelDownload": "Вы действительно хотите отменить загрузку?"
     }
 };
-function storeLibraryLocale(locale) { return copy$k[deviceLanguage(locale)] ?? copy$k.en; }
+function storeLibraryLocale(locale) { return copy$l[deviceLanguage(locale)] ?? copy$l.en; }
 
-const { PanelSection: PanelSection$b, PanelSectionRow: PanelSectionRow$c, DropdownItem: DropdownItem$5, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = CompatUI;
+const { PanelSection: PanelSection$c, PanelSectionRow: PanelSectionRow$d, DropdownItem: DropdownItem$5, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = CompatUI;
 const danger = `.ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) {
 background:${CORE.crimson}!important;color:${CORE.white}!important}
 .ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) * {color:inherit!important}`;
@@ -7492,7 +7492,7 @@ function StoreDownloadsQam({ locale }) {
     const c = storeLibraryLocale(locale);
     if (!jobs.length)
         return null;
-    return SP_JSX.jsx(PanelSection$b, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$c, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
+    return SP_JSX.jsx(PanelSection$c, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$d, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
 }
 
 const { DialogButton: DialogButton$e } = CompatUI;
@@ -7882,7 +7882,7 @@ function translationController(store) {
     }
 }
 
-const { PanelSectionRow: PanelSectionRow$b, ToggleField: ToggleField$9 } = CompatUI;
+const { PanelSectionRow: PanelSectionRow$c, ToggleField: ToggleField$a } = CompatUI;
 const descriptions$1 = {
     en: "Makes the Steam Controller appear as an Xbox controller.",
     it: "Fa riconoscere lo Steam Controller come un pad Xbox.",
@@ -7931,7 +7931,7 @@ function TranslationControllerToggle({ locale }) {
     }, []);
     if (!connected || enabled === null)
         return null;
-    return SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ToggleField$9, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
+    return SP_JSX.jsx(PanelSectionRow$c, { children: SP_JSX.jsx(ToggleField$a, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
                 if (typeof value !== "boolean" || writing.current || !available || !mounted.current || !translationController(window.ControllerStore))
                     return;
                 writing.current = true;
@@ -7988,7 +7988,7 @@ function pollStatus(read, update) {
     return () => { stopped = true; clearTimeout(timer); controller?.abort(); };
 }
 
-const copy$j = {
+const copy$k = {
     "en": {
         "Title": "Gaming Mode optional",
         "Description": "Start in Big Picture, switch to the desktop and open the Core Dashboard with a controller.",
@@ -8158,7 +8158,7 @@ const copy$j = {
         "Ready": "Gaming Mode तैयार है।"
     }
 };
-function optionalAgentCopy(locale) { return copy$j[locale] ?? copy$j.en; }
+function optionalAgentCopy(locale) { return copy$k[locale] ?? copy$k.en; }
 
 // Backend client for Quick Settings.
 //   * call(...)  -> Decky Python backend (main.py)
@@ -8321,7 +8321,7 @@ function gameSettingsLabel(_language) {
     return "Core Game Settings";
 }
 
-const copy$i = {
+const copy$j = {
     en: ["Session", "Audio", "Display", "Performance", "Graphics", "Controller", "System", "Settings", "Customize your panel", "Show tabs", "Move up", "Move down", "Restore defaults", "Back", "Hide a tab without changing its settings or disabling its features.", "Expand", "Collapse", "Switch tab", "Settings could not be saved. Try again."],
     it: ["Sessione", "Audio", "Schermo", "Prestazioni", "Grafica", "Controller", "Sistema", "Impostazioni", "Personalizza il pannello", "Mostra le schede", "Sposta su", "Sposta giù", "Ripristina predefiniti", "Indietro", "Nascondere una scheda non modifica le impostazioni e non disattiva le sue funzioni.", "Espandi", "Comprimi", "Cambia scheda", "Impossibile salvare le impostazioni. Riprova."],
     de: ["Sitzung", "Audio", "Bildschirm", "Leistung", "Grafik", "Controller", "System", "Einstellungen", "Panel anpassen", "Tabs anzeigen", "Nach oben", "Nach unten", "Standard wiederherstellen", "Zurück", "Das Ausblenden eines Tabs ändert keine Einstellungen und deaktiviert keine Funktionen.", "Ausklappen", "Einklappen", "Tab wechseln", "Einstellungen konnten nicht gespeichert werden. Erneut versuchen."],
@@ -8338,7 +8338,7 @@ const copy$i = {
 function controlLocale(locale) {
     const aliases = { english: "en", italian: "it", german: "de", spanish: "es", latam: "es", french: "fr", brazilian: "pt", portuguese: "pt", russian: "ru", ukrainian: "uk", japanese: "ja", koreana: "ko", schinese: "zh", tchinese: "zh", hindi: "hi" };
     const key = aliases[locale] ?? locale.split(/[-_]/)[0];
-    const row = copy$i[key] ?? copy$i.en;
+    const row = copy$j[key] ?? copy$j.en;
     const tabs = tabCopy[key] ?? tabCopy.en;
     const video = { en: "Video", it: "Video", de: "Video", es: "Vídeo", fr: "Vidéo", pt: "Vídeo", ru: "Видео", uk: "Відео", ja: "映像", ko: "비디오", zh: "视频", hi: "वीडियो" };
     return { home: row[0], audio: video[key] ?? video.en, display: row[2], performance: row[1], graphics: row[3], controller: row[5], tools: row[6], store: 'Plugin Store', decky: 'Decky', settings: row[7], customize: tabs[1], show: tabs[4], up: tabs[2], down: tabs[3], reset: row[12], back: row[13], hint: row[14], expand: row[15], collapse: row[16], switchTab: row[17], saveError: row[18], device: tabs[5], unavailable: tabs[6], loading: tabs[7], retry: tabs[8] };
@@ -8487,7 +8487,7 @@ const amdIt = {
     amdDisplayTemperature: "Temperatura colore",
     amdDriverRejected: "Il driver AMD non ha confermato questa modifica. Il valore precedente è stato ripristinato.",
 };
-const en$a = {
+const en$b = {
     title: "Quick Settings",
     audio: "Audio",
     volume: "Device volume",
@@ -8729,7 +8729,7 @@ const it = {
     cancel: "Annulla",
     notConnected: "Agent Quick Settings non collegato",
 };
-const strings$2 = { en: en$a, it };
+const strings$2 = { en: en$b, it };
 function t$1(locale = navigator.language) {
     const language = locale.split("-")[0];
     return { ...(strings$2[language] ?? strings$2.en), ...quickCoreLocale(language), title: "Core" };
@@ -9414,10 +9414,10 @@ function losslessCaptureLabel(locale, state) {
     return index < 0 ? "" : (rows$7[aliases[key] ?? key] ?? rows$7.en)[index];
 }
 
-const { DialogButton: DialogButton$d, Focusable: Focusable$i } = CompatUI;
+const { DialogButton: DialogButton$d, Focusable: Focusable$j } = CompatUI;
 function ControlSection({ id, title, icon, children, collapsed, onToggle, locale }) {
     const copy = controlLocale(locale);
-    return SP_JSX.jsxs(Focusable$i, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$d, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$i, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
+    return SP_JSX.jsxs(Focusable$j, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$d, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$j, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
 }
 
 /** One writer per independent setting/resource; callbacks receive only current results. */
@@ -10657,7 +10657,7 @@ function bounded$1(operation) {
         operation.then(value => { window.clearTimeout(timer); resolve(value); }, error => { window.clearTimeout(timer); reject(error); });
     });
 }
-const copy$h = {
+const copy$i = {
     en: ["Check shader support", "Graphics requirements met", "Requirements unmet", "Needs verification", "Listed by Intel · cache unverified", "Graphics adapter unavailable"],
     it: ["Verifica supporto shader", "Requisiti grafici soddisfatti", "Fuori requisiti", "Da verificare", "Nel catalogo Intel · cache da verificare", "Scheda grafica da rilevare"],
     de: ["Shader-Unterstützung prüfen", "Grafikanforderungen erfüllt", "Nicht unterstützt", "Nicht geprüft", "Bei Intel gelistet · Cache nicht geprüft", "Keine Grafikkarte erkannt"],
@@ -10696,7 +10696,7 @@ function ShaderCompatibility({ appId, locale, renderSection }) {
         return () => { mounted.current = false; ++epoch.current; window.removeEventListener("focus", onFocus); };
     }, [appId]);
     const text = shaderCacheCopy(locale);
-    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$h[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$h.en;
+    const [check, eligible, unsupported, unknown, listed, noAdapter] = copy$i[aliases$2[locale] ?? locale.split(/[-_]/)[0]] ?? copy$i.en;
     const labels = { eligible, unsupported, unverified: unknown };
     const current = (generation) => mounted.current && epoch.current === generation;
     function accept(next, generation) {
@@ -12195,7 +12195,7 @@ function createSteamDownloadPower(read, send) {
     };
 }
 
-const copy$g = {
+const copy$h = {
     en: ["Finish Steam download", "Stop keeping awake", "On AC power, Windows can turn off the display while Steam finishes the current download.", "PC stays awake for this download.", "Could not start download power mode."],
     it: ["Completa il download Steam", "Termina modalità download", "Con l’alimentazione collegata, Windows può spegnere lo schermo mentre Steam completa il download.", "Il PC resta sveglio per questo download.", "Impossibile avviare la modalità download."],
     de: ["Steam-Download abschließen", "Wachhalten beenden", "Am Netz kann Windows den Bildschirm ausschalten, während Steam den Download beendet.", "Der PC bleibt für diesen Download wach.", "Downloadmodus konnte nicht gestartet werden."],
@@ -12263,7 +12263,7 @@ function SteamDownloadPower({ locale }) {
     }, []);
     if (!state.available && !state.active)
         return null;
-    const [start, stop, detail, active, failed] = copy$g[locale.split(/[-_]/)[0]] ?? copy$g.en;
+    const [start, stop, detail, active, failed] = copy$h[locale.split(/[-_]/)[0]] ?? copy$h.en;
     return SP_JSX.jsxs("div", { className: "qsCardBody", "aria-busy": state.busy, children: [SP_JSX.jsx(CompatUI.DialogButton, { disabled: state.busy, onClick: () => void (state.active ? downloadPower.stop() : downloadPower.start()), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: state.active ? stop : start }) }), SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: state.failed ? failed : state.active ? active : detail })] });
 }
 
@@ -24457,7 +24457,7 @@ function useHistoryPhoto(url) {
     return resolved?.source === url && resolved.digest === expected?.sha256 ? resolved.url : undefined;
 }
 
-const copy$f = {
+const copy$g = {
     it: ['Premi', 'per approfondire', 'per richiudere', 'Visualizza immagine', 'Chiudi'],
     en: ['Press', 'to explore', 'to collapse', 'View image', 'Close'],
     de: ['Drücke', 'für mehr', 'zum Zuklappen', 'Bild ansehen', 'Schließen'],
@@ -24471,7 +24471,7 @@ const copy$f = {
     zh: ['按', '深入閱讀', '收起內容', '查看圖片', '關閉'],
     hi: ['', 'दबाकर विस्तार से पढ़ें', 'दबाकर समेटें', 'चित्र देखें', 'बंद करें'],
 };
-const historyActionCopy = (locale) => copy$f[locale.split(/[-_]/)[0]] ?? copy$f.en;
+const historyActionCopy = (locale) => copy$g[locale.split(/[-_]/)[0]] ?? copy$g.en;
 class GlyphBoundary extends _global_SP_REACT.Component {
     constructor() {
         super(...arguments);
@@ -24557,7 +24557,7 @@ function historyHeadingCover(all, kind, coverFile) {
 }
 
 const historyDigest = (image) => historyPhotoIntegrity[image.url]?.sha256;
-const { Focusable: Focusable$h, DialogButton: DialogButton$c, Navigation: Navigation$a } = CompatUI;
+const { Focusable: Focusable$i, DialogButton: DialogButton$c, Navigation: Navigation$a } = CompatUI;
 const labels$1 = {
     it: ['Accade oggi', 'La storia dei videogiochi, un giorno alla volta', 'In questo giorno', '', 'Dietro la storia', 'Continua su Wikipedia', 'Immagine: crediti e licenza', 'Prepariamo la storia di oggi…', 'Storia non disponibile. Riprova', 'Ultima storia disponibile', 'Fonte: Wikipedia · testo CC BY-SA 4.0'],
     en: ['On this day', 'Video game history, one day at a time', 'On this day', 'Today’s discovery', 'Behind the story', 'Read on Wikipedia', 'Image: credits and license', 'Finding today’s story…', 'Story unavailable. Retry', 'Last available story', 'Source: Wikipedia · text CC BY-SA 4.0'],
@@ -24666,7 +24666,7 @@ function Block({ story, chapter, index, locale }) {
     const open = () => { const now = Date.now(); if (now - lastActivation.current < 350)
         return; lastActivation.current = now; if (!media)
         return; openHistoryImage(media.url, media.subject, locale, cardRef.current?.ownerDocument.defaultView ?? window); };
-    return SP_JSX.jsxs(Focusable$h, { ref: cardRef, className: `ph-history-card ${index % 2 ? 'reverse' : ''} ${photo ? '' : 'no-image'}`, role: photo ? 'button' : 'article', "aria-label": title, focusable: true, onOKActionDescription: photo ? historyActionCopy(locale)[3] : undefined, onActivate: photo ? open : undefined, onClick: photo ? open : undefined, children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: chapter ? SP_JSX.jsx("span", { className: "ph-history-subject", children: chapter.subject || story.article.title }) : story.relationship ?? (occasion ? `${occasion} · ${story.article.title}` : story.article.title) }), renderTitle(), SP_JSX.jsx("p", { children: chapter?.body ?? story.editorial.intro }), !chapter && story.year && SP_JSX.jsx("div", { className: "ph-history-year", children: story.year })] }), media && photo && SP_JSX.jsxs("div", { className: "ph-history-image", children: [SP_JSX.jsx("img", { className: "ph-history-image-bg", src: photo, alt: "", "aria-hidden": true, role: "presentation" }), SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject, onError: () => setFailed(previous => [...previous, media.url]) })] })] });
+    return SP_JSX.jsxs(Focusable$i, { ref: cardRef, className: `ph-history-card ${index % 2 ? 'reverse' : ''} ${photo ? '' : 'no-image'}`, role: photo ? 'button' : 'article', "aria-label": title, focusable: true, onOKActionDescription: photo ? historyActionCopy(locale)[3] : undefined, onActivate: photo ? open : undefined, onClick: photo ? open : undefined, children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: chapter ? SP_JSX.jsx("span", { className: "ph-history-subject", children: chapter.subject || story.article.title }) : story.relationship ?? (occasion ? `${occasion} · ${story.article.title}` : story.article.title) }), renderTitle(), SP_JSX.jsx("p", { children: chapter?.body ?? story.editorial.intro }), !chapter && story.year && SP_JSX.jsx("div", { className: "ph-history-year", children: story.year })] }), media && photo && SP_JSX.jsxs("div", { className: "ph-history-image", children: [SP_JSX.jsx("img", { className: "ph-history-image-bg", src: photo, alt: "", "aria-hidden": true, role: "presentation" }), SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject, onError: () => setFailed(previous => [...previous, media.url]) })] })] });
 }
 const expandedRelatedStories = new Set();
 function RelatedStory({ story, locale }) {
@@ -24681,7 +24681,7 @@ function RelatedStory({ story, locale }) {
         expandedRelatedStories.delete(storyKey);
     else
         expandedRelatedStories.add(storyKey); return !value; }); };
-    return SP_JSX.jsxs("div", { className: "ph-history-related", children: [SP_JSX.jsxs(Focusable$h, { className: "ph-history-card ph-history-related-summary", role: "button", "aria-expanded": expanded, focusable: true, onActivate: toggle, onClick: toggle, onOKActionDescription: historyActionCopy(locale)[expanded ? 2 : 1], children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: story.relationship ?? words$3(locale)[4] }), SP_JSX.jsx("h3", { children: story.article.title }), SP_JSX.jsx(HistoryConfirmHint, { locale: locale, expanded: expanded })] }), media && photo && SP_JSX.jsx("div", { className: "ph-history-image", children: SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject }) })] }), expanded && SP_JSX.jsxs("div", { className: "ph-history-related-content", children: [SP_JSX.jsx(Block, { story: story, index: 0, locale: locale }), story.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: story, chapter: chapter, index: index + 1, locale: locale }), story.quote && (story.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$h, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: story.quote.quoted ? `«${story.quote.text}»` : story.quote.text }), story.quote.attribution && SP_JSX.jsx("span", { children: story.quote.attribution })] })] }, index))] })] });
+    return SP_JSX.jsxs("div", { className: "ph-history-related", children: [SP_JSX.jsxs(Focusable$i, { className: "ph-history-card ph-history-related-summary", role: "button", "aria-expanded": expanded, focusable: true, onActivate: toggle, onClick: toggle, onOKActionDescription: historyActionCopy(locale)[expanded ? 2 : 1], children: [SP_JSX.jsxs("div", { className: "ph-history-copy", children: [SP_JSX.jsx("div", { className: "ph-history-eyebrow", children: story.relationship ?? words$3(locale)[4] }), SP_JSX.jsx("h3", { children: story.article.title }), SP_JSX.jsx(HistoryConfirmHint, { locale: locale, expanded: expanded })] }), media && photo && SP_JSX.jsx("div", { className: "ph-history-image", children: SP_JSX.jsx("img", { className: "ph-history-image-fg", src: photo, alt: media.subject }) })] }), expanded && SP_JSX.jsxs("div", { className: "ph-history-related-content", children: [SP_JSX.jsx(Block, { story: story, index: 0, locale: locale }), story.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: story, chapter: chapter, index: index + 1, locale: locale }), story.quote && (story.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$i, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: story.quote.quoted ? `«${story.quote.text}»` : story.quote.text }), story.quote.attribution && SP_JSX.jsx("span", { children: story.quote.attribution })] })] }, index))] })] });
 }
 let historyPreviewOffset = 0;
 function DailyHistory({ getLocale }) {
@@ -24749,7 +24749,7 @@ function DailyHistory({ getLocale }) {
     }
     catch { } };
     const headingContent = SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-date", children: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(date) }), story ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("div", { className: "ph-history-sub", children: [heading && SP_JSX.jsx("span", { children: heading }), SP_JSX.jsx("strong", { children: story.article.title }), story.year && story.occasion?.kind !== 'feature' && SP_JSX.jsx("span", { className: "ph-history-year", children: story.year })] }), headingMedia(story)] }) : SP_JSX.jsx("div", { className: "ph-history-sub", children: copy[1] })] });
-    return SP_JSX.jsxs(Focusable$h, { className: "ph-history", ref: root, "flow-children": "column", onButtonDown: navigate, actionDescriptionMap: story?.preview ? { [buttons.SECONDARY]: hints[0], [buttons.OPTIONS]: hints[1] } : {}, children: [SP_JSX.jsx("style", { children: css$7 }), SP_JSX.jsx(Focusable$h, { className: "ph-history-head ph-history-day-card", role: "button", "aria-label": story?.article.title ?? copy[0], focusable: true, onActivate: dayAppId ? openDayGame : undefined, onClick: dayAppId ? openDayGame : undefined, children: headingContent }), !story ? SP_JSX.jsx("div", { className: "ph-history-empty", children: failed ? SP_JSX.jsx(DialogButton$c, { onClick: () => setRetry(v => v + 1), children: copy[8] }) : SP_JSX.jsx("span", { role: "status", children: copy[7] }) }) : [story, ...(story.also ?? [])].map(item => SP_JSX.jsxs("div", { className: "ph-history-story", children: [SP_JSX.jsx(Block, { story: item, index: 0, locale: locale }), item.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: item, chapter: chapter, index: index + 1, locale: locale }), item.quote && (item.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$h, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] })] }, index)), item.quote && !item.editorial.chapters?.length && SP_JSX.jsxs(Focusable$h, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] }), item.connections?.length ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-connections-title", children: copy[4] }), item.connections.map(related => SP_JSX.jsx(RelatedStory, { story: related, locale: locale }, `${related.date}-${related.editorial.id}`))] }) : null] }, `${item.date}-${item.editorial.id}`))] });
+    return SP_JSX.jsxs(Focusable$i, { className: "ph-history", ref: root, "flow-children": "column", onButtonDown: navigate, actionDescriptionMap: story?.preview ? { [buttons.SECONDARY]: hints[0], [buttons.OPTIONS]: hints[1] } : {}, children: [SP_JSX.jsx("style", { children: css$7 }), SP_JSX.jsx(Focusable$i, { className: "ph-history-head ph-history-day-card", role: "button", "aria-label": story?.article.title ?? copy[0], focusable: true, onActivate: dayAppId ? openDayGame : undefined, onClick: dayAppId ? openDayGame : undefined, children: headingContent }), !story ? SP_JSX.jsx("div", { className: "ph-history-empty", children: failed ? SP_JSX.jsx(DialogButton$c, { onClick: () => setRetry(v => v + 1), children: copy[8] }) : SP_JSX.jsx("span", { role: "status", children: copy[7] }) }) : [story, ...(story.also ?? [])].map(item => SP_JSX.jsxs("div", { className: "ph-history-story", children: [SP_JSX.jsx(Block, { story: item, index: 0, locale: locale }), item.editorial.chapters?.map((chapter, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx(Block, { story: item, chapter: chapter, index: index + 1, locale: locale }), item.quote && (item.quote.after ?? 1) === index + 1 && SP_JSX.jsxs(Focusable$i, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] })] }, index)), item.quote && !item.editorial.chapters?.length && SP_JSX.jsxs(Focusable$i, { className: "ph-history-quote", role: "note", focusable: true, children: [SP_JSX.jsx("p", { children: item.quote.quoted ? `«${item.quote.text}»` : item.quote.text }), item.quote.attribution && SP_JSX.jsx("span", { children: item.quote.attribution })] }), item.connections?.length ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-history-connections-title", children: copy[4] }), item.connections.map(related => SP_JSX.jsx(RelatedStory, { story: related, locale: locale }, `${related.date}-${related.editorial.id}`))] }) : null] }, `${item.date}-${item.editorial.id}`))] });
 }
 let historyConfig = { enabled: true, revision: 0 };
 let historyReady = false;
@@ -24852,15 +24852,15 @@ const coreUiSetting = createCoreUiSetting(defaultStorage());
 
 // Eternal Core: Core Home's text in Core's 12 languages (docs/eternal/CORE-UI.md, "Phase 2: Home"). "Jarvis", "Forge"
 // and the console names are names and stay the same everywhere. Self-contained: tests load it alone.
-const en$9 = {
+const en$a = {
     brief: "Jarvis brief", consoles: "Consoles",
     morning: "Good morning, sir", afternoon: "Good afternoon, sir", evening: "Good evening, sir", night: "Up late, sir",
     lastPlayed: "You were last playing {game}.", nothingYet: "Nothing on the go yet. Pick something and I'll keep track.",
     talk: "Talk to Jarvis", mods: "{count} mods have updates in Forge", modsOne: "1 mod has an update in Forge",
     updates: "News and updates for your games", empty: "No games in this collection yet", vr: "VR", retro: "Retro",
 };
-const copy$e = {
-    en: en$9,
+const copy$f = {
+    en: en$a,
     it: { brief: "Il punto di Jarvis", consoles: "Console", morning: "Buongiorno, signore", afternoon: "Buon pomeriggio, signore", evening: "Buonasera, signore", night: "Ancora sveglio, signore",
         lastPlayed: "L'ultima volta giocavi a {game}.", nothingYet: "Ancora niente in corso. Scegli un gioco e ne terrò traccia.", talk: "Parla con Jarvis",
         mods: "{count} mod hanno aggiornamenti in Forge", modsOne: "1 mod ha un aggiornamento in Forge", updates: "Notizie e aggiornamenti dei tuoi giochi", empty: "Ancora nessun gioco in questa raccolta", vr: "VR", retro: "Retro" },
@@ -24897,7 +24897,7 @@ const copy$e = {
 };
 function coreHomeCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return copy$e[language === "ua" ? "uk" : language] ?? en$9;
+    return copy$f[language === "ua" ? "uk" : language] ?? en$a;
 }
 // The greeting for the hour (local time): night 0-4, morning 5-11, afternoon 12-17, evening 18-23. The household
 // keeps late hours, so 4am is still "up late".
@@ -25692,7 +25692,7 @@ function CoreStars() {
 // Eternal Core: the Club tab's text in Core's 12 languages. Event names ("Game of the Week", ...), game titles,
 // member names and the bot command stay as the club writes them: they are the club's own names.
 // Self-contained (no imports): tests/club.test.mjs loads it alone.
-const en$8 = {
+const en$9 = {
     tab: "Club", title: "Play Retro Games Club", playing: "Playing now",
     daysLeft: { one: "{n} day left", other: "{n} days left" }, lastDay: "Last day", ended: "Ended", noDate: "Dates on the club site",
     notInLibrary: "Not in your library", play: "Play", details: "Game page", standing: "Your standing", beaten: "games beaten",
@@ -25707,9 +25707,9 @@ const en$8 = {
     setting: "Show the Club tab", settingHint: "Play Retro Games Club picks, your standing and nominations on the Home.",
     nameLabel: "Your club display name", nameSave: "Save name", saveFailed: "Could not save the Club settings.",
 };
-const copy$d = {
-    en: en$8,
-    it: { ...en$8, tab: "Club", playing: "In gioco ora", daysLeft: { one: "Manca {n} giorno", other: "Mancano {n} giorni" }, lastDay: "Ultimo giorno", ended: "Terminato", noDate: "Date sul sito del club",
+const copy$e = {
+    en: en$9,
+    it: { ...en$9, tab: "Club", playing: "In gioco ora", daysLeft: { one: "Manca {n} giorno", other: "Mancano {n} giorni" }, lastDay: "Ultimo giorno", ended: "Terminato", noDate: "Date sul sito del club",
         notInLibrary: "Non è nella tua libreria", play: "Gioca", details: "Pagina del gioco", standing: "La tua posizione", beaten: "giochi completati", streak: "serie", rank: "posizione",
         rankOf: "#{rank} su {of}", crowns: "Corone", setName: "Inserisci il tuo nome nel club in Accesso rapido > Core > Club per vedere la tua posizione.",
         notFound: "Nessun membro chiamato \"{name}\" nella classifica per ora.", top: "Top 5", nominations: "Candidature", voteOpens: "Il voto apre il {date}",
@@ -25719,7 +25719,7 @@ const copy$d = {
         updated: "Aggiornato {ago}", saved: "Dati salvati", refresh: "Aggiorna", loading: "Caricamento del club…", noData: "I dati del club non sono ancora disponibili.",
         setting: "Mostra la scheda Club", settingHint: "Le scelte del Play Retro Games Club, la tua posizione e le candidature nella Home.", nameLabel: "Il tuo nome nel club",
         nameSave: "Salva nome", saveFailed: "Impossibile salvare le impostazioni del Club." },
-    es: { ...en$8, playing: "Jugando ahora", daysLeft: { one: "Queda {n} día", other: "Quedan {n} días" }, lastDay: "Último día", ended: "Terminado", noDate: "Fechas en la web del club",
+    es: { ...en$9, playing: "Jugando ahora", daysLeft: { one: "Queda {n} día", other: "Quedan {n} días" }, lastDay: "Último día", ended: "Terminado", noDate: "Fechas en la web del club",
         notInLibrary: "No está en tu biblioteca", play: "Jugar", details: "Página del juego", standing: "Tu posición", beaten: "juegos superados", streak: "racha", rank: "puesto",
         rankOf: "#{rank} de {of}", crowns: "Coronas", setName: "Escribe tu nombre del club en Acceso rápido > Core > Club para ver tu posición.",
         notFound: "Aún no hay ningún miembro llamado \"{name}\" en la clasificación.", top: "Top 5", nominations: "Nominaciones", voteOpens: "La votación abre el {date}",
@@ -25729,7 +25729,7 @@ const copy$d = {
         updated: "Actualizado {ago}", saved: "Datos guardados", refresh: "Actualizar", loading: "Cargando el club…", noData: "Los datos del club aún no están disponibles.",
         setting: "Mostrar la pestaña Club", settingHint: "Las elecciones del Play Retro Games Club, tu posición y las nominaciones en Inicio.", nameLabel: "Tu nombre en el club",
         nameSave: "Guardar nombre", saveFailed: "No se pudo guardar la configuración del Club." },
-    fr: { ...en$8, playing: "En cours", daysLeft: { one: "{n} jour restant", other: "{n} jours restants" }, lastDay: "Dernier jour", ended: "Terminé", noDate: "Dates sur le site du club",
+    fr: { ...en$9, playing: "En cours", daysLeft: { one: "{n} jour restant", other: "{n} jours restants" }, lastDay: "Dernier jour", ended: "Terminé", noDate: "Dates sur le site du club",
         notInLibrary: "Absent de votre bibliothèque", play: "Jouer", details: "Page du jeu", standing: "Votre classement", beaten: "jeux terminés", streak: "série", rank: "rang",
         rankOf: "#{rank} sur {of}", crowns: "Couronnes", setName: "Saisissez votre nom de membre dans Accès rapide > Core > Club pour voir votre classement.",
         notFound: "Aucun membre nommé « {name} » dans le classement pour l'instant.", top: "Top 5", nominations: "Nominations", voteOpens: "Vote le {date}",
@@ -25739,7 +25739,7 @@ const copy$d = {
         updated: "Mis à jour {ago}", saved: "Données enregistrées", refresh: "Actualiser", loading: "Chargement du club…", noData: "Les données du club ne sont pas encore disponibles.",
         setting: "Afficher l'onglet Club", settingHint: "Les sélections du Play Retro Games Club, votre classement et les nominations sur l'accueil.", nameLabel: "Votre nom de membre",
         nameSave: "Enregistrer le nom", saveFailed: "Impossible d'enregistrer les paramètres du Club." },
-    de: { ...en$8, playing: "Läuft gerade", daysLeft: { one: "Noch {n} Tag", other: "Noch {n} Tage" }, lastDay: "Letzter Tag", ended: "Beendet", noDate: "Termine auf der Club-Website",
+    de: { ...en$9, playing: "Läuft gerade", daysLeft: { one: "Noch {n} Tag", other: "Noch {n} Tage" }, lastDay: "Letzter Tag", ended: "Beendet", noDate: "Termine auf der Club-Website",
         notInLibrary: "Nicht in deiner Bibliothek", play: "Spielen", details: "Spielseite", standing: "Dein Stand", beaten: "Spiele geschafft", streak: "Serie", rank: "Platz",
         rankOf: "Platz {rank} von {of}", crowns: "Kronen", setName: "Gib deinen Club-Namen unter Schnellzugriff > Core > Club ein, um deinen Stand zu sehen.",
         notFound: "Noch kein Mitglied namens „{name}“ in der Rangliste.", top: "Top 5", nominations: "Nominierungen", voteOpens: "Abstimmung ab {date}",
@@ -25749,7 +25749,7 @@ const copy$d = {
         updated: "Aktualisiert {ago}", saved: "Gespeicherte Daten", refresh: "Aktualisieren", loading: "Club wird geladen…", noData: "Club-Daten sind noch nicht verfügbar.",
         setting: "Club-Tab anzeigen", settingHint: "Die Picks des Play Retro Games Club, dein Stand und die Nominierungen auf der Startseite.", nameLabel: "Dein Club-Anzeigename",
         nameSave: "Namen speichern", saveFailed: "Club-Einstellungen konnten nicht gespeichert werden." },
-    pt: { ...en$8, playing: "Jogando agora", daysLeft: { one: "Falta {n} dia", other: "Faltam {n} dias" }, lastDay: "Último dia", ended: "Encerrado", noDate: "Datas no site do clube",
+    pt: { ...en$9, playing: "Jogando agora", daysLeft: { one: "Falta {n} dia", other: "Faltam {n} dias" }, lastDay: "Último dia", ended: "Encerrado", noDate: "Datas no site do clube",
         notInLibrary: "Não está na sua biblioteca", play: "Jogar", details: "Página do jogo", standing: "Sua posição", beaten: "jogos zerados", streak: "sequência", rank: "posição",
         rankOf: "#{rank} de {of}", crowns: "Coroas", setName: "Digite seu nome no clube em Acesso rápido > Core > Club para ver sua posição.",
         notFound: "Ainda não há membro chamado \"{name}\" no ranking.", top: "Top 5", nominations: "Indicações", voteOpens: "Votação abre em {date}",
@@ -25759,7 +25759,7 @@ const copy$d = {
         updated: "Atualizado {ago}", saved: "Dados salvos", refresh: "Atualizar", loading: "Carregando o clube…", noData: "Os dados do clube ainda não estão disponíveis.",
         setting: "Mostrar a aba Club", settingHint: "As escolhas do Play Retro Games Club, sua posição e as indicações na página inicial.", nameLabel: "Seu nome no clube",
         nameSave: "Salvar nome", saveFailed: "Não foi possível salvar as configurações do Club." },
-    uk: { ...en$8, tab: "Клуб", playing: "Зараз грають", daysLeft: { one: "Залишився {n} день", few: "Залишилося {n} дні", many: "Залишилося {n} днів", other: "Залишилося {n} дня" },
+    uk: { ...en$9, tab: "Клуб", playing: "Зараз грають", daysLeft: { one: "Залишився {n} день", few: "Залишилося {n} дні", many: "Залишилося {n} днів", other: "Залишилося {n} дня" },
         lastDay: "Останній день", ended: "Завершено", noDate: "Дати на сайті клубу", notInLibrary: "Немає у вашій бібліотеці", play: "Грати", details: "Сторінка гри",
         standing: "Ваше місце", beaten: "ігор пройдено", streak: "серія", rank: "місце", rankOf: "№{rank} з {of}", crowns: "Корони",
         setName: "Введіть своє ім'я в клубі в Швидкий доступ > Core > Club, щоб бачити своє місце.", notFound: "У рейтингу поки немає учасника «{name}».",
@@ -25769,7 +25769,7 @@ const copy$d = {
         updated: "Оновлено {ago}", saved: "Збережені дані", refresh: "Оновити", loading: "Завантаження клубу…", noData: "Дані клубу ще недоступні.",
         setting: "Показувати вкладку «Клуб»", settingHint: "Вибір Play Retro Games Club, ваше місце й номінації на головній.", nameLabel: "Ваше ім'я в клубі",
         nameSave: "Зберегти ім'я", saveFailed: "Не вдалося зберегти налаштування клубу." },
-    ru: { ...en$8, tab: "Клуб", playing: "Сейчас играют", daysLeft: { one: "Остался {n} день", few: "Осталось {n} дня", many: "Осталось {n} дней", other: "Осталось {n} дня" },
+    ru: { ...en$9, tab: "Клуб", playing: "Сейчас играют", daysLeft: { one: "Остался {n} день", few: "Осталось {n} дня", many: "Осталось {n} дней", other: "Осталось {n} дня" },
         lastDay: "Последний день", ended: "Завершено", noDate: "Даты на сайте клуба", notInLibrary: "Нет в вашей библиотеке", play: "Играть", details: "Страница игры",
         standing: "Ваше место", beaten: "игр пройдено", streak: "серия", rank: "место", rankOf: "№{rank} из {of}", crowns: "Короны",
         setName: "Введите своё имя в клубе в Быстрый доступ > Core > Club, чтобы видеть своё место.", notFound: "В рейтинге пока нет участника «{name}».",
@@ -25779,7 +25779,7 @@ const copy$d = {
         updated: "Обновлено {ago}", saved: "Сохранённые данные", refresh: "Обновить", loading: "Загрузка клуба…", noData: "Данные клуба пока недоступны.",
         setting: "Показывать вкладку «Клуб»", settingHint: "Выбор Play Retro Games Club, ваше место и номинации на главной.", nameLabel: "Ваше имя в клубе",
         nameSave: "Сохранить имя", saveFailed: "Не удалось сохранить настройки клуба." },
-    zh: { ...en$8, tab: "俱乐部", playing: "正在游玩", daysLeft: { other: "还剩 {n} 天" }, lastDay: "最后一天", ended: "已结束", noDate: "日期见俱乐部网站",
+    zh: { ...en$9, tab: "俱乐部", playing: "正在游玩", daysLeft: { other: "还剩 {n} 天" }, lastDay: "最后一天", ended: "已结束", noDate: "日期见俱乐部网站",
         notInLibrary: "不在你的库中", play: "开始游戏", details: "游戏页面", standing: "你的排名", beaten: "款已通关", streak: "连续", rank: "排名", rankOf: "第 {rank} 名，共 {of} 人",
         crowns: "王冠", setName: "在 快速访问 > Core > Club 中输入你的俱乐部名称即可查看排名。", notFound: "排行榜上还没有名为“{name}”的成员。", top: "前 5 名",
         nominations: "提名", voteOpens: "{date} 开始投票", logTitle: "如何登记通关", logDiscord: "在 Discord 上，于该游戏的帖子中：",
@@ -25788,7 +25788,7 @@ const copy$d = {
         updated: "更新于{ago}", saved: "显示已保存的数据", refresh: "刷新", loading: "正在加载俱乐部…", noData: "俱乐部数据暂不可用。",
         setting: "显示俱乐部标签页", settingHint: "在主页显示 Play Retro Games Club 的本期游戏、你的排名和提名。", nameLabel: "你的俱乐部显示名称",
         nameSave: "保存名称", saveFailed: "无法保存俱乐部设置。" },
-    ja: { ...en$8, tab: "クラブ", playing: "プレイ中", daysLeft: { other: "残り{n}日" }, lastDay: "最終日", ended: "終了", noDate: "日程はクラブのサイトで",
+    ja: { ...en$9, tab: "クラブ", playing: "プレイ中", daysLeft: { other: "残り{n}日" }, lastDay: "最終日", ended: "終了", noDate: "日程はクラブのサイトで",
         notInLibrary: "ライブラリにありません", play: "プレイ", details: "ゲームページ", standing: "あなたの順位", beaten: "本クリア", streak: "連続", rank: "順位",
         rankOf: "{of}人中{rank}位", crowns: "クラウン", setName: "クイックアクセス > Core > Club でクラブの表示名を入力すると順位が表示されます。",
         notFound: "「{name}」というメンバーはまだランキングにいません。", top: "トップ5", nominations: "ノミネート", voteOpens: "{date}に投票開始",
@@ -25798,7 +25798,7 @@ const copy$d = {
         updated: "{ago}に更新", saved: "保存済みのデータを表示中", refresh: "更新", loading: "クラブを読み込み中…", noData: "クラブのデータはまだありません。",
         setting: "クラブタブを表示", settingHint: "ホームに Play Retro Games Club の選出作品、あなたの順位、ノミネートを表示します。", nameLabel: "クラブの表示名",
         nameSave: "名前を保存", saveFailed: "クラブの設定を保存できませんでした。" },
-    ko: { ...en$8, tab: "클럽", playing: "지금 플레이 중", daysLeft: { other: "{n}일 남음" }, lastDay: "마지막 날", ended: "종료", noDate: "날짜는 클럽 사이트에서",
+    ko: { ...en$9, tab: "클럽", playing: "지금 플레이 중", daysLeft: { other: "{n}일 남음" }, lastDay: "마지막 날", ended: "종료", noDate: "날짜는 클럽 사이트에서",
         notInLibrary: "라이브러리에 없음", play: "플레이", details: "게임 페이지", standing: "내 순위", beaten: "개 클리어", streak: "연속", rank: "순위",
         rankOf: "{of}명 중 {rank}위", crowns: "크라운", setName: "빠른 실행 > Core > Club에서 클럽 이름을 입력하면 순위가 표시됩니다.",
         notFound: "아직 순위표에 \"{name}\" 멤버가 없습니다.", top: "상위 5명", nominations: "후보", voteOpens: "{date} 투표 시작",
@@ -25808,7 +25808,7 @@ const copy$d = {
         updated: "{ago} 업데이트", saved: "저장된 데이터 표시 중", refresh: "새로 고침", loading: "클럽을 불러오는 중…", noData: "아직 클럽 데이터가 없습니다.",
         setting: "클럽 탭 표시", settingHint: "홈에 Play Retro Games Club 선정작, 내 순위, 후보를 표시합니다.", nameLabel: "클럽 표시 이름",
         nameSave: "이름 저장", saveFailed: "클럽 설정을 저장하지 못했습니다." },
-    hi: { ...en$8, tab: "क्लब", playing: "अभी खेल रहे हैं", daysLeft: { one: "{n} दिन बाकी", other: "{n} दिन बाकी" }, lastDay: "आखिरी दिन", ended: "समाप्त",
+    hi: { ...en$9, tab: "क्लब", playing: "अभी खेल रहे हैं", daysLeft: { one: "{n} दिन बाकी", other: "{n} दिन बाकी" }, lastDay: "आखिरी दिन", ended: "समाप्त",
         noDate: "तारीखें क्लब की साइट पर", notInLibrary: "आपकी लाइब्रेरी में नहीं", play: "खेलें", details: "गेम पेज", standing: "आपकी स्थिति", beaten: "गेम पूरे किए",
         streak: "लगातार", rank: "रैंक", rankOf: "{of} में #{rank}", crowns: "ताज", setName: "अपनी स्थिति देखने के लिए क्विक एक्सेस > Core > Club में अपना क्लब नाम डालें।",
         notFound: "लीडरबोर्ड पर अभी \"{name}\" नाम का कोई सदस्य नहीं है।", top: "शीर्ष 5", nominations: "नामांकन", voteOpens: "मतदान {date} से",
@@ -25821,17 +25821,17 @@ const copy$d = {
 };
 function clubLanguage(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return language === "ua" ? "uk" : language in copy$d ? language : "en";
+    return language === "ua" ? "uk" : language in copy$e ? language : "en";
 }
 function clubCopy(locale) {
-    return copy$d[clubLanguage(locale)];
+    return copy$e[clubLanguage(locale)];
 }
 function fill$6(template, values) {
     return template.replace(/\{(\w+)\}/g, (match, key) => key in values ? String(values[key]) : match);
 }
 function daysLeftText(locale, days) {
     const language = clubLanguage(locale);
-    const forms = copy$d[language].daysLeft;
+    const forms = copy$e[language].daysLeft;
     let category = "other";
     try {
         category = new Intl.PluralRules(language).select(days);
@@ -26187,7 +26187,7 @@ const CLUB_COMPLETION_COMMAND = "/completed";
 // Eternal Core: the Club tab on Core's Home: Play Retro Games Club's current picks (matched to the Steam library,
 // A plays, X opens the game page), the user's standing beside the top 5, nominations, and how to log a win.
 // Core palette: black with the Starfield, gunmetal cards (10 px radius), crimson square focus, steel text.
-const { Focusable: Focusable$g, DialogButton: DialogButton$b, Navigation: Navigation$9 } = CompatUI;
+const { Focusable: Focusable$h, DialogButton: DialogButton$b, Navigation: Navigation$9 } = CompatUI;
 const css$6 = `
 .ph-club{position:relative;isolation:isolate;min-height:100%;padding:24px 36px 48px;color:${CORE.text};background:${CORE.black};box-sizing:border-box}
 .ph-club h2{margin:0;font-size:28px;font-weight:700;color:${CORE.white}}
@@ -26247,7 +26247,7 @@ function PickTile({ pick, match, copy, locale, now }) {
         playApp(match.appId); };
     const details = () => { if (match)
         openGamePage(match.appId, (path) => Navigation$9?.Navigate?.(path)); };
-    return SP_JSX.jsx(Focusable$g, { className: "ph-club-tile ph-club-focus", focusable: true, role: "button", "aria-label": `${pick.label}: ${pick.title}. ${leftText}. ${match ? copy.play : copy.notInLibrary}`, onActivate: match ? play : undefined, onClick: match ? play : undefined, onOKActionDescription: match ? copy.play : undefined, onSecondaryButton: match ? (event) => { event?.preventDefault?.(); event?.stopPropagation?.(); details(); } : undefined, onSecondaryActionDescription: match ? copy.details : undefined, children: SP_JSX.jsxs("div", { className: "ph-club-card", children: [SP_JSX.jsxs("div", { className: "ph-club-art", style: image ? { backgroundImage: `url("${image.replace(/"/g, "%22")}")` } : undefined, children: [!image && SP_JSX.jsx("span", { className: "ph-club-badge", children: pick.platform || "?" }), SP_JSX.jsx("span", { className: "ph-club-event", children: pick.label })] }), SP_JSX.jsxs("div", { className: "ph-club-body", children: [SP_JSX.jsx("div", { className: "ph-club-title", children: pick.title }), platform && SP_JSX.jsx("div", { className: "ph-club-meta", children: platform }), SP_JSX.jsx("div", { className: `ph-club-left${soon ? " soon" : ""}`, children: leftText }), SP_JSX.jsx("div", { className: "ph-club-lib", children: match ? `A ${copy.play} · X ${copy.details}` : copy.notInLibrary })] })] }) });
+    return SP_JSX.jsx(Focusable$h, { className: "ph-club-tile ph-club-focus", focusable: true, role: "button", "aria-label": `${pick.label}: ${pick.title}. ${leftText}. ${match ? copy.play : copy.notInLibrary}`, onActivate: match ? play : undefined, onClick: match ? play : undefined, onOKActionDescription: match ? copy.play : undefined, onSecondaryButton: match ? (event) => { event?.preventDefault?.(); event?.stopPropagation?.(); details(); } : undefined, onSecondaryActionDescription: match ? copy.details : undefined, children: SP_JSX.jsxs("div", { className: "ph-club-card", children: [SP_JSX.jsxs("div", { className: "ph-club-art", style: image ? { backgroundImage: `url("${image.replace(/"/g, "%22")}")` } : undefined, children: [!image && SP_JSX.jsx("span", { className: "ph-club-badge", children: pick.platform || "?" }), SP_JSX.jsx("span", { className: "ph-club-event", children: pick.label })] }), SP_JSX.jsxs("div", { className: "ph-club-body", children: [SP_JSX.jsx("div", { className: "ph-club-title", children: pick.title }), platform && SP_JSX.jsx("div", { className: "ph-club-meta", children: platform }), SP_JSX.jsx("div", { className: `ph-club-left${soon ? " soon" : ""}`, children: leftText }), SP_JSX.jsx("div", { className: "ph-club-lib", children: match ? `A ${copy.play} · X ${copy.details}` : copy.notInLibrary })] })] }) });
 }
 function Standing({ member, name, copy }) {
     if (!name)
@@ -26285,7 +26285,7 @@ function ClubTab({ locale, getLocale }) {
     const ago = updatedAgo(feed?.updated ?? snapshot?.fetched_at, now);
     const canRefresh = !state.loading && now / 1000 >= (feed?.refresh_available_at ?? 0);
     const name = feed?.display_name ?? state.settings?.display_name ?? "";
-    return SP_JSX.jsxs(Focusable$g, { className: "ph-club", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$6 }), SP_JSX.jsx(CoreStars, {}), SP_JSX.jsxs("div", { className: "ph-club-head", children: [SP_JSX.jsx("h2", { children: copy.title }), ago && SP_JSX.jsxs("span", { className: `ph-club-updated${feed?.stale ? " stale" : ""}`, role: "status", children: [fill$6(copy.updated, { ago: formatAgo(resolved, ago) }), feed?.stale ? ` · ${copy.saved}` : ""] }), SP_JSX.jsx(DialogButton$b, { style: { width: "auto", minWidth: 0, padding: "6px 16px", marginLeft: "auto" }, disabled: !canRefresh, onClick: () => void loadClub(true), children: copy.refresh })] }), !snapshot ? SP_JSX.jsx("div", { className: "ph-club-empty", role: "status", children: state.loading || !feed ? copy.loading : copy.noData }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h3", { children: copy.playing }), SP_JSX.jsx(Focusable$g, { className: "ph-club-picks", "flow-children": "row", children: snapshot.picks.map(pick => SP_JSX.jsx(PickTile, { pick: pick, match: matches.get(pick) ?? null, copy: copy, locale: resolved, now: now }, `${pick.kind}-${pick.slug}`)) }), SP_JSX.jsxs("div", { className: "ph-club-row", children: [SP_JSX.jsxs(Focusable$g, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.standing, children: [SP_JSX.jsxs("h3", { children: [copy.standing, snapshot.member?.name ? ` · ${snapshot.member.name}` : ""] }), SP_JSX.jsx(Standing, { member: snapshot.member, name: name, copy: copy })] }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.top, children: [SP_JSX.jsx("h3", { children: copy.top }), SP_JSX.jsx(TopFive, { rows: snapshot.top, me: snapshot.member?.slug ?? "" })] })] }), SP_JSX.jsxs("div", { className: "ph-club-row", children: [snapshot.nominations.length > 0 && SP_JSX.jsxs(Focusable$g, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.nominations, children: [SP_JSX.jsx("h3", { children: copy.nominations }), SP_JSX.jsx(Nominations, { groups: snapshot.nominations, copy: copy, locale: resolved })] }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.logTitle, children: [SP_JSX.jsx("h3", { children: copy.logTitle }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logDiscord }), SP_JSX.jsx("code", { className: "ph-club-command", children: CLUB_COMPLETION_COMMAND }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logOptions }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logForum }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logDeadline })] })] })] })] });
+    return SP_JSX.jsxs(Focusable$h, { className: "ph-club", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$6 }), SP_JSX.jsx(CoreStars, {}), SP_JSX.jsxs("div", { className: "ph-club-head", children: [SP_JSX.jsx("h2", { children: copy.title }), ago && SP_JSX.jsxs("span", { className: `ph-club-updated${feed?.stale ? " stale" : ""}`, role: "status", children: [fill$6(copy.updated, { ago: formatAgo(resolved, ago) }), feed?.stale ? ` · ${copy.saved}` : ""] }), SP_JSX.jsx(DialogButton$b, { style: { width: "auto", minWidth: 0, padding: "6px 16px", marginLeft: "auto" }, disabled: !canRefresh, onClick: () => void loadClub(true), children: copy.refresh })] }), !snapshot ? SP_JSX.jsx("div", { className: "ph-club-empty", role: "status", children: state.loading || !feed ? copy.loading : copy.noData }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h3", { children: copy.playing }), SP_JSX.jsx(Focusable$h, { className: "ph-club-picks", "flow-children": "row", children: snapshot.picks.map(pick => SP_JSX.jsx(PickTile, { pick: pick, match: matches.get(pick) ?? null, copy: copy, locale: resolved, now: now }, `${pick.kind}-${pick.slug}`)) }), SP_JSX.jsxs("div", { className: "ph-club-row", children: [SP_JSX.jsxs(Focusable$h, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.standing, children: [SP_JSX.jsxs("h3", { children: [copy.standing, snapshot.member?.name ? ` · ${snapshot.member.name}` : ""] }), SP_JSX.jsx(Standing, { member: snapshot.member, name: name, copy: copy })] }), SP_JSX.jsxs(Focusable$h, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.top, children: [SP_JSX.jsx("h3", { children: copy.top }), SP_JSX.jsx(TopFive, { rows: snapshot.top, me: snapshot.member?.slug ?? "" })] })] }), SP_JSX.jsxs("div", { className: "ph-club-row", children: [snapshot.nominations.length > 0 && SP_JSX.jsxs(Focusable$h, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.nominations, children: [SP_JSX.jsx("h3", { children: copy.nominations }), SP_JSX.jsx(Nominations, { groups: snapshot.nominations, copy: copy, locale: resolved })] }), SP_JSX.jsxs(Focusable$h, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.logTitle, children: [SP_JSX.jsx("h3", { children: copy.logTitle }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logDiscord }), SP_JSX.jsx("code", { className: "ph-club-command", children: CLUB_COMPLETION_COMMAND }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logOptions }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logForum }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logDeadline })] })] })] })] });
 }
 
 // Eternal Core: whether Home shows the Club tab. False while the "Show the Club tab" setting is off, and until
@@ -26330,7 +26330,7 @@ function briefLineFor(snapshot, nowMs) {
 
 // Eternal Core: the Club's settings (Quick Access > Core): "Show the Club tab" (on by default) and the member's
 // club display name, typed once with Steam's on-screen keyboard (Steam opens it when the field is activated).
-const { Focusable: Focusable$f, ToggleField: ToggleField$8, TextField: TextField$3, DialogButton: DialogButton$a } = CompatUI;
+const { Focusable: Focusable$g, ToggleField: ToggleField$9, TextField: TextField$3, DialogButton: DialogButton$a } = CompatUI;
 function ClubSettings({ locale }) {
     const copy = clubCopy(locale);
     const state = _global_SP_REACT.useSyncExternalStore(subscribeClub, clubState, clubState);
@@ -26355,7 +26355,7 @@ function ClubSettings({ locale }) {
             setBusy(false);
         }
     };
-    return SP_JSX.jsxs(Focusable$f, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [SP_JSX.jsx(ToggleField$8, { label: copy.setting, description: copy.settingHint, bottomSeparator: "none", checked: settings?.enabled !== false, disabled: busy || !settings, onChange: (enabled) => void save(enabled, settings?.display_name ?? "") }), SP_JSX.jsx(TextField$3, { label: copy.nameLabel, value: value, disabled: busy || !settings, onChange: (event) => setName(String(event?.target?.value ?? "").slice(0, 64)), onKeyDown: (event) => { if (event?.key === "Enter")
+    return SP_JSX.jsxs(Focusable$g, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [SP_JSX.jsx(ToggleField$9, { label: copy.setting, description: copy.settingHint, bottomSeparator: "none", checked: settings?.enabled !== false, disabled: busy || !settings, onChange: (enabled) => void save(enabled, settings?.display_name ?? "") }), SP_JSX.jsx(TextField$3, { label: copy.nameLabel, value: value, disabled: busy || !settings, onChange: (event) => setName(String(event?.target?.value ?? "").slice(0, 64)), onKeyDown: (event) => { if (event?.key === "Enter")
                     void save(settings?.enabled !== false, value); } }), SP_JSX.jsx(DialogButton$a, { disabled: busy || !settings || value.trim() === (settings?.display_name ?? ""), onClick: () => void save(settings?.enabled !== false, value), children: copy.nameSave })] });
 }
 
@@ -26381,14 +26381,14 @@ const clubHomeTab = {
 
 // Eternal Core: the Jarvis brief hero's text in Core's 12 languages (docs/eternal/CORE-UI.md, "Phase 2: Home", 3.3.4).
 // The greeting, "Talk to Jarvis" and the mods line stay in coreHomeLocale.ts. Self-contained: tests load it alone.
-const en$7 = {
+const en$8 = {
     continueLabel: "Continue", play: "Play", hours: "{count} hours played", hoursOne: "1 hour played", minutes: "{count} minutes played", neverPlayed: "Not played yet",
     clubLabel: "Club pick", daysLeft: "{count} days left", dayLeft: "1 day left", lastDay: "Last day",
     downloads: "{count} downloading", downloadsOne: "1 downloading", steamUpdate: "Steam update waiting", mods: "{count} mod updates", modsOne: "1 mod update",
     achievements: "{count} nearly done",
 };
-const copy$c = {
-    en: en$7,
+const copy$d = {
+    en: en$8,
     it: { continueLabel: "Continua", play: "Gioca", hours: "{count} ore di gioco", hoursOne: "1 ora di gioco", minutes: "{count} minuti di gioco", neverPlayed: "Non ancora giocato",
         clubLabel: "Scelta del Club", daysLeft: "Ancora {count} giorni", dayLeft: "Ancora 1 giorno", lastDay: "Ultimo giorno",
         downloads: "{count} download in corso", downloadsOne: "1 download in corso", steamUpdate: "Aggiornamento di Steam in attesa", mods: "{count} mod da aggiornare", modsOne: "1 mod da aggiornare",
@@ -26436,7 +26436,7 @@ const copy$c = {
 };
 function coreBriefCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return copy$c[language === "ua" ? "uk" : language] ?? en$7;
+    return copy$d[language === "ua" ? "uk" : language] ?? en$8;
 }
 
 // Eternal Core: the Jarvis brief hero's data (docs/eternal/CORE-UI.md, "Phase 2: Home", 3.3.4). Everything the hero
@@ -26584,7 +26584,7 @@ function minutesPlayed(appid, store) {
     }
 }
 
-const { Focusable: Focusable$e, DialogButton: DialogButton$9, Navigation: Navigation$8 } = CompatUI;
+const { Focusable: Focusable$f, DialogButton: DialogButton$9, Navigation: Navigation$8 } = CompatUI;
 const css$5 = `
 .core-brief{position:relative;isolation:isolate;overflow:hidden;margin:0 0 24px;padding:36px 40px 32px;min-height:360px;box-sizing:border-box;color:#E6EAEE}
 .core-brief-grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,1.6fr);gap:32px;align-items:start}
@@ -26690,8 +26690,8 @@ function CoreBriefHero({ locale, onTalk }) {
     const text = coreBriefCopy(locale), home = coreHomeCopy(locale);
     const navigate = (path) => Navigation$8?.Navigate?.(path);
     const cont = model.continue, club = model.club;
-    return SP_JSX.jsxs("section", { className: "core-brief", "aria-label": home.brief, children: [SP_JSX.jsx("style", { children: css$5 }), SP_JSX.jsx(CoreStars, {}), SP_JSX.jsxs("div", { className: "core-brief-grid", children: [SP_JSX.jsxs("div", { children: [SP_JSX.jsx("h2", { className: "core-brief-hello", children: model.greeting }), SP_JSX.jsxs("div", { className: "core-brief-meta", children: [SP_JSX.jsx("span", { children: model.date }), SP_JSX.jsx("span", { children: model.time }), model.weather ? SP_JSX.jsx("span", { children: model.weather }) : null] }), model.chips.length ? SP_JSX.jsx("div", { className: "core-brief-chips", children: model.chips.map(chip => SP_JSX.jsx("span", { className: "core-brief-chip", "data-tone": chip.tone, children: chip.text }, chip.id)) }) : null, SP_JSX.jsxs(Focusable$e, { className: "core-brief-talk", "flow-children": "row", children: [SP_JSX.jsx("span", { className: "core-brief-orb", "aria-hidden": "true" }), SP_JSX.jsx(DialogButton$9, { onClick: onTalk, children: home.talk })] })] }), cont || club ? SP_JSX.jsxs(Focusable$e, { className: "core-brief-cards", "flow-children": "row", children: [cont ? SP_JSX.jsxs(Focusable$e, { className: "core-brief-card core-brief-continue", focusable: true, "aria-label": cont.name, onActivate: () => { if (!playApp(cont.appid))
-                                    navigate(`/library/app/${cont.appid}`); }, onSecondaryButton: () => navigate(`/library/app/${cont.appid}`), children: [SP_JSX.jsx(Art, { sources: cont.hero }), SP_JSX.jsxs("div", { className: "core-brief-glass", children: [SP_JSX.jsx("div", { className: "core-brief-kicker", children: text.continueLabel }), SP_JSX.jsx("div", { className: "core-brief-title", children: cont.name }), SP_JSX.jsxs("div", { className: "core-brief-sub", children: [SP_JSX.jsx("span", { className: "core-brief-a", "aria-hidden": "true", children: "A" }), SP_JSX.jsx("span", { children: text.play }), SP_JSX.jsx("span", { children: cont.played })] })] })] }) : null, club ? SP_JSX.jsxs(Focusable$e, { className: "core-brief-card", focusable: true, "aria-label": club.title, onActivate: () => { if (club.appId)
+    return SP_JSX.jsxs("section", { className: "core-brief", "aria-label": home.brief, children: [SP_JSX.jsx("style", { children: css$5 }), SP_JSX.jsx(CoreStars, {}), SP_JSX.jsxs("div", { className: "core-brief-grid", children: [SP_JSX.jsxs("div", { children: [SP_JSX.jsx("h2", { className: "core-brief-hello", children: model.greeting }), SP_JSX.jsxs("div", { className: "core-brief-meta", children: [SP_JSX.jsx("span", { children: model.date }), SP_JSX.jsx("span", { children: model.time }), model.weather ? SP_JSX.jsx("span", { children: model.weather }) : null] }), model.chips.length ? SP_JSX.jsx("div", { className: "core-brief-chips", children: model.chips.map(chip => SP_JSX.jsx("span", { className: "core-brief-chip", "data-tone": chip.tone, children: chip.text }, chip.id)) }) : null, SP_JSX.jsxs(Focusable$f, { className: "core-brief-talk", "flow-children": "row", children: [SP_JSX.jsx("span", { className: "core-brief-orb", "aria-hidden": "true" }), SP_JSX.jsx(DialogButton$9, { onClick: onTalk, children: home.talk })] })] }), cont || club ? SP_JSX.jsxs(Focusable$f, { className: "core-brief-cards", "flow-children": "row", children: [cont ? SP_JSX.jsxs(Focusable$f, { className: "core-brief-card core-brief-continue", focusable: true, "aria-label": cont.name, onActivate: () => { if (!playApp(cont.appid))
+                                    navigate(`/library/app/${cont.appid}`); }, onSecondaryButton: () => navigate(`/library/app/${cont.appid}`), children: [SP_JSX.jsx(Art, { sources: cont.hero }), SP_JSX.jsxs("div", { className: "core-brief-glass", children: [SP_JSX.jsx("div", { className: "core-brief-kicker", children: text.continueLabel }), SP_JSX.jsx("div", { className: "core-brief-title", children: cont.name }), SP_JSX.jsxs("div", { className: "core-brief-sub", children: [SP_JSX.jsx("span", { className: "core-brief-a", "aria-hidden": "true", children: "A" }), SP_JSX.jsx("span", { children: text.play }), SP_JSX.jsx("span", { children: cont.played })] })] })] }) : null, club ? SP_JSX.jsxs(Focusable$f, { className: "core-brief-card", focusable: true, "aria-label": club.title, onActivate: () => { if (club.appId)
                                     openGamePage(club.appId, navigate); }, children: [club.art ? SP_JSX.jsx(Art, { sources: [club.art] }) : null, SP_JSX.jsxs("div", { className: club.art ? "core-brief-glass" : "core-brief-plain", children: [SP_JSX.jsx("div", { className: "core-brief-kicker", children: club.label }), SP_JSX.jsx("div", { className: "core-brief-title", children: club.title }), club.left ? SP_JSX.jsx("div", { className: "core-brief-sub", children: SP_JSX.jsx("span", { children: club.left }) }) : null] })] }) : null] }) : null] })] });
 }
 // The hero never takes Home down: any error shows `fallback` (the plain brief) instead.
@@ -26705,7 +26705,7 @@ class BriefBoundary extends _global_SP_REACT.Component {
     render() { return this.state.failed ? this.props.fallback : this.props.children; }
 }
 
-const { Focusable: Focusable$d, DialogButton: DialogButton$8, Navigation: Navigation$7 } = CompatUI;
+const { Focusable: Focusable$e, DialogButton: DialogButton$8, Navigation: Navigation$7 } = CompatUI;
 // The Club tab (src/club/): registered through Home's registry like any other module's tab; shown once the Club is on
 // and has data (clubAvailable), re-checked whenever the Club's store changes.
 try {
@@ -26770,7 +26770,7 @@ function portraitSources(appid) {
 function GameTile({ app }) {
     const sources = _global_SP_REACT.useMemo(() => portraitSources(app.appid), [app.appid]);
     const [index, setIndex] = _global_SP_REACT.useState(0);
-    return SP_JSX.jsxs(Focusable$d, { className: "core-home-tile", focusable: true, "aria-label": app.name, onActivate: () => { try {
+    return SP_JSX.jsxs(Focusable$e, { className: "core-home-tile", focusable: true, "aria-label": app.name, onActivate: () => { try {
             Navigation$7?.Navigate?.(`/library/app/${app.appid}`);
         }
         catch { /* Stay on Home. */ } }, children: [index < sources.length ? SP_JSX.jsx("img", { alt: "", loading: "lazy", src: sources[index], onError: () => setIndex(i => i + 1) }) : null, index >= sources.length ? SP_JSX.jsx("span", { children: app.name }) : null] });
@@ -26800,7 +26800,7 @@ function PlainBrief({ locale }) {
     catch {
         club = null;
     }
-    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx("h2", { children: text[greetingKey(now.getHours())] }), SP_JSX.jsx("p", { className: "core-home-line", children: last ? text.lastPlayed.replace("{game}", last.name) : text.nothingYet }), club ? SP_JSX.jsx("p", { className: "core-home-line", children: club }) : null, mods > 0 ? SP_JSX.jsx("p", { className: "core-home-line", children: mods === 1 ? text.modsOne : text.mods.replace("{count}", String(mods)) }) : null, SP_JSX.jsx(Focusable$d, { className: "core-home-actions", "flow-children": "row", children: SP_JSX.jsx(DialogButton$8, { onClick: openJarvis, children: text.talk }) })] });
+    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx("h2", { children: text[greetingKey(now.getHours())] }), SP_JSX.jsx("p", { className: "core-home-line", children: last ? text.lastPlayed.replace("{game}", last.name) : text.nothingYet }), club ? SP_JSX.jsx("p", { className: "core-home-line", children: club }) : null, mods > 0 ? SP_JSX.jsx("p", { className: "core-home-line", children: mods === 1 ? text.modsOne : text.mods.replace("{count}", String(mods)) }) : null, SP_JSX.jsx(Focusable$e, { className: "core-home-actions", "flow-children": "row", children: SP_JSX.jsx(DialogButton$8, { onClick: openJarvis, children: text.talk }) })] });
 }
 const familyName = { playstation: "PlayStation", nintendo: "Nintendo", sega: "Sega", xbox: "Xbox", retro: "Retro", vr: "VR" };
 function shelfFamily(name) {
@@ -26820,7 +26820,7 @@ function Consoles({ locale }) {
                 const icon = tabIcon(familyName[shelf.family], matchTab(familyName[shelf.family]), icons);
                 const tone = shelf.family === "vr" ? "#C9D1D9" : CORE_FAMILY_TONES$1[shelf.family];
                 return SP_JSX.jsxs("section", { style: { ["--core-tone"]: tone }, "aria-label": label, children: [SP_JSX.jsxs("div", { className: "core-home-label", children: [icon ? SP_JSX.jsx("img", { alt: "", src: icon }) : null, SP_JSX.jsx("span", { children: label }), SP_JSX.jsx("i", {})] }), shelf.apps.length
-                            ? SP_JSX.jsx(Focusable$d, { className: "core-home-row", "flow-children": "row", children: shelf.apps.map(app => SP_JSX.jsx(GameTile, { app: app }, app.appid)) })
+                            ? SP_JSX.jsx(Focusable$e, { className: "core-home-row", "flow-children": "row", children: shelf.apps.map(app => SP_JSX.jsx(GameTile, { app: app }, app.appid)) })
                             : SP_JSX.jsx("p", { className: "core-home-note", children: text.empty })] }, shelf.family);
             })] });
 }
@@ -26869,7 +26869,7 @@ function CoreHomeTabs({ native, getLocale, render }) {
     return SP_JSX.jsx(HomeBoundary, { fallback: fallback, children: render(tree) });
 }
 
-const { Focusable: Focusable$c, DialogButton: DialogButton$7, DropdownItem: DropdownItem$4, ToggleField: ToggleField$7, Navigation: Navigation$6 } = CompatUI;
+const { Focusable: Focusable$d, DialogButton: DialogButton$7, DropdownItem: DropdownItem$4, ToggleField: ToggleField$8, Navigation: Navigation$6 } = CompatUI;
 let config$1 = { enabled: true, country: "auto" };
 let ready = false;
 const listeners$6 = new Set();
@@ -26903,7 +26903,7 @@ function HomeNewsSettings({ locale }) {
         }
     };
     const names = new Intl.DisplayNames([locale], { type: "region" });
-    return SP_JSX.jsxs(Focusable$c, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [loadFailed && SP_JSX.jsx(DialogButton$7, { onClick: () => void readConfig().then(() => setLoadFailed(false)).catch(() => { }), children: copy[4] }), SP_JSX.jsx(ToggleField$7, { label: copy[1], bottomSeparator: "none", checked: value.enabled, disabled: busy || !ready, onChange: (enabled) => void save({ ...value, enabled }) }), SP_JSX.jsx(DropdownItem$4, { label: copy[2], layout: "below", bottomSeparator: "none", selectedOption: value.country, disabled: busy || !ready, rgOptions: [{ data: "auto", label: copy[3] }, ...NEWS_COUNTRIES.map(data => ({ data, label: names.of(data) ?? data }))], onChange: (option) => void save({ ...value, country: option.data }) })] });
+    return SP_JSX.jsxs(Focusable$d, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [loadFailed && SP_JSX.jsx(DialogButton$7, { onClick: () => void readConfig().then(() => setLoadFailed(false)).catch(() => { }), children: copy[4] }), SP_JSX.jsx(ToggleField$8, { label: copy[1], bottomSeparator: "none", checked: value.enabled, disabled: busy || !ready, onChange: (enabled) => void save({ ...value, enabled }) }), SP_JSX.jsx(DropdownItem$4, { label: copy[2], layout: "below", bottomSeparator: "none", selectedOption: value.country, disabled: busy || !ready, rgOptions: [{ data: "auto", label: copy[3] }, ...NEWS_COUNTRIES.map(data => ({ data, label: names.of(data) ?? data }))], onChange: (option) => void save({ ...value, country: option.data }) })] });
 }
 function nativeNewsRows(tree) {
     const children = tree?.props?.children;
@@ -26950,7 +26950,7 @@ function NewsCard({ item, width, height, locale, skin }) {
     const [missing, setMissing] = _global_SP_REACT.useState(false);
     const c = skin.classes;
     const date = item.published > 0 ? new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "long" }).format(new Date(item.published * 1000)) : "";
-    return SP_JSX.jsxs("div", { className: `${c.OuterWrapper} ph-news-card`, style: { width, height }, "data-news-url": item.url, children: [SP_JSX.jsx("div", { className: c.EventType, children: item.source }), SP_JSX.jsxs(Focusable$c, { className: `${c.EventPreviewContainer} ph-news-content`, focusable: true, "aria-label": `${item.title} Â· ${item.source}`, onActivate: () => {
+    return SP_JSX.jsxs("div", { className: `${c.OuterWrapper} ph-news-card`, style: { width, height }, "data-news-url": item.url, children: [SP_JSX.jsx("div", { className: c.EventType, children: item.source }), SP_JSX.jsxs(Focusable$d, { className: `${c.EventPreviewContainer} ph-news-content`, focusable: true, "aria-label": `${item.title} Â· ${item.source}`, onActivate: () => {
                     if (/^https?:\/\//i.test(item.url))
                         Navigation$6.NavigateToExternalWeb(item.url);
                 }, children: [SP_JSX.jsx("div", { className: `${c.EventImageWrapper} ph-news-cover`, style: { height: Math.round(width * 9 / 16), minHeight: Math.round(width * 9 / 16), flexShrink: 0 }, "data-logo": fallback, children: !missing ? SP_JSX.jsx("img", { className: `${c.EventImage} ph-news-image`, loading: "lazy", alt: "", src: fallback ? item.logo : item.image, onError: () => fallback ? setMissing(true) : setFallback(true) }) : SP_JSX.jsx("span", { children: item.source }) }), SP_JSX.jsxs("div", { className: `${c.EventInfo} ph-news-info`, children: [SP_JSX.jsx("div", { className: "ph-news-date", children: date }), SP_JSX.jsx("div", { className: `${c.Title} ph-news-title`, children: item.title })] })] })] });
@@ -27788,7 +27788,7 @@ function SiSteam (props) {
 }
 
 const { useCallback: useCallback$1, useEffect: useEffect$2, useLayoutEffect, useMemo: useMemo$2, useRef: useRef$1, useState: useState$2 } = _global_SP_REACT;
-const { Focusable: Focusable$b, GamepadButton: GamepadButton$2, Navigation: Navigation$5, TextField: TextField$2, ToggleField: ToggleField$6 } = CompatUI;
+const { Focusable: Focusable$c, GamepadButton: GamepadButton$2, Navigation: Navigation$5, TextField: TextField$2, ToggleField: ToggleField$7 } = CompatUI;
 const DASHBOARD_ROUTE = "/playhub-dashboard";
 const dashboardExit = createDashboardExit({
     hideOverlay: () => { closeDashboardOverlay(); clearDashboardChrome(); },
@@ -28504,7 +28504,7 @@ function FocusItem({ className = "", children, onPress, onFocus, ...props }) {
         sound("open");
         onPress?.();
     };
-    return (SP_JSX.jsx(Focusable$b, { ...props, tabIndex: 0, "data-ph-focusable": "true", noFocusRing: true, focusClassName: "ph-focus", className: className, onActivate: activate, onClick: (event) => { if (event?.detail > 0)
+    return (SP_JSX.jsx(Focusable$c, { ...props, tabIndex: 0, "data-ph-focusable": "true", noFocusRing: true, focusClassName: "ph-focus", className: className, onActivate: activate, onClick: (event) => { if (event?.detail > 0)
             activate(event); }, onFocus: (event) => { sound("move"); onFocus?.(event); }, children: children }));
 }
 function gridDirectionFromKey(key) {
@@ -28649,7 +28649,7 @@ function focusSystemMetric(position = 0) {
     return true;
 }
 function FocusGrid({ className = "", children, ...props }) {
-    return (SP_JSX.jsx(Focusable$b, { ...props, className: className, "flow-children": "grid", "data-ph-focus-grid": "true", children: children }));
+    return (SP_JSX.jsx(Focusable$c, { ...props, className: className, "flow-children": "grid", "data-ph-focus-grid": "true", children: children }));
 }
 function useClock() {
     const [now, setNow] = useState$2(() => new Date());
@@ -28670,7 +28670,7 @@ function Header({ tab, setTab, copy, locale, logo }) {
             { id: "system", label: copy.system, icon: FiCpu },
         ];
     }, [copy]);
-    return (SP_JSX.jsxs("header", { className: "ph-header", children: [SP_JSX.jsx("div", { className: "ph-brand", children: logo ? SP_JSX.jsx("img", { src: logo, alt: "Core" }) : SP_JSX.jsx("div", { className: "ph-brand-fallback", children: "core" }) }), SP_JSX.jsx(Focusable$b, { className: "ph-tabs", "flow-children": "horizontal", children: tabs.map((item) => {
+    return (SP_JSX.jsxs("header", { className: "ph-header", children: [SP_JSX.jsx("div", { className: "ph-brand", children: logo ? SP_JSX.jsx("img", { src: logo, alt: "Core" }) : SP_JSX.jsx("div", { className: "ph-brand-fallback", children: "core" }) }), SP_JSX.jsx(Focusable$c, { className: "ph-tabs", "flow-children": "horizontal", children: tabs.map((item) => {
                     const Icon = item.icon;
                     return (SP_JSX.jsxs(FocusItem, { className: `ph-tab ${tab === item.id ? "ph-active" : ""}`, onPress: () => setTab(item.id), onButtonDown: (event) => {
                             if (item.id !== "system" || tab !== "system" || Number(event?.detail?.button) !== GamepadButton$2?.DIR_DOWN)
@@ -28847,7 +28847,7 @@ function TaskSwitcher({ copy, onReady, onSelectWindow }) {
             closingHandles.current.delete(entry.handle);
         }
     }, [windows, refresh, onReady]);
-    return (SP_JSX.jsxs("div", { className: "ph-page ph-switcher-page", children: [closeNotice ? SP_JSX.jsx("div", { className: `ph-window-notice${closeNotice.failed ? " ph-failed" : ""}`, role: "status", "aria-live": "polite", children: closeNotice.text }) : null, windows.length === 0 ? (SP_JSX.jsx("div", { className: "ph-empty", children: SP_JSX.jsxs("div", { className: "ph-empty-inner", children: [SP_JSX.jsx(FiMonitor, {}), SP_JSX.jsx("div", { className: "ph-empty-title", children: copy.noWindows }), SP_JSX.jsx("div", { className: "ph-muted", children: copy.noWindowsBody })] }) })) : (SP_JSX.jsx(Focusable$b, { ref: rail, className: `ph-window-rail ${orderedWindows.length === 1 ? "ph-single" : ""}`, "flow-children": "horizontal", "data-ph-focus-grid": "true", children: orderedWindows.map((entry, index) => (SP_JSX.jsx(WindowCard, { entry: entry, artwork: artwork[entry.handle] ?? "", index: index, copy: copy, onSelect: () => onSelectWindow(entry), onAskClose: () => void closeEntry(entry, index) }, entry.handle))) }))] }));
+    return (SP_JSX.jsxs("div", { className: "ph-page ph-switcher-page", children: [closeNotice ? SP_JSX.jsx("div", { className: `ph-window-notice${closeNotice.failed ? " ph-failed" : ""}`, role: "status", "aria-live": "polite", children: closeNotice.text }) : null, windows.length === 0 ? (SP_JSX.jsx("div", { className: "ph-empty", children: SP_JSX.jsxs("div", { className: "ph-empty-inner", children: [SP_JSX.jsx(FiMonitor, {}), SP_JSX.jsx("div", { className: "ph-empty-title", children: copy.noWindows }), SP_JSX.jsx("div", { className: "ph-muted", children: copy.noWindowsBody })] }) })) : (SP_JSX.jsx(Focusable$c, { ref: rail, className: `ph-window-rail ${orderedWindows.length === 1 ? "ph-single" : ""}`, "flow-children": "horizontal", "data-ph-focus-grid": "true", children: orderedWindows.map((entry, index) => (SP_JSX.jsx(WindowCard, { entry: entry, artwork: artwork[entry.handle] ?? "", index: index, copy: copy, onSelect: () => onSelectWindow(entry), onAskClose: () => void closeEntry(entry, index) }, entry.handle))) }))] }));
 }
 function focusShortcutTile(id) {
     const tile = Array.from(dashboardRoot()?.querySelectorAll("[data-shortcut-id]") ?? [])
@@ -29272,7 +29272,7 @@ function SystemTab({ copy, extra, onConfirm }) {
                                                     stopDirectionalEvent(event);
                                                     focusDashboard(".ph-process-row");
                                                 }
-                                            }, children: [SP_JSX.jsx(FiRefreshCw, {}), SP_JSX.jsx("span", { children: copy.restartDecky })] })] }), SP_JSX.jsx(Focusable$b, { className: "ph-process-list", "flow-children": "vertical", children: processes.slice(0, 18).map((process) => (SP_JSX.jsxs(FocusItem, { className: "ph-process-row", onPress: () => setSelectedProcess(process), onOKActionDescription: copy.open, onButtonDown: (event) => {
+                                            }, children: [SP_JSX.jsx(FiRefreshCw, {}), SP_JSX.jsx("span", { children: copy.restartDecky })] })] }), SP_JSX.jsx(Focusable$c, { className: "ph-process-list", "flow-children": "vertical", children: processes.slice(0, 18).map((process) => (SP_JSX.jsxs(FocusItem, { className: "ph-process-row", onPress: () => setSelectedProcess(process), onOKActionDescription: copy.open, onButtonDown: (event) => {
                                             const direction = gridDirectionFromGamepad(event?.detail?.button);
                                             if (direction === "up" && process === processes[0]) {
                                                 stopDirectionalEvent(event);
@@ -29315,14 +29315,14 @@ function ProcessOptionsSheet({ process, copy, onCancel, onClose, onKill }) {
         const timer = window.setTimeout(() => focusDashboard(".ph-process-options .ph-confirm-button"), 40);
         return () => window.clearTimeout(timer);
     }, []);
-    return (SP_JSX.jsx(Focusable$b, { className: "ph-confirm-backdrop ph-process-options", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: process.name }), SP_JSX.jsxs("div", { className: "ph-confirm-name", children: ["PID ", process.id] }), SP_JSX.jsxs(Focusable$b, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onClose, children: copy.close }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onKill, children: copy.forceClose })] })] }) }));
+    return (SP_JSX.jsx(Focusable$c, { className: "ph-confirm-backdrop ph-process-options", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: process.name }), SP_JSX.jsxs("div", { className: "ph-confirm-name", children: ["PID ", process.id] }), SP_JSX.jsxs(Focusable$c, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onClose, children: copy.close }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onKill, children: copy.forceClose })] })] }) }));
 }
 function ConfirmSheet({ title, name, copy, onCancel, onConfirm }) {
     useEffect$2(() => {
         const timer = window.setTimeout(() => focusDashboard(".ph-confirm-button"), 40);
         return () => window.clearTimeout(timer);
     }, []);
-    return (SP_JSX.jsx(Focusable$b, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: title }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: name }), SP_JSX.jsxs(Focusable$b, { className: "ph-confirm-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onConfirm, children: copy.continue })] })] }) }));
+    return (SP_JSX.jsx(Focusable$c, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: title }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: name }), SP_JSX.jsxs(Focusable$c, { className: "ph-confirm-actions", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { preferredFocus: true, className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onConfirm, children: copy.continue })] })] }) }));
 }
 function AppOptionsSheet({ shortcut, copy, extra, onCancel, onRemove, onSave }) {
     const [name, setName] = useState$2(shortcut.name);
@@ -29331,7 +29331,7 @@ function AppOptionsSheet({ shortcut, copy, extra, onCancel, onRemove, onSave }) 
         const timer = window.setTimeout(() => focusDashboard(".ph-options-field input"), 50);
         return () => window.clearTimeout(timer);
     }, []);
-    return (SP_JSX.jsx(Focusable$b, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: extra.options }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: shortcut.name }), SP_JSX.jsx("div", { className: "ph-options-field", children: SP_JSX.jsx(TextField$2, { value: name, onChange: (event) => setName(event.target.value), style: { width: "100%", minWidth: 0 } }) }), SP_JSX.jsx(ToggleField$6, { label: extra.sdl3, description: extra.sdl3Description, checked: sdl3, onChange: setSdl3 }), SP_JSX.jsxs(Focusable$b, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onRemove, children: copy.remove }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: () => { if (name.trim())
+    return (SP_JSX.jsx(Focusable$c, { className: "ph-confirm-backdrop", onCancel: (event) => { stopEvent$1(event, true); onCancel(); }, onCancelButton: (event) => { stopEvent$1(event, true); onCancel(); }, children: SP_JSX.jsxs("div", { className: "ph-confirm", children: [SP_JSX.jsx("div", { className: "ph-confirm-title", children: extra.options }), SP_JSX.jsx("div", { className: "ph-confirm-name", children: shortcut.name }), SP_JSX.jsx("div", { className: "ph-options-field", children: SP_JSX.jsx(TextField$2, { value: name, onChange: (event) => setName(event.target.value), style: { width: "100%", minWidth: 0 } }) }), SP_JSX.jsx(ToggleField$7, { label: extra.sdl3, description: extra.sdl3Description, checked: sdl3, onChange: setSdl3 }), SP_JSX.jsxs(Focusable$c, { className: "ph-confirm-actions ph-three", "flow-children": "horizontal", children: [SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: onCancel, children: copy.cancel }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button ph-danger", onPress: onRemove, children: copy.remove }), SP_JSX.jsx(FocusItem, { className: "ph-confirm-button", onPress: () => { if (name.trim())
                                 onSave(name.trim(), sdl3); }, children: extra.save })] })] }) }));
 }
 function DashboardSurface() {
@@ -29577,7 +29577,7 @@ function DashboardSurface() {
         targets.forEach((targetWindow) => targetWindow.addEventListener("keydown", onKeyDown, true));
         return () => targets.forEach((targetWindow) => targetWindow.removeEventListener("keydown", onKeyDown, true));
     }, [cancelDashboard, tab]);
-    return (SP_JSX.jsxs(Focusable$b, { ref: root, className: "ph-dashboard", noFocusRing: true, onButtonDown: (event) => {
+    return (SP_JSX.jsxs(Focusable$c, { ref: root, className: "ph-dashboard", noFocusRing: true, onButtonDown: (event) => {
             const button = Number(event?.detail?.button);
             if (button === (GamepadButton$2?.CANCEL ?? 2)) {
                 cancelDashboard(event);
@@ -55577,7 +55577,7 @@ function subscribePluginProgress(listener) {
 }
 
 const { useCallback, useEffect: useEffect$1, useMemo: useMemo$1, useRef, useState: useState$1 } = _global_SP_REACT;
-const { DialogButton: DialogButton$6, ConfirmModal: ConfirmModal$1, Focusable: Focusable$a, GamepadButton: GamepadButton$1, ModalRoot, Navigation: Navigation$4, SteamSpinner, Tabs, TextField: TextField$1, showModal: showModal$1, } = CompatUI;
+const { DialogButton: DialogButton$6, ConfirmModal: ConfirmModal$1, Focusable: Focusable$b, GamepadButton: GamepadButton$1, ModalRoot, Navigation: Navigation$4, SteamSpinner, Tabs, TextField: TextField$1, showModal: showModal$1, } = CompatUI;
 const PLUGIN_STORE_ROUTE = "/playhub/plugin-store";
 const STORE_STYLE = `
   .ph-store-page { box-sizing:border-box; width:100%; height:100%; min-width:0; color:${CORE.text}; background:${CORE.black}; }
@@ -55860,7 +55860,7 @@ function ScrollReader({ children, copy, onBack }) {
         onBack();
     }, [reading, onBack]);
     const cancel = useGuardedCancel(cancelAction);
-    return (SP_JSX.jsx(Focusable$a, { ref: ref, className: `ph-store-reader${reading ? " ph-reading" : ""}`, noFocusRing: true, "flow-children": "none", onActivate: (event) => { stopEvent(event); setReading(true); }, onOKButton: (event) => { stopEvent(event); setReading(true); }, onCancel: cancel, onCancelButton: cancel, onOKActionDescription: reading ? undefined : copy.scroll, onCancelActionDescription: reading ? copy.stopReading : copy.back, actionDescriptionMap: reading ? {
+    return (SP_JSX.jsx(Focusable$b, { ref: ref, className: `ph-store-reader${reading ? " ph-reading" : ""}`, noFocusRing: true, "flow-children": "none", onActivate: (event) => { stopEvent(event); setReading(true); }, onOKButton: (event) => { stopEvent(event); setReading(true); }, onCancel: cancel, onCancelButton: cancel, onOKActionDescription: reading ? undefined : copy.scroll, onCancelActionDescription: reading ? copy.stopReading : copy.back, actionDescriptionMap: reading ? {
             [GamepadButton$1.DIR_UP]: copy.scroll,
             [GamepadButton$1.DIR_DOWN]: copy.scroll,
         } : undefined, onButtonDown: (event) => {
@@ -55876,7 +55876,7 @@ function ScrollReader({ children, copy, onBack }) {
 function MediaViewer({ item, copy, closeModal }) {
     const video = useRef(null);
     const close = useGuardedCancel(() => closeModal?.());
-    return (SP_JSX.jsx(ModalRoot, { closeModal: closeModal, onCancel: () => closeModal?.(), style: { width: "90vw", maxWidth: "1200px", boxSizing: "border-box" }, children: SP_JSX.jsx(Focusable$a, { className: "ph-store-media-modal", style: { width: "100%", maxWidth: "100%", height: "78vh", minWidth: 0, overflow: "hidden", display: "grid", gridTemplateRows: "minmax(0,1fr)" }, "flow-children": "column", onCancel: close, onCancelButton: close, onMenuButton: stopEvent, onMenuActionDescription: "", children: SP_JSX.jsx(Focusable$a, { style: { width: "100%", height: "100%", minWidth: 0, minHeight: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }, "flow-children": "none", onOKActionDescription: copy.select, onOKButton: (event) => {
+    return (SP_JSX.jsx(ModalRoot, { closeModal: closeModal, onCancel: () => closeModal?.(), style: { width: "90vw", maxWidth: "1200px", boxSizing: "border-box" }, children: SP_JSX.jsx(Focusable$b, { className: "ph-store-media-modal", style: { width: "100%", maxWidth: "100%", height: "78vh", minWidth: 0, overflow: "hidden", display: "grid", gridTemplateRows: "minmax(0,1fr)" }, "flow-children": "column", onCancel: close, onCancelButton: close, onMenuButton: stopEvent, onMenuActionDescription: "", children: SP_JSX.jsx(Focusable$b, { style: { width: "100%", height: "100%", minWidth: 0, minHeight: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }, "flow-children": "none", onOKActionDescription: copy.select, onOKButton: (event) => {
                     stopEvent(event);
                     if (video.current?.paused)
                         void video.current.play().catch(() => { });
@@ -55897,7 +55897,7 @@ function SafeMedia({ item, copy }) {
     const [visible, setVisible] = useState$1(true);
     if (!visible)
         return null;
-    return (SP_JSX.jsx(Focusable$a, { className: "ph-store-media-item", "flow-children": "none", onOKActionDescription: copy.select, onActivate: (event) => {
+    return (SP_JSX.jsx(Focusable$b, { className: "ph-store-media-item", "flow-children": "none", onOKActionDescription: copy.select, onActivate: (event) => {
             stopEvent(event);
             openStoreMedia(item, copy);
         }, children: item.kind === "video"
@@ -55966,7 +55966,7 @@ function PluginActionButton({ plugin, shared }) {
 }
 function VersionPicker({ plugin, shared, versions, closeModal }) {
     const [busy, setBusy] = useState$1(false);
-    return SP_JSX.jsxs(ModalRoot, { closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: shared.copy.chooseVersion }), SP_JSX.jsx(Focusable$a, { "flow-children": "column", style: { maxHeight: "60vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "8px 4px" }, children: !versions.length ? SP_JSX.jsx("p", { children: shared.copy.releaseUnavailable }) :
+    return SP_JSX.jsxs(ModalRoot, { closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: shared.copy.chooseVersion }), SP_JSX.jsx(Focusable$b, { "flow-children": "column", style: { maxHeight: "60vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "8px 4px" }, children: !versions.length ? SP_JSX.jsx("p", { children: shared.copy.releaseUnavailable }) :
                     versions.map((artifact) => SP_JSX.jsx(DialogButton$6, { disabled: busy, onClick: async () => {
                             if (!await confirmStoreOperation(shared.copy.installQuestion, "", shared.copy.install, shared.copy))
                                 return;
@@ -56002,10 +56002,10 @@ function UninstallButton({ plugin, shared }) {
 }
 function PluginRow({ plugin, shared, onOpen, manage = false }) {
     const update = pluginHasUpdate(plugin, shared.installed);
-    const body = (SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-store-row-media", children: SP_JSX.jsx(PluginImage, { plugin: plugin }) }), SP_JSX.jsxs("div", { className: "ph-store-row-copy", children: [SP_JSX.jsx("h3", { className: "ph-store-row-title", children: plugin.name }), SP_JSX.jsx("p", { className: "ph-store-row-description", children: plugin.shortDescription })] }), SP_JSX.jsxs("div", { className: "ph-store-row-trailing", children: [update ? SP_JSX.jsx("span", { className: "ph-store-update-marker", "aria-label": shared.copy.update, children: SP_JSX.jsx(TbRefresh, {}) }) : null, plugin.catalogStatus === "installed-only" ? null : SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), manage ? (SP_JSX.jsxs(Focusable$a, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: plugin, shared: shared }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })) : null] })] }));
+    const body = (SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-store-row-media", children: SP_JSX.jsx(PluginImage, { plugin: plugin }) }), SP_JSX.jsxs("div", { className: "ph-store-row-copy", children: [SP_JSX.jsx("h3", { className: "ph-store-row-title", children: plugin.name }), SP_JSX.jsx("p", { className: "ph-store-row-description", children: plugin.shortDescription })] }), SP_JSX.jsxs("div", { className: "ph-store-row-trailing", children: [update ? SP_JSX.jsx("span", { className: "ph-store-update-marker", "aria-label": shared.copy.update, children: SP_JSX.jsx(TbRefresh, {}) }) : null, plugin.catalogStatus === "installed-only" ? null : SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), manage ? (SP_JSX.jsxs(Focusable$b, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: plugin, shared: shared }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })) : null] })] }));
     if (manage || !onOpen)
         return SP_JSX.jsx("div", { className: "ph-store-row ph-store-row-manage", children: body });
-    return (SP_JSX.jsx(Focusable$a, { className: "ph-store-row ph-store-row-openable", onActivate: (event) => { stopEvent(event); onOpen(plugin); }, onOKButton: (event) => { stopEvent(event); onOpen(plugin); }, onOKActionDescription: shared.copy.select, children: body }));
+    return (SP_JSX.jsx(Focusable$b, { className: "ph-store-row ph-store-row-openable", onActivate: (event) => { stopEvent(event); onOpen(plugin); }, onOKButton: (event) => { stopEvent(event); onOpen(plugin); }, onOKActionDescription: shared.copy.select, children: body }));
 }
 function PluginRows({ plugins, shared, onOpen, manage = false }) {
     if (!plugins.length)
@@ -56019,7 +56019,7 @@ function SourceFilters({ value, onChange, copy }) {
         { id: "decky-store", label: "Decky Store" },
         { id: "outside-store", label: "GitHub" },
     ];
-    return (SP_JSX.jsx(Focusable$a, { className: "ph-store-filter", "flow-children": "row", noFocusRing: true, children: options.map((option) => (SP_JSX.jsx(DialogButton$6, { className: value === option.id ? "ph-selected" : "", onClick: () => onChange(option.id), children: option.id === "all" ? option.label : SP_JSX.jsx(SourceBadge, { source: option.id }) }, option.id))) }));
+    return (SP_JSX.jsx(Focusable$b, { className: "ph-store-filter", "flow-children": "row", noFocusRing: true, children: options.map((option) => (SP_JSX.jsx(DialogButton$6, { className: value === option.id ? "ph-selected" : "", onClick: () => onChange(option.id), children: option.id === "all" ? option.label : SP_JSX.jsx(SourceBadge, { source: option.id }) }, option.id))) }));
 }
 function sortLabel(sort, copy) {
     if (sort === "newest")
@@ -56033,7 +56033,7 @@ function SortPickerModal({ value, copy, onChange, closeModal }) {
         onChange(next);
         closeModal();
     };
-    return (SP_JSX.jsxs(ModalRoot, { className: "ph-store-sort-modal", closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: copy.sortBy }), SP_JSX.jsx(Focusable$a, { className: "ph-store-sort-options", "flow-children": "column", noFocusRing: true, children: ["name", "newest", "updated"].map((option) => (SP_JSX.jsx(DialogButton$6, { className: value === option ? "ph-selected" : "", onClick: () => choose(option), children: sortLabel(option, copy) }, option))) })] }));
+    return (SP_JSX.jsxs(ModalRoot, { className: "ph-store-sort-modal", closeModal: closeModal, onCancel: closeModal, children: [SP_JSX.jsx("h2", { children: copy.sortBy }), SP_JSX.jsx(Focusable$b, { className: "ph-store-sort-options", "flow-children": "column", noFocusRing: true, children: ["name", "newest", "updated"].map((option) => (SP_JSX.jsx(DialogButton$6, { className: value === option ? "ph-selected" : "", onClick: () => choose(option), children: sortLabel(option, copy) }, option))) })] }));
 }
 function openSortPicker(value, copy, onChange) {
     let modal;
@@ -56061,7 +56061,7 @@ function PluginCollection({ title, items, collectionKey, shared, onOpen, onBack,
         openSortPicker(sort, shared.copy, setSort);
     }, [sort, shared.copy]);
     const guardedBack = useGuardedCancel(onBack);
-    return (SP_JSX.jsxs(Focusable$a, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: title, sort: sort, copy: shared.copy }), SP_JSX.jsxs("div", { className: "ph-store-toolbar", children: [toolbarStart, SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy })] }), SP_JSX.jsx(PluginRows, { plugins: filtered, shared: shared, onOpen: onOpen, manage: manage })] }));
+    return (SP_JSX.jsxs(Focusable$b, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: title, sort: sort, copy: shared.copy }), SP_JSX.jsxs("div", { className: "ph-store-toolbar", children: [toolbarStart, SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy })] }), SP_JSX.jsx(PluginRows, { plugins: filtered, shared: shared, onOpen: onOpen, manage: manage })] }));
 }
 function PluginDetail({ plugin, shared, onBack }) {
     const [release, setRelease] = useState$1(null);
@@ -56113,16 +56113,16 @@ function PluginDetail({ plugin, shared, onBack }) {
     const description = readme || plugin.longDescription || plugin.shortDescription;
     const galleryMedia = media.filter((item) => item.url !== activeCover
         && !(activeCover === bundledPluginCover(plugin.repository) && item.url === plugin.coverUrl));
-    return (SP_JSX.jsxs(Focusable$a, { className: "ph-store-tab-body ph-store-detail ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsxs(Focusable$a, { className: "ph-store-detail-heading", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(Focusable$a, { className: "ph-store-detail-hero", "flow-children": "none", onOKActionDescription: shared.copy.select, onActivate: (event) => {
+    return (SP_JSX.jsxs(Focusable$b, { className: "ph-store-tab-body ph-store-detail ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsxs(Focusable$b, { className: "ph-store-detail-heading", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(Focusable$b, { className: "ph-store-detail-hero", "flow-children": "none", onOKActionDescription: shared.copy.select, onActivate: (event) => {
                             stopEvent(event);
                             if (activeCover)
                                 openStoreMedia({ kind: "image", url: activeCover, alt: plugin.name }, shared.copy);
-                        }, children: SP_JSX.jsx(PluginImage, { plugin: plugin, fallbackSources: coverSources, onImageLoaded: setActiveCover }) }), SP_JSX.jsxs("div", { className: "ph-store-detail-summary", children: [SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), SP_JSX.jsx("h1", { className: "ph-store-detail-title", children: plugin.name }), SP_JSX.jsxs("div", { className: "ph-store-detail-status", children: [installed ? SP_JSX.jsxs("span", { children: [shared.copy.installedVersion, ": ", installed.version || "?"] }) : null, SP_JSX.jsxs("span", { children: [shared.copy.latestVersion, ": ", latestVersion || "?"] })] }), SP_JSX.jsxs(Focusable$a, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: currentPlugin, shared: shared }), versions.some((item) => compareVersions(item.version, latestVersion) < 0) && SP_JSX.jsx(DialogButton$6, { className: "ph-store-action", "aria-label": shared.copy.chooseVersion, title: shared.copy.chooseVersion, onOKActionDescription: shared.copy.chooseVersion, onClick: () => showModal$1(SP_JSX.jsx(VersionPicker, { plugin: plugin, shared: shared, versions: versions }), window, { bNeverPopOut: true }), children: SP_JSX.jsx(TbHistory, {}) }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })] })] }), galleryMedia.length ? (SP_JSX.jsxs("section", { className: "ph-store-media-section", children: [SP_JSX.jsx("h2", { children: shared.copy.media }), SP_JSX.jsx(Focusable$a, { className: "ph-store-media-strip", "flow-children": "row", noFocusRing: true, children: galleryMedia.map((item) => SP_JSX.jsx(SafeMedia, { item: item, copy: shared.copy }, item.url)) })] })) : null, loading ? (SP_JSX.jsx("div", { className: "ph-store-empty", children: SP_JSX.jsx(SteamSpinner, {}) })) : (SP_JSX.jsxs(ScrollReader, { copy: shared.copy, onBack: onBack, children: [SP_JSX.jsx(MarkdownBlocks, { markdown: description }), SP_JSX.jsx("h2", { children: shared.copy.releaseNotes }), releaseNotes
+                        }, children: SP_JSX.jsx(PluginImage, { plugin: plugin, fallbackSources: coverSources, onImageLoaded: setActiveCover }) }), SP_JSX.jsxs("div", { className: "ph-store-detail-summary", children: [SP_JSX.jsx(SourceBadge, { source: plugin.catalogSource }), SP_JSX.jsx("h1", { className: "ph-store-detail-title", children: plugin.name }), SP_JSX.jsxs("div", { className: "ph-store-detail-status", children: [installed ? SP_JSX.jsxs("span", { children: [shared.copy.installedVersion, ": ", installed.version || "?"] }) : null, SP_JSX.jsxs("span", { children: [shared.copy.latestVersion, ": ", latestVersion || "?"] })] }), SP_JSX.jsxs(Focusable$b, { className: "ph-store-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(PluginActionButton, { plugin: currentPlugin, shared: shared }), versions.some((item) => compareVersions(item.version, latestVersion) < 0) && SP_JSX.jsx(DialogButton$6, { className: "ph-store-action", "aria-label": shared.copy.chooseVersion, title: shared.copy.chooseVersion, onOKActionDescription: shared.copy.chooseVersion, onClick: () => showModal$1(SP_JSX.jsx(VersionPicker, { plugin: plugin, shared: shared, versions: versions }), window, { bNeverPopOut: true }), children: SP_JSX.jsx(TbHistory, {}) }), SP_JSX.jsx(UninstallButton, { plugin: plugin, shared: shared })] })] })] }), galleryMedia.length ? (SP_JSX.jsxs("section", { className: "ph-store-media-section", children: [SP_JSX.jsx("h2", { children: shared.copy.media }), SP_JSX.jsx(Focusable$b, { className: "ph-store-media-strip", "flow-children": "row", noFocusRing: true, children: galleryMedia.map((item) => SP_JSX.jsx(SafeMedia, { item: item, copy: shared.copy }, item.url)) })] })) : null, loading ? (SP_JSX.jsx("div", { className: "ph-store-empty", children: SP_JSX.jsx(SteamSpinner, {}) })) : (SP_JSX.jsxs(ScrollReader, { copy: shared.copy, onBack: onBack, children: [SP_JSX.jsx(MarkdownBlocks, { markdown: description }), SP_JSX.jsx("h2", { children: shared.copy.releaseNotes }), releaseNotes
                         ? SP_JSX.jsx(MarkdownBlocks, { markdown: releaseNotes })
                         : SP_JSX.jsx("p", { children: shared.copy.releaseNotesUnavailable })] }))] }));
 }
 function CategoryLink({ title, onOpen, copy }) {
-    return (SP_JSX.jsx(Focusable$a, { className: "ph-store-section-link", onActivate: (event) => { stopEvent(event); onOpen(); }, onOKButton: (event) => { stopEvent(event); onOpen(); }, onOKActionDescription: copy.openCategory, children: SP_JSX.jsx("h2", { children: title }) }));
+    return (SP_JSX.jsx(Focusable$b, { className: "ph-store-section-link", onActivate: (event) => { stopEvent(event); onOpen(); }, onOKButton: (event) => { stopEvent(event); onOpen(); }, onOKActionDescription: copy.openCategory, children: SP_JSX.jsx("h2", { children: title }) }));
 }
 function FeaturedSlider({ plugins, shared, onOpen }) {
     const [index, setIndex] = useState$1(0);
@@ -56134,7 +56134,7 @@ function FeaturedSlider({ plugins, shared, onOpen }) {
     const move = (delta) => {
         setIndex((value) => (value + delta + plugins.length) % plugins.length);
     };
-    return (SP_JSX.jsxs("div", { className: "ph-store-featured-shell", children: [SP_JSX.jsxs(Focusable$a, { className: "ph-store-featured-slide", "flow-children": "none", onActivate: (event) => { stopEvent(event); onOpen(active); }, onOKButton: (event) => { stopEvent(event); onOpen(active); }, onOKActionDescription: shared.copy.select, actionDescriptionMap: {
+    return (SP_JSX.jsxs("div", { className: "ph-store-featured-shell", children: [SP_JSX.jsxs(Focusable$b, { className: "ph-store-featured-slide", "flow-children": "none", onActivate: (event) => { stopEvent(event); onOpen(active); }, onOKButton: (event) => { stopEvent(event); onOpen(active); }, onOKActionDescription: shared.copy.select, actionDescriptionMap: {
                     [GamepadButton$1.DIR_LEFT]: shared.copy.previous,
                     [GamepadButton$1.DIR_RIGHT]: shared.copy.next,
                 }, onButtonDown: (event) => {
@@ -56174,7 +56174,7 @@ function DiscoverTab(shared) {
     const featured = featuredPlugins(shared.plugins, 10);
     const featuredRepositories = new Set(featured.map((plugin) => plugin.repository.toLocaleLowerCase("en-US")));
     const categories = discoveryCategories(shared.plugins);
-    return (SP_JSX.jsxs(Focusable$a, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsx("section", { className: "ph-store-section", children: SP_JSX.jsx(FeaturedSlider, { plugins: featured, shared: shared, onOpen: (plugin) => setView({ kind: "detail", plugin }) }) }), categories.map((category) => {
+    return (SP_JSX.jsxs(Focusable$b, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, children: [SP_JSX.jsx("section", { className: "ph-store-section", children: SP_JSX.jsx(FeaturedSlider, { plugins: featured, shared: shared, onOpen: (plugin) => setView({ kind: "detail", plugin }) }) }), categories.map((category) => {
                 let items = shared.plugins.filter((plugin) => pluginInCategory(plugin, category));
                 if (category === "Playhub") {
                     items = items.filter((plugin) => !featuredRepositories.has(plugin.repository.toLocaleLowerCase("en-US")));
@@ -56258,7 +56258,7 @@ function SearchTab({ active, ...shared }) {
         stopEvent(event);
         openSortPicker(sort, shared.copy, setSort);
     };
-    return (SP_JSX.jsxs(Focusable$a, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: shared.copy.search, sort: sort, copy: shared.copy }), SP_JSX.jsx("div", { className: "ph-store-search-shell", children: SP_JSX.jsx(TextField$1, { label: shared.copy.searchPlaceholder, value: query, onChange: (event) => setQuery(event.target.value) }) }), SP_JSX.jsx("div", { className: "ph-store-toolbar", children: SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy }) }), SP_JSX.jsx(PluginRows, { plugins: results, shared: shared, onOpen: setDetail })] }));
+    return (SP_JSX.jsxs(Focusable$b, { className: "ph-store-tab-body ph-store-flow", "flow-children": "column", noFocusRing: true, onCancel: guardedBack, onCancelButton: guardedBack, onCancelActionDescription: shared.copy.back, onOptionsButton: showSort, onOptionsActionDescription: shared.copy.sortBy, children: [SP_JSX.jsx(ListHeader, { title: shared.copy.search, sort: sort, copy: shared.copy }), SP_JSX.jsx("div", { className: "ph-store-search-shell", children: SP_JSX.jsx(TextField$1, { label: shared.copy.searchPlaceholder, value: query, onChange: (event) => setQuery(event.target.value) }) }), SP_JSX.jsx("div", { className: "ph-store-toolbar", children: SP_JSX.jsx(SourceFilters, { value: source, onChange: setSource, copy: shared.copy }) }), SP_JSX.jsx(PluginRows, { plugins: results, shared: shared, onOpen: setDetail })] }));
 }
 function PluginStorePage() {
     const locale = useStoreLocale();
@@ -56479,7 +56479,7 @@ function tabEditorLocale(locale) {
 // Testi della sezione "Barra superiore" nelle impostazioni del plugin.
 // Ordine: titolo, data accanto all'ora, descrizione, sposta a sinistra,
 // descrizione, formato della data, automatico.
-const copy$b = {
+const copy$c = {
     en: ["Top bar", "Date next to the time", "Shows the date in Steam's top bar, before the weather and the current track.", "Move time and date to the left", "Moves the clock group, together with weather and music when shown.", "Date format", "Automatic"],
     it: ["Barra superiore", "Data accanto all'ora", "Mostra la data nella barra superiore di Steam, prima di meteo e brano corrente.", "Sposta ora e data a sinistra", "Sposta il gruppo dell’orologio, insieme a meteo e musica se presenti.", "Formato della data", "Automatico"],
     de: ["Obere Leiste", "Datum neben der Uhrzeit", "Zeigt das Datum in der oberen Leiste von Steam, vor Wetter und aktuellem Titel.", "Uhrzeit und Datum nach links", "Verschiebt die Uhrgruppe, zusammen mit Wetter und Musik, falls vorhanden.", "Datumsformat", "Automatisch"],
@@ -56498,10 +56498,10 @@ const tags = { en: "en-US", it: "it-IT", de: "de-DE", es: "es-ES", fr: "fr-FR", 
 function key(locale) {
     const lower = String(locale || "").toLowerCase();
     const k = aliases[lower] ?? lower.split(/[-_]/)[0];
-    return copy$b[k] ? k : "en";
+    return copy$c[k] ? k : "en";
 }
 function topbarDateCopy(locale) {
-    const [title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic] = copy$b[key(locale)];
+    const [title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic] = copy$c[key(locale)];
     return { title, dateLabel, dateDescription, leftLabel, leftDescription, formatLabel, automatic };
 }
 // Esempi calcolati come li scrive la barra superiore: stesse opzioni Intl e
@@ -56534,7 +56534,7 @@ function topbarDateOptions(locale, sample = new Date(2026, 8, 19)) {
             }
         }
         if (data === "auto")
-            label = `${copy$b[k][6]} (${label})`;
+            label = `${copy$c[k][6]} (${label})`;
         return { data, label };
     });
 }
@@ -57180,7 +57180,7 @@ function deckyIntegrationLocale(locale) {
     return { label: row[0], description: row[1] };
 }
 
-const copy$a = {
+const copy$b = {
     en: ["Discover the new Core experience", "Open Quick Access to discover Core.", "Everything is here: your Core, in Quick Access.", "Decky is available here. You can restore its Quick Access tab in Core settings.", "Decky integration is optional. You can enable it in Core settings and restore its Quick Access tab at any time.", "Continue", "Pause guide", "Finish"],
     it: ["Scopri la nuova esperienza Core", "Apri l'accesso rapido per scoprire Core.", "Trovi tutto qui: il tuo Core, nell'accesso rapido.", "Decky è accessibile qui. Puoi ripristinare la sua scheda nell'accesso rapido dalle impostazioni di Core.", "L'integrazione di Decky è facoltativa. Puoi attivarla nelle impostazioni di Core e ripristinare la sua scheda nell'accesso rapido in qualsiasi momento.", "Continua", "Sospendi la guida", "Concludi"],
     es: ["Descubre la nueva experiencia Core", "Abre el acceso rápido para descubrir Core.", "Todo está aquí: tu Core, en el acceso rápido.", "Decky está disponible aquí. Puedes restaurar su pestaña de acceso rápido en los ajustes de Core.", "La integración de Decky es opcional. Puedes activarla en los ajustes de Core y restaurar su pestaña de acceso rápido cuando quieras.", "Continuar", "Pausar la guía", "Finalizar"],
@@ -57195,7 +57195,7 @@ const copy$a = {
     ru: ["Откройте новый Core", "Откройте быстрый доступ, чтобы познакомиться с Core.", "Всё здесь: ваш Core в быстром доступе.", "Decky доступен здесь. Его вкладку быстрого доступа можно восстановить в настройках Core.", "Интеграция Decky необязательна. Её можно включить в настройках Core и в любой момент восстановить вкладку быстрого доступа.", "Продолжить", "Приостановить руководство", "Завершить"],
 };
 function getOnboardingCopy(locale) {
-    const [, open, , decky, , next, pause, finish] = copy$a[normalizeStoreLocale(locale)];
+    const [, open, , decky, , next, pause, finish] = copy$b[normalizeStoreLocale(locale)];
     nativeDeckyCopy[normalizeStoreLocale(locale)];
     const [title] = welcome[normalizeStoreLocale(locale)];
     const text = presentation[normalizeStoreLocale(locale)];
@@ -58792,7 +58792,7 @@ function deviceCapabilitiesLocale(locale) {
         statuses: { available: r[2], windows: r[2], readback: r[3], "manual-commands": r[4], "read-only": r[3], "manual-required": r[5], unavailable: r[6], pending: r[7], "hardware-required": r[8] } };
 }
 
-const { DialogButton: DialogButton$5, Focusable: Focusable$9 } = CompatUI;
+const { DialogButton: DialogButton$5, Focusable: Focusable$a } = CompatUI;
 const ids = new Set(["windows-display", "windows-power", "windows-battery", "presets", "fans", "temperatures", "power-limits", "charge-limit", "rgb", "vibration"]);
 const css$1 = `.ph-device-capabilities{display:grid;gap:10px;min-width:0;padding:12px 0;border-top:1px solid ${CORE.gunmetalRaised}}.ph-device-capability-list{display:grid;gap:10px;margin:0}.ph-device-capability-row{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;align-items:start}.ph-device-capability-row>svg{width:16px;height:16px;margin-top:2px;opacity:.65}.ph-device-capability-row[data-available=true]>svg{color:${CORE.ok};opacity:1}.ph-device-capability-row dt{font-size:13px;line-height:1.4}.ph-device-capability-row dd{margin:2px 0 0;font-size:11px;line-height:1.4;color:${CORE.steel};overflow-wrap:anywhere}.ph-device-capability-mismatch{display:flex;gap:8px;font-size:12px;line-height:1.45;color:${CORE.crimsonText}}.ph-device-capability-mismatch svg{width:16px;height:16px;flex:none;margin-top:2px}.ph-device-capabilities .ph-device-actions button{justify-content:flex-start;white-space:normal;min-width:0}.ph-device-capabilities>strong{font-size:13px}`;
 function DeviceCapabilities({ selection, effective, detected, locale, openVideo, openPerformance }) {
@@ -58836,7 +58836,7 @@ function DeviceCapabilities({ selection, effective, detected, locale, openVideo,
     const rows = current?.controls ?? [];
     const video = rows.some(row => row.available && row.destination === "video") ? openVideo : undefined;
     const performance = rows.some(row => row.available && row.destination === "performance") ? openPerformance : undefined;
-    return SP_JSX.jsxs(Focusable$9, { className: "ph-device-capabilities", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$1 }), SP_JSX.jsx("strong", { children: current?.coverage === "windows" ? copy.windows : copy.title }), effective !== detected && SP_JSX.jsxs("div", { className: "ph-device-capability-mismatch", role: "status", children: [SP_JSX.jsx(TbInfoCircle, { "aria-hidden": "true" }), SP_JSX.jsx("span", { children: copy.mismatch })] }), busy && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loading }), failed && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loadError }), current && SP_JSX.jsx("dl", { className: "ph-device-capability-list", children: rows.map(row => SP_JSX.jsxs("div", { className: "ph-device-capability-row", "data-available": row.available, children: [row.available ? SP_JSX.jsx(TbCheck, { "aria-hidden": "true" }) : SP_JSX.jsx(TbMinus, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.labels[row.id] }), SP_JSX.jsxs("dd", { children: [copy.statuses[row.status], row.id === "fans" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 ", row.values.map(v => v ?? "—").join(" / "), " RPM"] }), row.id === "temperatures" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 CPU ", row.values[0] ?? "—", " / GPU ", row.values[1] ?? "—", " \u00B0C"] })] })] })] }, row.id)) }), (video || performance) && SP_JSX.jsxs(Focusable$9, { className: "ph-device-actions", "flow-children": "column", children: [video && SP_JSX.jsxs(DialogButton$5, { onClick: video, children: [SP_JSX.jsx("span", { children: device.video }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), performance && SP_JSX.jsxs(DialogButton$5, { onClick: performance, children: [SP_JSX.jsx("span", { children: device.power }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] })] }), (failed || rows.some(row => row.status === "pending" || row.status === "unavailable")) && SP_JSX.jsx(DialogButton$5, { disabled: busy, onClick: () => setAttempt(value => value + 1), children: copy.retry })] });
+    return SP_JSX.jsxs(Focusable$a, { className: "ph-device-capabilities", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$1 }), SP_JSX.jsx("strong", { children: current?.coverage === "windows" ? copy.windows : copy.title }), effective !== detected && SP_JSX.jsxs("div", { className: "ph-device-capability-mismatch", role: "status", children: [SP_JSX.jsx(TbInfoCircle, { "aria-hidden": "true" }), SP_JSX.jsx("span", { children: copy.mismatch })] }), busy && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loading }), failed && SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: device.loadError }), current && SP_JSX.jsx("dl", { className: "ph-device-capability-list", children: rows.map(row => SP_JSX.jsxs("div", { className: "ph-device-capability-row", "data-available": row.available, children: [row.available ? SP_JSX.jsx(TbCheck, { "aria-hidden": "true" }) : SP_JSX.jsx(TbMinus, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.labels[row.id] }), SP_JSX.jsxs("dd", { children: [copy.statuses[row.status], row.id === "fans" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 ", row.values.map(v => v ?? "—").join(" / "), " RPM"] }), row.id === "temperatures" && row.available && Array.isArray(row.values) && SP_JSX.jsxs("span", { children: [" \u00B7 CPU ", row.values[0] ?? "—", " / GPU ", row.values[1] ?? "—", " \u00B0C"] })] })] })] }, row.id)) }), (video || performance) && SP_JSX.jsxs(Focusable$a, { className: "ph-device-actions", "flow-children": "column", children: [video && SP_JSX.jsxs(DialogButton$5, { onClick: video, children: [SP_JSX.jsx("span", { children: device.video }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), performance && SP_JSX.jsxs(DialogButton$5, { onClick: performance, children: [SP_JSX.jsx("span", { children: device.power }), SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] })] }), (failed || rows.some(row => row.status === "pending" || row.status === "unavailable")) && SP_JSX.jsx(DialogButton$5, { disabled: busy, onClick: () => setAttempt(value => value + 1), children: copy.retry })] });
 }
 
 const words$1 = {
@@ -59289,8 +59289,8 @@ function GpdV1ControllerControls({ locale, deviceKey, profile, active = true }) 
                             model.current?.edit(data); } }), SP_JSX.jsxs("div", { className: "qsMeta", children: [copy[6], ": ", label(snapshot.state.rumble)] }), view.editing && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: disabled, onClick: () => void model.current?.run("apply"), children: copy[4] }), snapshot.restoreAvailable && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: view.busy || snapshot.recoveryRequired, onClick: () => void model.current?.run("restore"), children: copy[5] })] }) : SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: common.unavailable }), (view.error || snapshot?.recoveryRequired) && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: view.error === "changed" ? copy[7] : common.saveError }), (!snapshot || view.error || snapshot.recoveryRequired) && SP_JSX.jsx(DFL.ButtonItem, { layout: "below", bottomSeparator: "none", disabled: view.busy, onClick: () => void model.current?.refresh(), children: common.retry })] });
 }
 
-const { DialogButton: DialogButton$4, DropdownItem: DropdownItem$3, Focusable: Focusable$8 } = CompatUI;
-const style$8 = `
+const { DialogButton: DialogButton$4, DropdownItem: DropdownItem$3, Focusable: Focusable$9 } = CompatUI;
+const style$9 = `
 .ph-device-settings{display:grid;gap:12px;min-width:0;padding:4px 4px 0;overflow-wrap:anywhere}
 .ph-device-identity{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:12px;border-radius:9px;background:${CORE.gunmetal}}
 .ph-device-symbol{display:grid;place-items:center;width:42px;height:42px;border-radius:8px;background:${CORE.gunmetalRaised};font-size:22px}
@@ -59391,7 +59391,7 @@ function DeviceSettings({ locale, openVideo, openPerformance, detailsOpen = fals
         }
     };
     if (!profile)
-        return SP_JSX.jsxs(Focusable$8, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$8 }), SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: error === "load" ? copy.loadError : copy.loading }), error === "load" && SP_JSX.jsx(DialogButton$4, { onClick: () => { setError(undefined); setLoadAttempt(value => value + 1); }, children: copy.retry })] });
+        return SP_JSX.jsxs(Focusable$9, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$9 }), SP_JSX.jsx("div", { className: "ph-device-detail", role: "status", children: error === "load" ? copy.loadError : copy.loading }), error === "load" && SP_JSX.jsx(DialogButton$4, { onClick: () => { setError(undefined); setLoadAttempt(value => value + 1); }, children: copy.retry })] });
     const profileNames = [{ id: "pc", name: copy.pc }, { id: "handheld", name: copy.handheld }, ...profile.handhelds];
     const names = new Map(profileNames.map(({ id, name }) => [id, name]));
     const handheld = profile.effective !== "pc";
@@ -59408,7 +59408,7 @@ function DeviceSettings({ locale, openVideo, openPerformance, detailsOpen = fals
         ? `${copy.batteryRemaining} · ${new Intl.NumberFormat(copy.language, {
             style: "unit", unit: "minute", unitDisplay: "short", maximumFractionDigits: 0,
         }).format(Math.ceil(seconds / 60))}` : undefined;
-    return SP_JSX.jsxs(Focusable$8, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$8 }), SP_JSX.jsxs("div", { className: "ph-device-identity", children: [SP_JSX.jsx("div", { className: "ph-device-symbol", "aria-hidden": "true", children: handheld ? SP_JSX.jsx(TbDeviceGamepad2, {}) : SP_JSX.jsx(TbDeviceDesktop, {}) }), SP_JSX.jsxs("div", { children: [SP_JSX.jsxs("div", { className: "ph-device-title", children: [SP_JSX.jsx("strong", { children: names.get(profile.effective) ?? copy.pc }), handheld && SP_JSX.jsx("span", { className: "ph-device-experimental", children: copy.experimental })] }), modelLabel && SP_JSX.jsxs("div", { className: "ph-device-detail", children: [copy.model, " \u00B7 ", modelLabel] })] })] }), SP_JSX.jsx(DropdownItem$3, { label: copy.profile, layout: "below", bottomSeparator: "none", selectedOption: profile.selection, disabled: saving, rgOptions: [{ label: copy.auto, data: "auto" }, ...profileNames.map(({ id, name }) => ({ label: name, data: id }))], onChange: select }), SP_JSX.jsx("p", { className: "ph-device-hint", children: copy.profileHint }), error === "save" && SP_JSX.jsx("div", { className: "ph-device-detail", role: "alert", children: copy.saveError }), (battery || health || remaining) && SP_JSX.jsxs("div", { className: "ph-device-battery", children: [SP_JSX.jsx(TbBattery, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [battery && SP_JSX.jsx("div", { children: battery }), remaining && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: remaining }), health && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: health })] })] }), display && SP_JSX.jsx("dl", { className: "ph-device-status", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.primaryDisplay }), SP_JSX.jsxs("dd", { children: [display.width, " \u00D7 ", display.height, display.hz ? ` · ${display.hz} Hz` : ""] })] }) }), SP_JSX.jsx(DeviceCapabilities, { selection: profile.selection, effective: profile.effective, detected: profile.detected, locale: locale, openVideo: openVideo, openPerformance: openPerformance }), profile.effective === "ayaneo-3" && profile.detected === "ayaneo-3" && SP_JSX.jsx(Ayaneo3ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), profile.effective === profile.detected && ["gpd-win-4", "gpd-win-mini"].includes(profile.detected) && SP_JSX.jsx(GpdV1ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), profile: profile.detected, locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), SP_JSX.jsxs(DialogButton$4, { className: "ph-device-details", "aria-expanded": detailsOpen, onClick: onDetailsToggle, children: [SP_JSX.jsx("span", { children: copy.details }), detailsOpen ? SP_JSX.jsx(TbChevronDown, { "aria-hidden": "true" }) : SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), detailsOpen && SP_JSX.jsx(DeviceInfo, { copy: copy, model: actualModel })] });
+    return SP_JSX.jsxs(Focusable$9, { className: "ph-device-settings", "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$9 }), SP_JSX.jsxs("div", { className: "ph-device-identity", children: [SP_JSX.jsx("div", { className: "ph-device-symbol", "aria-hidden": "true", children: handheld ? SP_JSX.jsx(TbDeviceGamepad2, {}) : SP_JSX.jsx(TbDeviceDesktop, {}) }), SP_JSX.jsxs("div", { children: [SP_JSX.jsxs("div", { className: "ph-device-title", children: [SP_JSX.jsx("strong", { children: names.get(profile.effective) ?? copy.pc }), handheld && SP_JSX.jsx("span", { className: "ph-device-experimental", children: copy.experimental })] }), modelLabel && SP_JSX.jsxs("div", { className: "ph-device-detail", children: [copy.model, " \u00B7 ", modelLabel] })] })] }), SP_JSX.jsx(DropdownItem$3, { label: copy.profile, layout: "below", bottomSeparator: "none", selectedOption: profile.selection, disabled: saving, rgOptions: [{ label: copy.auto, data: "auto" }, ...profileNames.map(({ id, name }) => ({ label: name, data: id }))], onChange: select }), SP_JSX.jsx("p", { className: "ph-device-hint", children: copy.profileHint }), error === "save" && SP_JSX.jsx("div", { className: "ph-device-detail", role: "alert", children: copy.saveError }), (battery || health || remaining) && SP_JSX.jsxs("div", { className: "ph-device-battery", children: [SP_JSX.jsx(TbBattery, { "aria-hidden": "true" }), SP_JSX.jsxs("div", { children: [battery && SP_JSX.jsx("div", { children: battery }), remaining && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: remaining }), health && SP_JSX.jsx("div", { className: "ph-device-battery-health", children: health })] })] }), display && SP_JSX.jsx("dl", { className: "ph-device-status", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { children: copy.primaryDisplay }), SP_JSX.jsxs("dd", { children: [display.width, " \u00D7 ", display.height, display.hz ? ` · ${display.hz} Hz` : ""] })] }) }), SP_JSX.jsx(DeviceCapabilities, { selection: profile.selection, effective: profile.effective, detected: profile.detected, locale: locale, openVideo: openVideo, openPerformance: openPerformance }), profile.effective === "ayaneo-3" && profile.detected === "ayaneo-3" && SP_JSX.jsx(Ayaneo3ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), profile.effective === profile.detected && ["gpd-win-4", "gpd-win-mini"].includes(profile.detected) && SP_JSX.jsx(GpdV1ControllerControls, { deviceKey: JSON.stringify([profile.selection, profile.manufacturer, profile.model]), profile: profile.detected, locale: locale, active: !saving }, JSON.stringify([profile.selection, profile.manufacturer, profile.model])), SP_JSX.jsxs(DialogButton$4, { className: "ph-device-details", "aria-expanded": detailsOpen, onClick: onDetailsToggle, children: [SP_JSX.jsx("span", { children: copy.details }), detailsOpen ? SP_JSX.jsx(TbChevronDown, { "aria-hidden": "true" }) : SP_JSX.jsx(TbChevronRight, { "aria-hidden": "true" })] }), detailsOpen && SP_JSX.jsx(DeviceInfo, { copy: copy, model: actualModel })] });
 }
 
 // The panel preference store owns expansion across QAM openings and tab changes.
@@ -59504,7 +59504,7 @@ function MsiChargeLimit({ locale }) {
     return SP_JSX.jsxs("div", { className: "qsCardBody qsDropdownFullWidth", "aria-busy": busy, children: [SP_JSX.jsx(DFL.DropdownItem, { label: copy[0], description: `${copy[1]} · ${deviceInfoLocale(locale).experimental}`, bottomSeparator: "none", layout: "below", selectedOption: state.chargeLimit, disabled: busy, rgOptions: choices.map(percent => ({ data: percent, label: `${percent}%` })), onChange: ({ data }) => void choose(data) }), failed && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: controlLocale(locale).saveError })] });
 }
 
-const { Focusable: Focusable$7, DialogButton: DialogButton$3, ToggleField: ToggleField$5, DropdownItem: DropdownItem$2, ScrollPanel, GamepadButton } = CompatUI;
+const { Focusable: Focusable$8, DialogButton: DialogButton$3, ToggleField: ToggleField$6, DropdownItem: DropdownItem$2, ScrollPanel, GamepadButton } = CompatUI;
 const icons = { home: TbPower, audio: TbDeviceTv, performance: TbVolume, graphics: TbGauge, controller: TbDeviceGamepad2, store: TbShoppingBag, decky: TbPlug };
 let prefs = normalizeControlPreferences({});
 let loaded = false;
@@ -59515,7 +59515,7 @@ const listeners = new Set();
 const subscribe = (listener) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
 function TopbarDateSettings({ state, update, locale }) {
     const text = topbarDateCopy(locale);
-    return SP_JSX.jsxs(Focusable$7, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 10 }, children: [SP_JSX.jsx(ToggleField$5, { label: text.dateLabel, description: text.dateDescription, bottomSeparator: "none", checked: state.topbarDateEnabled, onChange: (enabled) => update({ ...state, topbarDateEnabled: enabled }, locale) }), SP_JSX.jsx(ToggleField$5, { bottomSeparator: "none", label: text.leftLabel, description: text.leftDescription, checked: state.topbarClockLeft, onChange: (enabled) => update({ ...state, topbarClockLeft: enabled }, locale) }), SP_JSX.jsx(DropdownItem$2, { label: text.formatLabel, layout: "below", bottomSeparator: "none", selectedOption: state.topbarDateFormat, disabled: !state.topbarDateEnabled, rgOptions: topbarDateOptions(locale), onChange: (option) => update({ ...state, topbarDateFormat: option.data }, locale) })] });
+    return SP_JSX.jsxs(Focusable$8, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 10 }, children: [SP_JSX.jsx(ToggleField$6, { label: text.dateLabel, description: text.dateDescription, bottomSeparator: "none", checked: state.topbarDateEnabled, onChange: (enabled) => update({ ...state, topbarDateEnabled: enabled }, locale) }), SP_JSX.jsx(ToggleField$6, { bottomSeparator: "none", label: text.leftLabel, description: text.leftDescription, checked: state.topbarClockLeft, onChange: (enabled) => update({ ...state, topbarClockLeft: enabled }, locale) }), SP_JSX.jsx(DropdownItem$2, { label: text.formatLabel, layout: "below", bottomSeparator: "none", selectedOption: state.topbarDateFormat, disabled: !state.topbarDateEnabled, rgOptions: topbarDateOptions(locale), onChange: (option) => update({ ...state, topbarDateFormat: option.data }, locale) })] });
 }
 function OnboardingInputCapture({ active }) {
     const root = _global_SP_REACT.useRef(null);
@@ -59694,7 +59694,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
         const index = visible.indexOf(active);
         choose(visible[(index + direction + visible.length) % visible.length]);
     };
-    return SP_JSX.jsxs(Focusable$7, { className: "ph-control-shell", "flow-children": "column", onMoveDown: () => true, "data-playhub-onboarding-controls": origin === "qam" ? "true" : undefined, "data-onboarding-ready": ready, "data-onboarding-decky-enabled": deckyHost.available, "data-onboarding-decky-visible": visible.includes("decky"), "data-onboarding-customizing": customizing, "data-onboarding-active-tab": customizing ? "customize" : active, "data-onboarding-store-visible": visible.includes("store"), "data-onboarding-showcasing": showcasing, "data-onboarding-visible-tabs": JSON.stringify(visible), "data-onboarding-content-ready": ready && (active !== "decky" || customizing || deckyHost.ready), actionDescriptionMap: customizing ? {} : { [GamepadButton.BUMPER_LEFT]: copy.switchTab, [GamepadButton.BUMPER_RIGHT]: copy.switchTab }, onButtonDown: (event) => {
+    return SP_JSX.jsxs(Focusable$8, { className: "ph-control-shell", "flow-children": "column", onMoveDown: () => true, "data-playhub-onboarding-controls": origin === "qam" ? "true" : undefined, "data-onboarding-ready": ready, "data-onboarding-decky-enabled": deckyHost.available, "data-onboarding-decky-visible": visible.includes("decky"), "data-onboarding-customizing": customizing, "data-onboarding-active-tab": customizing ? "customize" : active, "data-onboarding-store-visible": visible.includes("store"), "data-onboarding-showcasing": showcasing, "data-onboarding-visible-tabs": JSON.stringify(visible), "data-onboarding-content-ready": ready && (active !== "decky" || customizing || deckyHost.ready), actionDescriptionMap: customizing ? {} : { [GamepadButton.BUMPER_LEFT]: copy.switchTab, [GamepadButton.BUMPER_RIGHT]: copy.switchTab }, onButtonDown: (event) => {
             if (customizing)
                 return;
             const button = event?.detail?.button;
@@ -59703,7 +59703,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
             event.preventDefault?.();
             event.stopPropagation?.();
             step(button === GamepadButton.BUMPER_LEFT ? -1 : 1);
-        }, onCancelButton: customizing ? cancelEditor : undefined, onCancelActionDescription: customizing ? editorCopy.cancel : undefined, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: (CompatUI.coreClassSelectors?.(css) ?? css) }), customizing ? SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs(Focusable$7, { className: "ph-control-settings", "flow-children": "column", "data-playhub-onboarding-content": origin === "qam" ? "customize" : undefined, children: [SP_JSX.jsx("style", { children: `.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:${CORE.gunmetal};margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:${CORE.gunmetalRaised}!important;box-shadow:inset 0 -3px 0 ${CORE.crimson}!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:${CORE.white}!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid ${CORE.crimson}!important;outline-offset:-2px!important}` }), !showcasing && SP_JSX.jsxs(Focusable$7, { className: "ph-settings-pages", "flow-children": "row", role: "tablist", children: [SP_JSX.jsx(DialogButton$3, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'general', onClick: () => setSettingsPage('general'), children: qamSettingsCopy(locale)[0] }), SP_JSX.jsx(DialogButton$3, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'qam', onClick: () => setSettingsPage('qam'), children: "Shortcuts" })] }), settingsPage === 'qam' && !showcasing ? SP_JSX.jsxs(QamSettings, { locale: locale, children: [settings, SP_JSX.jsx(ToggleField$5, { label: integrationCopy.label, description: integrationCopy.description, bottomSeparator: "none", checked: state.deckyHostEnabled, onChange: (enabled) => update({ ...state, deckyHostEnabled: enabled }, locale) })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h2", { className: "ph-tab-editor-title", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: editorCopy.title }), SP_JSX.jsx("p", { children: editorCopy.introduction }), SP_JSX.jsx(Focusable$7, { className: "ph-control-tabs ph-tab-editor", "flow-children": "row", role: "tablist", "aria-label": copy.customize, onKeyDown: (event) => {
+        }, onCancelButton: customizing ? cancelEditor : undefined, onCancelActionDescription: customizing ? editorCopy.cancel : undefined, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: (CompatUI.coreClassSelectors?.(css) ?? css) }), customizing ? SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs(Focusable$8, { className: "ph-control-settings", "flow-children": "column", "data-playhub-onboarding-content": origin === "qam" ? "customize" : undefined, children: [SP_JSX.jsx("style", { children: `.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:${CORE.gunmetal};margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:${CORE.gunmetalRaised}!important;box-shadow:inset 0 -3px 0 ${CORE.crimson}!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:${CORE.white}!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid ${CORE.crimson}!important;outline-offset:-2px!important}` }), !showcasing && SP_JSX.jsxs(Focusable$8, { className: "ph-settings-pages", "flow-children": "row", role: "tablist", children: [SP_JSX.jsx(DialogButton$3, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'general', onClick: () => setSettingsPage('general'), children: qamSettingsCopy(locale)[0] }), SP_JSX.jsx(DialogButton$3, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'qam', onClick: () => setSettingsPage('qam'), children: "Shortcuts" })] }), settingsPage === 'qam' && !showcasing ? SP_JSX.jsxs(QamSettings, { locale: locale, children: [settings, SP_JSX.jsx(ToggleField$6, { label: integrationCopy.label, description: integrationCopy.description, bottomSeparator: "none", checked: state.deckyHostEnabled, onChange: (enabled) => update({ ...state, deckyHostEnabled: enabled }, locale) })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h2", { className: "ph-tab-editor-title", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: editorCopy.title }), SP_JSX.jsx("p", { children: editorCopy.introduction }), SP_JSX.jsx(Focusable$8, { className: "ph-control-tabs ph-tab-editor", "flow-children": "row", role: "tablist", "aria-label": copy.customize, onKeyDown: (event) => {
                                                 if (event.key === "x" || event.key === "X") {
                                                     event.preventDefault();
                                                     event.stopPropagation();
@@ -59720,7 +59720,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
                                             }, children: editorTabs.map(id => {
                                                 const Icon = icons[id];
                                                 return SP_JSX.jsx(DialogButton$3, { className: "ph-control-icon", role: "tab", "aria-label": `${copy[id]}: ${state.hidden.includes(id) ? editorCopy.hidden : editorCopy.visible}`, title: copy[id], onOKActionDescription: editorAction(id), onSecondaryActionDescription: editor.draftOrder ? editorCopy.confirm : editorCopy.move, onCancelActionDescription: editorCopy.cancel, actionDescriptionMap: { [GamepadButton.OK]: editorAction(id), [GamepadButton.SECONDARY]: editor.draftOrder ? editorCopy.confirm : editorCopy.move, [GamepadButton.CANCEL]: editorCopy.cancel }, "aria-selected": editing === id, "data-hidden": state.hidden.includes(id), "data-moving": editing === id && !!editor.draftOrder, style: { order: (editor.draftOrder ?? state.order).indexOf(id) }, onFocus: () => edit({ type: "select", id }), onGamepadFocus: () => edit({ type: "select", id }), onGamepadDirection: editor.draftOrder ? editorDirection : undefined, onSecondaryButton: (event) => { event.preventDefault?.(); event.stopPropagation?.(); edit({ type: "select", id }); edit({ type: "secondary" }); }, onCancelButton: cancelEditor, onClick: () => { edit({ type: "select", id }); edit({ type: "confirm" }); }, children: SP_JSX.jsx(Icon, {}) }, id);
-                                            }) }), SP_JSX.jsx("div", { className: "ph-control-setting-row", "aria-live": "polite", children: SP_JSX.jsxs("div", { className: "ph-selected-tab", children: [SP_JSX.jsx("span", { children: copy[editing] }), SP_JSX.jsxs("span", { className: "ph-selected-tab-status", children: [state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible, !canToggleTab(state, editing, deckyAvailable) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("br", {}), editorCopy.lastTab] })] })] }) }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onOKActionDescription: editorCopy.reset, onClick: () => edit({ type: "reset" }), children: [SP_JSX.jsx(TbRestore, {}), SP_JSX.jsx("span", { children: editorCopy.reset })] }), SP_JSX.jsx("p", { className: "ph-tab-reset-hint", children: editorCopy.resetHint }), SP_JSX.jsxs("div", { className: "ph-editor-following", children: [SP_JSX.jsxs("div", { style: { paddingTop: 16 }, children: [SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) }), !showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: visible.includes("audio") ? openDeviceVideo : undefined, openPerformance: visible.includes("graphics") ? openDevicePerformance : undefined, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] })] }), SP_JSX.jsx(ControlSection, { id: "news", title: "News", locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("news"), onToggle: toggleSection, children: SP_JSX.jsx(HomeNewsSettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "daily-history", title: historyTitle(locale), locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("daily-history"), onToggle: toggleSection, children: SP_JSX.jsx(HomeHistorySettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "club", title: "Club", locale: locale, icon: SP_JSX.jsx(TbTrophy, {}), collapsed: !expanded.includes("club"), onToggle: toggleSection, children: SP_JSX.jsx(ClubSettings, { locale: locale }) }), SP_JSX.jsx(QuickSettingsContent, { page: "tools", locale: locale, expanded: expanded, onToggle: toggleSection }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onClick: () => { setCustomizing(false); replayPlayhubOnboarding(); }, children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] })] })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$7, { className: "ph-control-nav", "flow-children": "row", children: SP_JSX.jsxs(Focusable$7, { className: "ph-control-tabs", "flow-children": "row", role: "tablist", "aria-label": "Core", children: [visible.map(id => {
+                                            }) }), SP_JSX.jsx("div", { className: "ph-control-setting-row", "aria-live": "polite", children: SP_JSX.jsxs("div", { className: "ph-selected-tab", children: [SP_JSX.jsx("span", { children: copy[editing] }), SP_JSX.jsxs("span", { className: "ph-selected-tab-status", children: [state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible, !canToggleTab(state, editing, deckyAvailable) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("br", {}), editorCopy.lastTab] })] })] }) }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onOKActionDescription: editorCopy.reset, onClick: () => edit({ type: "reset" }), children: [SP_JSX.jsx(TbRestore, {}), SP_JSX.jsx("span", { children: editorCopy.reset })] }), SP_JSX.jsx("p", { className: "ph-tab-reset-hint", children: editorCopy.resetHint }), SP_JSX.jsxs("div", { className: "ph-editor-following", children: [SP_JSX.jsxs("div", { style: { paddingTop: 16 }, children: [SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) }), !showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: visible.includes("audio") ? openDeviceVideo : undefined, openPerformance: visible.includes("graphics") ? openDevicePerformance : undefined, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] })] }), SP_JSX.jsx(ControlSection, { id: "news", title: "News", locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("news"), onToggle: toggleSection, children: SP_JSX.jsx(HomeNewsSettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "daily-history", title: historyTitle(locale), locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("daily-history"), onToggle: toggleSection, children: SP_JSX.jsx(HomeHistorySettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "club", title: "Club", locale: locale, icon: SP_JSX.jsx(TbTrophy, {}), collapsed: !expanded.includes("club"), onToggle: toggleSection, children: SP_JSX.jsx(ClubSettings, { locale: locale }) }), SP_JSX.jsx(QuickSettingsContent, { page: "tools", locale: locale, expanded: expanded, onToggle: toggleSection }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onClick: () => { setCustomizing(false); replayPlayhubOnboarding(); }, children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] })] })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$8, { className: "ph-control-nav", "flow-children": "row", children: SP_JSX.jsxs(Focusable$8, { className: "ph-control-tabs", "flow-children": "row", role: "tablist", "aria-label": "Core", children: [visible.map(id => {
                                             const Icon = icons[id];
                                             return SP_JSX.jsx(DialogButton$3, { className: "ph-control-icon", role: "tab", "aria-selected": active === id, "aria-label": copy[id], onOKActionDescription: copy[id], disabled: !ready, "data-playhub-onboarding": origin === "qam" ? id : undefined, onClick: () => choose(id), children: SP_JSX.jsx(Icon, {}) }, id);
                                         }), SP_JSX.jsx(DialogButton$3, { className: "ph-control-icon", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, "aria-label": copy.settings, onOKActionDescription: copy.settings, disabled: !ready, onClick: () => setCustomizing(true), children: SP_JSX.jsx(TbSettings, {}) })] }) }), active !== "decky" && (active !== "home" || homeTitle) && SP_JSX.jsx("h2", { className: "ph-control-heading", children: active === "home" ? homeTitle : copy[active] }), !hostActive && SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs("div", { "data-playhub-onboarding-content": origin === "qam" ? active : undefined, children: [active === "home" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "home" : undefined, children: session }) : active === "store" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "store" : undefined, children: store }) : active === "controller" ? SP_JSX.jsx(SP_JSX.Fragment, { children: controller }) :
@@ -59783,8 +59783,8 @@ function createGameFrameComparison() {
 }
 const gameFrameComparison = createGameFrameComparison();
 
-const { ButtonItem: ButtonItem$6, PanelSection: PanelSection$a, PanelSectionRow: PanelSectionRow$a } = CompatUI;
-const copy$9 = {
+const { ButtonItem: ButtonItem$7, PanelSection: PanelSection$b, PanelSectionRow: PanelSectionRow$b } = CompatUI;
+const copy$a = {
     en: ["Frame timing", "Measure FPS", "Measuring…", "Four-second sample of the current game.", "Presented FPS", "Frame time", "No game frames captured. Try during play.", "Frame measurement is unavailable.", "Windows denied access to frame data."],
     it: ["Tempi dei fotogrammi", "Misura FPS", "Misurazione…", "Campione di quattro secondi del gioco in corso.", "FPS presentati", "Tempo per fotogramma", "Nessun fotogramma rilevato. Riprova durante il gioco.", "Misurazione dei fotogrammi non disponibile.", "Windows ha negato l’accesso ai dati dei fotogrammi."],
     de: ["Framezeiten", "FPS messen", "Messung läuft…", "Vier Sekunden aus dem laufenden Spiel.", "Ausgegebene FPS", "Framezeit", "Keine Frames erfasst. Versuche es im Spiel erneut.", "Frame-Messung nicht verfügbar.", "Windows hat den Zugriff auf Frame-Daten verweigert."],
@@ -59814,7 +59814,7 @@ const comparisonCopy = {
 };
 function GameFrameTiming({ appId, locale }) {
     const language = locale.split(/[-_]/)[0];
-    const [title, , measuring, , fps, frame, empty, unavailable, denied] = copy$9[language] ?? copy$9.en;
+    const [title, , measuring, , fps, frame, empty, unavailable, denied] = copy$a[language] ?? copy$a.en;
     const [measureFirst, measureSecond, repeat, clear, hint, prepare, firstLabel, secondLabel, change, returnToGame] = comparisonCopy[language] ?? comparisonCopy.en;
     const [result, setResult] = _global_SP_REACT.useState(() => gameFrameComparison.read(appId));
     _global_SP_REACT.useEffect(() => {
@@ -59835,10 +59835,10 @@ function GameFrameTiming({ appId, locale }) {
         { label: frame, before: first.medianFrameTimeMs, after: second?.medianFrameTimeMs, unit: " ms" },
         { label: "P95", before: first.p95FrameTimeMs, after: second?.p95FrameTimeMs, unit: " ms" },
     ] : [];
-    return SP_JSX.jsxs(PanelSection$a, { title: title, children: [SP_JSX.jsx(PanelSectionRow$a, { children: SP_JSX.jsx(ButtonItem$6, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => void gameFrameComparison.capture(appId, id => call("measure_game_frames", id, true)), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: busy ? measuring : measure }) }) }), SP_JSX.jsxs("div", { role: "status", style: { padding: "4px 16px 12px", fontSize: 13, lineHeight: 1.5, overflowWrap: "anywhere" }, children: [SP_JSX.jsx("div", { children: message }), !busy && !error && SP_JSX.jsx("div", { style: { opacity: .74 }, children: prepare }), first && SP_JSX.jsx("dl", { style: { display: "grid", gap: 8, margin: "12px 0 0" }, children: rows.map(({ label, before, after, unit }) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { style: { fontWeight: 650 }, children: label }), SP_JSX.jsxs("dd", { style: { margin: 0, display: "flex", flexWrap: "wrap", columnGap: 12 }, children: [SP_JSX.jsxs("span", { children: [firstLabel, " \u00B7 ", format(before), unit] }), after !== undefined && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { children: [secondLabel, " \u00B7 ", format(after), unit] }), SP_JSX.jsxs("span", { children: [change, " \u00B7 ", format(Number((after - before).toFixed(2)), true), unit] })] })] })] }, label)) })] }), first && SP_JSX.jsx(PanelSectionRow$a, { children: SP_JSX.jsx(ButtonItem$6, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => gameFrameComparison.reset(appId), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: clear }) }) })] });
+    return SP_JSX.jsxs(PanelSection$b, { title: title, children: [SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ButtonItem$7, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => void gameFrameComparison.capture(appId, id => call("measure_game_frames", id, true)), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: busy ? measuring : measure }) }) }), SP_JSX.jsxs("div", { role: "status", style: { padding: "4px 16px 12px", fontSize: 13, lineHeight: 1.5, overflowWrap: "anywhere" }, children: [SP_JSX.jsx("div", { children: message }), !busy && !error && SP_JSX.jsx("div", { style: { opacity: .74 }, children: prepare }), first && SP_JSX.jsx("dl", { style: { display: "grid", gap: 8, margin: "12px 0 0" }, children: rows.map(({ label, before, after, unit }) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { style: { fontWeight: 650 }, children: label }), SP_JSX.jsxs("dd", { style: { margin: 0, display: "flex", flexWrap: "wrap", columnGap: 12 }, children: [SP_JSX.jsxs("span", { children: [firstLabel, " \u00B7 ", format(before), unit] }), after !== undefined && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { children: [secondLabel, " \u00B7 ", format(after), unit] }), SP_JSX.jsxs("span", { children: [change, " \u00B7 ", format(Number((after - before).toFixed(2)), true), unit] })] })] })] }, label)) })] }), first && SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ButtonItem$7, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => gameFrameComparison.reset(appId), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: clear }) }) })] });
 }
 
-const style$7 = `
+const style$8 = `
 .ph-store-intro{isolation:isolate;width:100%;min-width:0;padding:0 0 14px;box-sizing:border-box}
 .ph-store-launch{position:relative;z-index:1}
 .ph-store-download{position:relative;z-index:0;width:100%;overflow:hidden;pointer-events:none}
@@ -59897,7 +59897,7 @@ function PluginStoreIntro({ description, button }) {
             observer.observe(target);
         return () => observer.disconnect();
     }, []);
-    return SP_JSX.jsxs("div", { className: "ph-store-intro", ref: container, children: [SP_JSX.jsx("style", { children: style$7 }), SP_JSX.jsx("div", { className: "ph-store-launch", ref: launcher, children: button }), SP_JSX.jsx("div", { className: "ph-store-download", style: { height: Math.max(0, height - overlap), marginTop: -wrapperGap }, "aria-hidden": "true", children: SP_JSX.jsx("div", { className: "ph-store-download-viewport", style: { height, top: -overlap }, children: SP_JSX.jsxs("div", { className: "ph-store-download-stage", children: [SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbPhoto, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbMusic, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbDeviceGamepad2, {}) }), SP_JSX.jsx("span", { className: "ph-store-shelf" }), SP_JSX.jsx(TbCheck, { className: "ph-store-saved" })] }) }) }), SP_JSX.jsx("div", { className: "ph-store-intro-copy", children: description })] });
+    return SP_JSX.jsxs("div", { className: "ph-store-intro", ref: container, children: [SP_JSX.jsx("style", { children: style$8 }), SP_JSX.jsx("div", { className: "ph-store-launch", ref: launcher, children: button }), SP_JSX.jsx("div", { className: "ph-store-download", style: { height: Math.max(0, height - overlap), marginTop: -wrapperGap }, "aria-hidden": "true", children: SP_JSX.jsx("div", { className: "ph-store-download-viewport", style: { height, top: -overlap }, children: SP_JSX.jsxs("div", { className: "ph-store-download-stage", children: [SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbPhoto, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbMusic, {}) }), SP_JSX.jsx("span", { className: "ph-store-app", children: SP_JSX.jsx(TbDeviceGamepad2, {}) }), SP_JSX.jsx("span", { className: "ph-store-shelf" }), SP_JSX.jsx(TbCheck, { className: "ph-store-saved" })] }) }) }), SP_JSX.jsx("div", { className: "ph-store-intro-copy", children: description })] });
 }
 
 /** Three startup checks only. Evidence and the durable session claim live in Python. */
@@ -63597,8 +63597,8 @@ function installAutoCompleted(deps) {
 // while someone is signed in, so when Windows has a restart pending (or a month has
 // passed) this card offers to restart at 5:00. The agent does the restart, never during a
 // game (GamingMode.Services/UpdateNight.cs). Shown only when there is something to say.
-const { PanelSection: PanelSection$9, PanelSectionRow: PanelSectionRow$9, ButtonItem: ButtonItem$5 } = CompatUI;
-const copy$8 = {
+const { PanelSection: PanelSection$a, PanelSectionRow: PanelSectionRow$a, ButtonItem: ButtonItem$6 } = CompatUI;
+const copy$9 = {
     en: { title: "Windows updates", offer: "Windows has updates waiting. Restart tonight at {time}?", restart: "Restart at {time}", scheduled: "Core will restart at {time} for Windows updates, unless a game is running.", cancel: "Cancel" },
     it: { title: "Aggiornamenti di Windows", offer: "Windows ha degli aggiornamenti in attesa. Riavviare stanotte alle {time}?", restart: "Riavvia alle {time}", scheduled: "Core si riavvierà alle {time} per gli aggiornamenti di Windows, a meno che un gioco sia aperto.", cancel: "Annulla" },
     es: { title: "Actualizaciones de Windows", offer: "Windows tiene actualizaciones pendientes. ¿Reiniciar esta noche a las {time}?", restart: "Reiniciar a las {time}", scheduled: "Core se reiniciará a las {time} para las actualizaciones de Windows, salvo que haya un juego abierto.", cancel: "Cancelar" },
@@ -63630,7 +63630,7 @@ function nightTime(locale, state, now = new Date()) {
 function UpdateNightCard({ locale }) {
     const [state, setState] = _global_SP_REACT.useState();
     const [busy, setBusy] = _global_SP_REACT.useState(false);
-    const text = copy$8[locale] ?? copy$8.en;
+    const text = copy$9[locale] ?? copy$9.en;
     _global_SP_REACT.useEffect(() => {
         let alive = true;
         const load = () => { call("core_update_night").then(value => { if (alive)
@@ -63652,14 +63652,14 @@ function UpdateNightCard({ locale }) {
             setBusy(false);
         }
     };
-    return (SP_JSX.jsxs(PanelSection$9, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$9, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${CORE.warning}` }, children: (state.scheduledFor ? text.scheduled : text.offer).replace("{time}", time) }) }), SP_JSX.jsx(PanelSectionRow$9, { children: SP_JSX.jsx(ButtonItem$5, { layout: "below", disabled: busy, onClick: () => act(state.scheduledFor ? "core_update_night_cancel" : "core_update_night_schedule"), children: state.scheduledFor ? text.cancel : text.restart.replace("{time}", time) }) })] }));
+    return (SP_JSX.jsxs(PanelSection$a, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$a, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${CORE.warning}` }, children: (state.scheduledFor ? text.scheduled : text.offer).replace("{time}", time) }) }), SP_JSX.jsx(PanelSectionRow$a, { children: SP_JSX.jsx(ButtonItem$6, { layout: "below", disabled: busy, onClick: () => act(state.scheduledFor ? "core_update_night_cancel" : "core_update_night_schedule"), children: state.scheduledFor ? text.cancel : text.restart.replace("{time}", time) }) })] }));
 }
 
 // Eternal Core: Core Health in Quick Access. Turns the agent's GET /health answer
 // (GamingMode.Services/CoreHealth.cs) into the lines HealthSection.tsx shows, in Core's 12
 // languages, including the console guards' rows and buttons (CONSOLE-GUARDS.md). Self-contained on purpose:
 // tests/coreHealthSection.test.mjs and tests/consoleGuards.test.mjs load this file alone.
-const en$6 = {
+const en$7 = {
     title: "Health", allGood: "All good", attention: "Needs attention: {n}", checking: "Checking…", agentDown: "Core's service is not answering.", dismiss: "Dismiss alert",
     r_backup: "Server backup", r_restore: "Restore check", r_drive: "Server drive", r_romm: "RomM", r_restart: "Windows restart", r_night: "Update night", r_tv: "TV", r_pc: "PC disk space", r_core: "Core update",
     notConfigured: "Set the server in Core > Gaming Mode", unreachable: "Server not reachable", missing: "No status file on the server", unreadable: "Status file unreadable", stale: "Last news {when}", unknown: "Unknown",
@@ -63675,8 +63675,8 @@ const en$6 = {
     r_stream: "Streaming", sIdle: "Idle", sTo: "Streaming to {device}", sVia: "Streaming · {source}", sKept: "TV kept out by you", tHeld: "Left alone (Stream mode)", sThrough: "Through {source}", sVd: "Apollo's virtual display is active",
     r_steam: "Steam update", stPostponed: "Postponed: {reason}", stUnsupported: "the new Steam doesn't work with the installed Decky", stUnknown: "Core can't tell yet if the new Steam works with Decky", stCantCheck: "Core can't check compatibility with Decky", stFailed: "the last try failed its check and was undone", stPending: "Waiting version: {version}",
 };
-const copy$7 = {
-    en: en$6,
+const copy$8 = {
+    en: en$7,
     it: {
         title: "Salute", allGood: "Tutto a posto", attention: "Da controllare: {n}", checking: "Controllo…", agentDown: "Il servizio di Core non risponde.", dismiss: "Ignora l'avviso",
         r_backup: "Backup del server", r_restore: "Prova di ripristino", r_drive: "Disco del server", r_romm: "RomM", r_restart: "Riavvio di Windows", r_night: "Notte degli aggiornamenti", r_tv: "TV", r_pc: "Spazio sul PC", r_core: "Aggiornamento di Core",
@@ -64206,7 +64206,7 @@ const consoleCopy = {
     },
 };
 for (const [language, table] of Object.entries(consoleCopy))
-    Object.assign(copy$7[language] ?? {}, table);
+    Object.assign(copy$8[language] ?? {}, table);
 // Batch 1 (BATCH-1.md): the save backup before update night and Decky with the plugins that report errors.
 const batchCopy = {
     en: {
@@ -64247,7 +64247,7 @@ const batchCopy = {
     },
 };
 for (const [language, table] of Object.entries(batchCopy))
-    Object.assign(copy$7[language] ?? {}, table);
+    Object.assign(copy$8[language] ?? {}, table);
 // Batch 2 (BATCH-2.md): sleep after streaming, Wake-on-LAN readiness and the Home Assistant bridge.
 const batchTwoCopy$1 = {
     en: {
@@ -64288,7 +64288,7 @@ const batchTwoCopy$1 = {
     },
 };
 for (const [language, table] of Object.entries(batchTwoCopy$1))
-    Object.assign(copy$7[language] ?? {}, table);
+    Object.assign(copy$8[language] ?? {}, table);
 // Jarvis (JARVIS.md): connected, not set up, Home Assistant unreachable, and how it answers.
 const jarvisCopy$1 = {
     en: { r_jarvis: "Jarvis", jvOff: "Off", jvNotSetUp: "Not set up", jvConnected: "Connected", jvReady: "Ready", jvHaDown: "Home Assistant unreachable", jvClaudeDown: "Claude API unreachable", jvToken: "Token refused", jvKey: "Key refused", jvAgent: "Agent not found", jvViaHa: "Through Home Assistant · {host}", jvViaClaude: "Through the Claude API", jvNoHelper: "Screen helper: needs the Anthropic key" },
@@ -64305,11 +64305,204 @@ const jarvisCopy$1 = {
     ru: { r_jarvis: "Jarvis", jvOff: "Выключено", jvNotSetUp: "Не настроено", jvConnected: "Подключено", jvReady: "Готово", jvHaDown: "Home Assistant недоступен", jvClaudeDown: "API Claude недоступен", jvToken: "Токен отклонён", jvKey: "Ключ отклонён", jvAgent: "Агент не найден", jvViaHa: "Через Home Assistant · {host}", jvViaClaude: "Через API Claude", jvNoHelper: "Помощь с экраном: нужен ключ Anthropic" },
 };
 for (const [language, table] of Object.entries(jarvisCopy$1))
-    Object.assign(copy$7[language] ?? {}, table);
+    Object.assign(copy$8[language] ?? {}, table);
+// 3.3.5 (CONSOLE-GUARDS.md "Exiting games", "Back paddles", "Emulators"; EMULATOR-UPDATES.md): exiting games, the back
+// paddles, emulator updates, one row per emulator and one hotkeys row per emulator. Emulator rows are titled with the
+// emulator's own name.
+const emuCopy = {
+    en: {
+        r_gameExit: "Exiting games", r_paddles: "Back paddles", r_emuUpdates: "Emulator updates", r_hotkeys: "Hotkeys · {name}",
+        geWatching: "Watching", geClean: "{title} closed cleanly", geCleaned: "{title}: Core closed {n} leftover processes", geLeft: "{title} did not exit: {n} still running", geUntracked: "Steam lost track of {title}",
+        geUntrackedDetail: "Steam no longer offers Exit Game for it. Use the Exit button below.", geNames: "Processes: {list}",
+        bpIn: "L4 = A, R4 = B", bpNot: "Not set in Steam's layout", bpUnknown: "Steam's layouts not found", bpDetail: "In Steam's controller layout, set L4 to A and R4 to B (the button below opens it; use the controller).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Desktop", bpSet: "set", bpUnset: "not set",
+        euCurrent: "Up to date", euSoaking: "Waiting: {list}", euNeeds: "Needs you: {list}", euSoakItem: "{name} {version} ({n} days left)", euConfirm: "{name} {version}: confirm it once on the desktop (only GitHub's own digest vouches for this download)", euRolled: "{name}: the last update was rolled back", euNotOffered: "Updated by EmuDeck: {list}",
+        emOk: "All set · {version}", emOkNoVersion: "All set", emCheck: "Check: {what}", emSettings: "settings", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "Starts fullscreen", "k_exit-prompt": "No exit prompt", k_shaders: "Shaders prepared before starting", sYes: "yes", sNo: "no", sNoConfig: "start it once first",
+        emRaIn: "RetroAchievements: signed in", emRaOut: "RetroAchievements: not signed in", emRaOff: "RetroAchievements: off", emBiosOk: "BIOS {system}: present", emBiosMissing: "BIOS {system}: missing", emBiosNone: "No BIOS needed", emVersion: "Version {version}", emRunning: "Running now: fixes wait until it closes",
+        hkMatch: "Match the shared table", hkDrift: "Drifted: {list}", hkNoConfig: "Start it once, then Core applies them", hkUnsupported: "Can't: {reason}", hkCant: "Can't do: {list}", hkGuard: "a quit or clashing combo",
+        "hr_keyboard-only": "its hotkeys are keyboard-only", "hr_no-save-states": "it has no save states", hr_unknown: "unknown emulator",
+        fn_save: "save state", fn_load: "load state", "fn_slot-next": "next slot", "fn_slot-prev": "previous slot", "fn_fast-forward": "fast-forward", fn_rewind: "rewind", fn_pause: "pause", fn_menu: "emulator menu", fn_fps: "FPS display",
+        aEmuFix: "Fix {name} settings", aEmuHotkeys: "Re-apply hotkeys to {name}", aEmuUpdate: "Update {name} now", aGameExit: "Exit {title}", aPaddles: "Open Steam's controller layout",
+    },
+    it: {
+        r_gameExit: "Uscita dai giochi", r_paddles: "Tasti posteriori", r_emuUpdates: "Aggiornamenti emulatori", r_hotkeys: "Scorciatoie · {name}",
+        geWatching: "In osservazione", geClean: "{title} chiuso correttamente", geCleaned: "{title}: Core ha chiuso {n} processi rimasti", geLeft: "{title} non si è chiuso: {n} ancora attivi", geUntracked: "Steam ha perso traccia di {title}",
+        geUntrackedDetail: "Steam non offre più Esci dal gioco. Usa il pulsante Esci qui sotto.", geNames: "Processi: {list}",
+        bpIn: "L4 = A, R4 = B", bpNot: "Non impostati nel layout di Steam", bpUnknown: "Layout di Steam non trovati", bpDetail: "Nel layout del controller di Steam imposta L4 su A e R4 su B (il pulsante qui sotto lo apre; usa il controller).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Desktop", bpSet: "impostati", bpUnset: "non impostati",
+        euCurrent: "Aggiornati", euSoaking: "In attesa: {list}", euNeeds: "Serve te: {list}", euSoakItem: "{name} {version} (mancano {n} giorni)", euConfirm: "{name} {version}: confermalo una volta sul desktop (lo garantisce solo l'impronta di GitHub)", euRolled: "{name}: l'ultimo aggiornamento è stato annullato", euNotOffered: "Aggiornati da EmuDeck: {list}",
+        emOk: "Tutto a posto · {version}", emOkNoVersion: "Tutto a posto", emCheck: "Da controllare: {what}", emSettings: "impostazioni", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "Si avvia a schermo intero", "k_exit-prompt": "Nessuna conferma all'uscita", k_shaders: "Shader preparati prima di avviare", sYes: "sì", sNo: "no", sNoConfig: "avvialo prima una volta",
+        emRaIn: "RetroAchievements: accesso eseguito", emRaOut: "RetroAchievements: accesso non eseguito", emRaOff: "RetroAchievements: spento", emBiosOk: "BIOS {system}: presente", emBiosMissing: "BIOS {system}: mancante", emBiosNone: "Nessun BIOS necessario", emVersion: "Versione {version}", emRunning: "In esecuzione: le correzioni aspettano che si chiuda",
+        hkMatch: "Uguali alla tabella comune", hkDrift: "Diverse: {list}", hkNoConfig: "Avvialo una volta, poi Core le applica", hkUnsupported: "Non possibile: {reason}", hkCant: "Non può: {list}", hkGuard: "una combinazione di uscita o in conflitto",
+        "hr_keyboard-only": "le sue scorciatoie sono solo da tastiera", "hr_no-save-states": "non ha salvataggi rapidi", hr_unknown: "emulatore sconosciuto",
+        fn_save: "salva stato", fn_load: "carica stato", "fn_slot-next": "slot successivo", "fn_slot-prev": "slot precedente", "fn_fast-forward": "avanti veloce", fn_rewind: "riavvolgi", fn_pause: "pausa", fn_menu: "menu dell'emulatore", fn_fps: "indicatore FPS",
+        aEmuFix: "Correggi le impostazioni di {name}", aEmuHotkeys: "Riapplica le scorciatoie a {name}", aEmuUpdate: "Aggiorna {name} ora", aGameExit: "Esci da {title}", aPaddles: "Apri il layout del controller di Steam",
+    },
+    es: {
+        r_gameExit: "Salir de los juegos", r_paddles: "Botones traseros", r_emuUpdates: "Actualizaciones de emuladores", r_hotkeys: "Atajos · {name}",
+        geWatching: "Vigilando", geClean: "{title} se cerró bien", geCleaned: "{title}: Core cerró {n} procesos sobrantes", geLeft: "{title} no se cerró: {n} siguen abiertos", geUntracked: "Steam perdió el rastro de {title}",
+        geUntrackedDetail: "Steam ya no ofrece Salir del juego. Usa el botón Salir de abajo.", geNames: "Procesos: {list}",
+        bpIn: "L4 = A, R4 = B", bpNot: "Sin asignar en el diseño de Steam", bpUnknown: "No se encontraron los diseños de Steam", bpDetail: "En el diseño del mando de Steam asigna A a L4 y B a R4 (el botón de abajo lo abre; usa el mando).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Escritorio", bpSet: "asignados", bpUnset: "sin asignar",
+        euCurrent: "Al día", euSoaking: "En espera: {list}", euNeeds: "Te necesita: {list}", euSoakItem: "{name} {version} (faltan {n} días)", euConfirm: "{name} {version}: confírmalo una vez en el escritorio (solo lo avala el resumen de GitHub)", euRolled: "{name}: la última actualización se deshizo", euNotOffered: "Los actualiza EmuDeck: {list}",
+        emOk: "Todo listo · {version}", emOkNoVersion: "Todo listo", emCheck: "Revisar: {what}", emSettings: "ajustes", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "Arranca en pantalla completa", "k_exit-prompt": "Sin confirmación al salir", k_shaders: "Sombreadores preparados antes de empezar", sYes: "sí", sNo: "no", sNoConfig: "ábrelo antes una vez",
+        emRaIn: "RetroAchievements: sesión iniciada", emRaOut: "RetroAchievements: sin sesión", emRaOff: "RetroAchievements: desactivado", emBiosOk: "BIOS {system}: presente", emBiosMissing: "BIOS {system}: falta", emBiosNone: "No necesita BIOS", emVersion: "Versión {version}", emRunning: "En marcha: los arreglos esperan a que se cierre",
+        hkMatch: "Iguales a la tabla común", hkDrift: "Diferentes: {list}", hkNoConfig: "Ábrelo una vez y Core los aplica", hkUnsupported: "No puede: {reason}", hkCant: "No puede: {list}", hkGuard: "una combinación de salida o en conflicto",
+        "hr_keyboard-only": "sus atajos son solo de teclado", "hr_no-save-states": "no tiene guardados rápidos", hr_unknown: "emulador desconocido",
+        fn_save: "guardar estado", fn_load: "cargar estado", "fn_slot-next": "ranura siguiente", "fn_slot-prev": "ranura anterior", "fn_fast-forward": "avance rápido", fn_rewind: "rebobinar", fn_pause: "pausa", fn_menu: "menú del emulador", fn_fps: "indicador de FPS",
+        aEmuFix: "Corregir ajustes de {name}", aEmuHotkeys: "Volver a aplicar atajos a {name}", aEmuUpdate: "Actualizar {name} ahora", aGameExit: "Salir de {title}", aPaddles: "Abrir el diseño del mando de Steam",
+    },
+    fr: {
+        r_gameExit: "Quitter les jeux", r_paddles: "Palettes arrière", r_emuUpdates: "Mises à jour des émulateurs", r_hotkeys: "Raccourcis · {name}",
+        geWatching: "Surveillance", geClean: "{title} s'est bien fermé", geCleaned: "{title} : Core a fermé {n} processus restants", geLeft: "{title} ne s'est pas fermé : {n} encore actifs", geUntracked: "Steam a perdu la trace de {title}",
+        geUntrackedDetail: "Steam ne propose plus Quitter le jeu. Utilisez le bouton Quitter ci-dessous.", geNames: "Processus : {list}",
+        bpIn: "L4 = A, R4 = B", bpNot: "Non réglées dans la configuration Steam", bpUnknown: "Configurations Steam introuvables", bpDetail: "Dans la configuration de manette Steam, réglez L4 sur A et R4 sur B (le bouton ci-dessous l'ouvre ; utilisez la manette).", bpLayout: "{layout} : {state}", bpBig: "Big Picture", bpDesktop: "Bureau", bpSet: "réglées", bpUnset: "non réglées",
+        euCurrent: "À jour", euSoaking: "En attente : {list}", euNeeds: "Votre avis : {list}", euSoakItem: "{name} {version} (encore {n} jours)", euConfirm: "{name} {version} : confirmez une fois sur le bureau (seule l'empreinte de GitHub garantit ce téléchargement)", euRolled: "{name} : la dernière mise à jour a été annulée", euNotOffered: "Mis à jour par EmuDeck : {list}",
+        emOk: "Tout est prêt · {version}", emOkNoVersion: "Tout est prêt", emCheck: "À vérifier : {what}", emSettings: "réglages", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "Démarre en plein écran", "k_exit-prompt": "Pas de confirmation pour quitter", k_shaders: "Shaders préparés avant le lancement", sYes: "oui", sNo: "non", sNoConfig: "lancez-le d'abord une fois",
+        emRaIn: "RetroAchievements : connecté", emRaOut: "RetroAchievements : non connecté", emRaOff: "RetroAchievements : désactivé", emBiosOk: "BIOS {system} : présent", emBiosMissing: "BIOS {system} : manquant", emBiosNone: "Aucun BIOS nécessaire", emVersion: "Version {version}", emRunning: "En cours : les corrections attendent sa fermeture",
+        hkMatch: "Conformes au tableau commun", hkDrift: "Différents : {list}", hkNoConfig: "Lancez-le une fois, puis Core les applique", hkUnsupported: "Impossible : {reason}", hkCant: "Ne peut pas : {list}", hkGuard: "une combinaison pour quitter ou en conflit",
+        "hr_keyboard-only": "ses raccourcis sont au clavier uniquement", "hr_no-save-states": "il n'a pas de sauvegardes instantanées", hr_unknown: "émulateur inconnu",
+        fn_save: "sauvegarde d'état", fn_load: "chargement d'état", "fn_slot-next": "emplacement suivant", "fn_slot-prev": "emplacement précédent", "fn_fast-forward": "avance rapide", fn_rewind: "retour arrière", fn_pause: "pause", fn_menu: "menu de l'émulateur", fn_fps: "affichage des FPS",
+        aEmuFix: "Corriger les réglages de {name}", aEmuHotkeys: "Réappliquer les raccourcis à {name}", aEmuUpdate: "Mettre à jour {name} maintenant", aGameExit: "Quitter {title}", aPaddles: "Ouvrir la configuration de manette Steam",
+    },
+    de: {
+        r_gameExit: "Spiele beenden", r_paddles: "Rücktasten", r_emuUpdates: "Emulator-Updates", r_hotkeys: "Tastenkürzel · {name}",
+        geWatching: "Wird beobachtet", geClean: "{title} sauber beendet", geCleaned: "{title}: Core hat {n} übrige Prozesse beendet", geLeft: "{title} wurde nicht beendet: {n} laufen noch", geUntracked: "Steam hat {title} aus den Augen verloren",
+        geUntrackedDetail: "Steam bietet „Spiel beenden“ dafür nicht mehr an. Nutze die Beenden-Taste unten.", geNames: "Prozesse: {list}",
+        bpIn: "L4 = A, R4 = B", bpNot: "Im Steam-Layout nicht belegt", bpUnknown: "Steam-Layouts nicht gefunden", bpDetail: "Belege im Controller-Layout von Steam L4 mit A und R4 mit B (die Taste unten öffnet es; mit dem Controller).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Desktop", bpSet: "belegt", bpUnset: "nicht belegt",
+        euCurrent: "Aktuell", euSoaking: "Wartet: {list}", euNeeds: "Braucht dich: {list}", euSoakItem: "{name} {version} (noch {n} Tage)", euConfirm: "{name} {version}: einmal am Desktop bestätigen (nur GitHubs eigener Hash bürgt für diesen Download)", euRolled: "{name}: das letzte Update wurde zurückgenommen", euNotOffered: "Aktualisiert EmuDeck: {list}",
+        emOk: "Alles bereit · {version}", emOkNoVersion: "Alles bereit", emCheck: "Prüfen: {what}", emSettings: "Einstellungen", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "Startet im Vollbild", "k_exit-prompt": "Keine Rückfrage beim Beenden", k_shaders: "Shader vor dem Start vorbereitet", sYes: "ja", sNo: "nein", sNoConfig: "erst einmal starten",
+        emRaIn: "RetroAchievements: angemeldet", emRaOut: "RetroAchievements: nicht angemeldet", emRaOff: "RetroAchievements: aus", emBiosOk: "BIOS {system}: vorhanden", emBiosMissing: "BIOS {system}: fehlt", emBiosNone: "Kein BIOS nötig", emVersion: "Version {version}", emRunning: "Läuft gerade: Korrekturen warten, bis es geschlossen ist",
+        hkMatch: "Wie in der gemeinsamen Tabelle", hkDrift: "Abweichend: {list}", hkNoConfig: "Einmal starten, dann setzt Core sie", hkUnsupported: "Geht nicht: {reason}", hkCant: "Kann nicht: {list}", hkGuard: "eine Beenden- oder doppelte Kombination",
+        "hr_keyboard-only": "seine Tastenkürzel gehen nur mit der Tastatur", "hr_no-save-states": "es hat keine Speicherstände", hr_unknown: "unbekannter Emulator",
+        fn_save: "Zustand speichern", fn_load: "Zustand laden", "fn_slot-next": "nächster Platz", "fn_slot-prev": "vorheriger Platz", "fn_fast-forward": "Vorspulen", fn_rewind: "Zurückspulen", fn_pause: "Pause", fn_menu: "Emulatormenü", fn_fps: "FPS-Anzeige",
+        aEmuFix: "Einstellungen von {name} korrigieren", aEmuHotkeys: "Tastenkürzel für {name} neu setzen", aEmuUpdate: "{name} jetzt aktualisieren", aGameExit: "{title} beenden", aPaddles: "Steam-Controller-Layout öffnen",
+    },
+    pt: {
+        r_gameExit: "Sair dos jogos", r_paddles: "Botões traseiros", r_emuUpdates: "Atualizações de emuladores", r_hotkeys: "Atalhos · {name}",
+        geWatching: "Observando", geClean: "{title} fechou corretamente", geCleaned: "{title}: o Core fechou {n} processos restantes", geLeft: "{title} não fechou: {n} ainda abertos", geUntracked: "O Steam perdeu o rastro de {title}",
+        geUntrackedDetail: "O Steam não oferece mais Sair do jogo. Use o botão Sair abaixo.", geNames: "Processos: {list}",
+        bpIn: "L4 = A, R4 = B", bpNot: "Não definidos no layout do Steam", bpUnknown: "Layouts do Steam não encontrados", bpDetail: "No layout do controle no Steam, defina L4 como A e R4 como B (o botão abaixo abre; use o controle).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Área de trabalho", bpSet: "definidos", bpUnset: "não definidos",
+        euCurrent: "Atualizados", euSoaking: "Aguardando: {list}", euNeeds: "Precisa de você: {list}", euSoakItem: "{name} {version} (faltam {n} dias)", euConfirm: "{name} {version}: confirme uma vez na área de trabalho (só o resumo do próprio GitHub garante este download)", euRolled: "{name}: a última atualização foi desfeita", euNotOffered: "Atualizados pelo EmuDeck: {list}",
+        emOk: "Tudo pronto · {version}", emOkNoVersion: "Tudo pronto", emCheck: "Verificar: {what}", emSettings: "configurações", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "Abre em tela cheia", "k_exit-prompt": "Sem confirmação ao sair", k_shaders: "Shaders preparados antes de iniciar", sYes: "sim", sNo: "não", sNoConfig: "abra-o uma vez antes",
+        emRaIn: "RetroAchievements: conectado", emRaOut: "RetroAchievements: não conectado", emRaOff: "RetroAchievements: desligado", emBiosOk: "BIOS {system}: presente", emBiosMissing: "BIOS {system}: faltando", emBiosNone: "Não precisa de BIOS", emVersion: "Versão {version}", emRunning: "Em execução: as correções esperam ele fechar",
+        hkMatch: "Iguais à tabela comum", hkDrift: "Diferentes: {list}", hkNoConfig: "Abra-o uma vez e o Core os aplica", hkUnsupported: "Não dá: {reason}", hkCant: "Não faz: {list}", hkGuard: "uma combinação de saída ou em conflito",
+        "hr_keyboard-only": "os atalhos dele são só de teclado", "hr_no-save-states": "ele não tem save states", hr_unknown: "emulador desconhecido",
+        fn_save: "salvar estado", fn_load: "carregar estado", "fn_slot-next": "próximo slot", "fn_slot-prev": "slot anterior", "fn_fast-forward": "avanço rápido", fn_rewind: "rebobinar", fn_pause: "pausa", fn_menu: "menu do emulador", fn_fps: "indicador de FPS",
+        aEmuFix: "Corrigir configurações do {name}", aEmuHotkeys: "Reaplicar atalhos no {name}", aEmuUpdate: "Atualizar {name} agora", aGameExit: "Sair de {title}", aPaddles: "Abrir o layout do controle no Steam",
+    },
+    uk: {
+        r_gameExit: "Вихід з ігор", r_paddles: "Задні кнопки", r_emuUpdates: "Оновлення емуляторів", r_hotkeys: "Гарячі клавіші · {name}",
+        geWatching: "Спостереження", geClean: "{title} закрито коректно", geCleaned: "{title}: Core закрив {n} залишкових процесів", geLeft: "{title} не закрився: ще працює {n}", geUntracked: "Steam втратив стеження за {title}",
+        geUntrackedDetail: "Steam більше не пропонує «Вийти з гри». Скористайтеся кнопкою «Вийти» нижче.", geNames: "Процеси: {list}",
+        bpIn: "L4 = A, R4 = B", bpNot: "Не призначено в розкладці Steam", bpUnknown: "Розкладки Steam не знайдено", bpDetail: "У розкладці контролера Steam призначте L4 на A і R4 на B (кнопка нижче відкриває її; використовуйте контролер).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Робочий стіл", bpSet: "призначено", bpUnset: "не призначено",
+        euCurrent: "Актуальні", euSoaking: "Очікують: {list}", euNeeds: "Потрібні ви: {list}", euSoakItem: "{name} {version} (залишилось днів: {n})", euConfirm: "{name} {version}: підтвердьте один раз на робочому столі (за це завантаження ручається лише відбиток GitHub)", euRolled: "{name}: останнє оновлення скасовано", euNotOffered: "Оновлює EmuDeck: {list}",
+        emOk: "Усе готово · {version}", emOkNoVersion: "Усе готово", emCheck: "Перевірити: {what}", emSettings: "налаштування", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "Запуск на весь екран", "k_exit-prompt": "Без підтвердження виходу", k_shaders: "Шейдери готуються перед запуском", sYes: "так", sNo: "ні", sNoConfig: "спершу запустіть один раз",
+        emRaIn: "RetroAchievements: вхід виконано", emRaOut: "RetroAchievements: вхід не виконано", emRaOff: "RetroAchievements: вимкнено", emBiosOk: "BIOS {system}: є", emBiosMissing: "BIOS {system}: немає", emBiosNone: "BIOS не потрібен", emVersion: "Версія {version}", emRunning: "Зараз працює: виправлення чекають, доки він закриється",
+        hkMatch: "Збігаються зі спільною таблицею", hkDrift: "Відрізняються: {list}", hkNoConfig: "Запустіть один раз, потім Core їх застосує", hkUnsupported: "Неможливо: {reason}", hkCant: "Не вміє: {list}", hkGuard: "комбінація виходу або конфлікт",
+        "hr_keyboard-only": "його гарячі клавіші лише для клавіатури", "hr_no-save-states": "у нього немає збережень стану", hr_unknown: "невідомий емулятор",
+        fn_save: "зберегти стан", fn_load: "завантажити стан", "fn_slot-next": "наступний слот", "fn_slot-prev": "попередній слот", "fn_fast-forward": "прискорення", fn_rewind: "перемотування", fn_pause: "пауза", fn_menu: "меню емулятора", fn_fps: "показ FPS",
+        aEmuFix: "Виправити налаштування {name}", aEmuHotkeys: "Знову застосувати гарячі клавіші до {name}", aEmuUpdate: "Оновити {name} зараз", aGameExit: "Вийти з {title}", aPaddles: "Відкрити розкладку контролера Steam",
+    },
+    ru: {
+        r_gameExit: "Выход из игр", r_paddles: "Задние кнопки", r_emuUpdates: "Обновления эмуляторов", r_hotkeys: "Горячие клавиши · {name}",
+        geWatching: "Наблюдение", geClean: "{title} закрыта корректно", geCleaned: "{title}: Core закрыл {n} оставшихся процессов", geLeft: "{title} не закрылась: ещё работает {n}", geUntracked: "Steam потерял {title} из виду",
+        geUntrackedDetail: "Steam больше не предлагает «Выйти из игры». Используйте кнопку «Выйти» ниже.", geNames: "Процессы: {list}",
+        bpIn: "L4 = A, R4 = B", bpNot: "Не назначены в раскладке Steam", bpUnknown: "Раскладки Steam не найдены", bpDetail: "В раскладке контроллера Steam назначьте L4 на A и R4 на B (кнопка ниже открывает её; используйте контроллер).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "Рабочий стол", bpSet: "назначены", bpUnset: "не назначены",
+        euCurrent: "Актуальны", euSoaking: "Ожидают: {list}", euNeeds: "Нужны вы: {list}", euSoakItem: "{name} {version} (осталось дней: {n})", euConfirm: "{name} {version}: подтвердите один раз на рабочем столе (за эту загрузку ручается только отпечаток GitHub)", euRolled: "{name}: последнее обновление отменено", euNotOffered: "Обновляет EmuDeck: {list}",
+        emOk: "Всё готово · {version}", emOkNoVersion: "Всё готово", emCheck: "Проверить: {what}", emSettings: "настройки", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "Запуск во весь экран", "k_exit-prompt": "Без подтверждения выхода", k_shaders: "Шейдеры готовятся перед запуском", sYes: "да", sNo: "нет", sNoConfig: "сначала запустите один раз",
+        emRaIn: "RetroAchievements: вход выполнен", emRaOut: "RetroAchievements: вход не выполнен", emRaOff: "RetroAchievements: выключено", emBiosOk: "BIOS {system}: есть", emBiosMissing: "BIOS {system}: нет", emBiosNone: "BIOS не нужен", emVersion: "Версия {version}", emRunning: "Сейчас работает: исправления ждут, пока он закроется",
+        hkMatch: "Совпадают с общей таблицей", hkDrift: "Отличаются: {list}", hkNoConfig: "Запустите один раз, затем Core их применит", hkUnsupported: "Невозможно: {reason}", hkCant: "Не умеет: {list}", hkGuard: "комбинация выхода или конфликт",
+        "hr_keyboard-only": "его горячие клавиши только для клавиатуры", "hr_no-save-states": "у него нет сохранений состояния", hr_unknown: "неизвестный эмулятор",
+        fn_save: "сохранить состояние", fn_load: "загрузить состояние", "fn_slot-next": "следующий слот", "fn_slot-prev": "предыдущий слот", "fn_fast-forward": "ускорение", fn_rewind: "перемотка", fn_pause: "пауза", fn_menu: "меню эмулятора", fn_fps: "показ FPS",
+        aEmuFix: "Исправить настройки {name}", aEmuHotkeys: "Снова применить горячие клавиши к {name}", aEmuUpdate: "Обновить {name} сейчас", aGameExit: "Выйти из {title}", aPaddles: "Открыть раскладку контроллера Steam",
+    },
+    zh: {
+        r_gameExit: "退出游戏", r_paddles: "背键", r_emuUpdates: "模拟器更新", r_hotkeys: "快捷键 · {name}",
+        geWatching: "监视中", geClean: "{title} 已正常关闭", geCleaned: "{title}：Core 关闭了 {n} 个残留进程", geLeft: "{title} 没有退出：仍有 {n} 个在运行", geUntracked: "Steam 已失去对 {title} 的跟踪",
+        geUntrackedDetail: "Steam 不再为它提供“退出游戏”。请使用下方的退出按钮。", geNames: "进程：{list}",
+        bpIn: "L4 = A，R4 = B", bpNot: "Steam 布局中未设置", bpUnknown: "未找到 Steam 布局", bpDetail: "在 Steam 的控制器布局中把 L4 设为 A、R4 设为 B（下方按钮可打开；用手柄操作）。", bpLayout: "{layout}：{state}", bpBig: "Big Picture", bpDesktop: "桌面", bpSet: "已设置", bpUnset: "未设置",
+        euCurrent: "已是最新", euSoaking: "等待中：{list}", euNeeds: "需要你处理：{list}", euSoakItem: "{name} {version}（还剩 {n} 天）", euConfirm: "{name} {version}：请在桌面确认一次（此下载仅有 GitHub 自身的摘要作保证）", euRolled: "{name}：上次更新已回滚", euNotOffered: "由 EmuDeck 更新：{list}",
+        emOk: "一切就绪 · {version}", emOkNoVersion: "一切就绪", emCheck: "需检查：{what}", emSettings: "设置", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "以全屏启动", "k_exit-prompt": "退出时不确认", k_shaders: "启动前预编译着色器", sYes: "是", sNo: "否", sNoConfig: "请先启动一次",
+        emRaIn: "RetroAchievements：已登录", emRaOut: "RetroAchievements：未登录", emRaOff: "RetroAchievements：已关闭", emBiosOk: "BIOS {system}：已有", emBiosMissing: "BIOS {system}：缺失", emBiosNone: "无需 BIOS", emVersion: "版本 {version}", emRunning: "正在运行：修复会等它关闭后进行",
+        hkMatch: "与通用表一致", hkDrift: "不一致：{list}", hkNoConfig: "先启动一次，之后 Core 会应用", hkUnsupported: "无法：{reason}", hkCant: "不支持：{list}", hkGuard: "退出或冲突的组合键",
+        "hr_keyboard-only": "它的快捷键只能用键盘", "hr_no-save-states": "它没有即时存档", hr_unknown: "未知模拟器",
+        fn_save: "即时存档", fn_load: "读取存档", "fn_slot-next": "下一个存档位", "fn_slot-prev": "上一个存档位", "fn_fast-forward": "快进", fn_rewind: "倒带", fn_pause: "暂停", fn_menu: "模拟器菜单", fn_fps: "FPS 显示",
+        aEmuFix: "修复 {name} 的设置", aEmuHotkeys: "重新为 {name} 应用快捷键", aEmuUpdate: "立即更新 {name}", aGameExit: "退出 {title}", aPaddles: "打开 Steam 控制器布局",
+    },
+    ja: {
+        r_gameExit: "ゲームの終了", r_paddles: "背面ボタン", r_emuUpdates: "エミュレーターの更新", r_hotkeys: "ホットキー · {name}",
+        geWatching: "監視中", geClean: "{title} は正常に閉じました", geCleaned: "{title}：Core が残ったプロセスを {n} 個閉じました", geLeft: "{title} が終了していません：{n} 個が実行中", geUntracked: "Steam が {title} を見失いました",
+        geUntrackedDetail: "Steam はこのゲームの「ゲームを終了」を出さなくなりました。下の終了ボタンを使ってください。", geNames: "プロセス：{list}",
+        bpIn: "L4 = A、R4 = B", bpNot: "Steam のレイアウトで未設定", bpUnknown: "Steam のレイアウトが見つかりません", bpDetail: "Steam のコントローラーレイアウトで L4 を A、R4 を B に設定してください（下のボタンで開きます。コントローラーで操作）。", bpLayout: "{layout}：{state}", bpBig: "Big Picture", bpDesktop: "デスクトップ", bpSet: "設定済み", bpUnset: "未設定",
+        euCurrent: "最新", euSoaking: "待機中：{list}", euNeeds: "確認が必要：{list}", euSoakItem: "{name} {version}（残り {n} 日）", euConfirm: "{name} {version}：デスクトップで一度確認してください（このダウンロードを保証するのは GitHub 自身のダイジェストだけです）", euRolled: "{name}：前回の更新は元に戻されました", euNotOffered: "EmuDeck が更新：{list}",
+        emOk: "準備完了 · {version}", emOkNoVersion: "準備完了", emCheck: "確認：{what}", emSettings: "設定", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "全画面で起動", "k_exit-prompt": "終了時の確認なし", k_shaders: "起動前にシェーダーを準備", sYes: "はい", sNo: "いいえ", sNoConfig: "先に一度起動してください",
+        emRaIn: "RetroAchievements：サインイン済み", emRaOut: "RetroAchievements：未サインイン", emRaOff: "RetroAchievements：オフ", emBiosOk: "BIOS {system}：あり", emBiosMissing: "BIOS {system}：なし", emBiosNone: "BIOS は不要", emVersion: "バージョン {version}", emRunning: "実行中：修正は終了するまで待ちます",
+        hkMatch: "共通の表どおり", hkDrift: "異なる：{list}", hkNoConfig: "一度起動すると Core が適用します", hkUnsupported: "不可：{reason}", hkCant: "できないこと：{list}", hkGuard: "終了または重複する組み合わせ",
+        "hr_keyboard-only": "ホットキーがキーボード専用です", "hr_no-save-states": "ステートセーブがありません", hr_unknown: "不明なエミュレーター",
+        fn_save: "ステートセーブ", fn_load: "ステートロード", "fn_slot-next": "次のスロット", "fn_slot-prev": "前のスロット", "fn_fast-forward": "早送り", fn_rewind: "巻き戻し", fn_pause: "一時停止", fn_menu: "エミュレーターのメニュー", fn_fps: "FPS 表示",
+        aEmuFix: "{name} の設定を修正", aEmuHotkeys: "{name} にホットキーを再適用", aEmuUpdate: "{name} を今すぐ更新", aGameExit: "{title} を終了", aPaddles: "Steam のコントローラーレイアウトを開く",
+    },
+    ko: {
+        r_gameExit: "게임 종료", r_paddles: "후면 버튼", r_emuUpdates: "에뮬레이터 업데이트", r_hotkeys: "단축키 · {name}",
+        geWatching: "지켜보는 중", geClean: "{title}이(가) 깔끔하게 닫혔어요", geCleaned: "{title}: Core가 남은 프로세스 {n}개를 닫았어요", geLeft: "{title}이(가) 종료되지 않았어요: {n}개 실행 중", geUntracked: "Steam이 {title}을(를) 놓쳤어요",
+        geUntrackedDetail: "Steam이 더 이상 게임 종료를 제공하지 않아요. 아래 종료 버튼을 쓰세요.", geNames: "프로세스: {list}",
+        bpIn: "L4 = A, R4 = B", bpNot: "Steam 레이아웃에 설정 안 됨", bpUnknown: "Steam 레이아웃을 찾을 수 없음", bpDetail: "Steam 컨트롤러 레이아웃에서 L4를 A, R4를 B로 설정하세요(아래 버튼으로 열기, 컨트롤러로 조작).", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "데스크톱", bpSet: "설정됨", bpUnset: "설정 안 됨",
+        euCurrent: "최신", euSoaking: "대기 중: {list}", euNeeds: "확인 필요: {list}", euSoakItem: "{name} {version}({n}일 남음)", euConfirm: "{name} {version}: 데스크톱에서 한 번 확인하세요(이 다운로드는 GitHub 자체 다이제스트만 보증해요)", euRolled: "{name}: 지난 업데이트를 되돌렸어요", euNotOffered: "EmuDeck이 업데이트: {list}",
+        emOk: "모두 준비됨 · {version}", emOkNoVersion: "모두 준비됨", emCheck: "확인: {what}", emSettings: "설정", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "전체 화면으로 시작", "k_exit-prompt": "종료 확인 없음", k_shaders: "시작 전에 셰이더 준비", sYes: "예", sNo: "아니요", sNoConfig: "먼저 한 번 실행하세요",
+        emRaIn: "RetroAchievements: 로그인됨", emRaOut: "RetroAchievements: 로그인 안 됨", emRaOff: "RetroAchievements: 꺼짐", emBiosOk: "BIOS {system}: 있음", emBiosMissing: "BIOS {system}: 없음", emBiosNone: "BIOS 필요 없음", emVersion: "버전 {version}", emRunning: "실행 중: 수정은 닫힌 뒤에 해요",
+        hkMatch: "공통 표와 같음", hkDrift: "다름: {list}", hkNoConfig: "한 번 실행하면 Core가 적용해요", hkUnsupported: "불가: {reason}", hkCant: "못 하는 것: {list}", hkGuard: "종료 또는 겹치는 조합",
+        "hr_keyboard-only": "단축키가 키보드 전용이에요", "hr_no-save-states": "세이브 스테이트가 없어요", hr_unknown: "알 수 없는 에뮬레이터",
+        fn_save: "상태 저장", fn_load: "상태 불러오기", "fn_slot-next": "다음 슬롯", "fn_slot-prev": "이전 슬롯", "fn_fast-forward": "빨리 감기", fn_rewind: "되감기", fn_pause: "일시 정지", fn_menu: "에뮬레이터 메뉴", fn_fps: "FPS 표시",
+        aEmuFix: "{name} 설정 고치기", aEmuHotkeys: "{name}에 단축키 다시 적용", aEmuUpdate: "지금 {name} 업데이트", aGameExit: "{title} 종료", aPaddles: "Steam 컨트롤러 레이아웃 열기",
+    },
+    hi: {
+        r_gameExit: "गेम से बाहर निकलना", r_paddles: "पीछे के बटन", r_emuUpdates: "एम्युलेटर अपडेट", r_hotkeys: "हॉटकी · {name}",
+        geWatching: "नज़र रखी जा रही है", geClean: "{title} ठीक से बंद हुआ", geCleaned: "{title}: Core ने बचे हुए {n} प्रोसेस बंद किए", geLeft: "{title} बंद नहीं हुआ: {n} अब भी चल रहे हैं", geUntracked: "Steam ने {title} का ट्रैक खो दिया",
+        geUntrackedDetail: "Steam अब इसके लिए गेम से बाहर निकलें नहीं देता। नीचे का बाहर निकलें बटन इस्तेमाल करें।", geNames: "प्रोसेस: {list}",
+        bpIn: "L4 = A, R4 = B", bpNot: "Steam लेआउट में सेट नहीं", bpUnknown: "Steam लेआउट नहीं मिले", bpDetail: "Steam के कंट्रोलर लेआउट में L4 को A और R4 को B पर सेट करें (नीचे का बटन इसे खोलता है; कंट्रोलर से चलाएँ)।", bpLayout: "{layout}: {state}", bpBig: "Big Picture", bpDesktop: "डेस्कटॉप", bpSet: "सेट", bpUnset: "सेट नहीं",
+        euCurrent: "अप टू डेट", euSoaking: "इंतज़ार में: {list}", euNeeds: "आपकी ज़रूरत: {list}", euSoakItem: "{name} {version} ({n} दिन बाकी)", euConfirm: "{name} {version}: डेस्कटॉप पर एक बार पुष्टि करें (इस डाउनलोड की गारंटी सिर्फ़ GitHub का अपना डाइजेस्ट देता है)", euRolled: "{name}: पिछला अपडेट वापस लिया गया", euNotOffered: "EmuDeck अपडेट करता है: {list}",
+        emOk: "सब तैयार · {version}", emOkNoVersion: "सब तैयार", emCheck: "जाँचें: {what}", emSettings: "सेटिंग्स", emRa: "RetroAchievements", emBios: "BIOS",
+        k_fullscreen: "फ़ुलस्क्रीन में शुरू होता है", "k_exit-prompt": "बाहर निकलने पर पुष्टि नहीं", k_shaders: "शुरू होने से पहले शेडर तैयार", sYes: "हाँ", sNo: "नहीं", sNoConfig: "पहले एक बार चलाएँ",
+        emRaIn: "RetroAchievements: साइन इन", emRaOut: "RetroAchievements: साइन इन नहीं", emRaOff: "RetroAchievements: बंद", emBiosOk: "BIOS {system}: मौजूद", emBiosMissing: "BIOS {system}: नहीं है", emBiosNone: "BIOS की ज़रूरत नहीं", emVersion: "वर्ज़न {version}", emRunning: "अभी चल रहा है: सुधार इसके बंद होने तक रुकेंगे",
+        hkMatch: "साझा टेबल जैसी", hkDrift: "अलग: {list}", hkNoConfig: "एक बार चलाएँ, फिर Core इन्हें लगाएगा", hkUnsupported: "संभव नहीं: {reason}", hkCant: "नहीं कर सकता: {list}", hkGuard: "बाहर निकलने वाला या टकराता कॉम्बो",
+        "hr_keyboard-only": "इसकी हॉटकी सिर्फ़ कीबोर्ड से चलती हैं", "hr_no-save-states": "इसमें सेव स्टेट नहीं हैं", hr_unknown: "अनजान एम्युलेटर",
+        fn_save: "स्टेट सेव", fn_load: "स्टेट लोड", "fn_slot-next": "अगला स्लॉट", "fn_slot-prev": "पिछला स्लॉट", "fn_fast-forward": "फ़ास्ट-फ़ॉरवर्ड", fn_rewind: "रिवाइंड", fn_pause: "रोकें", fn_menu: "एम्युलेटर मेन्यू", fn_fps: "FPS दिखाएँ",
+        aEmuFix: "{name} की सेटिंग्स ठीक करें", aEmuHotkeys: "{name} पर हॉटकी फिर से लगाएँ", aEmuUpdate: "{name} अभी अपडेट करें", aGameExit: "{title} से बाहर निकलें", aPaddles: "Steam का कंट्रोलर लेआउट खोलें",
+    },
+};
+for (const [language, table] of Object.entries(emuCopy))
+    Object.assign(copy$8[language] ?? {}, table);
+// 3.3.5: the Launcher pop-ups row also counts the store launchers Core closed after a game.
+const launcherClosedCopy = {
+    en: "Closed after games today: {n} (last: {name})",
+    it: "Chiusi dopo i giochi oggi: {n} (l'ultimo: {name})",
+    es: "Cerrados tras los juegos hoy: {n} (el último: {name})",
+    fr: "Fermés après les jeux aujourd'hui : {n} (dernier : {name})",
+    de: "Heute nach Spielen geschlossen: {n} (zuletzt: {name})",
+    pt: "Fechados após jogos hoje: {n} (último: {name})",
+    uk: "Закрито після ігор сьогодні: {n} (останній: {name})",
+    ru: "Закрыто после игр сегодня: {n} (последний: {name})",
+    zh: "今天游戏后关闭：{n} 个（最近：{name}）",
+    ja: "今日ゲーム後に閉じた数：{n}（最後：{name}）",
+    ko: "오늘 게임 후 닫음: {n}개(마지막: {name})",
+    hi: "आज गेम के बाद बंद किए: {n} (आख़िरी: {name})",
+};
+for (const [language, value] of Object.entries(launcherClosedCopy))
+    if (copy$8[language])
+        copy$8[language].lfClosed = value;
 function healthCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$7[language === "ua" ? "uk" : language] ?? en$6;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$6[key] ?? key });
+    const table = copy$8[language === "ua" ? "uk" : language] ?? en$7;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$7[key] ?? key });
 }
 function fill$4(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? String(values[name]) : all));
@@ -64557,6 +64750,8 @@ function rowValue(row, text, locale, now) {
             return { value: row.state === "available" ? fill$4(text.cAvail, { latest: String(data.latest ?? "?") })
                     : row.state === "current" ? fill$4(text.cCurrent, { current: String(data.current ?? "?") }) : text.unknown, details };
         default:
+            if (isEmulatorRow(row.id))
+                return emulatorValue(row, text);
             return consoleValue(row, text, locale, now);
     }
 }
@@ -64715,6 +64910,8 @@ function consoleValue(row, text, locale, now) {
             const last = clean$2(data.last, 40);
             if (last)
                 details.push(fill$4(text.lfLast, { name: last }));
+            if (Number(data.closedToday) > 0)
+                details.push(fill$4(text.lfClosed, { n: Number(data.closedToday) || 0, name: clean$2(data.lastClosed, 40) || "?" }));
             return { value: row.state === "watching" ? fill$4(text.lfOn, { n: Number(data.pushedToday) || 0 }) : row.state === "off" ? text.lfOff : text.unknown, details };
         }
         case "wake-check": {
@@ -64739,16 +64936,157 @@ function consoleValue(row, text, locale, now) {
     }
     return { value: text.unknown, details };
 }
+// 3.3.5 rows: exiting games, back paddles, emulator updates, "emulator-<id>" and "hotkeys-<id>" (titled with the emulator's name).
+const emulatorRowIds = ["game-exit", "back-paddles", "emulator-updates"];
+function isEmulatorRow(id) {
+    return emulatorRowIds.includes(id) || /^(emulator|hotkeys)-[a-z0-9]{2,20}$/.test(id) && id !== "emulator-updates";
+}
+function rowTitle(row, text) {
+    if (titles[row.id])
+        return text[titles[row.id]];
+    const name = clean$2(row.data?.name, 40) || "?";
+    if (row.id === "game-exit")
+        return text.r_gameExit;
+    if (row.id === "back-paddles")
+        return text.r_paddles;
+    if (row.id === "emulator-updates")
+        return text.r_emuUpdates;
+    if (row.id.startsWith("hotkeys-"))
+        return fill$4(text.r_hotkeys, { name });
+    return name;
+}
+function emulatorActionLabel(id, data, text) {
+    const name = clean$2(data.name, 40) || "?";
+    if (id === "game-exit-now")
+        return fill$4(text.aGameExit, { title: clean$2(data.untracked, 60) || clean$2(data.title, 60) || "?" });
+    if (id === "paddles-setup")
+        return text.aPaddles;
+    if (/^emu-fix-[a-z0-9]{2,20}$/.test(id))
+        return fill$4(text.aEmuFix, { name });
+    if (/^emu-hotkeys-[a-z0-9]{2,20}$/.test(id))
+        return fill$4(text.aEmuHotkeys, { name });
+    if (/^emu-update-[a-z0-9]{2,20}$/.test(id))
+        return fill$4(text.aEmuUpdate, { name });
+    return undefined;
+}
+function emulatorValue(row, text, locale, now) {
+    const data = row.data ?? {};
+    const details = [];
+    const list = (value, max = 12) => (Array.isArray(value) ? value : []).map(item => clean$2(item, 40)).filter(Boolean).slice(0, max);
+    const fn = (name) => text["fn_" + name] && !/^fn_/.test(text["fn_" + name]) ? text["fn_" + name] : name;
+    if (row.id === "game-exit") {
+        const title = clean$2(data.title, 60) || "?";
+        if (row.state === "untracked") {
+            details.push(text.geUntrackedDetail);
+            return { value: fill$4(text.geUntracked, { title: clean$2(data.untracked, 60) || "?" }), details };
+        }
+        if (row.state === "did-not-exit")
+            return { value: fill$4(text.geLeft, { title, n: Number(data.left) || 0 }), details };
+        if (row.state === "cleaned")
+            return { value: fill$4(text.geCleaned, { title, n: Number(data.closed) || 0 }), details };
+        if (row.state === "clean")
+            return { value: fill$4(text.geClean, { title }), details };
+        return { value: text.geWatching, details };
+    }
+    if (row.id === "back-paddles") {
+        const layouts = Array.isArray(data.layouts) ? data.layouts : [];
+        for (const layout of layouts.slice(0, 4))
+            details.push(fill$4(text.bpLayout, { layout: layout?.layout === "desktop" ? text.bpDesktop : text.bpBig, state: layout?.verdict === "a-b" ? text.bpSet : text.bpUnset }));
+        if (row.state !== "in-place")
+            details.push(text.bpDetail);
+        return { value: row.state === "in-place" ? text.bpIn : row.state === "not-set" ? text.bpNot : text.bpUnknown, details };
+    }
+    if (row.id === "emulator-updates") {
+        const items = Array.isArray(data.emulators) ? data.emulators : [];
+        const soaking = [], needs = [];
+        for (const item of items.slice(0, 16)) {
+            const name = clean$2(item?.name, 30) || "?", version = clean$2(item?.pending, 30) || "?";
+            if (item?.phase === "NeedsConfirmation") {
+                needs.push(name);
+                details.push(fill$4(text.euConfirm, { name, version }));
+            }
+            else if (item?.phase === "WaitingForChange") {
+                needs.push(name);
+                details.push(fill$4(text.euRolled, { name }));
+            }
+            else if (item?.phase === "Soaking" || item?.phase === "Due")
+                soaking.push(fill$4(text.euSoakItem, { name, version, n: Number(item?.daysLeft) || 0 }));
+        }
+        const notOffered = list(data.notOffered);
+        if (notOffered.length)
+            details.push(fill$4(text.euNotOffered, { list: notOffered.join(", ") }));
+        if (row.state === "needs-you")
+            return { value: fill$4(text.euNeeds, { list: needs.join(", ") || "?" }), details };
+        if (row.state === "soaking")
+            return { value: fill$4(text.euSoaking, { list: soaking.join(", ") || "?" }), details };
+        return { value: text.euCurrent, details };
+    }
+    if (row.id.startsWith("hotkeys-")) {
+        const cant = list(data.cantDo).map(fn);
+        if (row.state === "unsupported") {
+            const reason = clean$2(data.unsupported, 30);
+            return { value: fill$4(text.hkUnsupported, { reason: text["hr_" + reason] && !/^hr_/.test(text["hr_" + reason]) ? text["hr_" + reason] : reason || "?" }), details };
+        }
+        if (cant.length)
+            details.push(fill$4(text.hkCant, { list: cant.join(", ") }));
+        if (data.running === true)
+            details.push(text.emRunning);
+        if (row.state === "matches")
+            return { value: text.hkMatch, details };
+        if (row.state === "no-config")
+            return { value: text.hkNoConfig, details };
+        const drifted = list(data.drifted).map(item => item.startsWith("guard:") ? text.hkGuard : fn(item));
+        return { value: fill$4(text.hkDrift, { list: Array.from(new Set(drifted)).join(", ") || "?" }), details };
+    }
+    // emulator-<id>
+    const version = clean$2(data.version, 40);
+    const settings = Array.isArray(data.settings) ? data.settings : [];
+    for (const setting of settings) {
+        const label = text["k_" + String(setting?.kind)];
+        if (!label || /^k_/.test(label))
+            continue;
+        details.push(`${label}: ${setting?.state === "ok" ? text.sYes : setting?.state === "no-config" ? text.sNoConfig : text.sNo}`);
+    }
+    const ra = String(data.ra ?? "");
+    if (ra === "signed-in")
+        details.push(text.emRaIn);
+    else if (ra === "signed-out")
+        details.push(text.emRaOut);
+    else if (ra === "off")
+        details.push(text.emRaOff);
+    const bios = Array.isArray(data.bios) ? data.bios : [];
+    if (bios.length === 0 && data.biosNote === "none-needed")
+        details.push(text.emBiosNone);
+    for (const entry of bios.slice(0, 8)) {
+        const system = clean$2(entry?.system, 20).toUpperCase() || "?";
+        if (entry?.state === "ok")
+            details.push(fill$4(text.emBiosOk, { system }));
+        else if (entry?.state === "missing")
+            details.push(fill$4(text.emBiosMissing, { system }));
+    }
+    if (version)
+        details.push(fill$4(text.emVersion, { version }));
+    if (data.running === true)
+        details.push(text.emRunning);
+    if (row.state === "ok")
+        return { value: version ? fill$4(text.emOk, { version }) : text.emOkNoVersion, details };
+    const issues = list(data.issues).map(item => item === "settings" ? text.emSettings : item === "ra" ? text.emRa : item === "bios" ? text.emBios : item);
+    return { value: fill$4(text.emCheck, { what: issues.join(", ") || "?" }), details };
+}
 // A row's buttons: its fix (from data.fix) first, then the others it offers (data.actions).
 function rowActions(row, text) {
     const data = row.data ?? {};
     const actions = [];
+    const dynamic = typeof data.fix === "string" ? emulatorActionLabel(data.fix, data, text) : undefined;
+    if (dynamic && typeof data.fix === "string") {
+        actions.push({ id: data.fix, label: dynamic, fix: true });
+    }
     const fix = typeof data.fix === "string" && actionLabels[data.fix] ? data.fix : undefined;
     if (fix)
         actions.push({ id: fix, label: text[actionLabels[fix]], fix: true });
     for (const id of Array.isArray(data.actions) ? data.actions : [])
-        if (typeof id === "string" && actionLabels[id] && id !== fix)
-            actions.push({ id, label: text[actionLabels[id]], fix: false });
+        if (typeof id === "string" && id !== data.fix && (actionLabels[id] || emulatorActionLabel(id, data, text)) && id !== fix)
+            actions.push({ id, label: actionLabels[id] ? text[actionLabels[id]] : emulatorActionLabel(id, data, text), fix: false });
     return actions;
 }
 function healthSummary(answer, locale) {
@@ -64759,11 +65097,11 @@ function healthSummary(answer, locale) {
 function healthLines(answer, locale, now = new Date()) {
     const text = healthCopy(locale);
     const alerts = Array.isArray(answer?.alerts) ? answer.alerts : [];
-    return (Array.isArray(answer?.rows) ? answer.rows : []).filter(row => row && typeof row.id === "string" && titles[row.id]).map(row => {
+    return (Array.isArray(answer?.rows) ? answer.rows : []).filter(row => row && typeof row.id === "string" && (titles[row.id] || isEmulatorRow(row.id))).map(row => {
         const { value, details } = rowValue(row, text, locale, now);
         const alert = alerts.find(item => item?.rowId === row.id && !item.dismissed);
         const level = ["ok", "attention", "info", "unknown"].includes(row.level) ? row.level : "unknown";
-        const line = { id: row.id, level, title: text[titles[row.id]], value, details, alertId: answer?.alertsEnabled !== false ? alert?.id : undefined };
+        const line = { id: row.id, level, title: rowTitle(row, text), value, details, alertId: answer?.alertsEnabled !== false ? alert?.id : undefined };
         if (row.id === "microphone" && (row.state === "muted" || row.state === "partial"))
             line.tone = "crimson";
         const actions = rowActions(row, text);
@@ -64778,8 +65116,8 @@ function healthLines(answer, locale, now = new Date()) {
 // failed try) and "Update Steam now": the same backup, smoke test and rollback as the automatic update. The
 // agent's gate may ask for confirmation first: once when it cannot tell whether the new Steam works with Decky,
 // twice when it knows it does not. Each confirmation is another press of the same button.
-const { PanelSection: PanelSection$8, PanelSectionRow: PanelSectionRow$8, ButtonItem: ButtonItem$4 } = CompatUI;
-const copy$6 = {
+const { PanelSection: PanelSection$9, PanelSectionRow: PanelSectionRow$9, ButtonItem: ButtonItem$5 } = CompatUI;
+const copy$7 = {
     en: { title: "Steam updates", current: "Steam is up to date.", soaking: "A new Steam version is waiting: Core installs it in {n} days, at night, if it works with Decky.", due: "Core updates Steam on the next update night, when you're not playing.", waiting: "The last Steam update failed its check and was undone. Core tries again when a fix arrives.", off: "Steam updates itself, as usual.", now: "Update Steam now", again: "Update anyway", started: "Updating Steam: Core saves a copy first and is back in a few minutes.", busy: "An update is already running.", confirmCantTell: "Core can't tell whether the new Steam works with Decky. Press again to update anyway: Core saves a copy first and rolls back if something goes wrong.", confirmIncompatible: "The new Steam doesn't work with the installed Decky: plugins will stop loading. Press again if you want to update anyway.", confirmAgain: "Last confirmation: press once more to update Steam knowing that plugins won't work." },
     it: { title: "Aggiornamenti di Steam", current: "Steam è aggiornato.", soaking: "C'è una nuova versione di Steam: Core la installa tra {n} giorni, di notte, se funziona con Decky.", due: "Core aggiorna Steam la prossima notte degli aggiornamenti, quando non giochi.", waiting: "L'ultimo aggiornamento di Steam non ha superato il controllo ed è stato annullato. Core riprova quando arriva una correzione.", off: "Steam si aggiorna da solo, come al solito.", now: "Aggiorna Steam ora", again: "Aggiorna comunque", started: "Aggiornamento di Steam in corso: Core salva prima una copia e torna tra qualche minuto.", busy: "Un aggiornamento è già in corso.", confirmCantTell: "Core non sa se il nuovo Steam funziona con Decky. Premi di nuovo per aggiornare comunque: Core salva prima una copia e torna indietro se qualcosa non va.", confirmIncompatible: "Il nuovo Steam non funziona con il Decky installato: i plugin smetteranno di caricarsi. Premi di nuovo se vuoi aggiornare lo stesso.", confirmAgain: "Ultima conferma: premi ancora una volta per aggiornare Steam sapendo che i plugin non funzioneranno." },
     es: { title: "Actualizaciones de Steam", current: "Steam está actualizado.", soaking: "Hay una nueva versión de Steam: Core la instalará dentro de {n} días, de noche, si funciona con Decky.", due: "Core actualizará Steam la próxima noche de actualizaciones, cuando no estés jugando.", waiting: "La última actualización de Steam no pasó la comprobación y se deshizo. Core lo volverá a intentar cuando llegue una corrección.", off: "Steam se actualiza solo, como siempre.", now: "Actualizar Steam ahora", again: "Actualizar igualmente", started: "Actualizando Steam: Core guarda antes una copia y vuelve en unos minutos.", busy: "Ya hay una actualización en curso.", confirmCantTell: "Core no sabe si el nuevo Steam funciona con Decky. Pulsa de nuevo para actualizar igualmente: Core guarda antes una copia y vuelve atrás si algo falla.", confirmIncompatible: "El nuevo Steam no funciona con el Decky instalado: los plugins dejarán de cargarse. Pulsa de nuevo si quieres actualizar igualmente.", confirmAgain: "Última confirmación: pulsa una vez más para actualizar Steam sabiendo que los plugins no funcionarán." },
@@ -64795,7 +65133,7 @@ const copy$6 = {
 };
 function steamUpdateCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return copy$6[language === "ua" ? "uk" : language] ?? copy$6.en;
+    return copy$7[language === "ua" ? "uk" : language] ?? copy$7.en;
 }
 // The status line for the agent's /steam/update/state answer.
 function steamUpdateLine(state, locale) {
@@ -64858,7 +65196,7 @@ function SteamUpdateCard({ locale }) {
         }
     };
     const running = state.busy === true && (state.action === "update-steam" || state.action === "verify-steam");
-    return (SP_JSX.jsxs(PanelSection$8, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${state.holdPhase === "Postponed" || state.holdPhase === "WaitingForChange" ? CORE.warning : CORE.gunmetalRaised}` }, children: message ?? steamUpdateLine(state, locale) }) }), SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsx(ButtonItem$4, { layout: "below", disabled: busy || running, onClick: press, children: confirmations > 0 ? text.again : text.now }) })] }));
+    return (SP_JSX.jsxs(PanelSection$9, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$9, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${state.holdPhase === "Postponed" || state.holdPhase === "WaitingForChange" ? CORE.warning : CORE.gunmetalRaised}` }, children: message ?? steamUpdateLine(state, locale) }) }), SP_JSX.jsx(PanelSectionRow$9, { children: SP_JSX.jsx(ButtonItem$5, { layout: "below", disabled: busy || running, onClick: press, children: confirmations > 0 ? text.again : text.now }) })] }));
 }
 
 // Eternal Core: the Health section of Quick Access > Core. One line for the whole setup, then a
@@ -64873,26 +65211,26 @@ function SteamUpdateCard({ locale }) {
 // ("Restore display settings", "Switch sound back"...); an open row also offers its other actions
 // ("Save current display as normal"...). The agent runs them (POST /health/action) and answers with
 // the new rows.
-const { PanelSection: PanelSection$7, PanelSectionRow: PanelSectionRow$7, ButtonItem: ButtonItem$3, Focusable: Focusable$6 } = CompatUI;
-const { crimson: CRIMSON$5, crimsonText: CRIMSON_TEXT$4, steel: STEEL$5, gunmetal: GUNMETAL$5, white: WHITE$5 } = CORE;
-const style$6 = `
+const { PanelSection: PanelSection$8, PanelSectionRow: PanelSectionRow$8, ButtonItem: ButtonItem$4, Focusable: Focusable$7 } = CompatUI;
+const { crimson: CRIMSON$6, crimsonText: CRIMSON_TEXT$4, steel: STEEL$6, gunmetal: GUNMETAL$6, white: WHITE$6 } = CORE;
+const style$7 = `
 .core-health{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
-.core-health-summary{padding:8px 12px;font-size:14px;font-weight:650;color:${WHITE$5}}
+.core-health-summary{padding:8px 12px;font-size:14px;font-weight:650;color:${WHITE$6}}
 .core-health-summary.problem{color:${CRIMSON_TEXT$4}}
-.core-health-row{background:${GUNMETAL$5};border-radius:6px;padding:9px 12px;outline:none;box-shadow:none;text-shadow:none}
-.core-health-row.gpfocus,.core-health-row:focus-visible{outline:2px solid ${CRIMSON$5};outline-offset:-2px}
+.core-health-row{background:${GUNMETAL$6};border-radius:6px;padding:9px 12px;outline:none;box-shadow:none;text-shadow:none}
+.core-health-row.gpfocus,.core-health-row:focus-visible{outline:2px solid ${CRIMSON$6};outline-offset:-2px}
 .core-health-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.core-health-title{font-size:13px;color:${WHITE$5};font-weight:600;white-space:nowrap}
-.core-health-value{font-size:12px;color:${STEEL$5};text-align:right;overflow:hidden;text-overflow:ellipsis}
+.core-health-title{font-size:13px;color:${WHITE$6};font-weight:600;white-space:nowrap}
+.core-health-value{font-size:12px;color:${STEEL$6};text-align:right;overflow:hidden;text-overflow:ellipsis}
 .core-health-row.ok .core-health-value{color:${CORE_STATUS.neutral}}
 .core-health-row.info .core-health-value{color:${CORE_STATUS.warning}}
 .core-health-row.attention .core-health-value,.core-health-row.crimson .core-health-value{color:${CORE_STATUS.error};font-weight:600}
-.core-health-detail{margin-top:6px;font-size:11px;line-height:1.45;color:${STEEL$5};word-break:break-word}
-.core-health-result{padding:0 12px 6px;font-size:12px;color:${STEEL$5}}
+.core-health-detail{margin-top:6px;font-size:11px;line-height:1.45;color:${STEEL$6};word-break:break-word}
+.core-health-result{padding:0 12px 6px;font-size:12px;color:${STEEL$6}}
 .core-health-result.problem{color:${CORE_STATUS.error}}
 `;
 function Row({ line, open, onToggle }) {
-    return (SP_JSX.jsxs(Focusable$6, { className: `core-health-row ${line.level}${line.tone ? " " + line.tone : ""}`, onActivate: onToggle, "aria-expanded": open, noFocusRing: true, children: [SP_JSX.jsxs("div", { className: "core-health-head", children: [SP_JSX.jsx("span", { className: "core-health-title", children: line.title }), SP_JSX.jsx("span", { className: "core-health-value", children: line.value })] }), open && line.details.length > 0 && SP_JSX.jsx("div", { className: "core-health-detail", children: line.details.map((detail, index) => SP_JSX.jsx("div", { children: detail }, index)) })] }));
+    return (SP_JSX.jsxs(Focusable$7, { className: `core-health-row ${line.level}${line.tone ? " " + line.tone : ""}`, onActivate: onToggle, "aria-expanded": open, noFocusRing: true, children: [SP_JSX.jsxs("div", { className: "core-health-head", children: [SP_JSX.jsx("span", { className: "core-health-title", children: line.title }), SP_JSX.jsx("span", { className: "core-health-value", children: line.value })] }), open && line.details.length > 0 && SP_JSX.jsx("div", { className: "core-health-detail", children: line.details.map((detail, index) => SP_JSX.jsx("div", { children: detail }, index)) })] }));
 }
 function HealthSection({ locale }) {
     const [answer, setAnswer] = _global_SP_REACT.useState(undefined);
@@ -64948,14 +65286,14 @@ function HealthSection({ locale }) {
         .filter(action => action.fix ? line.level === "attention" || line.level === "info" : !!open[line.id])
         .map(action => ({ line, action })));
     const summary = answer ? healthSummary(answer, locale) : undefined;
-    return (SP_JSX.jsxs(PanelSection$7, { title: text.title, children: [SP_JSX.jsx("style", { children: style$6 }), SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsxs(Focusable$6, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id))), result && SP_JSX.jsx("div", { className: `core-health-result${result.problem ? " problem" : ""}`, role: "status", children: result.text })] }) }), buttons.map(({ line, action }) => (SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy, onClick: () => act(action), children: action.label }) }, `action-${line.id}-${action.id}`))), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
+    return (SP_JSX.jsxs(PanelSection$8, { title: text.title, children: [SP_JSX.jsx("style", { children: style$7 }), SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsxs(Focusable$7, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id))), result && SP_JSX.jsx("div", { className: `core-health-result${result.problem ? " problem" : ""}`, role: "status", children: result.text })] }) }), buttons.map(({ line, action }) => (SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsx(ButtonItem$4, { layout: "below", disabled: busy, onClick: () => act(action), children: action.label }) }, `action-${line.id}-${action.id}`))), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsx(ButtonItem$4, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
 }
 
 // Eternal Core: the Voice section of Quick Access > Core. Turns the agent's GET /voice/state and
 // POST /voice/party answers (GamingMode.Services/MarkIIIHost.Voice.cs) into what VoiceSection.tsx
 // shows, in Core's 12 languages. Self-contained on purpose: tests/coreVoiceSection.test.mjs loads
 // this file alone.
-const en$5 = {
+const en$6 = {
     title: "Voice", agentDown: "Core's service is not answering.",
     mute: "Mute microphone", unmute: "Unmute microphone", live: "Microphone live", muted: "Microphone muted", none: "No microphone", unknown: "Microphone: unknown", partial: "Microphone partly muted", partialDetail: "One default microphone is muted, the other is live. Check which one your call uses.",
     mutedElsewhere: "Muted outside Core", hotkey: "Shortcut {keys}: bind it to a controller chord in Steam",
@@ -64965,8 +65303,8 @@ const en$5 = {
     callsMic: "Calls mic", callsMicHint: "Windows' default microphone for calls: Xbox party, Discord.", windowsChoice: "Windows' choice", unnamed: "Microphone", tagCalls: "calls", tagApps: "games and apps", notConnected: "not connected", cmActive: "Connected and used for calls.", cmAbsent: "Not connected. Calls use Windows' default microphone.", cmChanged: "Windows uses another microphone for calls. Pick it again to use it.", cmFailed: "Windows did not let Core set the default. Pick it again, or set it in Windows' sound settings.", cmNotFound: "That microphone is no longer connected.",
     everything: "Use for everything", everythingHint: "Also the default for games and apps.", scope: "Mute", scopeAll: "Mute everything", scopeCalls: "Mute calls only", scopeAllHint: "Mutes the calls mic and the games and apps mic.", scopeCallsHint: "Mutes only the calls mic; the games and apps mic stays live. Windows mutes a microphone for every app at once, so an app that records from the calls mic itself (like OBS) is muted too.",
 };
-const copy$5 = {
-    en: en$5,
+const copy$6 = {
+    en: en$6,
     it: {
         title: "Voce", agentDown: "Il servizio di Core non risponde.",
         mute: "Silenzia il microfono", unmute: "Riattiva il microfono", live: "Microfono attivo", muted: "Microfono silenziato", none: "Nessun microfono", unknown: "Microfono: sconosciuto", partial: "Microfono silenziato in parte", partialDetail: "Un microfono predefinito è silenziato, l'altro è attivo. Controlla quale usa la chiamata.",
@@ -65080,8 +65418,8 @@ const copy$5 = {
 };
 function voiceCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$5[language === "ua" ? "uk" : language] ?? en$5;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$5[key] ?? key });
+    const table = copy$6[language === "ua" ? "uk" : language] ?? en$6;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$6[key] ?? key });
 }
 function fill$3(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? values[name] : all));
@@ -65161,23 +65499,23 @@ function discordInstalled(inventory) {
 // another plugin's panel. The agent does the work (GamingMode.Services/MarkIIIHost.Voice.cs).
 // Below the button: the calls mic picker (makes a device Windows' default for calls, and for
 // everything with the toggle) and the mute scope (everything, the default, or calls only).
-const { PanelSection: PanelSection$6, PanelSectionRow: PanelSectionRow$6, Focusable: Focusable$5, DialogButton: DialogButton$2, DropdownItem: DropdownItem$1, ToggleField: ToggleField$4 } = CompatUI;
-const { crimson: CRIMSON$4, crimsonText: CRIMSON_TEXT$3, steel: STEEL$4, gunmetal: GUNMETAL$4, white: WHITE$4 } = CORE;
-const style$5 = `
+const { PanelSection: PanelSection$7, PanelSectionRow: PanelSectionRow$7, Focusable: Focusable$6, DialogButton: DialogButton$2, DropdownItem: DropdownItem$1, ToggleField: ToggleField$5 } = CompatUI;
+const { crimson: CRIMSON$5, crimsonText: CRIMSON_TEXT$3, steel: STEEL$5, gunmetal: GUNMETAL$5, white: WHITE$5 } = CORE;
+const style$6 = `
 .core-voice{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
-.core-voice .core-voice-button{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box;background:${GUNMETAL$4}!important;color:${WHITE$4}!important;border-radius:6px!important;padding:12px 14px!important;display:flex;align-items:center;gap:12px;text-align:left;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important}
-.core-voice .core-voice-button.gpfocus,.core-voice .core-voice-button:focus-visible{outline:2px solid ${CRIMSON$4};outline-offset:-2px}
-.core-voice .core-voice-button.muted.gpfocus,.core-voice .core-voice-button.muted:focus-visible{outline-color:${WHITE$4}}
-.core-voice .core-voice-button.muted{background:${CRIMSON$4}!important}
+.core-voice .core-voice-button{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box;background:${GUNMETAL$5}!important;color:${WHITE$5}!important;border-radius:6px!important;padding:12px 14px!important;display:flex;align-items:center;gap:12px;text-align:left;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important}
+.core-voice .core-voice-button.gpfocus,.core-voice .core-voice-button:focus-visible{outline:2px solid ${CRIMSON$5};outline-offset:-2px}
+.core-voice .core-voice-button.muted.gpfocus,.core-voice .core-voice-button.muted:focus-visible{outline-color:${WHITE$5}}
+.core-voice .core-voice-button.muted{background:${CRIMSON$5}!important}
 .core-voice-icon{width:28px;height:28px;flex:0 0 auto}
 .core-voice-text{display:flex;flex-direction:column;gap:2px;min-width:0}
 .core-voice-label{font-size:15px;font-weight:650;line-height:1.2}
-.core-voice-state{font-size:12px;color:${STEEL$4};line-height:1.3}
-.core-voice .muted .core-voice-state{color:${WHITE$4}}
-.core-voice-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL$4}}
-.core-voice-row{background:${GUNMETAL$4};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.core-voice-row-title{font-size:13px;color:${WHITE$4};font-weight:600}
-.core-voice-row-value{font-size:12px;color:${STEEL$4};text-align:right}
+.core-voice-state{font-size:12px;color:${STEEL$5};line-height:1.3}
+.core-voice .muted .core-voice-state{color:${WHITE$5}}
+.core-voice-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL$5}}
+.core-voice-row{background:${GUNMETAL$5};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.core-voice-row-title{font-size:13px;color:${WHITE$5};font-weight:600}
+.core-voice-row-value{font-size:12px;color:${STEEL$5};text-align:right}
 .core-voice-note{padding:0 12px;font-size:12px;color:${CRIMSON_TEXT$3}}
 .core-voice-settings{display:flex;flex-direction:column;gap:6px;padding:0 4px}
 `;
@@ -65285,8 +65623,8 @@ function VoiceSection({ locale }) {
     const mic = micView(answer, locale);
     const calls = callsMicView(answer, locale);
     const scope = scopeView(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$6, { title: text.title, children: [SP_JSX.jsx("style", { children: style$5 }), SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsxs(Focusable$5, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$2, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs("div", { className: "core-voice-settings", children: [SP_JSX.jsx(DropdownItem$1, { label: text.callsMic, description: text.callsMicHint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: calls.options, selectedOption: calls.selected, onChange: (option) => { if (option.data !== calls.selected)
-                                        void pickCallsMic(option.data, calls.everything); } }), calls.line && SP_JSX.jsx("div", { className: "core-voice-hint", role: "status", children: calls.line }), callsNote && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: callsNote }), SP_JSX.jsx(ToggleField$4, { label: text.everything, description: text.everythingHint, bottomSeparator: "none", checked: calls.everything, disabled: busy || !answer || !calls.canToggleEverything, onChange: (enabled) => void pickCallsMic(calls.selected, enabled) }), SP_JSX.jsx(DropdownItem$1, { label: text.scope, description: scope.hint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: scope.options, selectedOption: scope.selected, onChange: (option) => { if (option.data !== scope.selected)
+    return (SP_JSX.jsxs(PanelSection$7, { title: text.title, children: [SP_JSX.jsx("style", { children: style$6 }), SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsxs(Focusable$6, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$2, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs("div", { className: "core-voice-settings", children: [SP_JSX.jsx(DropdownItem$1, { label: text.callsMic, description: text.callsMicHint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: calls.options, selectedOption: calls.selected, onChange: (option) => { if (option.data !== calls.selected)
+                                        void pickCallsMic(option.data, calls.everything); } }), calls.line && SP_JSX.jsx("div", { className: "core-voice-hint", role: "status", children: calls.line }), callsNote && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: callsNote }), SP_JSX.jsx(ToggleField$5, { label: text.everything, description: text.everythingHint, bottomSeparator: "none", checked: calls.everything, disabled: busy || !answer || !calls.canToggleEverything, onChange: (enabled) => void pickCallsMic(calls.selected, enabled) }), SP_JSX.jsx(DropdownItem$1, { label: text.scope, description: scope.hint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: scope.options, selectedOption: scope.selected, onChange: (option) => { if (option.data !== scope.selected)
                                         void pickScope(option.data); } })] }), SP_JSX.jsxs(DialogButton$2, { className: "core-voice-button", disabled: !answer, onClick: openParty, children: [SP_JSX.jsx(PartyIcon, {}), SP_JSX.jsx("span", { className: "core-voice-text", children: SP_JSX.jsx("span", { className: "core-voice-label", children: text.party }) })] }), SP_JSX.jsx("div", { className: "core-voice-hint", children: text.partyHint }), note && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: note }), SP_JSX.jsxs("div", { className: "core-voice-row", children: [SP_JSX.jsx("span", { className: "core-voice-row-title", children: text.discord }), SP_JSX.jsx("span", { className: "core-voice-row-value", children: discord ? text.discordInstalled : text.discordMissing })] })] }) })] }));
 }
 
@@ -65295,11 +65633,11 @@ function VoiceSection({ locale }) {
 // languages. Self-contained on purpose: tests/coreStreamMode.test.mjs loads this file alone.
 // Product names: the same in every language.
 const STREAM_SOURCES = { steam: "Steam Remote Play", steamvr: "SteamVR", sunshine: "Sunshine", apollo: "Apollo" };
-const en$4 = {
+const en$5 = {
     title: "Stream mode", agentDown: "Core's service is not answering.", off: "Off", onDevice: "On · {device}", onSource: "On · {source}", forcedOn: "On · kept on by you", keep: "Keep TV out of it", keepHint: "Stream mode stays on even when Core sees no stream.", heldDetail: "Core does not wake the TV, switch its input or send it anything, and holds its notices.", offDetail: "Turns on by itself when this PC streams to another device.", audioVirtual: "Sound: on the stream ({device})", audioAlready: "Sound: already on the stream", audioMuted: "Sound: TV speaker muted", audioNone: "Sound: no TV speaker to mute", audioOff: "Sound: left as it is (turned off in settings)", apolloMissing: "Apollo: not installed (optional, see Core's guide)", apolloIdle: "Apollo: installed, not streaming", apolloDisplay: "Apollo: virtual display active", apolloNoDisplay: "Apollo: streaming without a virtual display",
 };
-const copy$4 = {
-    en: en$4,
+const copy$5 = {
+    en: en$5,
     it: {
         title: "Modalità streaming", agentDown: "Il servizio di Core non risponde.", off: "Spenta", onDevice: "Attiva · {device}", onSource: "Attiva · {source}", forcedOn: "Attiva · tenuta accesa da te", keep: "Lascia stare la TV", keepHint: "La modalità streaming resta attiva anche quando Core non vede uno streaming.", heldDetail: "Core non accende la TV, non cambia ingresso, non le invia nulla e trattiene i suoi avvisi.", offDetail: "Si attiva da sola quando questo PC trasmette a un altro dispositivo.", audioVirtual: "Audio: sullo streaming ({device})", audioAlready: "Audio: già sullo streaming", audioMuted: "Audio: altoparlante della TV silenziato", audioNone: "Audio: nessun altoparlante della TV da silenziare", audioOff: "Audio: lasciato com'è (disattivato nelle impostazioni)", apolloMissing: "Apollo: non installato (facoltativo, vedi la guida di Core)", apolloIdle: "Apollo: installato, nessuno streaming", apolloDisplay: "Apollo: schermo virtuale attivo", apolloNoDisplay: "Apollo: streaming senza schermo virtuale",
     },
@@ -65336,8 +65674,8 @@ const copy$4 = {
 };
 function streamCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$4[language === "ua" ? "uk" : language] ?? en$4;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$4[key] ?? key });
+    const table = copy$5[language === "ua" ? "uk" : language] ?? en$5;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$5[key] ?? key });
 }
 function fill$2(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? values[name] : all));
@@ -65353,10 +65691,12 @@ function streamView(answer, locale) {
     if (!answer || typeof answer.active !== "boolean")
         return { state: "unknown", line: answer === null ? text.agentDown : "…", detail: "", forced: false, audio: "", apollo: "" };
     const forced = answer.forced === true;
-    const apollo = apolloLine(answer, text);
+    // 3.3.5: Vibepollo installs into Apollo's folder and is named as itself.
+    const vibepollo = answer.apollo?.flavour === "vibepollo";
+    const apollo = vibepollo ? apolloLine(answer, text).replace(/Apollo/g, "Vibepollo") : apolloLine(answer, text);
     if (!answer.active)
         return { state: "off", line: text.off, detail: text.offDetail, forced, audio: "", apollo };
-    const device = clean$1(answer.device), source = streamSourceLabel(answer.source);
+    const device = clean$1(answer.device), source = vibepollo && answer.source === "apollo" ? "Vibepollo" : streamSourceLabel(answer.source);
     const line = answer.detected ? (device ? fill$2(text.onDevice, { device }) : source ? fill$2(text.onSource, { source }) : text.forcedOn) : text.forcedOn;
     return { state: "on", line, detail: text.heldDetail, forced, audio: audioLine(answer, text), apollo };
 }
@@ -65386,17 +65726,17 @@ function apolloLine(answer, text) {
 // (and to which device the PC streams, when known), a toggle forces it on ("Keep TV out of it"), and
 // short lines say what happens to the PC's sound and whether Apollo's virtual display is active. While
 // Stream mode is on, Core sends nothing to the TV (GamingMode.Services/MarkIIIHost.Stream.cs).
-const { PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$5, Focusable: Focusable$4, ToggleField: ToggleField$3 } = CompatUI;
-const { crimson: CRIMSON$3, crimsonText: CRIMSON_TEXT$2, steel: STEEL$3, gunmetal: GUNMETAL$3, white: WHITE$3 } = CORE;
-const style$4 = `
+const { PanelSection: PanelSection$6, PanelSectionRow: PanelSectionRow$6, Focusable: Focusable$5, ToggleField: ToggleField$4 } = CompatUI;
+const { crimson: CRIMSON$4, crimsonText: CRIMSON_TEXT$2, steel: STEEL$4, gunmetal: GUNMETAL$4, white: WHITE$4 } = CORE;
+const style$5 = `
 .core-stream{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
-.core-stream-row{background:${GUNMETAL$3};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none;box-shadow:none;text-shadow:none}
-.core-stream-row.gpfocus,.core-stream-row:focus-visible{outline:2px solid ${CRIMSON$3};outline-offset:-2px}
-.core-stream-row.on{border-left:3px solid ${CRIMSON$3}}
-.core-stream-title{font-size:13px;color:${WHITE$3};font-weight:600;white-space:nowrap}
-.core-stream-value{font-size:12px;color:${STEEL$3};text-align:right;overflow:hidden;text-overflow:ellipsis}
+.core-stream-row{background:${GUNMETAL$4};border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none;box-shadow:none;text-shadow:none}
+.core-stream-row.gpfocus,.core-stream-row:focus-visible{outline:2px solid ${CRIMSON$4};outline-offset:-2px}
+.core-stream-row.on{border-left:3px solid ${CRIMSON$4}}
+.core-stream-title{font-size:13px;color:${WHITE$4};font-weight:600;white-space:nowrap}
+.core-stream-value{font-size:12px;color:${STEEL$4};text-align:right;overflow:hidden;text-overflow:ellipsis}
 .core-stream-row.on .core-stream-value{color:${CRIMSON_TEXT$2};font-weight:600}
-.core-stream-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL$3}}
+.core-stream-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL$4}}
 .core-stream-settings{display:flex;flex-direction:column;gap:6px;padding:0 4px}
 `;
 function StreamSection({ locale }) {
@@ -65429,7 +65769,7 @@ function StreamSection({ locale }) {
         }
     };
     const view = streamView(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$5, { title: text.title, children: [SP_JSX.jsx("style", { children: style$4 }), SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsxs(Focusable$4, { className: "core-stream", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$4, { className: `core-stream-row${view.state === "on" ? " on" : ""}`, noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-stream-title", children: text.title }), SP_JSX.jsx("span", { className: "core-stream-value", role: "status", children: view.line })] }), view.detail && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.detail }), view.audio && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.audio }), SP_JSX.jsx("div", { className: "core-stream-settings", children: SP_JSX.jsx(ToggleField$3, { label: text.keep, description: text.keepHint, bottomSeparator: "none", checked: view.forced, disabled: busy || !answer, onChange: (enabled) => void keepTvOut(enabled) }) }), view.apollo && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.apollo })] }) })] }));
+    return (SP_JSX.jsxs(PanelSection$6, { title: text.title, children: [SP_JSX.jsx("style", { children: style$5 }), SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsxs(Focusable$5, { className: "core-stream", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$5, { className: `core-stream-row${view.state === "on" ? " on" : ""}`, noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-stream-title", children: text.title }), SP_JSX.jsx("span", { className: "core-stream-value", role: "status", children: view.line })] }), view.detail && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.detail }), view.audio && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.audio }), SP_JSX.jsx("div", { className: "core-stream-settings", children: SP_JSX.jsx(ToggleField$4, { label: text.keep, description: text.keepHint, bottomSeparator: "none", checked: view.forced, disabled: busy || !answer, onChange: (enabled) => void keepTvOut(enabled) }) }), view.apollo && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.apollo })] }) })] }));
 }
 
 // Eternal Core: Stream mode, Steam's half. The Gaming Mode agent cannot see Steam Remote Play (Steam
@@ -65501,6 +65841,186 @@ function installSteamStreamWatch(deps) {
         }
         catch { /* Steam may already be gone. */ }
     };
+}
+
+// Eternal Core 3.3.5: games are exited through Steam. This frontend runs inside Steam, so it tells the Gaming
+// Mode agent what only Steam knows: a game started or stopped (SteamClient.GameSessions.
+// RegisterForAppLifetimeNotifications) and the user chose Exit Game (SteamClient.Apps.TerminateApp, which Steam's
+// own Exit Game in the Steam menu and Quick Access calls). The agent then closes what the launch left running
+// (an emulator a wrapper started, a launcher's helper) and, when Steam lost track of a game still on screen, offers
+// Core's own Exit (docs/eternal/CONSOLE-GUARDS.md, "Exiting games"). Steam's call is never changed or delayed: the
+// original runs first and the report is fire-and-forget. Without Decky the agent falls back on Steam's process tree.
+// Shapes from @decky/ui's community typings (GameSessions.ts, App.ts); not documented by Valve.
+// Self-contained on purpose: tests/coreEmulators.test.mjs loads this file alone.
+function installGameExitWatch(deps) {
+    const steam = deps.steam();
+    const undo = [];
+    try {
+        const register = steam?.GameSessions?.RegisterForAppLifetimeNotifications;
+        if (typeof register === "function") {
+            const handle = register.call(steam.GameSessions, (event) => {
+                const appId = Number(event?.unAppID);
+                if (!Number.isInteger(appId) || appId < 0 || appId > 0xffffffff)
+                    return;
+                try {
+                    void Promise.resolve(deps.lifetime(appId, event?.bRunning === true, safeTitle(deps, appId))).catch(() => { });
+                }
+                catch { }
+            });
+            undo.push(() => { try {
+                handle?.unregister?.();
+            }
+            catch { } });
+        }
+    }
+    catch { }
+    try {
+        const apps = steam?.Apps;
+        const original = apps?.TerminateApp;
+        if (typeof original === "function") {
+            const patched = function (...args) {
+                const result = original.apply(this ?? apps, args);
+                try {
+                    void Promise.resolve(deps.exitChosen()).catch(() => { });
+                }
+                catch { }
+                return result;
+            };
+            patched.__coreGameExit = true;
+            if (!original.__coreGameExit) {
+                apps.TerminateApp = patched;
+                undo.push(() => { if (apps.TerminateApp === patched)
+                    apps.TerminateApp = original; });
+            }
+        }
+    }
+    catch { }
+    return () => { while (undo.length)
+        undo.pop()(); };
+}
+function safeTitle(deps, appId) {
+    try {
+        return String(deps.title(appId) ?? "").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 64);
+    }
+    catch {
+        return "";
+    }
+}
+
+// Eternal Core 3.3.5: the one controller reference, shown in Quick Access > Core > Controls (and in
+// docs/eternal/CONSOLE-GUARDS.md). The emulator table must equal EmulatorCatalog.HotkeyTable in the agent
+// (GamingMode.Services/EmulatorHealth.cs); tests/coreEmulators.test.mjs compares them. Select is the hold modifier;
+// nothing quits an emulator (games are exited through Steam's Exit Game); the back paddles are never in an
+// emulator combo: L4 is A, R4 is B, L5 + R5 is Jarvis. Self-contained on purpose (the test loads this file alone).
+const EMULATOR_HOTKEYS = [
+    ["save", "Select + R1"],
+    ["load", "Select + L1"],
+    ["slot-next", "Select + D-pad right"],
+    ["slot-prev", "Select + D-pad left"],
+    ["fast-forward", "Select + R2 (hold)"],
+    ["rewind", "Select + L2 (hold)"],
+    ["pause", "Select + A"],
+    ["menu", "Select + Y"],
+    ["fps", "Select + X"],
+];
+const en$4 = {
+    title: "Controls", emulators: "Emulator hotkeys (the same in every emulator)", other: "Everywhere",
+    save: "Save state", load: "Load state", "slot-next": "Next save slot", "slot-prev": "Previous save slot", "fast-forward": "Fast-forward", rewind: "Rewind", pause: "Pause", menu: "Emulator menu", fps: "FPS display",
+    right: "D-pad right", left: "D-pad left", hold: "hold",
+    exit: "Exit a game", exitHow: "Steam's Exit Game (Steam button or Quick Access); no combo quits an emulator",
+    paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B",
+    jarvisTalk: "Talk to Jarvis", jarvisTalkHow: "Tap L5 + R5", jarvisOpen: "Open Jarvis", jarvisOpenHow: "Hold L5 + R5",
+    launchers: "Close store launchers after a game", launchersHelp: "A launcher a game started is closed politely when that game ends, unless it was open before, another of its games runs, or it is downloading.",
+    exitNow: "Exit {title}", exitUntracked: "Steam lost track of {title}; Core can close it.",
+};
+const copy$4 = {
+    en: en$4,
+    it: { title: "Comandi", emulators: "Scorciatoie degli emulatori (uguali in ogni emulatore)", other: "Ovunque", save: "Salva stato", load: "Carica stato", "slot-next": "Slot successivo", "slot-prev": "Slot precedente", "fast-forward": "Avanti veloce", rewind: "Riavvolgi", pause: "Pausa", menu: "Menu dell'emulatore", fps: "Indicatore FPS", right: "croce destra", left: "croce sinistra", hold: "tieni premuto", exit: "Uscire da un gioco", exitHow: "Esci dal gioco di Steam (tasto Steam o Accesso rapido); nessuna combinazione chiude un emulatore", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Parlare con Jarvis", jarvisTalkHow: "Tocca L5 + R5", jarvisOpen: "Aprire Jarvis", jarvisOpenHow: "Tieni premuti L5 + R5", launchers: "Chiudi i launcher dei negozi dopo un gioco", launchersHelp: "Un launcher aperto da un gioco viene chiuso con garbo quando il gioco finisce, a meno che fosse già aperto, un altro suo gioco sia in corso o stia scaricando.", exitNow: "Esci da {title}", exitUntracked: "Steam ha perso traccia di {title}; Core può chiuderlo." },
+    es: { title: "Controles", emulators: "Atajos de los emuladores (iguales en todos)", other: "En todas partes", save: "Guardar estado", load: "Cargar estado", "slot-next": "Ranura siguiente", "slot-prev": "Ranura anterior", "fast-forward": "Avance rápido", rewind: "Rebobinar", pause: "Pausa", menu: "Menú del emulador", fps: "Indicador de FPS", right: "cruceta derecha", left: "cruceta izquierda", hold: "mantener", exit: "Salir de un juego", exitHow: "Salir del juego de Steam (botón Steam o Acceso rápido); ninguna combinación cierra un emulador", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Hablar con Jarvis", jarvisTalkHow: "Toca L5 + R5", jarvisOpen: "Abrir Jarvis", jarvisOpenHow: "Mantén L5 + R5", launchers: "Cerrar lanzadores de tiendas tras un juego", launchersHelp: "Un lanzador que abrió un juego se cierra con cuidado al terminar ese juego, salvo que ya estuviera abierto, otro de sus juegos siga o esté descargando.", exitNow: "Salir de {title}", exitUntracked: "Steam perdió el rastro de {title}; Core puede cerrarlo." },
+    fr: { title: "Commandes", emulators: "Raccourcis des émulateurs (identiques partout)", other: "Partout", save: "Sauvegarder l'état", load: "Charger l'état", "slot-next": "Emplacement suivant", "slot-prev": "Emplacement précédent", "fast-forward": "Avance rapide", rewind: "Retour arrière", pause: "Pause", menu: "Menu de l'émulateur", fps: "Affichage des FPS", right: "croix droite", left: "croix gauche", hold: "maintenir", exit: "Quitter un jeu", exitHow: "Quitter le jeu de Steam (bouton Steam ou Accès rapide) ; aucune combinaison ne ferme un émulateur", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Parler à Jarvis", jarvisTalkHow: "Touchez L5 + R5", jarvisOpen: "Ouvrir Jarvis", jarvisOpenHow: "Maintenez L5 + R5", launchers: "Fermer les lanceurs des boutiques après un jeu", launchersHelp: "Un lanceur ouvert par un jeu est fermé poliment à la fin de ce jeu, sauf s'il était déjà ouvert, si un autre de ses jeux tourne ou s'il télécharge.", exitNow: "Quitter {title}", exitUntracked: "Steam a perdu la trace de {title} ; Core peut le fermer." },
+    de: { title: "Steuerung", emulators: "Emulator-Tastenkürzel (überall gleich)", other: "Überall", save: "Zustand speichern", load: "Zustand laden", "slot-next": "Nächster Speicherplatz", "slot-prev": "Vorheriger Speicherplatz", "fast-forward": "Vorspulen", rewind: "Zurückspulen", pause: "Pause", menu: "Emulatormenü", fps: "FPS-Anzeige", right: "Steuerkreuz rechts", left: "Steuerkreuz links", hold: "halten", exit: "Ein Spiel beenden", exitHow: "„Spiel beenden“ in Steam (Steam-Taste oder Schnellzugriff); keine Kombination beendet einen Emulator", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Mit Jarvis sprechen", jarvisTalkHow: "L5 + R5 kurz tippen", jarvisOpen: "Jarvis öffnen", jarvisOpenHow: "L5 + R5 halten", launchers: "Store-Launcher nach einem Spiel schließen", launchersHelp: "Ein Launcher, den ein Spiel gestartet hat, wird nach dem Spiel höflich geschlossen, außer er lief schon vorher, ein anderes seiner Spiele läuft oder er lädt herunter.", exitNow: "{title} beenden", exitUntracked: "Steam hat {title} aus den Augen verloren; Core kann es schließen." },
+    pt: { title: "Controles", emulators: "Atalhos dos emuladores (iguais em todos)", other: "Em todo lugar", save: "Salvar estado", load: "Carregar estado", "slot-next": "Próximo slot", "slot-prev": "Slot anterior", "fast-forward": "Avanço rápido", rewind: "Rebobinar", pause: "Pausa", menu: "Menu do emulador", fps: "Indicador de FPS", right: "direcional direita", left: "direcional esquerda", hold: "segurar", exit: "Sair de um jogo", exitHow: "Sair do jogo do Steam (botão Steam ou Acesso rápido); nenhuma combinação fecha um emulador", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Falar com o Jarvis", jarvisTalkHow: "Toque L5 + R5", jarvisOpen: "Abrir o Jarvis", jarvisOpenHow: "Segure L5 + R5", launchers: "Fechar launchers das lojas depois de um jogo", launchersHelp: "Um launcher que um jogo abriu é fechado com cuidado quando o jogo termina, a menos que já estivesse aberto, outro jogo dele esteja rodando ou ele esteja baixando.", exitNow: "Sair de {title}", exitUntracked: "O Steam perdeu o rastro de {title}; o Core pode fechá-lo." },
+    uk: { title: "Керування", emulators: "Гарячі клавіші емуляторів (однакові скрізь)", other: "Скрізь", save: "Зберегти стан", load: "Завантажити стан", "slot-next": "Наступний слот", "slot-prev": "Попередній слот", "fast-forward": "Прискорення", rewind: "Перемотування", pause: "Пауза", menu: "Меню емулятора", fps: "Показ FPS", right: "хрестовина праворуч", left: "хрестовина ліворуч", hold: "утримувати", exit: "Вийти з гри", exitHow: "«Вийти з гри» у Steam (кнопка Steam або Швидкий доступ); жодна комбінація не закриває емулятор", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Говорити з Jarvis", jarvisTalkHow: "Торкніться L5 + R5", jarvisOpen: "Відкрити Jarvis", jarvisOpenHow: "Утримуйте L5 + R5", launchers: "Закривати лаунчери магазинів після гри", launchersHelp: "Лаунчер, який запустила гра, ввічливо закривається, коли гра завершується, якщо він не був відкритий раніше, не працює інша його гра і він нічого не завантажує.", exitNow: "Вийти з {title}", exitUntracked: "Steam втратив стеження за {title}; Core може її закрити." },
+    ru: { title: "Управление", emulators: "Горячие клавиши эмуляторов (одинаковые везде)", other: "Везде", save: "Сохранить состояние", load: "Загрузить состояние", "slot-next": "Следующий слот", "slot-prev": "Предыдущий слот", "fast-forward": "Ускорение", rewind: "Перемотка", pause: "Пауза", menu: "Меню эмулятора", fps: "Показ FPS", right: "крестовина вправо", left: "крестовина влево", hold: "удерживать", exit: "Выйти из игры", exitHow: "«Выйти из игры» в Steam (кнопка Steam или Быстрый доступ); ни одна комбинация не закрывает эмулятор", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Говорить с Jarvis", jarvisTalkHow: "Коснитесь L5 + R5", jarvisOpen: "Открыть Jarvis", jarvisOpenHow: "Удерживайте L5 + R5", launchers: "Закрывать лаунчеры магазинов после игры", launchersHelp: "Лаунчер, который запустила игра, вежливо закрывается после неё, если он не был открыт раньше, не идёт другая его игра и он ничего не загружает.", exitNow: "Выйти из {title}", exitUntracked: "Steam потерял {title} из виду; Core может её закрыть." },
+    zh: { title: "操作", emulators: "模拟器快捷键（所有模拟器相同）", other: "通用", save: "即时存档", load: "读取存档", "slot-next": "下一个存档位", "slot-prev": "上一个存档位", "fast-forward": "快进", rewind: "倒带", pause: "暂停", menu: "模拟器菜单", fps: "FPS 显示", right: "十字键右", left: "十字键左", hold: "按住", exit: "退出游戏", exitHow: "使用 Steam 的“退出游戏”（Steam 键或快速访问）；没有组合键会关闭模拟器", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "和 Jarvis 说话", jarvisTalkHow: "轻按 L5 + R5", jarvisOpen: "打开 Jarvis", jarvisOpenHow: "按住 L5 + R5", launchers: "游戏结束后关闭商店启动器", launchersHelp: "由游戏启动的启动器会在该游戏结束后被礼貌关闭，除非它之前就开着、它的另一款游戏在运行或它正在下载。", exitNow: "退出 {title}", exitUntracked: "Steam 已失去对 {title} 的跟踪；Core 可以关闭它。" },
+    ja: { title: "操作", emulators: "エミュレーターのホットキー（どれでも同じ）", other: "共通", save: "ステートセーブ", load: "ステートロード", "slot-next": "次のスロット", "slot-prev": "前のスロット", "fast-forward": "早送り", rewind: "巻き戻し", pause: "一時停止", menu: "エミュレーターのメニュー", fps: "FPS 表示", right: "十字キー右", left: "十字キー左", hold: "長押し", exit: "ゲームの終了", exitHow: "Steam の「ゲームを終了」（Steam ボタンかクイックアクセス）。エミュレーターを閉じる組み合わせはありません", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Jarvis と話す", jarvisTalkHow: "L5 + R5 を軽く押す", jarvisOpen: "Jarvis を開く", jarvisOpenHow: "L5 + R5 を長押し", launchers: "ゲーム後にストアのランチャーを閉じる", launchersHelp: "ゲームが起動したランチャーは、そのゲームの終了後に丁寧に閉じます。前から開いていた場合、別のゲームが実行中の場合、ダウンロード中の場合は閉じません。", exitNow: "{title} を終了", exitUntracked: "Steam が {title} を見失いました。Core が閉じられます。" },
+    ko: { title: "조작", emulators: "에뮬레이터 단축키(모든 에뮬레이터 동일)", other: "어디서나", save: "상태 저장", load: "상태 불러오기", "slot-next": "다음 슬롯", "slot-prev": "이전 슬롯", "fast-forward": "빨리 감기", rewind: "되감기", pause: "일시 정지", menu: "에뮬레이터 메뉴", fps: "FPS 표시", right: "방향키 오른쪽", left: "방향키 왼쪽", hold: "길게", exit: "게임 종료", exitHow: "Steam의 게임 종료(Steam 버튼 또는 빠른 실행). 에뮬레이터를 닫는 조합은 없어요", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Jarvis와 말하기", jarvisTalkHow: "L5 + R5 짧게 누르기", jarvisOpen: "Jarvis 열기", jarvisOpenHow: "L5 + R5 길게 누르기", launchers: "게임 후 스토어 런처 닫기", launchersHelp: "게임이 연 런처는 그 게임이 끝나면 부드럽게 닫혀요. 원래 열려 있었거나, 다른 게임이 실행 중이거나, 다운로드 중이면 그대로 둬요.", exitNow: "{title} 종료", exitUntracked: "Steam이 {title}을(를) 놓쳤어요. Core가 닫을 수 있어요." },
+    hi: { title: "कंट्रोल", emulators: "एम्युलेटर हॉटकी (हर एम्युलेटर में एक जैसी)", other: "हर जगह", save: "स्टेट सेव", load: "स्टेट लोड", "slot-next": "अगला स्लॉट", "slot-prev": "पिछला स्लॉट", "fast-forward": "फ़ास्ट-फ़ॉरवर्ड", rewind: "रिवाइंड", pause: "रोकें", menu: "एम्युलेटर मेन्यू", fps: "FPS दिखाएँ", right: "डी-पैड दाएँ", left: "डी-पैड बाएँ", hold: "दबाए रखें", exit: "गेम से बाहर निकलना", exitHow: "Steam का गेम से बाहर निकलें (Steam बटन या क्विक एक्सेस); कोई कॉम्बो एम्युलेटर बंद नहीं करता", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Jarvis से बात करें", jarvisTalkHow: "L5 + R5 हल्का दबाएँ", jarvisOpen: "Jarvis खोलें", jarvisOpenHow: "L5 + R5 दबाए रखें", launchers: "गेम के बाद स्टोर लॉन्चर बंद करें", launchersHelp: "जो लॉन्चर किसी गेम ने खोला, वह गेम खत्म होने पर आराम से बंद होता है, जब तक वह पहले से खुला न हो, उसका दूसरा गेम न चल रहा हो या वह डाउनलोड न कर रहा हो।", exitNow: "{title} से बाहर निकलें", exitUntracked: "Steam ने {title} का ट्रैक खो दिया; Core इसे बंद कर सकता है।" },
+};
+function controlsCopy(locale) {
+    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
+    const table = copy$4[language === "ua" ? "uk" : language] ?? en$4;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$4[key] ?? key });
+}
+function fillControls(template, values) {
+    return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? values[name] : all));
+}
+// The table as lines for the user's language: the button combo with "D-pad right/left" and "(hold)" translated.
+function controlsRows(locale) {
+    const text = controlsCopy(locale);
+    const rows = EMULATOR_HOTKEYS.map(([id, buttons]) => ({
+        label: text[id], group: "emulators",
+        buttons: buttons.replace("D-pad right", text.right).replace("D-pad left", text.left).replace("(hold)", `(${text.hold})`),
+    }));
+    rows.push({ label: text.exit, buttons: text.exitHow, group: "other" });
+    rows.push({ label: text.paddleA, buttons: text.paddleAHow, group: "other" });
+    rows.push({ label: text.paddleB, buttons: text.paddleBHow, group: "other" });
+    rows.push({ label: text.jarvisTalk, buttons: text.jarvisTalkHow, group: "other" });
+    rows.push({ label: text.jarvisOpen, buttons: text.jarvisOpenHow, group: "other" });
+    return rows;
+}
+
+// Eternal Core 3.3.5: Quick Access > Core > Controls. The one controller reference (the shared emulator hotkeys,
+// exiting through Steam, the back paddles, Jarvis), Core's Exit for a game Steam lost track of, and the
+// per-launcher switches for closing store launchers after a game (GamingMode.Services/MarkIIIHost.Emulators.cs).
+const { PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$5, Focusable: Focusable$4, ToggleField: ToggleField$3, ButtonItem: ButtonItem$3 } = CompatUI;
+const { crimson: CRIMSON$3, steel: STEEL$3, gunmetal: GUNMETAL$3, white: WHITE$3 } = CORE;
+const style$4 = `
+.core-controls{display:flex;flex-direction:column;gap:4px;width:100%;padding:6px 0}
+.core-controls-head{font-size:11px;color:${STEEL$3};padding:6px 12px 2px;text-transform:uppercase;letter-spacing:.04em}
+.core-controls-row{background:${GUNMETAL$3};border-radius:6px;padding:7px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;outline:none}
+.core-controls-row.gpfocus,.core-controls-row:focus-visible{outline:2px solid ${CRIMSON$3};outline-offset:-2px}
+.core-controls-label{font-size:12px;color:${WHITE$3}}
+.core-controls-buttons{font-size:12px;color:${STEEL$3};text-align:right}
+.core-controls-hint{padding:0 12px;font-size:11px;line-height:1.45;color:${STEEL$3}}
+`;
+function ControlsSection({ locale }) {
+    const text = controlsCopy(locale);
+    const [answer, setAnswer] = _global_SP_REACT.useState(null);
+    const [busy, setBusy] = _global_SP_REACT.useState(false);
+    _global_SP_REACT.useEffect(() => {
+        let alive = true;
+        const load = () => call("core_emulators_state").then(value => { if (alive && value && Array.isArray(value.launchers))
+            setAnswer(value); }).catch(() => { });
+        load();
+        const timer = window.setInterval(load, 6000);
+        return () => { alive = false; window.clearInterval(timer); };
+    }, []);
+    const toggle = async (id, on) => {
+        setBusy(true);
+        try {
+            const value = await call("core_launcher_auto_close", id, on);
+            if (value && Array.isArray(value.launchers))
+                setAnswer(value);
+        }
+        catch { /* The next poll shows the actual state. */ }
+        finally {
+            setBusy(false);
+        }
+    };
+    const exitNow = async () => {
+        setBusy(true);
+        try {
+            await call("core_health_action", "game-exit-now");
+        }
+        catch { }
+        finally {
+            setBusy(false);
+        }
+    };
+    const rows = controlsRows(locale);
+    const untracked = typeof answer?.untracked === "string" && answer.untracked ? answer.untracked.slice(0, 64) : "";
+    return (SP_JSX.jsxs(PanelSection$5, { title: text.title, children: [SP_JSX.jsx("style", { children: style$4 }), untracked && (SP_JSX.jsxs(PanelSectionRow$5, { children: [SP_JSX.jsx("div", { className: "core-controls-hint", children: fillControls(text.exitUntracked, { title: untracked }) }), SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy, onClick: () => void exitNow(), children: fillControls(text.exitNow, { title: untracked }) })] })), SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsx(Focusable$4, { className: "core-controls", "flow-children": "column", children: ["emulators", "other"].map(group => (SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx("div", { className: "core-controls-head", children: group === "emulators" ? text.emulators : text.other }), rows.filter(row => row.group === group).map(row => (SP_JSX.jsxs(Focusable$4, { className: "core-controls-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-controls-label", children: row.label }), SP_JSX.jsx("span", { className: "core-controls-buttons", children: row.buttons })] }, row.label)))] }, group))) }) }), answer?.launchers && (SP_JSX.jsxs(PanelSectionRow$5, { children: [SP_JSX.jsx("div", { className: "core-controls-head", children: text.launchers }), SP_JSX.jsx("div", { className: "core-controls-hint", children: text.launchersHelp }), answer.launchers.map(launcher => (SP_JSX.jsx(ToggleField$3, { label: launcher.name, bottomSeparator: "none", checked: launcher.on, disabled: busy, onChange: (enabled) => void toggle(launcher.id, enabled) }, launcher.id)))] }))] }));
 }
 
 // Eternal Core batch 2 (B7, docs/eternal/BATCH-2.md): swipe typing, word suggestions and autocorrect on Steam's own
@@ -66327,7 +66847,7 @@ const en$2 = {
     eFailed: "Something went wrong; nothing was changed", eUnreachable: "Can't reach Jarvis", eAntiCheat: "Typing is paused while anti-cheat protection is on; the text is in Quick Access",
     eNoRoute: "No speech recognition available: save the Home Assistant token", eRate: "Too many requests; try again in a moment", eOff: "Jarvis is off",
     screenshot: "Screenshot taken", party: "Your Xbox party hears you too", typed: "Typed: {text}", heard: "Heard: {text}",
-    combos: "Hold {dictate} to dictate · {talk} to talk · {screen} for the screen", comboOff: "off",
+    combos: "Tap {talk} to talk (it stops on a pause) · hold it to open Jarvis · dictation and the screen helper: the buttons above, or ask by voice", comboOff: "off",
     hint: "Nothing is sent until you ask. Locks, the garage and the alarm need your phone.", helperOff: "Screen helper: add your Anthropic key on the desktop to use it",
 };
 const copy$2 = {
@@ -66343,7 +66863,7 @@ const copy$2 = {
         eFailed: "Qualcosa è andato storto; non è cambiato niente", eUnreachable: "Non riesco a raggiungere Jarvis", eAntiCheat: "La scrittura è in pausa mentre la protezione anti-cheat è attiva; il testo è in Accesso rapido",
         eNoRoute: "Nessun riconoscimento vocale disponibile: salva il token di Home Assistant", eRate: "Troppe richieste; riprova tra poco", eOff: "Jarvis è spento",
         screenshot: "Screenshot fatto", party: "Anche il tuo party Xbox ti sente", typed: "Scritto: {text}", heard: "Sentito: {text}",
-        combos: "Tieni {dictate} per dettare · {talk} per parlare · {screen} per lo schermo", comboOff: "spenta",
+        combos: "Tocca {talk} per parlare (si ferma a una pausa) · tienilo premuto per aprire Jarvis · dettatura e aiuto sullo schermo: i pulsanti qui sopra, o chiedi a voce", comboOff: "spenta",
         hint: "Non viene inviato niente finché non lo chiedi. Serrature, garage e allarme richiedono il telefono.", helperOff: "Aiuto sullo schermo: aggiungi la chiave di Anthropic sul desktop per usarlo",
     },
     es: {
@@ -66357,7 +66877,7 @@ const copy$2 = {
         eFailed: "Algo salió mal; no se cambió nada", eUnreachable: "No se puede contactar con Jarvis", eAntiCheat: "La escritura está en pausa con la protección antitrampas activa; el texto está en Acceso rápido",
         eNoRoute: "No hay reconocimiento de voz disponible: guarda el token de Home Assistant", eRate: "Demasiadas solicitudes; inténtalo de nuevo en un momento", eOff: "Jarvis está desactivado",
         screenshot: "Captura hecha", party: "Tu grupo de Xbox también te oye", typed: "Escrito: {text}", heard: "Oído: {text}",
-        combos: "Mantén {dictate} para dictar · {talk} para hablar · {screen} para la pantalla", comboOff: "desactivada",
+        combos: "Toca {talk} para hablar (se detiene en una pausa) · mantenlo para abrir Jarvis · dictado y ayuda en pantalla: los botones de arriba, o pídelo por voz", comboOff: "desactivada",
         hint: "No se envía nada hasta que lo pidas. Cerraduras, garaje y alarma necesitan tu teléfono.", helperOff: "Ayuda en pantalla: añade tu clave de Anthropic en el escritorio para usarla",
     },
     fr: {
@@ -66371,7 +66891,7 @@ const copy$2 = {
         eFailed: "Un problème est survenu ; rien n'a été modifié", eUnreachable: "Jarvis est injoignable", eAntiCheat: "La saisie est en pause tant que la protection anti-triche est active ; le texte est dans l'accès rapide",
         eNoRoute: "Aucune reconnaissance vocale disponible : enregistre le jeton Home Assistant", eRate: "Trop de requêtes ; réessaie dans un instant", eOff: "Jarvis est désactivé",
         screenshot: "Capture prise", party: "Ta partie Xbox t'entend aussi", typed: "Écrit : {text}", heard: "Entendu : {text}",
-        combos: "Maintiens {dictate} pour dicter · {talk} pour parler · {screen} pour l'écran", comboOff: "désactivée",
+        combos: "Touchez {talk} pour parler (s'arrête à une pause) · maintenez pour ouvrir Jarvis · dictée et aide à l'écran : les boutons ci-dessus, ou demandez à voix haute", comboOff: "désactivée",
         hint: "Rien n'est envoyé tant que tu ne le demandes pas. Serrures, garage et alarme passent par ton téléphone.", helperOff: "Aide à l'écran : ajoute ta clé Anthropic sur le bureau pour l'utiliser",
     },
     de: {
@@ -66385,7 +66905,7 @@ const copy$2 = {
         eFailed: "Etwas ist schiefgegangen; nichts wurde geändert", eUnreachable: "Jarvis ist nicht erreichbar", eAntiCheat: "Tippen ist pausiert, solange der Anti-Cheat-Schutz aktiv ist; der Text steht im Schnellzugriff",
         eNoRoute: "Keine Spracherkennung verfügbar: Home-Assistant-Token speichern", eRate: "Zu viele Anfragen; gleich noch einmal versuchen", eOff: "Jarvis ist aus",
         screenshot: "Screenshot gemacht", party: "Deine Xbox-Party hört dich auch", typed: "Geschrieben: {text}", heard: "Gehört: {text}",
-        combos: "{dictate} halten zum Diktieren · {talk} zum Sprechen · {screen} für den Bildschirm", comboOff: "aus",
+        combos: "{talk} tippen zum Sprechen (endet bei einer Pause) · halten öffnet Jarvis · Diktat und Bildschirmhilfe: die Tasten oben, oder per Sprache", comboOff: "aus",
         hint: "Es wird nichts gesendet, bis du es willst. Schlösser, Garage und Alarmanlage brauchen dein Handy.", helperOff: "Bildschirmhilfe: Anthropic-Schlüssel auf dem Desktop hinzufügen, um sie zu nutzen",
     },
     pt: {
@@ -66399,7 +66919,7 @@ const copy$2 = {
         eFailed: "Algo deu errado; nada foi alterado", eUnreachable: "Não foi possível alcançar o Jarvis", eAntiCheat: "A digitação está pausada com a proteção anti-cheat ativa; o texto está no Acesso rápido",
         eNoRoute: "Nenhum reconhecimento de voz disponível: salve o token do Home Assistant", eRate: "Pedidos demais; tente de novo em instantes", eOff: "O Jarvis está desligado",
         screenshot: "Captura feita", party: "Sua party do Xbox também ouve você", typed: "Digitado: {text}", heard: "Ouvido: {text}",
-        combos: "Segure {dictate} para ditar · {talk} para falar · {screen} para a tela", comboOff: "desligada",
+        combos: "Toque em {talk} para falar (para numa pausa) · segure para abrir o Jarvis · ditado e ajuda na tela: os botões acima, ou peça por voz", comboOff: "desligada",
         hint: "Nada é enviado até você pedir. Fechaduras, garagem e alarme precisam do seu celular.", helperOff: "Ajuda na tela: adicione sua chave da Anthropic no desktop para usá-la",
     },
     uk: {
@@ -66413,7 +66933,7 @@ const copy$2 = {
         eFailed: "Щось пішло не так; нічого не змінено", eUnreachable: "Не вдається зв’язатися з Jarvis", eAntiCheat: "Друк призупинено, поки ввімкнено захист від читів; текст у Швидкому доступі",
         eNoRoute: "Розпізнавання мовлення недоступне: збережіть токен Home Assistant", eRate: "Забагато запитів; спробуйте трохи згодом", eOff: "Jarvis вимкнено",
         screenshot: "Знімок екрана зроблено", party: "Ваша вечірка Xbox теж вас чує", typed: "Надруковано: {text}", heard: "Почуто: {text}",
-        combos: "Утримуйте {dictate}, щоб диктувати · {talk}, щоб говорити · {screen} для екрана", comboOff: "вимкнено",
+        combos: "Торкніться {talk}, щоб говорити (зупиняється на паузі) · утримуйте, щоб відкрити Jarvis · диктування й допомога з екраном: кнопки вище або голосом", comboOff: "вимкнено",
         hint: "Нічого не надсилається, доки ви не попросите. Замки, гараж і сигналізація — лише через телефон.", helperOff: "Допомога з екраном: додайте ключ Anthropic на робочому столі",
     },
     zh: {
@@ -66427,7 +66947,7 @@ const copy$2 = {
         eFailed: "出了点问题；没有做任何更改", eUnreachable: "无法连接 Jarvis", eAntiCheat: "反作弊保护开启时暂停输入；文字在快速访问中",
         eNoRoute: "没有可用的语音识别：请保存 Home Assistant 令牌", eRate: "请求太多；请稍后再试", eOff: "Jarvis 已关闭",
         screenshot: "已截图", party: "你的 Xbox 派对也能听到你", typed: "已输入：{text}", heard: "听到：{text}",
-        combos: "按住 {dictate} 听写 · {talk} 对话 · {screen} 看屏幕", comboOff: "关闭",
+        combos: "轻按 {talk} 对话（停顿时结束）· 按住打开 Jarvis · 听写和屏幕助手：用上方按钮或语音", comboOff: "关闭",
         hint: "在你要求之前不会发送任何内容。门锁、车库和警报需要你的手机。", helperOff: "屏幕助手：在桌面上添加 Anthropic 密钥即可使用",
     },
     ja: {
@@ -66441,7 +66961,7 @@ const copy$2 = {
         eFailed: "問題が起きました。何も変更していません", eUnreachable: "Jarvis に接続できません", eAntiCheat: "チート対策保護が有効な間は入力を止めています。テキストはクイックアクセスにあります",
         eNoRoute: "音声認識が使えません：Home Assistant のトークンを保存してください", eRate: "リクエストが多すぎます。少し待ってから試してください", eOff: "Jarvis はオフです",
         screenshot: "スクリーンショットを撮りました", party: "Xbox パーティーにも聞こえています", typed: "入力しました：{text}", heard: "聞こえた内容：{text}",
-        combos: "{dictate} 長押しで音声入力 · {talk} で会話 · {screen} で画面", comboOff: "オフ",
+        combos: "{talk} を軽く押して話す（間があくと終了）· 長押しで Jarvis を開く · 音声入力と画面ヘルパーは上のボタンか声で", comboOff: "オフ",
         hint: "頼むまで何も送信されません。鍵、ガレージ、アラームはスマホが必要です。", helperOff: "画面ヘルパー：デスクトップで Anthropic のキーを追加すると使えます",
     },
     ko: {
@@ -66455,7 +66975,7 @@ const copy$2 = {
         eFailed: "문제가 생겼어요. 아무것도 바뀌지 않았어요", eUnreachable: "Jarvis에 연결할 수 없어요", eAntiCheat: "안티치트 보호가 켜져 있는 동안 입력을 멈춰요. 텍스트는 빠른 실행에 있어요",
         eNoRoute: "음성 인식을 쓸 수 없어요: Home Assistant 토큰을 저장하세요", eRate: "요청이 너무 많아요. 잠시 후 다시 시도하세요", eOff: "Jarvis가 꺼져 있어요",
         screenshot: "스크린샷을 찍었어요", party: "Xbox 파티에도 들려요", typed: "입력함: {text}", heard: "들은 내용: {text}",
-        combos: "{dictate} 누르고 받아쓰기 · {talk} 대화 · {screen} 화면", comboOff: "꺼짐",
+        combos: "{talk}을(를) 짧게 눌러 대화(말이 멈추면 끝) · 길게 누르면 Jarvis 열기 · 받아쓰기와 화면 도우미: 위 버튼 또는 음성으로", comboOff: "꺼짐",
         hint: "요청하기 전에는 아무것도 보내지 않아요. 잠금장치, 차고, 경보는 휴대폰이 필요해요.", helperOff: "화면 도우미: 데스크톱에서 Anthropic 키를 추가하면 쓸 수 있어요",
     },
     hi: {
@@ -66469,7 +66989,7 @@ const copy$2 = {
         eFailed: "कुछ गड़बड़ हुई; कुछ नहीं बदला गया", eUnreachable: "Jarvis तक नहीं पहुँच पा रहे", eAntiCheat: "एंटी-चीट सुरक्षा चालू रहते टाइपिंग रुकी है; टेक्स्ट क्विक एक्सेस में है",
         eNoRoute: "कोई वाक् पहचान उपलब्ध नहीं: Home Assistant टोकन सहेजें", eRate: "बहुत ज़्यादा अनुरोध; थोड़ी देर में फिर कोशिश करें", eOff: "Jarvis बंद है",
         screenshot: "स्क्रीनशॉट लिया गया", party: "आपकी Xbox पार्टी भी आपको सुन रही है", typed: "लिखा गया: {text}", heard: "सुना गया: {text}",
-        combos: "बोलकर लिखने के लिए {dictate} · बात के लिए {talk} · स्क्रीन के लिए {screen} दबाए रखें", comboOff: "बंद",
+        combos: "बात करने के लिए {talk} टैप करें (रुकने पर बंद) · Jarvis खोलने के लिए दबाए रखें · डिक्टेशन और स्क्रीन सहायक: ऊपर के बटन, या आवाज़ से", comboOff: "बंद",
         hint: "जब तक आप न कहें, कुछ नहीं भेजा जाता। ताले, गैराज और अलार्म के लिए फ़ोन चाहिए।", helperOff: "स्क्रीन सहायक: इस्तेमाल के लिए डेस्कटॉप पर Anthropic कुंजी जोड़ें",
     },
     ru: {
@@ -66483,7 +67003,7 @@ const copy$2 = {
         eFailed: "Что-то пошло не так; ничего не изменено", eUnreachable: "Не удаётся связаться с Jarvis", eAntiCheat: "Печать приостановлена, пока включена защита от читов; текст в Быстром доступе",
         eNoRoute: "Распознавание речи недоступно: сохраните токен Home Assistant", eRate: "Слишком много запросов; попробуйте чуть позже", eOff: "Jarvis выключен",
         screenshot: "Снимок экрана сделан", party: "Ваша вечеринка Xbox тоже вас слышит", typed: "Напечатано: {text}", heard: "Услышано: {text}",
-        combos: "Удерживайте {dictate} для диктовки · {talk} для разговора · {screen} для экрана", comboOff: "выкл.",
+        combos: "Коснитесь {talk}, чтобы говорить (останавливается на паузе) · удерживайте, чтобы открыть Jarvis · диктовка и помощь с экраном: кнопки выше или голосом", comboOff: "выкл.",
         hint: "Ничего не отправляется, пока вы не попросите. Замки, гараж и сигнализация — только через телефон.", helperOff: "Помощь с экраном: добавьте ключ Anthropic на рабочем столе",
     },
 };
@@ -66538,7 +67058,8 @@ function errorLine(code, locale) {
 function combosLine(state, locale) {
     const text = jarvisCopy(locale);
     const show = (value) => (typeof value === "string" && /^[A-Z0-9+]{3,40}$/.test(value) ? value : text.comboOff);
-    return fill(text.combos, { dictate: show(state?.combos?.dictate), talk: show(state?.combos?.talk), screen: show(state?.combos?.screen) });
+    // 3.3.5: only L5+R5 (tap talks, hold opens); dictation and the screen helper are buttons and voice.
+    return fill(text.combos, { talk: show(state?.combos?.talk) });
 }
 // The last few turns, cleaned: only user/assistant, strings, at most `limit` entries, each capped.
 function historyLines(state, limit = 6) {
@@ -66551,26 +67072,26 @@ function historyLines(state, limit = 6) {
 
 // Eternal Core: the text Jarvis's own Quick Access tab adds (Core UI phase 1), in Core's 12 languages. The rest of
 // Jarvis's text is jarvisReport.ts. Self-contained: tests load it alone.
-const en$1 = { tap: "Tap {talk} to open or close Jarvis · hold it to talk", tapOff: "Hold {talk} to talk to Jarvis", last: "Last answer" };
+const en$1 = { tap: "Tap {talk} to talk · hold it to open or close Jarvis", tapOff: "Tap {talk} to talk · or hold it while you speak", last: "Last answer" };
 const copy$1 = {
     en: en$1,
-    it: { tap: "Tocca {talk} per aprire o chiudere Jarvis · tienilo premuto per parlare", tapOff: "Tieni premuto {talk} per parlare con Jarvis", last: "Ultima risposta" },
-    es: { tap: "Toca {talk} para abrir o cerrar Jarvis · mantenlo pulsado para hablar", tapOff: "Mantén pulsado {talk} para hablar con Jarvis", last: "Última respuesta" },
-    fr: { tap: "Appuyez sur {talk} pour ouvrir ou fermer Jarvis · maintenez pour parler", tapOff: "Maintenez {talk} pour parler à Jarvis", last: "Dernière réponse" },
-    de: { tap: "Tippe {talk}, um Jarvis zu öffnen oder zu schließen · halten zum Sprechen", tapOff: "Halte {talk}, um mit Jarvis zu sprechen", last: "Letzte Antwort" },
-    pt: { tap: "Toque em {talk} para abrir ou fechar o Jarvis · segure para falar", tapOff: "Segure {talk} para falar com o Jarvis", last: "Última resposta" },
-    uk: { tap: "Торкніться {talk}, щоб відкрити або закрити Jarvis · утримуйте, щоб говорити", tapOff: "Утримуйте {talk}, щоб говорити з Jarvis", last: "Остання відповідь" },
-    ru: { tap: "Нажмите {talk}, чтобы открыть или закрыть Jarvis · удерживайте, чтобы говорить", tapOff: "Удерживайте {talk}, чтобы говорить с Jarvis", last: "Последний ответ" },
-    zh: { tap: "轻按 {talk} 打开或关闭 Jarvis · 按住可对话", tapOff: "按住 {talk} 与 Jarvis 对话", last: "最新回答" },
-    ja: { tap: "{talk} を短く押すと Jarvis を開閉 · 長押しで話す", tapOff: "{talk} を長押しして Jarvis と話す", last: "最新の回答" },
-    ko: { tap: "{talk}을(를) 짧게 눌러 Jarvis 열기/닫기 · 누르고 있으면 대화", tapOff: "{talk}을(를) 누르고 있으면 Jarvis와 대화", last: "마지막 답변" },
-    hi: { tap: "Jarvis खोलने या बंद करने के लिए {talk} टैप करें · बात करने के लिए दबाए रखें", tapOff: "Jarvis से बात करने के लिए {talk} दबाए रखें", last: "आख़िरी जवाब" },
+    it: { tap: "Tocca {talk} per parlare · tienilo premuto per aprire o chiudere Jarvis", tapOff: "Tocca {talk} per parlare · oppure tienilo premuto mentre parli", last: "Ultima risposta" },
+    es: { tap: "Toca {talk} para hablar · mantenlo para abrir o cerrar Jarvis", tapOff: "Toca {talk} para hablar · o mantenlo mientras hablas", last: "Última respuesta" },
+    fr: { tap: "Touchez {talk} pour parler · maintenez pour ouvrir ou fermer Jarvis", tapOff: "Touchez {talk} pour parler · ou maintenez pendant que vous parlez", last: "Dernière réponse" },
+    de: { tap: "{talk} tippen zum Sprechen · halten öffnet oder schließt Jarvis", tapOff: "{talk} tippen zum Sprechen · oder beim Sprechen halten", last: "Letzte Antwort" },
+    pt: { tap: "Toque em {talk} para falar · segure para abrir ou fechar o Jarvis", tapOff: "Toque em {talk} para falar · ou segure enquanto fala", last: "Última resposta" },
+    uk: { tap: "Торкніться {talk}, щоб говорити · утримуйте, щоб відкрити або закрити Jarvis", tapOff: "Торкніться {talk}, щоб говорити · або утримуйте, поки говорите", last: "Остання відповідь" },
+    ru: { tap: "Коснитесь {talk}, чтобы говорить · удерживайте, чтобы открыть или закрыть Jarvis", tapOff: "Коснитесь {talk}, чтобы говорить · или удерживайте, пока говорите", last: "Последний ответ" },
+    zh: { tap: "轻按 {talk} 对话 · 按住打开或关闭 Jarvis", tapOff: "轻按 {talk} 对话 · 或说话时按住", last: "最新回答" },
+    ja: { tap: "{talk} を軽く押して話す · 長押しで Jarvis を開閉", tapOff: "{talk} を軽く押して話す · または話す間長押し", last: "最新の回答" },
+    ko: { tap: "{talk}을(를) 짧게 눌러 대화 · 길게 누르면 Jarvis 열기/닫기", tapOff: "{talk}을(를) 짧게 눌러 대화 · 또는 말하는 동안 누르고 있기", last: "마지막 답변" },
+    hi: { tap: "बात करने के लिए {talk} टैप करें · Jarvis खोलने या बंद करने के लिए दबाए रखें", tapOff: "बात करने के लिए {talk} टैप करें · या बोलते समय दबाए रखें", last: "आख़िरी जवाब" },
 };
 function jarvisTabCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
     return copy$1[language === "ua" ? "uk" : language] ?? en$1;
 }
-// The tab's hold-to-talk line, from the agent's state (combos.talk, tapOpens). Empty when talking has no combo.
+// The tab's L5+R5 line (3.3.5: a tap talks; with tapOpens a hold opens or closes the tab, without it a hold is push-to-talk), from the agent's state (combos.talk, tapOpens). Empty when talking has no combo.
 function jarvisTapLine(state, locale) {
     const talk = typeof state?.combos?.talk === "string" && /^[A-Z0-9+]{2,40}$/.test(state.combos.talk) ? state.combos.talk : "";
     if (!talk)
@@ -66756,8 +67277,8 @@ function JarvisPage({ locale }) {
 
 // Eternal Core: Jarvis's controller combos (docs/eternal/JARVIS.md). Steam owns the controller and the agent never reads
 // one (DashboardShortcutService.cs), so the combos are watched here, inside Steam, through
-// SteamClient.Input.RegisterForControllerStateChanges: two to four buttons held together. Dictation and "talk to Jarvis"
-// record while the combo is held; the screen helper fires once per press. Bit positions follow Steam's
+// SteamClient.Input.RegisterForControllerStateChanges: two to four buttons held together. Since 3.3.5 only the talk combo
+// (L5+R5) is set; the dictation and screen-helper kinds stay in the type for old settings but are never configured. Bit positions follow Steam's
 // ControllerStateChange as @decky/ui's typings describe it (ulButtons; ulUpperButtons holds the back grips L4/R4). The
 // 2026 Steam Controller is assumed to report its grips like the Steam Deck (inferred; TV checklist). The same parser
 // exists in C# (Shared/JarvisCore.cs, JarvisCombos) for the desktop app and the agent.
@@ -66771,7 +67292,8 @@ const ALIASES = {
     LB: "L1", RB: "R1", LT: "L2", RT: "R2", VIEW: "SELECT", BACK: "SELECT", MENU: "START", LS: "L3", RS: "R3",
     DUP: "UP", DDOWN: "DOWN", DLEFT: "LEFT", DRIGHT: "RIGHT",
 };
-const RESERVED = new Set(["STEAM", "GUIDE", "QAM", "HOME"]);
+// 3.3.5: L4 and R4 are A and B everywhere, so no combo may use them.
+const RESERVED = new Set(["STEAM", "GUIDE", "QAM", "HOME", "L4", "R4"]);
 const ORDER = ["L4", "R4", "L5", "R5", "L1", "R1", "L2", "R2", "L3", "R3", "SELECT", "START", "UP", "DOWN", "LEFT", "RIGHT", "A", "B", "X", "Y"];
 function parseCombo(text) {
     if (typeof text !== "string" || !text.trim() || text.length > 64)
@@ -66801,12 +67323,17 @@ function comboHeld(combo, buttons, upperButtons) {
     const lower = Number(buttons) >>> 0, upper = Number(upperButtons) >>> 0;
     return (lower & combo.lower) >>> 0 === combo.lower && (upper & combo.upper) >>> 0 === combo.upper;
 }
-// Core UI phase 1: the talk combo has two behaviours. A short tap (released within JARVIS_TAP_MS) opens or closes
-// Jarvis's Quick Access tab, also during a game; holding it is push-to-talk as before. Recording starts on the press
-// either way (no lost first syllable); a tap cancels it.
+// 3.3.5: tap to talk, hold to open (the other way round would break immersion). A tap on L5+R5 (released within
+// JARVIS_TAP_MS) talks: recording started on the press and keeps going, without opening anything, until a pause in
+// speech, another tap, the 30 s cap or a mute. A hold past the threshold cancels that recording and opens or closes
+// Jarvis's Quick Access tab (holdOpens, the desktop setting); with holdOpens off a hold is push-to-talk ("release").
 const JARVIS_TAP_MS = 300;
-function jarvisRelease(kind, heldMs, tapOpens) {
-    return kind === "talk" && tapOpens && Number.isFinite(heldMs) && heldMs >= 0 && heldMs < JARVIS_TAP_MS ? "tap" : "release";
+function jarvisRelease(kind, heldMs, holdOpens) {
+    if (kind !== "talk" || !Number.isFinite(heldMs) || heldMs < 0)
+        return "release";
+    if (heldMs < JARVIS_TAP_MS)
+        return "talk";
+    return holdOpens ? "open" : "release";
 }
 // Watches every controller; a combo counts as held while any controller holds it. Each press calls onPress once and
 // each release onRelease once. A combo whose buttons another held combo contains does not fire at the same time.
@@ -69470,7 +69997,30 @@ function createJarvisRuntime(deps) {
         set({ error: line });
         deps.toast(text().title, line);
     };
-    const start = (mode) => {
+    // Tap to talk: the recording keeps going after the tap; a pause (the agent), a second tap or the cap ends it.
+    let latched = false, secondTap = false, polls = 0;
+    const later = (callback, delay) => (deps.schedule ?? ((run, wait) => setTimeout(run, wait)))(callback, delay);
+    const poll = () => {
+        if (!latched || !deps.backend.listenState)
+            return;
+        if (++polls > 200) {
+            latched = false;
+            void stop();
+            return;
+        }
+        deps.backend.listenState().then(state => {
+            if (!latched)
+                return;
+            if (state?.ended || state?.recording === false) {
+                latched = false;
+                void stop();
+            }
+            else
+                later(poll, 150);
+        }).catch(() => { if (latched)
+            later(poll, 300); });
+    };
+    const start = (mode, auto = false) => {
         if (!deps.enabled()) {
             fail("off");
             return Promise.resolve(false);
@@ -69478,7 +70028,7 @@ function createJarvisRuntime(deps) {
         if (snapshot.listening || starting || snapshot.working)
             return Promise.resolve(false);
         set({ listening: mode, error: undefined });
-        starting = deps.backend.listenStart(mode).then(answer => {
+        starting = deps.backend.listenStart(mode, auto).then(answer => {
             if (!answer?.ok) {
                 set({ listening: null });
                 fail(answer?.error);
@@ -69486,6 +70036,9 @@ function createJarvisRuntime(deps) {
             }
             if (answer.partyHears)
                 deps.toast(text().title, text().party);
+            // Exclusive fullscreen can hide the agent's pill: say it here instead (the orb pulses as well).
+            if (answer.pillHidden)
+                deps.toast(text().title, text().listening);
             return true;
         }).catch(() => { set({ listening: null }); fail("unreachable"); return false; })
             .finally(() => { starting = undefined; });
@@ -69502,6 +70055,7 @@ function createJarvisRuntime(deps) {
         }
     };
     const stop = async (options = {}) => {
+        latched = false;
         if (starting && !(await starting))
             return undefined;
         const mode = snapshot.listening;
@@ -69591,6 +70145,7 @@ function createJarvisRuntime(deps) {
         return answer;
     };
     const cancel = async () => {
+        latched = false;
         if (starting)
             await starting.catch(() => false);
         if (!snapshot.listening)
@@ -69603,12 +70158,42 @@ function createJarvisRuntime(deps) {
     };
     return {
         cancel,
-        press: kind => { if (kind === "screen")
-            void screen();
-        else
-            void start(kind); },
-        release: kind => { if (kind !== "screen" && (snapshot.listening === kind || starting))
-            void stop(); },
+        press: kind => {
+            if (kind === "screen") {
+                void screen();
+                return;
+            }
+            // A second tap while a tap's recording runs ends it (on its release).
+            if (kind === "talk" && latched) {
+                secondTap = true;
+                return;
+            }
+            void start(kind, kind === "talk");
+        },
+        release: (kind, action = "release") => {
+            if (kind === "screen")
+                return;
+            if (secondTap) {
+                secondTap = false;
+                latched = false;
+                void stop();
+                return;
+            }
+            if (kind === "talk" && action === "talk") {
+                if (!(snapshot.listening === "talk" || starting))
+                    return;
+                latched = true;
+                polls = 0;
+                later(poll, 150);
+                return;
+            }
+            if (action === "open") {
+                void cancel();
+                return;
+            }
+            if (snapshot.listening === kind || starting)
+                void stop();
+        },
         start, stop, screen,
         snapshot: () => snapshot,
         subscribe: listener => { listeners.add(listener); return () => listeners.delete(listener); },
@@ -70501,7 +71086,7 @@ function Content({ origin = "decky" }) {
         return () => { alive = false; stopStatus(); };
     }, []);
     const gameAppId = steamAppId(window.SteamUIStore?.MainRunningAppID ?? CompatUI.Router?.MainRunningAppID);
-    return (SP_JSX.jsx(SP_JSX.Fragment, { children: SP_JSX.jsx(ControlCenter, { locale: locale, origin: origin, homeTitle: local.controlCentre, gameAppId: gameAppId, gamingMode: status?.currentMode === "Gaming", downloads: SP_JSX.jsx(StoreDownloadsQam, { locale: locale }), frameTiming: origin === "qam" && status && gameAppId !== 0 ? SP_JSX.jsx(GameFrameTiming, { appId: gameAppId, locale: locale }, gameAppId) : null, session: SP_JSX.jsxs(SP_JSX.Fragment, { children: [status && SP_JSX.jsx(VoiceSection, { locale: locale }), status && origin !== "qam" && SP_JSX.jsx(JarvisSection, { locale: locale }), status && SP_JSX.jsx(StreamSection, { locale: locale }), status && SP_JSX.jsx(AutomationsSection, { locale: locale }), status && SP_JSX.jsx(SwipeTypingSection, { locale: locale }), status && SP_JSX.jsx(UpdateNightCard, { locale: locale }), status && SP_JSX.jsx(SteamUpdateCard, { locale: locale }), status && SP_JSX.jsx(HealthSection, { locale: locale }), SP_JSX.jsx(CoreUiSection, { locale: locale }), !status && SP_JSX.jsx(PanelSection, { children: SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsxs("div", { role: "status", style: { margin: "8px 0 16px", padding: "16px", borderRadius: 10,
+    return (SP_JSX.jsx(SP_JSX.Fragment, { children: SP_JSX.jsx(ControlCenter, { locale: locale, origin: origin, homeTitle: local.controlCentre, gameAppId: gameAppId, gamingMode: status?.currentMode === "Gaming", downloads: SP_JSX.jsx(StoreDownloadsQam, { locale: locale }), frameTiming: origin === "qam" && status && gameAppId !== 0 ? SP_JSX.jsx(GameFrameTiming, { appId: gameAppId, locale: locale }, gameAppId) : null, session: SP_JSX.jsxs(SP_JSX.Fragment, { children: [status && SP_JSX.jsx(VoiceSection, { locale: locale }), status && origin !== "qam" && SP_JSX.jsx(JarvisSection, { locale: locale }), status && SP_JSX.jsx(StreamSection, { locale: locale }), status && SP_JSX.jsx(AutomationsSection, { locale: locale }), status && SP_JSX.jsx(SwipeTypingSection, { locale: locale }), status && SP_JSX.jsx(UpdateNightCard, { locale: locale }), status && SP_JSX.jsx(SteamUpdateCard, { locale: locale }), status && SP_JSX.jsx(ControlsSection, { locale: locale }), status && SP_JSX.jsx(HealthSection, { locale: locale }), SP_JSX.jsx(CoreUiSection, { locale: locale }), !status && SP_JSX.jsx(PanelSection, { children: SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsxs("div", { role: "status", style: { margin: "8px 0 16px", padding: "16px", borderRadius: 10,
                                     background: CORE.gunmetal, border: `1px solid ${CORE.gunmetalRaised}`, borderLeft: `3px solid ${CORE.warning}` }, children: [SP_JSX.jsx("div", { style: { fontSize: 16, fontWeight: 650, marginBottom: 8 }, children: optional.Title }), SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, opacity: .8 }, children: optional.AgentRequired })] }) }) }), SP_JSX.jsxs(PanelSection, { children: [SP_JSX.jsx(PanelSectionRow, { children: SP_JSX.jsx(ButtonItem, { disabled: !dashboardEnabled || !status, bottomSeparator: "none", layout: "below", onClick: () => openDashboard(), children: "Core Dashboard" }) }), SP_JSX.jsxs(PanelSectionRow, { children: [SP_JSX.jsx("style", { children: `
             @keyframes phShortcutPulse { 0%,100% { opacity:.62; transform:scale(.96); } 50% { opacity:1; transform:scale(1); } }
             @keyframes phShortcutTravel { 0%,100% { transform:translateX(-3px); opacity:.35; } 50% { transform:translateX(3px); opacity:1; } }
@@ -70793,7 +71378,8 @@ var index = definePlugin(() => {
         };
         const runtime = createJarvisRuntime({
             backend: {
-                listenStart: (mode) => call("core_jarvis_listen_start", mode),
+                listenStart: (mode, auto) => call("core_jarvis_listen_start", mode, auto === true),
+                listenState: () => call("core_jarvis_listen_state"),
                 listenStop: (steamTyping) => call("core_jarvis_listen_stop", steamTyping),
                 listenCancel: () => call("core_jarvis_listen_cancel"),
                 screen: (question) => call("core_jarvis_screen", question),
@@ -70803,6 +71389,7 @@ var index = definePlugin(() => {
             toast: (title, body) => toaster.toast({ title, body, duration: 8000 }),
             locale: () => currentLocale,
             enabled: () => settings.enabled,
+            schedule: (callback, delay) => window.setTimeout(callback, delay),
         });
         setJarvisRuntime(runtime);
         jarvisLive = { enabled: () => settings.enabled, snapshot: () => runtime.snapshot() };
@@ -70811,14 +71398,13 @@ var index = definePlugin(() => {
             input: () => window.SteamClient?.Input,
             combos: () => (settings.enabled ? settings.combos : {}),
             onPress: kind => runtime.press(kind),
-            // Core UI phase 1: a short tap on the talk combo opens or closes Jarvis's Quick Access tab (also over a game);
-            // holding it is push-to-talk. Recording began on the press, so a tap cancels it.
+            // 3.3.5: tap L5+R5 to talk (the game stays on screen; listening ends on a pause or another tap), hold it to open
+            // or close Jarvis's Quick Access tab (also over a game). Recording began on the press, so a hold cancels it.
             onRelease: (kind, heldMs) => {
-                if (jarvisRelease(kind, heldMs, settings.tapOpens) !== "tap") {
-                    runtime.release(kind);
+                const action = jarvisRelease(kind, heldMs, settings.tapOpens);
+                runtime.release(kind, action);
+                if (action !== "open")
                     return;
-                }
-                void runtime.cancel();
                 toggleJarvisTab({
                     menuStore: () => jarvisMenuStore(window.SteamUIStore?.WindowStore ?? CompatUI.Router?.WindowStore, gameRunning() ? 1 : 0),
                     navigation: () => CompatUI.Navigation,
@@ -70835,6 +71421,14 @@ var index = definePlugin(() => {
         report: report => call("core_stream_report", report.active, report.device),
         schedule: (callback, delay) => window.setTimeout(callback, delay),
         cancel: timer => window.clearTimeout(timer),
+    }));
+    // 3.3.5: exiting games through Steam. Steam's app lifetime and its Exit Game go to the agent, which closes what a
+    // launch leaves running (docs/eternal/CONSOLE-GUARDS.md, "Exiting games").
+    const stopGameExitWatch = installOptionalHook("Core game exit watch", () => installGameExitWatch({
+        steam: () => window.SteamClient,
+        title: appId => String(window.appStore?.GetAppOverviewByAppID?.(appId)?.display_name ?? ""),
+        lifetime: (appId, running, title) => call("core_game_lifetime", appId, running, title),
+        exitChosen: () => call("core_game_exit_chosen"),
     }));
     const coreRepairTileTimer = window.setTimeout(() => {
         void ensureCoreRepairTile({
@@ -70923,7 +71517,7 @@ var index = definePlugin(() => {
             const cleanups = [
                 stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
                 stopUpdateNotice,
-                stopCoreHeartbeat, stopLocalInput, stopSwipeTyping, stopJarvis, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch,
+                stopCoreHeartbeat, stopLocalInput, stopSwipeTyping, stopJarvis, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch, stopGameExitWatch,
                 stopDeckyIpcRecovery,
                 uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
                 uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,
