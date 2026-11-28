@@ -15,9 +15,9 @@ test('news keeps native row objects and reorders without cloning their contents'
  assert.equal(out.nativeNewsRows({props:{children:[]}}).length,0);
  assert.equal(out.nativeNewsRows({props:{children:[activity,activity,updated]}}),null);
 });
-test('the control center retains the selected tab title',()=>{
+test('3.3.11: Quick Access > Core no longer holds the News settings',()=>{
  const center=fs.readFileSync(new URL('../src/ControlCenter.tsx',import.meta.url),'utf8');
- assert.match(center,/active !== "decky" && \(active !== "home" \|\| homeTitle\) && <h2 className="ph-control-heading">\{active === "home" \? homeTitle : copy\[active\]\}/);
+ assert.doesNotMatch(center,/HomeNewsSettings|id="news"/);
 });
 
 test("news survives a Steam shelf disappearing during refresh",()=>{

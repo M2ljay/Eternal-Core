@@ -64,13 +64,15 @@ test("content readiness needs mounted, visible content and respects real ancesto
 
 test("ControlCenter uses ephemeral selection and committed content readiness without changing host focus ownership", () => {
   const source = readFileSync(new URL("../src/ControlCenter.tsx", import.meta.url), "utf8");
-  assert.match(source, /useOnboardingControlShowcase\(origin === "qam", ready, visible, manualActive, manualCustomizing\)/);
+  // 3.3.11: one list. The tour still names the old tabs; each opens the group that now holds that tab's content.
+  assert.match(source, /useOnboardingControlShowcase\(origin === "qam", ready, visible, state\.active, false\)/);
   assert.match(source, /data-onboarding-active-tab=\{customizing \? "customize" : active\}/);
-  assert.match(source, /data-onboarding-content-ready=\{ready && \(active !== "decky" \|\| customizing \|\| deckyHost.ready\)\}/);
+  assert.match(source, /data-onboarding-content-ready=\{ready\}/);
   assert.match(source, /data-playhub-onboarding-content=\{origin === "qam" \? "store" : undefined\}/);
   assert.match(source, /data-playhub-onboarding-content=\{origin === "qam" \? "home" : undefined\}/);
-  assert.match(source, /data-playhub-onboarding-content=\{origin === "qam" \? "customize" : undefined\}/);
-  assert.match(source, /const hostActive = !customizing && active === "decky" && deckyAvailable/);
+  assert.match(source, /data-playhub-onboarding=\{origin === "qam" \? "customize" : undefined\}/);
+  assert.match(source, /const shown = showcasing \? \(customizing \? "group\/system" : groupFor\(active\)\) : undefined;/);
+  assert.doesNotMatch(source, /<DeckyHost /, "no Decky inside Core; Decky keeps Steam's rail tab");
   assert.doesNotMatch(source, /resumePlayhubOnboarding/);
 });
 

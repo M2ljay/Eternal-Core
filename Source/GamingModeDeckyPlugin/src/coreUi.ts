@@ -13,7 +13,7 @@
 
 import {
   CORE_UI_LIVE_ATTRIBUTE, buildCoreUiCss, findCoreUiMapsDetailed, CORE_UI_ATTRIBUTE, CORE_UI_HOST_ATTRIBUTE, CORE_UI_ORB_ID, CORE_UI_STARS_ATTRIBUTE, CORE_UI_STYLE_ID,
-  CORE_UI_CHROME_ATTRIBUTE, CORE_UI_CLEAR_ATTRIBUTE, CORE_MENU_LOGO_BAND, CORE_UI_HEADER_ATTRIBUTE, headerHidden, CORE_QAM_VISIBLE_ATTRIBUTE, CORE_QAM_VISIBLE_VAR,
+  CORE_UI_CHROME_ATTRIBUTE, CORE_UI_CLEAR_ATTRIBUTE, CORE_MENU_LOGO_BAND, CORE_UI_HEADER_ATTRIBUTE, headerHidden, CORE_QAM_VISIBLE_ATTRIBUTE, CORE_QAM_VISIBLE_VAR, CORE_QAM_FULL_ATTRIBUTE,
   type CoreUiHost, type CoreUiSheet,
 } from "./coreUiStyles";
 import { InlineEdits, chromeState, clearOpaqueLayers, keepBelowLogo, type View } from "./coreUiDom";
@@ -391,7 +391,7 @@ export function createCoreUi(deps: CoreUiDeps) {
     for (const doc of docs) {
       try { for (const element of Array.from(doc.querySelectorAll<HTMLElement>(dom.qamMenu)).slice(0, 2)) menus.push({ doc, element }); } catch { /* Next document. */ }
     }
-    let placeholderLeft: number | undefined, hostWidth: number | undefined;
+    let placeholderLeft: number | undefined, hostWidth: number | undefined, hostHeight: number | undefined;
     if (dom.qamPlaceholder) {
       for (const doc of docs) {
         if (menus.some(menu => menu.doc === doc)) continue;
@@ -399,7 +399,7 @@ export function createCoreUi(deps: CoreUiDeps) {
           const width = Number(doc.defaultView?.innerWidth) || 0;
           const holder = doc.querySelector(dom.qamPlaceholder);
           const rect = holder?.getBoundingClientRect();
-          if (rect && rect.width > 0 && width > rect.left) { placeholderLeft = rect.left; hostWidth = width; break; }
+          if (rect && rect.width > 0 && width > rect.left) { placeholderLeft = rect.left; hostWidth = width; hostHeight = Number(doc.defaultView?.innerHeight) || undefined; break; }
         } catch { /* Next document. */ }
       }
     }
@@ -413,11 +413,16 @@ export function createCoreUi(deps: CoreUiDeps) {
           if (element.getAttribute(CORE_QAM_VISIBLE_ATTRIBUTE) !== "1") element.setAttribute(CORE_QAM_VISIBLE_ATTRIBUTE, "1");
           qamSized.add(element);
         } else unsizeQam(element);
+        // 3.3.11: a Quick Access window as tall as the main window (the placeholder no longer leaves the top bar's and
+        // the footer's room) gets a top safe area, so its first row is not where the clock sits.
+        const tall = !!hostHeight && (Number(view?.innerHeight) || 0) >= hostHeight - 2;
+        if (tall) { if (element.getAttribute(CORE_QAM_FULL_ATTRIBUTE) !== "1") element.setAttribute(CORE_QAM_FULL_ATTRIBUTE, "1"); qamSized.add(element); }
+        else if (element.hasAttribute?.(CORE_QAM_FULL_ATTRIBUTE)) element.removeAttribute(CORE_QAM_FULL_ATTRIBUTE);
       } catch { /* Left as Steam lays it out. */ }
     }
   }
   function unsizeQam(element: HTMLElement) {
-    try { element.removeAttribute(CORE_QAM_VISIBLE_ATTRIBUTE); element.style.removeProperty(CORE_QAM_VISIBLE_VAR); } catch {}
+    try { element.removeAttribute(CORE_QAM_VISIBLE_ATTRIBUTE); element.removeAttribute(CORE_QAM_FULL_ATTRIBUTE); element.style.removeProperty(CORE_QAM_VISIBLE_VAR); } catch {}
     qamSized.delete(element);
   }
 

@@ -89,7 +89,9 @@ const noSubscribe = () => () => {};
 const alwaysOff = () => false;
 function CoreTitle() {
   const on = React.useSyncExternalStore(coreUiSetting?.subscribe ?? noSubscribe, coreUiSetting?.get ?? alwaysOff, coreUiSetting?.get ?? alwaysOff);
-  return on ? <span style={{ display: "block", lineHeight: "36px", fontSize: 20, fontWeight: 600, color: "#FFFFFF" }}>Core</span> : playhubWordmarkImage;
+  // 3.3.11 (the QAMCore board): the Core ring, then "Core".
+  return on ? <span style={{ display: "flex", alignItems: "center", gap: 12, lineHeight: "36px", fontSize: 20, fontWeight: 600, color: "#FFFFFF" }}>
+    <span aria-hidden="true" style={{ display: "inline-flex", fontSize: 26, color: CORE.crimson }}><PlayhubIcon /></span>Core</span> : playhubWordmarkImage;
 }
 const playhubTitle = <CoreTitle />;
 function ModeButtonLabel({ mode }: { mode: "gaming" | "desktop" }) {

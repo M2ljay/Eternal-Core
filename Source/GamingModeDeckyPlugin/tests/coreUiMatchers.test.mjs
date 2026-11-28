@@ -11,7 +11,7 @@ import ts from "typescript";
 
 const compilerOptions = { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React };
 const local = { "./steamModules": "steamModules.ts", "./coreUiStyles": "coreUiStyles.ts", "./coreUiDom": "coreUiDom.ts", "./coreFullHeight": "coreFullHeight.ts",
-  "./coreArtwork": "coreArtwork.ts", "./coreStarfield": "coreStarfield.ts", "./coreUiSetting": "coreUiSetting.ts", "./coreInputPrompts": "coreInputPrompts.ts", "./coreQamRail": "coreQamRail.ts", "./coreHomePages": "coreHomePages.ts" };
+  "./coreArtwork": "coreArtwork.ts", "./coreStarfield": "coreStarfield.ts", "./coreUiSetting": "coreUiSetting.ts", "./coreInputPrompts": "coreInputPrompts.ts", "./coreQamRail": "coreQamRail.ts", "./coreLabels": "coreLabels.ts", "./coreHomePages": "coreHomePages.ts" };
 const cache = new Map();
 function load(file) {
   if (cache.has(file)) return cache.get(file);
@@ -207,7 +207,7 @@ test("Home after Art Hero (Steam's row, the fallback since 3.3.10): the art one 
   const a = styles.CORE_HOME_ART;
   assert.ok(part.includes(`mask-image:linear-gradient(180deg, #000000 ${a.fadeFrom}%, transparent 100%)`), "a short fade at the bottom only");
   // 3.3.10: screen one is exactly one screen and its own stacking context (TV: rows stacked over each other).
-  assert.match(part, /_HmRecent\._HmRecent\{position:relative !important;height:100vh !important;min-height:100vh !important;max-height:100vh !important;padding:0 !important;isolation:isolate/);
+  assert.match(part, /_HmRecent\._HmRecent\{position:relative !important;height:calc\(100vh - 100px\) !important;min-height:calc\(100vh - 100px\) !important;max-height:calc\(100vh - 100px\) !important;padding:0 !important;isolation:isolate/);
   assert.match(part, /_RgBg\._RgBg,[^{]*_RgImgs\._RgImgs\{[^}]*height:100vh !important;min-height:0 !important;max-height:100vh/, "the art never runs on under the next rows");
   assert.match(part, /_RgImg\._RgImg\{object-fit:cover !important;object-position:center !important;opacity:1 !important;filter:none/, "full brightness");
   assert.match(part, /_RgHead\._RgHead\{display:none/);

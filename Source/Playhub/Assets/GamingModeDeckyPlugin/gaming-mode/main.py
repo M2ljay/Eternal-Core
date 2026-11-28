@@ -2590,7 +2590,9 @@ $result | ConvertTo-Json -Compress
             active = next(x for x in order if x in eligible and x not in hidden)
         collapsed = [x for x in preferences.get("collapsed", []) if isinstance(x, str) and len(x) < 80][:64]
         section_ids = ("topbar-date", "device", "device/details", "news", "daily-history", "measurement",
-                       "display", "mixer", "devices", "power", "game", "shaders", "nvidia", "radeon", "lossless", "agent")
+                       "display", "mixer", "devices", "power", "game", "shaders", "nvidia", "radeon", "lossless", "agent",
+                       # 3.3.11: Quick Access > Core's groups (controlCenterState.ts, CORE_GROUPS).
+                       "group/sound", "group/display", "group/controller", "group/downloads", "group/look", "group/system")
         requested_sections = preferences.get("expandedSections", [])
         expanded_sections = set(x for x in requested_sections[:64] if isinstance(x, str)) if isinstance(requested_sections, list) else set()
         expanded_sections = [x for x in section_ids if x in expanded_sections]
@@ -2603,7 +2605,8 @@ $result | ConvertTo-Json -Compress
         data = dict(order=order, hidden=hidden, active=active, collapsed=collapsed, expandedSections=expanded_sections,
                     deckyHostEnabled=decky_host_enabled,
                     topbarDateEnabled=preferences.get("topbarDateEnabled", True) is True,
-                    topbarDateFormat=date_format, topbarClockLeft=preferences.get("topbarClockLeft", False) is True)
+                    topbarDateFormat=date_format, topbarClockLeft=preferences.get("topbarClockLeft", False) is True,
+                    layout=3311 if preferences.get("layout") == 3311 else 0)
         with self._panel_lock:
             os.makedirs(self._settings_dir, exist_ok=True)
             temporary = self._panel_path + ".tmp"

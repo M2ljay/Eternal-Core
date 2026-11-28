@@ -5,11 +5,12 @@ import {SP_REACT} from "./decky";
 const {createElement,useSyncExternalStore}=SP_REACT;
 import { findInReactTree, getReactRoot } from "@decky/ui";
 
-type Entry = { id: string; label: string; route: string; icon: any; order: number; onSecondary?: () => void };
+// `hide` (Eternal Core 3.3.11): an entry that adds no item but leaves out native items it matches (Friends & Chat).
+type Entry = { id: string; label: string; route: string; icon: any; order: number; onSecondary?: () => void; hide?: (item: any) => boolean };
 type State = { entries: Map<string, Entry>; dispose?: () => void; timer?: any; revision?: number;
   implementation?: number; current?: () => boolean; sequence?: number; listeners?: Set<() => void>; unobserveEntries?: () => void };
 const REVISION = 3; // Registry/cleanup ABI remains compatible with installed Discord v3.
-const IMPLEMENTATION = 4;
+const IMPLEMENTATION = 5; // 5: entries that hide native items.
 const KEY = "__necroSteamMenuV1";
 const state = (): State => ((window as any)[KEY] ||= { entries: new Map() });
 const ownedItem = (item: any) => String(item?.key || "").startsWith("necro-menu:")
@@ -69,10 +70,13 @@ function install(s: State): boolean {
       useSyncExternalStore(subscribe, snapshot, snapshot);
       const result = native.apply(this, args);
       return replace(result, value => Array.isArray(value) && value.some(isItem), items => {
-        const clean = items.filter((item: any) => !ownedItem(item));
+        const all = [...s.entries.values()];
+        const hiders = all.filter(entry => typeof entry.hide === "function");
+        const hidden = (item: any) => hiders.some(entry => { try { return isItem(item) && entry.hide!(item); } catch { return false; } });
+        const clean = items.filter((item: any) => !ownedItem(item) && !hidden(item));
         const template = clean.find(isItem);
         if (!template) return items;
-        const entries = [...s.entries.values()].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
+        const entries = all.filter(entry => typeof entry.hide !== "function").sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
         let position = 3;
         try { position = Number(localStorage.getItem("STEAMCORD_MENU_POSITION") || 3); } catch {}
         if (!Number.isFinite(position) || position < 1 || position > 9) position = 3;

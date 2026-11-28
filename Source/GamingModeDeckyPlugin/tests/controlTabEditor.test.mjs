@@ -104,13 +104,9 @@ test("all 12 locales cover footer, state and a scoped reset explanation", () => 
   assert.deepEqual(tabEditorLocale("koreana"), tabEditorLocale("ko"));
   assert.deepEqual(tabEditorLocale("unknown"), en);
 });
-test("editor uses native actions, stable keyed nodes and no legacy visibility/order controls", () => {
+// 3.3.11: Quick Access > Core is one list; the tab editor (the gear) is no longer shown. Its state module stays for the
+// saved order and hidden tabs, which old settings still carry.
+test("the one list has no tab editor", () => {
   const source = fs.readFileSync(new URL("../src/ControlCenter.tsx", import.meta.url), "utf8");
-  assert.match(source, /onSecondaryButton=/);
-  assert.match(source, /onGamepadDirection=\{editor\.draftOrder \? editorDirection : undefined\}/);
-  assert.match(source, /key=\{id\}/);
-  assert.match(source, /style=\{\{ order: \(editor\.draftOrder \?\? state\.order\)\.indexOf\(id\) \}\}/);
-  assert.doesNotMatch(source, /ToggleField label=\{copy.show\}|TbArrowLeft|TbArrowRight|<h3>\{copy.settings\}/);
-  assert.doesNotMatch(source, /<TbX|ph-control-settings-header/);
-  assert.match(source, /active !== "decky" && \(active !== "home" \|\| homeTitle\)/);
+  assert.doesNotMatch(source, /tabEditorTransition|createTabEditor|editorDirection/);
 });

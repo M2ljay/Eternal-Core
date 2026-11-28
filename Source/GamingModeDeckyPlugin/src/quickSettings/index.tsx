@@ -397,9 +397,19 @@ export function disposeDisplayConfirmation() {
   current?.modal?.Close?.();
 }
 
-export function QuickSettingsContent({ page, expanded = [], onToggle, locale, gameAppId = 0, gamingMode = false }: {
-  page: ControlTab | "tools"; expanded?: string[]; onToggle: (id: string) => void; locale: string; gameAppId?: number; gamingMode?: boolean;
+// 3.3.11: the parts Quick Access > Core lays out as one list (ControlCenter.tsx, page "core"): every section, plus the
+// short pickers the Quick rows open and the current display and sound output for their labels.
+export type CoreQuickParts = {
+  sections: Record<"power" | "shaders" | "mixer" | "devices" | "display" | "nvidia" | "radeon" | "lossless" | "agent", ReactNode>;
+  quick: { display: ReactNode; sound: ReactNode; power: ReactNode; displayLabel: string; soundLabel: string };
+  status: ReactNode;
+};
+
+export function QuickSettingsContent({ page, expanded = [], onToggle, locale, gameAppId = 0, gamingMode = false, layout }: {
+  page: ControlTab | "tools" | "core"; expanded?: string[]; onToggle: (id: string) => void; locale: string; gameAppId?: number; gamingMode?: boolean;
+  layout?: (parts: CoreQuickParts) => ReactNode;
 }) {
+  const core = page === "core";
   const local = t(locale);
   const groups = quickSettingsGroups(locale);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -1066,37 +1076,28 @@ export function QuickSettingsContent({ page, expanded = [], onToggle, locale, ga
       [local.advanced]: ["tools", "agent"],
     };
     const [tab, id] = location ?? sections[title];
-    if (tab !== page) return null;
+    if (!core && tab !== page) return null;
     return <ControlSection key={id} id={id} title={title} icon={icon} locale={locale}
       collapsed={!expanded.includes(id)} onToggle={onToggle}>
       <div className="qsCardBody">{children}</div>
     </ControlSection>;
   };
 
-  return (
-    <div>
-      <Focusable flow-children="column" className="qsRedesign">
-        <style>{qsClassSelectors(`
-          .qsRedesign,.qsRedesign *{box-sizing:border-box;min-width:0;letter-spacing:0}
-          .qsRedesign{width:100%;padding:0 16px 18px;overflow-x:hidden;color:inherit}
-          .qsCardBody{display:flex;flex-direction:column;gap:8px;width:100%;padding:0}
-          .qsCardBody>div{width:100%;max-width:100%;min-width:0}
-          .qsCardBody [class*="PanelSectionRow"]{padding-left:0!important;padding-right:0!important;margin:0!important}
-          .qsRedesign .qsDropdownFullWidth>div,.qsRedesign .qsDropdownFullWidth>div>div{width:100%;max-width:100%;min-width:0}
-          .qsRedesign .qsDropdownFullWidth [role="combobox"]{width:100%;max-width:100%;min-width:0}
-          .qsRedesign [class*="WithBottomSeparator"],.qsRedesign [class*="Field"]{border-top:0!important;border-bottom:0!important}
-          .qsRedesign [class*="WithBottomSeparator"]::before,.qsRedesign [class*="WithBottomSeparator"]::after,.qsRedesign [class*="Field"]::before,.qsRedesign [class*="Field"]::after{display:none!important}
-          .qsRedesign [role="separator"],.qsRedesign [class*="FieldSeparator"],.qsRedesign hr{display:none!important}
-          .qsButtonInner{display:flex;align-items:center;gap:9px;text-align:left}
-          .qsButtonInner svg{width:17px;height:17px;flex:none}
-          .qsMeta{font-size:12px;line-height:1.45;opacity:.7;overflow-wrap:anywhere}
-          .qsStatus{font-size:13px;line-height:1.4;padding:4px 0}
-        `)}</style>
-
-        {!caps && <div className="qsMeta">{loadFailed ? local.notConnected : controlLocale(locale).loading}
+  const statusPart = !caps ? <div className="qsMeta">{loadFailed ? local.notConnected : controlLocale(locale).loading}
           {loadFailed && <DialogButton onClick={() => { setLoadFailed(false); setLoadAttempt(value => value + 1); }}>{controlLocale(locale).retry}</DialogButton>}
-        </div>}
-        {section(<FaBolt />, groups.power, <>
+        </div> : null;
+  // 3.3.11: the Quick rows' pickers and labels (ControlCenter.tsx).
+  // One element each, shown in its section and under its Quick row.
+  const resolutionControl = caps?.display && resolutionOptions.length > 0 && <QuickDropdown fullWidth key={`res-${currentResolution}`} label={local.resolution} options={resolutionOptions} value={currentResolution} onChange={onResolution} />;
+  const refreshControl = caps?.display && refreshOptions.length > 0 && <QuickDropdown fullWidth key={`hz-${currentRefresh}`} label={local.refreshRate} options={refreshOptions} value={currentRefresh} onChange={onRefresh} />;
+  const hdrControl = <ToggleField bottomSeparator="none" label={local.hdr} checked={Boolean(hdr.enabled)} disabled={hdr.available !== true || hdr.supported !== true} onChange={onHdr} />;
+  const outputControl = <QuickDropdown fullWidth label={local.audioOutput} options={outputOptions} value={audio.default_output_id || ""} disabled={!audio.ok || audio.outputs.length === 0} onChange={onOutput} />;
+  const displayQuick = <div className="qsCardBody">{resolutionControl}{refreshControl}{hdrControl}</div>;
+  const soundQuick = <div className="qsCardBody">{outputControl}</div>;
+  const displayLabel = [display?.current?.width ? `${display.current.width} × ${display.current.height}` : "", display?.current?.hz ? `${display.current.hz} Hz` : "",
+    hdr.enabled ? "HDR" : ""].filter(Boolean).join(" · ");
+  const soundLabel = audio.outputs.find(device => device.id === audio.default_output_id)?.name ?? "";
+  const powerBody = <>
           <HandheldPowerLimits locale={locale} />
           <LenovoPowerLimits locale={locale} />
           <PowerProfile locale={locale} />
@@ -1106,33 +1107,30 @@ export function QuickSettingsContent({ page, expanded = [], onToggle, locale, ga
           <OneXFanControls locale={locale} />
           <AsusPerformanceActions locale={locale} />
           <ProcessorBoost locale={locale} />
-        </>, ["graphics", "power"])}
-        {page === "graphics" && <ShaderCompatibility key={gameAppId} appId={gameAppId} locale={locale}
-          renderSection={body => section(<FaMicrochip />, groups.shaders, body, ["graphics", "shaders"])} />}
-
-        {section(<FaVolumeUp />, groups.mixer, <>
+        </>;
+  const powerPart = section(<FaBolt />, groups.power, powerBody, ["graphics", "power"]);
+  const shadersPart = (page === "graphics" || core) ? <ShaderCompatibility key={gameAppId} appId={gameAppId} locale={locale}
+          renderSection={body => section(<FaMicrochip />, groups.shaders, body, ["graphics", "shaders"])} /> : null;
+  const mixerPart = section(<FaVolumeUp />, groups.mixer, <>
           <QuickSlider label={local.volume} value={volume.level} min={0} max={100} suffix="%" disabled={!volume.available} onChange={onVolume} />
           <QuickSlider label={local.microphoneVolume} value={clampPercent(audio.input_volume)} min={0} max={100} suffix="%" disabled={!audio.ok} onChange={onMicVolume} />
-        </>, ["performance", "mixer"])}
-        {section(<FaVolumeUp />, groups.devices, <>
-          <QuickDropdown fullWidth label={local.audioOutput} options={outputOptions} value={audio.default_output_id || ""} disabled={!audio.ok || audio.outputs.length === 0} onChange={onOutput} />
+        </>, ["performance", "mixer"]);
+  const devicesPart = section(<FaVolumeUp />, groups.devices, <>
+          {outputControl}
           <SpatialAudioControls locale={locale} endpointId={audio.default_output_id || ""} />
           <QuickDropdown fullWidth label={local.microphoneInput} options={inputOptions} value={audio.default_input_id || ""} disabled={!audio.ok || audio.inputs.length === 0} onChange={onInput} />
-        </>, ["performance", "devices"])}
-
-        {section(<FaDesktop />, local.display, <>
+        </>, ["performance", "devices"]);
+  const displayPart = section(<FaDesktop />, local.display, <>
           <PanelBrightness locale={locale} />
           <QuickSlider label={softwareBrightnessLabel(locale)} value={dimmerToBrightness(dimmer.level)} min={0} max={100} suffix="%" onChange={onBrightness} />
-          {caps?.display && resolutionOptions.length > 0 && <QuickDropdown fullWidth key={`res-${currentResolution}`} label={local.resolution} options={resolutionOptions} value={currentResolution} onChange={onResolution} />}
-          {caps?.display && refreshOptions.length > 0 && <QuickDropdown fullWidth key={`hz-${currentRefresh}`} label={local.refreshRate} options={refreshOptions} value={currentRefresh} onChange={onRefresh} />}
-          <ToggleField bottomSeparator="none" label={local.hdr} checked={Boolean(hdr.enabled)} disabled={hdr.available !== true || hdr.supported !== true} onChange={onHdr} />
+          {resolutionControl}
+          {refreshControl}
+          {hdrControl}
           <PerformanceSettings locale={locale} appId={gameAppId} />
           {gamingMode && gameAppId === 0 && <SteamDownloadPower locale={locale} />}
-        </>)}
-
-        {page === "graphics" && <NvidiaControls locale={locale} collapsed={!expanded.includes("nvidia")} onToggle={onToggle} />}
-
-        {caps?.amd_radeon && amd?.available && section(<FaMicrochip />, local.amd, <>
+        </>);
+  const nvidiaPart = (page === "graphics" || core) && <NvidiaControls locale={locale} collapsed={!expanded.includes("nvidia")} onToggle={onToggle} />;
+  const radeonPart = caps?.amd_radeon && amd?.available && section(<FaMicrochip />, local.amd, <>
           {amdPending && <div className="qsMeta" role="status">{controlLocale(locale).loading}</div>}
           {amdReadbackUnknown && <div className="qsMeta" role="status">{nvidiaLocale(locale).failed}
             <DialogButton onClick={() => void loadAmd()}>{controlLocale(locale).retry}</DialogButton>
@@ -1154,9 +1152,8 @@ export function QuickSettingsContent({ page, expanded = [], onToggle, locale, ga
           {amd.display_color?.contrast?.supported && <QuickSlider disabled={amdReadbackUnknown} label={local.amdDisplayContrast} value={amd.display_color.contrast.value ?? 100} min={amd.display_color.contrast.min ?? 0} max={amd.display_color.contrast.max ?? 200} onChange={(v: number) => queueAmdWrite("display_contrast", v, AMD_SLIDER_SETTLE)} />}
           {amd.display_color?.saturation?.supported && <QuickSlider disabled={amdReadbackUnknown} label={local.amdDisplaySaturation} value={amd.display_color.saturation.value ?? 100} min={amd.display_color.saturation.min ?? 0} max={amd.display_color.saturation.max ?? 200} onChange={(v: number) => queueAmdWrite("display_saturation", v, AMD_SLIDER_SETTLE)} />}
           {amd.display_color?.temperature?.supported && <QuickSlider disabled={amdReadbackUnknown} label={local.amdDisplayTemperature} value={amd.display_color.temperature.value ?? 6500} min={amd.display_color.temperature.min ?? 4000} max={amd.display_color.temperature.max ?? 10000} step={100} suffix=" K" onChange={(v: number) => queueAmdWrite("display_temperature", v, AMD_SLIDER_SETTLE)} />}
-        </>)}
-
-        {caps?.lossless && section(<FaPlay />, local.lossless, <>
+        </>);
+  const losslessPart = caps?.lossless && section(<FaPlay />, local.lossless, <>
           <ToggleField
             bottomSeparator="none"
             label={local.losslessScaling}
@@ -1172,15 +1169,57 @@ export function QuickSettingsContent({ page, expanded = [], onToggle, locale, ga
           <div className="qsMeta">
             {lossless?.can_scale ? local.losslessManagedHint : local.losslessGameOnlyHint}
           </div>
-        </>)}
-
-        {section(<FaTools />, local.advanced, <>
+        </>);
+  const agentPart = section(<FaTools />, local.advanced, <>
           <div className="qsStatus">{`${local.agentLabel}: ${agentRunning ? local.agentRunning : local.agentStopped}`}</div>
           <DialogButton disabled={agentRunning} onClick={onStartAgent}><span className="qsButtonInner"><FaPlay /><span>{local.startAgent}</span></span></DialogButton>
           <DialogButton disabled={!agentRunning} onClick={onStopAgent}><span className="qsButtonInner"><FaTools /><span>{local.stopAgent}</span></span></DialogButton>
           <div className="qsMeta">{local.agentHint}</div>
           <DialogButton disabled={diagnosticsBusy} onClick={onDiagnostics}><span className="qsButtonInner"><FaFileAlt /><span>{local.generateDiagnostics}</span></span></DialogButton>
-        </>)}
+        </>);
+  return (
+    <div>
+      <Focusable flow-children="column" className="qsRedesign">
+        <style>{qsClassSelectors(`
+          .qsRedesign,.qsRedesign *{box-sizing:border-box;min-width:0;letter-spacing:0}
+          .qsRedesign{width:100%;padding:0 16px 18px;overflow-x:hidden;color:inherit}
+          .qsCardBody{display:flex;flex-direction:column;gap:8px;width:100%;padding:0}
+          .qsCardBody>div{width:100%;max-width:100%;min-width:0}
+          .qsCardBody [class*="PanelSectionRow"]{padding-left:0!important;padding-right:0!important;margin:0!important}
+          .qsRedesign .qsDropdownFullWidth>div,.qsRedesign .qsDropdownFullWidth>div>div{width:100%;max-width:100%;min-width:0}
+          .qsRedesign .qsDropdownFullWidth [role="combobox"]{width:100%;max-width:100%;min-width:0}
+          .qsRedesign [class*="WithBottomSeparator"],.qsRedesign [class*="Field"]{border-top:0!important;border-bottom:0!important}
+          .qsRedesign [class*="WithBottomSeparator"]::before,.qsRedesign [class*="WithBottomSeparator"]::after,.qsRedesign [class*="Field"]::before,.qsRedesign [class*="Field"]::after{display:none!important}
+          .qsRedesign [role="separator"],.qsRedesign [class*="FieldSeparator"],.qsRedesign hr{display:none!important}
+          .qsButtonInner{display:flex;align-items:center;gap:9px;text-align:left}
+          .qsButtonInner svg{width:17px;height:17px;flex:none}
+          .qsMeta{font-size:12px;line-height:1.45;opacity:.7;overflow-wrap:anywhere}
+          .qsStatus{font-size:13px;line-height:1.4;padding:4px 0}
+        `)}</style>
+
+        {!core && statusPart}
+        {core && layout ? layout({
+          sections: { power: powerPart, shaders: shadersPart, mixer: mixerPart, devices: devicesPart, display: displayPart, nvidia: nvidiaPart,
+            radeon: radeonPart, lossless: losslessPart, agent: agentPart },
+          quick: { display: displayQuick, sound: soundQuick, power: powerBody, displayLabel, soundLabel },
+          status: statusPart,
+        }) : <>
+        {powerPart}
+        {shadersPart}
+
+        {mixerPart}
+        {devicesPart}
+
+        {displayPart}
+
+        {nvidiaPart}
+
+        {radeonPart}
+
+        {losslessPart}
+
+        {agentPart}
+        </>}
       </Focusable>
     </div>
   );

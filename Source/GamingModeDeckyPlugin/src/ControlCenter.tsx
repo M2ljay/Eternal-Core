@@ -1,19 +1,14 @@
 import { registerQamVisibilityDocument } from './qamTabVisibility';
-import { HomeNewsSettings } from "./HomeNews";
-import { ClubSettings } from "./club";
 import { call } from "./controlBackend";
 import { CORE } from "./corePalette";
 import { DFL, SP_REACT as React, toaster } from "./decky";
-import { TbPower, TbDeviceTv, TbVolume, TbDeviceGamepad2, TbPhoto, TbSettings, TbShoppingBag, TbRestore, TbPlug, TbGauge, TbTrophy } from "react-icons/tb";
+import { TbPower, TbDeviceTv, TbVolume, TbDeviceGamepad2, TbSettings, TbRestore, TbGauge, TbBolt, TbEye, TbDownload, TbChevronRight } from "react-icons/tb";
 import { controlLocale, controlStatus } from "./controlCenterLocale";
-import { normalizeControlPreferences, visibleControlTabs, type ControlPreferences, type ControlTab } from "./controlCenterState";
-import { createTabEditor, canToggleTab, tabEditorTransition, type TabEditorAction } from "./controlTabEditorState";
-import { tabEditorLocale } from "./controlTabEditorLocale";
+import { normalizeControlPreferences, visibleControlTabs, TAB_GROUP, type ControlPreferences, type ControlTab, type CoreGroup } from "./controlCenterState";
 import { topbarDateCopy, topbarDateOptions } from "./topbarDateLocale";
 import { QuickSettingsContent } from "./quickSettings";
 import { ControlSection } from "./ControlSection";
-import { DeckyHost, getDeckyHostSnapshot, subscribeDeckyHost, setDeckyHostEnabled, setDeckyNativeHidden } from "./deckyHost";
-import { deckyIntegrationLocale } from "./deckyIntegrationLocale";
+import { getDeckyHostSnapshot, subscribeDeckyHost, setDeckyHostEnabled, setDeckyNativeHidden } from "./deckyHost";
 import { getOnboardingExtraCopy } from "./onboardingLocale";
 import { registerOnboardingQamDocument, replayPlayhubOnboarding } from "./onboardingIntegration";
 import { useOnboardingControlShowcase } from "./onboardingControlShowcase";
@@ -23,13 +18,14 @@ import { useControlSections } from "./useControlSections";
 import { quickSettingsGroups } from "./quickSettings/groups";
 import { MsiChargeLimit } from "./quickSettings/MsiChargeLimit";
 
-import { QamSettings, qamSettingsCopy } from "./QamSettings";
+import { QamSettings } from "./QamSettings";
+import { coreQamCopy } from "./coreQamLocale";
+import { CoreUiSection } from "./CoreUiSection";
+import { useStoreDownloadsRunning } from "./storeDownloadMenu";
 
 const { Focusable, DialogButton, ToggleField, DropdownItem, ScrollPanel, GamepadButton } = DFL as any;
-const icons = { home: TbPower, audio: TbDeviceTv, performance: TbVolume, graphics: TbGauge, controller: TbDeviceGamepad2, store: TbShoppingBag, decky: TbPlug };
 let prefs = normalizeControlPreferences({});
 let loaded = false;
-let lastSettingsPage: 'general'|'qam' = 'general';
 let loading: Promise<void> | undefined;
 let write = Promise.resolve();
 const listeners = new Set<() => void>();
@@ -74,54 +70,68 @@ function update(next: ControlPreferences, locale: string) {
     toaster.toast({ title: "Core", body: controlLocale(locale).saveError });
   });
 }
+// 3.3.11 (the approved QAMCore board): Quick Access > Core is one scrolling list. No inner icon row and no gear:
+// a Quick block that is always open (Display, Sound, Performance, Power; each opens its picker or actions under it), then
+// sections that open and close with A and keep their state (expandedSections): Sound, Display & graphics, Controller,
+// Downloads (only while a store download runs), Look, System. Square gunmetal rows, the crimson focus bar, section
+// headers with a hairline under them and a chevron. The Decky sub-tab is gone (Decky keeps Steam's own rail tab), and
+// so are News and Club (Club lives on Home). Everything else the old tabs held is here.
 const css = `
-.ph-controls{width:100%;min-width:0;color:inherit;letter-spacing:0}
+.ph-controls{width:100%;min-width:0;color:inherit;letter-spacing:0;padding:0 12px 24px}
 .ph-controls *{box-sizing:border-box;letter-spacing:0}
-.ph-control-nav{display:grid;grid-template-columns:minmax(0,1fr);align-items:center;margin:4px 12px 12px;min-width:0;max-width:calc(100% - 24px)}
-.ph-control-tabs{display:flex;gap:3px;flex:1 1 0;overflow-x:auto;scrollbar-width:none;padding:3px;min-width:0}
-.ph-control-tabs::-webkit-scrollbar{display:none}
-.ph-controls .ph-control-icon{display:grid!important;place-items:center;width:32px!important;min-width:32px!important;max-width:32px!important;height:34px!important;min-height:34px!important;max-height:34px!important;padding:0!important;margin:0!important;border-radius:5px!important;border:2px solid transparent!important;background:transparent!important;color:inherit!important;flex:0 0 32px!important;transform:none!important;box-sizing:border-box!important;transition:background .12s,color .12s!important}
-.ph-control-icon svg{width:19px;height:19px}
-.ph-controls .ph-control-tabs>.ph-control-icon{width:auto!important;max-width:none!important;flex:1 0 32px!important}
-.ph-control-nav>.ph-control-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);overflow:visible;min-width:0}
-.ph-controls .ph-control-nav .ph-control-tabs>.ph-control-icon{width:100%!important;min-width:0!important;max-width:100%!important;flex:none!important}
-.ph-controls .ph-control-icon[aria-selected=true]{border-bottom-color:${CORE.crimson}!important}
-.ph-controls .ph-control-icon.gpfocus,.ph-controls .ph-control-icon:focus-visible,.ph-controls .ph-control-icon:hover{background:${CORE.gunmetalRaised}!important;color:${CORE.white}!important;box-shadow:inset 0 0 0 2px ${CORE.crimson}!important;transform:none!important}
-.ph-control-heading{font-size:18px;font-weight:700;margin:0 18px 12px;line-height:1.35}
-.ph-control-section{width:100%;min-width:0;margin:0 0 3px;border:0!important}
 .ph-controls [class*="PanelSection"]::after,.ph-controls [class*="Field"]::after,.ph-controls [class*="Field"]::before{display:none!important}
 .ph-controls [class*="PanelSection"],.ph-controls [class*="Field"]{border-top:0!important;border-bottom:0!important}
 .ph-controls hr,.ph-controls [role="separator"],.ph-controls [class*="FieldSeparator"],.ph-controls [class*="PanelSectionSeparator"],.ph-controls [class*="Divider"]:empty,.ph-controls [class*="divider"]:empty{display:none!important}
 .ph-controls [class*="BottomSeparator"],.ph-controls [class*="WithSeparator"]{border-top:0!important;border-bottom:0!important;box-shadow:none!important}
 .ph-controls [class*="BottomSeparator"]::before,.ph-controls [class*="BottomSeparator"]::after,.ph-controls [class*="WithSeparator"]::before,.ph-controls [class*="WithSeparator"]::after{display:none!important}
-.ph-controls .ph-control-section-title{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;min-height:42px!important;padding:10px 4px!important;display:flex!important;align-items:center;justify-content:space-between;gap:8px;border:0!important;background:transparent!important;color:inherit!important;border-radius:5px!important;transform:none!important;font-size:14px!important;white-space:normal!important}
-.ph-controls .ph-control-section-title.gpfocus,.ph-controls .ph-control-section-title:focus-visible,.ph-controls .ph-control-section-title:hover{background:${CORE.gunmetalRaised}!important;box-shadow:inset 3px 0 0 ${CORE.crimson}!important}
+.ph-quick-label{margin:6px 2px 8px;font-size:11px;font-weight:600;letter-spacing:.14em!important;text-transform:uppercase;color:${CORE.hint}}
+.ph-quick{display:flex;flex-direction:column;gap:4px;margin:0 0 14px}
+.ph-controls .ph-quick-row{width:100%!important;min-width:0!important;max-width:100%!important;min-height:52px!important;margin:0!important;padding:0 14px!important;display:flex!important;align-items:center;gap:12px;
+  background:${CORE.gunmetal}!important;color:${CORE.steel}!important;border:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important;font-size:16px!important;text-align:left}
+.ph-controls .ph-quick-row.gpfocus,.ph-controls .ph-quick-row:focus-visible,.ph-controls .ph-quick-row:hover{background:${CORE.gunmetalRaised}!important;color:${CORE.white}!important;box-shadow:inset 3px 0 0 ${CORE.crimson}!important}
+.ph-quick-row svg{width:20px;height:20px;flex:none}
+.ph-quick-row .ph-quick-value{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:14px;color:${CORE.hint};min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ph-quick-row .ph-quick-value svg{width:14px;height:14px}
+.ph-quick-panel{padding:6px 4px 10px 14px}
+.ph-power-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.ph-controls .ph-power-actions .DialogButton{min-width:0!important;height:44px!important;border-radius:0!important;background:${CORE.gunmetal}!important;color:${CORE.steel}!important;box-shadow:none!important}
+.ph-controls .ph-power-actions .DialogButton.gpfocus{background:${CORE.gunmetalRaised}!important;color:${CORE.white}!important;box-shadow:inset 3px 0 0 ${CORE.crimson}!important}
+.ph-control-section{width:100%;min-width:0;margin:0;border:0!important}
+.ph-controls .ph-control-section-title{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;min-height:48px!important;padding:10px 14px!important;display:flex!important;align-items:center;justify-content:space-between;gap:8px;border:0!important;
+  background:transparent!important;color:${CORE.steel}!important;border-radius:0!important;transform:none!important;font-size:16px!important;white-space:normal!important}
+.ph-controls .ph-control-section-title.gpfocus,.ph-controls .ph-control-section-title:focus-visible,.ph-controls .ph-control-section-title:hover{background:${CORE.gunmetalRaised}!important;color:${CORE.white}!important;box-shadow:inset 3px 0 0 ${CORE.crimson}!important}
 .ph-control-section-title strong{font-weight:600;overflow-wrap:anywhere}
-.ph-control-section-title>span{display:flex;gap:9px;align-items:center;text-align:left;min-width:0}
-.ph-control-section-title svg{width:17px;height:17px;flex:none}
-.ph-control-section-body{min-height:0;padding:4px 0 8px}
-.ph-control-settings{padding:12px 16px 20px}
-.ph-tab-editor-title{font-size:18px;line-height:1.3;margin:16px 0 8px;font-weight:700}
-.ph-control-settings p{font-size:12px;line-height:1.45;opacity:.7;margin:8px 0 18px}
-.ph-control-setting-row{padding:4px 0 12px}
-.ph-controls .ph-tab-editor{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%;min-width:0;margin:4px 0 4px;overflow:visible}
-.ph-controls .ph-tab-editor>.ph-control-icon{width:100%!important;min-width:0!important;max-width:100%!important;transition:background .12s,color .12s!important}
-.ph-tab-editor .ph-control-icon[data-hidden=true]{opacity:.4}
-.ph-tab-editor .ph-control-icon[data-moving=true]{outline:1px dashed currentColor;outline-offset:-5px}
-.ph-selected-tab{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:15px;font-weight:700;min-height:28px;line-height:1.4}
-.ph-selected-tab>span{min-width:0;overflow-wrap:anywhere}
-.ph-selected-tab-status{font-size:12px;font-weight:400;opacity:.75;text-align:right;max-width:48%}
-.ph-controls .ph-settings-action{width:100%!important;display:flex!important;align-items:center;gap:10px;white-space:normal!important;text-align:left}
+.ph-control-section-title>span{display:flex;gap:12px;align-items:center;text-align:left;min-width:0}
+.ph-control-section-title svg{width:18px;height:18px;flex:none}
+.ph-control-section-body{min-height:0;padding:4px 0 10px}
+.ph-core-group>.ph-control-section>.ph-control-section-title{min-height:52px!important;box-shadow:inset 0 -1px 0 ${CORE.gunmetal}!important;font-size:17px!important}
+.ph-core-group>.ph-control-section>.ph-control-section-title.gpfocus{box-shadow:inset 3px 0 0 ${CORE.crimson},inset 0 -1px 0 ${CORE.gunmetal}!important}
+.ph-core-group .ph-control-section-body .ph-control-section-title{font-size:15px!important}
+.ph-controls .ph-settings-action{width:100%!important;display:flex!important;align-items:center;gap:10px;white-space:normal!important;text-align:left;border-radius:0!important}
 .ph-settings-action svg{flex:none;width:18px;height:18px}
-.ph-settings-action span{min-width:0;overflow-wrap:anywhere}
-.ph-control-settings .ph-tab-reset-hint{margin:10px 2px 0;opacity:.7}
-.ph-editor-following{padding-top:32px}
-.ph-controls .qsRedesign{padding:0 16px 18px!important}
-.ph-controls .ph-control-settings .qsRedesign{padding:0 0 18px!important}
+.ph-controls .qsRedesign{padding:0 0 4px!important}
 .ph-controls .qsCardBody{gap:12px;padding:8px 0!important}
+.ph-core-subhead{margin:12px 2px 6px;font-size:11px;font-weight:600;letter-spacing:.14em!important;text-transform:uppercase;color:${CORE.hint}}
 `;
 
-export function ControlCenter({ locale, origin, session, store, controller, settings, downloads, homeTitle, gameAppId = 0, frameTiming, gamingMode = false }: {
+// Steam's own power calls (the same the Steam menu's Power entry makes).
+const steamSystem = () => (window as any).SteamClient?.System;
+const powerAction = (name: "SuspendPC" | "RestartPC" | "ShutdownPC") => () => { try { steamSystem()?.[name]?.(); } catch { /* Steam keeps running. */ } };
+
+type QuickId = "display" | "sound" | "performance" | "power";
+
+function QuickRow({ id, icon, title, value, open, onToggle, onboarding }: {
+  id: QuickId; icon: React.ReactNode; title: string; value?: string; open: boolean; onToggle: (id: QuickId) => void; onboarding?: string;
+}) {
+  return <DialogButton className="ph-quick-row" aria-expanded={open} onClick={() => onToggle(id)} data-playhub-onboarding={onboarding}>
+    {icon}<span>{title}</span><span className="ph-quick-value">{value ? <span>{value}</span> : null}<TbChevronRight /></span>
+  </DialogButton>;
+}
+
+// The group ids each old tab showed (the onboarding tour still names tabs; it is pointed at their groups).
+const groupFor = (tab: ControlTab): CoreGroup | undefined => TAB_GROUP[tab];
+
+export function ControlCenter({ locale, origin, session, store, controller, settings, downloads, gameAppId = 0, frameTiming, gamingMode = false }: {
   locale: string; origin: "qam" | "decky"; session: React.ReactNode; store: React.ReactNode; controller: React.ReactNode; settings: React.ReactNode; downloads?: React.ReactNode; homeTitle?: string; gameAppId?: number; frameTiming?: React.ReactNode; gamingMode?: boolean;
 }) {
   const state = React.useSyncExternalStore(subscribe, () => prefs);
@@ -134,22 +144,16 @@ export function ControlCenter({ locale, origin, session, store, controller, sett
       return ()=>{stopVisibility();stopOnboarding();};
     }
   }, [origin]);
-  const [manualCustomizing, setCustomizing] = React.useState(false);
-  const [settingsPage, updateSettingsPage] = React.useState<'general'|'qam'>(lastSettingsPage);
-  const setSettingsPage = (page:'general'|'qam') => {lastSettingsPage=page;updateSettingsPage(page);};
-  const [editor, setEditor] = React.useState(createTabEditor);
-  const editorRef = React.useRef(editor);
   const [ready, setReady] = React.useState(loaded);
+  const [quick, setQuick] = React.useState<QuickId | undefined>();
   const copy = controlLocale(locale);
-  const editorCopy = tabEditorLocale(locale);
-  const integrationCopy = deckyIntegrationLocale(locale);
+  const text = coreQamCopy(locale);
   const deckyHost = React.useSyncExternalStore(subscribeDeckyHost, getDeckyHostSnapshot);
+  const downloadsRunning = useStoreDownloadsRunning();
   React.useEffect(() => {
-    if (origin === "qam" && ready) {
-      setDeckyNativeHidden(state.deckyHostEnabled);
-      setDeckyHostEnabled(true);
-    }
-  }, [origin, ready, state.deckyHostEnabled]);
+    // 3.3.11: no Decky inside Core: Decky's own tab on Steam's rail stays visible and nothing is hosted here.
+    if (origin === "qam" && ready) { setDeckyNativeHidden(false); setDeckyHostEnabled(false); }
+  }, [origin, ready]);
   React.useEffect(() => {
     let alive = true;
     if (!loading) loading = call<[], unknown>("get_panel_preferences").then(value => {
@@ -158,147 +162,87 @@ export function ControlCenter({ locale, origin, session, store, controller, sett
     else void loading.finally(() => { if (alive) setReady(true); });
     return () => { alive = false; };
   }, []);
-  const deckyAvailable = origin === "qam" && deckyHost.available;
-  const editorTabs = state.order;
-  const visible = visibleControlTabs(state, deckyAvailable);
-  const manualActive = visible.includes(state.active) ? state.active : visible[0] ?? "home";
-  const { active, customizing, showcasing } = useOnboardingControlShowcase(origin === "qam", ready, visible, manualActive, manualCustomizing);
+  const visible = visibleControlTabs(state, false);
+  const { active, customizing, showcasing } = useOnboardingControlShowcase(origin === "qam", ready, visible, state.active, false);
   const updateExpanded = React.useCallback((change: (current: string[]) => string[]) => {
     if (ready) update({ ...prefs, expandedSections: change(prefs.expandedSections) }, locale);
   }, [ready, locale]);
   const { expanded, toggle: toggleSection } = useControlSections(state.expandedSections, updateExpanded);
-  const hostActive = !customizing && active === "decky" && deckyAvailable;
-  const editing = editor.selected;
-  const edit = (action: TabEditorAction) => {
-    const result = tabEditorTransition(prefs, editorRef.current, action, deckyAvailable);
-    editorRef.current = result.editor;
-    setEditor(result.editor);
-    if (result.preferences !== prefs) update(result.preferences, locale);
-  };
-  React.useEffect(() => {
-    if (!editorTabs.includes(editing)) {
-      const next = createTabEditor("home"); editorRef.current = next; setEditor(next);
-    }
-  }, [editing, state.order]);
-  const cancelEditor = (event?: any) => {
-    event?.stopPropagation?.(); event?.preventDefault?.();
-    if (editorRef.current.draftOrder) edit({ type: "cancel" });
-    else setCustomizing(false);
-  };
-  const editorDirection = (event: any) => {
-    if (!editorRef.current.draftOrder) return;
-    const button = event?.detail?.button;
-    if (![GamepadButton.DIR_LEFT, GamepadButton.DIR_RIGHT, GamepadButton.DIR_UP, GamepadButton.DIR_DOWN].includes(button)) return;
-    event.preventDefault?.(); event.stopPropagation?.();
-    if (button === GamepadButton.DIR_LEFT || button === GamepadButton.DIR_RIGHT) edit({ type: "move", direction: button === GamepadButton.DIR_LEFT ? -1 : 1 });
-  };
-  const editorAction = (id: ControlTab) => {
-    if (editor.draftOrder) return editorCopy.confirm;
-    return !canToggleTab(state, id, deckyAvailable) ? editorCopy.lastTab : state.hidden.includes(id) ? editorCopy.show : editorCopy.hide;
-  };
-  const choose = (id: ControlTab) => update({ ...state, active: id }, locale);
-  const openDeviceVideo = () => {
-    choose("audio"); // Persisted tab ID for Video.
-    setCustomizing(false);
-  };
-  const openDevicePerformance = () => {
-    choose("graphics");
-    setCustomizing(false);
-  };
-  const step = (direction: number) => {
-    const index = visible.indexOf(active);
-    choose(visible[(index + direction + visible.length) % visible.length]);
-  };
+  // The tour shows a tab's content: its group is open while it does.
+  const shown = showcasing ? (customizing ? "group/system" : groupFor(active)) : undefined;
+  const isOpen = (group: CoreGroup) => group === shown || expanded.includes(group);
+  const openGroup = (group: CoreGroup) => { if (!expanded.includes(group)) toggleSection(group); };
+  const toggleQuick = (id: QuickId) => setQuick(current => current === id ? undefined : id);
+  const group = (id: CoreGroup, title: string, icon: React.ReactNode, children: React.ReactNode, onboarding?: string) =>
+    <div className="ph-core-group" data-core-group={id} data-playhub-onboarding={origin === "qam" ? onboarding : undefined}>
+      <ControlSection id={id} title={title} icon={icon} locale={locale} collapsed={!isOpen(id)} onToggle={toggleSection}>
+        <div data-playhub-onboarding-content={origin === "qam" && onboarding ? onboarding : undefined}>{children}</div>
+      </ControlSection>
+    </div>;
   return <Focusable className="ph-control-shell" flow-children="column"
-    onMoveDown={() => true}
     data-playhub-onboarding-controls={origin === "qam" ? "true" : undefined}
     data-onboarding-ready={ready} data-onboarding-decky-enabled={deckyHost.available}
-    data-onboarding-decky-visible={visible.includes("decky")} data-onboarding-customizing={customizing}
+    data-onboarding-decky-visible={false} data-onboarding-customizing={customizing}
     data-onboarding-active-tab={customizing ? "customize" : active}
     data-onboarding-store-visible={visible.includes("store")} data-onboarding-showcasing={showcasing}
-    data-onboarding-visible-tabs={JSON.stringify(visible)}
-    data-onboarding-content-ready={ready && (active !== "decky" || customizing || deckyHost.ready)}
-    actionDescriptionMap={customizing ? {} : { [GamepadButton.BUMPER_LEFT]: copy.switchTab, [GamepadButton.BUMPER_RIGHT]: copy.switchTab }}
-    onButtonDown={(event: any) => {
-      if (customizing) return;
-      const button = event?.detail?.button;
-      if (button !== GamepadButton.BUMPER_LEFT && button !== GamepadButton.BUMPER_RIGHT) return;
-      event.preventDefault?.(); event.stopPropagation?.(); step(button === GamepadButton.BUMPER_LEFT ? -1 : 1);
-    }} onCancelButton={customizing ? cancelEditor : undefined} onCancelActionDescription={customizing ? editorCopy.cancel : undefined}>
+    data-onboarding-visible-tabs={JSON.stringify(visible.filter(id => id !== "decky"))}
+    data-onboarding-content-ready={ready}>
     <OnboardingInputCapture active={origin === "qam" && showcasing} />
     <div className="ph-controls" ref={onboardingRoot}><style>{((DFL as any).coreClassSelectors?.(css) ?? css)}</style>
-    {customizing ? <ScrollPanel><Focusable className="ph-control-settings" flow-children="column" data-playhub-onboarding-content={origin === "qam" ? "customize" : undefined}>
-      <style>{`.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:${CORE.gunmetal};margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:${CORE.gunmetalRaised}!important;box-shadow:inset 0 -3px 0 ${CORE.crimson}!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:${CORE.white}!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid ${CORE.crimson}!important;outline-offset:-2px!important}`}</style>
-      {!showcasing&&<Focusable className="ph-settings-pages" flow-children="row" role="tablist">
-        <DialogButton role="tab" onOKActionDescription={copy.switchTab} aria-selected={settingsPage==='general'} onClick={()=>setSettingsPage('general')}>{qamSettingsCopy(locale)[0]}</DialogButton>
-        <DialogButton role="tab" onOKActionDescription={copy.switchTab} aria-selected={settingsPage==='qam'} onClick={()=>setSettingsPage('qam')}>Shortcuts</DialogButton>
-      </Focusable>}
-      {settingsPage==='qam'&&!showcasing?<QamSettings locale={locale}>{settings}
-        <ToggleField label={integrationCopy.label} description={integrationCopy.description} bottomSeparator="none" checked={state.deckyHostEnabled}
-          onChange={(enabled: boolean) => update({ ...state, deckyHostEnabled: enabled }, locale)} />
-      </QamSettings>:<>
-      <h2 className="ph-tab-editor-title" data-playhub-onboarding={origin === "qam" ? "customize" : undefined}>{editorCopy.title}</h2>
-      <p>{editorCopy.introduction}</p>
-      <Focusable className="ph-control-tabs ph-tab-editor" flow-children="row" role="tablist" aria-label={copy.customize}
-        onKeyDown={(event: any) => {
-          if (event.key === "x" || event.key === "X") { event.preventDefault(); event.stopPropagation(); edit({ type: "secondary" }); }
-          else if (event.key === "Escape") cancelEditor(event);
-          else if (editorRef.current.draftOrder && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
-            event.preventDefault(); event.stopPropagation();
-            if (event.key === "ArrowLeft" || event.key === "ArrowRight") edit({ type: "move", direction: event.key === "ArrowLeft" ? -1 : 1 });
-          }
-        }}>
-        {editorTabs.map(id => { const Icon = icons[id]; return <DialogButton key={id} className="ph-control-icon" role="tab" aria-label={`${copy[id]}: ${state.hidden.includes(id) ? editorCopy.hidden : editorCopy.visible}`} title={copy[id]}
-          onOKActionDescription={editorAction(id)} onSecondaryActionDescription={editor.draftOrder ? editorCopy.confirm : editorCopy.move} onCancelActionDescription={editorCopy.cancel}
-          actionDescriptionMap={{ [GamepadButton.OK]: editorAction(id), [GamepadButton.SECONDARY]: editor.draftOrder ? editorCopy.confirm : editorCopy.move, [GamepadButton.CANCEL]: editorCopy.cancel }}
-          aria-selected={editing === id} data-hidden={state.hidden.includes(id)} data-moving={editing === id && !!editor.draftOrder} style={{ order: (editor.draftOrder ?? state.order).indexOf(id) }}
-          onFocus={() => edit({ type: "select", id })} onGamepadFocus={() => edit({ type: "select", id })}
-          onGamepadDirection={editor.draftOrder ? editorDirection : undefined}
-          onSecondaryButton={(event: any) => { event.preventDefault?.(); event.stopPropagation?.(); edit({ type: "select", id }); edit({ type: "secondary" }); }}
-          onCancelButton={cancelEditor}
-          onClick={() => { edit({ type: "select", id }); edit({ type: "confirm" }); }}><Icon/></DialogButton>; })}
-      </Focusable>
-      <div className="ph-control-setting-row" aria-live="polite">
-        <div className="ph-selected-tab"><span>{copy[editing]}</span><span className="ph-selected-tab-status">{state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible}{!canToggleTab(state, editing, deckyAvailable) && <><br/>{editorCopy.lastTab}</>}</span></div>
-      </div>
-      <DialogButton className="ph-settings-action" onOKActionDescription={editorCopy.reset} onClick={() => edit({ type: "reset" })}><TbRestore /><span>{editorCopy.reset}</span></DialogButton>
-      <p className="ph-tab-reset-hint">{editorCopy.resetHint}</p>
-      <div className="ph-editor-following">
-      <div style={{ paddingTop: 16 }}>
-        <ControlSection id="topbar-date" title={topbarDateCopy(locale).title} locale={locale} icon={<TbSettings/>} collapsed={!expanded.includes('topbar-date')} onToggle={toggleSection}><TopbarDateSettings state={state} update={update} locale={locale} /></ControlSection>
-        {!showcasing && <ControlSection id="device" title={copy.device} locale={locale} icon={<TbDeviceGamepad2/>} collapsed={!expanded.includes('device')} onToggle={toggleSection}>
-          <DeviceSettings locale={locale} openVideo={visible.includes("audio") ? openDeviceVideo : undefined}
-            openPerformance={visible.includes("graphics") ? openDevicePerformance : undefined}
-            detailsOpen={expanded.includes("device/details")} onDetailsToggle={() => toggleSection("device/details")} />
-          <MsiChargeLimit locale={locale} />
-        </ControlSection>}
-      </div>
-      <ControlSection id="news" title="News" locale={locale} icon={<TbPhoto />} collapsed={!expanded.includes("news")} onToggle={toggleSection}><HomeNewsSettings locale={locale} /></ControlSection>
-      <ControlSection id="club" title="Club" locale={locale} icon={<TbTrophy />} collapsed={!expanded.includes("club")} onToggle={toggleSection}><ClubSettings locale={locale} /></ControlSection>
-      <QuickSettingsContent page="tools" locale={locale} expanded={expanded} onToggle={toggleSection} />
-      <DialogButton className="ph-settings-action" onClick={() => { setCustomizing(false); replayPlayhubOnboarding(); }}>
-        <TbRestore /> {getOnboardingExtraCopy(locale).replay}
-      </DialogButton>
-      </div>
-      </>}
-    </Focusable></ScrollPanel> : <>
-      <Focusable className="ph-control-nav" flow-children="row">
-        <Focusable className="ph-control-tabs" flow-children="row" role="tablist" aria-label="Core">
-          {visible.map(id => { const Icon = icons[id]; return <DialogButton key={id} className="ph-control-icon" role="tab" aria-selected={active === id} aria-label={copy[id]} onOKActionDescription={copy[id]} disabled={!ready}
-            data-playhub-onboarding={origin === "qam" ? id : undefined}
-            onClick={() => choose(id)}><Icon /></DialogButton>; })}
-        <DialogButton className="ph-control-icon" data-playhub-onboarding={origin === "qam" ? "customize" : undefined} aria-label={copy.settings} onOKActionDescription={copy.settings} disabled={!ready} onClick={() => setCustomizing(true)}><TbSettings /></DialogButton>
-        </Focusable>
-      </Focusable>
-      {active !== "decky" && (active !== "home" || homeTitle) && <h2 className="ph-control-heading">{active === "home" ? homeTitle : copy[active]}</h2>}
-      {!hostActive && <ScrollPanel><div data-playhub-onboarding-content={origin === "qam" ? active : undefined}>{active === "home" ? <div data-playhub-onboarding-content={origin === "qam" ? "home" : undefined}>{session}</div> : active === "store" ? <div data-playhub-onboarding-content={origin === "qam" ? "store" : undefined}>{store}</div> : active === "controller" ? <>{controller}</> :
-        <>
-          <QuickSettingsContent page={active === "decky" ? "home" : active} locale={locale} expanded={expanded} onToggle={toggleSection} gameAppId={gameAppId} gamingMode={gamingMode} />
-          {active === "graphics" && frameTiming && <ControlSection id="measurement" title={quickSettingsGroups(locale).measurement} icon={<TbGauge />} locale={locale}
-            collapsed={!expanded.includes("measurement")} onToggle={toggleSection}>{frameTiming}</ControlSection>}
-        </>}{downloads}</div></ScrollPanel>}
-    </>}
+    <ScrollPanel><Focusable flow-children="column">
+      <QuickSettingsContent page="core" locale={locale} expanded={expanded} onToggle={toggleSection} gameAppId={gameAppId} gamingMode={gamingMode}
+        layout={parts => <>
+          {parts.status}
+          <div className="ph-quick-label">{text.quick} · {text.alwaysOpen}</div>
+          <Focusable className="ph-quick" flow-children="column">
+            <QuickRow id="display" icon={<TbDeviceTv />} title={text.display} value={parts.quick.displayLabel} open={quick === "display"} onToggle={toggleQuick} />
+            {quick === "display" && <div className="ph-quick-panel">{parts.quick.display}</div>}
+            <QuickRow id="sound" icon={<TbVolume />} title={text.sound} value={parts.quick.soundLabel} open={quick === "sound"} onToggle={toggleQuick} />
+            {quick === "sound" && <div className="ph-quick-panel">{parts.quick.sound}</div>}
+            <QuickRow id="performance" icon={<TbBolt />} title={text.performance} open={quick === "performance"} onToggle={toggleQuick} />
+            {quick === "performance" && <div className="ph-quick-panel"><div className="qsCardBody">{parts.quick.power}</div></div>}
+            <QuickRow id="power" icon={<TbPower />} title={text.power} value={`${text.sleep} · ${text.restart} · ${text.shutDown}`} open={quick === "power"} onToggle={toggleQuick} />
+            {quick === "power" && <Focusable className="ph-quick-panel ph-power-actions" flow-children="row">
+              <DialogButton onClick={powerAction("SuspendPC")}>{text.sleep}</DialogButton>
+              <DialogButton onClick={powerAction("RestartPC")}>{text.restart}</DialogButton>
+              <DialogButton onClick={powerAction("ShutdownPC")}>{text.shutDown}</DialogButton>
+            </Focusable>}
+          </Focusable>
+          {group("group/sound", text.sound, <TbVolume />, <>{parts.sections.mixer}{parts.sections.devices}</>, "performance")}
+          {group("group/display", text.displayGraphics, <TbDeviceTv />, <>
+            {parts.sections.display}
+            {frameTiming && <ControlSection id="measurement" title={quickSettingsGroups(locale).measurement} icon={<TbGauge />} locale={locale}
+              collapsed={!expanded.includes("measurement")} onToggle={toggleSection}>{frameTiming}</ControlSection>}
+            {parts.sections.shaders}
+            {parts.sections.nvidia}
+            {parts.sections.radeon}
+            {parts.sections.lossless}
+          </>, "audio")}
+          {group("group/controller", text.controller, <TbDeviceGamepad2 />, controller, "controller")}
+          {downloadsRunning && group("group/downloads", text.downloads, <TbDownload />, downloads)}
+          {group("group/look", text.look, <TbEye />, <>
+            <CoreUiSection locale={locale} />
+            <ControlSection id="topbar-date" title={topbarDateCopy(locale).title} locale={locale} icon={<TbSettings/>} collapsed={!expanded.includes('topbar-date')} onToggle={toggleSection}>
+              <TopbarDateSettings state={state} update={update} locale={locale} /></ControlSection>
+          </>)}
+          {group("group/system", text.system, <TbSettings />, <>
+            {!showcasing && <ControlSection id="device" title={copy.device} locale={locale} icon={<TbDeviceGamepad2/>} collapsed={!expanded.includes('device')} onToggle={toggleSection}>
+              <DeviceSettings locale={locale} openVideo={() => openGroup("group/display")} openPerformance={() => { openGroup("group/display"); setQuick("performance"); }}
+                detailsOpen={expanded.includes("device/details")} onDetailsToggle={() => toggleSection("device/details")} />
+              <MsiChargeLimit locale={locale} />
+            </ControlSection>}
+            {parts.sections.agent}
+            <div data-playhub-onboarding-content={origin === "qam" ? "home" : undefined}>{session}</div>
+            <div className="ph-core-subhead">{text.stores}</div>
+            <div data-playhub-onboarding-content={origin === "qam" ? "store" : undefined}>{store}</div>
+            <div className="ph-core-subhead" data-playhub-onboarding={origin === "qam" ? "customize" : undefined}>{text.shortcuts}</div>
+            <QamSettings locale={locale}>{settings}</QamSettings>
+            <DialogButton className="ph-settings-action" onClick={() => replayPlayhubOnboarding()}>
+              <TbRestore /> {getOnboardingExtraCopy(locale).replay}
+            </DialogButton>
+          </>, "home")}
+        </>} />
+    </Focusable></ScrollPanel>
     </div>
-    {origin === "qam" && !state.hidden.includes("decky") && <DeckyHost active={hostActive} />}
   </Focusable>;
 }

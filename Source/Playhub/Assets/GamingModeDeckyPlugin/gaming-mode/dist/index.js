@@ -584,10 +584,10 @@ function withModuleFallbacks(ui) {
 const CompatUI = withModuleFallbacks(DFL);
 const _global_SP_REACT = SP_REACT;
 
-let ready$1;
+let ready;
 function ensureControlBackend() {
-    if (!ready$1)
-        ready$1 = (async () => {
+    if (!ready)
+        ready = (async () => {
             try {
                 await call$1("get_panel_preferences");
                 return;
@@ -614,8 +614,8 @@ function ensureControlBackend() {
                         throw error;
                 }
             }
-        })().catch(error => { ready$1 = undefined; throw error; });
-    return ready$1;
+        })().catch(error => { ready = undefined; throw error; });
+    return ready;
 }
 async function call(method, ...args) {
     await ensureControlBackend();
@@ -4720,7 +4720,7 @@ const storeDigitalTranslations = {
 };
 
 // SPDX-License-Identifier: MIT. Playhub, Copyright (c) 2026 LoZazaMastro.
-const en$b = {
+const en$c = {
     errorQueueChanged: "The download list changed. Refresh it and try again.",
     partnerInstallEa: "This game requires EA app. Installation from Digital Stores is not available yet.",
     partnerInstallUbisoft: "This game requires Ubisoft Connect. Installation from Digital Stores is not available yet.",
@@ -4743,7 +4743,7 @@ const en$b = {
     canceled: "Canceled", failed: "Failed", interrupted: "Interrupted", installing: "Installing", verifying: "Verifying", canceling: "Canceling", waiting: "Queued", signInCanceled: "Sign-in canceled. You can try again from Accounts.", signInFailed: "Sign-in failed. Try again from Accounts.", title: "Digital stores", subtitle: "Install and manage your games", library: "Your games", accounts: "Accounts", downloads: "Downloads", search: "Search your games", filters: "Filters", allStores: "All stores", allGames: "All games", installed: "Installed", notInstalled: "Not installed", install: "Install", manage: "Manage", uninstall: "Uninstall", refresh: "Refresh", signIn: "Sign in", signOut: "Sign out", connected: "Connected", disconnected: "Not connected", connecting: "Connecting…", expired: "Sign in again", unavailable: "Unavailable", signInNote: "Complete sign-in in the window that opened.", accountHint: "Sign in to see the games you own.", automaticSteam: "Installed games appear automatically in your Steam library, grouped by store.", installIntentLoading: "Finding this game in your library…", gameMissing: "This game is not available in the connected account. Refresh the library or check your account.", back: "Back", cancel: "Cancel", close: "Close", continue: "Continue", review: "Review installation", confirmInstall: "Install now", chooseFolder: "Choose folder", useFolder: "Use this folder", parentFolder: "Parent folder", thisPc: "This PC", directoryEmpty: "No folders here", directoryTruncated: "Showing the first 512 folders. Open a subfolder to continue.", pathNote: "A separate folder for this game will be created here.", loading: "Loading…", retry: "Retry", errorRead: "Couldn’t read your library. Your last confirmed data is still shown.", errorCommand: "The store couldn’t confirm this action. Refresh and try again.", errorPrepare: "Couldn’t prepare this installation. Try again.", errorDestination: "Choose a valid installation folder.", errorNotEmpty: "This game folder is not empty or writable. Choose another location.", errorSpace: "There is not enough free space in this location.", errorChanged: "The game or account changed. Review the current details and try again.", errorProviderBusy: "Another store operation is in progress. Try again when it finishes.", errorUninstall: "Couldn’t prepare this uninstall. Refresh and try again.", free: "Free space", required: "Required space", folder: "Installation folder", drive: "Drive", selectedDestination: "Selected destination", clearCompleted: "Clear completed", completed: "Completed", paused: "Paused", active: "In progress", downloadNow: "Download now", pause: "Pause", resume: "Resume", cancelDownload: "Cancel download", confirmCancel: "Cancel this download?", confirmUninstall: "Uninstall this game?", uninstallNote: "The selected game will be removed from this PC.", uninstallUnavailable: "Uninstall is unavailable for this installation.", emptyLibrary: "No games to show", emptyLibraryHelp: "Connect an account or adjust your filters.", emptyDownloads: "No downloads yet", emptyDownloadsHelp: "Choose a game to install from Your games.", xboxInstallNote: "Installation and its location are managed by Microsoft Store.", xboxRequested: "Installation requested. Progress appears here after the store confirms it.", unknown: "Not available", sort: "Sort by", titleOrder: "Title A–Z", installedFirst: "Installed first", refreshing: "Refreshing library…", games: "games", directoryError: "Couldn’t open this folder. Choose another location.", statusRetry: "Refresh installation status", accountRefreshFailed: "Couldn’t refresh this store. The previous library is kept."
 };
 function storeDigitalCopy(locale = getSteamLocale()) {
-    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$b };
+    const language = normalizeSteamLocale$2(locale) ?? "en", translated = storeDigitalTranslations[language], result = { ...en$c };
     for (const key of Object.keys(result)) {
         const value = translated?.[key];
         if (typeof value === "string" && value.trim())
@@ -4915,7 +4915,7 @@ function formatStoreInstallLanguage(language, locale) {
     }
 }
 
-const { ModalRoot: ModalRoot$3, TextField: TextField$5, showModal: showModal$5, ConfirmModal: ConfirmModal$3, DropdownItem: DropdownItem$6 } = CompatUI;
+const { ModalRoot: ModalRoot$3, TextField: TextField$4, showModal: showModal$5, ConfirmModal: ConfirmModal$3, DropdownItem: DropdownItem$5 } = CompatUI;
 function StoreDigitalDirectoryPicker({ controller, c, initialPath, onSelect, closeModal }) {
     useDigitalModalGuard();
     const [listing, setListing] = _global_SP_REACT.useState(null), [loading, setLoading] = _global_SP_REACT.useState(true), [error, setError] = _global_SP_REACT.useState(false);
@@ -4976,8 +4976,8 @@ function StoreDigitalInstallDialog({ controller, gameKey, c, onInstalled, closeM
     const browse = () => { let parent = path.replace(/[\\/][^\\/]+[\\/]?$/, ""); if (/^[a-z]:$/i.test(parent))
         parent += "\\"; openStoreDigitalDirectory(controller, c, absoluteWindowsPath(parent) ? parent : undefined, selected => void prepare(selected, true)); };
     const game = controller.game(gameKey), free = preparation?.locations.filter(location => path.toLowerCase().startsWith(location.rootPath.toLowerCase())).sort((a, b) => b.rootPath.length - a.rootPath.length)[0]?.freeBytes;
-    return SP_JSX.jsx(ModalRoot$3, { className: "ph-sd-modal-frame", onCancel: close, closeModal: close, bDisableBackgroundDismiss: true, children: SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-root ph-sd-modal", "flow-children": "column", noFocusRing: true, onCancel: (event) => { event.preventDefault(); event.stopPropagation(); close(); }, children: [SP_JSX.jsx(StoreDigitalStyles, {}), SP_JSX.jsx("h2", { children: game?.title ?? c.install }), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-modal-body", "flow-children": "column", noFocusRing: true, children: [view.busy && SP_JSX.jsx("div", { role: "status", children: c.loading }), view.error && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "alert", children: storeDigitalError(view.error, c) }), hasStoreInstallLanguageChoice(preparation?.languages) && SP_JSX.jsx(DropdownItem$6, { label: c.gameLanguage, layout: "below", bottomSeparator: "none", selectedOption: preparation?.language, disabled: view.busy, rgOptions: preparation.languages.map(data => ({ data, label: storeInstallLanguageName(data) })), onChange: (option) => { if (preparation?.languages?.includes(option.data))
-                                void prepare(path || undefined, false, option.data); } }), review && preparation ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("strong", { children: c.review }), SP_JSX.jsxs("dl", { className: "ph-sd-facts", children: [SP_JSX.jsx("dt", { children: c.folder }), SP_JSX.jsx("dd", { children: preparation.confirmedPath }), SP_JSX.jsx("dt", { children: c.required }), SP_JSX.jsx("dd", { children: storeBytes(preparation.requiredBytes) }), SP_JSX.jsx("dt", { children: c.free }), SP_JSX.jsx("dd", { children: storeBytes(free) })] })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(TextField$5, { label: c.folder, value: path, disabled: view.busy, onChange: (event) => { controller.discardPreparation(); setPath(event?.target?.value ?? ""); setReview(false); } }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy, onClick: browse, children: c.chooseFolder }), preparation && SP_JSX.jsxs("div", { className: "ph-sd-muted", children: [c.required, ": ", storeBytes(preparation.requiredBytes)] })] }), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(DigitalButton, { ref: cancel.ref, navRef: cancel.navRef, className: "ph-sd-button", disabled: view.busy, onClick: close, children: c.cancel }), SP_JSX.jsx(DigitalButton, { ref: landing.ref, navRef: landing.navRef, className: "ph-sd-button ph-sd-primary", disabled: view.busy || !path.trim(), onClick: () => void (review ? install() : prepare(path)), children: review ? c.confirmInstall : c.continue })] })] })] }) });
+    return SP_JSX.jsx(ModalRoot$3, { className: "ph-sd-modal-frame", onCancel: close, closeModal: close, bDisableBackgroundDismiss: true, children: SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-root ph-sd-modal", "flow-children": "column", noFocusRing: true, onCancel: (event) => { event.preventDefault(); event.stopPropagation(); close(); }, children: [SP_JSX.jsx(StoreDigitalStyles, {}), SP_JSX.jsx("h2", { children: game?.title ?? c.install }), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-modal-body", "flow-children": "column", noFocusRing: true, children: [view.busy && SP_JSX.jsx("div", { role: "status", children: c.loading }), view.error && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "alert", children: storeDigitalError(view.error, c) }), hasStoreInstallLanguageChoice(preparation?.languages) && SP_JSX.jsx(DropdownItem$5, { label: c.gameLanguage, layout: "below", bottomSeparator: "none", selectedOption: preparation?.language, disabled: view.busy, rgOptions: preparation.languages.map(data => ({ data, label: storeInstallLanguageName(data) })), onChange: (option) => { if (preparation?.languages?.includes(option.data))
+                                void prepare(path || undefined, false, option.data); } }), review && preparation ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("strong", { children: c.review }), SP_JSX.jsxs("dl", { className: "ph-sd-facts", children: [SP_JSX.jsx("dt", { children: c.folder }), SP_JSX.jsx("dd", { children: preparation.confirmedPath }), SP_JSX.jsx("dt", { children: c.required }), SP_JSX.jsx("dd", { children: storeBytes(preparation.requiredBytes) }), SP_JSX.jsx("dt", { children: c.free }), SP_JSX.jsx("dd", { children: storeBytes(free) })] })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(TextField$4, { label: c.folder, value: path, disabled: view.busy, onChange: (event) => { controller.discardPreparation(); setPath(event?.target?.value ?? ""); setReview(false); } }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy, onClick: browse, children: c.chooseFolder }), preparation && SP_JSX.jsxs("div", { className: "ph-sd-muted", children: [c.required, ": ", storeBytes(preparation.requiredBytes)] })] }), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-actions", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx(DigitalButton, { ref: cancel.ref, navRef: cancel.navRef, className: "ph-sd-button", disabled: view.busy, onClick: close, children: c.cancel }), SP_JSX.jsx(DigitalButton, { ref: landing.ref, navRef: landing.navRef, className: "ph-sd-button ph-sd-primary", disabled: view.busy || !path.trim(), onClick: () => void (review ? install() : prepare(path)), children: review ? c.confirmInstall : c.continue })] })] })] }) });
 }
 function openStoreDigitalInstall(controller, key, c, onInstalled) { let modal; modal = showModal$5(SP_JSX.jsx(StoreDigitalInstallDialog, { controller: controller, gameKey: key, c: c, onInstalled: onInstalled, closeModal: () => modal.Close() }), undefined, { bNeverPopOut: true }); }
 function storeInstallLanguageName(language) { return formatStoreInstallLanguage(language, getSteamLocale()); }
@@ -5224,7 +5224,7 @@ function readDigitalGridMetrics(grid) {
     return { columns, rowHeight: rect.height, gap };
 }
 
-const { TextField: TextField$4, ModalRoot: ModalRoot$1, showModal: showModal$3, GamepadButton: GamepadButton$3 } = CompatUI;
+const { TextField: TextField$3, ModalRoot: ModalRoot$1, showModal: showModal$3, GamepadButton: GamepadButton$2 } = CompatUI;
 const logos = { epic, gog, xbox, amazon };
 function storeDigitalFilterStorageKey() {
     let account;
@@ -5402,8 +5402,8 @@ function StoreDigitalPage({ controller, locale }) {
         origin.current = null;
     } setTab(value); if (scroll.current)
         scroll.current.scrollTop = 0; };
-    const shoulder = (event) => { if (!GamepadButton$3)
-        return; const direction = event.detail?.button === GamepadButton$3?.BUMPER_LEFT ? -1 : event.detail?.button === GamepadButton$3?.BUMPER_RIGHT ? 1 : 0; if (!direction || event.defaultPrevented || event.detail?.is_repeat || digitalModalOpen() || view.busy || view.signingIn !== null || view.snapshot?.accounts.some(account => account.state === "connecting"))
+    const shoulder = (event) => { if (!GamepadButton$2)
+        return; const direction = event.detail?.button === GamepadButton$2?.BUMPER_LEFT ? -1 : event.detail?.button === GamepadButton$2?.BUMPER_RIGHT ? 1 : 0; if (!direction || event.defaultPrevented || event.detail?.is_repeat || digitalModalOpen() || view.busy || view.signingIn !== null || view.snapshot?.accounts.some(account => account.state === "connecting"))
         return; const target = event.target; if (!target || !root.current?.contains(target) || target.closest(".ph-sd-modal,[role=dialog]"))
         return; const original = event.nativeEvent ?? event; if (shoulderEvents.current.has(original))
         return; shoulderEvents.current.add(original); event.preventDefault(); event.stopPropagation(); if (tab === "library" && !selected) {
@@ -5478,20 +5478,20 @@ function StoreDigitalPage({ controller, locale }) {
         scrollDriven.current = true;
         setWindowStart(next);
     } rememberAnchor(); };
-    const gridDirection = (event) => { if (!GamepadButton$3 || !gridMetrics || event.defaultPrevented || digitalModalOpen() || view.busy || view.signingIn !== null)
-        return; const direction = event.detail?.button === GamepadButton$3.DIR_UP ? -1 : event.detail?.button === GamepadButton$3.DIR_DOWN ? 1 : 0; if (!direction)
+    const gridDirection = (event) => { if (!GamepadButton$2 || !gridMetrics || event.defaultPrevented || digitalModalOpen() || view.busy || view.signingIn !== null)
+        return; const direction = event.detail?.button === GamepadButton$2.DIR_UP ? -1 : event.detail?.button === GamepadButton$2.DIR_DOWN ? 1 : 0; if (!direction)
         return; const element = event.target?.closest("[data-game-key]"), id = element?.getAttribute("data-game-key"); if (!id)
         return; const current = pendingDirection.current?.index ?? filtered.findIndex(game => storeGameId(game.key) === id); if (current < 0)
         return; const row = Math.floor(current / gridMetrics.columns) + direction; if (row < 0 || row >= Math.ceil(filtered.length / gridMetrics.columns))
         return; const next = Math.min(filtered.length - 1, row * gridMetrics.columns + current % gridMetrics.columns), nextGame = filtered[next], nextId = storeGameId(nextGame.key); if (!pendingDirection.current && cards.current.get(nextId)?.element?.isConnected)
         return; event.preventDefault(); event.stopPropagation(); pendingDirection.current = { id: nextId, index: next, button: event.detail.button }; scrollDriven.current = false; rememberAnchor(id); const nextLoaded = Math.min(filtered.length, Math.max(loaded, Math.ceil((next + 13) / 48) * 48)); setLimit(nextLoaded); setWindowStart(digitalWindowPlan(nextLoaded, next - windowPlan.capacity / 2, gridMetrics).start); };
     const open = (game) => { focusKey.current = storeGameId(game.key); rememberAnchor(); origin.current = { id: storeGameId(game.key), scroll: scroll.current?.scrollTop ?? 0 }; setSelected(game.key); };
-    return SP_JSX.jsxs(DigitalFocusable, { ref: root, className: "ph-sd-root ph-sd-fullscreen", "flow-children": "column", noFocusRing: true, onButtonDown: shoulder, actionDescriptionMap: GamepadButton$3 ? { [GamepadButton$3.BUMPER_LEFT]: c.previousScreen, [GamepadButton$3.BUMPER_RIGHT]: c.nextScreen } : undefined, onCancel: (event) => { if (event.defaultPrevented || event.detail?.is_repeat)
+    return SP_JSX.jsxs(DigitalFocusable, { ref: root, className: "ph-sd-root ph-sd-fullscreen", "flow-children": "column", noFocusRing: true, onButtonDown: shoulder, actionDescriptionMap: GamepadButton$2 ? { [GamepadButton$2.BUMPER_LEFT]: c.previousScreen, [GamepadButton$2.BUMPER_RIGHT]: c.nextScreen } : undefined, onCancel: (event) => { if (event.defaultPrevented || event.detail?.is_repeat)
             return; event.preventDefault(); event.stopPropagation(); if (!digitalModalOpen())
             back(); }, onOptionsActionDescription: tab === "library" && !selected ? c.filters : undefined, onOptionsButton: tab === "library" && !selected ? (event) => { event.preventDefault(); event.stopPropagation(); showFilters(); } : undefined, children: [SP_JSX.jsx(StoreDigitalStyles, {}), SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-header", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsxs("div", { className: "ph-sd-brand", children: [SP_JSX.jsx(StoreDigitalStoreIcon, {}), SP_JSX.jsxs("div", { children: [SP_JSX.jsx("h1", { children: c.title }), SP_JSX.jsx("p", { children: c.subtitle })] })] }), SP_JSX.jsx(DigitalFocusable, { className: "ph-sd-tabs", "flow-children": "row", noFocusRing: true, children: ["library", "downloads", "accounts"].map(value => { const Icon = value === "library" ? FaThLarge : value === "downloads" ? FaCloudDownloadAlt : FaUserCircle; const target = () => { let t = tabs.current.get(value); if (!t) {
                             t = { element: null, nav: null };
                             tabs.current.set(value, t);
-                        } return t; }; return SP_JSX.jsxs(DigitalButton, { ref: (node) => { target().element = node; }, navRef: (node) => { target().nav = node; }, className: `ph-sd-button ph-sd-tab ${tab === value ? "is-active" : ""}`, onClick: () => changeTab(value), children: [SP_JSX.jsx(Icon, {}), SP_JSX.jsx("span", { children: c[value] }), value === "downloads" && !!view.snapshot?.jobs.filter(storeJobActive).length && SP_JSX.jsx("span", { className: "ph-sd-count", children: view.snapshot.jobs.filter(storeJobActive).length })] }, value); }) })] }), SP_JSX.jsx("div", { ref: scroll, className: "ph-sd-content", onScroll: viewportScroll, onWheel: () => { pendingDirection.current = null; }, onTouchMove: () => { pendingDirection.current = null; }, children: SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-page", "flow-children": "column", noFocusRing: true, children: [view.error && SP_JSX.jsxs("div", { className: "ph-sd-banner", role: "alert", children: [SP_JSX.jsx("span", { children: storeDigitalError(view.error, c) }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy || view.reading, onClick: () => void controller.read(), children: c.retry })] }), view.signInError && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "status", children: view.signInError === "canceled" ? c.signInCanceled : c.signInFailed }), !view.snapshot && view.reading ? SP_JSX.jsx("div", { className: "ph-sd-empty", role: "status", children: c.loading }) : tab === "library" && selected ? SP_JSX.jsx(StoreDigitalDetail, { controller: controller, c: c, game: libraryGames.find(game => sameStoreKey(game.key, selected)) ?? controller.visibleGames().find(game => sameStoreKey(game.key, selected)), onBack: back, onDownloads: () => changeTab("downloads"), onAccounts: () => changeTab("accounts") }, storeGameId(selected)) : tab === "accounts" ? SP_JSX.jsx(StoreDigitalAccounts, { controller: controller, c: c }) : tab === "downloads" ? SP_JSX.jsx(StoreDigitalDownloads, { controller: controller, c: c, onEmptyFocus: () => { const target = tabs.current.get("downloads"); digitalTakeFocus(target?.element, target?.nav); } }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-toolbar", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx("div", { children: SP_JSX.jsx(TextField$4, { label: c.search, value: query, onChange: (event) => setQuery(event?.target?.value ?? "") }) }), SP_JSX.jsxs(DigitalButton, { ref: filterTarget.ref, navRef: filterTarget.navRef, className: "ph-sd-button ph-sd-filters", onClick: showFilters, children: [SP_JSX.jsx(FaSlidersH, {}), SP_JSX.jsx("span", { className: "ph-sd-filter-label", children: c.filters })] }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy || view.reading || view.gamePassReading || !!view.refreshing.length, onClick: () => void (filters.store === "gamepass" ? controller.loadGamePass(true) : controller.refreshAll()), children: view.refreshing.length || view.gamePassReading ? c.refreshing : c.refresh })] }), SP_JSX.jsx("div", { className: "ph-sd-summary", children: SP_JSX.jsxs("span", { children: [filtered.length, " ", c.games, " \u00B7 ", filters.store === "all" ? c.allStores : filters.store === "gamepass" ? c.gamePass : digitalStoreName(filters.store)] }) }), filters.store === "gamepass" && view.gamePassError && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "alert", children: c.gamePassUnavailable }), filters.store === "gamepass" && view.gamePass?.isStale && !gamePassIsTransient(view.gamePass) && !!view.gamePass.games.length && SP_JSX.jsx("div", { className: "ph-sd-muted", role: "status", children: c.gamePassStale }), !filtered.length ? SP_JSX.jsxs("div", { className: "ph-sd-empty", children: [SP_JSX.jsx("h2", { children: filters.store === "gamepass" && view.gamePassReading ? c.gamePassLoading : c.emptyLibrary }), SP_JSX.jsx("p", { children: c.emptyLibraryHelp }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", onClick: () => changeTab("accounts"), children: c.accounts })] }) : SP_JSX.jsx(DigitalFocusable, { ref: grid, className: "ph-sd-grid", "data-window-start": windowPlan.start, "data-window-end": windowPlan.end, "data-window-loaded": loaded, "data-window-total": filtered.length, "data-window-ranges": windowRanges.map(range => `${range.start}:${range.end}`).join(","), "data-window-mounted": windowRanges.reduce((sum, range) => sum + range.end - range.start, 0), "flow-children": "grid", noFocusRing: true, onButtonDown: gridDirection, children: windowPieces.flatMap(piece => piece.kind === "spacer" ? [SP_JSX.jsx("div", { "aria-hidden": "true", style: { gridColumn: "1 / -1", height: piece.height } }, piece.key)] : filtered.slice(piece.start, piece.end).map((game, offset) => { const index = piece.start + offset; const id = storeGameId(game.key), target = () => { let t = cards.current.get(id); if (!t) {
+                        } return t; }; return SP_JSX.jsxs(DigitalButton, { ref: (node) => { target().element = node; }, navRef: (node) => { target().nav = node; }, className: `ph-sd-button ph-sd-tab ${tab === value ? "is-active" : ""}`, onClick: () => changeTab(value), children: [SP_JSX.jsx(Icon, {}), SP_JSX.jsx("span", { children: c[value] }), value === "downloads" && !!view.snapshot?.jobs.filter(storeJobActive).length && SP_JSX.jsx("span", { className: "ph-sd-count", children: view.snapshot.jobs.filter(storeJobActive).length })] }, value); }) })] }), SP_JSX.jsx("div", { ref: scroll, className: "ph-sd-content", onScroll: viewportScroll, onWheel: () => { pendingDirection.current = null; }, onTouchMove: () => { pendingDirection.current = null; }, children: SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-page", "flow-children": "column", noFocusRing: true, children: [view.error && SP_JSX.jsxs("div", { className: "ph-sd-banner", role: "alert", children: [SP_JSX.jsx("span", { children: storeDigitalError(view.error, c) }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy || view.reading, onClick: () => void controller.read(), children: c.retry })] }), view.signInError && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "status", children: view.signInError === "canceled" ? c.signInCanceled : c.signInFailed }), !view.snapshot && view.reading ? SP_JSX.jsx("div", { className: "ph-sd-empty", role: "status", children: c.loading }) : tab === "library" && selected ? SP_JSX.jsx(StoreDigitalDetail, { controller: controller, c: c, game: libraryGames.find(game => sameStoreKey(game.key, selected)) ?? controller.visibleGames().find(game => sameStoreKey(game.key, selected)), onBack: back, onDownloads: () => changeTab("downloads"), onAccounts: () => changeTab("accounts") }, storeGameId(selected)) : tab === "accounts" ? SP_JSX.jsx(StoreDigitalAccounts, { controller: controller, c: c }) : tab === "downloads" ? SP_JSX.jsx(StoreDigitalDownloads, { controller: controller, c: c, onEmptyFocus: () => { const target = tabs.current.get("downloads"); digitalTakeFocus(target?.element, target?.nav); } }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs(DigitalFocusable, { className: "ph-sd-toolbar", "flow-children": "row", noFocusRing: true, children: [SP_JSX.jsx("div", { children: SP_JSX.jsx(TextField$3, { label: c.search, value: query, onChange: (event) => setQuery(event?.target?.value ?? "") }) }), SP_JSX.jsxs(DigitalButton, { ref: filterTarget.ref, navRef: filterTarget.navRef, className: "ph-sd-button ph-sd-filters", onClick: showFilters, children: [SP_JSX.jsx(FaSlidersH, {}), SP_JSX.jsx("span", { className: "ph-sd-filter-label", children: c.filters })] }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", disabled: view.busy || view.reading || view.gamePassReading || !!view.refreshing.length, onClick: () => void (filters.store === "gamepass" ? controller.loadGamePass(true) : controller.refreshAll()), children: view.refreshing.length || view.gamePassReading ? c.refreshing : c.refresh })] }), SP_JSX.jsx("div", { className: "ph-sd-summary", children: SP_JSX.jsxs("span", { children: [filtered.length, " ", c.games, " \u00B7 ", filters.store === "all" ? c.allStores : filters.store === "gamepass" ? c.gamePass : digitalStoreName(filters.store)] }) }), filters.store === "gamepass" && view.gamePassError && SP_JSX.jsx("div", { className: "ph-sd-banner", role: "alert", children: c.gamePassUnavailable }), filters.store === "gamepass" && view.gamePass?.isStale && !gamePassIsTransient(view.gamePass) && !!view.gamePass.games.length && SP_JSX.jsx("div", { className: "ph-sd-muted", role: "status", children: c.gamePassStale }), !filtered.length ? SP_JSX.jsxs("div", { className: "ph-sd-empty", children: [SP_JSX.jsx("h2", { children: filters.store === "gamepass" && view.gamePassReading ? c.gamePassLoading : c.emptyLibrary }), SP_JSX.jsx("p", { children: c.emptyLibraryHelp }), SP_JSX.jsx(DigitalButton, { className: "ph-sd-button", onClick: () => changeTab("accounts"), children: c.accounts })] }) : SP_JSX.jsx(DigitalFocusable, { ref: grid, className: "ph-sd-grid", "data-window-start": windowPlan.start, "data-window-end": windowPlan.end, "data-window-loaded": loaded, "data-window-total": filtered.length, "data-window-ranges": windowRanges.map(range => `${range.start}:${range.end}`).join(","), "data-window-mounted": windowRanges.reduce((sum, range) => sum + range.end - range.start, 0), "flow-children": "grid", noFocusRing: true, onButtonDown: gridDirection, children: windowPieces.flatMap(piece => piece.kind === "spacer" ? [SP_JSX.jsx("div", { "aria-hidden": "true", style: { gridColumn: "1 / -1", height: piece.height } }, piece.key)] : filtered.slice(piece.start, piece.end).map((game, offset) => { const index = piece.start + offset; const id = storeGameId(game.key), target = () => { let t = cards.current.get(id); if (!t) {
                                         t = { element: null, nav: null };
                                         cards.current.set(id, t);
                                     } return t; }; return SP_JSX.jsxs(DigitalFocusable, { "data-game-key": id, "data-game-index": index, ref: (node) => { target().element = node; if (!node && target().nav === null)
@@ -5844,7 +5844,7 @@ class StoreDigitalController {
 const { createElement, useSyncExternalStore } = _global_SP_REACT;
 
 const REVISION = 3; // Registry/cleanup ABI remains compatible with installed Discord v3.
-const IMPLEMENTATION = 4;
+const IMPLEMENTATION = 5; // 5: entries that hide native items.
 const KEY = "__necroSteamMenuV1";
 const state$2 = () => { var _a; return ((_a = window)[KEY] || (_a[KEY] = { entries: new Map() })); };
 const ownedItem = (item) => String(item?.key || "").startsWith("necro-menu:")
@@ -5907,11 +5907,19 @@ function install(s) {
             useSyncExternalStore(subscribe, snapshot, snapshot);
             const result = native.apply(this, args);
             return replace(result, value => Array.isArray(value) && value.some(isItem), items => {
-                const clean = items.filter((item) => !ownedItem(item));
+                const all = [...s.entries.values()];
+                const hiders = all.filter(entry => typeof entry.hide === "function");
+                const hidden = (item) => hiders.some(entry => { try {
+                    return isItem(item) && entry.hide(item);
+                }
+                catch {
+                    return false;
+                } });
+                const clean = items.filter((item) => !ownedItem(item) && !hidden(item));
                 const template = clean.find(isItem);
                 if (!template)
                     return items;
-                const entries = [...s.entries.values()].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
+                const entries = all.filter(entry => typeof entry.hide !== "function").sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
                 let position = 3;
                 try {
                     position = Number(localStorage.getItem("STEAMCORD_MENU_POSITION") || 3);
@@ -6060,8 +6068,6 @@ function TbWindow (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M15 8a5 5 0 0 1 0 8"},"child":[]},{"tag":"path","attr":{"d":"M17.7 5a9 9 0 0 1 0 14"},"child":[]},{"tag":"path","attr":{"d":"M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5"},"child":[]}]})(props);
 }function TbVolume2 (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M15 8a5 5 0 0 1 0 8"},"child":[]},{"tag":"path","attr":{"d":"M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5"},"child":[]}]})(props);
-}function TbTrophy (props) {
-  return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M8 21l8 0"},"child":[]},{"tag":"path","attr":{"d":"M12 17l0 4"},"child":[]},{"tag":"path","attr":{"d":"M7 4l10 0"},"child":[]},{"tag":"path","attr":{"d":"M17 4v8a5 5 0 0 1 -10 0v-8"},"child":[]},{"tag":"path","attr":{"d":"M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"},"child":[]},{"tag":"path","attr":{"d":"M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"},"child":[]}]})(props);
 }function TbTrash (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M4 7l16 0"},"child":[]},{"tag":"path","attr":{"d":"M10 11l0 6"},"child":[]},{"tag":"path","attr":{"d":"M14 11l0 6"},"child":[]},{"tag":"path","attr":{"d":"M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"},"child":[]},{"tag":"path","attr":{"d":"M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"},"child":[]}]})(props);
 }function TbShoppingBag (props) {
@@ -6092,6 +6098,8 @@ function TbWindow (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M12 8l0 4l2 2"},"child":[]},{"tag":"path","attr":{"d":"M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"},"child":[]}]})(props);
 }function TbGauge (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"},"child":[]},{"tag":"path","attr":{"d":"M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"},"child":[]},{"tag":"path","attr":{"d":"M13.41 10.59l2.59 -2.59"},"child":[]},{"tag":"path","attr":{"d":"M7 12a5 5 0 0 1 5 -5"},"child":[]}]})(props);
+}function TbEye (props) {
+  return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"},"child":[]},{"tag":"path","attr":{"d":"M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"},"child":[]}]})(props);
 }function TbDownload (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"},"child":[]},{"tag":"path","attr":{"d":"M7 11l5 5l5 -5"},"child":[]},{"tag":"path","attr":{"d":"M12 4l0 12"},"child":[]}]})(props);
 }function TbDeviceTv (props) {
@@ -6110,6 +6118,8 @@ function TbWindow (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M3 21l18 0"},"child":[]},{"tag":"path","attr":{"d":"M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1h-18l2 -4h14l2 4"},"child":[]},{"tag":"path","attr":{"d":"M5 21l0 -10.15"},"child":[]},{"tag":"path","attr":{"d":"M19 21l0 -10.15"},"child":[]},{"tag":"path","attr":{"d":"M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"},"child":[]}]})(props);
 }function TbBrandGithub (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"},"child":[]}]})(props);
+}function TbBolt (props) {
+  return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"},"child":[]}]})(props);
 }function TbBattery (props) {
   return GenIcon({"attr":{"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":"2","strokeLinecap":"round","strokeLinejoin":"round"},"child":[{"tag":"path","attr":{"d":"M6 7h11a2 2 0 0 1 2 2v.5a.5 .5 0 0 0 .5 .5a.5 .5 0 0 1 .5 .5v3a.5 .5 0 0 1 -.5 .5a.5 .5 0 0 0 -.5 .5v.5a2 2 0 0 1 -2 2h-11a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2"},"child":[]}]})(props);
 }function TbArrowsSort (props) {
@@ -6146,9 +6156,29 @@ function awesomeMixInstalled(state) {
         return false;
     }
 }
-function coreSteamMenuEntries(state) {
-    return awesomeMixInstalled(state) ? [AWESOME_MIX_ENTRY] : [];
+// `coreUi`: Core UI is on, so Steam's Friends & Chat entry is left out (HIDE_FRIENDS_ENTRY, below).
+function coreSteamMenuEntries(state, coreUi = false) {
+    return [...(awesomeMixInstalled(state) ? [AWESOME_MIX_ENTRY] : []), ...(coreUi ? [HIDE_FRIENDS_ENTRY] : [])];
 }
+// 3.3.11: Steam's "Friends & Chat" entry is hidden from the Steam menu while Core UI is on. Told by what Steam gives the
+// entry, never by its (localised) label: its route or its React key names friends or chat. The entry is left out of
+// the menu's item list before React renders it (StoreDigitalMenuRegistry.ts), so focus runs from the entry above it to
+// the one below with no gap. An entry that matches neither stays.
+const HIDDEN_MENU_ITEM = /(^|[/:_-])(friends?|chat)([/:_-]|$)/i;
+function isFriendsMenuItem(item) {
+    try {
+        const route = String(item?.props?.route ?? "");
+        const key = String(item?.key ?? "");
+        if (key.startsWith("necro-menu:"))
+            return false;
+        return HIDDEN_MENU_ITEM.test(route) || HIDDEN_MENU_ITEM.test(key);
+    }
+    catch {
+        return false;
+    }
+}
+// The registry entry that adds no item and leaves Friends & Chat out.
+const HIDE_FRIENDS_ENTRY = { id: "core-hide-friends", label: "", route: "", order: 0, hide: isFriendsMenuItem };
 
 // Eternal Core: Core's own artwork, as SVG text (generated from docs/eternal/brand/; see REBRAND.md, "Plugin logos" and
 // CORE-UI.md, "Library icons"). Original drawings only: nothing here comes from a third-party icon pack.
@@ -6233,6 +6263,50 @@ function corePluginTile(nameOrRepository) {
     return logo ? svgDataUrl(CORE_PLUGIN_TILES[logo]) : undefined;
 }
 
+// Eternal Core: the "Core UI" setting (Quick Access > Core). On by default; kept in Steam's localStorage under
+// core.ui.enabled ("0" = off, anything else or nothing = on). coreUi.ts subscribes and removes or restores
+// everything Core UI adds as soon as it changes. Self-contained (no imports): tests load it on its own.
+const CORE_UI_SETTING_KEY = "core.ui.enabled";
+function createCoreUiSetting(storage) {
+    const read = () => { try {
+        return storage?.getItem(CORE_UI_SETTING_KEY) !== "0";
+    }
+    catch {
+        return true;
+    } };
+    let value = read();
+    const listeners = new Set();
+    return {
+        get: () => value,
+        set(on) {
+            const next = on === true;
+            try {
+                storage?.setItem(CORE_UI_SETTING_KEY, next ? "1" : "0");
+            }
+            catch { /* Kept for this session only. */ }
+            if (next === value)
+                return;
+            value = next;
+            for (const listener of [...listeners]) {
+                try {
+                    listener();
+                }
+                catch { /* One listener cannot stop the others. */ }
+            }
+        },
+        subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    };
+}
+function defaultStorage() {
+    try {
+        return typeof localStorage === "undefined" ? undefined : localStorage;
+    }
+    catch {
+        return undefined;
+    }
+}
+const coreUiSetting = createCoreUiSetting(defaultStorage());
+
 // Eternal Core: the Awesome Mix entry shows Core's awesome-mix mark (corePluginLogos.ts), single colour like Steam's own
 // menu icons; Steam's music note only if the mark is missing.
 function AwesomeMixMenuIcon() {
@@ -6266,17 +6340,28 @@ function syncCoreSteamMenu(current, wanted, register) {
 function installStoreDigitalPortal(locale = () => navigator.language) {
     const controller = new StoreDigitalController(), stopLocale = startSteamLocaleObservation();
     const menu = new Map();
-    const register = (entry) => registerSteamMenu({ ...entry, icon: SP_JSX.jsx(AwesomeMixMenuIcon, {}) });
-    const refresh = () => { let state; try {
+    const register = (entry) => registerSteamMenu({ ...entry, icon: entry.hide ? null : SP_JSX.jsx(AwesomeMixMenuIcon, {}) });
+    const refresh = () => { let state, coreUi = false; try {
         state = window.DeckyPluginLoader?.deckyState?.publicState?.();
     }
     catch {
         state = undefined;
-    } syncCoreSteamMenu(menu, coreSteamMenuEntries(state), register); };
+    } try {
+        coreUi = coreUiSetting.get();
+    }
+    catch {
+        coreUi = false;
+    } syncCoreSteamMenu(menu, coreSteamMenuEntries(state, coreUi), register); };
     refresh();
     const bus = window.DeckyPluginLoader?.deckyState?.eventBus;
     try {
         bus?.addEventListener?.("update", refresh);
+    }
+    catch { }
+    // 3.3.11: Friends & Chat follows the Core UI switch at once.
+    let unsubscribeCoreUi = () => { };
+    try {
+        unsubscribeCoreUi = coreUiSetting.subscribe(refresh);
     }
     catch { }
     const Route = () => { const language = _global_SP_REACT.useSyncExternalStore(subscribeSteamLocale, getSteamLocale); return SP_JSX.jsx(StoreDigitalPage, { controller: controller, locale: language }); };
@@ -6284,12 +6369,15 @@ function installStoreDigitalPortal(locale = () => navigator.language) {
     const stopIntent = installStoreDigitalIntentPump(storeDigitalApi.request);
     const timer = setInterval(refresh, 5000);
     return () => { clearInterval(timer); try {
+        unsubscribeCoreUi();
+    }
+    catch { } try {
         bus?.removeEventListener?.("update", refresh);
     }
     catch { } stopLocale(); stopIntent(); syncCoreSteamMenu(menu, [], register); routerHook.removeRoute(STORE_DIGITAL_ROUTE); controller.dispose(); };
 }
 
-const rows$9 = {
+const rows$7 = {
     en: ["Device name", "Model", "Processor", "Graphics", "Memory", "Total local storage", "Windows edition", "Windows version", "Windows Update", "Loading device information...", "Unavailable", "Could not open Windows Update.", "Could not load device information."],
     it: ["Nome dispositivo", "Modello", "Processore", "GPU", "Memoria", "Archiviazione locale totale", "Edizione Windows", "Versione Windows", "Windows Update", "Caricamento informazioni dispositivo...", "Non disponibile", "Impossibile aprire Windows Update.", "Impossibile caricare le informazioni del dispositivo."],
     de: ["Gerätename", "Modell", "Prozessor", "Grafik", "Arbeitsspeicher", "Lokaler Gesamtspeicher", "Windows-Edition", "Windows-Version", "Windows Update", "Geräteinformationen werden geladen...", "Nicht verfügbar", "Windows Update konnte nicht geöffnet werden.", "Geräteinformationen konnten nicht geladen werden."],
@@ -6331,11 +6419,11 @@ function deviceLanguage(locale) {
     const aliases = { english: "en", italian: "it", german: "de", spanish: "es", latam: "es", french: "fr", brazilian: "pt", portuguese: "pt", russian: "ru", ukrainian: "uk", japanese: "ja", koreana: "ko", schinese: "zh", tchinese: "zh", hindi: "hi" };
     const key = locale.toLowerCase();
     const candidate = aliases[key] ?? key.split(/[-_]/)[0];
-    return Object.prototype.hasOwnProperty.call(rows$9, candidate) ? candidate : "en";
+    return Object.prototype.hasOwnProperty.call(rows$7, candidate) ? candidate : "en";
 }
 function deviceInfoLocale(locale) {
     const language = deviceLanguage(locale);
-    const row = rows$9[language] ?? rows$9.en;
+    const row = rows$7[language] ?? rows$7.en;
     const profile = profiles[language] ?? profiles.en;
     return { language, batteryRemaining: batteryRemaining[language] ?? batteryRemaining.en, name: row[0], model: row[1], cpu: row[2], gpu: row[3], ram: row[4], storage: row[5], edition: row[6], version: row[7], update: row[8], loading: row[9], unavailable: row[10], openError: row[11], loadError: row[12],
         profile: profile[0], auto: profile[1], pc: profile[2], handheld: profile[3], experimental: profile[4], profileHint: profile[5], battery: profile[6], ac: profile[7], primaryDisplay: profile[8], video: profile[9], power: profile[10], details: profile[11], saveError: profile[12], retry: profile[13], batteryHealth: batteryHealth[language] ?? batteryHealth.en };
@@ -7425,7 +7513,7 @@ const copy$j = {
 };
 function storeLibraryLocale(locale) { return copy$j[deviceLanguage(locale)] ?? copy$j.en; }
 
-const { PanelSection: PanelSection$c, PanelSectionRow: PanelSectionRow$d, DropdownItem: DropdownItem$5, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = CompatUI;
+const { PanelSection: PanelSection$c, PanelSectionRow: PanelSectionRow$d, DropdownItem: DropdownItem$4, ConfirmModal: ConfirmModal$2, showModal: showModal$2 } = CompatUI;
 const danger = `.ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) {
 background:${CORE.crimson}!important;color:${CORE.white}!important}
 .ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) * {color:inherit!important}`;
@@ -7478,7 +7566,7 @@ function StoreDownloadMenu({ job, locale }) {
         ...(job.canResume ? [{ data: "resume", label: c["StoreLibrary.Resume"] }] : []),
         ...(job.canRemove === true || job.canCancel ? [{ data: "cancel", strOptionClass: "ph-store-download-cancel", label: SP_JSX.jsxs("span", { children: [SP_JSX.jsx("style", { children: danger }), c["StoreLibrary.Cancel"]] }) }] : []),
     ];
-    return SP_JSX.jsx(DropdownItem$5, { label: storeDigitalDisplayTitle(job), description: c[`StoreLibrary.Job.${job.state[0].toUpperCase()}${job.state.slice(1)}`] ?? "", layout: "below", bottomSeparator: "none", selectedOption: null, strDefaultLabel: c["StoreLibrary.Actions"], disabled: busy || !options.length, rgOptions: options, onChange: (option) => {
+    return SP_JSX.jsx(DropdownItem$4, { label: storeDigitalDisplayTitle(job), description: c[`StoreLibrary.Job.${job.state[0].toUpperCase()}${job.state.slice(1)}`] ?? "", layout: "below", bottomSeparator: "none", selectedOption: null, strDefaultLabel: c["StoreLibrary.Actions"], disabled: busy || !options.length, rgOptions: options, onChange: (option) => {
             if (!options.some(available => available.data === option.data))
                 return;
             if (option.data === "cancel")
@@ -7486,6 +7574,10 @@ function StoreDownloadMenu({ job, locale }) {
             else
                 void run(option.data);
         } });
+}
+// 3.3.11: whether a store download runs (Quick Access > Core shows its Downloads section only then).
+function useStoreDownloadsRunning() {
+    return _global_SP_REACT.useSyncExternalStore(subscribeStoreLibrary, () => readStoreDownloads().some(job => pendingStates.has(job.state)));
 }
 function StoreDownloadsQam({ locale }) {
     const jobs = _global_SP_REACT.useSyncExternalStore(subscribeStoreLibrary, readStoreDownloads).filter(job => pendingStates.has(job.state));
@@ -7495,7 +7587,7 @@ function StoreDownloadsQam({ locale }) {
     return SP_JSX.jsx(PanelSection$c, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$d, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
 }
 
-const { DialogButton: DialogButton$a } = CompatUI;
+const { DialogButton: DialogButton$8 } = CompatUI;
 const labelStore = (store) => ({ gog: "GOG", epic: "Epic Games", xbox: "Xbox", amazon: "Amazon Games" }[store] ?? "");
 const terminal = (job) => !job || ["completed", "canceled", "failed"].includes(job.state) || job.state === "externalHandoff" && job.reasonCode !== "windows_store_managed";
 let locale = () => navigator.language;
@@ -7522,7 +7614,7 @@ function GameAction({ appId, native }) {
     const running = Number(ui?.MainRunningAppID) === appId || (Array.isArray(ui?.RunningApps) && ui.RunningApps.some((app) => app?.appid === appId));
     if (!row?.accountCurrent || !row.game || !identity || proof.identity !== identity || proof.source !== apps || !proof.matches || running || row.game.isInstalled && row.game.isLaunchable)
         return native;
-    return SP_JSX.jsx("div", { style: { minWidth: 240, maxWidth: 560, width: "100%" }, children: terminal(row.job) ? SP_JSX.jsxs(DialogButton$a, { style: { whiteSpace: "normal" }, onClick: () => openStoreDigitalGame(row.key, "install"), children: [text$6().install, " \u00B7 ", labelStore(row.key.store)] }) : SP_JSX.jsx(JobControls, { job: row.job }) });
+    return SP_JSX.jsx("div", { style: { minWidth: 240, maxWidth: 560, width: "100%" }, children: terminal(row.job) ? SP_JSX.jsxs(DialogButton$8, { style: { whiteSpace: "normal" }, onClick: () => openStoreDigitalGame(row.key, "install"), children: [text$6().install, " \u00B7 ", labelStore(row.key.store)] }) : SP_JSX.jsx(JobControls, { job: row.job }) });
 }
 function DownloadSection() {
     const rows = _global_SP_REACT.useSyncExternalStore(subscribeStoreLibrary, readStoreDownloads);
@@ -7882,7 +7974,7 @@ function translationController(store) {
     }
 }
 
-const { PanelSectionRow: PanelSectionRow$c, ToggleField: ToggleField$a } = CompatUI;
+const { PanelSectionRow: PanelSectionRow$c, ToggleField: ToggleField$8 } = CompatUI;
 const descriptions$1 = {
     en: "Makes the Steam Controller appear as an Xbox controller.",
     it: "Fa riconoscere lo Steam Controller come un pad Xbox.",
@@ -7931,7 +8023,7 @@ function TranslationControllerToggle({ locale }) {
     }, []);
     if (!connected || enabled === null)
         return null;
-    return SP_JSX.jsx(PanelSectionRow$c, { children: SP_JSX.jsx(ToggleField$a, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
+    return SP_JSX.jsx(PanelSectionRow$c, { children: SP_JSX.jsx(ToggleField$8, { bottomSeparator: "none", label: "Translation Controller", description: descriptions$1[locale] ?? descriptions$1.en, checked: enabled, disabled: busy || !available, onChange: async (value) => {
                 if (typeof value !== "boolean" || writing.current || !available || !mounted.current || !translationController(window.ControllerStore))
                     return;
                 writing.current = true;
@@ -8359,7 +8451,7 @@ const tabCopy = {
 };
 
 const keys$1 = ["volume", "microphoneVolume", "audioOutput", "microphoneInput", "brightness", "resolution", "refreshRate", "powerMode", "powerEfficiency", "powerBalanced", "powerBetter", "powerBest", "tdpLimit", "off", "advanced", "diagnostics", "generateDiagnostics", "ok", "cancel", "back"];
-const rows$8 = {
+const rows$6 = {
     de: ["Lautstärke", "Mikrofonlautstärke", "Audioausgabe", "Audioeingang", "Helligkeit", "Auflösung", "Bildwiederholrate", "Energiemodus", "Beste Energieeffizienz", "Ausbalanciert", "Bessere Leistung", "Beste Leistung", "Leistungsgrenze", "Aus", "Erweitert", "Diagnose", "Diagnosebericht erstellen", "OK", "Abbrechen", "Zurück"],
     es: ["Volumen", "Volumen del micrófono", "Salida de audio", "Entrada de audio", "Brillo", "Resolución", "Frecuencia de actualización", "Modo de energía", "Máxima eficiencia", "Equilibrado", "Mejor rendimiento", "Máximo rendimiento", "Límite de potencia", "Desactivado", "Avanzado", "Diagnóstico", "Generar informe de diagnóstico", "Aceptar", "Cancelar", "Volver"],
     fr: ["Volume", "Volume du microphone", "Sortie audio", "Entrée audio", "Luminosité", "Résolution", "Fréquence de rafraîchissement", "Mode d’alimentation", "Efficacité énergétique maximale", "Équilibré", "Performances améliorées", "Performances maximales", "Limite de puissance", "Désactivé", "Avancé", "Diagnostic", "Créer un rapport de diagnostic", "OK", "Annuler", "Retour"],
@@ -8396,7 +8488,7 @@ function quickCoreLocale(locale) {
     const key = locale.toLowerCase().split(/[-_]/)[0];
     const language = aliases[key] ?? key;
     const labels = controlLocale(language);
-    const row = rows$8[language];
+    const row = rows$6[language];
     const confirmation = displayConfirmation[language] ?? displayConfirmation.en;
     const media = mediaSections[language] ?? mediaSections.en;
     return { ...(row ? Object.fromEntries(keys$1.map((key, index) => [key, row[index]])) : {}),
@@ -8487,7 +8579,7 @@ const amdIt = {
     amdDisplayTemperature: "Temperatura colore",
     amdDriverRejected: "Il driver AMD non ha confermato questa modifica. Il valore precedente è stato ripristinato.",
 };
-const en$a = {
+const en$b = {
     title: "Quick Settings",
     audio: "Audio",
     volume: "Device volume",
@@ -8729,7 +8821,7 @@ const it = {
     cancel: "Annulla",
     notConnected: "Agent Quick Settings non collegato",
 };
-const strings$2 = { en: en$a, it };
+const strings$2 = { en: en$b, it };
 function t$1(locale = navigator.language) {
     const language = locale.split("-")[0];
     return { ...(strings$2[language] ?? strings$2.en), ...quickCoreLocale(language), title: "Core" };
@@ -9393,7 +9485,7 @@ function installLosslessGameIntegration() {
     };
 }
 
-const rows$7 = {
+const rows$5 = {
     en: ["Active in the game", "Paused while the menu is open", "Waiting for the game", "Activation failed", "Off", "Status unknown"],
     it: ["Attivo nel gioco", "In pausa mentre il menu è aperto", "In attesa del gioco", "Attivazione non riuscita", "Disattivato", "Stato sconosciuto"],
     de: ["Im Spiel aktiv", "Bei geöffnetem Menü pausiert", "Wartet auf das Spiel", "Aktivierung fehlgeschlagen", "Aus", "Status unbekannt"],
@@ -9411,13 +9503,13 @@ function losslessCaptureLabel(locale, state) {
     const aliases = { english: "en", italian: "it", german: "de", spanish: "es", latam: "es", french: "fr", brazilian: "pt", portuguese: "pt", russian: "ru", ukrainian: "uk", schinese: "zh", tchinese: "zh", japanese: "ja", koreana: "ko", hindi: "hi" };
     const key = locale.toLowerCase().split(/[-_]/)[0];
     const index = ["active", "suspended", "pending", "failed", "inactive", "unknown"].indexOf(state ?? "");
-    return index < 0 ? "" : (rows$7[aliases[key] ?? key] ?? rows$7.en)[index];
+    return index < 0 ? "" : (rows$5[aliases[key] ?? key] ?? rows$5.en)[index];
 }
 
-const { DialogButton: DialogButton$9, Focusable: Focusable$j } = CompatUI;
+const { DialogButton: DialogButton$7, Focusable: Focusable$i } = CompatUI;
 function ControlSection({ id, title, icon, children, collapsed, onToggle, locale }) {
     const copy = controlLocale(locale);
-    return SP_JSX.jsxs(Focusable$j, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$9, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$j, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
+    return SP_JSX.jsxs(Focusable$i, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$7, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$i, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
 }
 
 /** One writer per independent setting/resource; callbacks receive only current results. */
@@ -10618,7 +10710,7 @@ function PerformanceSettings({ locale, appId }) {
                                         label: steamLabel(`#Corner_${value}`, cornerFallback[index]) })), onChange: option => change({ corner: option.data }) }) }), description && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: description })] }), !state && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: view.loading ? common.loading : common.unavailable })] }), ((source === "live" && view.failed) || sourceFailed) && SP_JSX.jsxs("div", { className: "qsMeta", role: "status", children: [common.saveError, " ", SP_JSX.jsx(DFL.DialogButton, { disabled: changing || view.busy, onClick: () => { setSourceFailed(false); void runtime.refresh(); }, children: common.retry })] })] });
 }
 
-const rows$6 = {
+const rows$4 = {
     en: ["Refresh", "Saved shaders", "NVIDIA shader cache", "Keep compiled shaders", "Storage limit", "Driver default", "Apply", "No cache files found yet", "Partial inventory", "Files", "Settings changed. Review the current values.", "The previous settings were restored.", "Couldn’t update the cache settings. Try again.", "Current"],
     it: ["Aggiorna", "Shader salvati", "Cache shader NVIDIA", "Conserva gli shader compilati", "Limite di spazio", "Predefinito del driver", "Applica", "Nessun file di cache presente", "Inventario parziale", "File", "Le impostazioni sono cambiate. Controlla i valori attuali.", "Le impostazioni precedenti sono state ripristinate.", "Impossibile aggiornare la cache. Riprova.", "Attuale"],
     de: ["Aktualisieren", "Gespeicherte Shader", "NVIDIA-Shader-Cache", "Kompilierte Shader behalten", "Speicherlimit", "Treibervorgabe", "Anwenden", "Noch keine Cache-Dateien vorhanden", "Unvollständige Übersicht", "Dateien", "Die Einstellungen wurden geändert. Prüfe die aktuellen Werte.", "Die vorherigen Einstellungen wurden wiederhergestellt.", "Die Cache-Einstellungen konnten nicht geändert werden. Versuche es erneut.", "Aktuell"],
@@ -10635,7 +10727,7 @@ const rows$6 = {
 function shaderCacheCopy(locale) {
     const aliases = { english: "en", italian: "it", german: "de", spanish: "es", latam: "es", french: "fr", brazilian: "pt", portuguese: "pt", russian: "ru", ukrainian: "uk", japanese: "ja", koreana: "ko", schinese: "zh", tchinese: "zh", hindi: "hi" };
     const key = aliases[locale.toLowerCase()] ?? locale.toLowerCase().split(/[-_]/)[0];
-    const r = rows$6[key] ?? rows$6.en;
+    const r = rows$4[key] ?? rows$4.en;
     return { refresh: r[0], saved: r[1], nvidia: r[2], enabled: r[3], limit: r[4], driverDefault: r[5], apply: r[6], empty: r[7], partial: r[8], files: r[9], changed: r[10], restored: r[11], failed: r[12], current: r[13] };
 }
 
@@ -10778,7 +10870,7 @@ function ShaderCompatibility({ appId, locale, renderSection }) {
     return renderSection ? renderSection(body) : body;
 }
 
-const rows$5 = {
+const rows$3 = {
     en: ["Global driver settings. Changes apply at the next game launch.", "Frame limit", "Off", "Driver default", "Apply", "Vertical sync", "Use game setting", "On", "Power mode", "Maximum performance", "Current", "Driver settings are unavailable.", "The driver settings changed. Refresh to review them.", "The driver could not confirm this change."],
     it: ["Impostazioni globali del driver. Le modifiche si applicano al prossimo avvio del gioco.", "Limite FPS", "Disattivato", "Predefinito del driver", "Applica", "Sincronizzazione verticale", "Impostazione del gioco", "Attivata", "Modalità energetica", "Prestazioni massime", "Attuale", "Impostazioni del driver non disponibili.", "Le impostazioni del driver sono cambiate. Aggiorna per verificarle.", "Il driver non ha confermato la modifica."],
     de: ["Globale Treibereinstellungen. Änderungen gelten beim nächsten Spielstart.", "FPS-Limit", "Aus", "Treibervorgabe", "Anwenden", "Vertikale Synchronisation", "Spieleinstellung verwenden", "Ein", "Energieverwaltung", "Maximale Leistung", "Aktuell", "Treibereinstellungen sind nicht verfügbar.", "Die Treibereinstellungen haben sich geändert. Zum Prüfen aktualisieren.", "Der Treiber konnte die Änderung nicht bestätigen."],
@@ -10807,7 +10899,7 @@ const power = {
     hi: ["अनुकूली", "ड्राइवर द्वारा नियंत्रित", "स्थिर प्रदर्शन", "न्यूनतम पावर", "अनुकूलित पावर"],
 };
 function nvidiaLocale(locale) {
-    const language = deviceLanguage(locale), row = rows$5[language], p = power[language];
+    const language = deviceLanguage(locale), row = rows$3[language], p = power[language];
     return { scope: row[0], fps: row[1], off: row[2], driverDefault: row[3], apply: row[4], vsync: row[5], game: row[6], on: row[7], power: row[8], maximum: row[9], current: row[10], unavailable: row[11], changed: row[12], failed: row[13],
         powerCurrent: { 0: p[0], 2: p[1], 3: p[2], 4: p[3], 5: p[4] } };
 }
@@ -12366,7 +12458,7 @@ function PanelBrightness({ locale }) {
                 } }), failed && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: controlLocale(locale).saveError })] });
 }
 
-const rows$4 = {
+const rows$2 = {
     en: ["Power", "Game", "Shaders", "Mixer", "Devices", "Measurement"],
     it: ["Alimentazione", "Gioco", "Shader", "Mixer", "Dispositivi", "Misurazione"],
     de: ["Energie", "Spiel", "Shader", "Mixer", "Geräte", "Messung"],
@@ -12384,7 +12476,7 @@ function quickSettingsGroups(locale) {
     const aliases = { english: "en", italian: "it", german: "de", spanish: "es", latam: "es",
         french: "fr", portuguese: "pt", brazilian: "pt", russian: "ru", ukrainian: "uk", japanese: "ja", koreana: "ko", schinese: "zh", tchinese: "zh", hindi: "hi" };
     const key = aliases[locale] ?? locale.toLowerCase().split(/[-_]/)[0];
-    const row = rows$4[key] ?? rows$4.en;
+    const row = rows$2[key] ?? rows$2.en;
     return { power: row[0], game: row[1], shaders: row[2], mixer: row[3], devices: row[4], measurement: row[5] };
 }
 
@@ -12755,7 +12847,8 @@ function disposeDisplayConfirmation() {
     sharedDisplayModal.current = undefined;
     current?.modal?.Close?.();
 }
-function QuickSettingsContent({ page, expanded = [], onToggle, locale, gameAppId = 0, gamingMode = false }) {
+function QuickSettingsContent({ page, expanded = [], onToggle, locale, gameAppId = 0, gamingMode = false, layout }) {
+    const core = page === "core";
     const local = t$1(locale);
     const groups = quickSettingsGroups(locale);
     const [loadFailed, setLoadFailed] = SP_REACT.useState(false);
@@ -13513,10 +13606,32 @@ function QuickSettingsContent({ page, expanded = [], onToggle, locale, gameAppId
             [local.advanced]: ["tools", "agent"],
         };
         const [tab, id] = location ?? sections[title];
-        if (tab !== page)
+        if (!core && tab !== page)
             return null;
         return SP_JSX.jsx(ControlSection, { id: id, title: title, icon: icon, locale: locale, collapsed: !expanded.includes(id), onToggle: onToggle, children: SP_JSX.jsx("div", { className: "qsCardBody", children: children }) }, id);
     };
+    const statusPart = !caps ? SP_JSX.jsxs("div", { className: "qsMeta", children: [loadFailed ? local.notConnected : controlLocale(locale).loading, loadFailed && SP_JSX.jsx(CompatUI.DialogButton, { onClick: () => { setLoadFailed(false); setLoadAttempt(value => value + 1); }, children: controlLocale(locale).retry })] }) : null;
+    // 3.3.11: the Quick rows' pickers and labels (ControlCenter.tsx).
+    // One element each, shown in its section and under its Quick row.
+    const resolutionControl = caps?.display && resolutionOptions.length > 0 && SP_JSX.jsx(QuickDropdown, { fullWidth: true, label: local.resolution, options: resolutionOptions, value: currentResolution, onChange: onResolution }, `res-${currentResolution}`);
+    const refreshControl = caps?.display && refreshOptions.length > 0 && SP_JSX.jsx(QuickDropdown, { fullWidth: true, label: local.refreshRate, options: refreshOptions, value: currentRefresh, onChange: onRefresh }, `hz-${currentRefresh}`);
+    const hdrControl = SP_JSX.jsx(CompatUI.ToggleField, { bottomSeparator: "none", label: local.hdr, checked: Boolean(hdr.enabled), disabled: hdr.available !== true || hdr.supported !== true, onChange: onHdr });
+    const outputControl = SP_JSX.jsx(QuickDropdown, { fullWidth: true, label: local.audioOutput, options: outputOptions, value: audio.default_output_id || "", disabled: !audio.ok || audio.outputs.length === 0, onChange: onOutput });
+    const displayQuick = SP_JSX.jsxs("div", { className: "qsCardBody", children: [resolutionControl, refreshControl, hdrControl] });
+    const soundQuick = SP_JSX.jsx("div", { className: "qsCardBody", children: outputControl });
+    const displayLabel = [display?.current?.width ? `${display.current.width} × ${display.current.height}` : "", display?.current?.hz ? `${display.current.hz} Hz` : "",
+        hdr.enabled ? "HDR" : ""].filter(Boolean).join(" · ");
+    const soundLabel = audio.outputs.find(device => device.id === audio.default_output_id)?.name ?? "";
+    const powerBody = SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(HandheldPowerLimits, { locale: locale }), SP_JSX.jsx(LenovoPowerLimits, { locale: locale }), SP_JSX.jsx(PowerProfile, { locale: locale }), SP_JSX.jsx(HandheldPowerMode, { locale: locale }), SP_JSX.jsx(MsiPowerControls, { locale: locale }), SP_JSX.jsx(AsusFanStatus, { locale: locale }), SP_JSX.jsx(OneXFanControls, { locale: locale }), SP_JSX.jsx(AsusPerformanceActions, { locale: locale }), SP_JSX.jsx(ProcessorBoost, { locale: locale })] });
+    const powerPart = section(SP_JSX.jsx(FaBolt, {}), groups.power, powerBody, ["graphics", "power"]);
+    const shadersPart = (page === "graphics" || core) ? SP_JSX.jsx(ShaderCompatibility, { appId: gameAppId, locale: locale, renderSection: body => section(SP_JSX.jsx(FaMicrochip, {}), groups.shaders, body, ["graphics", "shaders"]) }, gameAppId) : null;
+    const mixerPart = section(SP_JSX.jsx(FaVolumeUp, {}), groups.mixer, SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(QuickSlider, { label: local.volume, value: volume.level, min: 0, max: 100, suffix: "%", disabled: !volume.available, onChange: onVolume }), SP_JSX.jsx(QuickSlider, { label: local.microphoneVolume, value: clampPercent(audio.input_volume), min: 0, max: 100, suffix: "%", disabled: !audio.ok, onChange: onMicVolume })] }), ["performance", "mixer"]);
+    const devicesPart = section(SP_JSX.jsx(FaVolumeUp, {}), groups.devices, SP_JSX.jsxs(SP_JSX.Fragment, { children: [outputControl, SP_JSX.jsx(SpatialAudioControls, { locale: locale, endpointId: audio.default_output_id || "" }), SP_JSX.jsx(QuickDropdown, { fullWidth: true, label: local.microphoneInput, options: inputOptions, value: audio.default_input_id || "", disabled: !audio.ok || audio.inputs.length === 0, onChange: onInput })] }), ["performance", "devices"]);
+    const displayPart = section(SP_JSX.jsx(FaDesktop, {}), local.display, SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(PanelBrightness, { locale: locale }), SP_JSX.jsx(QuickSlider, { label: softwareBrightnessLabel(locale), value: dimmerToBrightness(dimmer.level), min: 0, max: 100, suffix: "%", onChange: onBrightness }), resolutionControl, refreshControl, hdrControl, SP_JSX.jsx(PerformanceSettings, { locale: locale, appId: gameAppId }), gamingMode && gameAppId === 0 && SP_JSX.jsx(SteamDownloadPower, { locale: locale })] }));
+    const nvidiaPart = (page === "graphics" || core) && SP_JSX.jsx(NvidiaControls, { locale: locale, collapsed: !expanded.includes("nvidia"), onToggle: onToggle });
+    const radeonPart = caps?.amd_radeon && amd?.available && section(SP_JSX.jsx(FaMicrochip, {}), local.amd, SP_JSX.jsxs(SP_JSX.Fragment, { children: [amdPending && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: controlLocale(locale).loading }), amdReadbackUnknown && SP_JSX.jsxs("div", { className: "qsMeta", role: "status", children: [nvidiaLocale(locale).failed, SP_JSX.jsx(CompatUI.DialogButton, { onClick: () => void loadAmd(), children: controlLocale(locale).retry })] }), amd.rsr?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdRsr, description: local.amdRsrHint, checked: Boolean(amd.rsr.enabled), onChange: (v) => onAmdToggle("rsr", v) }), amd.rsr?.supported && amd.rsr.enabled && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdRsrSharpness, value: amd.rsr.sharpness ?? 0, min: amd.rsr.smin ?? 0, max: amd.rsr.smax ?? 100, onChange: (v) => queueAmdWrite("rsr_sharpness", v, AMD_SLIDER_SETTLE) }), amd.afmf?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdAfmf, description: local.amdAfmfHint, checked: Boolean(amd.afmf.enabled), onChange: (v) => onAmdToggle("afmf", v) }), amd.antilag?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdAntilag, description: local.amdAntilagHint, checked: Boolean(amd.antilag.enabled), onChange: (v) => onAmdToggle("antilag", v) }), amd.boost?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdBoost, description: local.amdBoostHint, checked: Boolean(amd.boost.enabled), onChange: (v) => onAmdToggle("boost", v) }), amd.boost?.supported && amd.boost.enabled && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdBoostResolution, value: amd.boost.resolution ?? 50, min: amd.boost.rmin ?? 50, max: amd.boost.rmax ?? 100, suffix: "%", onChange: (v) => queueAmdWrite("boost_resolution", v, AMD_SLIDER_SETTLE) }), amd.enhanced_sync?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdEnhancedSync, description: local.amdEnhancedSyncHint, checked: Boolean(amd.enhanced_sync.enabled), onChange: (v) => onAmdToggle("enhanced_sync", v) }), amd.chill?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdChill, description: local.amdChillHint, checked: Boolean(amd.chill.enabled), onChange: (v) => onAmdToggle("chill", v) }), amd.chill?.supported && amd.chill.enabled && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdChillMin, value: amd.chill.min ?? 0, min: amd.chill.fmin ?? 0, max: amd.chill.fmax ?? 240, onChange: (v) => queueAmdWrite("chill_min", v, AMD_SLIDER_SETTLE) }), amd.chill?.supported && amd.chill.enabled && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdChillMax, value: amd.chill.max ?? 0, min: amd.chill.fmin ?? 0, max: amd.chill.fmax ?? 240, onChange: (v) => queueAmdWrite("chill_max", v, AMD_SLIDER_SETTLE) }), amd.sharpening?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdSharpening, description: local.amdSharpeningHint, checked: Boolean(amd.sharpening.enabled), onChange: (v) => onAmdToggle("sharpening", v) }), amd.sharpening?.supported && amd.sharpening.enabled && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdSharpeningValue, value: amd.sharpening.value ?? 0, min: amd.sharpening.smin ?? 0, max: amd.sharpening.smax ?? 100, step: amd.sharpening.step ?? 10, onChange: (v) => queueAmdWrite("sharpening_value", v, AMD_SLIDER_SETTLE) }), amd.display_color?.available && SP_JSX.jsx("div", { className: "qsMeta", children: local.amdDisplayColor }), amd.display_color?.brightness?.supported && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdDisplayBrightness, value: amd.display_color.brightness.value ?? 0, min: amd.display_color.brightness.min ?? -100, max: amd.display_color.brightness.max ?? 100, onChange: (v) => queueAmdWrite("display_brightness", v, AMD_SLIDER_SETTLE) }), amd.display_color?.contrast?.supported && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdDisplayContrast, value: amd.display_color.contrast.value ?? 100, min: amd.display_color.contrast.min ?? 0, max: amd.display_color.contrast.max ?? 200, onChange: (v) => queueAmdWrite("display_contrast", v, AMD_SLIDER_SETTLE) }), amd.display_color?.saturation?.supported && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdDisplaySaturation, value: amd.display_color.saturation.value ?? 100, min: amd.display_color.saturation.min ?? 0, max: amd.display_color.saturation.max ?? 200, onChange: (v) => queueAmdWrite("display_saturation", v, AMD_SLIDER_SETTLE) }), amd.display_color?.temperature?.supported && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdDisplayTemperature, value: amd.display_color.temperature.value ?? 6500, min: amd.display_color.temperature.min ?? 4000, max: amd.display_color.temperature.max ?? 10000, step: 100, suffix: " K", onChange: (v) => queueAmdWrite("display_temperature", v, AMD_SLIDER_SETTLE) })] }));
+    const losslessPart = caps?.lossless && section(SP_JSX.jsx(FaPlay, {}), local.lossless, SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(CompatUI.ToggleField, { bottomSeparator: "none", label: local.losslessScaling, disabled: losslessUnknown || losslessPending || !lossless?.installed || (!lossless?.can_scale && !(lossless?.scaling_requested ?? lossless?.scaling_active)), checked: Boolean(lossless?.scaling_requested ?? lossless?.scaling_active), onChange: onScalingToggle }), (losslessUnknown || lossless?.capture_state) && SP_JSX.jsxs("div", { className: "qsStatus", role: "status", children: [losslessCaptureLabel(locale, losslessUnknown ? "unknown" : lossless?.capture_state), losslessUnknown && SP_JSX.jsx(CompatUI.DialogButton, { disabled: losslessReading, onClick: () => void loadLossless(), children: losslessReading ? controlLocale(locale).loading : controlLocale(locale).retry })] }), SP_JSX.jsx(QuickDropdown, { disabled: losslessUnknown || losslessPending || !lossless?.installed, label: local.losslessFrameGen, options: frameGenOptions, value: lossless?.frame_gen ?? "Off", onChange: onFrameGen }, `fg-${lossless?.frame_gen ?? "Off"}`), SP_JSX.jsx(QuickSlider, { disabled: losslessUnknown || losslessPending || !lossless?.installed, label: local.losslessMultiplier, value: Math.max(2, Math.min(4, lossless?.multiplier ?? 2)), min: 2, max: 4, suffix: "x", onChange: onMultiplier }), SP_JSX.jsx("div", { className: "qsMeta", children: lossless?.can_scale ? local.losslessManagedHint : local.losslessGameOnlyHint })] }));
+    const agentPart = section(SP_JSX.jsx(FaTools, {}), local.advanced, SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "qsStatus", children: `${local.agentLabel}: ${agentRunning ? local.agentRunning : local.agentStopped}` }), SP_JSX.jsx(CompatUI.DialogButton, { disabled: agentRunning, onClick: onStartAgent, children: SP_JSX.jsxs("span", { className: "qsButtonInner", children: [SP_JSX.jsx(FaPlay, {}), SP_JSX.jsx("span", { children: local.startAgent })] }) }), SP_JSX.jsx(CompatUI.DialogButton, { disabled: !agentRunning, onClick: onStopAgent, children: SP_JSX.jsxs("span", { className: "qsButtonInner", children: [SP_JSX.jsx(FaTools, {}), SP_JSX.jsx("span", { children: local.stopAgent })] }) }), SP_JSX.jsx("div", { className: "qsMeta", children: local.agentHint }), SP_JSX.jsx(CompatUI.DialogButton, { disabled: diagnosticsBusy, onClick: onDiagnostics, children: SP_JSX.jsxs("span", { className: "qsButtonInner", children: [SP_JSX.jsx(FaFileAlt, {}), SP_JSX.jsx("span", { children: local.generateDiagnostics })] }) })] }));
     return (SP_JSX.jsx("div", { children: SP_JSX.jsxs(CompatUI.Focusable, { "flow-children": "column", className: "qsRedesign", children: [SP_JSX.jsx("style", { children: qsClassSelectors(`
           .qsRedesign,.qsRedesign *{box-sizing:border-box;min-width:0;letter-spacing:0}
           .qsRedesign{width:100%;padding:0 16px 18px;overflow-x:hidden;color:inherit}
@@ -13532,7 +13647,12 @@ function QuickSettingsContent({ page, expanded = [], onToggle, locale, gameAppId
           .qsButtonInner svg{width:17px;height:17px;flex:none}
           .qsMeta{font-size:12px;line-height:1.45;opacity:.7;overflow-wrap:anywhere}
           .qsStatus{font-size:13px;line-height:1.4;padding:4px 0}
-        `) }), !caps && SP_JSX.jsxs("div", { className: "qsMeta", children: [loadFailed ? local.notConnected : controlLocale(locale).loading, loadFailed && SP_JSX.jsx(CompatUI.DialogButton, { onClick: () => { setLoadFailed(false); setLoadAttempt(value => value + 1); }, children: controlLocale(locale).retry })] }), section(SP_JSX.jsx(FaBolt, {}), groups.power, SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(HandheldPowerLimits, { locale: locale }), SP_JSX.jsx(LenovoPowerLimits, { locale: locale }), SP_JSX.jsx(PowerProfile, { locale: locale }), SP_JSX.jsx(HandheldPowerMode, { locale: locale }), SP_JSX.jsx(MsiPowerControls, { locale: locale }), SP_JSX.jsx(AsusFanStatus, { locale: locale }), SP_JSX.jsx(OneXFanControls, { locale: locale }), SP_JSX.jsx(AsusPerformanceActions, { locale: locale }), SP_JSX.jsx(ProcessorBoost, { locale: locale })] }), ["graphics", "power"]), page === "graphics" && SP_JSX.jsx(ShaderCompatibility, { appId: gameAppId, locale: locale, renderSection: body => section(SP_JSX.jsx(FaMicrochip, {}), groups.shaders, body, ["graphics", "shaders"]) }, gameAppId), section(SP_JSX.jsx(FaVolumeUp, {}), groups.mixer, SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(QuickSlider, { label: local.volume, value: volume.level, min: 0, max: 100, suffix: "%", disabled: !volume.available, onChange: onVolume }), SP_JSX.jsx(QuickSlider, { label: local.microphoneVolume, value: clampPercent(audio.input_volume), min: 0, max: 100, suffix: "%", disabled: !audio.ok, onChange: onMicVolume })] }), ["performance", "mixer"]), section(SP_JSX.jsx(FaVolumeUp, {}), groups.devices, SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(QuickDropdown, { fullWidth: true, label: local.audioOutput, options: outputOptions, value: audio.default_output_id || "", disabled: !audio.ok || audio.outputs.length === 0, onChange: onOutput }), SP_JSX.jsx(SpatialAudioControls, { locale: locale, endpointId: audio.default_output_id || "" }), SP_JSX.jsx(QuickDropdown, { fullWidth: true, label: local.microphoneInput, options: inputOptions, value: audio.default_input_id || "", disabled: !audio.ok || audio.inputs.length === 0, onChange: onInput })] }), ["performance", "devices"]), section(SP_JSX.jsx(FaDesktop, {}), local.display, SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(PanelBrightness, { locale: locale }), SP_JSX.jsx(QuickSlider, { label: softwareBrightnessLabel(locale), value: dimmerToBrightness(dimmer.level), min: 0, max: 100, suffix: "%", onChange: onBrightness }), caps?.display && resolutionOptions.length > 0 && SP_JSX.jsx(QuickDropdown, { fullWidth: true, label: local.resolution, options: resolutionOptions, value: currentResolution, onChange: onResolution }, `res-${currentResolution}`), caps?.display && refreshOptions.length > 0 && SP_JSX.jsx(QuickDropdown, { fullWidth: true, label: local.refreshRate, options: refreshOptions, value: currentRefresh, onChange: onRefresh }, `hz-${currentRefresh}`), SP_JSX.jsx(CompatUI.ToggleField, { bottomSeparator: "none", label: local.hdr, checked: Boolean(hdr.enabled), disabled: hdr.available !== true || hdr.supported !== true, onChange: onHdr }), SP_JSX.jsx(PerformanceSettings, { locale: locale, appId: gameAppId }), gamingMode && gameAppId === 0 && SP_JSX.jsx(SteamDownloadPower, { locale: locale })] })), page === "graphics" && SP_JSX.jsx(NvidiaControls, { locale: locale, collapsed: !expanded.includes("nvidia"), onToggle: onToggle }), caps?.amd_radeon && amd?.available && section(SP_JSX.jsx(FaMicrochip, {}), local.amd, SP_JSX.jsxs(SP_JSX.Fragment, { children: [amdPending && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: controlLocale(locale).loading }), amdReadbackUnknown && SP_JSX.jsxs("div", { className: "qsMeta", role: "status", children: [nvidiaLocale(locale).failed, SP_JSX.jsx(CompatUI.DialogButton, { onClick: () => void loadAmd(), children: controlLocale(locale).retry })] }), amd.rsr?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdRsr, description: local.amdRsrHint, checked: Boolean(amd.rsr.enabled), onChange: (v) => onAmdToggle("rsr", v) }), amd.rsr?.supported && amd.rsr.enabled && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdRsrSharpness, value: amd.rsr.sharpness ?? 0, min: amd.rsr.smin ?? 0, max: amd.rsr.smax ?? 100, onChange: (v) => queueAmdWrite("rsr_sharpness", v, AMD_SLIDER_SETTLE) }), amd.afmf?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdAfmf, description: local.amdAfmfHint, checked: Boolean(amd.afmf.enabled), onChange: (v) => onAmdToggle("afmf", v) }), amd.antilag?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdAntilag, description: local.amdAntilagHint, checked: Boolean(amd.antilag.enabled), onChange: (v) => onAmdToggle("antilag", v) }), amd.boost?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdBoost, description: local.amdBoostHint, checked: Boolean(amd.boost.enabled), onChange: (v) => onAmdToggle("boost", v) }), amd.boost?.supported && amd.boost.enabled && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdBoostResolution, value: amd.boost.resolution ?? 50, min: amd.boost.rmin ?? 50, max: amd.boost.rmax ?? 100, suffix: "%", onChange: (v) => queueAmdWrite("boost_resolution", v, AMD_SLIDER_SETTLE) }), amd.enhanced_sync?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdEnhancedSync, description: local.amdEnhancedSyncHint, checked: Boolean(amd.enhanced_sync.enabled), onChange: (v) => onAmdToggle("enhanced_sync", v) }), amd.chill?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdChill, description: local.amdChillHint, checked: Boolean(amd.chill.enabled), onChange: (v) => onAmdToggle("chill", v) }), amd.chill?.supported && amd.chill.enabled && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdChillMin, value: amd.chill.min ?? 0, min: amd.chill.fmin ?? 0, max: amd.chill.fmax ?? 240, onChange: (v) => queueAmdWrite("chill_min", v, AMD_SLIDER_SETTLE) }), amd.chill?.supported && amd.chill.enabled && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdChillMax, value: amd.chill.max ?? 0, min: amd.chill.fmin ?? 0, max: amd.chill.fmax ?? 240, onChange: (v) => queueAmdWrite("chill_max", v, AMD_SLIDER_SETTLE) }), amd.sharpening?.supported && SP_JSX.jsx(CompatUI.ToggleField, { disabled: amdReadbackUnknown, bottomSeparator: "none", label: local.amdSharpening, description: local.amdSharpeningHint, checked: Boolean(amd.sharpening.enabled), onChange: (v) => onAmdToggle("sharpening", v) }), amd.sharpening?.supported && amd.sharpening.enabled && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdSharpeningValue, value: amd.sharpening.value ?? 0, min: amd.sharpening.smin ?? 0, max: amd.sharpening.smax ?? 100, step: amd.sharpening.step ?? 10, onChange: (v) => queueAmdWrite("sharpening_value", v, AMD_SLIDER_SETTLE) }), amd.display_color?.available && SP_JSX.jsx("div", { className: "qsMeta", children: local.amdDisplayColor }), amd.display_color?.brightness?.supported && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdDisplayBrightness, value: amd.display_color.brightness.value ?? 0, min: amd.display_color.brightness.min ?? -100, max: amd.display_color.brightness.max ?? 100, onChange: (v) => queueAmdWrite("display_brightness", v, AMD_SLIDER_SETTLE) }), amd.display_color?.contrast?.supported && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdDisplayContrast, value: amd.display_color.contrast.value ?? 100, min: amd.display_color.contrast.min ?? 0, max: amd.display_color.contrast.max ?? 200, onChange: (v) => queueAmdWrite("display_contrast", v, AMD_SLIDER_SETTLE) }), amd.display_color?.saturation?.supported && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdDisplaySaturation, value: amd.display_color.saturation.value ?? 100, min: amd.display_color.saturation.min ?? 0, max: amd.display_color.saturation.max ?? 200, onChange: (v) => queueAmdWrite("display_saturation", v, AMD_SLIDER_SETTLE) }), amd.display_color?.temperature?.supported && SP_JSX.jsx(QuickSlider, { disabled: amdReadbackUnknown, label: local.amdDisplayTemperature, value: amd.display_color.temperature.value ?? 6500, min: amd.display_color.temperature.min ?? 4000, max: amd.display_color.temperature.max ?? 10000, step: 100, suffix: " K", onChange: (v) => queueAmdWrite("display_temperature", v, AMD_SLIDER_SETTLE) })] })), caps?.lossless && section(SP_JSX.jsx(FaPlay, {}), local.lossless, SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(CompatUI.ToggleField, { bottomSeparator: "none", label: local.losslessScaling, disabled: losslessUnknown || losslessPending || !lossless?.installed || (!lossless?.can_scale && !(lossless?.scaling_requested ?? lossless?.scaling_active)), checked: Boolean(lossless?.scaling_requested ?? lossless?.scaling_active), onChange: onScalingToggle }), (losslessUnknown || lossless?.capture_state) && SP_JSX.jsxs("div", { className: "qsStatus", role: "status", children: [losslessCaptureLabel(locale, losslessUnknown ? "unknown" : lossless?.capture_state), losslessUnknown && SP_JSX.jsx(CompatUI.DialogButton, { disabled: losslessReading, onClick: () => void loadLossless(), children: losslessReading ? controlLocale(locale).loading : controlLocale(locale).retry })] }), SP_JSX.jsx(QuickDropdown, { disabled: losslessUnknown || losslessPending || !lossless?.installed, label: local.losslessFrameGen, options: frameGenOptions, value: lossless?.frame_gen ?? "Off", onChange: onFrameGen }, `fg-${lossless?.frame_gen ?? "Off"}`), SP_JSX.jsx(QuickSlider, { disabled: losslessUnknown || losslessPending || !lossless?.installed, label: local.losslessMultiplier, value: Math.max(2, Math.min(4, lossless?.multiplier ?? 2)), min: 2, max: 4, suffix: "x", onChange: onMultiplier }), SP_JSX.jsx("div", { className: "qsMeta", children: lossless?.can_scale ? local.losslessManagedHint : local.losslessGameOnlyHint })] })), section(SP_JSX.jsx(FaTools, {}), local.advanced, SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "qsStatus", children: `${local.agentLabel}: ${agentRunning ? local.agentRunning : local.agentStopped}` }), SP_JSX.jsx(CompatUI.DialogButton, { disabled: agentRunning, onClick: onStartAgent, children: SP_JSX.jsxs("span", { className: "qsButtonInner", children: [SP_JSX.jsx(FaPlay, {}), SP_JSX.jsx("span", { children: local.startAgent })] }) }), SP_JSX.jsx(CompatUI.DialogButton, { disabled: !agentRunning, onClick: onStopAgent, children: SP_JSX.jsxs("span", { className: "qsButtonInner", children: [SP_JSX.jsx(FaTools, {}), SP_JSX.jsx("span", { children: local.stopAgent })] }) }), SP_JSX.jsx("div", { className: "qsMeta", children: local.agentHint }), SP_JSX.jsx(CompatUI.DialogButton, { disabled: diagnosticsBusy, onClick: onDiagnostics, children: SP_JSX.jsxs("span", { className: "qsButtonInner", children: [SP_JSX.jsx(FaFileAlt, {}), SP_JSX.jsx("span", { children: local.generateDiagnostics })] }) })] }))] }) }));
+        `) }), !core && statusPart, core && layout ? layout({
+                    sections: { power: powerPart, shaders: shadersPart, mixer: mixerPart, devices: devicesPart, display: displayPart, nvidia: nvidiaPart,
+                        radeon: radeonPart, lossless: losslessPart, agent: agentPart },
+                    quick: { display: displayQuick, sound: soundQuick, power: powerBody, displayLabel, soundLabel },
+                    status: statusPart,
+                }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [powerPart, shadersPart, mixerPart, devicesPart, displayPart, nvidiaPart, radeonPart, losslessPart, agentPart] })] }) }));
 }
 function installQuickSettings() {
     void (async () => {
@@ -21958,52 +22078,7 @@ const words$2 = {
     zh: ["游戏新闻", "在主页显示游戏新闻", "国家或地区", "跟随 Core 语言", "暂时无法获取新闻，请稍后重试。", "无法保存设置。", "最近获取的新闻"],
     hi: ["वीडियो गेम समाचार", "होम में गेम समाचार दिखाएँ", "देश", "Core की भाषा का उपयोग करें", "समाचार उपलब्ध नहीं हैं। बाद में फिर कोशिश करें।", "सेटिंग सहेजी नहीं जा सकी।", "पिछले उपलब्ध समाचार"],
 };
-const NEWS_COUNTRIES = ["US", "IT", "DE", "ES", "FR", "BR", "RU", "UA", "JP", "KR", "TW", "IN"];
 function newsCopy(locale) { return words$2[locale] ?? words$2.en; }
-
-// Eternal Core: the "Core UI" setting (Quick Access > Core). On by default; kept in Steam's localStorage under
-// core.ui.enabled ("0" = off, anything else or nothing = on). coreUi.ts subscribes and removes or restores
-// everything Core UI adds as soon as it changes. Self-contained (no imports): tests load it on its own.
-const CORE_UI_SETTING_KEY = "core.ui.enabled";
-function createCoreUiSetting(storage) {
-    const read = () => { try {
-        return storage?.getItem(CORE_UI_SETTING_KEY) !== "0";
-    }
-    catch {
-        return true;
-    } };
-    let value = read();
-    const listeners = new Set();
-    return {
-        get: () => value,
-        set(on) {
-            const next = on === true;
-            try {
-                storage?.setItem(CORE_UI_SETTING_KEY, next ? "1" : "0");
-            }
-            catch { /* Kept for this session only. */ }
-            if (next === value)
-                return;
-            value = next;
-            for (const listener of [...listeners]) {
-                try {
-                    listener();
-                }
-                catch { /* One listener cannot stop the others. */ }
-            }
-        },
-        subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    };
-}
-function defaultStorage() {
-    try {
-        return typeof localStorage === "undefined" ? undefined : localStorage;
-    }
-    catch {
-        return undefined;
-    }
-}
-const coreUiSetting = createCoreUiSetting(defaultStorage());
 
 // Eternal Core: Core Home's text in Core's 12 languages (docs/eternal/CORE-UI.md, "Phase 2: Home"). "Jarvis", "Forge"
 // and the console names are names and stay the same everywhere. Self-contained: tests load it alone.
@@ -22045,7 +22120,7 @@ const extra$1 = {
         hardcore: "हार्डकोर", players: "{n}% खिलाड़ी", left: "{n} बाकी", achievementsEmpty: "कोई उपलब्धि अनलॉक करें, वह यहाँ दिखेगी",
         consolesEmpty: "अपने कंसोल यहाँ देखने के लिए The Collector में अपनी RomM लाइब्रेरी सिंक करें" },
 };
-const en$9 = {
+const en$a = {
     brief: "Today", consoles: "Consoles", favorites: "Favorites", favoritesEmpty: "Star a game to add it here",
     morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening", night: "Up late",
     lastPlayed: "You were last playing {game}.", nothingYet: "Nothing on the go yet. Pick something and I'll keep track.",
@@ -22053,7 +22128,7 @@ const en$9 = {
     updates: "News and updates for your games", empty: "No games in this collection yet", vr: "VR", retro: "Retro",
 };
 const copy$e = {
-    en: en$9,
+    en: en$a,
     it: { brief: "Oggi", consoles: "Console", favorites: "Preferiti", favoritesEmpty: "Aggiungi una stella a un gioco per vederlo qui", morning: "Buongiorno", afternoon: "Buon pomeriggio", evening: "Buonasera", night: "Ancora sveglio",
         lastPlayed: "L'ultima volta giocavi a {game}.", nothingYet: "Ancora niente in corso. Scegli un gioco e ne terrò traccia.", talk: "Parla con Jarvis",
         mods: "{count} mod hanno aggiornamenti in Forge", modsOne: "1 mod ha un aggiornamento in Forge", updates: "Notizie e aggiornamenti dei tuoi giochi", empty: "Ancora nessun gioco in questa raccolta", vr: "VR", retro: "Retro" },
@@ -22091,7 +22166,7 @@ const copy$e = {
 function coreHomeCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
     const key = language === "ua" ? "uk" : language;
-    return { ...extra$1.en, ...(copy$e[key] ? extra$1[key] ?? {} : {}), ...(copy$e[key] ?? en$9) };
+    return { ...extra$1.en, ...(copy$e[key] ? extra$1[key] ?? {} : {}), ...(copy$e[key] ?? en$a) };
 }
 
 // Eternal Core: Core Home's bottom tabs (docs/eternal/CORE-UI.md, "Phase 2: Home"). Pure: tests drive it with fake
@@ -22586,7 +22661,7 @@ function storedModel(raw) {
     return { recent, closest };
 }
 
-const { Focusable: Focusable$i, Navigation: Navigation$a } = CompatUI;
+const { Focusable: Focusable$h, Navigation: Navigation$a } = CompatUI;
 // Steam's achievement progress cache (index.tsx hands in its finder: it is a Steam store found by module search).
 let progressSource = () => undefined;
 function setAchievementProgressSource(source) { progressSource = source; }
@@ -22726,14 +22801,14 @@ function CoreAchievementsTab({ locale }) {
     const recent = (data?.recent ?? []).map(unlock => withRarity(unlock, rarity)), closest = data?.closest ?? [];
     // 3.3.10: nothing to show (once read): one line of hint text where the lists would start.
     if (data && !recent.length && !closest.length)
-        return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$6 }), SP_JSX.jsx(Focusable$i, { className: "core-ach-empty", focusable: true, children: text.achievementsEmpty })] });
-    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$6 }), SP_JSX.jsxs(Focusable$i, { className: "core-ach", "flow-children": "row", children: [SP_JSX.jsxs(Focusable$i, { className: "core-ach-col", "flow-children": "column", children: [SP_JSX.jsx("h3", { children: text.recentUnlocks }), recent.length ? SP_JSX.jsx("div", { className: "core-ach-list", children: recent.map((unlock, i) => {
+        return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$6 }), SP_JSX.jsx(Focusable$h, { className: "core-ach-empty", focusable: true, children: text.achievementsEmpty })] });
+    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$6 }), SP_JSX.jsxs(Focusable$h, { className: "core-ach", "flow-children": "row", children: [SP_JSX.jsxs(Focusable$h, { className: "core-ach-col", "flow-children": "column", children: [SP_JSX.jsx("h3", { children: text.recentUnlocks }), recent.length ? SP_JSX.jsx("div", { className: "core-ach-list", children: recent.map((unlock, i) => {
                                     const note = unlockNote(unlock, { hardcore: text.hardcore, players: text.players });
-                                    return SP_JSX.jsxs(Focusable$i, { className: "core-ach-row", focusable: true, "aria-label": `${unlock.name}, ${unlock.game}`, onActivate: () => openAchievements(unlock.appId), onClick: () => openAchievements(unlock.appId), ...gameMenuProps(unlock.appId), children: [unlock.icon ? SP_JSX.jsx("img", { className: "core-ach-icon", alt: "", src: unlock.icon }) : SP_JSX.jsx("span", { className: "core-ach-icon" }), SP_JSX.jsxs("div", { className: "core-ach-text", children: [SP_JSX.jsx("div", { className: "core-ach-name", children: unlock.name }), SP_JSX.jsx("div", { className: "core-ach-sub", children: [unlock.game, whenText(unlock.at, now, locale)].filter(Boolean).join(" · ") })] }), note && SP_JSX.jsx("span", { className: "core-ach-note", children: note }), SP_JSX.jsx("span", { className: `core-ach-tag${unlock.source === "ra" ? " ra" : ""}`, children: unlock.source === "ra" ? "RetroAchievements" : "Steam" })] }, `${unlock.source}-${unlock.appId ?? unlock.game}-${unlock.name}-${i}`);
-                                }) }) : SP_JSX.jsx(Focusable$i, { className: "core-ach-row", focusable: true, children: SP_JSX.jsx("span", { className: "core-ach-empty", children: data ? text.achievementsEmpty : "…" }) })] }), SP_JSX.jsxs(Focusable$i, { className: "core-ach-col", "flow-children": "column", children: [SP_JSX.jsx("h3", { children: text.closest }), SP_JSX.jsx("div", { className: "core-ach-list", children: closest.map((entry, i) => {
+                                    return SP_JSX.jsxs(Focusable$h, { className: "core-ach-row", focusable: true, "aria-label": `${unlock.name}, ${unlock.game}`, onActivate: () => openAchievements(unlock.appId), onClick: () => openAchievements(unlock.appId), ...gameMenuProps(unlock.appId), children: [unlock.icon ? SP_JSX.jsx("img", { className: "core-ach-icon", alt: "", src: unlock.icon }) : SP_JSX.jsx("span", { className: "core-ach-icon" }), SP_JSX.jsxs("div", { className: "core-ach-text", children: [SP_JSX.jsx("div", { className: "core-ach-name", children: unlock.name }), SP_JSX.jsx("div", { className: "core-ach-sub", children: [unlock.game, whenText(unlock.at, now, locale)].filter(Boolean).join(" · ") })] }), note && SP_JSX.jsx("span", { className: "core-ach-note", children: note }), SP_JSX.jsx("span", { className: `core-ach-tag${unlock.source === "ra" ? " ra" : ""}`, children: unlock.source === "ra" ? "RetroAchievements" : "Steam" })] }, `${unlock.source}-${unlock.appId ?? unlock.game}-${unlock.name}-${i}`);
+                                }) }) : SP_JSX.jsx(Focusable$h, { className: "core-ach-row", focusable: true, children: SP_JSX.jsx("span", { className: "core-ach-empty", children: data ? text.achievementsEmpty : "…" }) })] }), SP_JSX.jsxs(Focusable$h, { className: "core-ach-col", "flow-children": "column", children: [SP_JSX.jsx("h3", { children: text.closest }), SP_JSX.jsx("div", { className: "core-ach-list", children: closest.map((entry, i) => {
                                     const pct = percentOf(entry);
                                     const left = text.left.replace("{n}", String(entry.total - entry.unlocked));
-                                    return SP_JSX.jsxs(Focusable$i, { className: "core-ach-card", focusable: true, "aria-label": `${entry.game}, ${pct}%`, onActivate: () => openAchievements(entry.appId), onClick: () => openAchievements(entry.appId), ...gameMenuProps(entry.appId), children: [SP_JSX.jsxs("div", { className: "core-ach-head", children: [SP_JSX.jsx("span", { children: entry.game }), SP_JSX.jsxs("span", { children: [pct, "%"] })] }), SP_JSX.jsx("div", { className: "core-ach-bar", children: SP_JSX.jsx("i", { style: { width: `${pct}%` } }) }), SP_JSX.jsx("div", { className: "core-ach-left", children: entry.source === "ra" ? `RA · ${left}` : left })] }, `${entry.source}-${entry.appId ?? entry.game}-${i}`);
+                                    return SP_JSX.jsxs(Focusable$h, { className: "core-ach-card", focusable: true, "aria-label": `${entry.game}, ${pct}%`, onActivate: () => openAchievements(entry.appId), onClick: () => openAchievements(entry.appId), ...gameMenuProps(entry.appId), children: [SP_JSX.jsxs("div", { className: "core-ach-head", children: [SP_JSX.jsx("span", { children: entry.game }), SP_JSX.jsxs("span", { children: [pct, "%"] })] }), SP_JSX.jsx("div", { className: "core-ach-bar", children: SP_JSX.jsx("i", { style: { width: `${pct}%` } }) }), SP_JSX.jsx("div", { className: "core-ach-left", children: entry.source === "ra" ? `RA · ${left}` : left })] }, `${entry.source}-${entry.appId ?? entry.game}-${i}`);
                                 }) })] })] })] });
 }
 
@@ -23682,12 +23757,6 @@ function ensureClubLoaded() {
     }
     return loadClub(false);
 }
-async function saveClubSettings(next) {
-    const saved = await call("set_club_settings", next.enabled, next.display_name);
-    set({ settings: saved });
-    void loadClub(false);
-    return saved;
-}
 
 // Eternal Core: logging a Club completion through Eternal-Assemble (the Discord plugin).
 //
@@ -24115,7 +24184,7 @@ function wantConsoleHeroes(slugs) {
     void pump();
 }
 
-const { Focusable: Focusable$h, Navigation: Navigation$9 } = CompatUI;
+const { Focusable: Focusable$g, Navigation: Navigation$9 } = CompatUI;
 const steamWindow$1 = () => window;
 // 3.3.11: Steam's own route builders for a collection, looked up once in Steam's modules (route tables nest two or
 // three levels deep); coreConsoles.ts calls only short one-argument builders whose source builds a collection path.
@@ -24254,7 +24323,7 @@ function GameTile({ appid, autoFocus, onFocus }) {
     const [failed, setFailed] = _global_SP_REACT.useState({ portrait: 0, hero: 0, logo: 0 });
     const layers = favoriteLayers(art, failed);
     const fail = (kind) => () => setFailed(prior => ({ ...prior, [kind]: prior[kind] + 1 }));
-    return SP_JSX.jsx(Focusable$h, { className: "core-tile", focusable: true, noFocusRing: true, "aria-label": appName(appid), autoFocus: autoFocus, onActivate: () => openGame(appid), onClick: () => openGame(appid), onGamepadFocus: onFocus, onFocus: onFocus, ...gameMenuProps(appid), children: layers.kind === "portrait"
+    return SP_JSX.jsx(Focusable$g, { className: "core-tile", focusable: true, noFocusRing: true, "aria-label": appName(appid), autoFocus: autoFocus, onActivate: () => openGame(appid), onClick: () => openGame(appid), onGamepadFocus: onFocus, onFocus: onFocus, ...gameMenuProps(appid), children: layers.kind === "portrait"
             ? SP_JSX.jsx("img", { alt: "", loading: "lazy", src: layers.src, onError: fail("portrait") }, layers.src)
             : SP_JSX.jsxs(SP_JSX.Fragment, { children: [layers.hero && SP_JSX.jsx("img", { alt: "", src: layers.hero, onError: fail("hero") }, layers.hero), layers.logo && SP_JSX.jsx("img", { className: "core-tile-logo", alt: "", src: layers.logo, onError: fail("logo") }, layers.logo)] }) });
 }
@@ -24271,13 +24340,13 @@ function ConsoleTile({ card, logo, hero, tag, autoFocus, onFocus }) {
         return undefined;
     } }, [card.name]);
     const mark = !logoFailed && logo ? logo : icon;
-    return SP_JSX.jsxs(Focusable$h, { className: `core-tile core-console${hero ? "" : " core-plain"}`, focusable: true, noFocusRing: true, "aria-label": card.name, autoFocus: autoFocus, onActivate: open, onClick: open, onGamepadFocus: onFocus, onFocus: onFocus, children: [hero && SP_JSX.jsx("img", { alt: "", src: hero }), hero && SP_JSX.jsx("span", { className: "core-tile-shade" }), mark ? SP_JSX.jsx("img", { className: "core-tile-logo", alt: "", src: mark, onError: () => setLogoFailed(true) }) : SP_JSX.jsx("span", { className: "core-tile-name", children: card.name }), tag && SP_JSX.jsx("span", { className: "core-tile-tag", style: { background: tag.tone }, children: tag.label })] });
+    return SP_JSX.jsxs(Focusable$g, { className: `core-tile core-console${hero ? "" : " core-plain"}`, focusable: true, noFocusRing: true, "aria-label": card.name, autoFocus: autoFocus, onActivate: open, onClick: open, onGamepadFocus: onFocus, onFocus: onFocus, children: [hero && SP_JSX.jsx("img", { alt: "", src: hero }), hero && SP_JSX.jsx("span", { className: "core-tile-shade" }), mark ? SP_JSX.jsx("img", { className: "core-tile-logo", alt: "", src: mark, onError: () => setLogoFailed(true) }) : SP_JSX.jsx("span", { className: "core-tile-name", children: card.name }), tag && SP_JSX.jsx("span", { className: "core-tile-tag", style: { background: tag.tone }, children: tag.label })] });
 }
 // A club pick the user owns, leading the Consoles row: the game's hero (else its box art) at the console tiles' size,
 // the pick's tag at the top; A opens the game page.
 function PickTile({ pick, autoFocus, onFocus }) {
     const art = _global_SP_REACT.useMemo(() => favoriteArt(pick.appId, steamWindow$1().appStore), [pick.appId]);
-    return SP_JSX.jsxs(Focusable$h, { className: "core-tile core-console core-plain", focusable: true, noFocusRing: true, "aria-label": `${pick.label}: ${pick.title}`, autoFocus: autoFocus, onActivate: () => openGame(pick.appId), onClick: () => openGame(pick.appId), onGamepadFocus: onFocus, onFocus: onFocus, ...gameMenuProps(pick.appId), children: [SP_JSX.jsx(Art, { sources: [...art.hero, ...art.portrait] }), SP_JSX.jsx("span", { className: "core-tile-shade" }), SP_JSX.jsx("span", { className: "core-tile-tag", style: { background: pick.tone }, children: pick.label })] });
+    return SP_JSX.jsxs(Focusable$g, { className: "core-tile core-console core-plain", focusable: true, noFocusRing: true, "aria-label": `${pick.label}: ${pick.title}`, autoFocus: autoFocus, onActivate: () => openGame(pick.appId), onClick: () => openGame(pick.appId), onGamepadFocus: onFocus, onFocus: onFocus, ...gameMenuProps(pick.appId), children: [SP_JSX.jsx(Art, { sources: [...art.hero, ...art.portrait] }), SP_JSX.jsx("span", { className: "core-tile-shade" }), SP_JSX.jsx("span", { className: "core-tile-tag", style: { background: pick.tone }, children: pick.label })] });
 }
 // The club's owned picks for the Consoles row, from the Club's own data (refreshed hourly by clubStore.ts; no extra fetch).
 function useConsolePicks() {
@@ -24394,9 +24463,9 @@ function HomeScreenOne({ games, autoFocus, getLocale }) {
         setHomePage(next);
     };
     const locale = getLocale();
-    return SP_JSX.jsxs(Focusable$h, { className: "core-screen", ref: root, "data-core-home-one": page, onButtonDown: onButtonDown, children: [SP_JSX.jsx("style", { children: homeScreenCss }), SP_JSX.jsx(Hero, { sources: heroOf(items[heroAt]) }), SP_JSX.jsx("div", { className: "core-screen-fade" }), SP_JSX.jsx(PageTabs, { page: page, locale: locale }), !items.length
-                ? SP_JSX.jsx("div", { className: "core-row", children: SP_JSX.jsx(Focusable$h, { className: `core-tile${page === "consoles" ? " core-console" : ""} core-plain`, focusable: true, noFocusRing: true, autoFocus: autoFocus, "aria-label": page === "consoles" ? coreHomeCopy(locale).consolesEmpty : "" }) })
-                : SP_JSX.jsx(Focusable$h, { className: "core-row", "flow-children": "row", children: items.map((item, i) => {
+    return SP_JSX.jsxs(Focusable$g, { className: "core-screen", ref: root, "data-core-home-one": page, onButtonDown: onButtonDown, children: [SP_JSX.jsx("style", { children: homeScreenCss }), SP_JSX.jsx(Hero, { sources: heroOf(items[heroAt]) }), SP_JSX.jsx("div", { className: "core-screen-fade" }), SP_JSX.jsx(PageTabs, { page: page, locale: locale }), !items.length
+                ? SP_JSX.jsx("div", { className: "core-row", children: SP_JSX.jsx(Focusable$g, { className: `core-tile${page === "consoles" ? " core-console" : ""} core-plain`, focusable: true, noFocusRing: true, autoFocus: autoFocus, "aria-label": page === "consoles" ? coreHomeCopy(locale).consolesEmpty : "" }) })
+                : SP_JSX.jsx(Focusable$g, { className: "core-row", "flow-children": "row", children: items.map((item, i) => {
                         const first = autoFocus && i === 0, onFocus = () => setFocused(i);
                         if (item.kind === "pick")
                             return SP_JSX.jsx(PickTile, { pick: item.pick, autoFocus: first, onFocus: onFocus }, itemKey(item));
@@ -24415,7 +24484,7 @@ function ConsoleScreenTwo({ getLocale }) {
     const text = coreHomeCopy(getLocale());
     const card = cards.find(item => item.id === focusedConsoleId()) ?? cards[0];
     const games = (card?.games ?? []).slice(0, 16);
-    return SP_JSX.jsxs("div", { className: "core-two", "data-core-home-two": "consoles", children: [SP_JSX.jsx("style", { children: homeScreenCss }), SP_JSX.jsx("p", { className: "core-two-label", children: text.recentlyPlayed }), games.length ? SP_JSX.jsxs(Focusable$h, { className: "core-two-row", "flow-children": "row", children: [games.map(game => SP_JSX.jsx(GameTile, { appid: game.appid, onFocus: () => { } }, game.appid)), card ? SP_JSX.jsx(Focusable$h, { className: "core-tile core-plain core-all", focusable: true, noFocusRing: true, "aria-label": text.all, onActivate: () => openCollection(card.id), onClick: () => openCollection(card.id), children: SP_JSX.jsx("span", { className: "core-tile-name", children: text.all }) }) : null] }) : SP_JSX.jsx("p", { className: "core-two-empty", children: text.empty })] });
+    return SP_JSX.jsxs("div", { className: "core-two", "data-core-home-two": "consoles", children: [SP_JSX.jsx("style", { children: homeScreenCss }), SP_JSX.jsx("p", { className: "core-two-label", children: text.recentlyPlayed }), games.length ? SP_JSX.jsxs(Focusable$g, { className: "core-two-row", "flow-children": "row", children: [games.map(game => SP_JSX.jsx(GameTile, { appid: game.appid, onFocus: () => { } }, game.appid)), card ? SP_JSX.jsx(Focusable$g, { className: "core-tile core-plain core-all", focusable: true, noFocusRing: true, "aria-label": text.all, onActivate: () => openCollection(card.id), onClick: () => openCollection(card.id), children: SP_JSX.jsx("span", { className: "core-tile-name", children: text.all }) }) : null] }) : SP_JSX.jsx("p", { className: "core-two-empty", children: text.empty })] });
 }
 class HomeScreenBoundary extends _global_SP_REACT.Component {
     constructor() {
@@ -24452,7 +24521,7 @@ const extra = {
     ko: { unreachable: "클럽에 연결할 수 없습니다. 1시간 안에 다시 시도합니다.", inLibrary: "라이브러리에 있음", openInLibrary: "라이브러리에서 열기", comingUp: "다가오는 일정", beatenCount: "{n}명 클리어", topLine: "상위", logUnavailable: "여기에서 클리어를 기록하려면 Assemble을 불러오세요" },
     hi: { unreachable: "क्लब से संपर्क नहीं हो सका। एक घंटे के भीतर फिर कोशिश होगी।", inLibrary: "आपकी लाइब्रेरी में", openInLibrary: "लाइब्रेरी में खोलें", comingUp: "आगे क्या है", beatenCount: "{n} ने पूरा किया", topLine: "शीर्ष", logUnavailable: "यहाँ से पूरा करना दर्ज करने के लिए Assemble लोड करें" },
 };
-const en$8 = {
+const en$9 = {
     tab: "Club", title: "Play Retro Games Club", playing: "Playing now",
     daysLeft: { one: "{n} day left", other: "{n} days left" }, lastDay: "Last day", ended: "Ended", noDate: "Dates on the club site",
     notInLibrary: "Not in your library", play: "Play", details: "Game page", standing: "Your standing", beaten: "games beaten",
@@ -24470,8 +24539,8 @@ const en$8 = {
     logOpened: "Opened in Assemble: choose the options and send it there.", logFailed: "Assemble could not open the thread.",
 };
 const copy$d = {
-    en: en$8,
-    it: { ...en$8, tab: "Club", playing: "In gioco ora", daysLeft: { one: "Manca {n} giorno", other: "Mancano {n} giorni" }, lastDay: "Ultimo giorno", ended: "Terminato", noDate: "Date sul sito del club",
+    en: en$9,
+    it: { ...en$9, tab: "Club", playing: "In gioco ora", daysLeft: { one: "Manca {n} giorno", other: "Mancano {n} giorni" }, lastDay: "Ultimo giorno", ended: "Terminato", noDate: "Date sul sito del club",
         notInLibrary: "Non è nella tua libreria", play: "Gioca", details: "Pagina del gioco", standing: "La tua posizione", beaten: "giochi completati", streak: "serie", rank: "posizione",
         rankOf: "#{rank} su {of}", crowns: "Corone", setName: "Inserisci il tuo nome nel club in Accesso rapido > Core > Club per vedere la tua posizione.",
         notFound: "Nessun membro chiamato \"{name}\" nella classifica per ora.", top: "Top 5", nominations: "Candidature", voteOpens: "Il voto apre il {date}",
@@ -24483,7 +24552,7 @@ const copy$d = {
         nameSave: "Salva nome", saveFailed: "Impossibile salvare le impostazioni del Club.",
         logAssemble: "Assemble apre il thread del gioco sul Discord del club con /completed pronto. Scegli le opzioni lì e invialo tu.", logButton: "Registra completamento", logOpening: "Apertura di Assemble…",
         logOpened: "Aperto in Assemble: scegli le opzioni e invialo da lì.", logFailed: "Assemble non è riuscito ad aprire il thread." },
-    es: { ...en$8, playing: "Jugando ahora", daysLeft: { one: "Queda {n} día", other: "Quedan {n} días" }, lastDay: "Último día", ended: "Terminado", noDate: "Fechas en la web del club",
+    es: { ...en$9, playing: "Jugando ahora", daysLeft: { one: "Queda {n} día", other: "Quedan {n} días" }, lastDay: "Último día", ended: "Terminado", noDate: "Fechas en la web del club",
         notInLibrary: "No está en tu biblioteca", play: "Jugar", details: "Página del juego", standing: "Tu posición", beaten: "juegos superados", streak: "racha", rank: "puesto",
         rankOf: "#{rank} de {of}", crowns: "Coronas", setName: "Escribe tu nombre del club en Acceso rápido > Core > Club para ver tu posición.",
         notFound: "Aún no hay ningún miembro llamado \"{name}\" en la clasificación.", top: "Top 5", nominations: "Nominaciones", voteOpens: "La votación abre el {date}",
@@ -24495,7 +24564,7 @@ const copy$d = {
         nameSave: "Guardar nombre", saveFailed: "No se pudo guardar la configuración del Club.",
         logAssemble: "Assemble abre el hilo del juego en el Discord del club con /completed listo. Elige las opciones allí y envíalo tú.", logButton: "Registrar completado", logOpening: "Abriendo Assemble…",
         logOpened: "Abierto en Assemble: elige las opciones y envíalo allí.", logFailed: "Assemble no pudo abrir el hilo." },
-    fr: { ...en$8, playing: "En cours", daysLeft: { one: "{n} jour restant", other: "{n} jours restants" }, lastDay: "Dernier jour", ended: "Terminé", noDate: "Dates sur le site du club",
+    fr: { ...en$9, playing: "En cours", daysLeft: { one: "{n} jour restant", other: "{n} jours restants" }, lastDay: "Dernier jour", ended: "Terminé", noDate: "Dates sur le site du club",
         notInLibrary: "Absent de votre bibliothèque", play: "Jouer", details: "Page du jeu", standing: "Votre classement", beaten: "jeux terminés", streak: "série", rank: "rang",
         rankOf: "#{rank} sur {of}", crowns: "Couronnes", setName: "Saisissez votre nom de membre dans Accès rapide > Core > Club pour voir votre classement.",
         notFound: "Aucun membre nommé « {name} » dans le classement pour l'instant.", top: "Top 5", nominations: "Nominations", voteOpens: "Vote le {date}",
@@ -24507,7 +24576,7 @@ const copy$d = {
         nameSave: "Enregistrer le nom", saveFailed: "Impossible d'enregistrer les paramètres du Club.",
         logAssemble: "Assemble ouvre le fil du jeu sur le Discord du club avec /completed prêt. Choisissez les options et envoyez-le vous-même.", logButton: "Enregistrer la complétion", logOpening: "Ouverture d'Assemble…",
         logOpened: "Ouvert dans Assemble : choisissez les options et envoyez-le depuis là.", logFailed: "Assemble n'a pas pu ouvrir le fil." },
-    de: { ...en$8, playing: "Läuft gerade", daysLeft: { one: "Noch {n} Tag", other: "Noch {n} Tage" }, lastDay: "Letzter Tag", ended: "Beendet", noDate: "Termine auf der Club-Website",
+    de: { ...en$9, playing: "Läuft gerade", daysLeft: { one: "Noch {n} Tag", other: "Noch {n} Tage" }, lastDay: "Letzter Tag", ended: "Beendet", noDate: "Termine auf der Club-Website",
         notInLibrary: "Nicht in deiner Bibliothek", play: "Spielen", details: "Spielseite", standing: "Dein Stand", beaten: "Spiele geschafft", streak: "Serie", rank: "Platz",
         rankOf: "Platz {rank} von {of}", crowns: "Kronen", setName: "Gib deinen Club-Namen unter Schnellzugriff > Core > Club ein, um deinen Stand zu sehen.",
         notFound: "Noch kein Mitglied namens „{name}“ in der Rangliste.", top: "Top 5", nominations: "Nominierungen", voteOpens: "Abstimmung ab {date}",
@@ -24519,7 +24588,7 @@ const copy$d = {
         nameSave: "Namen speichern", saveFailed: "Club-Einstellungen konnten nicht gespeichert werden.",
         logAssemble: "Assemble öffnet den Thread des Spiels im Discord des Clubs mit /completed. Wähle dort die Optionen und sende ihn selbst.", logButton: "Abschluss eintragen", logOpening: "Assemble wird geöffnet…",
         logOpened: "In Assemble geöffnet: Wähle die Optionen und sende ihn dort.", logFailed: "Assemble konnte den Thread nicht öffnen." },
-    pt: { ...en$8, playing: "Jogando agora", daysLeft: { one: "Falta {n} dia", other: "Faltam {n} dias" }, lastDay: "Último dia", ended: "Encerrado", noDate: "Datas no site do clube",
+    pt: { ...en$9, playing: "Jogando agora", daysLeft: { one: "Falta {n} dia", other: "Faltam {n} dias" }, lastDay: "Último dia", ended: "Encerrado", noDate: "Datas no site do clube",
         notInLibrary: "Não está na sua biblioteca", play: "Jogar", details: "Página do jogo", standing: "Sua posição", beaten: "jogos zerados", streak: "sequência", rank: "posição",
         rankOf: "#{rank} de {of}", crowns: "Coroas", setName: "Digite seu nome no clube em Acesso rápido > Core > Club para ver sua posição.",
         notFound: "Ainda não há membro chamado \"{name}\" no ranking.", top: "Top 5", nominations: "Indicações", voteOpens: "Votação abre em {date}",
@@ -24531,7 +24600,7 @@ const copy$d = {
         nameSave: "Salvar nome", saveFailed: "Não foi possível salvar as configurações do Club.",
         logAssemble: "O Assemble abre o tópico do jogo no Discord do clube com /completed pronto. Escolha as opções lá e envie você mesmo.", logButton: "Registrar conclusão", logOpening: "Abrindo o Assemble…",
         logOpened: "Aberto no Assemble: escolha as opções e envie por lá.", logFailed: "O Assemble não conseguiu abrir o tópico." },
-    uk: { ...en$8, tab: "Клуб", playing: "Зараз грають", daysLeft: { one: "Залишився {n} день", few: "Залишилося {n} дні", many: "Залишилося {n} днів", other: "Залишилося {n} дня" },
+    uk: { ...en$9, tab: "Клуб", playing: "Зараз грають", daysLeft: { one: "Залишився {n} день", few: "Залишилося {n} дні", many: "Залишилося {n} днів", other: "Залишилося {n} дня" },
         lastDay: "Останній день", ended: "Завершено", noDate: "Дати на сайті клубу", notInLibrary: "Немає у вашій бібліотеці", play: "Грати", details: "Сторінка гри",
         standing: "Ваше місце", beaten: "ігор пройдено", streak: "серія", rank: "місце", rankOf: "№{rank} з {of}", crowns: "Корони",
         setName: "Введіть своє ім'я в клубі в Швидкий доступ > Core > Club, щоб бачити своє місце.", notFound: "У рейтингу поки немає учасника «{name}».",
@@ -24543,7 +24612,7 @@ const copy$d = {
         nameSave: "Зберегти ім'я", saveFailed: "Не вдалося зберегти налаштування клубу.",
         logAssemble: "Assemble відкриває гілку гри в Discord клубу з готовою командою /completed. Виберіть параметри там і надішліть самі.", logButton: "Зареєструвати проходження", logOpening: "Відкриваємо Assemble…",
         logOpened: "Відкрито в Assemble: виберіть параметри й надішліть там.", logFailed: "Assemble не вдалося відкрити гілку." },
-    ru: { ...en$8, tab: "Клуб", playing: "Сейчас играют", daysLeft: { one: "Остался {n} день", few: "Осталось {n} дня", many: "Осталось {n} дней", other: "Осталось {n} дня" },
+    ru: { ...en$9, tab: "Клуб", playing: "Сейчас играют", daysLeft: { one: "Остался {n} день", few: "Осталось {n} дня", many: "Осталось {n} дней", other: "Осталось {n} дня" },
         lastDay: "Последний день", ended: "Завершено", noDate: "Даты на сайте клуба", notInLibrary: "Нет в вашей библиотеке", play: "Играть", details: "Страница игры",
         standing: "Ваше место", beaten: "игр пройдено", streak: "серия", rank: "место", rankOf: "№{rank} из {of}", crowns: "Короны",
         setName: "Введите своё имя в клубе в Быстрый доступ > Core > Club, чтобы видеть своё место.", notFound: "В рейтинге пока нет участника «{name}».",
@@ -24555,7 +24624,7 @@ const copy$d = {
         nameSave: "Сохранить имя", saveFailed: "Не удалось сохранить настройки клуба.",
         logAssemble: "Assemble открывает ветку игры в Discord клуба с готовой командой /completed. Выберите параметры там и отправьте сами.", logButton: "Записать прохождение", logOpening: "Открываем Assemble…",
         logOpened: "Открыто в Assemble: выберите параметры и отправьте там.", logFailed: "Assemble не удалось открыть ветку." },
-    zh: { ...en$8, tab: "俱乐部", playing: "正在游玩", daysLeft: { other: "还剩 {n} 天" }, lastDay: "最后一天", ended: "已结束", noDate: "日期见俱乐部网站",
+    zh: { ...en$9, tab: "俱乐部", playing: "正在游玩", daysLeft: { other: "还剩 {n} 天" }, lastDay: "最后一天", ended: "已结束", noDate: "日期见俱乐部网站",
         notInLibrary: "不在你的库中", play: "开始游戏", details: "游戏页面", standing: "你的排名", beaten: "款已通关", streak: "连续", rank: "排名", rankOf: "第 {rank} 名，共 {of} 人",
         crowns: "王冠", setName: "在 快速访问 > Core > Club 中输入你的俱乐部名称即可查看排名。", notFound: "排行榜上还没有名为“{name}”的成员。", top: "前 5 名",
         nominations: "提名", voteOpens: "{date} 开始投票", logTitle: "如何登记通关", logDiscord: "在 Discord 上，于该游戏的帖子中：",
@@ -24566,7 +24635,7 @@ const copy$d = {
         nameSave: "保存名称", saveFailed: "无法保存俱乐部设置。",
         logAssemble: "Assemble 会在俱乐部的 Discord 中打开该游戏的帖子，并准备好 /completed。请在那里选择选项并自行发送。", logButton: "登记通关", logOpening: "正在打开 Assemble…",
         logOpened: "已在 Assemble 中打开：请在那里选择选项并发送。", logFailed: "Assemble 无法打开该帖子。" },
-    ja: { ...en$8, tab: "クラブ", playing: "プレイ中", daysLeft: { other: "残り{n}日" }, lastDay: "最終日", ended: "終了", noDate: "日程はクラブのサイトで",
+    ja: { ...en$9, tab: "クラブ", playing: "プレイ中", daysLeft: { other: "残り{n}日" }, lastDay: "最終日", ended: "終了", noDate: "日程はクラブのサイトで",
         notInLibrary: "ライブラリにありません", play: "プレイ", details: "ゲームページ", standing: "あなたの順位", beaten: "本クリア", streak: "連続", rank: "順位",
         rankOf: "{of}人中{rank}位", crowns: "クラウン", setName: "クイックアクセス > Core > Club でクラブの表示名を入力すると順位が表示されます。",
         notFound: "「{name}」というメンバーはまだランキングにいません。", top: "トップ5", nominations: "ノミネート", voteOpens: "{date}に投票開始",
@@ -24578,7 +24647,7 @@ const copy$d = {
         nameSave: "名前を保存", saveFailed: "クラブの設定を保存できませんでした。",
         logAssemble: "Assemble がクラブの Discord でゲームのスレッドを開き、/completed を用意します。オプションを選んでご自身で送信してください。", logButton: "クリアを記録", logOpening: "Assemble を開いています…",
         logOpened: "Assemble で開きました。オプションを選んで送信してください。", logFailed: "Assemble はスレッドを開けませんでした。" },
-    ko: { ...en$8, tab: "클럽", playing: "지금 플레이 중", daysLeft: { other: "{n}일 남음" }, lastDay: "마지막 날", ended: "종료", noDate: "날짜는 클럽 사이트에서",
+    ko: { ...en$9, tab: "클럽", playing: "지금 플레이 중", daysLeft: { other: "{n}일 남음" }, lastDay: "마지막 날", ended: "종료", noDate: "날짜는 클럽 사이트에서",
         notInLibrary: "라이브러리에 없음", play: "플레이", details: "게임 페이지", standing: "내 순위", beaten: "개 클리어", streak: "연속", rank: "순위",
         rankOf: "{of}명 중 {rank}위", crowns: "크라운", setName: "빠른 실행 > Core > Club에서 클럽 이름을 입력하면 순위가 표시됩니다.",
         notFound: "아직 순위표에 \"{name}\" 멤버가 없습니다.", top: "상위 5명", nominations: "후보", voteOpens: "{date} 투표 시작",
@@ -24590,7 +24659,7 @@ const copy$d = {
         nameSave: "이름 저장", saveFailed: "클럽 설정을 저장하지 못했습니다.",
         logAssemble: "Assemble이 클럽 Discord에서 게임 스레드를 열고 /completed를 준비합니다. 옵션을 고른 뒤 직접 보내세요.", logButton: "클리어 기록", logOpening: "Assemble 여는 중…",
         logOpened: "Assemble에서 열렸습니다. 옵션을 고르고 보내세요.", logFailed: "Assemble이 스레드를 열지 못했습니다." },
-    hi: { ...en$8, tab: "क्लब", playing: "अभी खेल रहे हैं", daysLeft: { one: "{n} दिन बाकी", other: "{n} दिन बाकी" }, lastDay: "आखिरी दिन", ended: "समाप्त",
+    hi: { ...en$9, tab: "क्लब", playing: "अभी खेल रहे हैं", daysLeft: { one: "{n} दिन बाकी", other: "{n} दिन बाकी" }, lastDay: "आखिरी दिन", ended: "समाप्त",
         noDate: "तारीखें क्लब की साइट पर", notInLibrary: "आपकी लाइब्रेरी में नहीं", play: "खेलें", details: "गेम पेज", standing: "आपकी स्थिति", beaten: "गेम पूरे किए",
         streak: "लगातार", rank: "रैंक", rankOf: "{of} में #{rank}", crowns: "ताज", setName: "अपनी स्थिति देखने के लिए क्विक एक्सेस > Core > Club में अपना क्लब नाम डालें।",
         notFound: "लीडरबोर्ड पर अभी \"{name}\" नाम का कोई सदस्य नहीं है।", top: "शीर्ष 5", nominations: "नामांकन", voteOpens: "मतदान {date} से",
@@ -24631,7 +24700,7 @@ function daysLeftText(locale, days) {
 // Log completion (X: with Eternal-Assemble loaded, the pick's Discord thread opens with /completed ready) and Open in
 // Library (Y), the user's standing with the top three, what is coming up, and nominations.
 // Core palette: black with the Starfield, gunmetal cards (10 px radius), focus lifts, steel text.
-const { Focusable: Focusable$g, Navigation: Navigation$8 } = CompatUI;
+const { Focusable: Focusable$f, Navigation: Navigation$8 } = CompatUI;
 const CLUB_ART = /^https:\/\/www\.playretrogamesclub\.com\/img\/\d{1,9}\.(?:png|jpe?g|webp)$/;
 // The club's image only from the club's own /img/ path (never another host).
 function clubArtUrl(pick) {
@@ -24721,7 +24790,7 @@ function PickCard({ pick, match, copy, locale, now, first, onFocus, onLog, onOpe
     const beaten = typeof pick.beaten === "number" ? fill$5(copy.beatenCount, { n: pick.beaten }) : "";
     const play = () => { if (match)
         playApp(match.appId); };
-    return SP_JSX.jsxs(Focusable$g, { className: "ph-club-card ph-club-lift", focusable: true, role: "button", autoFocus: first, "aria-label": `${pick.label}: ${pick.title}. ${left.text}. ${match ? copy.inLibrary : copy.notInLibrary}`, onGamepadFocus: onFocus, onFocus: onFocus, onActivate: match ? play : undefined, onClick: match ? play : undefined, onOKActionDescription: match ? copy.play : undefined, onSecondaryButton: (event) => { event?.preventDefault?.(); event?.stopPropagation?.(); onLog(); }, onSecondaryActionDescription: copy.logButton, onOptionsButton: match ? (event) => { event?.preventDefault?.(); event?.stopPropagation?.(); onOpen(); } : undefined, onOptionsActionDescription: match ? copy.openInLibrary : undefined, children: [image ? SP_JSX.jsx("img", { className: "ph-club-card-art", src: image, alt: "", loading: "lazy", referrerPolicy: "no-referrer", onError: () => setFailed(image) })
+    return SP_JSX.jsxs(Focusable$f, { className: "ph-club-card ph-club-lift", focusable: true, role: "button", autoFocus: first, "aria-label": `${pick.label}: ${pick.title}. ${left.text}. ${match ? copy.inLibrary : copy.notInLibrary}`, onGamepadFocus: onFocus, onFocus: onFocus, onActivate: match ? play : undefined, onClick: match ? play : undefined, onOKActionDescription: match ? copy.play : undefined, onSecondaryButton: (event) => { event?.preventDefault?.(); event?.stopPropagation?.(); onLog(); }, onSecondaryActionDescription: copy.logButton, onOptionsButton: match ? (event) => { event?.preventDefault?.(); event?.stopPropagation?.(); onOpen(); } : undefined, onOptionsActionDescription: match ? copy.openInLibrary : undefined, children: [image ? SP_JSX.jsx("img", { className: "ph-club-card-art", src: image, alt: "", loading: "lazy", referrerPolicy: "no-referrer", onError: () => setFailed(image) })
                 : SP_JSX.jsx("span", { className: "ph-club-badge", children: pick.platform || "?" }), SP_JSX.jsx("span", { className: "ph-club-tone", style: { background: tone } }), SP_JSX.jsx("span", { className: "ph-club-fade" }), SP_JSX.jsxs("div", { className: "ph-club-details", children: [SP_JSX.jsx("div", { className: "ph-club-tag", style: { color: tone }, children: pick.label }), SP_JSX.jsx("div", { className: "ph-club-title", children: pick.title }), meta && SP_JSX.jsx("div", { className: "ph-club-meta", children: meta }), SP_JSX.jsx("div", { className: `ph-club-left${left.soon ? " soon" : ""}`, children: [left.text, beaten].filter(Boolean).join(" · ") }), SP_JSX.jsx("span", { className: `ph-club-chip${match ? " owned" : ""}`, children: match ? `✓ ${copy.inLibrary}` : copy.notInLibrary })] })] });
 }
 function Standing({ member, name, top, copy }) {
@@ -24791,7 +24860,7 @@ function ClubTab({ locale, getLocale }) {
     const match = pick ? matches.get(pick) ?? null : null;
     const open = (target) => { if (target)
         openGamePage(target.appId, (path) => Navigation$8?.Navigate?.(path)); };
-    return SP_JSX.jsxs(Focusable$g, { className: "ph-club", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$5 }), SP_JSX.jsx(CoreStars, {}), !snapshot ? SP_JSX.jsx(Focusable$g, { className: "ph-club-empty", focusable: true, role: "status", children: state.loading && !feed ? copy.loading : copy.unreachable }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$g, { className: "ph-club-picks", "flow-children": "row", children: picks.map((item, index) => SP_JSX.jsx(PickCard, { pick: item, match: matches.get(item) ?? null, copy: copy, locale: resolved, now: now, first: index === 0, onFocus: () => setFocused(index), onLog: () => void log(item), onOpen: () => open(matches.get(item) ?? null) }, `${item.kind}-${item.slug}`)) }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-actions", "flow-children": "row", children: [SP_JSX.jsxs(Focusable$g, { className: "ph-club-action", focusable: true, role: "button", "aria-disabled": !can(pick) || busy ? "true" : "false", onActivate: () => void log(pick), onClick: () => void log(pick), children: [SP_JSX.jsx("span", { className: "ph-club-key", "aria-hidden": "true", children: "X" }), copy.logButton] }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-action", focusable: true, role: "button", "aria-disabled": match ? "false" : "true", onActivate: () => open(match), onClick: () => open(match), children: [SP_JSX.jsx("span", { className: "ph-club-key", "aria-hidden": "true", children: "Y" }), copy.openInLibrary] }), status && SP_JSX.jsx("span", { className: `ph-club-status${status.error ? " error" : ""}`, role: "status", children: status.text })] }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-boxes", "flow-children": "row", children: [SP_JSX.jsxs(Focusable$g, { className: "ph-club-box ph-club-lift", focusable: true, role: "group", "aria-label": copy.standing, onActivate: () => { }, children: [SP_JSX.jsx("h3", { children: copy.standing }), SP_JSX.jsx(Standing, { member: snapshot.member, name: name, top: snapshot.top, copy: copy })] }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-box ph-club-lift", focusable: true, role: "group", "aria-label": copy.comingUp, onActivate: () => { }, children: [SP_JSX.jsx("h3", { children: copy.comingUp }), SP_JSX.jsx(ComingUp, { items: snapshot.schedule, locale: resolved })] }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-box ph-club-lift", focusable: true, role: "group", "aria-label": copy.nominations, onActivate: () => { }, children: [SP_JSX.jsx("h3", { children: copy.nominations }), SP_JSX.jsx(Nominations, { groups: snapshot.nominations })] })] })] })] });
+    return SP_JSX.jsxs(Focusable$f, { className: "ph-club", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$5 }), SP_JSX.jsx(CoreStars, {}), !snapshot ? SP_JSX.jsx(Focusable$f, { className: "ph-club-empty", focusable: true, role: "status", children: state.loading && !feed ? copy.loading : copy.unreachable }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$f, { className: "ph-club-picks", "flow-children": "row", children: picks.map((item, index) => SP_JSX.jsx(PickCard, { pick: item, match: matches.get(item) ?? null, copy: copy, locale: resolved, now: now, first: index === 0, onFocus: () => setFocused(index), onLog: () => void log(item), onOpen: () => open(matches.get(item) ?? null) }, `${item.kind}-${item.slug}`)) }), SP_JSX.jsxs(Focusable$f, { className: "ph-club-actions", "flow-children": "row", children: [SP_JSX.jsxs(Focusable$f, { className: "ph-club-action", focusable: true, role: "button", "aria-disabled": !can(pick) || busy ? "true" : "false", onActivate: () => void log(pick), onClick: () => void log(pick), children: [SP_JSX.jsx("span", { className: "ph-club-key", "aria-hidden": "true", children: "X" }), copy.logButton] }), SP_JSX.jsxs(Focusable$f, { className: "ph-club-action", focusable: true, role: "button", "aria-disabled": match ? "false" : "true", onActivate: () => open(match), onClick: () => open(match), children: [SP_JSX.jsx("span", { className: "ph-club-key", "aria-hidden": "true", children: "Y" }), copy.openInLibrary] }), status && SP_JSX.jsx("span", { className: `ph-club-status${status.error ? " error" : ""}`, role: "status", children: status.text })] }), SP_JSX.jsxs(Focusable$f, { className: "ph-club-boxes", "flow-children": "row", children: [SP_JSX.jsxs(Focusable$f, { className: "ph-club-box ph-club-lift", focusable: true, role: "group", "aria-label": copy.standing, onActivate: () => { }, children: [SP_JSX.jsx("h3", { children: copy.standing }), SP_JSX.jsx(Standing, { member: snapshot.member, name: name, top: snapshot.top, copy: copy })] }), SP_JSX.jsxs(Focusable$f, { className: "ph-club-box ph-club-lift", focusable: true, role: "group", "aria-label": copy.comingUp, onActivate: () => { }, children: [SP_JSX.jsx("h3", { children: copy.comingUp }), SP_JSX.jsx(ComingUp, { items: snapshot.schedule, locale: resolved })] }), SP_JSX.jsxs(Focusable$f, { className: "ph-club-box ph-club-lift", focusable: true, role: "group", "aria-label": copy.nominations, onActivate: () => { }, children: [SP_JSX.jsx("h3", { children: copy.nominations }), SP_JSX.jsx(Nominations, { groups: snapshot.nominations })] })] })] })] });
 }
 
 // Eternal Core: whether Home shows the Club tab. False while the "Show the Club tab" setting is off, and until
@@ -24805,37 +24874,6 @@ function isClubAvailable(state) {
 function clubAvailable() {
     void ensureClubLoaded();
     return isClubAvailable(clubState());
-}
-
-// Eternal Core: the Club's settings (Quick Access > Core): "Show the Club tab" (on by default) and the member's
-// club display name, typed once with Steam's on-screen keyboard (Steam opens it when the field is activated).
-const { Focusable: Focusable$f, ToggleField: ToggleField$9, TextField: TextField$3, DialogButton: DialogButton$8 } = CompatUI;
-function ClubSettings({ locale }) {
-    const copy = clubCopy(locale);
-    const state = _global_SP_REACT.useSyncExternalStore(subscribeClub, clubState, clubState);
-    const settings = state.settings;
-    const [name, setName] = _global_SP_REACT.useState(null);
-    const [busy, setBusy] = _global_SP_REACT.useState(false);
-    _global_SP_REACT.useEffect(() => { if (!state.settings)
-        void loadClub(false); }, []);
-    const value = name ?? settings?.display_name ?? "";
-    const save = async (enabled, display_name) => {
-        if (busy)
-            return;
-        setBusy(true);
-        try {
-            await saveClubSettings({ enabled, display_name });
-            setName(null);
-        }
-        catch {
-            toaster.toast({ title: "Core", body: copy.saveFailed });
-        }
-        finally {
-            setBusy(false);
-        }
-    };
-    return SP_JSX.jsxs(Focusable$f, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [SP_JSX.jsx(ToggleField$9, { label: copy.setting, description: copy.settingHint, bottomSeparator: "none", checked: settings?.enabled !== false, disabled: busy || !settings, onChange: (enabled) => void save(enabled, settings?.display_name ?? "") }), SP_JSX.jsx(TextField$3, { label: copy.nameLabel, value: value, disabled: busy || !settings, onChange: (event) => setName(String(event?.target?.value ?? "").slice(0, 64)), onKeyDown: (event) => { if (event?.key === "Enter")
-                    void save(settings?.enabled !== false, value); } }), SP_JSX.jsx(DialogButton$8, { disabled: busy || !settings || value.trim() === (settings?.display_name ?? ""), onClick: () => void save(settings?.enabled !== false, value), children: copy.nameSave })] });
 }
 
 // Eternal Core: the Club tab's public surface for Home and Jarvis.
@@ -24984,42 +25022,13 @@ function CoreHomeTabs({ native, getLocale, render }) {
     return SP_JSX.jsx(HomeBoundary, { fallback: fallback, children: render(tree) });
 }
 
-const { Focusable: Focusable$d, DialogButton: DialogButton$7, DropdownItem: DropdownItem$4, ToggleField: ToggleField$8, Navigation: Navigation$6 } = CompatUI;
+const { Focusable: Focusable$d, Navigation: Navigation$6 } = CompatUI;
 let config$1 = { enabled: true, country: "auto" };
-let ready = false;
 const listeners$6 = new Set();
 const subscribe$1 = (f) => { listeners$6.add(f); return () => { listeners$6.delete(f); }; };
 const notify = () => listeners$6.forEach(f => f());
 const notifyHomeNewsLanguageChanged = () => { config$1 = { ...config$1 }; notify(); notifyHistoryLanguageChanged(); };
-const readConfig = async () => { config$1 = await call("get_home_news_settings"); ready = true; notify(); };
-function HomeNewsSettings({ locale }) {
-    const value = _global_SP_REACT.useSyncExternalStore(subscribe$1, () => config$1);
-    const [busy, setBusy] = _global_SP_REACT.useState(false);
-    const [loadFailed, setLoadFailed] = _global_SP_REACT.useState(false);
-    const pending = _global_SP_REACT.useRef(false);
-    const copy = newsCopy(locale);
-    _global_SP_REACT.useEffect(() => { if (!ready)
-        void readConfig().catch(() => setLoadFailed(true)); }, []);
-    const save = async (next) => {
-        if (pending.current)
-            return;
-        pending.current = true;
-        setBusy(true);
-        try {
-            config$1 = await call("set_home_news_settings", next.enabled, next.country);
-            notify();
-        }
-        catch {
-            toaster.toast({ title: "Core", body: copy[5] });
-        }
-        finally {
-            pending.current = false;
-            setBusy(false);
-        }
-    };
-    const names = new Intl.DisplayNames([locale], { type: "region" });
-    return SP_JSX.jsxs(Focusable$d, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 12 }, children: [loadFailed && SP_JSX.jsx(DialogButton$7, { onClick: () => void readConfig().then(() => setLoadFailed(false)).catch(() => { }), children: copy[4] }), SP_JSX.jsx(ToggleField$8, { label: copy[1], bottomSeparator: "none", checked: value.enabled, disabled: busy || !ready, onChange: (enabled) => void save({ ...value, enabled }) }), SP_JSX.jsx(DropdownItem$4, { label: copy[2], layout: "below", bottomSeparator: "none", selectedOption: value.country, disabled: busy || !ready, rgOptions: [{ data: "auto", label: copy[3] }, ...NEWS_COUNTRIES.map(data => ({ data, label: names.of(data) ?? data }))], onChange: (option) => void save({ ...value, country: option.data }) })] });
-}
+const readConfig = async () => { config$1 = await call("get_home_news_settings"); notify(); };
 function nativeNewsRows(tree) {
     const children = tree?.props?.children;
     if (!Array.isArray(children))
@@ -25917,7 +25926,7 @@ function SiSteam (props) {
 }
 
 const { useCallback: useCallback$1, useEffect: useEffect$2, useLayoutEffect, useMemo: useMemo$2, useRef: useRef$1, useState: useState$2 } = _global_SP_REACT;
-const { Focusable: Focusable$c, GamepadButton: GamepadButton$2, Navigation: Navigation$5, TextField: TextField$2, ToggleField: ToggleField$7 } = CompatUI;
+const { Focusable: Focusable$c, GamepadButton: GamepadButton$1, Navigation: Navigation$5, TextField: TextField$2, ToggleField: ToggleField$7 } = CompatUI;
 const DASHBOARD_ROUTE = "/playhub-dashboard";
 const dashboardExit = createDashboardExit({
     hideOverlay: () => { closeDashboardOverlay(); clearDashboardChrome(); },
@@ -26648,13 +26657,13 @@ function gridDirectionFromKey(key) {
     return null;
 }
 function gridDirectionFromGamepad(button) {
-    if (button === GamepadButton$2?.DIR_LEFT)
+    if (button === GamepadButton$1?.DIR_LEFT)
         return "left";
-    if (button === GamepadButton$2?.DIR_RIGHT)
+    if (button === GamepadButton$1?.DIR_RIGHT)
         return "right";
-    if (button === GamepadButton$2?.DIR_UP)
+    if (button === GamepadButton$1?.DIR_UP)
         return "up";
-    if (button === GamepadButton$2?.DIR_DOWN)
+    if (button === GamepadButton$1?.DIR_DOWN)
         return "down";
     return null;
 }
@@ -26802,7 +26811,7 @@ function Header({ tab, setTab, copy, locale, logo }) {
     return (SP_JSX.jsxs("header", { className: "ph-header", children: [SP_JSX.jsx("div", { className: "ph-brand", children: logo ? SP_JSX.jsx("img", { src: logo, alt: "Core" }) : SP_JSX.jsx("div", { className: "ph-brand-fallback", children: "core" }) }), SP_JSX.jsx(Focusable$c, { className: "ph-tabs", "flow-children": "horizontal", children: tabs.map((item) => {
                     const Icon = item.icon;
                     return (SP_JSX.jsxs(FocusItem, { className: `ph-tab ${tab === item.id ? "ph-active" : ""}`, onPress: () => setTab(item.id), onButtonDown: (event) => {
-                            if (item.id !== "system" || tab !== "system" || Number(event?.detail?.button) !== GamepadButton$2?.DIR_DOWN)
+                            if (item.id !== "system" || tab !== "system" || Number(event?.detail?.button) !== GamepadButton$1?.DIR_DOWN)
                                 return;
                             stopDirectionalEvent(event);
                             focusSystemMetric(0);
@@ -27708,42 +27717,42 @@ function DashboardSurface() {
     }, [cancelDashboard, tab]);
     return (SP_JSX.jsxs(Focusable$c, { ref: root, className: "ph-dashboard", noFocusRing: true, onButtonDown: (event) => {
             const button = Number(event?.detail?.button);
-            if (button === (GamepadButton$2?.CANCEL ?? 2)) {
+            if (button === (GamepadButton$1?.CANCEL ?? 2)) {
                 cancelDashboard(event);
                 cancelHeld.current = true;
                 return;
             }
             const active = currentDashboardFocus();
-            if (button === GamepadButton$2?.DIR_UP && active?.classList.contains("ph-tab")) {
+            if (button === GamepadButton$1?.DIR_UP && active?.classList.contains("ph-tab")) {
                 stopDirectionalEvent(event);
                 return;
             }
-            if (tab === "system" && button === GamepadButton$2?.DIR_DOWN && active?.classList.contains("ph-tab")) {
+            if (tab === "system" && button === GamepadButton$1?.DIR_DOWN && active?.classList.contains("ph-tab")) {
                 stopDirectionalEvent(event);
                 focusSystemMetric(0);
                 return;
             }
-            if (tab === "system" && button === GamepadButton$2?.DIR_UP && active?.classList.contains("ph-history-card")) {
+            if (tab === "system" && button === GamepadButton$1?.DIR_UP && active?.classList.contains("ph-history-card")) {
                 stopDirectionalEvent(event);
                 focusDashboard(".ph-tab.ph-active");
                 return;
             }
-            if (tab === "system" && button === GamepadButton$2?.DIR_DOWN && active?.classList.contains("ph-history-card")) {
+            if (tab === "system" && button === GamepadButton$1?.DIR_DOWN && active?.classList.contains("ph-history-card")) {
                 stopDirectionalEvent(event);
                 focusDashboard(".ph-restart-decky");
                 return;
             }
-            if (tab === "system" && button === GamepadButton$2?.DIR_UP && active?.classList.contains("ph-restart-decky")) {
+            if (tab === "system" && button === GamepadButton$1?.DIR_UP && active?.classList.contains("ph-restart-decky")) {
                 stopDirectionalEvent(event);
                 focusSystemMetric(0);
                 return;
             }
-            if (tab === "system" && button === GamepadButton$2?.DIR_DOWN && active?.classList.contains("ph-restart-decky")) {
+            if (tab === "system" && button === GamepadButton$1?.DIR_DOWN && active?.classList.contains("ph-restart-decky")) {
                 stopDirectionalEvent(event);
                 focusDashboard(".ph-process-row");
                 return;
             }
-            if (tab === "system" && button === GamepadButton$2?.DIR_UP && active?.classList.contains("ph-process-row") && active === dashboardRoot()?.querySelector(".ph-process-row")) {
+            if (tab === "system" && button === GamepadButton$1?.DIR_UP && active?.classList.contains("ph-process-row") && active === dashboardRoot()?.querySelector(".ph-process-row")) {
                 stopDirectionalEvent(event);
                 focusDashboard(".ph-restart-decky");
                 return;
@@ -27756,7 +27765,7 @@ function DashboardSurface() {
                 }
             }
             const processRow = event?.target?.closest?.(".ph-process-row");
-            if (processRow && button === GamepadButton$2?.DIR_RIGHT) {
+            if (processRow && button === GamepadButton$1?.DIR_RIGHT) {
                 stopDirectionalEvent(event);
                 focusDashboard(".ph-restart-decky");
                 return;
@@ -27770,7 +27779,7 @@ function DashboardSurface() {
             changeTab(tabs[(current + (button === 5 ? -1 : 1) + tabs.length) % tabs.length]);
         }, onButtonUp: (event) => {
             const button = Number(event?.detail?.button);
-            if (button === (GamepadButton$2?.CANCEL ?? 2)) {
+            if (button === (GamepadButton$1?.CANCEL ?? 2)) {
                 cancelHeld.current = false;
                 stopEvent$1(event, true);
                 return;
@@ -30388,7 +30397,7 @@ function initPlayhubQam(options) {
 }
 
 const LOCALES = ["en", "it", "es", "fr", "de", "pt", "uk", "zh", "ja", "ko", "hi", "ru"];
-const rows$3 = {
+const rows$1 = {
     installQuestion: ["Install this plugin?", "Vuoi installare questo plugin?", "¿Quieres instalar este plugin?", "Voulez-vous installer ce plugin ?", "Dieses Plugin installieren?", "Deseja instalar este plugin?", "Встановити цей плагін?", "要安装此插件吗？", "このプラグインをインストールしますか？", "이 플러그인을 설치할까요?", "यह प्लगइन इंस्टॉल करें?", "Установить этот плагин?"],
     updateQuestion: ["Update this plugin?", "Vuoi aggiornare questo plugin?", "¿Quieres actualizar este plugin?", "Voulez-vous mettre à jour ce plugin ?", "Dieses Plugin aktualisieren?", "Deseja atualizar este plugin?", "Оновити цей плагін?", "要更新此插件吗？", "このプラグインを更新しますか？", "이 플러그인을 업데이트할까요?", "यह प्लगइन अपडेट करें?", "Обновить этот плагин?"],
     chooseVersion: ["Install a specific version", "Installa una versione specifica", "Instalar una versión específica", "Installer une version précise", "Bestimmte Version installieren", "Instalar uma versão específica", "Встановити певну версію", "安装指定版本", "バージョンを指定してインストール", "특정 버전 설치", "कोई खास संस्करण इंस्टॉल करें", "Установить определённую версию"],
@@ -30459,7 +30468,7 @@ function normalizeStoreLocale(value) {
 }
 function getPluginStoreCopy(locale) {
     const index = Math.max(0, LOCALES.indexOf(locale));
-    return Object.fromEntries(Object.entries(rows$3).map(([key, values]) => [key, values[index] || values[0]]));
+    return Object.fromEntries(Object.entries(rows$1).map(([key, values]) => [key, values[index] || values[0]]));
 }
 const categoryRows = {
     Audio: ["Audio", "Audio", "Audio", "Audio", "Audio", "Áudio", "Аудіо", "音频", "オーディオ", "오디오", "ऑडियो", "Аудио"],
@@ -30467,7 +30476,7 @@ const categoryRows = {
     Controller: ["Controllers", "Controller", "Mandos", "Manettes", "Controller", "Controles", "Контролери", "控制器", "コントローラー", "컨트롤러", "कंट्रोलर", "Контроллеры"],
     Grafica: ["Graphics", "Grafica", "Gráficos", "Graphismes", "Grafik", "Gráficos", "Графіка", "图形", "グラフィック", "그래픽", "ग्राफ़िक्स", "Графика"],
     "Accessibilità": ["Accessibility", "Accessibilità", "Accesibilidad", "Accessibilité", "Barrierefreiheit", "Acessibilidade", "Спеціальні можливості", "无障碍", "アクセシビリティ", "접근성", "सुलभता", "Специальные возможности"],
-    "Novità": rows$3.newCategory,
+    "Novità": rows$1.newCategory,
     Playhub: ["Playhub", "Playhub", "Playhub", "Playhub", "Playhub", "Playhub", "Playhub", "Playhub", "Playhub", "Playhub", "Playhub", "Playhub"],
     "Libreria e giochi": ["Library and games", "Libreria e giochi", "Biblioteca y juegos", "Bibliothèque et jeux", "Bibliothek und Spiele", "Biblioteca e jogos", "Бібліотека та ігри", "游戏库与游戏", "ライブラリとゲーム", "라이브러리 및 게임", "लाइब्रेरी और गेम", "Библиотека и игры"],
     "Personalizzazione e media": ["Customization and media", "Personalizzazione e media", "Personalización y multimedia", "Personnalisation et médias", "Personalisierung und Medien", "Personalização e mídia", "Персоналізація та медіа", "个性化与媒体", "カスタマイズとメディア", "개인 설정 및 미디어", "कस्टमाइज़ेशन और मीडिया", "Персонализация и медиа"],
@@ -53835,7 +53844,7 @@ function subscribePluginProgress(listener) {
 }
 
 const { useCallback, useEffect: useEffect$1, useMemo: useMemo$1, useRef, useState: useState$1 } = _global_SP_REACT;
-const { DialogButton: DialogButton$6, ConfirmModal: ConfirmModal$1, Focusable: Focusable$b, GamepadButton: GamepadButton$1, ModalRoot, Navigation: Navigation$4, SteamSpinner, Tabs, TextField: TextField$1, showModal: showModal$1, } = CompatUI;
+const { DialogButton: DialogButton$6, ConfirmModal: ConfirmModal$1, Focusable: Focusable$b, GamepadButton, ModalRoot, Navigation: Navigation$4, SteamSpinner, Tabs, TextField: TextField$1, showModal: showModal$1, } = CompatUI;
 const PLUGIN_STORE_ROUTE = "/playhub/plugin-store";
 const STORE_STYLE = `
   .ph-store-page { box-sizing:border-box; width:100%; height:100%; min-width:0; color:${CORE.text}; background:${CORE.black}; }
@@ -54119,16 +54128,16 @@ function ScrollReader({ children, copy, onBack }) {
     }, [reading, onBack]);
     const cancel = useGuardedCancel(cancelAction);
     return (SP_JSX.jsx(Focusable$b, { ref: ref, className: `ph-store-reader${reading ? " ph-reading" : ""}`, noFocusRing: true, "flow-children": "none", onActivate: (event) => { stopEvent(event); setReading(true); }, onOKButton: (event) => { stopEvent(event); setReading(true); }, onCancel: cancel, onCancelButton: cancel, onOKActionDescription: reading ? undefined : copy.scroll, onCancelActionDescription: reading ? copy.stopReading : copy.back, actionDescriptionMap: reading ? {
-            [GamepadButton$1.DIR_UP]: copy.scroll,
-            [GamepadButton$1.DIR_DOWN]: copy.scroll,
+            [GamepadButton.DIR_UP]: copy.scroll,
+            [GamepadButton.DIR_DOWN]: copy.scroll,
         } : undefined, onButtonDown: (event) => {
             if (!reading)
                 return;
             const button = Number(event?.detail?.button);
-            if (button !== GamepadButton$1.DIR_UP && button !== GamepadButton$1.DIR_DOWN)
+            if (button !== GamepadButton.DIR_UP && button !== GamepadButton.DIR_DOWN)
                 return;
             stopEvent(event);
-            ref.current?.scrollBy({ top: button === GamepadButton$1.DIR_UP ? -104 : 104, behavior: "smooth" });
+            ref.current?.scrollBy({ top: button === GamepadButton.DIR_UP ? -104 : 104, behavior: "smooth" });
         }, children: children }));
 }
 function MediaViewer({ item, copy, closeModal }) {
@@ -54393,15 +54402,15 @@ function FeaturedSlider({ plugins, shared, onOpen }) {
         setIndex((value) => (value + delta + plugins.length) % plugins.length);
     };
     return (SP_JSX.jsxs("div", { className: "ph-store-featured-shell", children: [SP_JSX.jsxs(Focusable$b, { className: "ph-store-featured-slide", "flow-children": "none", onActivate: (event) => { stopEvent(event); onOpen(active); }, onOKButton: (event) => { stopEvent(event); onOpen(active); }, onOKActionDescription: shared.copy.select, actionDescriptionMap: {
-                    [GamepadButton$1.DIR_LEFT]: shared.copy.previous,
-                    [GamepadButton$1.DIR_RIGHT]: shared.copy.next,
+                    [GamepadButton.DIR_LEFT]: shared.copy.previous,
+                    [GamepadButton.DIR_RIGHT]: shared.copy.next,
                 }, onButtonDown: (event) => {
                     const button = Number(event?.detail?.button);
-                    if (button === GamepadButton$1.DIR_LEFT) {
+                    if (button === GamepadButton.DIR_LEFT) {
                         stopEvent(event);
                         move(-1);
                     }
-                    if (button === GamepadButton$1.DIR_RIGHT) {
+                    if (button === GamepadButton.DIR_RIGHT) {
                         stopEvent(event);
                         move(1);
                     }
@@ -54596,8 +54605,8 @@ function PluginStorePage() {
     const shared = { plugins: visiblePlugins ?? plugins, installed, copy, locale, progress };
     const footer = {
         actionDescriptionMap: {
-            [GamepadButton$1.BUMPER_LEFT]: copy.switchTabs,
-            [GamepadButton$1.BUMPER_RIGHT]: copy.switchTabs,
+            [GamepadButton.BUMPER_LEFT]: copy.switchTabs,
+            [GamepadButton.BUMPER_RIGHT]: copy.switchTabs,
         },
         onCancelActionDescription: copy.back,
         onCancelButton: back,
@@ -54620,7 +54629,34 @@ var playhubWordmark$1 = 'http://127.0.0.1:1337/plugins/Playhub/assets/playhub-wo
 
 // Stable persisted IDs: audio is Video (third); performance is Audio (fourth).
 const CONTROL_TABS = ["home", "store", "audio", "performance", "graphics", "controller", "decky"];
-const CONTROL_SECTION_IDS = ["topbar-date", "device", "device/details", "news", "daily-history", "measurement", "display", "mixer", "devices", "power", "game", "shaders", "nvidia", "radeon", "lossless", "agent"];
+// 3.3.11: Quick Access > Core is one list. Its collapsible groups (CORE_GROUPS) are sections too, so their open state is
+// kept the same way; "news" and "daily-history" stay valid ids (old settings load) though the list no longer shows them.
+const CORE_GROUPS = ["group/sound", "group/display", "group/controller", "group/downloads", "group/look", "group/system"];
+const CONTROL_SECTION_IDS = ["topbar-date", "device", "device/details", "news", "daily-history", "measurement", "display", "mixer", "devices", "power", "game", "shaders", "nvidia", "radeon", "lossless", "agent", ...CORE_GROUPS];
+// The old tabs' persisted ids and the group each moved to. The ids never matched their icons: "audio" was Video (now
+// Display & graphics) and "performance" was Audio (now Sound); "graphics" was Performance & graphics.
+const TAB_GROUP = {
+    home: "group/system", store: "group/system", audio: "group/display", performance: "group/sound", graphics: "group/display",
+    controller: "group/controller", decky: undefined,
+};
+const ONE_LIST_LAYOUT = 3311;
+// Settings saved before 3.3.11 (no `layout`): the group holding the tab that was open starts open, and a group all of
+// whose old tabs were hidden starts closed. Everything else the user saved is kept as it was.
+function migrateToOneList(value, expanded) {
+    if (Number(value?.layout) === ONE_LIST_LAYOUT)
+        return expanded;
+    const hidden = new Set(Array.isArray(value?.hidden) ? value.hidden.filter((id) => typeof id === "string") : []);
+    const next = new Set(expanded);
+    const active = TAB_GROUP[value?.active];
+    if (active && !hidden.has(value.active))
+        next.add(active);
+    for (const group of CORE_GROUPS) {
+        const tabs = Object.keys(TAB_GROUP).filter(tab => TAB_GROUP[tab] === group);
+        if (tabs.length && tabs.every(tab => hidden.has(tab)))
+            next.delete(group);
+    }
+    return normalizeExpandedSections([...next]);
+}
 function normalizeExpandedSections(value) {
     if (!Array.isArray(value))
         return [];
@@ -54651,87 +54687,7 @@ function normalizeControlPreferences(value) {
     const active = valid(value?.active) && eligible(value.active) && !hidden.includes(value.active) ? value.active : order.find(id => eligible(id) && !hidden.includes(id));
     const dateFormats = ["auto", "dd_mm_yyyy", "dd_mm_yy", "yyyy_mm_dd", "dd_month_yyyy", "weekday_dd_month", "weekday_short_dd_month", "month_dd_yyyy", "month_short_dd_yyyy", "iso"];
     const topbarDateFormat = dateFormats.includes(value?.topbarDateFormat) ? value.topbarDateFormat : "auto";
-    return { order, hidden, active, deckyHostEnabled, topbarDateEnabled: value?.topbarDateEnabled !== false, topbarDateFormat, topbarClockLeft: value?.topbarClockLeft === true, expandedSections: normalizeExpandedSections(value?.expandedSections), collapsed: [...new Set((Array.isArray(value?.collapsed) ? value.collapsed : []).filter((id) => typeof id === "string" && id.length < 80))] };
-}
-
-const createTabEditor = (selected = "home") => ({ selected, draftOrder: null });
-function canToggleTab(prefs, id, deckyAvailable) {
-    return prefs.hidden.includes(id) || id === "decky" && !deckyAvailable ||
-        prefs.order.some(other => other !== id && !prefs.hidden.includes(other) && (other !== "decky" || deckyAvailable));
-}
-function tabEditorTransition(prefs, editor, action, deckyAvailable) {
-    let preferences = prefs;
-    let next = editor;
-    if (action.type === "select") {
-        if (!editor.draftOrder)
-            next = { ...editor, selected: action.id };
-    }
-    else if (action.type === "cancel")
-        next = { ...editor, draftOrder: null };
-    else if (action.type === "reset") {
-        preferences = normalizeControlPreferences({ ...prefs, order: [...CONTROL_TABS], hidden: [] });
-        next = { ...editor, draftOrder: null };
-    }
-    else if (action.type === "move" && editor.draftOrder) {
-        const order = [...editor.draftOrder];
-        const eligible = order;
-        const target = eligible[eligible.indexOf(editor.selected) + action.direction];
-        if (target) {
-            const from = order.indexOf(editor.selected), to = order.indexOf(target);
-            [order[from], order[to]] = [order[to], order[from]];
-            next = { ...editor, draftOrder: order };
-        }
-    }
-    else if (action.type === "secondary" || action.type === "confirm") {
-        if (editor.draftOrder) {
-            preferences = normalizeControlPreferences({ ...prefs, order: editor.draftOrder });
-            next = { ...editor, draftOrder: null };
-        }
-        else if (action.type === "secondary")
-            next = { ...editor, draftOrder: [...prefs.order] };
-        else if (canToggleTab(prefs, editor.selected, deckyAvailable)) {
-            const hidden = prefs.hidden.includes(editor.selected) ? prefs.hidden.filter(id => id !== editor.selected) : [...prefs.hidden, editor.selected];
-            preferences = normalizeControlPreferences({ ...prefs, hidden });
-        }
-    }
-    return { editor: next, preferences };
-}
-
-const rows$2 = {
-    en: ["Show", "Hide", "Move", "Confirm move", "Cancel", "Visible", "Hidden", "Last usable tab", "Reset tabs", "Restores the default tab order and shows all tabs. Other settings stay unchanged."],
-    it: ["Mostra", "Nascondi", "Sposta", "Conferma spostamento", "Annulla", "Visibile", "Nascosta", "Ultima tab utilizzabile", "Ripristina le tab", "Ripristina l'ordine iniziale e mostra tutte le tab. Le altre impostazioni restano invariate."],
-    de: ["Anzeigen", "Ausblenden", "Verschieben", "Verschieben bestätigen", "Abbrechen", "Sichtbar", "Ausgeblendet", "Letzter nutzbarer Tab", "Tabs zurücksetzen", "Stellt die ursprüngliche Reihenfolge wieder her und zeigt alle Tabs. Andere Einstellungen bleiben erhalten."],
-    es: ["Mostrar", "Ocultar", "Mover", "Confirmar movimiento", "Cancelar", "Visible", "Oculta", "Última pestaña disponible", "Restablecer pestañas", "Restaura el orden inicial y muestra todas las pestañas. Los demás ajustes no cambian."],
-    fr: ["Afficher", "Masquer", "Déplacer", "Confirmer le déplacement", "Annuler", "Visible", "Masqué", "Dernier onglet utilisable", "Réinitialiser les onglets", "Rétablit l'ordre initial et affiche tous les onglets. Les autres paramètres sont conservés."],
-    pt: ["Mostrar", "Ocultar", "Mover", "Confirmar movimento", "Cancelar", "Visível", "Oculta", "Última aba disponível", "Restaurar abas", "Restaura a ordem inicial e mostra todas as abas. As outras configurações não mudam."],
-    ru: ["Показать", "Скрыть", "Переместить", "Подтвердить перемещение", "Отмена", "Видна", "Скрыта", "Последняя доступная вкладка", "Сбросить вкладки", "Возвращает исходный порядок и показывает все вкладки. Остальные настройки сохраняются."],
-    uk: ["Показати", "Приховати", "Перемістити", "Підтвердити переміщення", "Скасувати", "Видима", "Прихована", "Остання доступна вкладка", "Скинути вкладки", "Відновлює початковий порядок і показує всі вкладки. Решта налаштувань не змінюється."],
-    ja: ["表示", "非表示", "移動", "移動を確定", "キャンセル", "表示中", "非表示", "最後の使用可能なタブ", "タブをリセット", "初期の順序に戻し、すべてのタブを表示します。他の設定は変更されません。"],
-    ko: ["표시", "숨기기", "이동", "이동 확인", "취소", "표시됨", "숨겨짐", "마지막 사용 가능한 탭", "탭 초기화", "기본 순서로 복원하고 모든 탭을 표시합니다. 다른 설정은 유지됩니다."],
-    zh: ["显示", "隐藏", "移动", "确认移动", "取消", "已显示", "已隐藏", "最后一个可用选项卡", "重置选项卡", "恢复默认顺序并显示所有选项卡。其他设置保持不变。"],
-    hi: ["दिखाएँ", "छिपाएँ", "खिसकाएँ", "स्थान की पुष्टि करें", "रद्द करें", "दिखाई दे रहा है", "छिपा हुआ", "अंतिम उपलब्ध टैब", "टैब रीसेट करें", "मूल क्रम बहाल करता है और सभी टैब दिखाता है। अन्य सेटिंग्स नहीं बदलतीं।"],
-};
-const introductions = {
-    en: ["Customize tabs", "Choose which tabs to show and in what order."],
-    it: ["Personalizza le tab", "Scegli quali tab mostrare e in quale ordine."],
-    de: ["Tabs anpassen", "Wähle, welche Tabs in welcher Reihenfolge angezeigt werden."],
-    es: ["Personalizar pestañas", "Elige qué pestañas mostrar y en qué orden."],
-    fr: ["Personnaliser les onglets", "Choisissez les onglets à afficher et leur ordre."],
-    pt: ["Personalizar abas", "Escolha quais abas mostrar e em que ordem."],
-    ru: ["Настройка вкладок", "Выберите, какие вкладки показывать и в каком порядке."],
-    uk: ["Налаштування вкладок", "Виберіть, які вкладки показувати та в якому порядку."],
-    ja: ["タブのカスタマイズ", "表示するタブとその順序を選択します。"],
-    ko: ["탭 사용자 지정", "표시할 탭과 순서를 선택하세요."],
-    zh: ["自定义选项卡", "选择要显示的选项卡及其顺序。"],
-    hi: ["टैब अनुकूलित करें", "चुनें कि कौन से टैब किस क्रम में दिखाने हैं।"],
-};
-function tabEditorLocale(locale) {
-    const aliases = { english: "en", italian: "it", german: "de", spanish: "es", latam: "es", french: "fr", portuguese: "pt", brazilian: "pt", russian: "ru", ukrainian: "uk", japanese: "ja", koreana: "ko", schinese: "zh", tchinese: "zh", hindi: "hi" };
-    const normalized = locale.toLowerCase();
-    const key = aliases[normalized] ?? normalized.split(/[-_]/)[0];
-    const row = rows$2[key] ?? rows$2.en;
-    const intro = introductions[key] ?? introductions.en;
-    return { show: row[0], hide: row[1], move: row[2], confirm: row[3], cancel: row[4], visible: row[5], hidden: row[6], lastTab: row[7], reset: row[8], resetHint: row[9], title: intro[0], introduction: intro[1] };
+    return { order, hidden, active, deckyHostEnabled, topbarDateEnabled: value?.topbarDateEnabled !== false, topbarDateFormat, topbarClockLeft: value?.topbarClockLeft === true, expandedSections: migrateToOneList(value, normalizeExpandedSections(value?.expandedSections)), layout: ONE_LIST_LAYOUT, collapsed: [...new Set((Array.isArray(value?.collapsed) ? value.collapsed : []).filter((id) => typeof id === "string" && id.length < 80))] };
 }
 
 // Testi della sezione "Barra superiore" nelle impostazioni del plugin.
@@ -54795,51 +54751,6 @@ function topbarDateOptions(locale, sample = new Date(2026, 8, 19)) {
             label = `${copy$c[k][6]} (${label})`;
         return { data, label };
     });
-}
-
-/** Keep native PluginView and its provider, but isolate navigation from the QAM. */
-function createScopedDeckyState(real) {
-    const delegates = ["setVersionInfo", "setIsLoaderUpdating", "setPluginOrder", "setDisabledPlugins"];
-    if (typeof real?.publicState !== "function" || !real.eventBus?.addEventListener
-        || !real.eventBus?.removeEventListener || delegates.some(key => typeof real[key] !== "function")) {
-        throw new Error("unsupported_decky_state");
-    }
-    const eventBus = new EventTarget();
-    let selected = null;
-    let disposed = false;
-    let visible = true;
-    const notify = () => { if (!disposed)
-        eventBus.dispatchEvent(new Event("update")); };
-    const state = {
-        eventBus,
-        publicState() {
-            const snapshot = real.publicState();
-            if (!Array.isArray(snapshot?.plugins))
-                throw new Error("unsupported_plugin_inventory");
-            const plugins = snapshot.plugins.filter((plugin) => plugin.name !== "Playhub");
-            return { ...snapshot, plugins, activePlugin: visible ? plugins.find((plugin) => plugin.name === selected) ?? null : null };
-        },
-        setActivePlugin(name) { selected = name === "Playhub" ? null : name; notify(); },
-        closeActivePlugin() { selected = null; notify(); },
-    };
-    for (const key of delegates)
-        state[key] = real[key].bind(real);
-    // Decky 3.3.1 binds this setter when mounting its provider. Older providers do not need it.
-    if (typeof real.setSortPlugins === "function")
-        state.setSortPlugins = real.setSortPlugins.bind(real);
-    state.publicState();
-    real.eventBus.addEventListener("update", notify);
-    return { state, setVisible(next) {
-            if (next === visible)
-                return;
-            visible = next;
-            notify();
-        }, dispose() {
-            if (disposed)
-                return;
-            disposed = true;
-            real.eventBus.removeEventListener("update", notify);
-        } };
 }
 
 const PLAYHUB_TAB_ID = 0x50484B;
@@ -55103,7 +55014,6 @@ const EVENT = "shortcuts:qam-bridge-changed";
 const listeners$3 = new Set();
 let snapshot$1 = { enabled: false, available: false, ready: false, reason: "disabled" };
 let capability;
-let releaseMount;
 let running = false;
 let failure;
 let projectionFailure;
@@ -55126,28 +55036,18 @@ function publish$1(next) {
     if (!batching)
         listeners$3.forEach(listener => listener());
 }
-function release() { releaseMount?.(); }
 /** Keep native Decky reachable until the embedded panel has committed. */
 function applyNativeSuppression() {
     const mounted = mountedLease;
     const requested = running && snapshot$1.enabled && snapshot$1.available && snapshot$1.ready && nativeHidden &&
-        !failure && !projectionFailure && typeof mounted?.lease.setNativeHidden === "function";
-    if (mounted && mounted.hideRequested !== requested) {
-        mounted.hideRequested = requested;
-        try {
-            mounted.visibilityAccepted = mounted.lease.setNativeHidden?.(requested) === true;
-        }
-        catch {
-            mounted.visibilityAccepted = false;
-        }
-    }
+        !failure && !projectionFailure && "undefined" === "function";
     const effective = requested && mounted === mountedLease && mounted?.visibilityAccepted === true;
     setNativeDeckyHidden(effective);
     try {
         capability?.setNativeHidden?.(effective);
     }
     catch { /* Leave the original Decky tab accessible. */ }
-    return mounted?.visibilityAccepted ?? true;
+    return true;
 }
 function setDeckyNativeHidden(hidden) {
     preferenceRevision += 1;
@@ -55164,7 +55064,6 @@ function reconcile() {
         const useLegacy = !disabled && bridge?.protocol === 1 && !bridge.deckyHost;
         const hook = window.DeckyPluginLoader?.tabsHook;
         if (legacyHost && (!useLegacy || legacyBridge !== bridge || legacyHook !== hook || !legacyHost.ownsHook())) {
-            release();
             legacyHost.stop();
             legacyHost = null;
         }
@@ -55188,8 +55087,6 @@ function reconcile() {
         }
         catch { /* Replaced owner. */ }
     }
-    if (changed || !available)
-        release();
     // A new healthy owner gets its own mount attempt; never retry a failing root
     // continuously on the same capability.
     if (changed && next && available)
@@ -55206,7 +55103,7 @@ function setDeckyHostEnabled(enabled) {
     const before = JSON.stringify(snapshot$1);
     batching = true;
     try {
-        publish$1({ ...snapshot$1, enabled: enabled === true, ready: snapshot$1.ready, reason: "waiting_for_mount"  });
+        publish$1({ ...snapshot$1, enabled: enabled === true, ready: enabled && snapshot$1.ready, reason: enabled ? "waiting_for_mount" : "disabled" });
         if (running)
             reconcile();
         else
@@ -55220,51 +55117,8 @@ function setDeckyHostEnabled(enabled) {
 }
 function failDeckyHost(reason) {
     failure = reason;
-    release();
     publish$1({ ...snapshot$1, available: false, ready: false, reason });
     applyNativeSuppression();
-}
-function mountDeckyHost(options) {
-    if (!running || !snapshot$1.enabled || !snapshot$1.available || releaseMount || !capability)
-        return null;
-    const lease = capability.acquire({ ...options, hideNative: false, onRelease(reason) {
-            if (reason === "shortcuts_unloaded")
-                reason = "owner_changed";
-            if (reason === "owner_changed") {
-                publish$1({ ...snapshot$1, available: false, ready: false, ownerRevision: (snapshot$1.ownerRevision ?? 0) + 1 });
-            }
-            options.onRelease(reason);
-        } });
-    if (!lease || typeof lease.release !== "function" || typeof lease.renew !== "function"
-        || typeof lease.setActive !== "function" || typeof lease.setReady !== "function" || lease.panel == null) {
-        lease?.release?.("invalid_lease");
-        return null;
-    }
-    let alive = true;
-    const stop = () => {
-        if (!alive)
-            return;
-        lease.release("host_unmounted");
-        alive = false;
-        if (releaseMount === stop)
-            releaseMount = undefined;
-        if (mountedLease?.lease === lease)
-            mountedLease = undefined;
-        publish$1({ ...snapshot$1, ready: false });
-        applyNativeSuppression();
-    };
-    releaseMount = stop;
-    mountedLease = { lease, hideRequested: false, visibilityAccepted: true };
-    return { ...lease,
-        release: stop,
-        setReady() {
-            // Legacy owners cannot separate hosting from suppression. Keep their native tab.
-            const accepted = alive && (typeof lease.setNativeHidden !== "function" || lease.setReady());
-            publish$1({ ...snapshot$1, ready: accepted });
-            applyNativeSuppression();
-            return accepted;
-        },
-    };
 }
 /** The parent persists the opt-in. Starting/reloading this runtime is always OFF. */
 function initDeckyHost(readPreferences) {
@@ -55307,7 +55161,6 @@ function initDeckyHost(readPreferences) {
             return;
         stopped = true;
         running = false;
-        release();
         projection.stop();
         legacyHost?.stop();
         legacyHost = null;
@@ -55332,110 +55185,6 @@ function initDeckyHost(readPreferences) {
     reconcile();
     void loadPreferences();
     return stop;
-}
-
-class HostBoundary extends _global_SP_REACT.Component {
-    constructor() {
-        super(...arguments);
-        this.state = { failed: false };
-    }
-    static getDerivedStateFromError() { return { failed: true }; }
-    componentDidCatch() { this.props.onError(); }
-    render() { return this.state.failed ? null : this.props.children; }
-}
-function Commit({ onCommit }) {
-    _global_SP_REACT.useLayoutEffect(onCommit, [onCommit]);
-    return null;
-}
-/** Mount only in Playhub's standalone QAM entry, outside .ph-controls/setting CSS. */
-function DeckyHost({ active }) {
-    const Focusable = CompatUI.Focusable;
-    const snapshot = _global_SP_REACT.useSyncExternalStore(subscribeDeckyHost, getDeckyHostSnapshot);
-    const element = _global_SP_REACT.useRef(null);
-    const [panel, setPanel] = _global_SP_REACT.useState(null);
-    const leaseRef = _global_SP_REACT.useRef(null);
-    const activeRef = _global_SP_REACT.useRef(active);
-    activeRef.current = active;
-    const onCommit = _global_SP_REACT.useCallback(() => {
-        leaseRef.current?.setActive(activeRef.current);
-        leaseRef.current?.setReady();
-    }, []);
-    _global_SP_REACT.useEffect(() => {
-        if (!snapshot.enabled || !snapshot.available || !element.current)
-            return;
-        const host = element.current;
-        // Reject inherited settings selectors instead of trying to restyle native Decky.
-        if (host.closest(".ph-controls, .ph-control-settings, .qsRedesign")) {
-            failDeckyHost("settings_css_ancestor");
-            return;
-        }
-        let alive = true;
-        let scoped;
-        let timer;
-        const onError = () => { if (alive)
-            failDeckyHost("native_root_error"); };
-        try {
-            const lease = mountDeckyHost({ element: host,
-                createContent(root) {
-                    const nativeRoot = root;
-                    if (!_global_SP_REACT.isValidElement(root) || !nativeRoot.props?.deckyState || !nativeRoot.props.children) {
-                        throw new Error("unsupported_native_root");
-                    }
-                    scoped = createScopedDeckyState(nativeRoot.props.deckyState);
-                    scoped.setVisible(false);
-                    return SP_JSX.jsxs(HostBoundary, { onError: onError, children: [_global_SP_REACT.cloneElement(nativeRoot, { deckyState: scoped.state }), SP_JSX.jsx(Commit, { onCommit: onCommit })] });
-                },
-                isHealthy: () => alive && host.isConnected && !host.closest(".ph-controls, .ph-control-settings, .qsRedesign"),
-                onVisibility: (visible) => scoped?.setVisible(visible),
-                onRelease(reason) {
-                    if (alive && reason !== "host_unmounted" && reason !== "owner_changed")
-                        failDeckyHost(reason);
-                }, });
-            if (!lease) {
-                scoped?.dispose();
-                failDeckyHost("native_adapter_unavailable");
-                return;
-            }
-            leaseRef.current = lease;
-            setPanel(lease.panel);
-            timer = window.setInterval(() => { if (!lease.renew())
-                onError(); }, 500);
-        }
-        catch {
-            scoped?.dispose();
-            failDeckyHost("unsupported_native_root");
-        }
-        return () => {
-            alive = false;
-            if (timer !== undefined)
-                window.clearInterval(timer);
-            leaseRef.current?.release();
-            leaseRef.current = null;
-            scoped?.dispose();
-            setPanel(null);
-        };
-    }, [snapshot.enabled, snapshot.available, snapshot.ownerRevision, onCommit]);
-    _global_SP_REACT.useLayoutEffect(() => { leaseRef.current?.setActive(active); }, [active]);
-    return SP_JSX.jsx(Focusable, { ref: element, "data-playhub-decky-host": "true", "aria-hidden": !active, ...(!active ? { inert: "" } : {}), focusable: false, childFocusDisabled: !active, style: { width: "100%", minWidth: 0, display: active ? undefined : "none" }, children: snapshot.enabled && snapshot.available ? panel : null });
-}
-
-const rows$1 = {
-    en: ["Hide Decky from Steam tabs", "Decky always remains available in the Core menu."],
-    it: ["Nascondi Decky dalle tab di Steam", "Decky rimane sempre disponibile nel menu di Core."],
-    de: ["Decky in den Steam-Tabs ausblenden", "Decky bleibt im Core-Menü immer verfügbar."],
-    es: ["Ocultar Decky de las pestañas de Steam", "Decky sigue siempre disponible en el menú de Core."],
-    fr: ["Masquer Decky dans les onglets Steam", "Decky reste toujours disponible dans le menu Core."],
-    pt: ["Ocultar Decky das abas do Steam", "Decky permanece sempre disponível no menu do Core."],
-    ru: ["Скрыть Decky из вкладок Steam", "Decky всегда остаётся доступным в меню Core."],
-    uk: ["Приховати Decky з вкладок Steam", "Decky завжди залишається доступним у меню Core."],
-    zh: ["在 Steam 标签页中隐藏 Decky", "Decky 始终可在 Core 菜单中使用。"],
-    ja: ["SteamのタブからDeckyを非表示にする", "Deckyは引き続きCoreメニューでいつでも利用できます。"],
-    ko: ["Steam 탭에서 Decky 숨기기", "Decky는 Core 메뉴에서 항상 사용할 수 있습니다."],
-    hi: ["Steam टैब से Decky छिपाएँ", "Decky हमेशा Core मेनू में उपलब्ध रहता है।"],
-};
-function deckyIntegrationLocale(locale) {
-    const row = rows$1[locale.split(/[-_]/)[0]] ?? rows$1.en;
-    return { label: row[0], description: row[1] };
 }
 
 const copy$b = {
@@ -57762,18 +57511,2027 @@ function MsiChargeLimit({ locale }) {
     return SP_JSX.jsxs("div", { className: "qsCardBody qsDropdownFullWidth", "aria-busy": busy, children: [SP_JSX.jsx(DFL.DropdownItem, { label: copy[0], description: `${copy[1]} · ${deviceInfoLocale(locale).experimental}`, bottomSeparator: "none", layout: "below", selectedOption: state.chargeLimit, disabled: busy, rgOptions: choices.map(percent => ({ data: percent, label: `${percent}%` })), onChange: ({ data }) => void choose(data) }), failed && SP_JSX.jsx("div", { className: "qsMeta", role: "status", children: controlLocale(locale).saveError })] });
 }
 
-const { Focusable: Focusable$8, DialogButton: DialogButton$3, ToggleField: ToggleField$6, DropdownItem: DropdownItem$2, ScrollPanel, GamepadButton } = CompatUI;
-const icons = { home: TbPower, audio: TbDeviceTv, performance: TbVolume, graphics: TbGauge, controller: TbDeviceGamepad2, store: TbShoppingBag, decky: TbPlug };
+// Eternal Core 3.3.11: the words of Quick Access > Core as one list (ControlCenter.tsx). Other languages fall back to
+// English.
+const en$8 = {
+    quick: "Quick", alwaysOpen: "always open", display: "Display", sound: "Sound", performance: "Performance", power: "Power",
+    sleep: "Sleep", restart: "Restart", shutDown: "Shut down", displayGraphics: "Display & graphics", controller: "Controller",
+    downloads: "Downloads", look: "Look", system: "System", stores: "Stores", shortcuts: "Shortcuts",
+};
+const copies = {
+    it: { quick: "Rapide", alwaysOpen: "sempre aperto", display: "Schermo", sound: "Audio", performance: "Prestazioni", power: "Alimentazione",
+        sleep: "Sospendi", restart: "Riavvia", shutDown: "Spegni", displayGraphics: "Schermo e grafica", controller: "Controller",
+        downloads: "Download", look: "Aspetto", system: "Sistema", stores: "Store", shortcuts: "Scorciatoie" },
+    es: { quick: "Rápido", alwaysOpen: "siempre abierto", display: "Pantalla", sound: "Sonido", performance: "Rendimiento", power: "Energía",
+        sleep: "Suspender", restart: "Reiniciar", shutDown: "Apagar", displayGraphics: "Pantalla y gráficos", controller: "Mando",
+        downloads: "Descargas", look: "Aspecto", system: "Sistema", stores: "Tiendas", shortcuts: "Atajos" },
+    fr: { quick: "Rapide", alwaysOpen: "toujours ouvert", display: "Affichage", sound: "Son", performance: "Performances", power: "Alimentation",
+        sleep: "Veille", restart: "Redémarrer", shutDown: "Éteindre", displayGraphics: "Affichage et graphismes", controller: "Manette",
+        downloads: "Téléchargements", look: "Apparence", system: "Système", stores: "Boutiques", shortcuts: "Raccourcis" },
+    de: { quick: "Schnell", alwaysOpen: "immer offen", display: "Anzeige", sound: "Ton", performance: "Leistung", power: "Energie",
+        sleep: "Ruhezustand", restart: "Neu starten", shutDown: "Herunterfahren", displayGraphics: "Anzeige und Grafik", controller: "Controller",
+        downloads: "Downloads", look: "Aussehen", system: "System", stores: "Stores", shortcuts: "Kurzbefehle" },
+    pt: { quick: "Rápido", alwaysOpen: "sempre aberto", display: "Tela", sound: "Som", performance: "Desempenho", power: "Energia",
+        sleep: "Suspender", restart: "Reiniciar", shutDown: "Desligar", displayGraphics: "Tela e gráficos", controller: "Controle",
+        downloads: "Downloads", look: "Aparência", system: "Sistema", stores: "Lojas", shortcuts: "Atalhos" },
+};
+function coreQamCopy(locale) {
+    const key = String(locale ?? "").toLowerCase().slice(0, 2);
+    return { ...en$8, ...(copies[key] ?? {}) };
+}
+
+// Eternal Core: the Core UI setting's text in Core's 12 languages (Quick Access > Core). "Core UI" is the
+// feature's name and stays the same in every language. Self-contained: tests/coreUi.test.mjs loads it alone.
+const en$7 = {
+    section: "Look", label: "Core UI",
+    hint: "Core's black, gunmetal and crimson look, with the Starfield, on the Steam menu, Quick Access and the top and bottom bars. Off gives them back to Steam.",
+    screensaver: "Use Core Starfield as screensaver", screensaverHint: "Steam's screensaver becomes the Core Starfield. Off goes back to Steam's slideshow.", snapshot: "Save Core UI snapshot", snapshotHint: "Writes how Steam's screens are built right now to a file for diagnosis. No personal data.", snapshotSaved: "Saved to", snapshotFailed: "Could not save the snapshot.",
+};
+const copy$a = {
+    en: en$7,
+    it: { section: "Aspetto", label: "Core UI", hint: "L'aspetto di Core in nero, canna di fucile e cremisi, con il campo stellare, sul menu di Steam, sull'Accesso rapido e sulle barre in alto e in basso. Spento li restituisce a Steam.", screensaver: "Usa Core Starfield come salvaschermo", screensaverHint: "Il salvaschermo di Steam diventa il campo stellare di Core. Spento torna alla presentazione di Steam.", snapshot: "Salva istantanea di Core UI", snapshotHint: "Scrive in un file come sono costruite ora le schermate di Steam, per la diagnosi. Nessun dato personale.", snapshotSaved: "Salvata in", snapshotFailed: "Impossibile salvare l'istantanea." },
+    es: { section: "Aspecto", label: "Core UI", hint: "El aspecto de Core en negro, gris metal y carmesí, con el campo de estrellas, en el menú de Steam, el Acceso rápido y las barras superior e inferior. Desactivado los devuelve a Steam.", screensaver: "Usar Core Starfield como salvapantallas", screensaverHint: "El salvapantallas de Steam pasa a ser el campo de estrellas de Core. Desactivado vuelve a la presentación de Steam.", snapshot: "Guardar instantánea de Core UI", snapshotHint: "Guarda en un archivo cómo están construidas ahora las pantallas de Steam, para el diagnóstico. Sin datos personales.", snapshotSaved: "Guardada en", snapshotFailed: "No se pudo guardar la instantánea." },
+    fr: { section: "Apparence", label: "Core UI", hint: "L'apparence de Core en noir, gris acier et cramoisi, avec le champ d'étoiles, sur le menu Steam, l'Accès rapide et les barres du haut et du bas. Désactivé, Steam reprend la sienne.", screensaver: "Utiliser Core Starfield comme économiseur d'écran", screensaverHint: "L'économiseur d'écran de Steam devient le champ d'étoiles de Core. Désactivé, Steam reprend son diaporama.", snapshot: "Enregistrer un instantané de Core UI", snapshotHint: "Écrit dans un fichier la structure actuelle des écrans de Steam, pour le diagnostic. Aucune donnée personnelle.", snapshotSaved: "Enregistré dans", snapshotFailed: "Impossible d'enregistrer l'instantané." },
+    de: { section: "Aussehen", label: "Core UI", hint: "Der Look von Core in Schwarz, Gunmetal und Karmesin mit dem Sternenfeld im Steam-Menü, im Schnellzugriff und in der oberen und unteren Leiste. Aus gibt sie an Steam zurück.", screensaver: "Core Starfield als Bildschirmschoner", screensaverHint: "Steams Bildschirmschoner wird das Sternenfeld von Core. Aus kehrt zu Steams Diashow zurück.", snapshot: "Core-UI-Momentaufnahme speichern", snapshotHint: "Schreibt zur Diagnose in eine Datei, wie Steams Bildschirme gerade aufgebaut sind. Keine persönlichen Daten.", snapshotSaved: "Gespeichert unter", snapshotFailed: "Die Momentaufnahme konnte nicht gespeichert werden." },
+    pt: { section: "Aparência", label: "Core UI", hint: "O visual do Core em preto, cinza-chumbo e carmesim, com o campo estelar, no menu Steam, no Acesso rápido e nas barras superior e inferior. Desligado devolve tudo ao Steam.", screensaver: "Usar Core Starfield como protetor de tela", screensaverHint: "O protetor de tela do Steam passa a ser o campo estelar do Core. Desligado volta à apresentação do Steam.", snapshot: "Salvar instantâneo do Core UI", snapshotHint: "Grava num arquivo como as telas do Steam estão montadas agora, para diagnóstico. Nenhum dado pessoal.", snapshotSaved: "Salvo em", snapshotFailed: "Não foi possível salvar o instantâneo." },
+    uk: { section: "Вигляд", label: "Core UI", hint: "Вигляд Core у чорному, сталевому й багряному кольорах із зоряним полем у меню Steam, швидкому доступі та на верхній і нижній панелях. Вимкнення повертає вигляд Steam.", screensaver: "Core Starfield як заставка", screensaverHint: "Заставкою Steam стає зоряне поле Core. Вимкнення повертає слайд-шоу Steam.", snapshot: "Зберегти знімок Core UI", snapshotHint: "Записує у файл, як зараз побудовані екрани Steam, для діагностики. Без особистих даних.", snapshotSaved: "Збережено в", snapshotFailed: "Не вдалося зберегти знімок." },
+    ru: { section: "Внешний вид", label: "Core UI", hint: "Оформление Core в чёрном, стальном и багровом цветах со звёздным полем в меню Steam, быстром доступе и на верхней и нижней панелях. Если выключить, вернётся оформление Steam.", screensaver: "Core Starfield как заставка", screensaverHint: "Заставкой Steam станет звёздное поле Core. Если выключить, вернётся слайд-шоу Steam.", snapshot: "Сохранить снимок Core UI", snapshotHint: "Записывает в файл, как сейчас устроены экраны Steam, для диагностики. Без личных данных.", snapshotSaved: "Сохранено в", snapshotFailed: "Не удалось сохранить снимок." },
+    zh: { section: "外观", label: "Core UI", hint: "在 Steam 菜单、快速访问以及顶部和底部栏使用 Core 的黑色、炮铜色和深红色外观，并显示星空。关闭后恢复 Steam 的外观。", screensaver: "使用 Core Starfield 作为屏幕保护程序", screensaverHint: "Steam 的屏幕保护程序改为 Core 星空。关闭后恢复 Steam 的幻灯片。", snapshot: "保存 Core UI 快照", snapshotHint: "将 Steam 各界面当前的结构写入文件，用于诊断。不含个人数据。", snapshotSaved: "已保存到", snapshotFailed: "无法保存快照。" },
+    ja: { section: "外観", label: "Core UI", hint: "Steam メニュー、クイックアクセス、上下のバーに、星空と黒・ガンメタル・クリムゾンの Core の外観を使います。オフにすると Steam の外観に戻ります。", screensaver: "Core Starfield をスクリーンセーバーにする", screensaverHint: "Steam のスクリーンセーバーを Core の星空にします。オフにすると Steam のスライドショーに戻ります。", snapshot: "Core UI のスナップショットを保存", snapshotHint: "診断用に、Steam の各画面の現在の構造をファイルに書き出します。個人データは含みません。", snapshotSaved: "保存先:", snapshotFailed: "スナップショットを保存できませんでした。" },
+    ko: { section: "모양", label: "Core UI", hint: "Steam 메뉴, 빠른 실행, 위아래 막대에 별빛 배경과 검정·건메탈·진홍색의 Core 모양을 적용합니다. 끄면 Steam 모양으로 돌아갑니다.", screensaver: "Core Starfield를 화면 보호기로 사용", screensaverHint: "Steam 화면 보호기가 Core 별빛으로 바뀝니다. 끄면 Steam 슬라이드쇼로 돌아갑니다.", snapshot: "Core UI 스냅샷 저장", snapshotHint: "진단을 위해 Steam 화면의 현재 구조를 파일로 저장합니다. 개인 데이터는 포함되지 않습니다.", snapshotSaved: "저장 위치:", snapshotFailed: "스냅샷을 저장할 수 없습니다." },
+    hi: { section: "रूप", label: "Core UI", hint: "Steam मेनू, क्विक एक्सेस और ऊपर-नीचे की पट्टियों पर तारों भरी पृष्ठभूमि के साथ Core का काला, गनमेटल और क्रिमसन रूप। बंद करने पर Steam का रूप लौट आता है।", screensaver: "Core Starfield को स्क्रीनसेवर बनाएँ", screensaverHint: "Steam का स्क्रीनसेवर Core का तारामंडल बन जाता है। बंद करने पर Steam का स्लाइडशो लौट आता है।", snapshot: "Core UI स्नैपशॉट सहेजें", snapshotHint: "जाँच के लिए Steam की स्क्रीनों की मौजूदा बनावट एक फ़ाइल में लिखता है। कोई निजी डेटा नहीं।", snapshotSaved: "यहाँ सहेजा गया:", snapshotFailed: "स्नैपशॉट सहेजा नहीं जा सका।" },
+};
+function coreUiCopy(locale) {
+    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
+    return copy$a[language === "ua" ? "uk" : language] ?? en$7;
+}
+const packCopy = {
+    en: { pack: "Re-import icon pack", packHint: "Reads colorgrade-icons-heroes-logos.zip from Downloads again for the Consoles tab.", packDone: "Imported: {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip is not in Downloads.", packFailed: "The icon pack could not be imported." },
+    it: { pack: "Reimporta pacchetto icone", packHint: "Rilegge colorgrade-icons-heroes-logos.zip da Download per la scheda Console.", packDone: "Importate: {count} console.", packMissing: "colorgrade-icons-heroes-logos.zip non è in Download.", packFailed: "Impossibile importare il pacchetto icone." },
+    es: { pack: "Reimportar paquete de iconos", packHint: "Vuelve a leer colorgrade-icons-heroes-logos.zip de Descargas para la pestaña Consolas.", packDone: "Importadas: {count} consolas.", packMissing: "colorgrade-icons-heroes-logos.zip no está en Descargas.", packFailed: "No se pudo importar el paquete de iconos." },
+    fr: { pack: "Réimporter le pack d'icônes", packHint: "Relit colorgrade-icons-heroes-logos.zip dans Téléchargements pour l'onglet Consoles.", packDone: "Importées : {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip n'est pas dans Téléchargements.", packFailed: "Le pack d'icônes n'a pas pu être importé." },
+    de: { pack: "Icon-Paket neu importieren", packHint: "Liest colorgrade-icons-heroes-logos.zip aus Downloads erneut für den Tab Konsolen.", packDone: "Importiert: {count} Konsolen.", packMissing: "colorgrade-icons-heroes-logos.zip ist nicht in Downloads.", packFailed: "Das Icon-Paket konnte nicht importiert werden." },
+    pt: { pack: "Reimportar pacote de ícones", packHint: "Lê de novo colorgrade-icons-heroes-logos.zip em Downloads para a aba Consoles.", packDone: "Importados: {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip não está em Downloads.", packFailed: "Não foi possível importar o pacote de ícones." },
+    uk: { pack: "Повторно імпортувати піктограми", packHint: "Знову читає colorgrade-icons-heroes-logos.zip із Завантажень для вкладки Консолі.", packDone: "Імпортовано консолей: {count}.", packMissing: "colorgrade-icons-heroes-logos.zip немає в Завантаженнях.", packFailed: "Не вдалося імпортувати піктограми." },
+    ru: { pack: "Повторно импортировать значки", packHint: "Снова читает colorgrade-icons-heroes-logos.zip из Загрузок для вкладки Консоли.", packDone: "Импортировано консолей: {count}.", packMissing: "colorgrade-icons-heroes-logos.zip нет в Загрузках.", packFailed: "Не удалось импортировать значки." },
+    zh: { pack: "重新导入图标包", packHint: "为“主机”标签重新读取“下载”中的 colorgrade-icons-heroes-logos.zip。", packDone: "已导入 {count} 个主机。", packMissing: "“下载”中没有 colorgrade-icons-heroes-logos.zip。", packFailed: "无法导入图标包。" },
+    ja: { pack: "アイコンパックを再インポート", packHint: "コンソールタブ用に、ダウンロードの colorgrade-icons-heroes-logos.zip を読み直します。", packDone: "{count} 台のコンソールをインポートしました。", packMissing: "ダウンロードに colorgrade-icons-heroes-logos.zip がありません。", packFailed: "アイコンパックをインポートできませんでした。" },
+    ko: { pack: "아이콘 팩 다시 가져오기", packHint: "콘솔 탭을 위해 다운로드의 colorgrade-icons-heroes-logos.zip을 다시 읽습니다.", packDone: "콘솔 {count}개를 가져왔습니다.", packMissing: "다운로드에 colorgrade-icons-heroes-logos.zip이 없습니다.", packFailed: "아이콘 팩을 가져오지 못했습니다." },
+    hi: { pack: "आइकन पैक फिर से इम्पोर्ट करें", packHint: "कंसोल टैब के लिए Downloads से colorgrade-icons-heroes-logos.zip फिर से पढ़ता है।", packDone: "{count} कंसोल इम्पोर्ट हुए।", packMissing: "Downloads में colorgrade-icons-heroes-logos.zip नहीं है।", packFailed: "आइकन पैक इम्पोर्ट नहीं हो सका।" },
+};
+function coreUiPackCopy(locale) {
+    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
+    return packCopy[language] ?? packCopy.en;
+}
+
+// Eternal Core: Core UI (docs/eternal/CORE-UI.md). Builds the one stylesheet Core's plugin injects: phase 1 (the
+// global chrome, the Steam menu, Quick Access, context menus) and phase 2 (Home, the Library's tab bar, grid and
+// collection tiles).
+//
+// Steam's class names are hashed and change between builds, so no hashed name is written here. Every
+// selector comes from one of Steam's class maps (readable key -> hashed class string), found through
+// steamModules.ts: the classic class-map search on Decky 3, then the ES-module client's variables and module
+// scopes (findVar / findModuleScopeByVar) on Decky 4. A rule whose map or key is missing on the running
+// client is left out (and reported, so the runtime can log it once); the rest still apply.
+//
+// Every selector starts with html[data-core-ui] (set only while the "Core UI" setting is on) and repeats its
+// target class, and every declaration is !important: Core UI wins over a CSS Loader theme on the areas it
+// styles (see CORE-UI.md, "CSS Loader").
+//
+// Some rules key on attributes the runtime sets after looking at the live page (coreUi.ts, coreUiDom.ts,
+// coreLibraryIcons.ts): which Quick Access element is the real panel, which large layers inside it are opaque,
+// whether the top bar sits over art, which Library tab or collection tile is which console family.
+//
+// Pure on purpose (one import, steamModules.ts, itself pure): tests run it against fake Decky 3 and Decky 4
+// libraries.
+const CORE_UI_ATTRIBUTE = "data-core-ui";
+const CORE_UI_STYLE_ID = "core-ui-style";
+const CORE_UI_STARS_ATTRIBUTE = "data-core-ui-stars";
+const CORE_UI_HOST_ATTRIBUTE = "data-core-ui-host";
+// 3.3.8: set by the runtime on a Starfield canvas only while its surface is on screen; without it the canvas is hidden.
+const CORE_UI_LIVE_ATTRIBUTE = "data-core-ui-live";
+// Set by the runtime on large opaque layers inside a black panel (they would hide the stars).
+const CORE_UI_CLEAR_ATTRIBUTE = "data-core-ui-clear";
+// Set by the runtime on the top bar and the button-hint bar: "black" when Steam paints them over a plain page,
+// "clear" over game art.
+const CORE_UI_CHROME_ATTRIBUTE = "data-core-ui-chrome";
+// 3.3.10: set by the runtime on the top bar while the page under it has scrolled past its first screen ("hidden").
+const CORE_UI_HEADER_ATTRIBUTE = "data-core-ui-header";
+// Library decoration (coreLibraryIcons.ts): the tab or tile's family and key; the icon arrives as --core-icon.
+const CORE_UI_TAB_ATTRIBUTE = "data-core-tab";
+const CORE_UI_TILE_ATTRIBUTE = "data-core-collection";
+const CORE_UI_TONE_ATTRIBUTE = "data-core-tone";
+const CORE_UI_ICON_ATTRIBUTE = "data-core-icon";
+const ROOT = `html[${CORE_UI_ATTRIBUTE}]`;
+// The corner rule (CORE-UI.md, "Corners"): square (0) for the full-height side panels, the top bar, the footer and
+// every focus or selection highlight; one token for floating things only (context menus, submenus, dialogs, modals,
+// toasts, cards). Capsules and art keep Steam's own radius.
+const CORE_RADIUS_FLOAT_VAR = "--core-radius-float";
+const CORE_RADIUS_FLOAT = "10px";
+const FLOAT = `var(${CORE_RADIUS_FLOAT_VAR}, ${CORE_RADIUS_FLOAT})`;
+const SQUARE = "0";
+// Colours: corePalette.ts (CORE), repeated here so this file stays loadable on its own.
+const C = { black: "#000000", gunmetal: "#1A1D21", raised: "#2A2F36", steel: "#C9D1D9", hint: "#9AA4AE", white: "#FFFFFF", crimson: "#D7263D", crimsonText: "#EA5A68" };
+// Console-family tones (Library tabs and collection tiles; MAPPING.md of the Core icon set). All Games, Installed,
+// VR and Completed are steel with no tone.
+const CORE_FAMILY_TONES = { playstation: "#6E8CB8", nintendo: "#B07A84", sega: "#5E9E9A", xbox: "#7FA36B", retro: "#8F7CB0" };
+// Core's ring mark (assets/playhub-logo-decky.svg): the only logo on the Steam menu, top left, in its own space.
+const CORE_RING_MARK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 450"><g transform="translate(225,225) scale(3.24812)"><circle r="62" fill="none" stroke="#3A3F46" stroke-width="9"/><circle r="62" fill="none" stroke="#D7263D" stroke-width="9" stroke-linecap="round" transform="rotate(180)" stroke-dasharray="389.6" stroke-dashoffset="194.8"/><g stroke="#C9D1D9" stroke-width="5" stroke-linecap="round"><line x1="0" y1="-48" x2="0" y2="-38"/><line x1="0" y1="38" x2="0" y2="48"/><line x1="-48" y1="0" x2="-38" y2="0"/><line x1="38" y1="0" x2="48" y2="0"/><line x1="-33.9" y1="-33.9" x2="-26.9" y2="-26.9"/><line x1="26.9" y1="26.9" x2="33.9" y2="33.9"/><line x1="33.9" y1="-33.9" x2="26.9" y2="-26.9"/><line x1="-26.9" y1="26.9" x2="-33.9" y2="33.9"/></g><circle r="22" fill="#C9D1D9"/><circle r="9" fill="#D7263D"/></g></svg>';
+const CORE_RING_MARK = "data:image/svg+xml," + encodeURIComponent(CORE_RING_MARK_SVG);
+// The mark's reserved band at the top of the Steam menu: no row and no focus highlight is ever inside it.
+const CORE_MENU_LOGO_BAND = 80;
+const CORE_MENU_LOGO_SIZE = 44;
+// Keys only the Steam menu's own module has (webpack 56461 on the November 2026 client, read live; "Runnning" is
+// Steam's spelling).
+const MAIN_MENU_UNIQUE = ["mainMenuCloseDurationMS", "MainMenuEmbedded", "RunnningAppSeparator", "RunningAppIcon", "CurrentUserAvatar"];
+const CORE_UI_MAP_SIGNATURES = {
+    // The Steam menu and its in-game variant (AppRunningControls, NavigationColumn, AppColumn...) are one module
+    // (3.3.11 snapshot: one module carries mainMenuCloseDurationMS and AppRunningControls together). It needs one of the
+    // menu's own keys; Steam ships it twice (3.3.11: identical key lists), and the copies are merged (mergeMaps).
+    mainmenu: { all: ["Menu", "ItemIcon", "ItemLabel"], any: [MAIN_MENU_UNIQUE], prefer: MAIN_MENU_UNIQUE },
+    // @decky/ui's quickAccessMenuClasses (webpack 34544 on the November 2026 client: no TabContentColumn any more).
+    quickaccess: { all: ["TabGroupPanel", "Tab", "Title"],
+        any: [["Tabs", "TabsWithFooter", "BottomTabs", "TabList"], ["TabContentColumn", "AllTabContents", "ContentTransition"], ["QuickAccessMenu", "Menu", "Container"]],
+        prefer: ["QuickAccessMenu", "QuickAccessMenuEmbedded", "AllTabContents", "TabGroupPanel"] },
+    controls: { all: ["PanelSection"], any: [["PanelSectionTitle", "PanelSectionRow"]], none: ["TabGroupPanel", "QuickAccessMenu"] },
+    footer: { all: ["BasicFooter"], any: [["QuickAccessFooter", "Opaque"]], prefer: ["QuickAccessFooter", "Opaque"] },
+    header: { all: ["Header"], any: [["HeaderDownloadContainer", "HeaderOpaque"]], prefer: ["HeaderOpaque", "Clock"] },
+    dropdown: { all: ["DropDownControlButton"], none: ["GamepadDialogContent"] },
+    // Big Picture's context menus (gamepadcontextmenu_*), not the desktop client's (no BasicContextMenuHeader).
+    contextmenu: { all: ["contextMenuContents", "contextMenuItem", "BasicContextMenuHeader"], any: [["Focused", "active"]] },
+    // Phase 2 (readable names from the retired Core CSS Loader theme and @decky/ui's static class maps).
+    gamepadui: { all: ["BasicHome"], any: [["MainNavMenuAnchor", "OpaqueBackground"]] },
+    tabbedpage: { all: ["TabRow", "Tab", "TabTitle"], any: [["TabHeaderRowWrapper", "GamepadTabbedPage"]] },
+    library: { all: ["GamepadLibrary"] },
+    appgrid: { all: ["AppGridSectionLabel"], any: [["LibraryImageBackgroundGlow", "AppGrid", "LibraryAppGrid"]] },
+    portrait: { all: ["LibraryItemBox"], none: ["TabRow"] },
+    recentgames: { all: ["RecentGamesContainer"], any: [["RecentGamesBackgroundContainer", "RecentGamesBackgroundImages"]] },
+    carousel: { all: ["CarouselCapsuleBackgroundGlow"] },
+    home: { all: ["TabbedContent"], none: ["TabRow", "Tab", "BasicHome"] },
+    // 3.3.4: Steam's dialog fields (@decky/ui's gamepadDialogClasses): the rows ButtonItem draws, Decky's plugin list too.
+    // Webpack 2053 on the November 2026 client: no FieldChildren (FieldChildrenInner / FieldChildrenWithIcon instead).
+    gamepaddialog: { all: ["Field", "FieldLabel"],
+        any: [["FieldChildren", "FieldChildrenInner", "FieldChildrenWithIcon"], ["FieldDescription", "FieldLeftColumn", "FieldRightColumn"]],
+        prefer: ["FieldChildrenInner", "FieldLeftColumn", "On", "ToggleRail"] },
+    // 3.3.9, from the coordinator's live read (steam-class-signatures-2026-11-27; tests/fixtures/steam-class-maps.json).
+    // The game page: Steam's header (sharedappdetailsheader), the page root and play bar (basicappdetailssectionstyler),
+    // its sections (appdetailssection) and the play section's cloud status (appdetailsplaysection; key names from Clean
+    // Gameview's readable class names, not yet read live: CORE-UI.md says how to confirm them from the snapshot).
+    appheader: { all: ["TopCapsule", "HeaderBackgroundImage", "ImgSrc"], any: [["TopGradient", "BoxSizer"], ["FullscreenEnterStart", "FullscreenEnterDone"]] },
+    appdetails: { all: ["AppDetailsContainer", "PlaySection"], any: [["AppActionButton", "ActionRow", "AppButtons"], ["AppDetailsRoot", "AppDetailsContent", "AppDetailSectionList"]] },
+    appsection: { all: ["AppDetailsSection", "AppDetailsSectionContainer"], any: [["RightColumnSection", "AppDetailsSectionHasLabel", "Body"]] },
+    playsection: { all: ["CloudStatusLabel"], any: [["CloudSyncProblem", "CloudSyncProblemIcon"]] },
+    // 3.3.11 (the keys @decky/ui's appDetailsClasses and appActionButtonClasses find these modules by): the page's
+    // outer view (AppDetailsOverviewPanel, InnerContainer, Glassy: Steam's tinted panel, the light blue under the
+    // description and behind screen two) and the Play / Install button (green PlayButton, its container).
+    appview: { all: ["HeaderLoaded", "InnerContainer"], any: [["AppDetailsOverviewPanel", "ScrollContainer", "Glassy", "ShowPlayBar"]] },
+    actionbutton: { all: ["PlayButtonContainer", "PlayButton"], any: [["Green", "ButtonText", "ShowStreaming", "ButtonChild"]] },
+    // Settings (the paged settings dialog; an older module has the keys without the PagedSettingsDialog_ prefix).
+    // 3.3.10: Settings stayed Steam's: the signature also matches an older module (PageListColumn / PageListItem without
+    // the prefix) that is not the one on screen; the prefixed module is preferred.
+    settings: { all: [], any: [["PagedSettingsDialog_PageListColumn", "PageListColumn"], ["PagedSettingsDialog_PageListItem", "PageListItem"],
+            ["PageListItem_Title", "PagedSettingsDialog_PageList", "PageList"]],
+        prefer: ["PagedSettingsDialog", "PagedSettingsDialog_PageListColumn", "PagedSettingsDialog_PageListItem", "PagedSettingsDialog_PageContent", "PagedSettingDialog_ContentColumn"] },
+    // Settings' text (the coordinator's live read): sub-headers, body and description text, links.
+    settingstext: { all: ["SettingsDialogSubHeader"], any: [["SettingsDialogBodyText", "SettingsDialogDescriptionText", "SettingsDialogButton"]] },
+    // The small toggle map (Toggle, ToggleRail, ToggleSwitch, ToggleRow); gamepaddialog carries its own copy plus On.
+    toggle: { all: ["Toggle", "ToggleRail", "ToggleSwitch"], any: [["ToggleRow"]], none: ["Field"] },
+    downloads: { all: ["DownloadsPage", "SectionItem"], any: [["SectionTitle", "ItemLists"], ["ProgressBar", "SectionItemStatus"]] },
+    downloadbar: { all: ["BottomBar", "DownloadStatus"], any: [["DetailedDownloadProgress", "ProgressBarWrapper"]] },
+    overlay: { all: ["OverlayPopup", "ControllerConfiguratorWrapper"], any: [["BackToGame", "ExitGameBtn", "Toolbar"]] },
+    configurator: { all: ["ControllerConfiguratorMain", "ControllerConfiguratorGamepadPage"], any: [["TopSectionHeader", "ConfigurationName", "MainOptionsButton"]] },
+    configsummary: { all: ["ControllerConfiguratorSummary", "ControllerLayout"], any: [["ControlsListSection", "StandardControl"]] },
+    searchbar: { all: ["SearchBox", "SearchFieldBackground"], any: [["SearchIconLeft", "SearchIconRight"], ["ShowingSearch", "SearchAndTitleContainer"]] },
+    searchresults: { all: ["GamepadSearch", "ResultsRow"], any: [["ResultTemplate", "ResultsGridWrapper"]] },
+    suggestions: { all: ["Suggestions", "Suggestion"] },
+};
+function matchesSignature(map, signature) {
+    return signature.all.every(key => has(map, key)) && (signature.any ?? []).every(group => group.some(key => has(map, key)))
+        && !(signature.none ?? []).some(key => has(map, key));
+}
+const CORE_UI_MAP_FILTERS = Object.fromEntries(Object.keys(CORE_UI_MAP_SIGNATURES).map(name => [name, (map) => matchesSignature(map, CORE_UI_MAP_SIGNATURES[name])]));
+function has(map, key) {
+    try {
+        return !!map && typeof map === "object" && typeof map[key] === "string" && map[key].length > 0;
+    }
+    catch {
+        return false;
+    }
+}
+function attempt(run) {
+    try {
+        return run();
+    }
+    catch {
+        return undefined;
+    }
+}
+// One class map: the class-map search (Decky 3's findClassModule / classMap, then findModule, which on Decky 4
+// walks module scopes and variables), then Decky 4's findVar and findModuleScopeByVar directly.
+function findCoreUiMapRoute(ui, filter) {
+    const accept = (value) => (value && typeof value === "object" && attempt(() => filter(value)) === true ? value : undefined);
+    const classic = accept(attempt(() => findClassModule(ui, filter)));
+    if (classic)
+        return { map: classic, route: "classic" };
+    const variable = typeof ui?.findVar === "function" ? accept(attempt(() => ui.findVar((value) => accept(value) !== undefined))) : undefined;
+    if (variable)
+        return { map: variable, route: "findVar" };
+    const scope = typeof ui?.findModuleScopeByVar === "function"
+        ? attempt(() => ui.findModuleScopeByVar((value) => accept(value) !== undefined)) : undefined;
+    if (scope && typeof scope === "object") {
+        for (const value of attempt(() => Object.values(scope)) ?? []) {
+            const hit = accept(value);
+            if (hit)
+                return { map: hit, route: "scope" };
+        }
+    }
+    return { route: "missing" };
+}
+const CORE_UI_CANDIDATE_KEYS = 120;
+function signatureKeys(signature) {
+    return [...new Set([...signature.all, ...(signature.any ?? []).flat()])];
+}
+function looksLikeClassMap(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+        return false;
+    const entries = attempt(() => Object.entries(value)) ?? [];
+    return entries.length > 0 && entries.length <= 600 && entries.every(([, v]) => typeof v === "string");
+}
+function scoreCandidate(map, signature) {
+    if (!looksLikeClassMap(map))
+        return undefined;
+    const wanted = signatureKeys(signature);
+    const matched = wanted.filter(key => has(map, key));
+    if (!matched.length)
+        return undefined;
+    const keys = (attempt(() => Object.keys(map)) ?? []).slice(0, CORE_UI_CANDIDATE_KEYS);
+    return { score: Math.round(matched.length / wanted.length * 100) / 100, matched, missing: wanted.filter(key => !matched.includes(key)), keys };
+}
+// One walk over every class map the loader exposes (the filter never accepts, so the search visits them all), scoring
+// each against every missing signature.
+function closestCoreUiCandidates(ui, names) {
+    const best = {};
+    if (!names.length)
+        return best;
+    const seen = new Set();
+    const visit = (value) => {
+        if (!value || typeof value !== "object" || seen.has(value))
+            return false;
+        seen.add(value);
+        for (const name of names) {
+            const found = attempt(() => scoreCandidate(value, CORE_UI_MAP_SIGNATURES[name]));
+            if (found && (!best[name] || found.score > best[name].score))
+                best[name] = found;
+        }
+        return false;
+    };
+    attempt(() => findClassModule(ui, visit));
+    if (typeof ui?.findVar === "function")
+        attempt(() => ui.findVar(visit));
+    if (typeof ui?.findModuleScopeByVar === "function")
+        attempt(() => ui.findModuleScopeByVar((value) => { visit(value); return false; }));
+    return best;
+}
+// 3.3.10: how well a matching module fits its signature: its `prefer` keys first (keys only the right module has), then
+// how many of the signature's keys it carries. Used only to choose between two modules that both match.
+function signatureFit(map, signature) {
+    const prefer = (signature.prefer ?? []).filter(key => has(map, key)).length;
+    return prefer * 1000 + signatureKeys(signature).filter(key => has(map, key)).length;
+}
+// Every distinct module that matches each signature, in one walk over every class map the loader exposes (the walk
+// never accepts, so it visits them all). Two references to equal maps count once.
+function allCoreUiMatches(ui, names) {
+    const out = {};
+    if (!names.length)
+        return out;
+    const seen = new Set();
+    const visit = (value) => {
+        if (!value || typeof value !== "object" || seen.has(value) || !looksLikeClassMap(value))
+            return false;
+        seen.add(value);
+        for (const name of names) {
+            if (attempt(() => CORE_UI_MAP_FILTERS[name](value)) !== true)
+                continue;
+            const list = out[name] ?? (out[name] = []);
+            if (!list.some(other => sameMap(other, value)) && list.length < 8)
+                list.push(value);
+        }
+        return false;
+    };
+    attempt(() => findClassModule(ui, visit));
+    if (typeof ui?.findVar === "function")
+        attempt(() => ui.findVar(visit));
+    if (typeof ui?.findModuleScopeByVar === "function")
+        attempt(() => ui.findModuleScopeByVar((value) => { visit(value); return false; }));
+    return out;
+}
+function sameMap(a, b) {
+    if (a === b)
+        return true;
+    const ka = attempt(() => Object.keys(a)) ?? [], kb = attempt(() => Object.keys(b)) ?? [];
+    return ka.length === kb.length && ka.every(key => a[key] === b[key]);
+}
+const uniqueKeys = (map, signature) => (signature.prefer ?? []).filter(key => has(map, key));
+function findCoreUiMapsDetailed(ui, options = {}) {
+    const maps = {}, routes = {};
+    const missing = [], found = [];
+    for (const name of Object.keys(CORE_UI_MAP_FILTERS)) {
+        const hit = findCoreUiMapRoute(ui, CORE_UI_MAP_FILTERS[name]);
+        routes[name] = hit.route;
+        if (hit.map) {
+            maps[name] = hit.map;
+            found.push(name);
+        }
+        else
+            missing.push(name);
+    }
+    // The first module a search answers is not always the one on screen: every found map is checked for a second
+    // module that matches the same signature, and the better fit wins.
+    const ambiguous = {};
+    if (options.ambiguity !== false) {
+        const all = allCoreUiMatches(ui, found);
+        for (const name of found) {
+            const list = all[name] ?? [];
+            if (list.length < 2)
+                continue;
+            const signature = CORE_UI_MAP_SIGNATURES[name];
+            const first = maps[name];
+            let best = first, bestFit = signatureFit(first, signature);
+            for (const map of list) {
+                const fit = signatureFit(map, signature);
+                if (fit > bestFit) {
+                    best = map;
+                    bestFit = fit;
+                }
+            }
+            // Every module as good as the best one is merged (Steam's duplicate copies); a worse fit is passed over.
+            const ties = [best, ...list.filter(map => !sameMap(map, best) && signatureFit(map, signature) === bestFit)];
+            maps[name] = ties.length > 1 ? mergeMaps(ties) : best;
+            ambiguous[name] = { matches: list.length, switched: !sameMap(best, first), chosen: uniqueKeys(best, signature),
+                passedOver: list.filter(map => !ties.some(tie => sameMap(tie, map))).map(map => uniqueKeys(map, signature)), merged: ties.length };
+        }
+    }
+    const candidates = options.candidates === false ? {} : closestCoreUiCandidates(ui, missing);
+    return { maps, routes, candidates, ambiguous };
+}
+const CLASS_NAME = /^-?[A-Za-z_][\w-]*$/;
+// 3.3.4: every target also carries an id-level boost, `:not(#core-ui-boost)` (no element has that id, so it matches
+// everything and adds an id's weight). A CSS Loader theme left on (the old Core theme was) used class selectors with
+// !important; with the boost Core UI's !important rules out-rank any of them, however many classes deep.
+const CORE_UI_BOOST = ":not(#core-ui-boost)";
+// ".hashed.hashed:not(#core-ui-boost)": the class from the map, repeated once, plus the boost. Undefined when the key
+// is missing or its value is not a plain class list.
+// 3.3.11: a merged map (mergeMaps: Steam ships the same module twice, either copy may be the one on screen) holds a
+// key's alternatives separated by "|"; the selector is then :is(one, other), which keeps a single compound's weight.
+const ALTERNATIVES = "|";
+function classAlternatives(value) {
+    const out = String(value).split(ALTERNATIVES).map(part => part.trim().split(/\s+/).filter(Boolean)).filter(names => names.length);
+    return out.length && out.every(names => names.every(name => CLASS_NAME.test(name))) ? out : undefined;
+}
+function classSelector(map, key) {
+    if (!has(map, key))
+        return undefined;
+    const alternatives = classAlternatives(map[key]);
+    if (!alternatives)
+        return undefined;
+    const one = (names) => "." + names.join(".") + "." + names[0];
+    return (alternatives.length === 1 ? one(alternatives[0]) : `:is(${alternatives.map(one).join(",")})`) + CORE_UI_BOOST;
+}
+// ---- The selector table (3.3.4) ----
+//
+// Every element Core UI aims at, by name, with each way of finding it, best first. A strategy is a selector
+// template: `{map.Key}` stands for that class map's class (dropped when the map or key is missing), anything else is
+// plain CSS (Steam's unhashed globals, attributes, links). Rules and the snapshot (coreUiSnapshot.ts) read this one
+// table, so fixing a selector after the snapshot is one line here.
+const CORE_UI_TARGETS = {
+    header: ["{header.Header}"],
+    footer: ["{footer.BasicFooter}"],
+    menu: ["{mainmenu.Menu}"],
+    menuItem: ["{mainmenu.Item}"],
+    qamMenu: ["{quickaccess.Menu}"],
+    qamPanel: ["{quickaccess.Container}", "{quickaccess.QuickAccessMenu}", "{quickaccess.ViewPlaceholder}"],
+    qamRail: ["{quickaccess.Tabs}", "{quickaccess.TabsWithFooter}", "{quickaccess.TabList}", "{quickaccess.BottomTabs}"],
+    qamTab: ["{quickaccess.Tab}"],
+    qamTabSelected: ["{quickaccess.Tab}{quickaccess.Selected}", '{quickaccess.Tab}[aria-selected="true"]', "{quickaccess.Tab}.Selected", "{quickaccess.Tab}.Active"],
+    qamTitle: ["{quickaccess.Title}", "{quickaccess.HeaderContainer}"],
+    qamContent: ["{quickaccess.TabContentColumn}", "{quickaccess.AllTabContents}", "{quickaccess.ContentTransition}"],
+    // Decky's plugin list and every ButtonItem: Steam's dialog field rows and their DialogButton.
+    // 3.3.8: each also under QuickAccessMenu and Container, so one missing key never drops the rows.
+    qamRowField: ["{quickaccess.Menu} {gamepaddialog.Field}", "{quickaccess.QuickAccessMenu} {gamepaddialog.Field}", "{quickaccess.Container} {gamepaddialog.Field}"],
+    qamRowButton: ['{quickaccess.Menu} .DialogButton:not([style*="background"])', "{quickaccess.Menu} {dropdown.DropDownControlButton}",
+        '{quickaccess.QuickAccessMenu} .DialogButton:not([style*="background"])', "{quickaccess.QuickAccessMenu} {dropdown.DropDownControlButton}",
+        '{quickaccess.Container} .DialogButton:not([style*="background"])'],
+    qamTitleButton: ["{quickaccess.Title} .DialogButton"],
+    context: ["{contextmenu.contextMenuContents}"],
+    home: ["{gamepadui.BasicHome}"],
+    library: ["{library.GamepadLibrary}"],
+    libraryTabRow: ["{tabbedpage.TabRow}", "{tabbedpage.TabHeaderRowWrapper}"],
+    libraryTab: ["{tabbedpage.Tab}"],
+    libraryTabSelected: ["{tabbedpage.Tab}{tabbedpage.Selected}", '{tabbedpage.Tab}[aria-selected="true"]'],
+    libraryTabTitle: ["{tabbedpage.TabTitle}"],
+    // Home's tab row (3.3.8): Steam's tabbed page that holds Core Home's tab content (CoreHomeTabs marks each tab's
+    // content with data-core-home-tab), so the Library's and a game page's tab bars are not touched.
+    homeTabPage: ["{tabbedpage.GamepadTabbedPage}:has([data-core-home-tab])", "{gamepadui.BasicHome}:has([data-core-home-tab])"],
+    libraryGrid: ["{library.GamepadLibrary} {appgrid.AppGrid}", "{library.GamepadLibrary} {appgrid.LibraryAppGrid}", "{library.GamepadLibrary}"],
+    libraryCapsule: ["{library.GamepadLibrary} {portrait.LibraryItemBox}"],
+    collectionTile: ['a[href*="/library/collection/"]', "[data-collection-id]"],
+    // 3.3.11: the game page's parts, for the snapshot (it recorded none of them, so a missing match could not be told
+    // from a missing capture).
+    gameHeader: ["{appheader.TopCapsule}"],
+    gamePlayBar: ["{appdetails.PlaySection}"],
+    gameScreenTwo: ["{appdetails.AppDetailsContainer} {tabbedpage.GamepadTabbedPage}", "{appdetails.AppDetailsContainer}"],
+    gameSection: ["{appsection.AppDetailsSectionContainer}", "{appsection.AppDetailsSection}"],
+    // Hosts from other plugins (3.3.7): The Collector's ROM game page (CORE_UI_HOSTS, "collector-rom-page").
+    collectorRomPage: [".romm-core-page"],
+};
+const TOKEN = /\{([a-z]+)\.([A-Za-z0-9_]+)\}/g;
+// One template against the maps: the strong form (with Core UI's specificity) and the plain form (querySelector).
+// Undefined when any {map.Key} in it is missing on this client.
+function resolveTemplate(maps, template, plain = false) {
+    let missing = false;
+    const out = template.replace(TOKEN, (_all, map, key) => {
+        const value = plain ? plainSelector(maps[map], key) : classSelector(maps[map], key);
+        if (!value)
+            missing = true;
+        return value ?? "";
+    });
+    return missing ? undefined : out;
+}
+// Every strategy of a target that resolves on this client, best first.
+function targetSelectors(maps, id, plain = false) {
+    return (CORE_UI_TARGETS[id] ?? []).map(template => resolveTemplate(maps, template, plain)).filter((value) => !!value);
+}
+// The whole table resolved, for the snapshot: per target, each strategy and whether it resolved.
+function resolvedTargetTable(maps) {
+    const out = {};
+    for (const [id, list] of Object.entries(CORE_UI_TARGETS))
+        out[id] = list.map(strategy => ({ strategy, selector: resolveTemplate(maps, strategy, true) }));
+    return out;
+}
+const imp = (block) => Object.entries(block).map(([key, value]) => `${key}:${value} !important`).join(";");
+const CLEAR = { "background-color": "transparent", "background-image": "none", "box-shadow": "none" };
+// Pure black, opaque: no translucency, no tint, no blur behind, no gradient or shadow (item 6 of the TV list).
+const SOLID_BLACK = { "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none", filter: "none", opacity: "1" };
+function rules(mark) {
+    // Rule-local helper: one ROOT-prefixed list for a target.
+    const under = (list, tail = "") => list.map(sel => `${ROOT} ${sel}${tail}`).join(",");
+    const list = [
+        // The float radius token, inherited by everything in the page; Steam's global confirm dialogs use it.
+        { id: "corners", needs: [], css: () => `${ROOT} body{${imp({ [CORE_RADIUS_FLOAT_VAR]: CORE_RADIUS_FLOAT })}}${ROOT} .GenericConfirmDialog{${imp({ "border-radius": FLOAT })}}` },
+        // Global chrome: the top bar and the button-hint bar are clear over game art and pure black anywhere else
+        // (the runtime says which: data-core-ui-chrome), and whenever Steam paints them opaque.
+        // 3.3.9 (TV: "either fully black or fully transparent, including search"): the top bar is fully transparent
+        // everywhere, over art and over black alike: no bar, no blur, no gradient, whatever Steam marks it (HeaderOpaque
+        // included). Clock, icons and avatar steel or white, with one soft text shadow so they read over bright art.
+        { id: "chrome-header", needs: [["header", "Header"]], css: s => {
+                const header = `${ROOT} ${s("header", "Header")}`;
+                const opaque = s("header", "HeaderOpaque") ? `${ROOT} ${s("header", "HeaderOpaque")}` : "";
+                const all = [header, ...(opaque ? [opaque] : [])];
+                return `${all.flatMap(sel => [sel, `${sel}::before`, `${sel}::after`, `${sel}[${CORE_UI_CHROME_ATTRIBUTE}]`]).join(",")}{${imp({ ...CLEAR, "backdrop-filter": "none", filter: "none",
+                    "border-bottom-color": "transparent", "border-radius": SQUARE, opacity: "1" })}}` +
+                    `${header}{${imp({ color: C.steel })}}${header} :is(svg,span,div){${imp({ "text-shadow": CORE_HEADER_TEXT_SHADOW })}}` +
+                    // 3.3.10 (TV photo: the clock, weather and search sat over the tiles): past the page's first screen the bar
+                    // slides up and fades out, whole (never a partial background); back near the top it returns.
+                    `${header}{${imp({ transition: `opacity ${CORE_HEADER_HIDE_MS}ms ease-out, translate ${CORE_HEADER_HIDE_MS}ms ease-out` })}}` +
+                    `${header}[${CORE_UI_HEADER_ATTRIBUTE}="hidden"]{${imp({ opacity: "0", translate: "0 -100%", "pointer-events": "none" })}}` +
+                    `@media (prefers-reduced-motion: reduce){${header}{${imp({ transition: "none" })}}}`;
+            } },
+        { id: "chrome-footer", needs: [["footer", "BasicFooter"]], css: s => {
+                const footer = `${ROOT} ${s("footer", "BasicFooter")}`;
+                return `${footer},${footer}::before,${footer}::after{${imp({ ...CLEAR, "backdrop-filter": "none", filter: "none", "border-top-color": "transparent" })}}` +
+                    `${footer}[${CORE_UI_CHROME_ATTRIBUTE}="black"]{${imp(SOLID_BLACK)}}${footer}{${imp({ "border-radius": SQUARE })}}`;
+            } },
+        { id: "chrome-footer-opaque", needs: [["footer", "Opaque"]], css: s => {
+                const opaque = `${ROOT} ${s("footer", "Opaque")}`;
+                return `${opaque}{${imp(SOLID_BLACK)}}${opaque}::before,${opaque}::after{${imp({ ...CLEAR, "backdrop-filter": "none" })}}`;
+            } },
+        // The top bar's universal search (3.3.8, TV: "the search bar is ugly"). Found through the header's class map plus
+        // structure only (the field is the header's element that holds the <input>), never a hashed class: a square
+        // gunmetal field with steel text, a #9AA4AE placeholder and a steel magnifier; focused, a 2px crimson underline and
+        // no glow. Its height is the top bar's (Steam already sizes it to the bar); Steam's blue is gone.
+        // 3.3.9: transparent like the bar: the steel magnifier and text over a 1px steel underline, 2px crimson when focused.
+        { id: "search-field", needs: [["header", "Header"]], css: s => {
+                const header = `${ROOT} ${s("header", "Header")}`;
+                const field = `${header} div:has(> input)`;
+                return `${field}{${imp({ "background-color": "transparent", "background-image": "none", "border-radius": SQUARE, "box-shadow": `inset 0 -1px 0 ${C.steel}`, border: "0", outline: "none", filter: "none", "backdrop-filter": "none" })}}` +
+                    `${field} > input{${imp({ color: C.steel, "background-color": "transparent", "background-image": "none", "box-shadow": "none", border: "0", outline: "none", "caret-color": C.crimson })}}` +
+                    `${field} > input::placeholder{${imp({ color: C.hint, opacity: "1" })}}` +
+                    `${field} > svg,${field} > svg *{${imp({ color: C.steel, fill: C.steel })}}` +
+                    `${field}:focus-within,${field}:has(> input:focus),${field}.gpfocuswithin{${imp({ "background-color": "transparent", "box-shadow": `inset 0 -2px 0 ${C.crimson}`, outline: "none", filter: "none" })}}`;
+            } },
+        // Steam's dialog field rows everywhere (3.3.8: Settings rows, Downloads, any page built from DialogField): no blue
+        // band; the focused row gunmetal with the square crimson left bar, like the Steam menu. Quick Access keeps its own
+        // (more specific) row rules.
+        { id: "dialog-fields", needs: [["gamepaddialog", "Field"]], css: s => {
+                const field = `${ROOT} ${s("gamepaddialog", "Field")}`;
+                const focus = `${field}:is(.gpfocus,.gpfocuswithin,:focus-visible)`;
+                return `${field}::before,${field}::after{${imp({ "background-image": "none", "box-shadow": "none" })}}` +
+                    `${focus}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": `inset 3px 0 0 ${C.crimson}`, "border-radius": SQUARE, filter: "none", animation: "none", outline: "none" })}}` +
+                    `${focus}::before,${focus}::after{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
+                    `${focus} ${s("gamepaddialog", "FieldLabel")}{${imp({ color: C.white })}}`;
+            } },
+        // Steam menu: AMOLED black panel (stars drawn behind the rows by coreUi.ts). Core's ring mark sits top left in a
+        // band of its own: an in-flow block before every row, so no row and no focus fill can ever overlap it (the
+        // runtime also checks the first row starts below it; coreUiDom.ts, keepBelowLogo).
+        { id: "menu-panel", needs: [["mainmenu", "Menu"]], css: s => {
+                const menu = `${ROOT} ${s("mainmenu", "Menu")}`;
+                // 3.3.10: the menu window's outer box (Container, around Menu) is black too, never Steam's blue around the rows.
+                const outer = ["Container", "MainMenuEmbedded"].filter(key => s("mainmenu", key)).map(key => `${ROOT} ${s("mainmenu", key)}`);
+                return (outer.length ? `${outer.join(",")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE, "backdrop-filter": "none" })}}` : "") +
+                    `${menu}{${imp({ position: "relative", "background-color": C.black, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` +
+                    (mark ? `${menu}::before{${imp({ content: '""', display: "block", position: "relative", order: "-1", flex: `0 0 ${CORE_MENU_LOGO_BAND}px`,
+                        "box-sizing": "border-box", width: "100%", height: `${CORE_MENU_LOGO_BAND}px`, "min-height": `${CORE_MENU_LOGO_BAND}px`, margin: "0", padding: "0",
+                        background: `url(${JSON.stringify(mark)}) 24px center / ${CORE_MENU_LOGO_SIZE}px ${CORE_MENU_LOGO_SIZE}px no-repeat`, "pointer-events": "none", "z-index": "1" })}}` : "");
+            } },
+        // One inset and a fixed-width icon cell for every row, so icons and labels line up. No transforms: the
+        // rows must not drift sideways.
+        { id: "menu-rows", needs: [["mainmenu", "Menu"], ["mainmenu", "Item"], ["mainmenu", "ItemIcon"], ["mainmenu", "ItemLabel"]], css: s => {
+                const menu = `${ROOT} ${s("mainmenu", "Menu")}`;
+                const outer = s("mainmenu", "ItemOuter") === "" ? "" : `${menu} ${s("mainmenu", "ItemOuter")}{${imp({ "margin-left": "0", "padding-left": "0", transform: "none", left: "auto" })}}`;
+                return outer +
+                    `${menu} ${s("mainmenu", "Item")}{${imp({ display: "flex", "align-items": "center", "box-sizing": "border-box", "min-height": "48px", "margin-left": "0",
+                        "padding-left": "24px", "padding-right": "16px", transform: "none", left: "auto", "background-color": "transparent", "background-image": "none",
+                        "box-shadow": "none", "border-radius": "0", outline: "none", animation: "none" })}}` +
+                    `${menu} ${s("mainmenu", "Item")}::before,${menu} ${s("mainmenu", "Item")}::after{${imp({ "background-image": "none", "box-shadow": "none" })}}` +
+                    `${menu} ${s("mainmenu", "ItemIcon")}{${imp({ flex: "0 0 32px", width: "32px", "min-width": "32px", "max-width": "32px", margin: "0 16px 0 0", padding: "0",
+                        display: "flex", "align-items": "center", "justify-content": "center", transform: "none", position: "static" })}}` +
+                    `${menu} ${s("mainmenu", "ItemIcon")} :is(svg,img){${imp({ width: "24px", height: "24px", "max-width": "24px", "max-height": "24px" })}}` +
+                    `${menu} ${s("mainmenu", "ItemLabel")}{${imp({ margin: "0", padding: "0", "text-align": "left", transform: "none", color: C.steel, "font-size": "16px" })}}`;
+            } },
+        // Focused row: gunmetal with a 3px crimson bar on its left edge. No glow, no underline.
+        { id: "menu-focus", needs: [["mainmenu", "Menu"], ["mainmenu", "Item"]], css: s => {
+                const menu = `${ROOT} ${s("mainmenu", "Menu")}`;
+                const item = s("mainmenu", "Item");
+                return `${menu} ${item}:is(.gpfocus,:focus,:focus-visible,:focus-within){${imp({ "background-color": C.gunmetal, "background-image": "none",
+                    "box-shadow": `inset 3px 0 0 ${C.crimson}`, outline: "none", animation: "none", filter: "none", "border-radius": SQUARE })}}` +
+                    `${menu} ${item}:is(.gpfocus,:focus,:focus-visible,:focus-within) *{${imp({ color: C.white, "text-shadow": "none" })}}`;
+            } },
+        // The page you are on (Home's marker): crimson, not Steam's blue. 3.3.10: the item Steam marks Active (the page you
+        // are on) keeps no fill of Steam's; only the dot says it, and its label is white.
+        { id: "menu-active", needs: [["mainmenu", "ActiveDot"]], css: s => `${ROOT} ${s("mainmenu", "ActiveDot")}{${imp({ "background-color": C.crimson, "background-image": "none", "box-shadow": "none", "border-color": C.crimson })}}` +
+                (s("mainmenu", "Item") && s("mainmenu", "Active") ? `${ROOT} ${s("mainmenu", "Item")}${s("mainmenu", "Active")}:not(.gpfocus,:focus,:focus-visible,:focus-within){${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
+                    `${ROOT} ${s("mainmenu", "Item")}${s("mainmenu", "Active")} ${s("mainmenu", "ItemLabel")}{${imp({ color: C.white })}}` : "") },
+        // The "MENU" footer under the panel: black.
+        { id: "menu-footer", needs: [["mainmenu", "FooterBoxShadow"]], css: s => `${ROOT} ${s("mainmenu", "FooterBoxShadow")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
+        { id: "menu-footer-bar", needs: [["mainmenu", "Menu"], ["footer", "BasicFooter"]], css: s => `${ROOT} ${s("mainmenu", "Menu")} ${s("footer", "BasicFooter")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
+        // Quick Access: one black panel with the Starfield behind everything. Which element is the real panel differs
+        // between clients (Menu, QuickAccessMenu or Container): each is a candidate, the runtime picks the outermost one
+        // that is panel-sized (CORE_UI_HOSTS) and only that one is painted black; the others go clear.
+        { id: "qam-panel", needs: [], needsAny: [["quickaccess", "Menu"], ["quickaccess", "QuickAccessMenu"], ["quickaccess", "Container"]], css: s => {
+                const candidates = ["Container", "QuickAccessMenu", "ViewPlaceholder"].filter(key => s("quickaccess", key) !== "")
+                    .map(key => `${ROOT} ${s("quickaccess", key)}`);
+                return (s("quickaccess", "Menu") ? `${ROOT} ${s("quickaccess", "Menu")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` : "") +
+                    (candidates.length ? `${candidates.join(",")}{${imp({ ...CLEAR, "backdrop-filter": "none", "border-radius": SQUARE })}}` +
+                        `${candidates.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}="1"]`).join(",")}{${imp({ "background-color": C.black, "background-image": "none" })}}` : "");
+            } },
+        // Everything over the stars is clear: the content column, plugin panels (Decky's and every plugin's own,
+        // CSS Loader's included), and any large opaque layer the runtime finds inside the panel.
+        // 3.3.8: TabContentColumn is gone on the November 2026 client; any one of the content layers is enough.
+        { id: "qam-clear", needs: [], needsAny: [["quickaccess", "TabContentColumn"], ["quickaccess", "AllTabContents"], ["quickaccess", "ContentTransition"], ["quickaccess", "TabGroupPanel"]], css: s => {
+                const keys = ["TabContentColumn", "AllTabContents", "ContentTransition", "TabGroupPanel", "PanelSection", "PanelOuterNav", "PopupBody", "FriendsListTabPanel"];
+                const list = keys.filter(key => s("quickaccess", key) !== "").map(key => `${ROOT} ${s("quickaccess", key)}`);
+                if (s("controls", "PanelSection") !== "")
+                    list.push(`${ROOT} ${s("controls", "PanelSection")}`);
+                list.push(`${ROOT} [${CORE_UI_CLEAR_ATTRIBUTE}]`);
+                return `${list.join(",")}{${imp({ ...CLEAR, "backdrop-filter": "none" })}}`;
+            } },
+        // The title strip: clear over the panel's black and stars (no gradient bars above or under it, no logo).
+        { id: "qam-title", needs: [["quickaccess", "Title"]], css: s => {
+                const keys = ["Title", "HeaderContainer"].filter(key => s("quickaccess", key) !== "").map(key => `${ROOT} ${s("quickaccess", key)}`);
+                const pseudo = keys.flatMap(key => [`${key}::before`, `${key}::after`]);
+                return `${keys.join(",")}{${imp({ ...CLEAR, "border-color": "transparent", "backdrop-filter": "none" })}}` +
+                    `${pseudo.join(",")}{${imp({ "background-image": "none", "background-color": "transparent", "box-shadow": "none" })}}`;
+            } },
+        // The tab rail: clear over the panel's black and stars, a thin gunmetal divider; the open tab gunmetal (its
+        // crimson bar is Core's own).
+        // 3.3.8: the rail's inner list and bottom group (TabList, BottomTabs; new on the November 2026 client) go clear too.
+        { id: "qam-tabs", needs: [["quickaccess", "Tab"]], needsAny: [["quickaccess", "Tabs"], ["quickaccess", "TabsWithFooter"], ["quickaccess", "TabList"]], css: s => (s("quickaccess", "Tabs") ? `${ROOT} ${s("quickaccess", "Tabs")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": `inset 1px 0 0 ${C.gunmetal}` })}}` : "") +
+                (["TabList", "BottomTabs"].filter(key => s("quickaccess", key)).map(key => `${ROOT} ${s("quickaccess", key)}`).join(",") || `${ROOT} [data-core-ui-none]`) +
+                `{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
+                `${ROOT} ${s("quickaccess", "Tab")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
+                `${ROOT} ${s("quickaccess", "Tab")}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", filter: "none", "border-radius": SQUARE })}}` },
+        // 3.3.10 (the approved board, QAMDecky): the rail on the RIGHT of the panel, the content to its left. Steam's Menu
+        // holds the rail and the content column side by side; its row is reversed. The D-pad follows the picture
+        // (coreQamRail.ts: left from the rail goes into the content, right from the content's edge into the rail).
+        { id: "qam-rail-right", needs: [["quickaccess", "Menu"]], needsAny: [["quickaccess", "Tabs"], ["quickaccess", "TabsWithFooter"]], css: s => `${ROOT} ${s("quickaccess", "Menu")}{${imp({ display: "flex", "flex-direction": "row-reverse" })}}` +
+                // 3.3.11: Steam's Quick Access window is wider than the part of it on screen (855 px, about 350 px visible on
+                // the TV), so the reversed row put the rail off screen. coreQamRail.ts measures the visible width and the Menu
+                // takes exactly that: the rail sits at the right edge of what the user sees.
+                `${ROOT} ${s("quickaccess", "Menu")}[${CORE_QAM_VISIBLE_ATTRIBUTE}]{${imp({ width: `var(${CORE_QAM_VISIBLE_VAR})`, "max-width": `var(${CORE_QAM_VISIBLE_VAR})`, "min-width": "0", "box-sizing": "border-box", overflow: "hidden" })}}` },
+        { id: "panels-full-height", needs: [], needsAny: [["quickaccess", "ViewPlaceholder"], ["mainmenu", "ViewPlaceholder"]], css: s => {
+                const holders = [s("quickaccess", "ViewPlaceholder"), s("mainmenu", "ViewPlaceholder")].filter(Boolean).map(sel => `${ROOT} ${sel}`);
+                return `${holders.join(",")}{${imp({ top: "0", bottom: "0", "max-height": "none" })}}` +
+                    (s("quickaccess", "Menu") ? `${ROOT} ${s("quickaccess", "Menu")}[${CORE_QAM_FULL_ATTRIBUTE}]{${imp({ "padding-top": `${CORE_PANEL_SAFE_TOP}px`, "box-sizing": "border-box" })}}` : "");
+            } },
+        // The open tab: gunmetal, never Steam's grey-blue gradient (TV photo, 3.3.3). Every way Steam may mark it is in the
+        // selector table (qamTabSelected).
+        // 3.3.10: the fill is the tab's own box (48 x 64, square); any fill Steam draws in a pseudo-element goes.
+        { id: "qam-tab-selected", needs: [], targets: ["qamTabSelected"], css: (_s, t) => `${under(t("qamTabSelected"))}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", filter: "none", "border-radius": SQUARE })}}` +
+                `${under(t("qamTabSelected"), "::before")},${under(t("qamTabSelected"), "::after")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` },
+        // Rail icons. 3.3.10 (TV photo: plugin icons sat ~17px high, off the selected fill): live geometry, every tab is
+        // 48 x 64; Steam's own svg icons are 24px centred by a 20px 12px margin, plugin icons a 30px span pinned to the
+        // tab's top. Now every tab is a flex box that centres its child both ways, every icon (Steam's svg, a plugin's span,
+        // Core's glyph) is CORE_RAIL_ICON_PX square with no margin, and the selected fill is the whole square tab.
+        { id: "qam-rail-icons", needs: [], targets: ["qamTab"], css: (_s, t) => {
+                const px = `${CORE_RAIL_ICON_PX}px`;
+                const box = { width: px, height: px, "min-width": px, "min-height": px, "max-width": px, "max-height": px, margin: "0", padding: "0", flex: `0 0 ${px}` };
+                return `${under(t("qamTab"))}{${imp({ display: "flex", "align-items": "center", "justify-content": "center", "box-sizing": "border-box", padding: "0", "border-radius": SQUARE })}}` +
+                    `${under(t("qamTab"), " > *")}{${imp({ margin: "0", "align-self": "center" })}}` +
+                    `${under(t("qamTab"), " > svg")},${under(t("qamTab"), " > :is(span,div):has(> :is(svg,img))")},${under(t("qamTab"), " [data-core-rail-icon]")}{${imp({ ...box, display: "flex", "align-items": "center", "justify-content": "center", position: "static", top: "auto", transform: "none" })}}` +
+                    // 3.3.11: icons that set no fill drew black; they take the tab's colour.
+                    `${under(t("qamTab"), " svg:not([fill])")}{${imp({ fill: "currentColor" })}}` +
+                    `${under(t("qamTab"), " > :is(span,div):has(> :is(svg,img)) > :is(svg,img)")},${under(t("qamTab"), " [data-core-rail-icon] svg")}{${imp({ width: "100%", height: "100%", margin: "0", "max-width": "100%", "max-height": "100%", "shape-rendering": "geometricPrecision" })}}`;
+            } },
+        { id: "qam-tabs-footer", needs: [["quickaccess", "TabsWithFooter"]], css: s => `${ROOT} ${s("quickaccess", "TabsWithFooter")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` },
+        // The footer bar: black.
+        { id: "qam-footer", needs: [["footer", "QuickAccessFooter"]], css: s => `${ROOT} ${s("footer", "QuickAccessFooter")},${ROOT} ${s("footer", "QuickAccessFooter")}::before{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
+        { id: "qam-footer-shadow", needs: [["quickaccess", "FooterBoxShadow"]], css: s => `${ROOT} ${s("quickaccess", "FooterBoxShadow")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
+        // Plugin content: Steam's buttons and dropdowns inside Quick Access lose the grey-blue gradient. Gunmetal,
+        // raised plus a 2px crimson ring when focused. DialogButton and gpfocus are Steam's unhashed global classes.
+        // 3.3.4 (TV photo of Decky's main page): rows are gunmetal with steel text, a focused row raised gunmetal with the
+        // square crimson left bar (never Steam's white); the title's Store / Settings buttons gunmetal with the same bar.
+        // A button that sets its own background inline (Jarvis's crimson "listening" buttons) keeps it.
+        { id: "qam-controls", needs: [], targets: ["qamRowButton"], css: (_s, t) => qamRowCss(t("qamRowButton"), t("qamRowField")) },
+        // Context menus and their submenus (a game's Options / "..." menu, Manage, and the menus the Steam menu and
+        // Quick Access open). The Context board: black panel with a 1px gunmetal edge and 10px corners, 8px top and
+        // bottom, 48px rows with a 22px inset and 16px text, a 13px hint-grey header, hairline gunmetal separators.
+        { id: "context-panel", needs: [["contextmenu", "contextMenuContents"]], css: s => `${ROOT} ${s("contextmenu", "contextMenuContents")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", outline: "none", border: "0",
+                "border-radius": FLOAT, overflow: "hidden", "padding-top": "8px", "padding-bottom": "8px", filter: "none", "backdrop-filter": "none" })}}` +
+                (s("contextmenu", "contextMenu") ? `${ROOT} ${s("contextmenu", "contextMenu")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` : "") },
+        { id: "context-header", needs: [["contextmenu", "BasicContextMenuHeader"]], css: s => {
+                const headers = ["BasicContextMenuHeader", "MenuSectionHeader"].filter(key => s("contextmenu", key)).map(key => `${ROOT} ${s("contextmenu", key)}`);
+                return `${headers.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", color: C.hint, "font-size": "13px", padding: "12px 22px 10px" })}}`;
+            } },
+        { id: "context-separator", needs: [["contextmenu", "ContextMenuSeparator"]], css: s => `${ROOT} ${s("contextmenu", "ContextMenuSeparator")}{${imp({ "background-color": C.gunmetal, "background-image": "none", height: "1px", "min-height": "1px", margin: "6px 0", border: "0", opacity: "1" })}}` },
+        { id: "context-items", needs: [["contextmenu", "contextMenuItem"]], css: s => {
+                const item = `${ROOT} ${s("contextmenu", "contextMenuItem")}`;
+                return `${item}{${imp({ display: "flex", "align-items": "center", "box-sizing": "border-box", "min-height": "48px", padding: "0 22px", "font-size": "16px",
+                    color: C.steel, "background-color": "transparent", "background-image": "none", "box-shadow": "none", "border-radius": "0", "text-shadow": "none", animation: "none" })}}` +
+                    `${item} svg{${imp({ flex: "0 0 auto", "margin-right": "12px", fill: "currentColor" })}}` +
+                    `${item}:is([disabled],[aria-disabled="true"])${s("contextmenu", "Disabled") ? `,${item}${s("contextmenu", "Disabled")}` : ""}{${imp({ color: C.hint })}}`;
+            } },
+        // Focused (and an open submenu's item): gunmetal with the Steam menu's crimson left bar. No glow.
+        { id: "context-focus", needs: [["contextmenu", "contextMenuItem"], ["contextmenu", "Focused"]], css: s => {
+                const item = `${ROOT} ${s("contextmenu", "contextMenuItem")}`;
+                const open = s("contextmenu", "SubMenu") && s("contextmenu", "active") ? `,${item}${s("contextmenu", "SubMenu")}${s("contextmenu", "active")}` : "";
+                return `${item}${s("contextmenu", "Focused")},${item}:is(.gpfocus,:focus-visible)${open}{${imp({ "background-color": C.gunmetal, "background-image": "none",
+                    "box-shadow": `inset 3px 0 0 ${C.crimson}`, color: C.white, filter: "none", outline: "none", "border-radius": SQUARE })}}`;
+            } },
+        // Danger items (Steam marks them Destructive: Uninstall, Remove...): crimson text, focused or not.
+        { id: "context-danger", needs: [["contextmenu", "contextMenuItem"], ["contextmenu", "Destructive"]], css: s => `${ROOT} ${s("contextmenu", "contextMenuItem")}${s("contextmenu", "Destructive")}{${imp({ color: C.crimsonText })}}` },
+        // ---- Phase 2: Home (the Home board: more art, less chrome, black with stars behind the shelves). ----
+        { id: "home-page", needs: [["gamepadui", "BasicHome"]], css: s => {
+                const home = `${ROOT} ${s("gamepadui", "BasicHome")}`;
+                return `${home}{${imp({ "background-color": C.black, "background-image": "none" })}}` +
+                    (s("home", "TabbedContent") ? `${ROOT} ${s("home", "TabbedContent")}{${imp(CLEAR)}}` : "");
+            } },
+        // Home is first about the art (3.3.9, TV: "more inspiration from the Art Hero theme", with the user's Art Hero options:
+        // Expanded Hero, Linear Gradient, carousel height 5, larger carousel font, font height -4, cover/center). The focused
+        // game's hero fills Home (the recent section is one screen tall) at full brightness, with a short fade at the bottom
+        // only; the carousel sits low over the art, the focused game's name in larger type above its capsule; Steam's
+        // "Recent games" header and the green play triangle are hidden. The tabs and shelves are below the fold, on black
+        // with stars (the home host). Measures: CORE_HOME_ART.
+        { id: "home-hero", needs: [["recentgames", "RecentGamesBackgroundContainer"]], css: s => {
+                const a = CORE_HOME_ART;
+                const r = (key) => s("recentgames", key) ? `${ROOT} ${s("recentgames", key)}` : "";
+                const k = (key) => s("carousel", key) ? `${ROOT} ${s("carousel", key)}` : "";
+                const mask = `linear-gradient(180deg, #000000 ${a.fadeFrom}%, transparent 100%)`;
+                const art = [r("RecentGamesBackgroundContainer"), r("RecentGamesBackgroundImages")].filter(Boolean);
+                const headers = [r("RecentGamesHeader"), r("RecentGamesHeaderLabel")].filter(Boolean);
+                const label = k("CarouselGameLabelWrapper");
+                const shown = label ? [`${ROOT} .gpfocuswithin > ${s("carousel", "CarouselGameLabelWrapper")}`,
+                    ...(s("carousel", "ShowAsHovered") ? [`${label}${s("carousel", "ShowAsHovered")}`] : [])] : [];
+                // 3.3.10 (TV photo: the Collector's shelf showed through the Favorites grid): screen one is exactly one screen and
+                // its own stacking context; the art is exactly one screen tall (it was a minimum, so it could run on under the
+                // next rows) and the carousel row is taken out of the flow (it was moved down 50vh relatively inside a 70vh box, so
+                // it reached 120vh, over whatever came next). The rows after screen one start at 100vh, in their own space.
+                return (s("home", "RecentSection") ? `${ROOT} ${s("home", "RecentSection")}{${imp({ position: "relative", height: `calc(100vh - ${CORE_HOME_SCREEN_CUT_PX}px)`, "min-height": `calc(100vh - ${CORE_HOME_SCREEN_CUT_PX}px)`, "max-height": `calc(100vh - ${CORE_HOME_SCREEN_CUT_PX}px)`,
+                    padding: "0", isolation: "isolate", "z-index": "0", overflow: "visible" })}}` : "") +
+                    `${art.join(",")}{${imp({ "-webkit-mask-image": mask, "mask-image": mask, height: "100vh", "min-height": "0", "max-height": "100vh", "z-index": "0" })}}` +
+                    (r("RecentGamesBackground") ? `${r("RecentGamesBackground")}{${imp({ position: "absolute", left: "0", width: "100vw", "min-width": "100vw", height: "100vh", "max-height": "none",
+                        opacity: "1", filter: "none", "border-radius": SQUARE })}}` : "") +
+                    (r("RecentGamesBackgroundImage") ? `${r("RecentGamesBackgroundImage")}{${imp({ "object-fit": "cover", "object-position": "center", opacity: "1", filter: "none" })}}` : "") +
+                    (headers.length ? `${headers.join(",")}{${imp({ display: "none" })}}` : "") +
+                    (r("RecentGamesContainer") ? `${r("RecentGamesContainer")}{${imp({ "margin-top": "-1vh", "padding-top": "0" })}}` : "") +
+                    (r("RecentGamesInnerContainer") ? `${r("RecentGamesInnerContainer")}{${imp({ position: "absolute", left: "0", right: "0", top: `${a.carouselTop}vh`, bottom: "auto",
+                        height: "auto", "max-height": `${100 - a.carouselTop}vh`, "z-index": "1" })}}` : "") +
+                    // 3.3.10 (the approved board): no game name and no status line on screen one, Steam's own included.
+                    (shown.length || label ? `${[...shown, ...(label ? [label] : [])].join(",")}{${imp({ display: "none" })}}` : "") +
+                    (k("Play") && s("carousel", "ActionIcon") ? `${k("Play")} ${s("carousel", "ActionIcon")}{${imp({ display: "none" })}}` : "");
+            } },
+        { id: "home-glow", needs: [["carousel", "CarouselCapsuleBackgroundGlow"]], css: s => `${ROOT} ${s("carousel", "CarouselCapsuleBackgroundGlow")}{${imp({ opacity: "0" })}}` },
+        // ---- Phase 2: the Library (the Library board: black grid, tabs like Quick Access, crimson focus ring). ----
+        { id: "library-page", needs: [["library", "GamepadLibrary"]], css: s => {
+                const library = `${ROOT} ${s("library", "GamepadLibrary")}`;
+                return `${library}{${imp({ "background-color": C.black, "background-image": "none" })}}` +
+                    (s("library", "CollectionHeader") ? `${ROOT} ${s("library", "CollectionHeader")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` : "");
+            } },
+        { id: "library-grid", needs: [["appgrid", "AppGridSectionLabel"]], css: s => (s("appgrid", "LibraryImageBackgroundGlow") ? `${ROOT} ${s("appgrid", "LibraryImageBackgroundGlow")}{${imp({ opacity: "0" })}}` : "") +
+                `${ROOT} ${s("appgrid", "AppGridSectionLabel")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` +
+                (s("appgrid", "Rule") ? `${ROOT} ${s("appgrid", "Rule")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-color": C.gunmetal })}}` : "") },
+        // Focused capsule. 3.3.10 (TV photo: the ring sat offset from Fight Night's tile, in Steam's accent colour): no
+        // ring at all, Core's or Steam's, on the Library or Home; Steam's own focus lift says which capsule has focus. No
+        // glow (Steam's capsule glow is off in home-glow and library-grid). Home keeps the 3.3.8 overflow fix: capsules
+        // drawn at CORE_HOME_CAPSULE_SCALE inside their slots, so Steam's focus growth stays inside the row and the screen.
+        { id: "capsule-focus", needs: [["portrait", "LibraryItemBox"]], css: s => {
+                const box = s("portrait", "LibraryItemBox");
+                const libraryScopes = [s("library", "GamepadLibrary")].filter(Boolean);
+                const homeScopes = [s("home", "TabbedContent"), s("recentgames", "RecentGamesContainer"), s("gamepadui", "BasicHome")].filter(Boolean);
+                if (!libraryScopes.length && !homeScopes.length)
+                    return "";
+                // Never a Library capsule (Steam may nest the Library inside BasicHome's tree).
+                const notLibrary = libraryScopes.length ? `:not(${libraryScopes[0]} *)` : "";
+                const home = homeScopes.map(scope => `${ROOT} ${scope} ${box}${notLibrary}`);
+                const all = [...libraryScopes.map(scope => `${ROOT} ${scope} ${box}`), ...home];
+                const focused = all.map(item => `${item}:is(.gpfocus,.gpfocuswithin,:focus,:focus-visible,:focus-within)`);
+                const ring = { outline: "none", "outline-offset": "0", "box-shadow": "none", animation: "none", filter: "none" };
+                return `${focused.join(",")}{${imp(ring)}}` +
+                    `${focused.flatMap(item => [`${item}::before`, `${item}::after`, `${item} *`]).join(",")}{${imp({ outline: "none", "box-shadow": "none" })}}` +
+                    (home.length ? `${home.join(",")}{${imp({ scale: String(CORE_HOME_CAPSULE_SCALE), "transform-origin": "50% 50%", translate: "none" })}}` : "");
+            } },
+        // The Library's tab bar (the game page has its own rule since 3.3.9, game-screen-two). 3.3.4, from the TV photos: one marker
+        // per tab and no more. Built by libraryTabCss (below), from the selector table.
+        { id: "library-tabs", needs: [["library", "GamepadLibrary"]], targets: ["libraryTab"], css: (s, t) => {
+                const lib = s("library", "GamepadLibrary");
+                const page = s("tabbedpage", "GamepadTabbedPage");
+                const scopes = [`${ROOT} ${lib}`, ...(page ? [`${ROOT} ${page}:has(${lib})`] : [])];
+                return libraryTabCss({ scopes, tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"),
+                    row: t("libraryTabRow"), count: s("tabbedpage", "TabCount") || undefined });
+            } },
+        // Home's tab row (3.3.8, TV: Steam's pill still showed on Jarvis brief / Consoles / Club / On this day): the same
+        // single marker as the Library, over a clear row so Home's stars show through it.
+        // 3.3.10 (TV photo: Favorites / Consoles / Club sat over the grid): Steam pins the row (its wrapper is absolute at the
+        // tabbed page's top), and with the row clear the tiles scrolled under it showed through. The row is now in the flow,
+        // so the tab content starts below it and scrolls with it; no fill is added.
+        { id: "home-tabs", needs: [], targets: ["homeTabPage", "libraryTab"], css: (s, t) => {
+                const scopes = t("homeTabPage").map(sel => `${ROOT} ${sel}`);
+                const wrapper = s("tabbedpage", "TabHeaderRowWrapper");
+                return libraryTabCss({ scopes, tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"), row: t("libraryTabRow"), rowFill: "transparent" }) +
+                    (wrapper ? `${scopes.map(scope => `${scope} ${wrapper}`).join(",")}{${imp({ position: "relative", top: "auto", bottom: "auto", "z-index": "1" })}}` : "");
+            } },
+        // 3.3.10: Home's tabbed page is its own layer above the hero's art, in the flow: nothing is drawn over or under it.
+        // (The Collector's family shelf, which also needed this, left Home in Collector win.36.)
+        { id: "home-layers", needs: [["gamepadui", "BasicHome"]], targets: ["homeTabPage"], css: (s, t) => {
+                const rows = t("homeTabPage").filter(sel => !sel.startsWith(s("gamepadui", "BasicHome"))).map(sel => `${ROOT} ${sel}`);
+                return rows.length ? `${rows.join(",")}{${imp({ position: "relative", "z-index": "1", "background-color": "transparent", "background-image": "none" })}}` : "";
+            } },
+        // 3.3.10 (the approved board): while Core's Home pages are on screen (screen one carries data-core-home-one), the top
+        // bar's clock goes back to the right (the left belongs to L1 HOME CONSOLES R1) and the search field leaves the bar.
+        // (Families appear nowhere on Home: The Collector's family shelf left Home in Collector win.36.)
+        { id: "home-pages", needs: [["header", "Header"]], css: s => {
+                const home = `${ROOT} body:has([data-core-home-one])`;
+                const header = `${home} ${s("header", "Header")}`;
+                return `${header} [data-playhub-clock-left]{${imp({ order: "0" })}}` +
+                    `${header} div:has(> input){${imp({ display: "none" })}}`;
+            } },
+        // ---- 3.3.9: Steam's game page as the clean game view (CORE-UI.md, "The game view"), matching The Collector's ROM
+        // page. Screen one: the art fills the view above the footer (cover, 60% brightness, Steam's top gradient cleared),
+        // the logo locked bottom-left at most 120px, an 80px transparent play bar. Measures: CORE_GAME_VIEW.
+        { id: "game-hero", needs: [["appheader", "TopCapsule"], ["appheader", "ImgSrc"]], css: s => {
+                const g = CORE_GAME_VIEW, screen = `calc(100vh - ${g.playbar + g.footer}px)`;
+                const cap = `${ROOT} ${s("appheader", "TopCapsule")}`;
+                const state = (key) => s("appheader", key) ? `${cap}${s("appheader", key)}` : "";
+                const full = ["FullscreenEnterActive", "FullscreenEnterDone", "FullscreenExitStart"].map(state).filter(Boolean);
+                const back = ["FullscreenExitActive", "FullscreenExitDone"].map(state).filter(Boolean);
+                // Steam's fullscreen enter (Play pressed): Clean Gameview's fix as a transition from screen one's height to the
+                // full screen and back, so the art grows instead of jumping (transitions out-rank !important in the cascade).
+                return `${cap}{${imp({ height: screen, transition: `height ${g.enterMs}ms ease-out` })}}` +
+                    (full.length ? `${full.join(",")}{${imp({ height: "100vh" })}}` : "") +
+                    (back.length ? `${back.join(",")}{${imp({ height: screen })}}` : "") +
+                    (s("appheader", "HeaderBackgroundImage") ? `${ROOT} ${s("appheader", "HeaderBackgroundImage")}{${imp({ height: "100vh" })}}` : "") +
+                    `${ROOT} ${s("appheader", "ImgSrc")}{${imp({ "object-fit": "cover", "object-position": "center", filter: `brightness(${g.brightness})` })}}` +
+                    (s("appheader", "TopGradient") ? `${ROOT} ${s("appheader", "TopGradient")}{${imp({ "background-color": "transparent", "background-image": "none", background: "transparent" })}}` : "") +
+                    (s("appheader", "BoxSizer") ? `${ROOT} ${s("appheader", "BoxSizer")}{${imp({ top: `calc(100vh - ${g.logo}px * 1.3 - ${g.playbar + g.footer}px)`, "max-height": `${g.logo}px`, "z-index": "2" })}}` : "") +
+                    `@media (prefers-reduced-motion: reduce){${cap}{${imp({ transition: "none" })}}}`;
+            } },
+        { id: "game-playbar", needs: [["appdetails", "PlaySection"]], css: s => {
+                const g = CORE_GAME_VIEW;
+                const bar = `${ROOT} ${s("appdetails", "PlaySection")}`;
+                const play = s("appdetails", "AppActionButton") ? `${ROOT} ${s("appdetails", "AppActionButton")}` : "";
+                const buttons = s("appdetails", "AppButtons") ? `${ROOT} ${s("appdetails", "AppButtons")}` : "";
+                const square = buttons ? [`${buttons} > *`, `${buttons} .DialogButton`] : [];
+                return `${bar}{${imp({ height: `${g.playbar + g.footer}px`, "min-height": `${g.playbar + g.footer}px`, "padding-bottom": `${g.footer}px`, "box-sizing": "border-box",
+                    "background-color": "transparent", "background-image": "none", "backdrop-filter": "none", "box-shadow": "none", color: C.steel })}}` +
+                    (s("appdetails", "AppDetailsRoot") ? `${ROOT} ${s("appdetails", "AppDetailsRoot")}{${imp({ "background-color": "transparent", "background-image": "none", "backdrop-filter": "none" })}}` : "") +
+                    (play ? `${play}{${imp({ "background-color": C.crimson, "background-image": "none", color: C.white, "border-radius": SQUARE, "box-shadow": "none", filter: "none" })}}` +
+                        `${play} *{${imp({ color: C.white })}}` +
+                        `${play}:is(.gpfocus,:focus-visible,:focus){${imp({ outline: `3px solid ${C.white}`, "outline-offset": "0", "box-shadow": "none", filter: "none", animation: "none" })}}` : "") +
+                    (square.length ? `${square.join(",")}{${imp({ "min-width": `${g.button}px`, height: `${g.button}px`, "background-color": C.black, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                        `${square.map(sel => `${sel}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.gunmetal, color: C.white, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}` : "");
+            } },
+        // The cloud as a button (Clean Gameview's "cloud as a button"): the status text hidden, its holder a 48px square.
+        { id: "game-cloud", needs: [["playsection", "CloudStatusLabel"]], css: s => {
+                const label = s("playsection", "CloudStatusLabel");
+                const holder = `${ROOT} :has(> ${label})`;
+                return `${ROOT} ${label}{${imp({ display: "none" })}}` +
+                    `${holder}{${imp({ width: `${CORE_GAME_VIEW.button}px`, height: `${CORE_GAME_VIEW.button}px`, "box-sizing": "border-box", display: "flex", "align-items": "center",
+                        "justify-content": "center", "background-color": C.black, "background-image": "none", "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                    `${holder}::before,${holder}::after{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
+                    `${holder}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, outline: `2px solid ${C.crimson}`, "outline-offset": "0" })}}`;
+            } },
+        // Screen two: Steam's sections and tabs over black and the Starfield ("game-page" host, stars only below the play
+        // bar). The container itself stays clear, so the art behind the play bar is never covered.
+        { id: "game-screen-two", needs: [["appdetails", "AppDetailsContainer"]], targets: ["libraryTab"], css: (s, t) => {
+                const box = `${ROOT} ${s("appdetails", "AppDetailsContainer")}`;
+                return `${box}{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
+                    libraryTabCss({ scopes: [box], tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"), row: t("libraryTabRow"), rowFill: "transparent" });
+            } },
+        { id: "game-sections", needs: [["appsection", "AppDetailsSectionContainer"]], css: s => {
+                const cards = ["AppDetailsSectionContainer", "RightColumnSection"].filter(key => s("appsection", key)).map(key => `${ROOT} ${s("appsection", key)}`);
+                return `${cards.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": FLOAT, "box-shadow": "none", color: C.steel })}}` +
+                    `${cards.map(sel => `${sel}:is(.gpfocus,.gpfocuswithin,:focus-visible)`).join(",")}{${imp({ "background-color": C.raised, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}`;
+            } },
+        // ---- 3.3.11: the game view, one look for Steam's page and The Collector's ROM page (CORE-UI.md, "The game view
+        // in 3.3.11"). The Collector draws its play bar with Steam's own classes (ActionRow, ActionButtonAndStatusPanel,
+        // AppButtons, StatusAndStats, GameStatsSection), so one set of rules styles both; its own parts are reached by its
+        // fixed classes (.romm-game-view, .romm-tab, .romm-core-card).
+        // Screen two: Steam's tinted panels clear. Glassy (the light blue under the description and behind Steam's tabs),
+        // the overview panel and the scroll container are transparent on both pages; Steam's own page is black under them
+        // (The Collector already paints its page), the Starfield showing where the game-page host is live.
+        { id: "game-view-clear", needs: [["appview", "InnerContainer"]], css: s => {
+                const v = (key) => s("appview", key) ? `${ROOT} ${s("appview", key)}` : "";
+                const d = (key) => s("appdetails", key) ? `${ROOT} ${s("appdetails", key)}` : "";
+                const clear = [v("Glassy"), v("AppDetailsOverviewPanel"), v("ScrollContainer"), v("PlayBar"), d("AppDetailsContent"), d("AppDetailSectionList")].filter(Boolean);
+                const box = s("appdetails", "AppDetailsContainer");
+                const tabbed = box ? ["GamepadTabbedPage", "TabContents", "TabContentsScroll", "ContentTransition"].filter(key => s("tabbedpage", key))
+                    .map(key => `${ROOT} ${box} ${s("tabbedpage", key)}`) : [];
+                const all = [...clear, ...tabbed];
+                return (all.length ? `${all.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", "backdrop-filter": "none", "box-shadow": "none" })}}` : "") +
+                    `${v("InnerContainer")}:not(:has(.romm-game-view)){${imp({ "background-color": C.black, "background-image": "none" })}}`;
+            } },
+        // Screen two's cards on Steam's page: gunmetal, the crimson focus bar (the sections' own cards are in game-sections).
+        { id: "game-info-cards", needs: [["appdetails", "GameInfoContainer"]], css: s => {
+                const cards = ["GameInfoContainer", "GameInfoQuickLinks", "GameInfoCollections"].filter(key => s("appdetails", key)).map(key => `${ROOT} ${s("appdetails", key)}`);
+                return `${cards.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": FLOAT, "box-shadow": "none", color: C.steel })}}`;
+            } },
+        // Screen one, both pages: Play / Install crimson with white text, square, one size; the stats right after it in one
+        // row style (hint label over a steel value); the icon buttons square black right after the stats, never pushed to
+        // the far right.
+        { id: "game-actions", needs: [["appdetails", "ActionRow"]], css: s => {
+                const g = CORE_GAME_VIEW;
+                const d = (key) => s("appdetails", key) ? `${ROOT} ${s("appdetails", key)}` : "";
+                const p = (key) => s("playsection", key) ? `${ROOT} ${s("playsection", key)}` : "";
+                const a = (key) => s("actionbutton", key) ? `${ROOT} ${s("actionbutton", key)}` : "";
+                const row = d("ActionRow"), panel = d("ActionButtonAndStatusPanel"), buttons = d("AppButtons");
+                const play = [a("PlayButton"), a("PlayButtonContainer"), panel ? `${panel} > .DialogButton:first-child` : "", panel ? `${panel} > :first-child .DialogButton` : "",
+                    `${ROOT} .romm-game-view :is(.romm-native-play,.romm-btn-play)`].filter(Boolean);
+                const green = s("actionbutton", "Green") ? play.map(sel => `${sel}${s("actionbutton", "Green")}`) : [];
+                const stats = [p("StatusAndStats"), p("GameStatsSection")].filter(Boolean);
+                const label = [p("PlayBarDetailLabel"), p("PlayBarLabel")].filter(Boolean);
+                const icons = [buttons ? `${buttons} > *` : "", buttons ? `${buttons} .DialogButton` : "", p("MenuButton"), p("GameInfoButton"), p("FavoriteButton"), p("ControllerConfigButton"),
+                    `${ROOT} .romm-game-view .romm-core-playbar .romm-native-menu-btn`].filter(Boolean);
+                const side = [buttons, p("RightControls"), p("AppButtonsContainer")].filter(Boolean);
+                return `${row}{${imp({ display: "flex", "align-items": "center", "justify-content": "flex-start", gap: "28px" })}}` +
+                    `${row} > *{${imp({ "flex-grow": "0" })}}` +
+                    `${[...play, ...green].join(",")}{${imp({ "background-color": C.crimson, "background-image": "none", color: C.white, "border-radius": SQUARE, "box-shadow": "none",
+                        filter: "none", height: `${g.button}px`, "min-height": `${g.button}px`, "min-width": "200px", "font-size": "18px", "font-weight": "600" })}}` +
+                    `${play.map(sel => `${sel} *`).join(",")}{${imp({ color: C.white })}}` +
+                    `${play.map(sel => `${sel}:is(.gpfocus,:focus-visible,:focus)`).join(",")}{${imp({ outline: `3px solid ${C.white}`, "outline-offset": "0", "box-shadow": "none", filter: "none", animation: "none" })}}` +
+                    (stats.length ? `${stats.join(",")}{${imp({ display: "flex", "align-items": "center", gap: "32px", "background-color": "transparent", "background-image": "none", color: C.steel, "font-size": "16px" })}}` : "") +
+                    (label.length ? `${label.join(",")}{${imp({ color: C.hint, "font-size": "11px", "font-weight": "600", "letter-spacing": "0.12em", "text-transform": "uppercase" })}}` : "") +
+                    (side.length ? `${side.join(",")}{${imp({ "margin-left": "0", flex: "0 0 auto", display: "flex", gap: "8px", "justify-content": "flex-start" })}}` : "") +
+                    `${icons.join(",")}{${imp({ width: `${g.button}px`, "min-width": `${g.button}px`, height: `${g.button}px`, padding: "0", "background-color": C.black, "background-image": "none",
+                        color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                    `${icons.map(sel => `${sel}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.gunmetal, color: C.white, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}`;
+            } },
+        // The logo locked bottom-left on both pages, and still art only (no header video).
+        { id: "game-still-art", needs: [["appheader", "TopCapsule"]], css: s => {
+                const h = (key) => s("appheader", key) ? `${ROOT} ${s("appheader", key)}` : "";
+                return `${h("TopCapsule")} video{${imp({ display: "none" })}}` +
+                    (h("BoxSizer") ? `${h("BoxSizer")}{${imp({ left: "2.8vw", right: "auto", transform: "none" })}}` : "") +
+                    (h("TitleLogo") ? `${h("TitleLogo")}{${imp({ "object-position": "left bottom" })}}` : "");
+            } },
+        // The Collector's screen two: tabs without Steam's focus box (the crimson underline marks the open tab), gunmetal
+        // cards.
+        { id: "rom-screen-two", needs: [["appdetails", "ActionRow"]], css: () => {
+                const view = `${ROOT} .romm-game-view`;
+                const tab = `${view} .romm-tab.romm-tab`;
+                return `${tab},${tab}.gpfocus,${tab}:focus,${tab}:focus-visible{${imp({ outline: "none", "outline-offset": "0", border: "0", filter: "none", animation: "none", "border-radius": SQUARE })}}` +
+                    `${tab}::before,${tab}::after{${imp({ content: "none", display: "none" })}}` +
+                    `${tab}{${imp({ "background-color": "transparent", "background-image": "none", color: C.hint, "box-shadow": "inset 0 -3px 0 transparent" })}}` +
+                    `${tab}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, color: C.white })}}` +
+                    `${tab}.romm-tab-active{${imp({ color: C.white, "box-shadow": `inset 0 -3px 0 ${C.crimson}` })}}` +
+                    `${view} :is(.romm-core-card,.romm-ext-card,.romm-core-chip){${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": FLOAT, "box-shadow": "none" })}}` +
+                    `${view} .romm-core-card:is(.gpfocus,:focus-visible){${imp({ "background-color": C.raised, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}`;
+            } },
+        // ---- 3.3.9: the surfaces still in Steam's blue (CORE-UI.md, "Steam's other pages"): black pages, gunmetal rows,
+        // the square crimson focus bar, steel text.
+        { id: "settings-pages", needs: [], needsAny: [["settings", "PagedSettingsDialog_PageListColumn"], ["settings", "PageListColumn"]], css: s => {
+                const pick = (...keys) => keys.map(key => s("settings", key)).filter(Boolean).map(sel => `${ROOT} ${sel}`);
+                // 3.3.10: the responsive variants (Steam swaps to them at the TV's width) are black too.
+                const black = pick("PagedSettingsDialog", "PagedSettingsDialog_PageListColumn", "PageListColumn", "PagedSettingDialog_ContentColumn", "PagedSettingsDialog_PageContent", "ResponsivePageList", "ResponsiveActivePage", "PagedSettingsDialog_PageList", "PageList");
+                const title = pick("PagedSettingsDialog_Title");
+                const separators = pick("PageListSeparator");
+                const disabled = pick("DisabledItem");
+                const items = pick("PagedSettingsDialog_PageListItem", "PageListItem");
+                const active = s("settings", "Active") ? items.map(item => `${item}${s("settings", "Active")}`) : [];
+                const focus = items.map(item => `${item}:is(.gpfocus,:focus-visible)`);
+                return (black.length ? `${black.join(",")}{${imp(SOLID_BLACK)}}` : "") +
+                    (items.length ? `${items.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                        `${items.map(item => `${item} *`).join(",")}{${imp({ color: "inherit" })}}` : "") +
+                    (active.length ? `${active.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}` })}}` : "") +
+                    (focus.length ? `${focus.join(",")}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, outline: "none", filter: "none" })}}` : "") +
+                    (title.length ? `${title.join(",")}{${imp({ color: C.white, "background-color": "transparent", "background-image": "none" })}}` : "") +
+                    (separators.length ? `${separators.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-color": C.gunmetal })}}` : "") +
+                    (disabled.length ? `${disabled.join(",")}{${imp({ color: C.hint, opacity: "1" })}}` : "");
+            } },
+        // 3.3.10: Settings' text (its own module): sub-headers steel small caps, body steel, descriptions hint grey, links
+        // crimson text; Settings' own buttons gunmetal with the square crimson bar on focus.
+        { id: "settings-text", needs: [["settingstext", "SettingsDialogSubHeader"]], css: s => {
+                const k = (key) => s("settingstext", key) ? `${ROOT} ${s("settingstext", key)}` : "";
+                const button = k("SettingsDialogButton");
+                return `${k("SettingsDialogSubHeader")}{${imp({ color: C.steel, "letter-spacing": "0.1em", "text-transform": "uppercase", "background-color": "transparent", "background-image": "none" })}}` +
+                    [k("SettingsDialogBodyText")].filter(Boolean).map(sel => `${sel}{${imp({ color: C.steel })}}`).join("") +
+                    [k("SettingsDialogDescriptionText")].filter(Boolean).map(sel => `${sel}{${imp({ color: C.hint })}}`).join("") +
+                    [k("SettingsDialogLink")].filter(Boolean).map(sel => `${sel}{${imp({ color: C.crimsonText })}}`).join("") +
+                    (button ? `${button}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                        `${button}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "");
+            } },
+        // 3.3.10: Steam's global dialogs (unhashed classes: confirm dialogs, the modal box around them) gunmetal with the float
+        // radius, never the grey-blue gradient; their DialogButtons follow the Quick Access row look.
+        { id: "steam-dialogs", needs: [], css: () => {
+                const box = [".GenericConfirmDialog", ".ModalPosition_Content .DialogContent"].map(sel => `${ROOT} ${sel}${CORE_UI_BOOST}`);
+                const buttons = box.map(sel => `${sel} .DialogButton:not([style*="background"])`);
+                return `${box.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": `inset 0 0 0 1px ${C.raised}`, "border-radius": FLOAT, color: C.steel })}}` +
+                    `${buttons.join(",")}{${imp({ "background-color": C.raised, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                    `${buttons.map(sel => `${sel}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}`;
+            } },
+        // Toggles (gamepaddialog's copy with On, and the small toggle map): the rail gunmetal, crimson when on, a white knob.
+        { id: "toggles", needs: [], needsAny: [["gamepaddialog", "ToggleRail"], ["toggle", "ToggleRail"]], css: s => {
+                const out = [];
+                for (const map of ["gamepaddialog", "toggle"]) {
+                    if (!s(map, "ToggleRail"))
+                        continue;
+                    const rail = `${ROOT} ${s(map, "ToggleRail")}`;
+                    out.push(`${rail}{${imp({ "background-color": C.raised, "background-image": "none", "box-shadow": "none" })}}`);
+                    if (s(map, "ToggleSwitch"))
+                        out.push(`${ROOT} ${s(map, "ToggleSwitch")}{${imp({ "background-color": C.white, "background-image": "none", "box-shadow": "none" })}}`);
+                    const on = s("gamepaddialog", "On");
+                    if (on && s(map, "Toggle"))
+                        out.push(`${ROOT} ${s(map, "Toggle")}${on} ${s(map, "ToggleRail")},${rail}${on}{${imp({ "background-color": C.crimson, "background-image": "none" })}}`);
+                }
+                return out.join("");
+            } },
+        { id: "downloads-page", needs: [["downloads", "DownloadsPage"]], css: s => {
+                const d = (key) => s("downloads", key) ? `${ROOT} ${s("downloads", key)}` : "";
+                const item = d("SectionItem");
+                return `${d("DownloadsPage")}{${imp(SOLID_BLACK)}}` +
+                    (item ? `${item}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": SQUARE, "box-shadow": "none", color: C.steel })}}` +
+                        `${item}:is(.gpfocus,.gpfocuswithin,:focus-visible){${imp({ "background-color": C.raised, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "") +
+                    (d("HoverRing") ? `${d("HoverRing")}{${imp({ display: "none" })}}` : "") +
+                    (d("SectionTitle") ? `${d("SectionTitle")}{${imp({ color: C.steel, "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` : "") +
+                    (d("ProgressBar") ? `${d("ProgressBar")}{${imp({ "background-color": C.raised, "background-image": "none" })}}${d("ProgressBar")} > *{${imp({ "background-color": C.crimson, "background-image": "none" })}}` : "");
+            } },
+        { id: "download-bar", needs: [["downloadbar", "BottomBar"]], css: s => {
+                const b = (key) => s("downloadbar", key) ? `${ROOT} ${s("downloadbar", key)}` : "";
+                return `${b("BottomBar")}{${imp(SOLID_BLACK)}}` +
+                    (b("ProgressBar") ? `${b("ProgressBar")}{${imp({ "background-color": C.raised, "background-image": "none" })}}${b("ProgressBar")} > *{${imp({ "background-color": C.crimson, "background-image": "none" })}}` : "");
+            } },
+        // The Steam menu while a game runs: its three columns black, the rows gunmetal on focus with the crimson bar.
+        // The Steam menu's own module (3.3.11: the in-game keys are part of it; 3.3.10's separate map never matched).
+        { id: "ingame-menu", needs: [], needsAny: [["mainmenu", "AppColumn"], ["mainmenu", "NavigationColumn"]], css: s => {
+                const m = (key) => s("mainmenu", key) ? `${ROOT} ${s("mainmenu", key)}` : "";
+                const black = ["AppRunningControls", "NavigationColumn", "NavigationBox", "AppColumn", "AppColumnContent", "FocusedColumn", "NavColumnFocused", "ControllerColumnFocused", "ActiveContent"].map(m).filter(Boolean);
+                const rows = [m("NavigationMenuItem"), m("SelectableAppWindow")].filter(Boolean);
+                return (black.length ? `${black.join(",")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none" })}}` : "") +
+                    (m("CurrentGameBackground") ? `${m("CurrentGameBackground")}{${imp({ opacity: "0.35", filter: "none" })}}` : "") +
+                    (rows.length ? `${rows.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                        `${rows.map(row => `${row}:is(.gpfocus,:focus-visible,:focus-within)`).join(",")}{${imp({ "background-color": C.gunmetal, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "") +
+                    (m("NavigationMenuItemSeparator") ? `${m("NavigationMenuItemSeparator")}{${imp({ "background-color": C.gunmetal, "background-image": "none" })}}` : "");
+            } },
+        { id: "overlay-configurator", needs: [], needsAny: [["overlay", "OverlayPopup"], ["configurator", "ControllerConfiguratorMain"], ["configsummary", "ControllerConfiguratorSummary"]], css: s => {
+                const k = (map, key) => s(map, key) ? `${ROOT} ${s(map, key)}` : "";
+                const black = [k("overlay", "OverlayPopup"), k("overlay", "OverlayPopupBody"), k("overlay", "Toolbar"), k("overlay", "SettingsModalRoot"),
+                    k("configurator", "ControllerConfiguratorBackgroundContainer"), k("configurator", "ControllerConfiguratorMain"), k("configsummary", "ControllerConfiguratorSummary")].filter(Boolean);
+                const rows = [k("overlay", "ToolbarButton"), k("overlay", "BackToGame"), k("overlay", "ExitGameBtn"), k("configurator", "CurrentConfigurationButton"),
+                    k("configurator", "MainOptionsButton"), k("configsummary", "StandardControl")].filter(Boolean);
+                return (black.length ? `${black.join(",")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none" })}}` : "") +
+                    (rows.length ? `${rows.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                        `${rows.map(row => `${row}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "");
+            } },
+        // Search: the field by its own map now (the 3.3.8 structural rule stays as the fallback), results and suggestions.
+        { id: "search-pages", needs: [], needsAny: [["searchbar", "SearchFieldBackground"], ["searchresults", "GamepadSearch"], ["suggestions", "Suggestions"]], css: s => {
+                const k = (map, key) => s(map, key) ? `${ROOT} ${s(map, key)}` : "";
+                const field = k("searchbar", "SearchFieldBackground");
+                const results = [k("searchresults", "ResultTemplate"), k("suggestions", "Suggestion")].filter(Boolean);
+                return (field ? `${field}{${imp({ "background-color": "transparent", "background-image": "none", "border-radius": SQUARE, "box-shadow": `inset 0 -1px 0 ${C.steel}`, border: "0", "backdrop-filter": "none" })}}` +
+                    `${field}:focus-within{${imp({ "box-shadow": `inset 0 -2px 0 ${C.crimson}` })}}` : "") +
+                    (k("searchbar", "SearchBox") ? `${k("searchbar", "SearchBox")}{${imp({ color: C.steel, "background-color": "transparent", "caret-color": C.crimson })}}` : "") +
+                    [k("searchbar", "SearchIconLeft"), k("searchbar", "SearchIconRight")].filter(Boolean).map(sel => `${sel},${sel} *{${imp({ color: C.steel, fill: C.steel })}}`).join("") +
+                    ([k("searchresults", "GamepadSearch"), k("suggestions", "Suggestions")].filter(Boolean).map(sel => `${sel}{${imp(SOLID_BLACK)}}`).join("")) +
+                    (results.length ? `${results.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                        `${results.map(row => `${row}:is(.gpfocus,:focus-visible,:hover)`).join(",")}{${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "");
+            } },
+        // Library grid (3.3.4): capsules drawn about 16% smaller inside their slots, so even black gutters (and the stars)
+        // show between them. Steam's slots and focus order are untouched; art stays art (no stars behind it).
+        { id: "library-capsules", needs: [], targets: ["libraryCapsule"], css: (_s, t) => libraryCapsuleCss(t("libraryCapsule")) },
+    ];
+    return list;
+}
+// Rules that need no class map (Steam's unhashed globals only): alone, they do not make a stylesheet.
+const ALWAYS_ON = new Set(["corners", "steam-dialogs"]);
+// ---- Builders (pure; tests call them directly) ----
+// 3.3.10: 24px, the size of Steam's own rail icons (were 30, which sat off-centre in the 48 x 64 tab).
+const CORE_RAIL_ICON_PX = 24;
+// 3.3.11: the measured visible width of the Quick Access panel (coreQamRail.ts, measureQamVisible).
+const CORE_QAM_VISIBLE_ATTRIBUTE = "data-core-qam-visible";
+const CORE_QAM_VISIBLE_VAR = "--core-qam-visible";
+// 3.3.11: the Steam menu and Quick Access fill the screen top to bottom. Steam lays each popup window over its
+// ViewPlaceholder in the main window, which it inset by the top bar and the footer (top 40px, bottom 40px on the TV);
+// Core sets the placeholder to the full height. A Quick Access window that came out full height (coreUi.ts, sizeQam)
+// gets CORE_PANEL_SAFE_TOP of room at its top.
+const CORE_QAM_FULL_ATTRIBUTE = "data-core-qam-full";
+const CORE_PANEL_SAFE_TOP = 40;
+// 3.3.9: Home after Art Hero with the user's options: the art fades out over its last 12%, the carousel 50vh down in a
+// 70vh row (carousel height 5), the focused game's name 4em above its capsule (font height -4) at 22px (larger).
+// 3.3.10: carouselHeight is gone: the row is out of the flow at carouselTop and sized by Steam (its box ran past screen
+// one). The row's position and size wait for the approved Home row design.
+// 3.3.11: screen one ends this far above the bottom (the 42 px footer and screen two's 58 px tab names); equal to
+// coreHomePages.ts HOME_SCREEN_CUT_PX (a test keeps them equal).
+const CORE_HOME_SCREEN_CUT_PX = 100;
+const CORE_HOME_ART = { fadeFrom: 88, carouselTop: 50};
+// 3.3.10: how long the top bar takes to slide out and back.
+const CORE_HEADER_HIDE_MS = 200;
+// 3.3.10: whether the top bar is hidden for a page scrolled this far. Hidden once the page's first screen has scrolled
+// under the bar (the content below the fold would reach it: the viewport less two bar heights, at least 80px); shown
+// again once back above that line by more than HYSTERESIS, so a small scroll at the line does not flicker it.
+const CORE_HEADER_HYSTERESIS = 48;
+function headerHidden(scrollTop, viewportHeight, headerHeight, wasHidden) {
+    if (!(scrollTop > 0) || !(viewportHeight > 0))
+        return false;
+    const line = Math.max(80, viewportHeight - 2 * Math.max(0, headerHeight || 0));
+    if (scrollTop > line)
+        return true;
+    if (scrollTop < line - CORE_HEADER_HYSTERESIS)
+        return false;
+    return wasHidden;
+}
+// 3.3.9: the top bar's only shadow, for text over bright art (soft, dark, no glow colour).
+const CORE_HEADER_TEXT_SHADOW = "0 1px 3px rgba(0,0,0,0.65)";
+// 3.3.9: the clean game view's measures (Clean Gameview v1.8 Lz's defaults, as The Collector's GAME_VIEW): an 80px play bar
+// over the 40px footer, the logo at most 120px, the art at 60% brightness, 48px square buttons, a 600ms fullscreen enter.
+const CORE_GAME_VIEW = { playbar: 80, footer: 40, logo: 120, brightness: 0.6, button: 48, enterMs: 600 };
+const CORE_LIBRARY_CAPSULE_SCALE = 0.84;
+// Home's capsules (3.3.8): smaller at the TV's 1348 x 758 viewport, so Steam's focus growth stays inside the row.
+const CORE_HOME_CAPSULE_SCALE = 0.8;
+const CORE_TAB_ICON_PX = 24;
+// Quick Access rows (Decky's plugin list, every ButtonItem, dropdowns) and their dialog fields.
+function qamRowCss(buttons, fields = []) {
+    if (!buttons.length)
+        return "";
+    const at = (list, tail = "") => list.map(sel => `${ROOT} ${sel}${tail}`).join(",");
+    const focus = ":is(.gpfocus,:focus-visible,:focus)";
+    return `${at(buttons)}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "box-shadow": "none", "text-shadow": "none", "border-radius": SQUARE, filter: "none" })}}` +
+        `${at(buttons, focus)}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", animation: "none", "border-radius": SQUARE, outline: "none" })}}` +
+        `${at(buttons, `${focus} *`)}{${imp({ color: C.white })}}` +
+        (fields.length ? `${at(fields)},${at(fields, "::before")},${at(fields, "::after")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
+            `${at(fields, ":is(.gpfocuswithin,:focus-within)")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` : "");
+}
+// The Library's tab bar: icon (24px) and label on one line with even spacing; transparent tabs in steel; one marker
+// per tab, a short 3px underline centred under the label, shown only on hover or focus (the family's tone) and on
+// the open tab (crimson, which wins). Steam's or another theme's own underlines and markers on the tab are removed.
+function libraryTabCss(parts) {
+    const { scopes, tab } = parts;
+    if (!scopes.length || !tab.length)
+        return "";
+    const each = (inner, tail = "") => scopes.flatMap(scope => inner.map(sel => `${scope} ${sel}${tail}`)).join(",");
+    const title = parts.title ?? [], selected = parts.selected ?? [], row = parts.row ?? [];
+    const tagged = tab.map(sel => `${sel}[${CORE_UI_TAB_ATTRIBUTE}]`);
+    const label = title.length ? tab.flatMap(sel => title.map(inner => `${sel} ${inner}`)) : tab;
+    const hover = tab.map(sel => `${sel}:is(:hover,.gpfocus,:focus-visible)`);
+    const hoverLabel = title.length ? hover.flatMap(sel => title.map(inner => `${sel} ${inner}`)) : hover;
+    const activeLabel = title.length ? selected.flatMap(sel => title.map(inner => `${sel} ${inner}`)) : selected;
+    const marker = { content: '""', position: "absolute", left: "50%", bottom: "-8px", width: "28px", height: "3px", "margin-left": "-14px", "border-radius": SQUARE,
+        "background-image": "none", "pointer-events": "none", opacity: "0" };
+    return (row.length ? `${each(row)},${each(row, "::before")},${each(row, "::after")}{${imp({ "background-color": parts.rowFill ?? C.black, "background-image": "none", "backdrop-filter": "none", "box-shadow": "none" })}}` : "") +
+        `${each(tab)}{${imp({ position: "relative", "background-color": "transparent", "background-image": "none", color: C.steel, "box-shadow": "none",
+            "border-radius": SQUARE, "border-bottom-color": "transparent", "text-decoration": "none" })}}` +
+        // Nothing else draws on the tab: no second underline, no per-icon marker.
+        `${each(tab, "::before")},${each(tab, "::after")}{${imp({ content: "none", display: "none" })}}` +
+        `${each(label)}{${imp({ position: "relative", display: "inline-flex", "align-items": "center", gap: "8px", "line-height": `${CORE_TAB_ICON_PX}px`, "vertical-align": "middle",
+            "border-bottom-color": "transparent", "text-decoration": "none", "box-shadow": "none", "background-image": "none" })}}` +
+        `${each(label, "::after")}{${imp({ ...marker, "background-color": `var(--core-tone, ${C.steel})` })}}` +
+        `${each(hoverLabel, "::after")}{${imp({ opacity: "1" })}}` +
+        `${each(hover)}{${imp({ "background-color": C.gunmetal, color: C.white })}}` +
+        (activeLabel.length ? `${each(selected)}{${imp({ "background-color": "transparent", "background-image": "none", color: C.steel, "box-shadow": "none" })}}` +
+            `${each(activeLabel, "::after")}{${imp({ opacity: "1", "background-color": C.crimson })}}` : "") +
+        // The icon (the tagged tab's --core-icon) before the label, on the same line.
+        (title.length ? `${each(tagged.flatMap(sel => title.map(inner => `${sel}[${CORE_UI_ICON_ATTRIBUTE}] ${inner}::before`)))}` : `${each(tagged.map(sel => `${sel}[${CORE_UI_ICON_ATTRIBUTE}]::before`))}`) +
+        `{${imp({ content: '""', display: "inline-block", flex: `0 0 ${CORE_TAB_ICON_PX}px`, width: `${CORE_TAB_ICON_PX}px`, height: `${CORE_TAB_ICON_PX}px`, margin: "0", position: "static",
+            background: "var(--core-icon) center / contain no-repeat" })}}` +
+        toneVariables(scopes.flatMap(scope => tagged.map(sel => `${scope} ${sel}`))) +
+        (parts.count ? `${each([parts.count])}{${imp({ display: "none" })}}` : "");
+}
+// Library capsules drawn smaller inside Steam's slots (about 16%), so the gutters are even and black.
+function libraryCapsuleCss(capsules, factor = CORE_LIBRARY_CAPSULE_SCALE) {
+    if (!capsules.length)
+        return "";
+    const list = capsules.map(sel => `${ROOT} ${sel}`).join(",");
+    return `${list}{${imp({ scale: String(factor), "transform-origin": "50% 50%" })}}`;
+}
+// --core-tone per family, on any element the runtime tagged with data-core-tone.
+function toneVariables(prefix) {
+    const prefixes = Array.isArray(prefix) ? prefix : [prefix];
+    if (!prefixes.length)
+        return "";
+    return Object.entries(CORE_FAMILY_TONES).map(([family, tone]) => `${prefixes.map(p => `${p}[${CORE_UI_TONE_ATTRIBUTE}="${family}"]`).join(",")}{${imp({ "--core-tone": tone })}}`).join("");
+}
+// Collection tiles in Steam's Collections view (tagged by coreLibraryIcons.ts by collection name). 3.3.4: one card shape
+// for every console tile: gunmetal, the console's icon centred, its name below (data-core-name, set by the decorator),
+// the family tone as a short bar along the bottom, a crimson ring on focus. Steam's collage and its own label are
+// hidden only on a tile Core draws an icon for; a tile without one keeps Steam's look plus the tone bar.
+function collectionTileCss(tiles = [""]) {
+    const all = (tail = "") => tiles.map(sel => `${ROOT} ${sel}[${CORE_UI_TILE_ATTRIBUTE}]${CORE_UI_BOOST}${tail}`).join(",");
+    const iconed = (tail = "") => tiles.map(sel => `${ROOT} ${sel}[${CORE_UI_TILE_ATTRIBUTE}][${CORE_UI_ICON_ATTRIBUTE}]${CORE_UI_BOOST}${tail}`).join(",");
+    const toned = tiles.map(sel => `${ROOT} ${sel}[${CORE_UI_TILE_ATTRIBUTE}]${CORE_UI_BOOST}`);
+    return `/* library-collection-tiles */${all()}{${imp({ position: "relative", "border-radius": FLOAT, overflow: "hidden", "box-shadow": "none" })}}` +
+        `${iconed()}{${imp({ "background-color": C.gunmetal, "background-image": "none", "min-height": "160px" })}}` +
+        `${iconed(" > *")}{${imp({ opacity: "0" })}}` +
+        `${iconed("::before")}{${imp({ content: '""', position: "absolute", left: "50%", top: "18%", width: "44%", height: "44%", "max-width": "112px", "max-height": "112px", translate: "-50% 0",
+            background: "var(--core-icon) center / contain no-repeat", "pointer-events": "none", "z-index": "2" })}}` +
+        `${iconed("[data-core-name]::after")}{${imp({ content: "attr(data-core-name)", position: "absolute", left: "8px", right: "8px", top: "68%", "text-align": "center", color: C.steel,
+            "font-size": "15px", "line-height": "20px", "white-space": "nowrap", overflow: "hidden", "text-overflow": "ellipsis", "pointer-events": "none", "z-index": "2" })}}` +
+        // The tone: a 3px bar along the bottom edge (a background layer, so ::before and ::after stay free for icon and name).
+        `${toned.map(sel => `${sel}[${CORE_UI_TONE_ATTRIBUTE}]`).join(",")}{${imp({ "box-shadow": "inset 0 -3px 0 var(--core-tone)" })}}` +
+        `${all(":is(.gpfocus,:focus)")}{${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "0", filter: "none", animation: "none" })}}` + toneVariables(toned);
+}
+const CORE_UI_HOSTS = [
+    { id: "menu", map: "mainmenu", key: "Menu", minArea: 0, fullHeight: true, panel: true },
+    { id: "qam-container", map: "quickaccess", key: "Container", minArea: 0, fullHeight: true, panel: true },
+    { id: "qam-panel", map: "quickaccess", key: "QuickAccessMenu", minArea: 0, fullHeight: true, panel: true },
+    { id: "qam", map: "quickaccess", key: "Menu", minArea: 0, fullHeight: true, panel: true },
+    { id: "menu-footer", map: "mainmenu", key: "FooterBoxShadow", minArea: 24000 },
+    { id: "qam-footer", map: "footer", key: "QuickAccessFooter", minArea: 24000 },
+    { id: "qam-footer-shadow", map: "quickaccess", key: "FooterBoxShadow", minArea: 24000 },
+    { id: "footer-opaque", map: "footer", key: "Opaque", minArea: 24000 },
+    // 3.3.9: the top bar is never black any more (chrome-header), so it is never a Starfield host.
+    // Phase 2 pages: the canvas covers the visible part of the page only.
+    { id: "home", map: "gamepadui", key: "BasicHome", minArea: 0, page: true },
+    { id: "library", map: "library", key: "GamepadLibrary", minArea: 0, page: true },
+    // 3.3.9: Steam's game page, screen two (CORE-UI.md, "The game view"): the app details container, below the play bar,
+    // never a ROM page (The Collector's page is its own host).
+    { id: "game-page", map: "appdetails", key: "AppDetailsContainer", minArea: 0, page: true, viewport: true, exclude: ".romm-core-page", below: "{appdetails.PlaySection}" },
+    // Hosts from other plugins (3.3.7). The Collector's ROM game page (Eternal-Collector, corePageStyles.ts): the
+    // wrapper in place of Steam's overview panel, below the hero art.
+    { id: "collector-rom-page", selector: ".romm-core-page", minArea: 0, page: true },
+    { id: "awesome-mix-page", selector: ".awesome-mix-core-page", minArea: 0, page: true },
+];
+// A plugin host's selector: one or more plain class names, nothing else (no combinators, attributes or ids).
+const PLUGIN_HOST_SELECTOR = /^(\.[A-Za-z_][\w-]*)+$/;
+// Where a host is found: plain (querySelector) and strong (stylesheet: the class repeated plus the boost). Undefined
+// when its class map or key is missing on this client, or a plugin host's selector is not a plain class list.
+function resolveHostSelector(maps, host) {
+    if ("selector" in host) {
+        const plain = String(host.selector ?? "").trim();
+        if (!PLUGIN_HOST_SELECTOR.test(plain))
+            return undefined;
+        const first = plain.slice(0, plain.indexOf(".", 1) > 0 ? plain.indexOf(".", 1) : undefined);
+        return { plain, strong: plain + first + CORE_UI_BOOST };
+    }
+    const plain = plainSelector(maps[host.map], host.key), strong = classSelector(maps[host.map], host.key);
+    return plain && strong ? { plain, strong } : undefined;
+}
+// Jarvis's presence orb in the top bar, next to Steam's clock (jarvisPresence.ts decides its state). Dim steel ring
+// when idle, a slow crimson pulse (opacity only, no glow) while listening or thinking, a crimson ring when an answer
+// is ready. Still under reduced motion.
+const CORE_UI_ORB_ID = "core-jarvis-orb";
+function orbCss() {
+    const orb = `${ROOT} #${CORE_UI_ORB_ID}`;
+    return `/* jarvis-orb */${orb}{${imp({ display: "inline-block", width: "12px", height: "12px", margin: "0 10px", "border-radius": "50%", "box-sizing": "border-box",
+        "vertical-align": "middle", flex: "none", border: `2px solid ${C.steel}`, "background-color": "transparent", opacity: "0.45", "box-shadow": "none", animation: "none" })}}` +
+        `${orb}[data-state="hidden"]{${imp({ display: "none" })}}` +
+        `${orb}[data-state="busy"]{${imp({ "border-color": C.crimson, "background-color": C.crimson, opacity: "1", animation: "core-jarvis-pulse 1.6s ease-in-out infinite" })}}` +
+        `${orb}[data-state="ready"]{${imp({ "border-color": C.crimson, "background-color": "transparent", opacity: "1" })}}` +
+        `@keyframes core-jarvis-pulse{0%,100%{opacity:0.4}50%{opacity:1}}` +
+        `@media (prefers-reduced-motion: reduce){${orb}[data-state="busy"]{animation:none !important}}`;
+}
+// The stylesheet for the maps found, plus where the Starfield goes. `skipped` names each rule whose map or
+// class is missing on this client. `mark` is the Steam menu's logo (Core's ring mark by default; `wordmark`, the
+// phase 1 name, is accepted too).
+function buildCoreUiCss(maps, options = {}) {
+    const applied = [], skipped = [], parts = [];
+    const candidate = options.mark ?? options.wordmark ?? CORE_RING_MARK;
+    const mark = typeof candidate === "string" && /^(https?:|data:image\/)/.test(candidate) ? candidate : undefined;
+    const target = (id) => targetSelectors(maps, id);
+    for (const rule of rules(mark)) {
+        const anyOk = !rule.needsAny?.length || rule.needsAny.some(([map, key]) => classSelector(maps[map], key));
+        if (!anyOk || !rule.needs.every(([map, key]) => classSelector(maps[map], key)) || !(rule.targets ?? []).every(id => target(id).length > 0)) {
+            skipped.push(rule.id);
+            continue;
+        }
+        const select = (map, key) => classSelector(maps[map], key) ?? "";
+        let css;
+        try {
+            css = rule.css(select, target);
+        }
+        catch {
+            css = undefined;
+        }
+        if (!css) {
+            skipped.push(rule.id);
+            continue;
+        }
+        parts.push(`/* ${rule.id} */${css}`);
+        applied.push(rule.id);
+    }
+    // Nothing of Steam found (no class map at all): no stylesheet, not even the always-on parts.
+    if (applied.every(id => ALWAYS_ON.has(id))) {
+        parts.length = 0;
+        applied.length = 0;
+    }
+    const hosts = [];
+    for (const host of CORE_UI_HOSTS) {
+        const plugin = "selector" in host;
+        // A plugin's page is a host only next to Steam's own surfaces: without any class map there is no Core UI.
+        if (plugin && !applied.length)
+            continue;
+        const found = resolveHostSelector(maps, host);
+        if (!found)
+            continue;
+        hosts.push({ id: host.id, selector: found.plain, strong: found.strong, minArea: host.minArea,
+            fullHeight: !plugin && host.fullHeight === true, panel: !plugin && host.panel === true,
+            page: host.page === true, source: plugin ? "plugin" : "steam", viewport: plugin || host.viewport === true,
+            ...(!plugin && host.exclude ? { exclude: host.exclude } : {}),
+            ...(!plugin && host.below ? { below: resolveTemplate(maps, host.below, true) } : {}) });
+    }
+    // Black means starfield: every black surface above is a host. The runtime puts one canvas in each (the
+    // shared field), behind the surface's content; a host inside another host stays clear instead.
+    if (hosts.length) {
+        const all = hosts.map(host => `${ROOT} ${host.selector}`);
+        const strong = hosts.map(host => `${ROOT} ${host.strong}`);
+        parts.push(`/* starfield-hosts */${all.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}]`).join(",")}{${imp({ isolation: "isolate" })}}` +
+            `${all.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}] > canvas[${CORE_UI_STARS_ATTRIBUTE}]`).join(",")}{${imp({ position: "absolute", left: "0", right: "auto", bottom: "auto", width: "100%",
+                // The canvas follows the surface's scroll position and, for full-height surfaces, reaches the screen's edges.
+                top: "calc(var(--core-ui-scroll, 0px) - var(--core-ui-extend-top, 0px))",
+                height: "calc(100% + var(--core-ui-extend-top, 0px) + var(--core-ui-extend-bottom, 0px))",
+                "z-index": "-1", "pointer-events": "none", margin: "0", padding: "0", border: "0", "border-radius": "inherit", "background-color": C.black })}}` +
+            // A page host's canvas covers only what is on screen (--core-ui-page-height, 0 until measured), never more than
+            // its host (max-height 100% of the host, its containing block): 3.3.8, no viewport-tall fallback.
+            `${hosts.filter(host => host.page).map(host => `${ROOT} ${host.selector}[${CORE_UI_HOST_ATTRIBUTE}] > canvas[${CORE_UI_STARS_ATTRIBUTE}]`).join(",") || `${ROOT} [data-core-ui-none]`}{${imp({ height: "var(--core-ui-page-height, 0px)", "max-height": "100%" })}}` +
+            // 3.3.8: a canvas whose surface is not on screen (or that belongs to no live surface) is never drawn.
+            `${ROOT} canvas[${CORE_UI_STARS_ATTRIBUTE}]:not([${CORE_UI_LIVE_ATTRIBUTE}]){${imp({ display: "none" })}}` +
+            // A host inside another host (and a panel candidate that is not the panel) stays clear: the outer surface's
+            // stars show through it. Repeats the host's class so it out-ranks the host's own black rule.
+            `${strong.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}="nested"]`).join(",")}{${imp({ "background-color": "transparent", "background-image": "none" })}}`);
+    }
+    if (applied.length)
+        parts.push(collectionTileCss());
+    const clock = plainSelector(maps.header, "Clock");
+    if (clock)
+        parts.push(orbCss());
+    const dom = {
+        header: plainSelector(maps.header, "Header"), footer: plainSelector(maps.footer, "BasicFooter"),
+        menu: plainSelector(maps.mainmenu, "Menu"), menuItem: plainSelector(maps.mainmenu, "Item"), qamTab: plainSelector(maps.quickaccess, "Tab"),
+        tab: plainSelector(maps.tabbedpage, "Tab"), tabTitle: plainSelector(maps.tabbedpage, "TabTitle"), tabSelected: plainSelector(maps.tabbedpage, "Selected"),
+        library: plainSelector(maps.library, "GamepadLibrary"), tabbedPage: plainSelector(maps.tabbedpage, "GamepadTabbedPage"),
+        playSection: plainSelector(maps.appdetails, "PlaySection"), appContainer: plainSelector(maps.appdetails, "AppDetailsContainer"), tabRow: plainSelector(maps.tabbedpage, "TabRow"),
+        contextMenu: plainSelector(maps.contextmenu, "contextMenuContents"),
+        qamPlaceholder: plainSelector(maps.quickaccess, "ViewPlaceholder") ?? plainSelector(maps.quickaccess, "Container"),
+        qamMenu: plainSelector(maps.quickaccess, "Menu"), qamRail: plainSelector(maps.quickaccess, "Tabs") ?? plainSelector(maps.quickaccess, "TabsWithFooter"),
+        qamTabSelected: plainSelector(maps.quickaccess, "Tab") && plainSelector(maps.quickaccess, "Selected") ? `${plainSelector(maps.quickaccess, "Tab")}${plainSelector(maps.quickaccess, "Selected")}` : undefined,
+    };
+    const css = parts.join("\n");
+    return { css, applied, skipped, hosts, clock, dom, maps, ruleTargets: ruleTargetsFromCss(css) };
+}
+const STATE = /^(\.gpfocus|\.gpfocuswithin|:hover|:focus|:focus-visible|:focus-within)$/;
+// Splits a selector list on its top-level commas (not those inside :is(), :not() or :has()).
+function splitTopLevel(list) {
+    const out = [];
+    let depth = 0, current = "";
+    for (const ch of list) {
+        if (ch === "(")
+            depth++;
+        else if (ch === ")")
+            depth = Math.max(0, depth - 1);
+        if (ch === "," && depth === 0) {
+            out.push(current);
+            current = "";
+        }
+        else
+            current += ch;
+    }
+    if (current.trim())
+        out.push(current);
+    return out;
+}
+// Per rule (the `/* id */` that starts each part of the stylesheet), one selector list Element.matches can test:
+// pseudo-elements and the state pseudo-classes dropped, @media / @keyframes skipped. For the snapshot only.
+function ruleTargetsFromCss(css) {
+    const out = {};
+    for (const part of String(css).split("\n")) {
+        const head = /^\/\* ([\w-]+) \*\//.exec(part);
+        if (!head)
+            continue;
+        const found = new Set();
+        let depth = 0, selector = "";
+        const body = part.slice(head[0].length);
+        for (let i = 0; i < body.length; i++) {
+            const ch = body[i];
+            if (ch === "{") {
+                if (depth === 0 && !selector.trim().startsWith("@")) {
+                    for (const one of splitTopLevel(selector)) {
+                        const clean = one.replace(/::?(before|after|placeholder|-webkit-[\w-]+)/g, "")
+                            .replace(/:is\(([^()]*)\)/g, (all, inner) => inner.split(",").every(part => STATE.test(part.trim())) ? "" : all)
+                            .replace(/:(hover|focus|focus-visible|focus-within)(?![\w-])/g, "").trim();
+                        if (clean && !clean.startsWith("@"))
+                            found.add(clean);
+                    }
+                }
+                depth++;
+                selector = "";
+            }
+            else if (ch === "}") {
+                depth = Math.max(0, depth - 1);
+                selector = "";
+            }
+            else if (depth === 0)
+                selector += ch;
+        }
+        if (found.size)
+            out[head[1]] = [...found].join(",");
+    }
+    return out;
+}
+// The same class without the specificity repeat, for querySelector.
+function plainSelector(map, key) {
+    if (!has(map, key))
+        return undefined;
+    const alternatives = classAlternatives(map[key]);
+    if (!alternatives)
+        return undefined;
+    const one = (names) => "." + names.join(".");
+    return alternatives.length === 1 ? one(alternatives[0]) : `:is(${alternatives.map(one).join(",")})`;
+}
+// 3.3.11 (TV: the Steam menu, Settings and Downloads stayed Steam's although every rule was emitted): Steam ships some
+// class modules twice, with the same keys and different hashed classes, and either copy may be the one a window draws
+// (the Steam menu's MainMenu_uid2 window drew the copy that was not picked). Every module that fits a signature as well
+// as the best one is merged: each key holds every copy's class, and each rule targets them all.
+function mergeMaps(maps) {
+    const out = {};
+    for (const map of maps) {
+        for (const key of attempt(() => Object.keys(map)) ?? []) {
+            const value = map[key];
+            if (typeof value !== "string" || !value)
+                continue;
+            const parts = out[key] ? out[key].split(ALTERNATIVES) : [];
+            if (!parts.includes(value))
+                out[key] = [...parts, value].join(ALTERNATIVES);
+        }
+    }
+    return out;
+}
+
+// Eternal Core: Quick Access rail icons at Steam's own size (docs/eternal/CORE-UI.md, "Plugin logos", 3.3.4). Core's
+// tab, Jarvis's tab and the Eternal plugins' glyphs were drawn at 1em (about 16px, half of Steam's own icons); with
+// Core UI on they fill the rail cell at CORE_RAIL_ICON_PX (24px in the 48 x 64 tab, Steam's own icon size, 3.3.10). Core UI off: 1em, as before.
+//
+// Pure (one import, coreUiStyles.ts, itself pure): tests check the box and the glyph markup.
+const CORE_RAIL_ICON_ATTRIBUTE = "data-core-rail-icon";
+// The box around a rail icon: CORE_RAIL_ICON_PX with Core UI on (its font size too, so an icon drawn at 1em fills it), 1em off.
+function railIconBox(on) {
+    const size = on ? CORE_RAIL_ICON_PX : "1em";
+    return { display: "flex", width: size, height: size, alignItems: "center", justifyContent: "center", flex: "none", ...(on ? { fontSize: CORE_RAIL_ICON_PX } : {}) };
+}
+// A glyph's SVG text made to fill its box crisply: 100% of the box, geometric precision, hidden from screen readers.
+// Only Core's own artwork goes through here (coreArtwork.ts), never user input.
+function railGlyphHtml(svg) {
+    if (!/^<svg[\s>]/.test(svg))
+        return "";
+    return svg.replace(/^<svg(?![^>]*\swidth=)/, '<svg width="100%" height="100%" shape-rendering="geometricPrecision" aria-hidden="true" focusable="false"');
+}
+
+// Eternal Core: the Core UI snapshot (docs/eternal/CORE-UI.md, "The snapshot", 3.3.4). Ground truth for Core UI's
+// selectors: every selector up to 3.3.3 was inferred from Steam's readable class-map names, never observed, and the TV
+// showed most of them missing. The snapshot records how each surface is really built, so the next fixes are exact.
+//
+// - When: a few seconds after Core UI applies, then the first time each surface opens (the Steam menu, Quick Access and
+//   each of its tabs, a context menu, the Library's tab bar, a collection tile and the grid, Home, the footer and the
+//   top bar), and on demand (Quick Access > Core > Look > Save Core UI snapshot).
+// - What: per surface a pruned tree (at most SNAPSHOT_DEPTH levels and SNAPSHOT_NODES nodes): tag, classes, data-*
+//   attribute names, the box, a few computed styles, which Core UI rule matched, and a flag on opaque layers that cover
+//   more than 30% of the surface. Plus which class maps resolved and how, the selector table, the documents (main
+//   window or popup), the screen size and DPR, icon sources and the CSS Loader state.
+// - Never: text beyond short labels (at most 30 characters, and none at all on the grid and Home, where they would be
+//   game names), input values, URLs with queries, or anything the user typed.
+// - Where: the plugin backend writes it (main.py, save_core_ui_snapshot) to
+//   %APPDATA%\GamingMode\diagnostics\core-ui-snapshot-YYYYMMDD-HHMMSS.json, one file per capture (3.3.11; the newest
+//   20 kept), at most SNAPSHOT_MAX_BYTES each.
+//
+// Pure apart from what it is handed (documents, a view, the stylesheet's facts): tests drive it with fake DOMs.
+const SNAPSHOT_DEPTH = 6;
+const SNAPSHOT_NODES = 400;
+const SNAPSHOT_MAX_BYTES = 2 * 1024 * 1024;
+const SNAPSHOT_LABEL = 30;
+const SNAPSHOT_COVER_SHARE = 0.3;
+// How long after Core UI applies the first capture runs, and how long a newly opened surface settles before capture.
+const SNAPSHOT_FIRST_MS = 5000;
+const SNAPSHOT_SETTLE_MS = 1500;
+const SNAPSHOT_MIN_GAP_MS = 3000;
+const SNAPSHOT_SURFACES = [
+    { id: "steam-menu", targets: ["menu"], labels: true },
+    { id: "qam", targets: ["qamPanel", "qamMenu"], labels: true },
+    { id: "qam-rail", targets: ["qamRail"], labels: true },
+    { id: "qam-title", targets: ["qamTitle"], labels: true },
+    { id: "qam-content", targets: ["qamContent"], labels: true, perTab: true },
+    { id: "context-menu", targets: ["context"], labels: true },
+    { id: "library-tabs", targets: ["libraryTabRow"], labels: true },
+    { id: "library-collection-tile", targets: ["collectionTile"], labels: true },
+    { id: "library-grid", targets: ["libraryGrid"], labels: false },
+    { id: "home", targets: ["home"], labels: false },
+    { id: "footer", targets: ["footer"], labels: true },
+    { id: "top-bar", targets: ["header"], labels: false },
+    // 3.3.11: Steam's game page (no labels: game names and the user's activity).
+    { id: "game-hero", targets: ["gameHeader"], labels: false },
+    { id: "game-playbar", targets: ["gamePlayBar"], labels: false },
+    { id: "game-screen-two", targets: ["gameScreenTwo"], labels: false },
+    { id: "game-section", targets: ["gameSection"], labels: false },
+    // 3.3.7, a host from another plugin: The Collector's ROM game page (no labels: game names).
+    { id: "collector-rom-page", targets: ["collectorRomPage"], labels: false },
+];
+const STYLE_KEYS = [
+    // [short key, computed property, defaults left out]
+    ["bg", "backgroundColor", ["rgba(0, 0, 0, 0)", "transparent"]],
+    ["img", "backgroundImage", ["none"]],
+    ["op", "opacity", ["1"]],
+    ["pos", "position", ["static"]],
+    ["top", "top", ["auto"]],
+    ["bot", "bottom", ["auto"]],
+    ["mh", "maxHeight", ["none"]],
+    ["ov", "overflow", ["visible"]],
+    ["z", "zIndex", ["auto"]],
+    ["br", "borderRadius", ["0px"]],
+];
+// "url(...)" -> "url", "linear-gradient(...)" -> "linear-gradient": the type only, never the address.
+function imageType(value) {
+    const text = String(value ?? "").trim();
+    if (!text || text === "none")
+        return "none";
+    const kinds = new Set();
+    for (const match of text.matchAll(/(url|(?:repeating-)?(?:linear|radial|conic)-gradient|image-set|-webkit-image-set|cross-fade)\(/gi))
+        kinds.add(match[1].toLowerCase());
+    return kinds.size ? [...kinds].join("+") : "other";
+}
+const clip = (value, max = SNAPSHOT_LABEL) => {
+    const text = String(value ?? "").replace(/\s+/g, " ").trim();
+    return text.length > max ? text.slice(0, max) : text;
+};
+// A short label: aria-label, title, or the element's own text (its direct text nodes only), at most 30 characters.
+function shortLabel(element) {
+    try {
+        const aria = element.getAttribute?.("aria-label") || element.getAttribute?.("title");
+        if (aria)
+            return clip(aria) || undefined;
+        let own = "";
+        for (const node of Array.from(element.childNodes ?? []))
+            if (node?.nodeType === 3)
+                own += node.textContent ?? "";
+        return clip(own) || undefined;
+    }
+    catch {
+        return undefined;
+    }
+}
+function parseAlpha(colour) {
+    const text = colour.trim().toLowerCase();
+    if (!text || text === "transparent")
+        return 0;
+    const fn = /^rgba?\(([^)]*)\)$/.exec(text);
+    if (fn) {
+        const parts = fn[1].split(/[\s,/]+/).filter(Boolean);
+        if (parts.length >= 4) {
+            const a = parts[3];
+            return a.endsWith("%") ? Number.parseFloat(a) / 100 : Number.parseFloat(a);
+        }
+        return 1;
+    }
+    return text.startsWith("#") ? 1 : 0;
+}
+function rectOf$2(element) {
+    try {
+        const r = element.getBoundingClientRect();
+        return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)];
+    }
+    catch {
+        return [0, 0, 0, 0];
+    }
+}
+function classesOf(element) {
+    try {
+        const list = element.classList ? Array.from(element.classList) : String(element.className?.baseVal ?? element.className ?? "").split(/\s+/);
+        return list.filter(Boolean).slice(0, 12).map(name => clip(name, 60));
+    }
+    catch {
+        return [];
+    }
+}
+function dataNames(element) {
+    try {
+        const names = [];
+        for (const attribute of Array.from(element.attributes ?? []))
+            if (/^data-/.test(attribute?.name ?? ""))
+                names.push(String(attribute.name).slice(0, 40));
+        if (!element.attributes && element.dataset)
+            for (const key of Object.keys(element.dataset))
+                names.push("data-" + key.replace(/[A-Z]/g, c => "-" + c.toLowerCase()));
+        return names.slice(0, 12);
+    }
+    catch {
+        return [];
+    }
+}
+function stylesOf(view, element) {
+    let computed;
+    try {
+        computed = view.getComputedStyle?.(element);
+    }
+    catch {
+        computed = undefined;
+    }
+    if (!computed)
+        return { opaque: false };
+    const out = {};
+    for (const [key, prop, defaults] of STYLE_KEYS) {
+        let value = String(computed[prop] ?? computed[prop.replace(/[A-Z]/g, c => "-" + c.toLowerCase())] ?? "");
+        if (key === "img")
+            value = imageType(value);
+        if (value && !defaults.includes(value))
+            out[key] = clip(value, 60);
+    }
+    const alpha = parseAlpha(String(computed.backgroundColor ?? ""));
+    const image = imageType(computed.backgroundImage);
+    const opacity = Number.parseFloat(String(computed.opacity ?? "1"));
+    const opaque = (alpha >= 0.9 || /gradient|url/.test(image)) && (!Number.isFinite(opacity) || opacity >= 0.9);
+    return { s: Object.keys(out).length ? out : undefined, opaque };
+}
+function matchedRules(element, rules) {
+    const hits = [];
+    for (const [id, selector] of Object.entries(rules)) {
+        try {
+            if (element.matches?.(selector))
+                hits.push(id);
+        }
+        catch { /* A selector this engine cannot read. */ }
+    }
+    return hits.length ? hits : undefined;
+}
+// One surface as a pruned tree: breadth-first, so a cut keeps the outer structure (where the panels and their
+// backgrounds are) rather than one deep branch. `more` on a node says how many children were left out.
+function captureTree(root, view, options = {}) {
+    const maxDepth = options.depth ?? SNAPSHOT_DEPTH, maxNodes = Math.max(1, options.nodes ?? SNAPSHOT_NODES);
+    const rules = options.rules ?? {};
+    const rootRect = rectOf$2(root);
+    const area = Math.max(1, rootRect[2] * rootRect[3]);
+    let count = 0, truncated = false;
+    const make = (element) => {
+        count++;
+        const node = { t: String(element?.tagName ?? "?").toLowerCase(), r: rectOf$2(element) };
+        const c = classesOf(element);
+        if (c.length)
+            node.c = c;
+        const d = dataNames(element);
+        if (d.length)
+            node.d = d;
+        const { s, opaque } = stylesOf(view, element);
+        if (s)
+            node.s = s;
+        if (opaque && node.r[2] * node.r[3] > area * SNAPSHOT_COVER_SHARE)
+            node.cover = 1;
+        const m = matchedRules(element, rules);
+        if (m)
+            node.m = m;
+        if (options.labels) {
+            const l = shortLabel(element);
+            if (l)
+                node.l = l;
+        }
+        return node;
+    };
+    const tree = make(root);
+    const queue = [[root, tree, 0]];
+    while (queue.length) {
+        const [element, node, depth] = queue.shift();
+        let children = [];
+        try {
+            children = Array.from(element.children ?? []);
+        }
+        catch {
+            children = [];
+        }
+        if (!children.length)
+            continue;
+        if (depth + 1 >= maxDepth) {
+            node.more = children.length;
+            truncated = true;
+            continue;
+        }
+        const kids = [];
+        for (const child of children) {
+            if (count >= maxNodes) {
+                node.more = (node.more ?? 0) + 1;
+                truncated = true;
+                continue;
+            }
+            const kid = make(child);
+            kids.push(kid);
+            queue.push([child, kid, depth + 1]);
+        }
+        if (kids.length)
+            node.k = kids;
+    }
+    return { tree, nodes: count, truncated };
+}
+// Up to six ancestors of a surface's root (nearest first): enough to see what clips, scrolls or paints behind it.
+function ancestorsOf(element, view, limit = 6) {
+    const out = [];
+    let current = element?.parentElement;
+    while (current && out.length < limit) {
+        const node = { t: String(current.tagName ?? "?").toLowerCase(), r: rectOf$2(current) };
+        const c = classesOf(current);
+        if (c.length)
+            node.c = c;
+        const d = dataNames(current);
+        if (d.length)
+            node.d = d;
+        const { s } = stylesOf(view, current);
+        if (s)
+            node.s = s;
+        out.push(node);
+        current = current.parentElement;
+    }
+    return out;
+}
+function visible$1(element) {
+    try {
+        const r = element.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+    }
+    catch {
+        return false;
+    }
+}
+// Which surfaces are on screen now, across Steam's documents, through the selector table. The first visible element
+// of the first strategy that finds one wins. Quick Access content is keyed per open tab ("qam-content:3:Core").
+function findSurfaces(docs, maps, surfaces = SNAPSHOT_SURFACES) {
+    const found = [];
+    for (const surface of surfaces) {
+        let hit;
+        for (const target of surface.targets) {
+            for (const selector of targetSelectors(maps, target, true)) {
+                for (let index = 0; index < docs.length && !hit; index++) {
+                    let list = [];
+                    try {
+                        list = Array.from(docs[index].querySelectorAll(selector)).slice(0, 12);
+                    }
+                    catch {
+                        list = [];
+                    }
+                    const element = list.find(visible$1);
+                    if (element)
+                        hit = { id: surface.id, key: surface.id, surface, element, doc: docs[index], docIndex: index, via: `${target}: ${selector}` };
+                }
+                if (hit)
+                    break;
+            }
+            if (hit)
+                break;
+        }
+        if (!hit)
+            continue;
+        if (surface.perTab)
+            hit.key = `${surface.id}:${selectedQamTab(hit.doc, maps)}`;
+        found.push(hit);
+    }
+    return found;
+}
+// The open Quick Access tab, as "<index>:<label>" (label at most 30 characters; index alone when it has none).
+function selectedQamTab(doc, maps) {
+    const tabs = [];
+    for (const selector of targetSelectors(maps, "qamTab", true)) {
+        try {
+            tabs.push(...Array.from(doc.querySelectorAll(selector)));
+        }
+        catch { /* Next. */ }
+        if (tabs.length)
+            break;
+    }
+    const selected = new Set();
+    for (const selector of targetSelectors(maps, "qamTabSelected", true)) {
+        try {
+            for (const tab of Array.from(doc.querySelectorAll(selector)))
+                selected.add(tab);
+        }
+        catch { /* Next. */ }
+    }
+    const index = tabs.findIndex(tab => selected.has(tab));
+    if (index < 0)
+        return "unknown";
+    const label = shortLabel(tabs[index]);
+    return label ? `${index}:${label}` : String(index);
+}
+function recordSurface(found, view, rules, nodes = SNAPSHOT_NODES, at = new Date().toISOString()) {
+    const { tree, nodes: count, truncated } = captureTree(found.element, view, { nodes, labels: found.surface.labels, rules });
+    return { id: found.id, key: found.key, doc: found.docIndex, via: found.via, at, rect: tree.r, nodes: count, truncated, tree, ancestors: ancestorsOf(found.element, view) };
+}
+// What each Steam document is: the main window or a popup, its size and DPR, and where Core UI's stylesheet sits among
+// the document's stylesheets (CSS Loader appends its own to <head>; Core UI keeps itself last).
+function documentRecord(doc, index, main, styleId) {
+    const view = doc?.defaultView ?? {};
+    let path = "", title = "";
+    try {
+        path = clip(String(doc.location?.pathname ?? ""), 80);
+    }
+    catch {
+        path = "";
+    }
+    try {
+        title = clip(doc.title ?? "", 40);
+    }
+    catch {
+        title = "";
+    }
+    let styles = [];
+    try {
+        styles = Array.from(doc.head?.querySelectorAll?.("style,link[rel~='stylesheet']") ?? []);
+    }
+    catch {
+        styles = [];
+    }
+    const at = styles.findIndex(style => style?.id === styleId);
+    return { index, main: doc === main, path, title, width: Number(view.innerWidth) || 0, height: Number(view.innerHeight) || 0, dpr: Number(view.devicePixelRatio) || 1,
+        coreStyle: at >= 0, coreStyleLast: at >= 0 && at === styles.length - 1, stylesAfterCore: at >= 0 ? styles.length - 1 - at : 0, styles: styles.length };
+}
+// The whole snapshot, held under SNAPSHOT_MAX_BYTES: when too big, every surface is captured again with half the nodes
+// (callers pass `recapture`), then trees are dropped largest first, each drop named in `dropped`.
+function assembleSnapshot(input, recapture) {
+    const firstView = input.docs[0]?.defaultView ?? {};
+    const base = {
+        kind: "core-ui-snapshot", format: 1, core: input.version || undefined, reason: input.reason, capturedAt: input.now.toISOString(),
+        screen: { width: Number(firstView.innerWidth) || 0, height: Number(firstView.innerHeight) || 0, dpr: Number(firstView.devicePixelRatio) || 1,
+            screenWidth: Number(firstView.screen?.width) || 0, screenHeight: Number(firstView.screen?.height) || 0 },
+        coreUi: { applied: input.sheet?.applied ?? [], skipped: input.sheet?.skipped ?? [], mapRoutes: input.sheet?.routes ?? {},
+            mapCandidates: candidateList(input.sheet?.candidates),
+            mapAmbiguity: ambiguityList(input.sheet?.ambiguous),
+            selectors: input.sheet?.maps ? resolvedTargetTable(input.sheet.maps) : {},
+            // 3.3.7: every Starfield host resolved on this client (Steam's and other plugins'), with its selector.
+            hosts: hostList(input.sheet?.hosts) },
+        documents: input.docs.map((doc, index) => documentRecord(doc, index, input.main, input.styleId)),
+        ...(input.extra ?? {}),
+    };
+    let surfaces = input.surfaces, dropped = [];
+    const encode = () => {
+        const list = [...surfaces.values()].sort((a, b) => a.key.localeCompare(b.key));
+        return JSON.stringify({ ...base, surfaces: list, dropped: dropped.length ? dropped : undefined });
+    };
+    let json = encode();
+    const size = (text) => utf8Length(text);
+    for (let nodes = SNAPSHOT_NODES / 2; size(json) > SNAPSHOT_MAX_BYTES && recapture && nodes >= 25; nodes = Math.floor(nodes / 2)) {
+        surfaces = recapture(nodes);
+        json = encode();
+    }
+    while (size(json) > SNAPSHOT_MAX_BYTES && surfaces.size) {
+        const largest = [...surfaces.values()].sort((a, b) => JSON.stringify(b).length - JSON.stringify(a).length)[0];
+        surfaces = new Map(surfaces);
+        surfaces.delete(largest.key);
+        dropped = [...dropped, largest.key];
+        json = encode();
+    }
+    if (size(json) > SNAPSHOT_MAX_BYTES)
+        json = JSON.stringify({ kind: "core-ui-snapshot", format: 1, core: input.version, reason: input.reason, capturedAt: input.now.toISOString(), error: "too_large" });
+    let nodes = 0;
+    for (const record of surfaces.values())
+        nodes += record.nodes;
+    return { json, bytes: size(json), nodes, dropped };
+}
+// Missing maps' closest modules as the snapshot records them: key names only, bounded.
+function candidateList(candidates) {
+    const out = {};
+    if (!candidates || typeof candidates !== "object")
+        return out;
+    const names = (list, max) => (Array.isArray(list) ? list : []).slice(0, max).map(key => String(key).slice(0, 80));
+    for (const [map, candidate] of Object.entries(candidates).slice(0, 32)) {
+        if (!candidate)
+            continue;
+        out[map] = { score: Number(candidate.score) || 0, matched: names(candidate.matched, 40), missing: names(candidate.missing, 40), keys: names(candidate.keys, 120) };
+    }
+    return out;
+}
+// 3.3.10: maps more than one module matched, as the snapshot records them: key names only, bounded.
+function ambiguityList(ambiguous) {
+    const out = {};
+    if (!ambiguous || typeof ambiguous !== "object")
+        return out;
+    const names = (list) => (Array.isArray(list) ? list : []).slice(0, 12).map(key => String(key).slice(0, 80));
+    for (const [map, seen] of Object.entries(ambiguous).slice(0, 40)) {
+        if (!seen)
+            continue;
+        out[map] = { matches: Number(seen.matches) || 0, switched: seen.switched === true, chosen: names(seen.chosen),
+            passedOver: (Array.isArray(seen.passedOver) ? seen.passedOver : []).slice(0, 8).map(names), merged: Number(seen.merged) || 1 };
+    }
+    return out;
+}
+// The host list as the snapshot records it: id, plain selector, where it came from and its kind.
+function hostList(hosts) {
+    if (!Array.isArray(hosts))
+        return [];
+    return hosts.slice(0, 64).map(host => ({ id: String(host.id), selector: String(host.selector).slice(0, 200), source: host.source === "plugin" ? "plugin" : "steam",
+        kind: host.page ? "page" : host.panel ? "panel" : "surface" }));
+}
+function utf8Length(text) {
+    let bytes = 0;
+    for (let i = 0; i < text.length; i++) {
+        const code = text.charCodeAt(i);
+        if (code < 0x80)
+            bytes += 1;
+        else if (code < 0x800)
+            bytes += 2;
+        else if (code >= 0xd800 && code <= 0xdbff) {
+            bytes += 4;
+            i++;
+        }
+        else
+            bytes += 3;
+    }
+    return bytes;
+}
+function createSnapshotProbe(deps) {
+    const captured = new Map();
+    const seen = new Set();
+    let docs = [], firstAt, dueAt, lastWrite = -Infinity, writing = false, reason = "start";
+    let last;
+    function captureAll(nodes = SNAPSHOT_NODES) {
+        const sheet = deps.sheet();
+        const maps = sheet?.maps ?? {};
+        const rules = sheet?.ruleTargets ?? {};
+        const at = new Date(deps.now()).toISOString();
+        const next = new Map(captured);
+        for (const found of findSurfaces(docs, maps)) {
+            try {
+                next.set(found.key, recordSurface(found, found.doc?.defaultView ?? {}, rules, nodes, at));
+            }
+            catch { /* That surface closed mid-capture. */ }
+        }
+        return next;
+    }
+    async function write(why) {
+        if (writing)
+            return last;
+        writing = true;
+        try {
+            const fresh = captureAll();
+            for (const [key, record] of fresh)
+                captured.set(key, record);
+            const assembled = assembleSnapshot({ reason: why, version: deps.version, now: new Date(deps.now()), docs, main: deps.main(), styleId: deps.styleId,
+                sheet: deps.sheet(), surfaces: captured, extra: deps.extra?.() }, nodes => captureAll(nodes));
+            lastWrite = deps.now();
+            const answer = await deps.write(assembled.json);
+            last = { ok: answer?.ok === true, path: answer?.path, error: answer?.error, bytes: assembled.bytes, at: new Date(deps.now()).toISOString() };
+            if (!last.ok)
+                deps.log?.(`[Core UI] snapshot not saved: ${answer?.error ?? "no answer"}`);
+            return last;
+        }
+        catch (error) {
+            last = { ok: false, error: String(error?.message ?? error).slice(0, 120) };
+            deps.log?.(`[Core UI] snapshot not saved: ${last.error}`);
+            return last;
+        }
+        finally {
+            writing = false;
+        }
+    }
+    return {
+        // Called by Core UI once a second with Steam's documents: schedules the first capture and one per newly opened surface.
+        tick(currentDocs) {
+            docs = currentDocs;
+            const now = deps.now();
+            if (firstAt === undefined) {
+                firstAt = now + SNAPSHOT_FIRST_MS;
+                dueAt = firstAt;
+                reason = "start";
+            }
+            if (now >= (firstAt ?? 0)) {
+                let fresh = [];
+                try {
+                    fresh = findSurfaces(docs, deps.sheet()?.maps ?? {}).map(found => found.key).filter(key => !seen.has(key));
+                }
+                catch {
+                    fresh = [];
+                }
+                if (fresh.length) {
+                    for (const key of fresh)
+                        seen.add(key);
+                    if (dueAt === undefined) {
+                        dueAt = now + SNAPSHOT_SETTLE_MS;
+                        reason = `opened: ${fresh.join(", ")}`;
+                    }
+                    else if (reason !== "start")
+                        reason = `${reason}, ${fresh.join(", ")}`;
+                }
+            }
+            if (dueAt !== undefined && now >= dueAt && now - lastWrite >= SNAPSHOT_MIN_GAP_MS && !writing) {
+                dueAt = undefined;
+                void write(reason);
+            }
+        },
+        saveNow: (currentDocs) => { if (currentDocs)
+            docs = currentDocs; return write("manual"); },
+        last: () => last,
+        keys: () => [...captured.keys()],
+    };
+}
+let control;
+function setCoreUiSnapshotControl(next) { control = next; }
+const coreUiSnapshotControl = {
+    available: () => !!control,
+    saveNow: () => control ? control.saveNow() : Promise.resolve({ ok: false, error: "unavailable" }),
+};
+
+// Eternal Core (Core UI phase 1, docs/eternal/CORE-UI.md): Quick Access > Core.
+// - CoreUiSection: the one "Core UI" setting, on by default; off removes everything Core UI adds.
+// - DigitalStoresEntry: Digital stores now opens from here (the Steam menu entry became Awesome Mix).
+const { PanelSection: PanelSection$b, PanelSectionRow: PanelSectionRow$b, ToggleField: ToggleField$6, ButtonItem: ButtonItem$7, Navigation: Navigation$3 } = CompatUI;
+function CoreUiSection({ locale }) {
+    const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
+    const text = coreUiCopy(locale);
+    return (SP_JSX.jsxs(PanelSection$b, { title: text.section, children: [SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ToggleField$6, { bottomSeparator: "none", label: text.label, description: text.hint, checked: on, onChange: (value) => coreUiSetting.set(value) }) }), SP_JSX.jsx(ScreensaverRow, { locale: locale }), SP_JSX.jsx(SnapshotRow, { locale: locale }), SP_JSX.jsx(IconPackRow, { locale: locale })] }));
+}
+// 3.3.4: a rail icon at Steam's own size while Core UI is on (coreRailIcons.ts), 1em off.
+function CoreRailIcon({ children, glyph }) {
+    const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
+    const props = { [CORE_RAIL_ICON_ATTRIBUTE]: "1", "aria-hidden": "true", style: railIconBox(on) };
+    if (glyph)
+        return SP_JSX.jsx("span", { ...props, dangerouslySetInnerHTML: { __html: railGlyphHtml(glyph) } });
+    return SP_JSX.jsx("span", { ...props, children: children });
+}
+// 3.3.9: "Re-import icon pack": the Consoles tab's art, read again from the user's Downloads zip.
+function IconPackRow({ locale }) {
+    const text = coreUiPackCopy(locale);
+    const [state, setState] = _global_SP_REACT.useState({ busy: false });
+    const press = async () => {
+        setState({ busy: true });
+        const answer = await loadConsolePack(true);
+        const result = answer?.import;
+        const line = result?.imported ? text.packDone.replace("{count}", String(result.slugs ?? answer?.slugs?.length ?? 0))
+            : result?.reason === "zip_missing" ? text.packMissing : text.packFailed;
+        setState({ busy: false, line });
+    };
+    return (SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ButtonItem$7, { bottomSeparator: "none", layout: "below", description: state.line ?? text.packHint, disabled: state.busy, onClick: () => void press(), children: text.pack }) }));
+}
+// "Save Core UI snapshot": writes the diagnostic snapshot now (coreUiSnapshot.ts); the line under it says where.
+function SnapshotRow({ locale }) {
+    const text = coreUiCopy(locale);
+    const [state, setState] = _global_SP_REACT.useState("idle");
+    const [path, setPath] = _global_SP_REACT.useState("");
+    if (!coreUiSnapshotControl.available())
+        return null;
+    const press = async () => {
+        setState("busy");
+        try {
+            const answer = await coreUiSnapshotControl.saveNow();
+            setPath(answer?.path ?? "");
+            setState(answer?.ok ? "saved" : "failed");
+        }
+        catch {
+            setState("failed");
+        }
+    };
+    const description = state === "saved" ? `${text.snapshotSaved}${path ? ` ${path}` : ""}` : state === "failed" ? text.snapshotFailed : text.snapshotHint;
+    return (SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ButtonItem$7, { bottomSeparator: "none", layout: "below", description: description, disabled: state === "busy", onClick: press, children: text.snapshot }) }));
+}
+// "Use Core Starfield as screensaver": selects Core Starfield in Steam's screensaver list, or goes back to Steam's
+// slideshow. Shown only once Steam's settings store is found.
+function ScreensaverRow({ locale }) {
+    const [, redraw] = _global_SP_REACT.useState(0);
+    _global_SP_REACT.useEffect(() => coreScreensaverControl.subscribe(() => redraw(n => n + 1)), []);
+    _global_SP_REACT.useEffect(() => { const timer = window.setInterval(() => redraw(n => n + 1), 3000); return () => window.clearInterval(timer); }, []);
+    if (!coreScreensaverControl.available())
+        return null;
+    const text = coreUiCopy(locale);
+    return (SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ToggleField$6, { bottomSeparator: "none", label: text.screensaver, description: text.screensaverHint, checked: coreScreensaverControl.get(), onChange: (value) => { coreScreensaverControl.set(value); } }) }));
+}
+function openDigitalStores() {
+    try {
+        Navigation$3?.CloseSideMenus?.();
+        window.setTimeout(() => Navigation$3?.Navigate?.(STORE_DIGITAL_ROUTE), 40);
+    }
+    catch (error) {
+        console.warn("Core Digital stores: route not reachable", error);
+    }
+}
+function DigitalStoresEntry({ locale }) {
+    const text = storeDigitalCopy(locale);
+    return (SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ButtonItem$7, { bottomSeparator: "none", layout: "below", description: text.subtitle, onClick: openDigitalStores, children: SP_JSX.jsxs("span", { style: { display: "inline-flex", alignItems: "center", gap: "10px" }, children: [SP_JSX.jsx("span", { style: { display: "inline-flex", width: "1em", height: "1em" }, children: SP_JSX.jsx(StoreDigitalStoreIcon, {}) }), SP_JSX.jsx("span", { children: text.title })] }) }) }));
+}
+
+const { Focusable: Focusable$8, DialogButton: DialogButton$3, ToggleField: ToggleField$5, DropdownItem: DropdownItem$2, ScrollPanel} = CompatUI;
 let prefs = normalizeControlPreferences({});
 let loaded = false;
-let lastSettingsPage = 'general';
 let loading;
 let write = Promise.resolve();
 const listeners = new Set();
 const subscribe = (listener) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
 function TopbarDateSettings({ state, update, locale }) {
     const text = topbarDateCopy(locale);
-    return SP_JSX.jsxs(Focusable$8, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 10 }, children: [SP_JSX.jsx(ToggleField$6, { label: text.dateLabel, description: text.dateDescription, bottomSeparator: "none", checked: state.topbarDateEnabled, onChange: (enabled) => update({ ...state, topbarDateEnabled: enabled }, locale) }), SP_JSX.jsx(ToggleField$6, { bottomSeparator: "none", label: text.leftLabel, description: text.leftDescription, checked: state.topbarClockLeft, onChange: (enabled) => update({ ...state, topbarClockLeft: enabled }, locale) }), SP_JSX.jsx(DropdownItem$2, { label: text.formatLabel, layout: "below", bottomSeparator: "none", selectedOption: state.topbarDateFormat, disabled: !state.topbarDateEnabled, rgOptions: topbarDateOptions(locale), onChange: (option) => update({ ...state, topbarDateFormat: option.data }, locale) })] });
+    return SP_JSX.jsxs(Focusable$8, { "flow-children": "column", style: { padding: "8px 0", display: "flex", flexDirection: "column", gap: 10 }, children: [SP_JSX.jsx(ToggleField$5, { label: text.dateLabel, description: text.dateDescription, bottomSeparator: "none", checked: state.topbarDateEnabled, onChange: (enabled) => update({ ...state, topbarDateEnabled: enabled }, locale) }), SP_JSX.jsx(ToggleField$5, { bottomSeparator: "none", label: text.leftLabel, description: text.leftDescription, checked: state.topbarClockLeft, onChange: (enabled) => update({ ...state, topbarClockLeft: enabled }, locale) }), SP_JSX.jsx(DropdownItem$2, { label: text.formatLabel, layout: "below", bottomSeparator: "none", selectedOption: state.topbarDateFormat, disabled: !state.topbarDateEnabled, rgOptions: topbarDateOptions(locale), onChange: (option) => update({ ...state, topbarDateFormat: option.data }, locale) })] });
 }
 function OnboardingInputCapture({ active }) {
     const root = _global_SP_REACT.useRef(null);
@@ -57802,53 +59560,61 @@ function update(next, locale) {
         toaster.toast({ title: "Core", body: controlLocale(locale).saveError });
     });
 }
+// 3.3.11 (the approved QAMCore board): Quick Access > Core is one scrolling list. No inner icon row and no gear:
+// a Quick block that is always open (Display, Sound, Performance, Power; each opens its picker or actions under it), then
+// sections that open and close with A and keep their state (expandedSections): Sound, Display & graphics, Controller,
+// Downloads (only while a store download runs), Look, System. Square gunmetal rows, the crimson focus bar, section
+// headers with a hairline under them and a chevron. The Decky sub-tab is gone (Decky keeps Steam's own rail tab), and
+// so are News and Club (Club lives on Home). Everything else the old tabs held is here.
 const css = `
-.ph-controls{width:100%;min-width:0;color:inherit;letter-spacing:0}
+.ph-controls{width:100%;min-width:0;color:inherit;letter-spacing:0;padding:0 12px 24px}
 .ph-controls *{box-sizing:border-box;letter-spacing:0}
-.ph-control-nav{display:grid;grid-template-columns:minmax(0,1fr);align-items:center;margin:4px 12px 12px;min-width:0;max-width:calc(100% - 24px)}
-.ph-control-tabs{display:flex;gap:3px;flex:1 1 0;overflow-x:auto;scrollbar-width:none;padding:3px;min-width:0}
-.ph-control-tabs::-webkit-scrollbar{display:none}
-.ph-controls .ph-control-icon{display:grid!important;place-items:center;width:32px!important;min-width:32px!important;max-width:32px!important;height:34px!important;min-height:34px!important;max-height:34px!important;padding:0!important;margin:0!important;border-radius:5px!important;border:2px solid transparent!important;background:transparent!important;color:inherit!important;flex:0 0 32px!important;transform:none!important;box-sizing:border-box!important;transition:background .12s,color .12s!important}
-.ph-control-icon svg{width:19px;height:19px}
-.ph-controls .ph-control-tabs>.ph-control-icon{width:auto!important;max-width:none!important;flex:1 0 32px!important}
-.ph-control-nav>.ph-control-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);overflow:visible;min-width:0}
-.ph-controls .ph-control-nav .ph-control-tabs>.ph-control-icon{width:100%!important;min-width:0!important;max-width:100%!important;flex:none!important}
-.ph-controls .ph-control-icon[aria-selected=true]{border-bottom-color:${CORE.crimson}!important}
-.ph-controls .ph-control-icon.gpfocus,.ph-controls .ph-control-icon:focus-visible,.ph-controls .ph-control-icon:hover{background:${CORE.gunmetalRaised}!important;color:${CORE.white}!important;box-shadow:inset 0 0 0 2px ${CORE.crimson}!important;transform:none!important}
-.ph-control-heading{font-size:18px;font-weight:700;margin:0 18px 12px;line-height:1.35}
-.ph-control-section{width:100%;min-width:0;margin:0 0 3px;border:0!important}
 .ph-controls [class*="PanelSection"]::after,.ph-controls [class*="Field"]::after,.ph-controls [class*="Field"]::before{display:none!important}
 .ph-controls [class*="PanelSection"],.ph-controls [class*="Field"]{border-top:0!important;border-bottom:0!important}
 .ph-controls hr,.ph-controls [role="separator"],.ph-controls [class*="FieldSeparator"],.ph-controls [class*="PanelSectionSeparator"],.ph-controls [class*="Divider"]:empty,.ph-controls [class*="divider"]:empty{display:none!important}
 .ph-controls [class*="BottomSeparator"],.ph-controls [class*="WithSeparator"]{border-top:0!important;border-bottom:0!important;box-shadow:none!important}
 .ph-controls [class*="BottomSeparator"]::before,.ph-controls [class*="BottomSeparator"]::after,.ph-controls [class*="WithSeparator"]::before,.ph-controls [class*="WithSeparator"]::after{display:none!important}
-.ph-controls .ph-control-section-title{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;min-height:42px!important;padding:10px 4px!important;display:flex!important;align-items:center;justify-content:space-between;gap:8px;border:0!important;background:transparent!important;color:inherit!important;border-radius:5px!important;transform:none!important;font-size:14px!important;white-space:normal!important}
-.ph-controls .ph-control-section-title.gpfocus,.ph-controls .ph-control-section-title:focus-visible,.ph-controls .ph-control-section-title:hover{background:${CORE.gunmetalRaised}!important;box-shadow:inset 3px 0 0 ${CORE.crimson}!important}
+.ph-quick-label{margin:6px 2px 8px;font-size:11px;font-weight:600;letter-spacing:.14em!important;text-transform:uppercase;color:${CORE.hint}}
+.ph-quick{display:flex;flex-direction:column;gap:4px;margin:0 0 14px}
+.ph-controls .ph-quick-row{width:100%!important;min-width:0!important;max-width:100%!important;min-height:52px!important;margin:0!important;padding:0 14px!important;display:flex!important;align-items:center;gap:12px;
+  background:${CORE.gunmetal}!important;color:${CORE.steel}!important;border:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important;font-size:16px!important;text-align:left}
+.ph-controls .ph-quick-row.gpfocus,.ph-controls .ph-quick-row:focus-visible,.ph-controls .ph-quick-row:hover{background:${CORE.gunmetalRaised}!important;color:${CORE.white}!important;box-shadow:inset 3px 0 0 ${CORE.crimson}!important}
+.ph-quick-row svg{width:20px;height:20px;flex:none}
+.ph-quick-row .ph-quick-value{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:14px;color:${CORE.hint};min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ph-quick-row .ph-quick-value svg{width:14px;height:14px}
+.ph-quick-panel{padding:6px 4px 10px 14px}
+.ph-power-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.ph-controls .ph-power-actions .DialogButton{min-width:0!important;height:44px!important;border-radius:0!important;background:${CORE.gunmetal}!important;color:${CORE.steel}!important;box-shadow:none!important}
+.ph-controls .ph-power-actions .DialogButton.gpfocus{background:${CORE.gunmetalRaised}!important;color:${CORE.white}!important;box-shadow:inset 3px 0 0 ${CORE.crimson}!important}
+.ph-control-section{width:100%;min-width:0;margin:0;border:0!important}
+.ph-controls .ph-control-section-title{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;min-height:48px!important;padding:10px 14px!important;display:flex!important;align-items:center;justify-content:space-between;gap:8px;border:0!important;
+  background:transparent!important;color:${CORE.steel}!important;border-radius:0!important;transform:none!important;font-size:16px!important;white-space:normal!important}
+.ph-controls .ph-control-section-title.gpfocus,.ph-controls .ph-control-section-title:focus-visible,.ph-controls .ph-control-section-title:hover{background:${CORE.gunmetalRaised}!important;color:${CORE.white}!important;box-shadow:inset 3px 0 0 ${CORE.crimson}!important}
 .ph-control-section-title strong{font-weight:600;overflow-wrap:anywhere}
-.ph-control-section-title>span{display:flex;gap:9px;align-items:center;text-align:left;min-width:0}
-.ph-control-section-title svg{width:17px;height:17px;flex:none}
-.ph-control-section-body{min-height:0;padding:4px 0 8px}
-.ph-control-settings{padding:12px 16px 20px}
-.ph-tab-editor-title{font-size:18px;line-height:1.3;margin:16px 0 8px;font-weight:700}
-.ph-control-settings p{font-size:12px;line-height:1.45;opacity:.7;margin:8px 0 18px}
-.ph-control-setting-row{padding:4px 0 12px}
-.ph-controls .ph-tab-editor{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%;min-width:0;margin:4px 0 4px;overflow:visible}
-.ph-controls .ph-tab-editor>.ph-control-icon{width:100%!important;min-width:0!important;max-width:100%!important;transition:background .12s,color .12s!important}
-.ph-tab-editor .ph-control-icon[data-hidden=true]{opacity:.4}
-.ph-tab-editor .ph-control-icon[data-moving=true]{outline:1px dashed currentColor;outline-offset:-5px}
-.ph-selected-tab{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:15px;font-weight:700;min-height:28px;line-height:1.4}
-.ph-selected-tab>span{min-width:0;overflow-wrap:anywhere}
-.ph-selected-tab-status{font-size:12px;font-weight:400;opacity:.75;text-align:right;max-width:48%}
-.ph-controls .ph-settings-action{width:100%!important;display:flex!important;align-items:center;gap:10px;white-space:normal!important;text-align:left}
+.ph-control-section-title>span{display:flex;gap:12px;align-items:center;text-align:left;min-width:0}
+.ph-control-section-title svg{width:18px;height:18px;flex:none}
+.ph-control-section-body{min-height:0;padding:4px 0 10px}
+.ph-core-group>.ph-control-section>.ph-control-section-title{min-height:52px!important;box-shadow:inset 0 -1px 0 ${CORE.gunmetal}!important;font-size:17px!important}
+.ph-core-group>.ph-control-section>.ph-control-section-title.gpfocus{box-shadow:inset 3px 0 0 ${CORE.crimson},inset 0 -1px 0 ${CORE.gunmetal}!important}
+.ph-core-group .ph-control-section-body .ph-control-section-title{font-size:15px!important}
+.ph-controls .ph-settings-action{width:100%!important;display:flex!important;align-items:center;gap:10px;white-space:normal!important;text-align:left;border-radius:0!important}
 .ph-settings-action svg{flex:none;width:18px;height:18px}
-.ph-settings-action span{min-width:0;overflow-wrap:anywhere}
-.ph-control-settings .ph-tab-reset-hint{margin:10px 2px 0;opacity:.7}
-.ph-editor-following{padding-top:32px}
-.ph-controls .qsRedesign{padding:0 16px 18px!important}
-.ph-controls .ph-control-settings .qsRedesign{padding:0 0 18px!important}
+.ph-controls .qsRedesign{padding:0 0 4px!important}
 .ph-controls .qsCardBody{gap:12px;padding:8px 0!important}
+.ph-core-subhead{margin:12px 2px 6px;font-size:11px;font-weight:600;letter-spacing:.14em!important;text-transform:uppercase;color:${CORE.hint}}
 `;
-function ControlCenter({ locale, origin, session, store, controller, settings, downloads, homeTitle, gameAppId = 0, frameTiming, gamingMode = false }) {
+// Steam's own power calls (the same the Steam menu's Power entry makes).
+const steamSystem = () => window.SteamClient?.System;
+const powerAction = (name) => () => { try {
+    steamSystem()?.[name]?.();
+}
+catch { /* Steam keeps running. */ } };
+function QuickRow({ id, icon, title, value, open, onToggle, onboarding }) {
+    return SP_JSX.jsxs(DialogButton$3, { className: "ph-quick-row", "aria-expanded": open, onClick: () => onToggle(id), "data-playhub-onboarding": onboarding, children: [icon, SP_JSX.jsx("span", { children: title }), SP_JSX.jsxs("span", { className: "ph-quick-value", children: [value ? SP_JSX.jsx("span", { children: value }) : null, SP_JSX.jsx(TbChevronRight, {})] })] });
+}
+// The group ids each old tab showed (the onboarding tour still names tabs; it is pointed at their groups).
+const groupFor = (tab) => TAB_GROUP[tab];
+function ControlCenter({ locale, origin, session, store, controller, settings, downloads, gameAppId = 0, frameTiming, gamingMode = false }) {
     const state = _global_SP_REACT.useSyncExternalStore(subscribe, () => prefs);
     const onboardingRoot = _global_SP_REACT.useRef(null);
     _global_SP_REACT.useLayoutEffect(() => {
@@ -57859,22 +59625,19 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
             return () => { stopVisibility(); stopOnboarding(); };
         }
     }, [origin]);
-    const [manualCustomizing, setCustomizing] = _global_SP_REACT.useState(false);
-    const [settingsPage, updateSettingsPage] = _global_SP_REACT.useState(lastSettingsPage);
-    const setSettingsPage = (page) => { lastSettingsPage = page; updateSettingsPage(page); };
-    const [editor, setEditor] = _global_SP_REACT.useState(createTabEditor);
-    const editorRef = _global_SP_REACT.useRef(editor);
     const [ready, setReady] = _global_SP_REACT.useState(loaded);
+    const [quick, setQuick] = _global_SP_REACT.useState();
     const copy = controlLocale(locale);
-    const editorCopy = tabEditorLocale(locale);
-    const integrationCopy = deckyIntegrationLocale(locale);
+    const text = coreQamCopy(locale);
     const deckyHost = _global_SP_REACT.useSyncExternalStore(subscribeDeckyHost, getDeckyHostSnapshot);
+    const downloadsRunning = useStoreDownloadsRunning();
     _global_SP_REACT.useEffect(() => {
+        // 3.3.11: no Decky inside Core: Decky's own tab on Steam's rail stays visible and nothing is hosted here.
         if (origin === "qam" && ready) {
-            setDeckyNativeHidden(state.deckyHostEnabled);
-            setDeckyHostEnabled(true);
+            setDeckyNativeHidden(false);
+            setDeckyHostEnabled(false);
         }
-    }, [origin, ready, state.deckyHostEnabled]);
+    }, [origin, ready]);
     _global_SP_REACT.useEffect(() => {
         let alive = true;
         if (!loading)
@@ -57889,100 +59652,21 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
                 setReady(true); });
         return () => { alive = false; };
     }, []);
-    const deckyAvailable = origin === "qam" && deckyHost.available;
-    const editorTabs = state.order;
-    const visible = visibleControlTabs(state, deckyAvailable);
-    const manualActive = visible.includes(state.active) ? state.active : visible[0] ?? "home";
-    const { active, customizing, showcasing } = useOnboardingControlShowcase(origin === "qam", ready, visible, manualActive, manualCustomizing);
+    const visible = visibleControlTabs(state, false);
+    const { active, customizing, showcasing } = useOnboardingControlShowcase(origin === "qam", ready, visible, state.active, false);
     const updateExpanded = _global_SP_REACT.useCallback((change) => {
         if (ready)
             update({ ...prefs, expandedSections: change(prefs.expandedSections) }, locale);
     }, [ready, locale]);
     const { expanded, toggle: toggleSection } = useControlSections(state.expandedSections, updateExpanded);
-    const hostActive = !customizing && active === "decky" && deckyAvailable;
-    const editing = editor.selected;
-    const edit = (action) => {
-        const result = tabEditorTransition(prefs, editorRef.current, action, deckyAvailable);
-        editorRef.current = result.editor;
-        setEditor(result.editor);
-        if (result.preferences !== prefs)
-            update(result.preferences, locale);
-    };
-    _global_SP_REACT.useEffect(() => {
-        if (!editorTabs.includes(editing)) {
-            const next = createTabEditor("home");
-            editorRef.current = next;
-            setEditor(next);
-        }
-    }, [editing, state.order]);
-    const cancelEditor = (event) => {
-        event?.stopPropagation?.();
-        event?.preventDefault?.();
-        if (editorRef.current.draftOrder)
-            edit({ type: "cancel" });
-        else
-            setCustomizing(false);
-    };
-    const editorDirection = (event) => {
-        if (!editorRef.current.draftOrder)
-            return;
-        const button = event?.detail?.button;
-        if (![GamepadButton.DIR_LEFT, GamepadButton.DIR_RIGHT, GamepadButton.DIR_UP, GamepadButton.DIR_DOWN].includes(button))
-            return;
-        event.preventDefault?.();
-        event.stopPropagation?.();
-        if (button === GamepadButton.DIR_LEFT || button === GamepadButton.DIR_RIGHT)
-            edit({ type: "move", direction: button === GamepadButton.DIR_LEFT ? -1 : 1 });
-    };
-    const editorAction = (id) => {
-        if (editor.draftOrder)
-            return editorCopy.confirm;
-        return !canToggleTab(state, id, deckyAvailable) ? editorCopy.lastTab : state.hidden.includes(id) ? editorCopy.show : editorCopy.hide;
-    };
-    const choose = (id) => update({ ...state, active: id }, locale);
-    const openDeviceVideo = () => {
-        choose("audio"); // Persisted tab ID for Video.
-        setCustomizing(false);
-    };
-    const openDevicePerformance = () => {
-        choose("graphics");
-        setCustomizing(false);
-    };
-    const step = (direction) => {
-        const index = visible.indexOf(active);
-        choose(visible[(index + direction + visible.length) % visible.length]);
-    };
-    return SP_JSX.jsxs(Focusable$8, { className: "ph-control-shell", "flow-children": "column", onMoveDown: () => true, "data-playhub-onboarding-controls": origin === "qam" ? "true" : undefined, "data-onboarding-ready": ready, "data-onboarding-decky-enabled": deckyHost.available, "data-onboarding-decky-visible": visible.includes("decky"), "data-onboarding-customizing": customizing, "data-onboarding-active-tab": customizing ? "customize" : active, "data-onboarding-store-visible": visible.includes("store"), "data-onboarding-showcasing": showcasing, "data-onboarding-visible-tabs": JSON.stringify(visible), "data-onboarding-content-ready": ready && (active !== "decky" || customizing || deckyHost.ready), actionDescriptionMap: customizing ? {} : { [GamepadButton.BUMPER_LEFT]: copy.switchTab, [GamepadButton.BUMPER_RIGHT]: copy.switchTab }, onButtonDown: (event) => {
-            if (customizing)
-                return;
-            const button = event?.detail?.button;
-            if (button !== GamepadButton.BUMPER_LEFT && button !== GamepadButton.BUMPER_RIGHT)
-                return;
-            event.preventDefault?.();
-            event.stopPropagation?.();
-            step(button === GamepadButton.BUMPER_LEFT ? -1 : 1);
-        }, onCancelButton: customizing ? cancelEditor : undefined, onCancelActionDescription: customizing ? editorCopy.cancel : undefined, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: (CompatUI.coreClassSelectors?.(css) ?? css) }), customizing ? SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs(Focusable$8, { className: "ph-control-settings", "flow-children": "column", "data-playhub-onboarding-content": origin === "qam" ? "customize" : undefined, children: [SP_JSX.jsx("style", { children: `.ph-controls .ph-settings-pages{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:5px;border-radius:10px;background:${CORE.gunmetal};margin:0 0 20px;width:100%;min-width:0;max-width:100%}.ph-controls .ph-settings-pages>[role=tab]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:40px!important;min-height:40px!important;padding:8px 6px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;font-size:14px!important;line-height:24px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}.ph-controls .ph-settings-pages>[role=tab][aria-selected=true]{background:${CORE.gunmetalRaised}!important;box-shadow:inset 0 -3px 0 ${CORE.crimson}!important}.ph-controls .ph-settings-pages>[role=tab],.ph-controls .ph-settings-pages>[role=tab]:hover,.ph-controls .ph-settings-pages>[role=tab]:focus,.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab] *{color:${CORE.white}!important}.ph-controls .ph-settings-pages>[role=tab].gpfocus,.ph-controls .ph-settings-pages>[role=tab]:focus-visible{outline:2px solid ${CORE.crimson}!important;outline-offset:-2px!important}` }), !showcasing && SP_JSX.jsxs(Focusable$8, { className: "ph-settings-pages", "flow-children": "row", role: "tablist", children: [SP_JSX.jsx(DialogButton$3, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'general', onClick: () => setSettingsPage('general'), children: qamSettingsCopy(locale)[0] }), SP_JSX.jsx(DialogButton$3, { role: "tab", onOKActionDescription: copy.switchTab, "aria-selected": settingsPage === 'qam', onClick: () => setSettingsPage('qam'), children: "Shortcuts" })] }), settingsPage === 'qam' && !showcasing ? SP_JSX.jsxs(QamSettings, { locale: locale, children: [settings, SP_JSX.jsx(ToggleField$6, { label: integrationCopy.label, description: integrationCopy.description, bottomSeparator: "none", checked: state.deckyHostEnabled, onChange: (enabled) => update({ ...state, deckyHostEnabled: enabled }, locale) })] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h2", { className: "ph-tab-editor-title", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: editorCopy.title }), SP_JSX.jsx("p", { children: editorCopy.introduction }), SP_JSX.jsx(Focusable$8, { className: "ph-control-tabs ph-tab-editor", "flow-children": "row", role: "tablist", "aria-label": copy.customize, onKeyDown: (event) => {
-                                                if (event.key === "x" || event.key === "X") {
-                                                    event.preventDefault();
-                                                    event.stopPropagation();
-                                                    edit({ type: "secondary" });
-                                                }
-                                                else if (event.key === "Escape")
-                                                    cancelEditor(event);
-                                                else if (editorRef.current.draftOrder && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
-                                                    event.preventDefault();
-                                                    event.stopPropagation();
-                                                    if (event.key === "ArrowLeft" || event.key === "ArrowRight")
-                                                        edit({ type: "move", direction: event.key === "ArrowLeft" ? -1 : 1 });
-                                                }
-                                            }, children: editorTabs.map(id => {
-                                                const Icon = icons[id];
-                                                return SP_JSX.jsx(DialogButton$3, { className: "ph-control-icon", role: "tab", "aria-label": `${copy[id]}: ${state.hidden.includes(id) ? editorCopy.hidden : editorCopy.visible}`, title: copy[id], onOKActionDescription: editorAction(id), onSecondaryActionDescription: editor.draftOrder ? editorCopy.confirm : editorCopy.move, onCancelActionDescription: editorCopy.cancel, actionDescriptionMap: { [GamepadButton.OK]: editorAction(id), [GamepadButton.SECONDARY]: editor.draftOrder ? editorCopy.confirm : editorCopy.move, [GamepadButton.CANCEL]: editorCopy.cancel }, "aria-selected": editing === id, "data-hidden": state.hidden.includes(id), "data-moving": editing === id && !!editor.draftOrder, style: { order: (editor.draftOrder ?? state.order).indexOf(id) }, onFocus: () => edit({ type: "select", id }), onGamepadFocus: () => edit({ type: "select", id }), onGamepadDirection: editor.draftOrder ? editorDirection : undefined, onSecondaryButton: (event) => { event.preventDefault?.(); event.stopPropagation?.(); edit({ type: "select", id }); edit({ type: "secondary" }); }, onCancelButton: cancelEditor, onClick: () => { edit({ type: "select", id }); edit({ type: "confirm" }); }, children: SP_JSX.jsx(Icon, {}) }, id);
-                                            }) }), SP_JSX.jsx("div", { className: "ph-control-setting-row", "aria-live": "polite", children: SP_JSX.jsxs("div", { className: "ph-selected-tab", children: [SP_JSX.jsx("span", { children: copy[editing] }), SP_JSX.jsxs("span", { className: "ph-selected-tab-status", children: [state.hidden.includes(editing) ? editorCopy.hidden : editorCopy.visible, !canToggleTab(state, editing, deckyAvailable) && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("br", {}), editorCopy.lastTab] })] })] }) }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onOKActionDescription: editorCopy.reset, onClick: () => edit({ type: "reset" }), children: [SP_JSX.jsx(TbRestore, {}), SP_JSX.jsx("span", { children: editorCopy.reset })] }), SP_JSX.jsx("p", { className: "ph-tab-reset-hint", children: editorCopy.resetHint }), SP_JSX.jsxs("div", { className: "ph-editor-following", children: [SP_JSX.jsxs("div", { style: { paddingTop: 16 }, children: [SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) }), !showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: visible.includes("audio") ? openDeviceVideo : undefined, openPerformance: visible.includes("graphics") ? openDevicePerformance : undefined, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] })] }), SP_JSX.jsx(ControlSection, { id: "news", title: "News", locale: locale, icon: SP_JSX.jsx(TbPhoto, {}), collapsed: !expanded.includes("news"), onToggle: toggleSection, children: SP_JSX.jsx(HomeNewsSettings, { locale: locale }) }), SP_JSX.jsx(ControlSection, { id: "club", title: "Club", locale: locale, icon: SP_JSX.jsx(TbTrophy, {}), collapsed: !expanded.includes("club"), onToggle: toggleSection, children: SP_JSX.jsx(ClubSettings, { locale: locale }) }), SP_JSX.jsx(QuickSettingsContent, { page: "tools", locale: locale, expanded: expanded, onToggle: toggleSection }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onClick: () => { setCustomizing(false); replayPlayhubOnboarding(); }, children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] })] })] }) }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$8, { className: "ph-control-nav", "flow-children": "row", children: SP_JSX.jsxs(Focusable$8, { className: "ph-control-tabs", "flow-children": "row", role: "tablist", "aria-label": "Core", children: [visible.map(id => {
-                                            const Icon = icons[id];
-                                            return SP_JSX.jsx(DialogButton$3, { className: "ph-control-icon", role: "tab", "aria-selected": active === id, "aria-label": copy[id], onOKActionDescription: copy[id], disabled: !ready, "data-playhub-onboarding": origin === "qam" ? id : undefined, onClick: () => choose(id), children: SP_JSX.jsx(Icon, {}) }, id);
-                                        }), SP_JSX.jsx(DialogButton$3, { className: "ph-control-icon", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, "aria-label": copy.settings, onOKActionDescription: copy.settings, disabled: !ready, onClick: () => setCustomizing(true), children: SP_JSX.jsx(TbSettings, {}) })] }) }), active !== "decky" && (active !== "home" || homeTitle) && SP_JSX.jsx("h2", { className: "ph-control-heading", children: active === "home" ? homeTitle : copy[active] }), !hostActive && SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsxs("div", { "data-playhub-onboarding-content": origin === "qam" ? active : undefined, children: [active === "home" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "home" : undefined, children: session }) : active === "store" ? SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "store" : undefined, children: store }) : active === "controller" ? SP_JSX.jsx(SP_JSX.Fragment, { children: controller }) :
-                                            SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(QuickSettingsContent, { page: active === "decky" ? "home" : active, locale: locale, expanded: expanded, onToggle: toggleSection, gameAppId: gameAppId, gamingMode: gamingMode }), active === "graphics" && frameTiming && SP_JSX.jsx(ControlSection, { id: "measurement", title: quickSettingsGroups(locale).measurement, icon: SP_JSX.jsx(TbGauge, {}), locale: locale, collapsed: !expanded.includes("measurement"), onToggle: toggleSection, children: frameTiming })] }), downloads] }) })] })] }), origin === "qam" && !state.hidden.includes("decky") && SP_JSX.jsx(DeckyHost, { active: hostActive })] });
+    // The tour shows a tab's content: its group is open while it does.
+    const shown = showcasing ? (customizing ? "group/system" : groupFor(active)) : undefined;
+    const isOpen = (group) => group === shown || expanded.includes(group);
+    const openGroup = (group) => { if (!expanded.includes(group))
+        toggleSection(group); };
+    const toggleQuick = (id) => setQuick(current => current === id ? undefined : id);
+    const group = (id, title, icon, children, onboarding) => SP_JSX.jsx("div", { className: "ph-core-group", "data-core-group": id, "data-playhub-onboarding": origin === "qam" ? onboarding : undefined, children: SP_JSX.jsx(ControlSection, { id: id, title: title, icon: icon, locale: locale, collapsed: !isOpen(id), onToggle: toggleSection, children: SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" && onboarding ? onboarding : undefined, children: children }) }) });
+    return SP_JSX.jsxs(Focusable$8, { className: "ph-control-shell", "flow-children": "column", "data-playhub-onboarding-controls": origin === "qam" ? "true" : undefined, "data-onboarding-ready": ready, "data-onboarding-decky-enabled": deckyHost.available, "data-onboarding-decky-visible": false, "data-onboarding-customizing": customizing, "data-onboarding-active-tab": customizing ? "customize" : active, "data-onboarding-store-visible": visible.includes("store"), "data-onboarding-showcasing": showcasing, "data-onboarding-visible-tabs": JSON.stringify(visible.filter(id => id !== "decky")), "data-onboarding-content-ready": ready, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: (CompatUI.coreClassSelectors?.(css) ?? css) }), SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsx(Focusable$8, { "flow-children": "column", children: SP_JSX.jsx(QuickSettingsContent, { page: "core", locale: locale, expanded: expanded, onToggle: toggleSection, gameAppId: gameAppId, gamingMode: gamingMode, layout: parts => SP_JSX.jsxs(SP_JSX.Fragment, { children: [parts.status, SP_JSX.jsxs("div", { className: "ph-quick-label", children: [text.quick, " \u00B7 ", text.alwaysOpen] }), SP_JSX.jsxs(Focusable$8, { className: "ph-quick", "flow-children": "column", children: [SP_JSX.jsx(QuickRow, { id: "display", icon: SP_JSX.jsx(TbDeviceTv, {}), title: text.display, value: parts.quick.displayLabel, open: quick === "display", onToggle: toggleQuick }), quick === "display" && SP_JSX.jsx("div", { className: "ph-quick-panel", children: parts.quick.display }), SP_JSX.jsx(QuickRow, { id: "sound", icon: SP_JSX.jsx(TbVolume, {}), title: text.sound, value: parts.quick.soundLabel, open: quick === "sound", onToggle: toggleQuick }), quick === "sound" && SP_JSX.jsx("div", { className: "ph-quick-panel", children: parts.quick.sound }), SP_JSX.jsx(QuickRow, { id: "performance", icon: SP_JSX.jsx(TbBolt, {}), title: text.performance, open: quick === "performance", onToggle: toggleQuick }), quick === "performance" && SP_JSX.jsx("div", { className: "ph-quick-panel", children: SP_JSX.jsx("div", { className: "qsCardBody", children: parts.quick.power }) }), SP_JSX.jsx(QuickRow, { id: "power", icon: SP_JSX.jsx(TbPower, {}), title: text.power, value: `${text.sleep} · ${text.restart} · ${text.shutDown}`, open: quick === "power", onToggle: toggleQuick }), quick === "power" && SP_JSX.jsxs(Focusable$8, { className: "ph-quick-panel ph-power-actions", "flow-children": "row", children: [SP_JSX.jsx(DialogButton$3, { onClick: powerAction("SuspendPC"), children: text.sleep }), SP_JSX.jsx(DialogButton$3, { onClick: powerAction("RestartPC"), children: text.restart }), SP_JSX.jsx(DialogButton$3, { onClick: powerAction("ShutdownPC"), children: text.shutDown })] })] }), group("group/sound", text.sound, SP_JSX.jsx(TbVolume, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [parts.sections.mixer, parts.sections.devices] }), "performance"), group("group/display", text.displayGraphics, SP_JSX.jsx(TbDeviceTv, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [parts.sections.display, frameTiming && SP_JSX.jsx(ControlSection, { id: "measurement", title: quickSettingsGroups(locale).measurement, icon: SP_JSX.jsx(TbGauge, {}), locale: locale, collapsed: !expanded.includes("measurement"), onToggle: toggleSection, children: frameTiming }), parts.sections.shaders, parts.sections.nvidia, parts.sections.radeon, parts.sections.lossless] }), "audio"), group("group/controller", text.controller, SP_JSX.jsx(TbDeviceGamepad2, {}), controller, "controller"), downloadsRunning && group("group/downloads", text.downloads, SP_JSX.jsx(TbDownload, {}), downloads), group("group/look", text.look, SP_JSX.jsx(TbEye, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(CoreUiSection, { locale: locale }), SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) })] })), group("group/system", text.system, SP_JSX.jsx(TbSettings, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [!showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: () => openGroup("group/display"), openPerformance: () => { openGroup("group/display"); setQuick("performance"); }, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] }), parts.sections.agent, SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "home" : undefined, children: session }), SP_JSX.jsx("div", { className: "ph-core-subhead", children: text.stores }), SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "store" : undefined, children: store }), SP_JSX.jsx("div", { className: "ph-core-subhead", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: text.shortcuts }), SP_JSX.jsx(QamSettings, { locale: locale, children: settings }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onClick: () => replayPlayhubOnboarding(), children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] }), "home")] }) }) }) })] })] });
 }
 
 function validSample(raw) {
@@ -58041,8 +59725,8 @@ function createGameFrameComparison() {
 }
 const gameFrameComparison = createGameFrameComparison();
 
-const { ButtonItem: ButtonItem$7, PanelSection: PanelSection$b, PanelSectionRow: PanelSectionRow$b } = CompatUI;
-const copy$a = {
+const { ButtonItem: ButtonItem$6, PanelSection: PanelSection$a, PanelSectionRow: PanelSectionRow$a } = CompatUI;
+const copy$9 = {
     en: ["Frame timing", "Measure FPS", "Measuring…", "Four-second sample of the current game.", "Presented FPS", "Frame time", "No game frames captured. Try during play.", "Frame measurement is unavailable.", "Windows denied access to frame data."],
     it: ["Tempi dei fotogrammi", "Misura FPS", "Misurazione…", "Campione di quattro secondi del gioco in corso.", "FPS presentati", "Tempo per fotogramma", "Nessun fotogramma rilevato. Riprova durante il gioco.", "Misurazione dei fotogrammi non disponibile.", "Windows ha negato l’accesso ai dati dei fotogrammi."],
     de: ["Framezeiten", "FPS messen", "Messung läuft…", "Vier Sekunden aus dem laufenden Spiel.", "Ausgegebene FPS", "Framezeit", "Keine Frames erfasst. Versuche es im Spiel erneut.", "Frame-Messung nicht verfügbar.", "Windows hat den Zugriff auf Frame-Daten verweigert."],
@@ -58072,7 +59756,7 @@ const comparisonCopy = {
 };
 function GameFrameTiming({ appId, locale }) {
     const language = locale.split(/[-_]/)[0];
-    const [title, , measuring, , fps, frame, empty, unavailable, denied] = copy$a[language] ?? copy$a.en;
+    const [title, , measuring, , fps, frame, empty, unavailable, denied] = copy$9[language] ?? copy$9.en;
     const [measureFirst, measureSecond, repeat, clear, hint, prepare, firstLabel, secondLabel, change, returnToGame] = comparisonCopy[language] ?? comparisonCopy.en;
     const [result, setResult] = _global_SP_REACT.useState(() => gameFrameComparison.read(appId));
     _global_SP_REACT.useEffect(() => {
@@ -58093,7 +59777,7 @@ function GameFrameTiming({ appId, locale }) {
         { label: frame, before: first.medianFrameTimeMs, after: second?.medianFrameTimeMs, unit: " ms" },
         { label: "P95", before: first.p95FrameTimeMs, after: second?.p95FrameTimeMs, unit: " ms" },
     ] : [];
-    return SP_JSX.jsxs(PanelSection$b, { title: title, children: [SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ButtonItem$7, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => void gameFrameComparison.capture(appId, id => call("measure_game_frames", id, true)), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: busy ? measuring : measure }) }) }), SP_JSX.jsxs("div", { role: "status", style: { padding: "4px 16px 12px", fontSize: 13, lineHeight: 1.5, overflowWrap: "anywhere" }, children: [SP_JSX.jsx("div", { children: message }), !busy && !error && SP_JSX.jsx("div", { style: { opacity: .74 }, children: prepare }), first && SP_JSX.jsx("dl", { style: { display: "grid", gap: 8, margin: "12px 0 0" }, children: rows.map(({ label, before, after, unit }) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { style: { fontWeight: 650 }, children: label }), SP_JSX.jsxs("dd", { style: { margin: 0, display: "flex", flexWrap: "wrap", columnGap: 12 }, children: [SP_JSX.jsxs("span", { children: [firstLabel, " \u00B7 ", format(before), unit] }), after !== undefined && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { children: [secondLabel, " \u00B7 ", format(after), unit] }), SP_JSX.jsxs("span", { children: [change, " \u00B7 ", format(Number((after - before).toFixed(2)), true), unit] })] })] })] }, label)) })] }), first && SP_JSX.jsx(PanelSectionRow$b, { children: SP_JSX.jsx(ButtonItem$7, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => gameFrameComparison.reset(appId), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: clear }) }) })] });
+    return SP_JSX.jsxs(PanelSection$a, { title: title, children: [SP_JSX.jsx(PanelSectionRow$a, { children: SP_JSX.jsx(ButtonItem$6, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => void gameFrameComparison.capture(appId, id => call("measure_game_frames", id, true)), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: busy ? measuring : measure }) }) }), SP_JSX.jsxs("div", { role: "status", style: { padding: "4px 16px 12px", fontSize: 13, lineHeight: 1.5, overflowWrap: "anywhere" }, children: [SP_JSX.jsx("div", { children: message }), !busy && !error && SP_JSX.jsx("div", { style: { opacity: .74 }, children: prepare }), first && SP_JSX.jsx("dl", { style: { display: "grid", gap: 8, margin: "12px 0 0" }, children: rows.map(({ label, before, after, unit }) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("dt", { style: { fontWeight: 650 }, children: label }), SP_JSX.jsxs("dd", { style: { margin: 0, display: "flex", flexWrap: "wrap", columnGap: 12 }, children: [SP_JSX.jsxs("span", { children: [firstLabel, " \u00B7 ", format(before), unit] }), after !== undefined && SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("span", { children: [secondLabel, " \u00B7 ", format(after), unit] }), SP_JSX.jsxs("span", { children: [change, " \u00B7 ", format(Number((after - before).toFixed(2)), true), unit] })] })] })] }, label)) })] }), first && SP_JSX.jsx(PanelSectionRow$a, { children: SP_JSX.jsx(ButtonItem$6, { layout: "below", bottomSeparator: "none", disabled: busy, onClick: () => gameFrameComparison.reset(appId), children: SP_JSX.jsx("span", { style: { whiteSpace: "normal", overflowWrap: "anywhere" }, children: clear }) }) })] });
 }
 
 const style$8 = `
@@ -61855,8 +63539,8 @@ function installAutoCompleted(deps) {
 // while someone is signed in, so when Windows has a restart pending (or a month has
 // passed) this card offers to restart at 5:00. The agent does the restart, never during a
 // game (GamingMode.Services/UpdateNight.cs). Shown only when there is something to say.
-const { PanelSection: PanelSection$a, PanelSectionRow: PanelSectionRow$a, ButtonItem: ButtonItem$6 } = CompatUI;
-const copy$9 = {
+const { PanelSection: PanelSection$9, PanelSectionRow: PanelSectionRow$9, ButtonItem: ButtonItem$5 } = CompatUI;
+const copy$8 = {
     en: { title: "Windows updates", offer: "Windows has updates waiting. Restart tonight at {time}?", restart: "Restart at {time}", scheduled: "Core will restart at {time} for Windows updates, unless a game is running.", cancel: "Cancel" },
     it: { title: "Aggiornamenti di Windows", offer: "Windows ha degli aggiornamenti in attesa. Riavviare stanotte alle {time}?", restart: "Riavvia alle {time}", scheduled: "Core si riavvierà alle {time} per gli aggiornamenti di Windows, a meno che un gioco sia aperto.", cancel: "Annulla" },
     es: { title: "Actualizaciones de Windows", offer: "Windows tiene actualizaciones pendientes. ¿Reiniciar esta noche a las {time}?", restart: "Reiniciar a las {time}", scheduled: "Core se reiniciará a las {time} para las actualizaciones de Windows, salvo que haya un juego abierto.", cancel: "Cancelar" },
@@ -61888,7 +63572,7 @@ function nightTime(locale, state, now = new Date()) {
 function UpdateNightCard({ locale }) {
     const [state, setState] = _global_SP_REACT.useState();
     const [busy, setBusy] = _global_SP_REACT.useState(false);
-    const text = copy$9[locale] ?? copy$9.en;
+    const text = copy$8[locale] ?? copy$8.en;
     _global_SP_REACT.useEffect(() => {
         let alive = true;
         const load = () => { call("core_update_night").then(value => { if (alive)
@@ -61910,14 +63594,14 @@ function UpdateNightCard({ locale }) {
             setBusy(false);
         }
     };
-    return (SP_JSX.jsxs(PanelSection$a, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$a, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${CORE.warning}` }, children: (state.scheduledFor ? text.scheduled : text.offer).replace("{time}", time) }) }), SP_JSX.jsx(PanelSectionRow$a, { children: SP_JSX.jsx(ButtonItem$6, { layout: "below", disabled: busy, onClick: () => act(state.scheduledFor ? "core_update_night_cancel" : "core_update_night_schedule"), children: state.scheduledFor ? text.cancel : text.restart.replace("{time}", time) }) })] }));
+    return (SP_JSX.jsxs(PanelSection$9, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$9, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${CORE.warning}` }, children: (state.scheduledFor ? text.scheduled : text.offer).replace("{time}", time) }) }), SP_JSX.jsx(PanelSectionRow$9, { children: SP_JSX.jsx(ButtonItem$5, { layout: "below", disabled: busy, onClick: () => act(state.scheduledFor ? "core_update_night_cancel" : "core_update_night_schedule"), children: state.scheduledFor ? text.cancel : text.restart.replace("{time}", time) }) })] }));
 }
 
 // Eternal Core: Core Health in Quick Access. Turns the agent's GET /health answer
 // (GamingMode.Services/CoreHealth.cs) into the lines HealthSection.tsx shows, in Core's 12
 // languages, including the console guards' rows and buttons (CONSOLE-GUARDS.md). Self-contained on purpose:
 // tests/coreHealthSection.test.mjs and tests/consoleGuards.test.mjs load this file alone.
-const en$7 = {
+const en$6 = {
     title: "Health", allGood: "All good", attention: "Needs attention: {n}", checking: "Checking…", agentDown: "Core's service is not answering.", dismiss: "Dismiss alert",
     r_backup: "Server backup", r_restore: "Restore check", r_drive: "Server drive", r_romm: "RomM", r_restart: "Windows restart", r_night: "Update night", r_tv: "TV", r_pc: "PC disk space", r_core: "Core update",
     notConfigured: "Set the server in Core > Gaming Mode", unreachable: "Server not reachable", missing: "No status file on the server", unreadable: "Status file unreadable", stale: "Last news {when}", unknown: "Unknown",
@@ -61933,8 +63617,8 @@ const en$7 = {
     r_stream: "Streaming", sIdle: "Idle", sTo: "Streaming to {device}", sVia: "Streaming · {source}", sKept: "TV kept out by you", tHeld: "Left alone (Stream mode)", sThrough: "Through {source}", sVd: "Apollo's virtual display is active",
     r_steam: "Steam update", stPostponed: "Postponed: {reason}", stUnsupported: "the new Steam doesn't work with the installed Decky", stUnknown: "Core can't tell yet if the new Steam works with Decky", stCantCheck: "Core can't check compatibility with Decky", stFailed: "the last try failed its check and was undone", stPending: "Waiting version: {version}",
 };
-const copy$8 = {
-    en: en$7,
+const copy$7 = {
+    en: en$6,
     it: {
         title: "Salute", allGood: "Tutto a posto", attention: "Da controllare: {n}", checking: "Controllo…", agentDown: "Il servizio di Core non risponde.", dismiss: "Ignora l'avviso",
         r_backup: "Backup del server", r_restore: "Prova di ripristino", r_drive: "Disco del server", r_romm: "RomM", r_restart: "Riavvio di Windows", r_night: "Notte degli aggiornamenti", r_tv: "TV", r_pc: "Spazio sul PC", r_core: "Aggiornamento di Core",
@@ -62464,7 +64148,7 @@ const consoleCopy = {
     },
 };
 for (const [language, table] of Object.entries(consoleCopy))
-    Object.assign(copy$8[language] ?? {}, table);
+    Object.assign(copy$7[language] ?? {}, table);
 // Batch 1 (BATCH-1.md): the save backup before update night and Decky with the plugins that report errors.
 const batchCopy = {
     en: {
@@ -62505,7 +64189,7 @@ const batchCopy = {
     },
 };
 for (const [language, table] of Object.entries(batchCopy))
-    Object.assign(copy$8[language] ?? {}, table);
+    Object.assign(copy$7[language] ?? {}, table);
 // Batch 2 (BATCH-2.md): sleep after streaming, Wake-on-LAN readiness and the Home Assistant bridge.
 const batchTwoCopy$1 = {
     en: {
@@ -62546,7 +64230,7 @@ const batchTwoCopy$1 = {
     },
 };
 for (const [language, table] of Object.entries(batchTwoCopy$1))
-    Object.assign(copy$8[language] ?? {}, table);
+    Object.assign(copy$7[language] ?? {}, table);
 // Jarvis (JARVIS.md): connected, not set up, Home Assistant unreachable, and how it answers.
 const jarvisCopy$1 = {
     en: { r_jarvis: "Jarvis", jvOff: "Off", jvNotSetUp: "Not set up", jvConnected: "Connected", jvReady: "Ready", jvHaDown: "Home Assistant unreachable", jvClaudeDown: "Claude API unreachable", jvToken: "Token refused", jvKey: "Key refused", jvAgent: "Agent not found", jvViaHa: "Through Home Assistant · {host}", jvViaClaude: "Through the Claude API", jvNoHelper: "Screen helper: needs the Anthropic key" },
@@ -62563,7 +64247,7 @@ const jarvisCopy$1 = {
     ru: { r_jarvis: "Jarvis", jvOff: "Выключено", jvNotSetUp: "Не настроено", jvConnected: "Подключено", jvReady: "Готово", jvHaDown: "Home Assistant недоступен", jvClaudeDown: "API Claude недоступен", jvToken: "Токен отклонён", jvKey: "Ключ отклонён", jvAgent: "Агент не найден", jvViaHa: "Через Home Assistant · {host}", jvViaClaude: "Через API Claude", jvNoHelper: "Помощь с экраном: нужен ключ Anthropic" },
 };
 for (const [language, table] of Object.entries(jarvisCopy$1))
-    Object.assign(copy$8[language] ?? {}, table);
+    Object.assign(copy$7[language] ?? {}, table);
 // 3.3.5 (CONSOLE-GUARDS.md "Exiting games", "Back paddles", "Emulators"; EMULATOR-UPDATES.md): exiting games, the back
 // paddles, emulator updates, one row per emulator and one hotkeys row per emulator. Emulator rows are titled with the
 // emulator's own name.
@@ -62738,7 +64422,7 @@ const emuCopy = {
     },
 };
 for (const [language, table] of Object.entries(emuCopy))
-    Object.assign(copy$8[language] ?? {}, table);
+    Object.assign(copy$7[language] ?? {}, table);
 // 3.3.5: the Launcher pop-ups row also counts the store launchers Core closed after a game.
 const launcherClosedCopy = {
     en: "Closed after games today: {n} (last: {name})",
@@ -62755,12 +64439,12 @@ const launcherClosedCopy = {
     hi: "आज गेम के बाद बंद किए: {n} (आख़िरी: {name})",
 };
 for (const [language, value] of Object.entries(launcherClosedCopy))
-    if (copy$8[language])
-        copy$8[language].lfClosed = value;
+    if (copy$7[language])
+        copy$7[language].lfClosed = value;
 function healthCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$8[language === "ua" ? "uk" : language] ?? en$7;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$7[key] ?? key });
+    const table = copy$7[language === "ua" ? "uk" : language] ?? en$6;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$6[key] ?? key });
 }
 function fill$4(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? String(values[name]) : all));
@@ -63374,8 +65058,8 @@ function healthLines(answer, locale, now = new Date()) {
 // failed try) and "Update Steam now": the same backup, smoke test and rollback as the automatic update. The
 // agent's gate may ask for confirmation first: once when it cannot tell whether the new Steam works with Decky,
 // twice when it knows it does not. Each confirmation is another press of the same button.
-const { PanelSection: PanelSection$9, PanelSectionRow: PanelSectionRow$9, ButtonItem: ButtonItem$5 } = CompatUI;
-const copy$7 = {
+const { PanelSection: PanelSection$8, PanelSectionRow: PanelSectionRow$8, ButtonItem: ButtonItem$4 } = CompatUI;
+const copy$6 = {
     en: { title: "Steam updates", current: "Steam is up to date.", soaking: "A new Steam version is waiting: Core installs it in {n} days, at night, if it works with Decky.", due: "Core updates Steam on the next update night, when you're not playing.", waiting: "The last Steam update failed its check and was undone. Core tries again when a fix arrives.", off: "Steam updates itself, as usual.", now: "Update Steam now", again: "Update anyway", started: "Updating Steam: Core saves a copy first and is back in a few minutes.", busy: "An update is already running.", confirmCantTell: "Core can't tell whether the new Steam works with Decky. Press again to update anyway: Core saves a copy first and rolls back if something goes wrong.", confirmIncompatible: "The new Steam doesn't work with the installed Decky: plugins will stop loading. Press again if you want to update anyway.", confirmAgain: "Last confirmation: press once more to update Steam knowing that plugins won't work." },
     it: { title: "Aggiornamenti di Steam", current: "Steam è aggiornato.", soaking: "C'è una nuova versione di Steam: Core la installa tra {n} giorni, di notte, se funziona con Decky.", due: "Core aggiorna Steam la prossima notte degli aggiornamenti, quando non giochi.", waiting: "L'ultimo aggiornamento di Steam non ha superato il controllo ed è stato annullato. Core riprova quando arriva una correzione.", off: "Steam si aggiorna da solo, come al solito.", now: "Aggiorna Steam ora", again: "Aggiorna comunque", started: "Aggiornamento di Steam in corso: Core salva prima una copia e torna tra qualche minuto.", busy: "Un aggiornamento è già in corso.", confirmCantTell: "Core non sa se il nuovo Steam funziona con Decky. Premi di nuovo per aggiornare comunque: Core salva prima una copia e torna indietro se qualcosa non va.", confirmIncompatible: "Il nuovo Steam non funziona con il Decky installato: i plugin smetteranno di caricarsi. Premi di nuovo se vuoi aggiornare lo stesso.", confirmAgain: "Ultima conferma: premi ancora una volta per aggiornare Steam sapendo che i plugin non funzioneranno." },
     es: { title: "Actualizaciones de Steam", current: "Steam está actualizado.", soaking: "Hay una nueva versión de Steam: Core la instalará dentro de {n} días, de noche, si funciona con Decky.", due: "Core actualizará Steam la próxima noche de actualizaciones, cuando no estés jugando.", waiting: "La última actualización de Steam no pasó la comprobación y se deshizo. Core lo volverá a intentar cuando llegue una corrección.", off: "Steam se actualiza solo, como siempre.", now: "Actualizar Steam ahora", again: "Actualizar igualmente", started: "Actualizando Steam: Core guarda antes una copia y vuelve en unos minutos.", busy: "Ya hay una actualización en curso.", confirmCantTell: "Core no sabe si el nuevo Steam funciona con Decky. Pulsa de nuevo para actualizar igualmente: Core guarda antes una copia y vuelve atrás si algo falla.", confirmIncompatible: "El nuevo Steam no funciona con el Decky instalado: los plugins dejarán de cargarse. Pulsa de nuevo si quieres actualizar igualmente.", confirmAgain: "Última confirmación: pulsa una vez más para actualizar Steam sabiendo que los plugins no funcionarán." },
@@ -63391,7 +65075,7 @@ const copy$7 = {
 };
 function steamUpdateCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return copy$7[language === "ua" ? "uk" : language] ?? copy$7.en;
+    return copy$6[language === "ua" ? "uk" : language] ?? copy$6.en;
 }
 // The status line for the agent's /steam/update/state answer.
 function steamUpdateLine(state, locale) {
@@ -63454,7 +65138,7 @@ function SteamUpdateCard({ locale }) {
         }
     };
     const running = state.busy === true && (state.action === "update-steam" || state.action === "verify-steam");
-    return (SP_JSX.jsxs(PanelSection$9, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$9, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${state.holdPhase === "Postponed" || state.holdPhase === "WaitingForChange" ? CORE.warning : CORE.gunmetalRaised}` }, children: message ?? steamUpdateLine(state, locale) }) }), SP_JSX.jsx(PanelSectionRow$9, { children: SP_JSX.jsx(ButtonItem$5, { layout: "below", disabled: busy || running, onClick: press, children: confirmations > 0 ? text.again : text.now }) })] }));
+    return (SP_JSX.jsxs(PanelSection$8, { title: text.title, children: [SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsx("div", { style: { fontSize: 13, lineHeight: 1.5, color: CORE.steel, margin: "0 0 8px", paddingLeft: 9, borderLeft: `3px solid ${state.holdPhase === "Postponed" || state.holdPhase === "WaitingForChange" ? CORE.warning : CORE.gunmetalRaised}` }, children: message ?? steamUpdateLine(state, locale) }) }), SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsx(ButtonItem$4, { layout: "below", disabled: busy || running, onClick: press, children: confirmations > 0 ? text.again : text.now }) })] }));
 }
 
 // Eternal Core: the Health section of Quick Access > Core. One line for the whole setup, then a
@@ -63469,7 +65153,7 @@ function SteamUpdateCard({ locale }) {
 // ("Restore display settings", "Switch sound back"...); an open row also offers its other actions
 // ("Save current display as normal"...). The agent runs them (POST /health/action) and answers with
 // the new rows.
-const { PanelSection: PanelSection$8, PanelSectionRow: PanelSectionRow$8, ButtonItem: ButtonItem$4, Focusable: Focusable$7 } = CompatUI;
+const { PanelSection: PanelSection$7, PanelSectionRow: PanelSectionRow$7, ButtonItem: ButtonItem$3, Focusable: Focusable$7 } = CompatUI;
 const { crimson: CRIMSON$6, crimsonText: CRIMSON_TEXT$4, steel: STEEL$6, gunmetal: GUNMETAL$6, white: WHITE$6 } = CORE;
 const style$7 = `
 .core-health{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
@@ -63544,14 +65228,14 @@ function HealthSection({ locale }) {
         .filter(action => action.fix ? line.level === "attention" || line.level === "info" : !!open[line.id])
         .map(action => ({ line, action })));
     const summary = answer ? healthSummary(answer, locale) : undefined;
-    return (SP_JSX.jsxs(PanelSection$8, { title: text.title, children: [SP_JSX.jsx("style", { children: style$7 }), SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsxs(Focusable$7, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id))), result && SP_JSX.jsx("div", { className: `core-health-result${result.problem ? " problem" : ""}`, role: "status", children: result.text })] }) }), buttons.map(({ line, action }) => (SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsx(ButtonItem$4, { layout: "below", disabled: busy, onClick: () => act(action), children: action.label }) }, `action-${line.id}-${action.id}`))), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$8, { children: SP_JSX.jsx(ButtonItem$4, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
+    return (SP_JSX.jsxs(PanelSection$7, { title: text.title, children: [SP_JSX.jsx("style", { children: style$7 }), SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsxs(Focusable$7, { className: "core-health", "flow-children": "column", children: [SP_JSX.jsx("div", { className: `core-health-summary${summary && summary.attention > 0 ? " problem" : ""}`, role: "status", children: answer === undefined ? text.checking : answer === null ? text.agentDown : summary.line }), lines.map(line => (SP_JSX.jsx(Row, { line: line, open: !!open[line.id], onToggle: () => setOpen(state => ({ ...state, [line.id]: !state[line.id] })) }, line.id))), result && SP_JSX.jsx("div", { className: `core-health-result${result.problem ? " problem" : ""}`, role: "status", children: result.text })] }) }), buttons.map(({ line, action }) => (SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy, onClick: () => act(action), children: action.label }) }, `action-${line.id}-${action.id}`))), lines.filter(line => line.alertId).map(line => (SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy, onClick: () => dismiss(line.alertId), children: `${text.dismiss}: ${line.title}` }) }, `dismiss-${line.alertId}`)))] }));
 }
 
 // Eternal Core: the Voice section of Quick Access > Core. Turns the agent's GET /voice/state and
 // POST /voice/party answers (GamingMode.Services/MarkIIIHost.Voice.cs) into what VoiceSection.tsx
 // shows, in Core's 12 languages. Self-contained on purpose: tests/coreVoiceSection.test.mjs loads
 // this file alone.
-const en$6 = {
+const en$5 = {
     title: "Voice", agentDown: "Core's service is not answering.",
     mute: "Mute microphone", unmute: "Unmute microphone", live: "Microphone live", muted: "Microphone muted", none: "No microphone", unknown: "Microphone: unknown", partial: "Microphone partly muted", partialDetail: "One default microphone is muted, the other is live. Check which one your call uses.",
     mutedElsewhere: "Muted outside Core", hotkey: "Shortcut {keys}: bind it to a controller chord in Steam",
@@ -63561,8 +65245,8 @@ const en$6 = {
     callsMic: "Calls mic", callsMicHint: "Windows' default microphone for calls: Xbox party, Discord.", windowsChoice: "Windows' choice", unnamed: "Microphone", tagCalls: "calls", tagApps: "games and apps", notConnected: "not connected", cmActive: "Connected and used for calls.", cmAbsent: "Not connected. Calls use Windows' default microphone.", cmChanged: "Windows uses another microphone for calls. Pick it again to use it.", cmFailed: "Windows did not let Core set the default. Pick it again, or set it in Windows' sound settings.", cmNotFound: "That microphone is no longer connected.",
     everything: "Use for everything", everythingHint: "Also the default for games and apps.", scope: "Mute", scopeAll: "Mute everything", scopeCalls: "Mute calls only", scopeAllHint: "Mutes the calls mic and the games and apps mic.", scopeCallsHint: "Mutes only the calls mic; the games and apps mic stays live. Windows mutes a microphone for every app at once, so an app that records from the calls mic itself (like OBS) is muted too.",
 };
-const copy$6 = {
-    en: en$6,
+const copy$5 = {
+    en: en$5,
     it: {
         title: "Voce", agentDown: "Il servizio di Core non risponde.",
         mute: "Silenzia il microfono", unmute: "Riattiva il microfono", live: "Microfono attivo", muted: "Microfono silenziato", none: "Nessun microfono", unknown: "Microfono: sconosciuto", partial: "Microfono silenziato in parte", partialDetail: "Un microfono predefinito è silenziato, l'altro è attivo. Controlla quale usa la chiamata.",
@@ -63676,8 +65360,8 @@ const copy$6 = {
 };
 function voiceCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$6[language === "ua" ? "uk" : language] ?? en$6;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$6[key] ?? key });
+    const table = copy$5[language === "ua" ? "uk" : language] ?? en$5;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$5[key] ?? key });
 }
 function fill$3(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? values[name] : all));
@@ -63757,7 +65441,7 @@ function discordInstalled(inventory) {
 // another plugin's panel. The agent does the work (GamingMode.Services/MarkIIIHost.Voice.cs).
 // Below the button: the calls mic picker (makes a device Windows' default for calls, and for
 // everything with the toggle) and the mute scope (everything, the default, or calls only).
-const { PanelSection: PanelSection$7, PanelSectionRow: PanelSectionRow$7, Focusable: Focusable$6, DialogButton: DialogButton$2, DropdownItem: DropdownItem$1, ToggleField: ToggleField$5 } = CompatUI;
+const { PanelSection: PanelSection$6, PanelSectionRow: PanelSectionRow$6, Focusable: Focusable$6, DialogButton: DialogButton$2, DropdownItem: DropdownItem$1, ToggleField: ToggleField$4 } = CompatUI;
 const { crimson: CRIMSON$5, crimsonText: CRIMSON_TEXT$3, steel: STEEL$5, gunmetal: GUNMETAL$5, white: WHITE$5 } = CORE;
 const style$6 = `
 .core-voice{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:8px;width:100%}
@@ -63881,8 +65565,8 @@ function VoiceSection({ locale }) {
     const mic = micView(answer, locale);
     const calls = callsMicView(answer, locale);
     const scope = scopeView(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$7, { title: text.title, children: [SP_JSX.jsx("style", { children: style$6 }), SP_JSX.jsx(PanelSectionRow$7, { children: SP_JSX.jsxs(Focusable$6, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$2, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs("div", { className: "core-voice-settings", children: [SP_JSX.jsx(DropdownItem$1, { label: text.callsMic, description: text.callsMicHint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: calls.options, selectedOption: calls.selected, onChange: (option) => { if (option.data !== calls.selected)
-                                        void pickCallsMic(option.data, calls.everything); } }), calls.line && SP_JSX.jsx("div", { className: "core-voice-hint", role: "status", children: calls.line }), callsNote && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: callsNote }), SP_JSX.jsx(ToggleField$5, { label: text.everything, description: text.everythingHint, bottomSeparator: "none", checked: calls.everything, disabled: busy || !answer || !calls.canToggleEverything, onChange: (enabled) => void pickCallsMic(calls.selected, enabled) }), SP_JSX.jsx(DropdownItem$1, { label: text.scope, description: scope.hint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: scope.options, selectedOption: scope.selected, onChange: (option) => { if (option.data !== scope.selected)
+    return (SP_JSX.jsxs(PanelSection$6, { title: text.title, children: [SP_JSX.jsx("style", { children: style$6 }), SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsxs(Focusable$6, { className: "core-voice", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$2, { className: `core-voice-button${mic.muted ? " muted" : ""}`, disabled: busy || !answer || mic.state === "none", onClick: toggleMic, "aria-pressed": mic.muted, children: [SP_JSX.jsx(MicIcon, { off: mic.muted }), SP_JSX.jsxs("span", { className: "core-voice-text", children: [SP_JSX.jsx("span", { className: "core-voice-label", children: answer === null ? text.agentDown : mic.button }), SP_JSX.jsx("span", { className: "core-voice-state", role: "status", children: answer === undefined ? "…" : mic.line })] })] }), mic.detail && SP_JSX.jsx("div", { className: "core-voice-hint", children: mic.detail }), SP_JSX.jsxs("div", { className: "core-voice-settings", children: [SP_JSX.jsx(DropdownItem$1, { label: text.callsMic, description: text.callsMicHint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: calls.options, selectedOption: calls.selected, onChange: (option) => { if (option.data !== calls.selected)
+                                        void pickCallsMic(option.data, calls.everything); } }), calls.line && SP_JSX.jsx("div", { className: "core-voice-hint", role: "status", children: calls.line }), callsNote && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: callsNote }), SP_JSX.jsx(ToggleField$4, { label: text.everything, description: text.everythingHint, bottomSeparator: "none", checked: calls.everything, disabled: busy || !answer || !calls.canToggleEverything, onChange: (enabled) => void pickCallsMic(calls.selected, enabled) }), SP_JSX.jsx(DropdownItem$1, { label: text.scope, description: scope.hint, layout: "below", bottomSeparator: "none", disabled: busy || !answer, rgOptions: scope.options, selectedOption: scope.selected, onChange: (option) => { if (option.data !== scope.selected)
                                         void pickScope(option.data); } })] }), SP_JSX.jsxs(DialogButton$2, { className: "core-voice-button", disabled: !answer, onClick: openParty, children: [SP_JSX.jsx(PartyIcon, {}), SP_JSX.jsx("span", { className: "core-voice-text", children: SP_JSX.jsx("span", { className: "core-voice-label", children: text.party }) })] }), SP_JSX.jsx("div", { className: "core-voice-hint", children: text.partyHint }), note && SP_JSX.jsx("div", { className: "core-voice-note", role: "alert", children: note }), SP_JSX.jsxs("div", { className: "core-voice-row", children: [SP_JSX.jsx("span", { className: "core-voice-row-title", children: text.discord }), SP_JSX.jsx("span", { className: "core-voice-row-value", children: discord ? text.discordInstalled : text.discordMissing })] })] }) })] }));
 }
 
@@ -63891,11 +65575,11 @@ function VoiceSection({ locale }) {
 // languages. Self-contained on purpose: tests/coreStreamMode.test.mjs loads this file alone.
 // Product names: the same in every language.
 const STREAM_SOURCES = { steam: "Steam Remote Play", steamvr: "SteamVR", sunshine: "Sunshine", apollo: "Apollo" };
-const en$5 = {
+const en$4 = {
     title: "Stream mode", agentDown: "Core's service is not answering.", off: "Off", onDevice: "On · {device}", onSource: "On · {source}", forcedOn: "On · kept on by you", keep: "Keep TV out of it", keepHint: "Stream mode stays on even when Core sees no stream.", heldDetail: "Core does not wake the TV, switch its input or send it anything, and holds its notices.", offDetail: "Turns on by itself when this PC streams to another device.", audioVirtual: "Sound: on the stream ({device})", audioAlready: "Sound: already on the stream", audioMuted: "Sound: TV speaker muted", audioNone: "Sound: no TV speaker to mute", audioOff: "Sound: left as it is (turned off in settings)", apolloMissing: "Apollo: not installed (optional, see Core's guide)", apolloIdle: "Apollo: installed, not streaming", apolloDisplay: "Apollo: virtual display active", apolloNoDisplay: "Apollo: streaming without a virtual display",
 };
-const copy$5 = {
-    en: en$5,
+const copy$4 = {
+    en: en$4,
     it: {
         title: "Modalità streaming", agentDown: "Il servizio di Core non risponde.", off: "Spenta", onDevice: "Attiva · {device}", onSource: "Attiva · {source}", forcedOn: "Attiva · tenuta accesa da te", keep: "Lascia stare la TV", keepHint: "La modalità streaming resta attiva anche quando Core non vede uno streaming.", heldDetail: "Core non accende la TV, non cambia ingresso, non le invia nulla e trattiene i suoi avvisi.", offDetail: "Si attiva da sola quando questo PC trasmette a un altro dispositivo.", audioVirtual: "Audio: sullo streaming ({device})", audioAlready: "Audio: già sullo streaming", audioMuted: "Audio: altoparlante della TV silenziato", audioNone: "Audio: nessun altoparlante della TV da silenziare", audioOff: "Audio: lasciato com'è (disattivato nelle impostazioni)", apolloMissing: "Apollo: non installato (facoltativo, vedi la guida di Core)", apolloIdle: "Apollo: installato, nessuno streaming", apolloDisplay: "Apollo: schermo virtuale attivo", apolloNoDisplay: "Apollo: streaming senza schermo virtuale",
     },
@@ -63932,8 +65616,8 @@ const copy$5 = {
 };
 function streamCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$5[language === "ua" ? "uk" : language] ?? en$5;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$5[key] ?? key });
+    const table = copy$4[language === "ua" ? "uk" : language] ?? en$4;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$4[key] ?? key });
 }
 function fill$2(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? values[name] : all));
@@ -63984,7 +65668,7 @@ function apolloLine(answer, text) {
 // (and to which device the PC streams, when known), a toggle forces it on ("Keep TV out of it"), and
 // short lines say what happens to the PC's sound and whether Apollo's virtual display is active. While
 // Stream mode is on, Core sends nothing to the TV (GamingMode.Services/MarkIIIHost.Stream.cs).
-const { PanelSection: PanelSection$6, PanelSectionRow: PanelSectionRow$6, Focusable: Focusable$5, ToggleField: ToggleField$4 } = CompatUI;
+const { PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$5, Focusable: Focusable$5, ToggleField: ToggleField$3 } = CompatUI;
 const { crimson: CRIMSON$4, crimsonText: CRIMSON_TEXT$2, steel: STEEL$4, gunmetal: GUNMETAL$4, white: WHITE$4 } = CORE;
 const style$5 = `
 .core-stream{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
@@ -64027,7 +65711,7 @@ function StreamSection({ locale }) {
         }
     };
     const view = streamView(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$6, { title: text.title, children: [SP_JSX.jsx("style", { children: style$5 }), SP_JSX.jsx(PanelSectionRow$6, { children: SP_JSX.jsxs(Focusable$5, { className: "core-stream", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$5, { className: `core-stream-row${view.state === "on" ? " on" : ""}`, noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-stream-title", children: text.title }), SP_JSX.jsx("span", { className: "core-stream-value", role: "status", children: view.line })] }), view.detail && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.detail }), view.audio && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.audio }), SP_JSX.jsx("div", { className: "core-stream-settings", children: SP_JSX.jsx(ToggleField$4, { label: text.keep, description: text.keepHint, bottomSeparator: "none", checked: view.forced, disabled: busy || !answer, onChange: (enabled) => void keepTvOut(enabled) }) }), view.apollo && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.apollo })] }) })] }));
+    return (SP_JSX.jsxs(PanelSection$5, { title: text.title, children: [SP_JSX.jsx("style", { children: style$5 }), SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsxs(Focusable$5, { className: "core-stream", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$5, { className: `core-stream-row${view.state === "on" ? " on" : ""}`, noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-stream-title", children: text.title }), SP_JSX.jsx("span", { className: "core-stream-value", role: "status", children: view.line })] }), view.detail && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.detail }), view.audio && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.audio }), SP_JSX.jsx("div", { className: "core-stream-settings", children: SP_JSX.jsx(ToggleField$3, { label: text.keep, description: text.keepHint, bottomSeparator: "none", checked: view.forced, disabled: busy || !answer, onChange: (enabled) => void keepTvOut(enabled) }) }), view.apollo && SP_JSX.jsx("div", { className: "core-stream-hint", children: view.apollo })] }) })] }));
 }
 
 // Eternal Core: Stream mode, Steam's half. The Gaming Mode agent cannot see Steam Remote Play (Steam
@@ -64181,7 +65865,7 @@ const EMULATOR_HOTKEYS = [
     ["menu", "Select + Y"],
     ["fps", "Select + X"],
 ];
-const en$4 = {
+const en$3 = {
     title: "Controls", emulators: "Emulator hotkeys (the same in every emulator)", other: "Everywhere",
     save: "Save state", load: "Load state", "slot-next": "Next save slot", "slot-prev": "Previous save slot", "fast-forward": "Fast-forward", rewind: "Rewind", pause: "Pause", menu: "Emulator menu", fps: "FPS display",
     right: "D-pad right", left: "D-pad left", hold: "hold",
@@ -64191,8 +65875,8 @@ const en$4 = {
     launchers: "Close store launchers after a game", launchersHelp: "A launcher a game started is closed politely when that game ends, unless it was open before, another of its games runs, or it is downloading.",
     exitNow: "Exit {title}", exitUntracked: "Steam lost track of {title}; Core can close it.",
 };
-const copy$4 = {
-    en: en$4,
+const copy$3 = {
+    en: en$3,
     it: { title: "Comandi", emulators: "Scorciatoie degli emulatori (uguali in ogni emulatore)", other: "Ovunque", save: "Salva stato", load: "Carica stato", "slot-next": "Slot successivo", "slot-prev": "Slot precedente", "fast-forward": "Avanti veloce", rewind: "Riavvolgi", pause: "Pausa", menu: "Menu dell'emulatore", fps: "Indicatore FPS", right: "croce destra", left: "croce sinistra", hold: "tieni premuto", exit: "Uscire da un gioco", exitHow: "Esci dal gioco di Steam (tasto Steam o Accesso rapido); nessuna combinazione chiude un emulatore", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Parlare con Jarvis", jarvisTalkHow: "Tocca L5 + R5", jarvisOpen: "Aprire Jarvis", jarvisOpenHow: "Tieni premuti L5 + R5", launchers: "Chiudi i launcher dei negozi dopo un gioco", launchersHelp: "Un launcher aperto da un gioco viene chiuso con garbo quando il gioco finisce, a meno che fosse già aperto, un altro suo gioco sia in corso o stia scaricando.", exitNow: "Esci da {title}", exitUntracked: "Steam ha perso traccia di {title}; Core può chiuderlo." },
     es: { title: "Controles", emulators: "Atajos de los emuladores (iguales en todos)", other: "En todas partes", save: "Guardar estado", load: "Cargar estado", "slot-next": "Ranura siguiente", "slot-prev": "Ranura anterior", "fast-forward": "Avance rápido", rewind: "Rebobinar", pause: "Pausa", menu: "Menú del emulador", fps: "Indicador de FPS", right: "cruceta derecha", left: "cruceta izquierda", hold: "mantener", exit: "Salir de un juego", exitHow: "Salir del juego de Steam (botón Steam o Acceso rápido); ninguna combinación cierra un emulador", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Hablar con Jarvis", jarvisTalkHow: "Toca L5 + R5", jarvisOpen: "Abrir Jarvis", jarvisOpenHow: "Mantén L5 + R5", launchers: "Cerrar lanzadores de tiendas tras un juego", launchersHelp: "Un lanzador que abrió un juego se cierra con cuidado al terminar ese juego, salvo que ya estuviera abierto, otro de sus juegos siga o esté descargando.", exitNow: "Salir de {title}", exitUntracked: "Steam perdió el rastro de {title}; Core puede cerrarlo." },
     fr: { title: "Commandes", emulators: "Raccourcis des émulateurs (identiques partout)", other: "Partout", save: "Sauvegarder l'état", load: "Charger l'état", "slot-next": "Emplacement suivant", "slot-prev": "Emplacement précédent", "fast-forward": "Avance rapide", rewind: "Retour arrière", pause: "Pause", menu: "Menu de l'émulateur", fps: "Affichage des FPS", right: "croix droite", left: "croix gauche", hold: "maintenir", exit: "Quitter un jeu", exitHow: "Quitter le jeu de Steam (bouton Steam ou Accès rapide) ; aucune combinaison ne ferme un émulateur", paddleA: "L4", paddleAHow: "A", paddleB: "R4", paddleBHow: "B", jarvisTalk: "Parler à Jarvis", jarvisTalkHow: "Touchez L5 + R5", jarvisOpen: "Ouvrir Jarvis", jarvisOpenHow: "Maintenez L5 + R5", launchers: "Fermer les lanceurs des boutiques après un jeu", launchersHelp: "Un lanceur ouvert par un jeu est fermé poliment à la fin de ce jeu, sauf s'il était déjà ouvert, si un autre de ses jeux tourne ou s'il télécharge.", exitNow: "Quitter {title}", exitUntracked: "Steam a perdu la trace de {title} ; Core peut le fermer." },
@@ -64207,8 +65891,8 @@ const copy$4 = {
 };
 function controlsCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$4[language === "ua" ? "uk" : language] ?? en$4;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$4[key] ?? key });
+    const table = copy$3[language === "ua" ? "uk" : language] ?? en$3;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$3[key] ?? key });
 }
 function fillControls(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? values[name] : all));
@@ -64231,7 +65915,7 @@ function controlsRows(locale) {
 // Eternal Core 3.3.5: Quick Access > Core > Controls. The one controller reference (the shared emulator hotkeys,
 // exiting through Steam, the back paddles, Jarvis), Core's Exit for a game Steam lost track of, and the
 // per-launcher switches for closing store launchers after a game (GamingMode.Services/MarkIIIHost.Emulators.cs).
-const { PanelSection: PanelSection$5, PanelSectionRow: PanelSectionRow$5, Focusable: Focusable$4, ToggleField: ToggleField$3, ButtonItem: ButtonItem$3 } = CompatUI;
+const { PanelSection: PanelSection$4, PanelSectionRow: PanelSectionRow$4, Focusable: Focusable$4, ToggleField: ToggleField$2, ButtonItem: ButtonItem$2 } = CompatUI;
 const { crimson: CRIMSON$3, steel: STEEL$3, gunmetal: GUNMETAL$3, white: WHITE$3 } = CORE;
 const style$4 = `
 .core-controls{display:flex;flex-direction:column;gap:4px;width:100%;padding:6px 0}
@@ -64278,7 +65962,7 @@ function ControlsSection({ locale }) {
     };
     const rows = controlsRows(locale);
     const untracked = typeof answer?.untracked === "string" && answer.untracked ? answer.untracked.slice(0, 64) : "";
-    return (SP_JSX.jsxs(PanelSection$5, { title: text.title, children: [SP_JSX.jsx("style", { children: style$4 }), untracked && (SP_JSX.jsxs(PanelSectionRow$5, { children: [SP_JSX.jsx("div", { className: "core-controls-hint", children: fillControls(text.exitUntracked, { title: untracked }) }), SP_JSX.jsx(ButtonItem$3, { layout: "below", disabled: busy, onClick: () => void exitNow(), children: fillControls(text.exitNow, { title: untracked }) })] })), SP_JSX.jsx(PanelSectionRow$5, { children: SP_JSX.jsx(Focusable$4, { className: "core-controls", "flow-children": "column", children: ["emulators", "other"].map(group => (SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx("div", { className: "core-controls-head", children: group === "emulators" ? text.emulators : text.other }), rows.filter(row => row.group === group).map(row => (SP_JSX.jsxs(Focusable$4, { className: "core-controls-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-controls-label", children: row.label }), SP_JSX.jsx("span", { className: "core-controls-buttons", children: row.buttons })] }, row.label)))] }, group))) }) }), answer?.launchers && (SP_JSX.jsxs(PanelSectionRow$5, { children: [SP_JSX.jsx("div", { className: "core-controls-head", children: text.launchers }), SP_JSX.jsx("div", { className: "core-controls-hint", children: text.launchersHelp }), answer.launchers.map(launcher => (SP_JSX.jsx(ToggleField$3, { label: launcher.name, bottomSeparator: "none", checked: launcher.on, disabled: busy, onChange: (enabled) => void toggle(launcher.id, enabled) }, launcher.id)))] }))] }));
+    return (SP_JSX.jsxs(PanelSection$4, { title: text.title, children: [SP_JSX.jsx("style", { children: style$4 }), untracked && (SP_JSX.jsxs(PanelSectionRow$4, { children: [SP_JSX.jsx("div", { className: "core-controls-hint", children: fillControls(text.exitUntracked, { title: untracked }) }), SP_JSX.jsx(ButtonItem$2, { layout: "below", disabled: busy, onClick: () => void exitNow(), children: fillControls(text.exitNow, { title: untracked }) })] })), SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsx(Focusable$4, { className: "core-controls", "flow-children": "column", children: ["emulators", "other"].map(group => (SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx("div", { className: "core-controls-head", children: group === "emulators" ? text.emulators : text.other }), rows.filter(row => row.group === group).map(row => (SP_JSX.jsxs(Focusable$4, { className: "core-controls-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-controls-label", children: row.label }), SP_JSX.jsx("span", { className: "core-controls-buttons", children: row.buttons })] }, row.label)))] }, group))) }) }), answer?.launchers && (SP_JSX.jsxs(PanelSectionRow$4, { children: [SP_JSX.jsx("div", { className: "core-controls-head", children: text.launchers }), SP_JSX.jsx("div", { className: "core-controls-hint", children: text.launchersHelp }), answer.launchers.map(launcher => (SP_JSX.jsx(ToggleField$2, { label: launcher.name, bottomSeparator: "none", checked: launcher.on, disabled: busy, onChange: (enabled) => void toggle(launcher.id, enabled) }, launcher.id)))] }))] }));
 }
 
 // Eternal Core batch 2 (B7, docs/eternal/BATCH-2.md): swipe typing, word suggestions and autocorrect on Steam's own
@@ -64674,7 +66358,7 @@ function vaporTypeInstalled(inventory) {
 // Eternal Core batch 2 (docs/eternal/BATCH-2.md): the Quick Access text for swipe typing and the automations summary,
 // in Core's 12 languages, and the pure functions that turn the agent's answers into lines. Self-contained on purpose:
 // tests/coreBatchTwo.test.mjs loads this file alone. The Health rows' text lives in healthReport.ts.
-const en$3 = {
+const en$2 = {
     typing: "Swipe typing", typingHint: "Swipe across the trackpads on Steam's keyboard, with word suggestions and autocorrect. Off brings back Steam's own keyboard.",
     private: "Private mode", privateHint: "Pauses learning, autocorrect and the typing log. You can also hold Esc with a trackpad.",
     log: "Keep typing log", logHint: "Saves typed words with swipe paths on this PC, to help tuning. Nothing is sent anywhere.",
@@ -64690,8 +66374,8 @@ const en$3 = {
     ha: "Home Assistant", haOff: "Off", haNotConfigured: "Not set up", haConnected: "Connected to {host}", haConnecting: "Connecting to {host}…", haRefused: "Login refused by {host}", haUnreachable: "Can't reach {host}",
     sleep: "Sleep after streaming", sleepOff: "Off", sleepOn: "After {n} min with nobody here", sleepAt: "Sleeping at {time} unless someone plays here",
 };
-const copy$3 = {
-    en: en$3,
+const copy$2 = {
+    en: en$2,
     it: {
         typing: "Scrittura a scorrimento", typingHint: "Scorri sui trackpad sulla tastiera di Steam, con suggerimenti e correzione automatica. Spento torna la tastiera normale di Steam.",
         private: "Modalità privata", privateHint: "Mette in pausa apprendimento, correzione automatica e registro di scrittura. Puoi anche tenere premuto Esc con un trackpad.",
@@ -64871,8 +66555,8 @@ const copy$3 = {
 };
 function batchTwoCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$3[language === "ua" ? "uk" : language] ?? en$3;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$3[key] ?? key });
+    const table = copy$2[language === "ua" ? "uk" : language] ?? en$2;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$2[key] ?? key });
 }
 function fill$1(template, values) {
     return template.replace(/\{(\w+)\}/g, (whole, name) => (name in values ? String(values[name]) : whole));
@@ -64958,7 +66642,7 @@ function sleepLine(answer, locale) {
 // Eternal Core batch 2 (B7): swipe typing in Quick Access > Core. The switch is Core's setting (also in the desktop
 // app); private mode, the typing log, the keyboard's own settings and "forget everything" are VaporType's
 // (src/swipeTyping.ts). The keyboard's own settings panel is VaporType's and in English.
-const { PanelSection: PanelSection$4, PanelSectionRow: PanelSectionRow$4, Focusable: Focusable$3, ToggleField: ToggleField$2, ButtonItem: ButtonItem$2, Navigation: Navigation$3 } = CompatUI;
+const { PanelSection: PanelSection$3, PanelSectionRow: PanelSectionRow$3, Focusable: Focusable$3, ToggleField: ToggleField$1, ButtonItem: ButtonItem$1, Navigation: Navigation$2 } = CompatUI;
 const { steel: STEEL$2, gunmetal: GUNMETAL$2, white: WHITE$2, crimson: CRIMSON$2, crimsonText: CRIMSON_TEXT$1, hint: HINT$2 } = CORE;
 let runtime$1;
 function setSwipeTypingRuntime(value) { runtime$1 = value; }
@@ -65006,19 +66690,19 @@ function SwipeTypingSection({ locale }) {
     };
     const openSettings = async () => {
         try {
-            Navigation$3?.CloseSideMenus?.();
+            Navigation$2?.CloseSideMenus?.();
         }
         catch { /* The menu closes itself on the keyboard. */ }
         toaster.toast({ title: "Core", body: text.settingsToast });
         if (!(await typing.openSettingsWhenKeyboardOpens(20000)))
             toaster.toast({ title: "Core", body: text.noKeyboard });
     };
-    return (SP_JSX.jsxs(PanelSection$4, { title: text.typing, children: [SP_JSX.jsx("style", { children: style$3 }), SP_JSX.jsx(PanelSectionRow$4, { children: SP_JSX.jsxs(Focusable$3, { className: "core-typing", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$3, { className: "core-typing-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-typing-title", children: text.typing }), SP_JSX.jsx("span", { className: `core-typing-value${status.state === "paused" ? " paused" : ""}`, role: "status", children: typingStatus(status.state, locale, status.error ?? undefined) })] }), SP_JSX.jsx(ToggleField$2, { label: text.typing, description: text.typingHint, bottomSeparator: "none", checked: typing.enabled(), disabled: status.state === "loading" && !typing.enabled(), onChange: (on) => void typing.setEnabled(on) }), running && SP_JSX.jsx(ToggleField$2, { label: text.private, description: text.privateHint, bottomSeparator: "none", checked: typing.settingsValue("privateMode") === true, onChange: (on) => typing.setSetting("privateMode", on) }), running && SP_JSX.jsx(ToggleField$2, { label: text.log, description: text.logHint, bottomSeparator: "none", checked: typing.settingsValue("typingLog") === true, onChange: (on) => typing.setSetting("typingLog", on) }), running && SP_JSX.jsx(ButtonItem$2, { layout: "below", bottomSeparator: "none", onClick: () => void openSettings(), children: text.settings }), SP_JSX.jsx(ButtonItem$2, { layout: "below", bottomSeparator: "none", disabled: forgetting, onClick: () => void forget(), children: forgetting ? text.forgetting : confirm ? text.forgetConfirm : text.forget }), SP_JSX.jsx("div", { className: "core-typing-hint", children: text.english }), SP_JSX.jsx("div", { className: "core-typing-hint", children: text.credit })] }) })] }));
+    return (SP_JSX.jsxs(PanelSection$3, { title: text.typing, children: [SP_JSX.jsx("style", { children: style$3 }), SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsxs(Focusable$3, { className: "core-typing", "flow-children": "column", children: [SP_JSX.jsxs(Focusable$3, { className: "core-typing-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-typing-title", children: text.typing }), SP_JSX.jsx("span", { className: `core-typing-value${status.state === "paused" ? " paused" : ""}`, role: "status", children: typingStatus(status.state, locale, status.error ?? undefined) })] }), SP_JSX.jsx(ToggleField$1, { label: text.typing, description: text.typingHint, bottomSeparator: "none", checked: typing.enabled(), disabled: status.state === "loading" && !typing.enabled(), onChange: (on) => void typing.setEnabled(on) }), running && SP_JSX.jsx(ToggleField$1, { label: text.private, description: text.privateHint, bottomSeparator: "none", checked: typing.settingsValue("privateMode") === true, onChange: (on) => typing.setSetting("privateMode", on) }), running && SP_JSX.jsx(ToggleField$1, { label: text.log, description: text.logHint, bottomSeparator: "none", checked: typing.settingsValue("typingLog") === true, onChange: (on) => typing.setSetting("typingLog", on) }), running && SP_JSX.jsx(ButtonItem$1, { layout: "below", bottomSeparator: "none", onClick: () => void openSettings(), children: text.settings }), SP_JSX.jsx(ButtonItem$1, { layout: "below", bottomSeparator: "none", disabled: forgetting, onClick: () => void forget(), children: forgetting ? text.forgetting : confirm ? text.forgetConfirm : text.forget }), SP_JSX.jsx("div", { className: "core-typing-hint", children: text.english }), SP_JSX.jsx("div", { className: "core-typing-hint", children: text.credit })] }) })] }));
 }
 
 // Eternal Core batch 2 (B17, B8, B13): a read-only summary in Quick Access > Core: the automations that are on, the
 // Home Assistant bridge and sleep after streaming. Editing happens in the desktop app (Gaming Mode > Automations).
-const { PanelSection: PanelSection$3, PanelSectionRow: PanelSectionRow$3, Focusable: Focusable$2 } = CompatUI;
+const { PanelSection: PanelSection$2, PanelSectionRow: PanelSectionRow$2, Focusable: Focusable$2 } = CompatUI;
 const { steel: STEEL$1, gunmetal: GUNMETAL$1, white: WHITE$1, crimson: CRIMSON$1, hint: HINT$1 } = CORE;
 const style$2 = `
 .core-autos{background:transparent;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;gap:6px;width:100%}
@@ -65048,7 +66732,7 @@ function AutomationsSection({ locale }) {
     if (!answer)
         return null;
     const lines = automationLines(answer, locale);
-    return (SP_JSX.jsxs(PanelSection$3, { title: text.autos, children: [SP_JSX.jsx("style", { children: style$2 }), SP_JSX.jsx(PanelSectionRow$3, { children: SP_JSX.jsxs(Focusable$2, { className: "core-autos", "flow-children": "column", children: [(lines.length ? lines : [text.none]).map((line, index) => SP_JSX.jsx("div", { className: "core-autos-rule", children: line }, index)), SP_JSX.jsxs(Focusable$2, { className: "core-autos-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-autos-title", children: text.ha }), SP_JSX.jsx("span", { className: "core-autos-value", role: "status", children: bridgeLine(answer, locale) })] }), SP_JSX.jsxs(Focusable$2, { className: "core-autos-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-autos-title", children: text.sleep }), SP_JSX.jsx("span", { className: "core-autos-value", children: sleepLine(answer, locale) })] }), SP_JSX.jsx("div", { className: "core-autos-hint", children: text.edit })] }) })] }));
+    return (SP_JSX.jsxs(PanelSection$2, { title: text.autos, children: [SP_JSX.jsx("style", { children: style$2 }), SP_JSX.jsx(PanelSectionRow$2, { children: SP_JSX.jsxs(Focusable$2, { className: "core-autos", "flow-children": "column", children: [(lines.length ? lines : [text.none]).map((line, index) => SP_JSX.jsx("div", { className: "core-autos-rule", children: line }, index)), SP_JSX.jsxs(Focusable$2, { className: "core-autos-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-autos-title", children: text.ha }), SP_JSX.jsx("span", { className: "core-autos-value", role: "status", children: bridgeLine(answer, locale) })] }), SP_JSX.jsxs(Focusable$2, { className: "core-autos-row", noFocusRing: true, onActivate: () => { }, children: [SP_JSX.jsx("span", { className: "core-autos-title", children: text.sleep }), SP_JSX.jsx("span", { className: "core-autos-value", children: sleepLine(answer, locale) })] }), SP_JSX.jsx("div", { className: "core-autos-hint", children: text.edit })] }) })] }));
 }
 
 // Eternal Core batch 2 (B13, docs/eternal/BATCH-2.md): when Steam last saw controller input on this PC. Sleep after
@@ -65094,7 +66778,7 @@ function keyboardBase() {
 // that turn the agent's answers (GET /jarvis/state and the action answers, MarkIIIHost.Jarvis.cs) into lines.
 // Self-contained on purpose: tests/coreJarvis.test.mjs loads this file alone. Jarvis's own answers are in English
 // (the persona is a British butler, and Aincrad's Whisper and Piper are English); everything around them is localised.
-const en$2 = {
+const en$1 = {
     title: "Jarvis", placeholder: "Ask Jarvis…", send: "Send", dictate: "Dictate", dictateStop: "Stop and type", talk: "Talk to Jarvis", talkStop: "Stop and send",
     screen: "What's on screen?", more: "More", speak: "Speak", clear: "Clear", page: "Open full page", you: "You", listening: "Listening… press again to stop", thinking: "Thinking…",
     stConnectedHa: "Connected through Home Assistant", stConnectedClaude: "Connected to the Claude API", stReady: "Ready", stOff: "Off",
@@ -65108,8 +66792,8 @@ const en$2 = {
     combos: "Tap {talk} to talk (it stops on a pause) · hold it to open Jarvis · dictation and the screen helper: the buttons above, or ask by voice", comboOff: "off",
     hint: "Nothing is sent until you ask. Locks, the garage and the alarm need your phone.", helperOff: "Screen helper: add your Anthropic key on the desktop to use it",
 };
-const copy$2 = {
-    en: en$2,
+const copy$1 = {
+    en: en$1,
     it: {
         title: "Jarvis", placeholder: "Chiedi a Jarvis…", send: "Invia", dictate: "Detta", dictateStop: "Ferma e scrivi", talk: "Parla con Jarvis", talkStop: "Ferma e invia",
         screen: "Cosa c'è sullo schermo?", more: "Altro", speak: "Leggi", clear: "Cancella", page: "Apri a pagina intera", you: "Tu", listening: "In ascolto… premi di nuovo per fermare", thinking: "Ci penso…",
@@ -65267,8 +66951,8 @@ const copy$2 = {
 };
 function jarvisCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    const table = copy$2[language === "ua" ? "uk" : language] ?? en$2;
-    return new Proxy(table, { get: (target, key) => target[key] ?? en$2[key] ?? key });
+    const table = copy$1[language === "ua" ? "uk" : language] ?? en$1;
+    return new Proxy(table, { get: (target, key) => target[key] ?? en$1[key] ?? key });
 }
 function fill(template, values) {
     return template.replace(/\{(\w+)\}/g, (all, name) => (name in values ? String(values[name]) : all));
@@ -65330,9 +67014,9 @@ function historyLines(state, limit = 6) {
 
 // Eternal Core: the text Jarvis's own Quick Access tab adds (Core UI phase 1), in Core's 12 languages. The rest of
 // Jarvis's text is jarvisReport.ts. Self-contained: tests load it alone.
-const en$1 = { tap: "Tap {talk} to talk · hold it to open or close Jarvis", tapOff: "Tap {talk} to talk · or hold it while you speak", last: "Last answer" };
-const copy$1 = {
-    en: en$1,
+const en = { tap: "Tap {talk} to talk · hold it to open or close Jarvis", tapOff: "Tap {talk} to talk · or hold it while you speak", last: "Last answer" };
+const copy = {
+    en,
     it: { tap: "Tocca {talk} per parlare · tienilo premuto per aprire o chiudere Jarvis", tapOff: "Tocca {talk} per parlare · oppure tienilo premuto mentre parli", last: "Ultima risposta" },
     es: { tap: "Toca {talk} para hablar · mantenlo para abrir o cerrar Jarvis", tapOff: "Toca {talk} para hablar · o mantenlo mientras hablas", last: "Última respuesta" },
     fr: { tap: "Touchez {talk} pour parler · maintenez pour ouvrir ou fermer Jarvis", tapOff: "Touchez {talk} pour parler · ou maintenez pendant que vous parlez", last: "Dernière réponse" },
@@ -65347,7 +67031,7 @@ const copy$1 = {
 };
 function jarvisTabCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return copy$1[language === "ua" ? "uk" : language] ?? en$1;
+    return copy[language === "ua" ? "uk" : language] ?? en;
 }
 // The tab's L5+R5 line (3.3.5: a tap talks; with tapOpens a hold opens or closes the tab, without it a hold is push-to-talk), from the agent's state (combos.talk, tapOpens). Empty when talking has no combo.
 function jarvisTapLine(state, locale) {
@@ -65502,7 +67186,7 @@ function createPresence(now = Date.now) {
 // Eternal Core: Jarvis in Quick Access > Core and on its own full page (docs/eternal/JARVIS.md). Type with Steam's
 // keyboard (swipe typing applies), dictate into the field, talk to Jarvis, or ask about the screen. The agent does the
 // work (MarkIIIHost.Jarvis.cs); the combos and push-to-talk flow are jarvisRuntime.ts. Nothing is sent until asked.
-const { PanelSection: PanelSection$2, PanelSectionRow: PanelSectionRow$2, Focusable: Focusable$1, TextField, DialogButton: DialogButton$1, Navigation: Navigation$2 } = CompatUI;
+const { PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1, Focusable: Focusable$1, TextField, DialogButton: DialogButton$1, Navigation: Navigation$1 } = CompatUI;
 const { black: BLACK, steel: STEEL, gunmetal: GUNMETAL, gunmetalRaised: RAISED, white: WHITE, crimson: CRIMSON, crimsonText: CRIMSON_TEXT, hint: HINT, text: TEXT } = CORE;
 const JARVIS_ROUTE = "/core-jarvis";
 let runtime;
@@ -65617,7 +67301,7 @@ function JarvisPanel({ locale, full = false, tab = false }) {
             return;
         // Quick Access closes first, so the screenshot shows the game rather than this panel.
         try {
-            Navigation$2?.CloseSideMenus?.();
+            Navigation$1?.CloseSideMenus?.();
         }
         catch { /* Already closed. */ }
         await new Promise(resolve => window.setTimeout(resolve, 700));
@@ -65642,8 +67326,8 @@ function JarvisPanel({ locale, full = false, tab = false }) {
     };
     const openPage = () => {
         try {
-            Navigation$2?.Navigate?.(JARVIS_ROUTE);
-            Navigation$2?.CloseSideMenus?.();
+            Navigation$1?.Navigate?.(JARVIS_ROUTE);
+            Navigation$1?.CloseSideMenus?.();
         }
         catch { /* Router unavailable. */ }
     };
@@ -65656,7 +67340,7 @@ function JarvisPanel({ locale, full = false, tab = false }) {
     }
     const body = (SP_JSX.jsxs(Focusable$1, { className: `core-jarvis${full ? " full" : ""}`, "flow-children": "column", children: [SP_JSX.jsx("style", { children: style$1 }), SP_JSX.jsx("div", { className: "core-jarvis-status", role: "status", style: { color: CORE_STATUS[tone] }, children: statusLine(state, locale) }), listening && SP_JSX.jsxs("div", { className: "core-jarvis-live", role: "status", children: [SP_JSX.jsx("span", { className: "core-jarvis-dot" }), text.listening] }), (pending || live?.working) && SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.thinking }), SP_JSX.jsxs("div", { className: "core-jarvis-log", children: [turns.map((turn, index) => (SP_JSX.jsxs(Focusable$1, { className: `core-jarvis-turn ${turn.role}`, noFocusRing: true, onActivate: () => { if (turn.role === "assistant")
                             speak(turn.text); }, children: [SP_JSX.jsx("span", { className: "core-jarvis-who", children: turn.role === "user" ? text.you : text.title }), turn.text] }, index))), screen && (SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-turn core-jarvis-screen", noFocusRing: true, onActivate: () => speak(screen.text), children: [SP_JSX.jsx("span", { className: "core-jarvis-who", children: text.screen }), screen.text] }))] }), input, SP_JSX.jsxs(Focusable$1, { className: "core-jarvis-buttons", "flow-children": "row", children: [SP_JSX.jsx(DialogButton$1, { onClick: send, disabled: !draft.trim() || pending, children: text.send }), SP_JSX.jsx(DialogButton$1, { onClick: dictate, style: listening === "dictate" ? { background: CRIMSON, color: WHITE } : undefined, children: listening === "dictate" ? text.dictateStop : text.dictate }), SP_JSX.jsx(DialogButton$1, { onClick: talk, style: listening === "talk" ? { background: CRIMSON, color: WHITE } : undefined, children: listening === "talk" ? text.talkStop : text.talk }), SP_JSX.jsx(DialogButton$1, { onClick: askScreen, disabled: state?.screenHelper !== true, children: text.screen }), screen?.more && SP_JSX.jsx(DialogButton$1, { onClick: more, children: text.more }), lastAnswer && SP_JSX.jsx(DialogButton$1, { onClick: () => speak(lastAnswer), children: text.speak }), SP_JSX.jsx(DialogButton$1, { onClick: clear, children: text.clear }), !full && SP_JSX.jsx(DialogButton$1, { onClick: openPage, children: text.page })] }), state?.screenHelper !== true && SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.helperOff }), SP_JSX.jsx("div", { className: "core-jarvis-hint", children: combosLine(state, locale) }), SP_JSX.jsx("div", { className: "core-jarvis-hint", children: text.hint })] }));
-    return full ? body : (SP_JSX.jsx(PanelSection$2, { title: text.title, children: SP_JSX.jsx(PanelSectionRow$2, { children: body }) }));
+    return full ? body : (SP_JSX.jsx(PanelSection$1, { title: text.title, children: SP_JSX.jsx(PanelSectionRow$1, { children: body }) }));
 }
 function JarvisSection({ locale }) {
     return SP_JSX.jsx(JarvisPanel, { locale: locale });
@@ -65835,1292 +67519,6 @@ function installJarvisCombos(deps) {
     };
 }
 
-// Eternal Core: Core UI (docs/eternal/CORE-UI.md). Builds the one stylesheet Core's plugin injects: phase 1 (the
-// global chrome, the Steam menu, Quick Access, context menus) and phase 2 (Home, the Library's tab bar, grid and
-// collection tiles).
-//
-// Steam's class names are hashed and change between builds, so no hashed name is written here. Every
-// selector comes from one of Steam's class maps (readable key -> hashed class string), found through
-// steamModules.ts: the classic class-map search on Decky 3, then the ES-module client's variables and module
-// scopes (findVar / findModuleScopeByVar) on Decky 4. A rule whose map or key is missing on the running
-// client is left out (and reported, so the runtime can log it once); the rest still apply.
-//
-// Every selector starts with html[data-core-ui] (set only while the "Core UI" setting is on) and repeats its
-// target class, and every declaration is !important: Core UI wins over a CSS Loader theme on the areas it
-// styles (see CORE-UI.md, "CSS Loader").
-//
-// Some rules key on attributes the runtime sets after looking at the live page (coreUi.ts, coreUiDom.ts,
-// coreLibraryIcons.ts): which Quick Access element is the real panel, which large layers inside it are opaque,
-// whether the top bar sits over art, which Library tab or collection tile is which console family.
-//
-// Pure on purpose (one import, steamModules.ts, itself pure): tests run it against fake Decky 3 and Decky 4
-// libraries.
-const CORE_UI_ATTRIBUTE = "data-core-ui";
-const CORE_UI_STYLE_ID = "core-ui-style";
-const CORE_UI_STARS_ATTRIBUTE = "data-core-ui-stars";
-const CORE_UI_HOST_ATTRIBUTE = "data-core-ui-host";
-// 3.3.8: set by the runtime on a Starfield canvas only while its surface is on screen; without it the canvas is hidden.
-const CORE_UI_LIVE_ATTRIBUTE = "data-core-ui-live";
-// Set by the runtime on large opaque layers inside a black panel (they would hide the stars).
-const CORE_UI_CLEAR_ATTRIBUTE = "data-core-ui-clear";
-// Set by the runtime on the top bar and the button-hint bar: "black" when Steam paints them over a plain page,
-// "clear" over game art.
-const CORE_UI_CHROME_ATTRIBUTE = "data-core-ui-chrome";
-// 3.3.10: set by the runtime on the top bar while the page under it has scrolled past its first screen ("hidden").
-const CORE_UI_HEADER_ATTRIBUTE = "data-core-ui-header";
-// Library decoration (coreLibraryIcons.ts): the tab or tile's family and key; the icon arrives as --core-icon.
-const CORE_UI_TAB_ATTRIBUTE = "data-core-tab";
-const CORE_UI_TILE_ATTRIBUTE = "data-core-collection";
-const CORE_UI_TONE_ATTRIBUTE = "data-core-tone";
-const CORE_UI_ICON_ATTRIBUTE = "data-core-icon";
-const ROOT = `html[${CORE_UI_ATTRIBUTE}]`;
-// The corner rule (CORE-UI.md, "Corners"): square (0) for the full-height side panels, the top bar, the footer and
-// every focus or selection highlight; one token for floating things only (context menus, submenus, dialogs, modals,
-// toasts, cards). Capsules and art keep Steam's own radius.
-const CORE_RADIUS_FLOAT_VAR = "--core-radius-float";
-const CORE_RADIUS_FLOAT = "10px";
-const FLOAT = `var(${CORE_RADIUS_FLOAT_VAR}, ${CORE_RADIUS_FLOAT})`;
-const SQUARE = "0";
-// Colours: corePalette.ts (CORE), repeated here so this file stays loadable on its own.
-const C = { black: "#000000", gunmetal: "#1A1D21", raised: "#2A2F36", steel: "#C9D1D9", hint: "#9AA4AE", white: "#FFFFFF", crimson: "#D7263D", crimsonText: "#EA5A68" };
-// Console-family tones (Library tabs and collection tiles; MAPPING.md of the Core icon set). All Games, Installed,
-// VR and Completed are steel with no tone.
-const CORE_FAMILY_TONES = { playstation: "#6E8CB8", nintendo: "#B07A84", sega: "#5E9E9A", xbox: "#7FA36B", retro: "#8F7CB0" };
-// Core's ring mark (assets/playhub-logo-decky.svg): the only logo on the Steam menu, top left, in its own space.
-const CORE_RING_MARK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 450"><g transform="translate(225,225) scale(3.24812)"><circle r="62" fill="none" stroke="#3A3F46" stroke-width="9"/><circle r="62" fill="none" stroke="#D7263D" stroke-width="9" stroke-linecap="round" transform="rotate(180)" stroke-dasharray="389.6" stroke-dashoffset="194.8"/><g stroke="#C9D1D9" stroke-width="5" stroke-linecap="round"><line x1="0" y1="-48" x2="0" y2="-38"/><line x1="0" y1="38" x2="0" y2="48"/><line x1="-48" y1="0" x2="-38" y2="0"/><line x1="38" y1="0" x2="48" y2="0"/><line x1="-33.9" y1="-33.9" x2="-26.9" y2="-26.9"/><line x1="26.9" y1="26.9" x2="33.9" y2="33.9"/><line x1="33.9" y1="-33.9" x2="26.9" y2="-26.9"/><line x1="-26.9" y1="26.9" x2="-33.9" y2="33.9"/></g><circle r="22" fill="#C9D1D9"/><circle r="9" fill="#D7263D"/></g></svg>';
-const CORE_RING_MARK = "data:image/svg+xml," + encodeURIComponent(CORE_RING_MARK_SVG);
-// The mark's reserved band at the top of the Steam menu: no row and no focus highlight is ever inside it.
-const CORE_MENU_LOGO_BAND = 80;
-const CORE_MENU_LOGO_SIZE = 44;
-// Keys only the Steam menu's own module has (webpack 56461 on the November 2026 client, read live; "Runnning" is
-// Steam's spelling).
-const MAIN_MENU_UNIQUE = ["mainMenuCloseDurationMS", "MainMenuEmbedded", "RunnningAppSeparator", "RunningAppIcon", "CurrentUserAvatar"];
-const CORE_UI_MAP_SIGNATURES = {
-    // The Steam menu and its in-game variant (AppRunningControls, NavigationColumn, AppColumn...) are one module
-    // (3.3.11 snapshot: one module carries mainMenuCloseDurationMS and AppRunningControls together). It needs one of the
-    // menu's own keys; Steam ships it twice (3.3.11: identical key lists), and the copies are merged (mergeMaps).
-    mainmenu: { all: ["Menu", "ItemIcon", "ItemLabel"], any: [MAIN_MENU_UNIQUE], prefer: MAIN_MENU_UNIQUE },
-    // @decky/ui's quickAccessMenuClasses (webpack 34544 on the November 2026 client: no TabContentColumn any more).
-    quickaccess: { all: ["TabGroupPanel", "Tab", "Title"],
-        any: [["Tabs", "TabsWithFooter", "BottomTabs", "TabList"], ["TabContentColumn", "AllTabContents", "ContentTransition"], ["QuickAccessMenu", "Menu", "Container"]],
-        prefer: ["QuickAccessMenu", "QuickAccessMenuEmbedded", "AllTabContents", "TabGroupPanel"] },
-    controls: { all: ["PanelSection"], any: [["PanelSectionTitle", "PanelSectionRow"]], none: ["TabGroupPanel", "QuickAccessMenu"] },
-    footer: { all: ["BasicFooter"], any: [["QuickAccessFooter", "Opaque"]], prefer: ["QuickAccessFooter", "Opaque"] },
-    header: { all: ["Header"], any: [["HeaderDownloadContainer", "HeaderOpaque"]], prefer: ["HeaderOpaque", "Clock"] },
-    dropdown: { all: ["DropDownControlButton"], none: ["GamepadDialogContent"] },
-    // Big Picture's context menus (gamepadcontextmenu_*), not the desktop client's (no BasicContextMenuHeader).
-    contextmenu: { all: ["contextMenuContents", "contextMenuItem", "BasicContextMenuHeader"], any: [["Focused", "active"]] },
-    // Phase 2 (readable names from the retired Core CSS Loader theme and @decky/ui's static class maps).
-    gamepadui: { all: ["BasicHome"], any: [["MainNavMenuAnchor", "OpaqueBackground"]] },
-    tabbedpage: { all: ["TabRow", "Tab", "TabTitle"], any: [["TabHeaderRowWrapper", "GamepadTabbedPage"]] },
-    library: { all: ["GamepadLibrary"] },
-    appgrid: { all: ["AppGridSectionLabel"], any: [["LibraryImageBackgroundGlow", "AppGrid", "LibraryAppGrid"]] },
-    portrait: { all: ["LibraryItemBox"], none: ["TabRow"] },
-    recentgames: { all: ["RecentGamesContainer"], any: [["RecentGamesBackgroundContainer", "RecentGamesBackgroundImages"]] },
-    carousel: { all: ["CarouselCapsuleBackgroundGlow"] },
-    home: { all: ["TabbedContent"], none: ["TabRow", "Tab", "BasicHome"] },
-    // 3.3.4: Steam's dialog fields (@decky/ui's gamepadDialogClasses): the rows ButtonItem draws, Decky's plugin list too.
-    // Webpack 2053 on the November 2026 client: no FieldChildren (FieldChildrenInner / FieldChildrenWithIcon instead).
-    gamepaddialog: { all: ["Field", "FieldLabel"],
-        any: [["FieldChildren", "FieldChildrenInner", "FieldChildrenWithIcon"], ["FieldDescription", "FieldLeftColumn", "FieldRightColumn"]],
-        prefer: ["FieldChildrenInner", "FieldLeftColumn", "On", "ToggleRail"] },
-    // 3.3.9, from the coordinator's live read (steam-class-signatures-2026-11-27; tests/fixtures/steam-class-maps.json).
-    // The game page: Steam's header (sharedappdetailsheader), the page root and play bar (basicappdetailssectionstyler),
-    // its sections (appdetailssection) and the play section's cloud status (appdetailsplaysection; key names from Clean
-    // Gameview's readable class names, not yet read live: CORE-UI.md says how to confirm them from the snapshot).
-    appheader: { all: ["TopCapsule", "HeaderBackgroundImage", "ImgSrc"], any: [["TopGradient", "BoxSizer"], ["FullscreenEnterStart", "FullscreenEnterDone"]] },
-    appdetails: { all: ["AppDetailsContainer", "PlaySection"], any: [["AppActionButton", "ActionRow", "AppButtons"], ["AppDetailsRoot", "AppDetailsContent", "AppDetailSectionList"]] },
-    appsection: { all: ["AppDetailsSection", "AppDetailsSectionContainer"], any: [["RightColumnSection", "AppDetailsSectionHasLabel", "Body"]] },
-    playsection: { all: ["CloudStatusLabel"], any: [["CloudSyncProblem", "CloudSyncProblemIcon"]] },
-    // 3.3.11 (the keys @decky/ui's appDetailsClasses and appActionButtonClasses find these modules by): the page's
-    // outer view (AppDetailsOverviewPanel, InnerContainer, Glassy: Steam's tinted panel, the light blue under the
-    // description and behind screen two) and the Play / Install button (green PlayButton, its container).
-    appview: { all: ["HeaderLoaded", "InnerContainer"], any: [["AppDetailsOverviewPanel", "ScrollContainer", "Glassy", "ShowPlayBar"]] },
-    actionbutton: { all: ["PlayButtonContainer", "PlayButton"], any: [["Green", "ButtonText", "ShowStreaming", "ButtonChild"]] },
-    // Settings (the paged settings dialog; an older module has the keys without the PagedSettingsDialog_ prefix).
-    // 3.3.10: Settings stayed Steam's: the signature also matches an older module (PageListColumn / PageListItem without
-    // the prefix) that is not the one on screen; the prefixed module is preferred.
-    settings: { all: [], any: [["PagedSettingsDialog_PageListColumn", "PageListColumn"], ["PagedSettingsDialog_PageListItem", "PageListItem"],
-            ["PageListItem_Title", "PagedSettingsDialog_PageList", "PageList"]],
-        prefer: ["PagedSettingsDialog", "PagedSettingsDialog_PageListColumn", "PagedSettingsDialog_PageListItem", "PagedSettingsDialog_PageContent", "PagedSettingDialog_ContentColumn"] },
-    // Settings' text (the coordinator's live read): sub-headers, body and description text, links.
-    settingstext: { all: ["SettingsDialogSubHeader"], any: [["SettingsDialogBodyText", "SettingsDialogDescriptionText", "SettingsDialogButton"]] },
-    // The small toggle map (Toggle, ToggleRail, ToggleSwitch, ToggleRow); gamepaddialog carries its own copy plus On.
-    toggle: { all: ["Toggle", "ToggleRail", "ToggleSwitch"], any: [["ToggleRow"]], none: ["Field"] },
-    downloads: { all: ["DownloadsPage", "SectionItem"], any: [["SectionTitle", "ItemLists"], ["ProgressBar", "SectionItemStatus"]] },
-    downloadbar: { all: ["BottomBar", "DownloadStatus"], any: [["DetailedDownloadProgress", "ProgressBarWrapper"]] },
-    overlay: { all: ["OverlayPopup", "ControllerConfiguratorWrapper"], any: [["BackToGame", "ExitGameBtn", "Toolbar"]] },
-    configurator: { all: ["ControllerConfiguratorMain", "ControllerConfiguratorGamepadPage"], any: [["TopSectionHeader", "ConfigurationName", "MainOptionsButton"]] },
-    configsummary: { all: ["ControllerConfiguratorSummary", "ControllerLayout"], any: [["ControlsListSection", "StandardControl"]] },
-    searchbar: { all: ["SearchBox", "SearchFieldBackground"], any: [["SearchIconLeft", "SearchIconRight"], ["ShowingSearch", "SearchAndTitleContainer"]] },
-    searchresults: { all: ["GamepadSearch", "ResultsRow"], any: [["ResultTemplate", "ResultsGridWrapper"]] },
-    suggestions: { all: ["Suggestions", "Suggestion"] },
-};
-function matchesSignature(map, signature) {
-    return signature.all.every(key => has(map, key)) && (signature.any ?? []).every(group => group.some(key => has(map, key)))
-        && !(signature.none ?? []).some(key => has(map, key));
-}
-const CORE_UI_MAP_FILTERS = Object.fromEntries(Object.keys(CORE_UI_MAP_SIGNATURES).map(name => [name, (map) => matchesSignature(map, CORE_UI_MAP_SIGNATURES[name])]));
-function has(map, key) {
-    try {
-        return !!map && typeof map === "object" && typeof map[key] === "string" && map[key].length > 0;
-    }
-    catch {
-        return false;
-    }
-}
-function attempt(run) {
-    try {
-        return run();
-    }
-    catch {
-        return undefined;
-    }
-}
-// One class map: the class-map search (Decky 3's findClassModule / classMap, then findModule, which on Decky 4
-// walks module scopes and variables), then Decky 4's findVar and findModuleScopeByVar directly.
-function findCoreUiMapRoute(ui, filter) {
-    const accept = (value) => (value && typeof value === "object" && attempt(() => filter(value)) === true ? value : undefined);
-    const classic = accept(attempt(() => findClassModule(ui, filter)));
-    if (classic)
-        return { map: classic, route: "classic" };
-    const variable = typeof ui?.findVar === "function" ? accept(attempt(() => ui.findVar((value) => accept(value) !== undefined))) : undefined;
-    if (variable)
-        return { map: variable, route: "findVar" };
-    const scope = typeof ui?.findModuleScopeByVar === "function"
-        ? attempt(() => ui.findModuleScopeByVar((value) => accept(value) !== undefined)) : undefined;
-    if (scope && typeof scope === "object") {
-        for (const value of attempt(() => Object.values(scope)) ?? []) {
-            const hit = accept(value);
-            if (hit)
-                return { map: hit, route: "scope" };
-        }
-    }
-    return { route: "missing" };
-}
-const CORE_UI_CANDIDATE_KEYS = 120;
-function signatureKeys(signature) {
-    return [...new Set([...signature.all, ...(signature.any ?? []).flat()])];
-}
-function looksLikeClassMap(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value))
-        return false;
-    const entries = attempt(() => Object.entries(value)) ?? [];
-    return entries.length > 0 && entries.length <= 600 && entries.every(([, v]) => typeof v === "string");
-}
-function scoreCandidate(map, signature) {
-    if (!looksLikeClassMap(map))
-        return undefined;
-    const wanted = signatureKeys(signature);
-    const matched = wanted.filter(key => has(map, key));
-    if (!matched.length)
-        return undefined;
-    const keys = (attempt(() => Object.keys(map)) ?? []).slice(0, CORE_UI_CANDIDATE_KEYS);
-    return { score: Math.round(matched.length / wanted.length * 100) / 100, matched, missing: wanted.filter(key => !matched.includes(key)), keys };
-}
-// One walk over every class map the loader exposes (the filter never accepts, so the search visits them all), scoring
-// each against every missing signature.
-function closestCoreUiCandidates(ui, names) {
-    const best = {};
-    if (!names.length)
-        return best;
-    const seen = new Set();
-    const visit = (value) => {
-        if (!value || typeof value !== "object" || seen.has(value))
-            return false;
-        seen.add(value);
-        for (const name of names) {
-            const found = attempt(() => scoreCandidate(value, CORE_UI_MAP_SIGNATURES[name]));
-            if (found && (!best[name] || found.score > best[name].score))
-                best[name] = found;
-        }
-        return false;
-    };
-    attempt(() => findClassModule(ui, visit));
-    if (typeof ui?.findVar === "function")
-        attempt(() => ui.findVar(visit));
-    if (typeof ui?.findModuleScopeByVar === "function")
-        attempt(() => ui.findModuleScopeByVar((value) => { visit(value); return false; }));
-    return best;
-}
-// 3.3.10: how well a matching module fits its signature: its `prefer` keys first (keys only the right module has), then
-// how many of the signature's keys it carries. Used only to choose between two modules that both match.
-function signatureFit(map, signature) {
-    const prefer = (signature.prefer ?? []).filter(key => has(map, key)).length;
-    return prefer * 1000 + signatureKeys(signature).filter(key => has(map, key)).length;
-}
-// Every distinct module that matches each signature, in one walk over every class map the loader exposes (the walk
-// never accepts, so it visits them all). Two references to equal maps count once.
-function allCoreUiMatches(ui, names) {
-    const out = {};
-    if (!names.length)
-        return out;
-    const seen = new Set();
-    const visit = (value) => {
-        if (!value || typeof value !== "object" || seen.has(value) || !looksLikeClassMap(value))
-            return false;
-        seen.add(value);
-        for (const name of names) {
-            if (attempt(() => CORE_UI_MAP_FILTERS[name](value)) !== true)
-                continue;
-            const list = out[name] ?? (out[name] = []);
-            if (!list.some(other => sameMap(other, value)) && list.length < 8)
-                list.push(value);
-        }
-        return false;
-    };
-    attempt(() => findClassModule(ui, visit));
-    if (typeof ui?.findVar === "function")
-        attempt(() => ui.findVar(visit));
-    if (typeof ui?.findModuleScopeByVar === "function")
-        attempt(() => ui.findModuleScopeByVar((value) => { visit(value); return false; }));
-    return out;
-}
-function sameMap(a, b) {
-    if (a === b)
-        return true;
-    const ka = attempt(() => Object.keys(a)) ?? [], kb = attempt(() => Object.keys(b)) ?? [];
-    return ka.length === kb.length && ka.every(key => a[key] === b[key]);
-}
-const uniqueKeys = (map, signature) => (signature.prefer ?? []).filter(key => has(map, key));
-function findCoreUiMapsDetailed(ui, options = {}) {
-    const maps = {}, routes = {};
-    const missing = [], found = [];
-    for (const name of Object.keys(CORE_UI_MAP_FILTERS)) {
-        const hit = findCoreUiMapRoute(ui, CORE_UI_MAP_FILTERS[name]);
-        routes[name] = hit.route;
-        if (hit.map) {
-            maps[name] = hit.map;
-            found.push(name);
-        }
-        else
-            missing.push(name);
-    }
-    // The first module a search answers is not always the one on screen: every found map is checked for a second
-    // module that matches the same signature, and the better fit wins.
-    const ambiguous = {};
-    if (options.ambiguity !== false) {
-        const all = allCoreUiMatches(ui, found);
-        for (const name of found) {
-            const list = all[name] ?? [];
-            if (list.length < 2)
-                continue;
-            const signature = CORE_UI_MAP_SIGNATURES[name];
-            const first = maps[name];
-            let best = first, bestFit = signatureFit(first, signature);
-            for (const map of list) {
-                const fit = signatureFit(map, signature);
-                if (fit > bestFit) {
-                    best = map;
-                    bestFit = fit;
-                }
-            }
-            // Every module as good as the best one is merged (Steam's duplicate copies); a worse fit is passed over.
-            const ties = [best, ...list.filter(map => !sameMap(map, best) && signatureFit(map, signature) === bestFit)];
-            maps[name] = ties.length > 1 ? mergeMaps(ties) : best;
-            ambiguous[name] = { matches: list.length, switched: !sameMap(best, first), chosen: uniqueKeys(best, signature),
-                passedOver: list.filter(map => !ties.some(tie => sameMap(tie, map))).map(map => uniqueKeys(map, signature)), merged: ties.length };
-        }
-    }
-    const candidates = options.candidates === false ? {} : closestCoreUiCandidates(ui, missing);
-    return { maps, routes, candidates, ambiguous };
-}
-const CLASS_NAME = /^-?[A-Za-z_][\w-]*$/;
-// 3.3.4: every target also carries an id-level boost, `:not(#core-ui-boost)` (no element has that id, so it matches
-// everything and adds an id's weight). A CSS Loader theme left on (the old Core theme was) used class selectors with
-// !important; with the boost Core UI's !important rules out-rank any of them, however many classes deep.
-const CORE_UI_BOOST = ":not(#core-ui-boost)";
-// ".hashed.hashed:not(#core-ui-boost)": the class from the map, repeated once, plus the boost. Undefined when the key
-// is missing or its value is not a plain class list.
-// 3.3.11: a merged map (mergeMaps: Steam ships the same module twice, either copy may be the one on screen) holds a
-// key's alternatives separated by "|"; the selector is then :is(one, other), which keeps a single compound's weight.
-const ALTERNATIVES = "|";
-function classAlternatives(value) {
-    const out = String(value).split(ALTERNATIVES).map(part => part.trim().split(/\s+/).filter(Boolean)).filter(names => names.length);
-    return out.length && out.every(names => names.every(name => CLASS_NAME.test(name))) ? out : undefined;
-}
-function classSelector(map, key) {
-    if (!has(map, key))
-        return undefined;
-    const alternatives = classAlternatives(map[key]);
-    if (!alternatives)
-        return undefined;
-    const one = (names) => "." + names.join(".") + "." + names[0];
-    return (alternatives.length === 1 ? one(alternatives[0]) : `:is(${alternatives.map(one).join(",")})`) + CORE_UI_BOOST;
-}
-// ---- The selector table (3.3.4) ----
-//
-// Every element Core UI aims at, by name, with each way of finding it, best first. A strategy is a selector
-// template: `{map.Key}` stands for that class map's class (dropped when the map or key is missing), anything else is
-// plain CSS (Steam's unhashed globals, attributes, links). Rules and the snapshot (coreUiSnapshot.ts) read this one
-// table, so fixing a selector after the snapshot is one line here.
-const CORE_UI_TARGETS = {
-    header: ["{header.Header}"],
-    footer: ["{footer.BasicFooter}"],
-    menu: ["{mainmenu.Menu}"],
-    menuItem: ["{mainmenu.Item}"],
-    qamMenu: ["{quickaccess.Menu}"],
-    qamPanel: ["{quickaccess.Container}", "{quickaccess.QuickAccessMenu}", "{quickaccess.ViewPlaceholder}"],
-    qamRail: ["{quickaccess.Tabs}", "{quickaccess.TabsWithFooter}", "{quickaccess.TabList}", "{quickaccess.BottomTabs}"],
-    qamTab: ["{quickaccess.Tab}"],
-    qamTabSelected: ["{quickaccess.Tab}{quickaccess.Selected}", '{quickaccess.Tab}[aria-selected="true"]', "{quickaccess.Tab}.Selected", "{quickaccess.Tab}.Active"],
-    qamTitle: ["{quickaccess.Title}", "{quickaccess.HeaderContainer}"],
-    qamContent: ["{quickaccess.TabContentColumn}", "{quickaccess.AllTabContents}", "{quickaccess.ContentTransition}"],
-    // Decky's plugin list and every ButtonItem: Steam's dialog field rows and their DialogButton.
-    // 3.3.8: each also under QuickAccessMenu and Container, so one missing key never drops the rows.
-    qamRowField: ["{quickaccess.Menu} {gamepaddialog.Field}", "{quickaccess.QuickAccessMenu} {gamepaddialog.Field}", "{quickaccess.Container} {gamepaddialog.Field}"],
-    qamRowButton: ['{quickaccess.Menu} .DialogButton:not([style*="background"])', "{quickaccess.Menu} {dropdown.DropDownControlButton}",
-        '{quickaccess.QuickAccessMenu} .DialogButton:not([style*="background"])', "{quickaccess.QuickAccessMenu} {dropdown.DropDownControlButton}",
-        '{quickaccess.Container} .DialogButton:not([style*="background"])'],
-    qamTitleButton: ["{quickaccess.Title} .DialogButton"],
-    context: ["{contextmenu.contextMenuContents}"],
-    home: ["{gamepadui.BasicHome}"],
-    library: ["{library.GamepadLibrary}"],
-    libraryTabRow: ["{tabbedpage.TabRow}", "{tabbedpage.TabHeaderRowWrapper}"],
-    libraryTab: ["{tabbedpage.Tab}"],
-    libraryTabSelected: ["{tabbedpage.Tab}{tabbedpage.Selected}", '{tabbedpage.Tab}[aria-selected="true"]'],
-    libraryTabTitle: ["{tabbedpage.TabTitle}"],
-    // Home's tab row (3.3.8): Steam's tabbed page that holds Core Home's tab content (CoreHomeTabs marks each tab's
-    // content with data-core-home-tab), so the Library's and a game page's tab bars are not touched.
-    homeTabPage: ["{tabbedpage.GamepadTabbedPage}:has([data-core-home-tab])", "{gamepadui.BasicHome}:has([data-core-home-tab])"],
-    libraryGrid: ["{library.GamepadLibrary} {appgrid.AppGrid}", "{library.GamepadLibrary} {appgrid.LibraryAppGrid}", "{library.GamepadLibrary}"],
-    libraryCapsule: ["{library.GamepadLibrary} {portrait.LibraryItemBox}"],
-    collectionTile: ['a[href*="/library/collection/"]', "[data-collection-id]"],
-    // 3.3.11: the game page's parts, for the snapshot (it recorded none of them, so a missing match could not be told
-    // from a missing capture).
-    gameHeader: ["{appheader.TopCapsule}"],
-    gamePlayBar: ["{appdetails.PlaySection}"],
-    gameScreenTwo: ["{appdetails.AppDetailsContainer} {tabbedpage.GamepadTabbedPage}", "{appdetails.AppDetailsContainer}"],
-    gameSection: ["{appsection.AppDetailsSectionContainer}", "{appsection.AppDetailsSection}"],
-    // Hosts from other plugins (3.3.7): The Collector's ROM game page (CORE_UI_HOSTS, "collector-rom-page").
-    collectorRomPage: [".romm-core-page"],
-};
-const TOKEN = /\{([a-z]+)\.([A-Za-z0-9_]+)\}/g;
-// One template against the maps: the strong form (with Core UI's specificity) and the plain form (querySelector).
-// Undefined when any {map.Key} in it is missing on this client.
-function resolveTemplate(maps, template, plain = false) {
-    let missing = false;
-    const out = template.replace(TOKEN, (_all, map, key) => {
-        const value = plain ? plainSelector(maps[map], key) : classSelector(maps[map], key);
-        if (!value)
-            missing = true;
-        return value ?? "";
-    });
-    return missing ? undefined : out;
-}
-// Every strategy of a target that resolves on this client, best first.
-function targetSelectors(maps, id, plain = false) {
-    return (CORE_UI_TARGETS[id] ?? []).map(template => resolveTemplate(maps, template, plain)).filter((value) => !!value);
-}
-// The whole table resolved, for the snapshot: per target, each strategy and whether it resolved.
-function resolvedTargetTable(maps) {
-    const out = {};
-    for (const [id, list] of Object.entries(CORE_UI_TARGETS))
-        out[id] = list.map(strategy => ({ strategy, selector: resolveTemplate(maps, strategy, true) }));
-    return out;
-}
-const imp = (block) => Object.entries(block).map(([key, value]) => `${key}:${value} !important`).join(";");
-const CLEAR = { "background-color": "transparent", "background-image": "none", "box-shadow": "none" };
-// Pure black, opaque: no translucency, no tint, no blur behind, no gradient or shadow (item 6 of the TV list).
-const SOLID_BLACK = { "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none", filter: "none", opacity: "1" };
-function rules(mark) {
-    // Rule-local helper: one ROOT-prefixed list for a target.
-    const under = (list, tail = "") => list.map(sel => `${ROOT} ${sel}${tail}`).join(",");
-    const list = [
-        // The float radius token, inherited by everything in the page; Steam's global confirm dialogs use it.
-        { id: "corners", needs: [], css: () => `${ROOT} body{${imp({ [CORE_RADIUS_FLOAT_VAR]: CORE_RADIUS_FLOAT })}}${ROOT} .GenericConfirmDialog{${imp({ "border-radius": FLOAT })}}` },
-        // Global chrome: the top bar and the button-hint bar are clear over game art and pure black anywhere else
-        // (the runtime says which: data-core-ui-chrome), and whenever Steam paints them opaque.
-        // 3.3.9 (TV: "either fully black or fully transparent, including search"): the top bar is fully transparent
-        // everywhere, over art and over black alike: no bar, no blur, no gradient, whatever Steam marks it (HeaderOpaque
-        // included). Clock, icons and avatar steel or white, with one soft text shadow so they read over bright art.
-        { id: "chrome-header", needs: [["header", "Header"]], css: s => {
-                const header = `${ROOT} ${s("header", "Header")}`;
-                const opaque = s("header", "HeaderOpaque") ? `${ROOT} ${s("header", "HeaderOpaque")}` : "";
-                const all = [header, ...(opaque ? [opaque] : [])];
-                return `${all.flatMap(sel => [sel, `${sel}::before`, `${sel}::after`, `${sel}[${CORE_UI_CHROME_ATTRIBUTE}]`]).join(",")}{${imp({ ...CLEAR, "backdrop-filter": "none", filter: "none",
-                    "border-bottom-color": "transparent", "border-radius": SQUARE, opacity: "1" })}}` +
-                    `${header}{${imp({ color: C.steel })}}${header} :is(svg,span,div){${imp({ "text-shadow": CORE_HEADER_TEXT_SHADOW })}}` +
-                    // 3.3.10 (TV photo: the clock, weather and search sat over the tiles): past the page's first screen the bar
-                    // slides up and fades out, whole (never a partial background); back near the top it returns.
-                    `${header}{${imp({ transition: `opacity ${CORE_HEADER_HIDE_MS}ms ease-out, translate ${CORE_HEADER_HIDE_MS}ms ease-out` })}}` +
-                    `${header}[${CORE_UI_HEADER_ATTRIBUTE}="hidden"]{${imp({ opacity: "0", translate: "0 -100%", "pointer-events": "none" })}}` +
-                    `@media (prefers-reduced-motion: reduce){${header}{${imp({ transition: "none" })}}}`;
-            } },
-        { id: "chrome-footer", needs: [["footer", "BasicFooter"]], css: s => {
-                const footer = `${ROOT} ${s("footer", "BasicFooter")}`;
-                return `${footer},${footer}::before,${footer}::after{${imp({ ...CLEAR, "backdrop-filter": "none", filter: "none", "border-top-color": "transparent" })}}` +
-                    `${footer}[${CORE_UI_CHROME_ATTRIBUTE}="black"]{${imp(SOLID_BLACK)}}${footer}{${imp({ "border-radius": SQUARE })}}`;
-            } },
-        { id: "chrome-footer-opaque", needs: [["footer", "Opaque"]], css: s => {
-                const opaque = `${ROOT} ${s("footer", "Opaque")}`;
-                return `${opaque}{${imp(SOLID_BLACK)}}${opaque}::before,${opaque}::after{${imp({ ...CLEAR, "backdrop-filter": "none" })}}`;
-            } },
-        // The top bar's universal search (3.3.8, TV: "the search bar is ugly"). Found through the header's class map plus
-        // structure only (the field is the header's element that holds the <input>), never a hashed class: a square
-        // gunmetal field with steel text, a #9AA4AE placeholder and a steel magnifier; focused, a 2px crimson underline and
-        // no glow. Its height is the top bar's (Steam already sizes it to the bar); Steam's blue is gone.
-        // 3.3.9: transparent like the bar: the steel magnifier and text over a 1px steel underline, 2px crimson when focused.
-        { id: "search-field", needs: [["header", "Header"]], css: s => {
-                const header = `${ROOT} ${s("header", "Header")}`;
-                const field = `${header} div:has(> input)`;
-                return `${field}{${imp({ "background-color": "transparent", "background-image": "none", "border-radius": SQUARE, "box-shadow": `inset 0 -1px 0 ${C.steel}`, border: "0", outline: "none", filter: "none", "backdrop-filter": "none" })}}` +
-                    `${field} > input{${imp({ color: C.steel, "background-color": "transparent", "background-image": "none", "box-shadow": "none", border: "0", outline: "none", "caret-color": C.crimson })}}` +
-                    `${field} > input::placeholder{${imp({ color: C.hint, opacity: "1" })}}` +
-                    `${field} > svg,${field} > svg *{${imp({ color: C.steel, fill: C.steel })}}` +
-                    `${field}:focus-within,${field}:has(> input:focus),${field}.gpfocuswithin{${imp({ "background-color": "transparent", "box-shadow": `inset 0 -2px 0 ${C.crimson}`, outline: "none", filter: "none" })}}`;
-            } },
-        // Steam's dialog field rows everywhere (3.3.8: Settings rows, Downloads, any page built from DialogField): no blue
-        // band; the focused row gunmetal with the square crimson left bar, like the Steam menu. Quick Access keeps its own
-        // (more specific) row rules.
-        { id: "dialog-fields", needs: [["gamepaddialog", "Field"]], css: s => {
-                const field = `${ROOT} ${s("gamepaddialog", "Field")}`;
-                const focus = `${field}:is(.gpfocus,.gpfocuswithin,:focus-visible)`;
-                return `${field}::before,${field}::after{${imp({ "background-image": "none", "box-shadow": "none" })}}` +
-                    `${focus}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": `inset 3px 0 0 ${C.crimson}`, "border-radius": SQUARE, filter: "none", animation: "none", outline: "none" })}}` +
-                    `${focus}::before,${focus}::after{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
-                    `${focus} ${s("gamepaddialog", "FieldLabel")}{${imp({ color: C.white })}}`;
-            } },
-        // Steam menu: AMOLED black panel (stars drawn behind the rows by coreUi.ts). Core's ring mark sits top left in a
-        // band of its own: an in-flow block before every row, so no row and no focus fill can ever overlap it (the
-        // runtime also checks the first row starts below it; coreUiDom.ts, keepBelowLogo).
-        { id: "menu-panel", needs: [["mainmenu", "Menu"]], css: s => {
-                const menu = `${ROOT} ${s("mainmenu", "Menu")}`;
-                // 3.3.10: the menu window's outer box (Container, around Menu) is black too, never Steam's blue around the rows.
-                const outer = ["Container", "MainMenuEmbedded"].filter(key => s("mainmenu", key)).map(key => `${ROOT} ${s("mainmenu", key)}`);
-                return (outer.length ? `${outer.join(",")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE, "backdrop-filter": "none" })}}` : "") +
-                    `${menu}{${imp({ position: "relative", "background-color": C.black, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` +
-                    (mark ? `${menu}::before{${imp({ content: '""', display: "block", position: "relative", order: "-1", flex: `0 0 ${CORE_MENU_LOGO_BAND}px`,
-                        "box-sizing": "border-box", width: "100%", height: `${CORE_MENU_LOGO_BAND}px`, "min-height": `${CORE_MENU_LOGO_BAND}px`, margin: "0", padding: "0",
-                        background: `url(${JSON.stringify(mark)}) 24px center / ${CORE_MENU_LOGO_SIZE}px ${CORE_MENU_LOGO_SIZE}px no-repeat`, "pointer-events": "none", "z-index": "1" })}}` : "");
-            } },
-        // One inset and a fixed-width icon cell for every row, so icons and labels line up. No transforms: the
-        // rows must not drift sideways.
-        { id: "menu-rows", needs: [["mainmenu", "Menu"], ["mainmenu", "Item"], ["mainmenu", "ItemIcon"], ["mainmenu", "ItemLabel"]], css: s => {
-                const menu = `${ROOT} ${s("mainmenu", "Menu")}`;
-                const outer = s("mainmenu", "ItemOuter") === "" ? "" : `${menu} ${s("mainmenu", "ItemOuter")}{${imp({ "margin-left": "0", "padding-left": "0", transform: "none", left: "auto" })}}`;
-                return outer +
-                    `${menu} ${s("mainmenu", "Item")}{${imp({ display: "flex", "align-items": "center", "box-sizing": "border-box", "min-height": "48px", "margin-left": "0",
-                        "padding-left": "24px", "padding-right": "16px", transform: "none", left: "auto", "background-color": "transparent", "background-image": "none",
-                        "box-shadow": "none", "border-radius": "0", outline: "none", animation: "none" })}}` +
-                    `${menu} ${s("mainmenu", "Item")}::before,${menu} ${s("mainmenu", "Item")}::after{${imp({ "background-image": "none", "box-shadow": "none" })}}` +
-                    `${menu} ${s("mainmenu", "ItemIcon")}{${imp({ flex: "0 0 32px", width: "32px", "min-width": "32px", "max-width": "32px", margin: "0 16px 0 0", padding: "0",
-                        display: "flex", "align-items": "center", "justify-content": "center", transform: "none", position: "static" })}}` +
-                    `${menu} ${s("mainmenu", "ItemIcon")} :is(svg,img){${imp({ width: "24px", height: "24px", "max-width": "24px", "max-height": "24px" })}}` +
-                    `${menu} ${s("mainmenu", "ItemLabel")}{${imp({ margin: "0", padding: "0", "text-align": "left", transform: "none", color: C.steel, "font-size": "16px" })}}`;
-            } },
-        // Focused row: gunmetal with a 3px crimson bar on its left edge. No glow, no underline.
-        { id: "menu-focus", needs: [["mainmenu", "Menu"], ["mainmenu", "Item"]], css: s => {
-                const menu = `${ROOT} ${s("mainmenu", "Menu")}`;
-                const item = s("mainmenu", "Item");
-                return `${menu} ${item}:is(.gpfocus,:focus,:focus-visible,:focus-within){${imp({ "background-color": C.gunmetal, "background-image": "none",
-                    "box-shadow": `inset 3px 0 0 ${C.crimson}`, outline: "none", animation: "none", filter: "none", "border-radius": SQUARE })}}` +
-                    `${menu} ${item}:is(.gpfocus,:focus,:focus-visible,:focus-within) *{${imp({ color: C.white, "text-shadow": "none" })}}`;
-            } },
-        // The page you are on (Home's marker): crimson, not Steam's blue. 3.3.10: the item Steam marks Active (the page you
-        // are on) keeps no fill of Steam's; only the dot says it, and its label is white.
-        { id: "menu-active", needs: [["mainmenu", "ActiveDot"]], css: s => `${ROOT} ${s("mainmenu", "ActiveDot")}{${imp({ "background-color": C.crimson, "background-image": "none", "box-shadow": "none", "border-color": C.crimson })}}` +
-                (s("mainmenu", "Item") && s("mainmenu", "Active") ? `${ROOT} ${s("mainmenu", "Item")}${s("mainmenu", "Active")}:not(.gpfocus,:focus,:focus-visible,:focus-within){${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
-                    `${ROOT} ${s("mainmenu", "Item")}${s("mainmenu", "Active")} ${s("mainmenu", "ItemLabel")}{${imp({ color: C.white })}}` : "") },
-        // The "MENU" footer under the panel: black.
-        { id: "menu-footer", needs: [["mainmenu", "FooterBoxShadow"]], css: s => `${ROOT} ${s("mainmenu", "FooterBoxShadow")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
-        { id: "menu-footer-bar", needs: [["mainmenu", "Menu"], ["footer", "BasicFooter"]], css: s => `${ROOT} ${s("mainmenu", "Menu")} ${s("footer", "BasicFooter")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
-        // Quick Access: one black panel with the Starfield behind everything. Which element is the real panel differs
-        // between clients (Menu, QuickAccessMenu or Container): each is a candidate, the runtime picks the outermost one
-        // that is panel-sized (CORE_UI_HOSTS) and only that one is painted black; the others go clear.
-        { id: "qam-panel", needs: [], needsAny: [["quickaccess", "Menu"], ["quickaccess", "QuickAccessMenu"], ["quickaccess", "Container"]], css: s => {
-                const candidates = ["Container", "QuickAccessMenu", "ViewPlaceholder"].filter(key => s("quickaccess", key) !== "")
-                    .map(key => `${ROOT} ${s("quickaccess", key)}`);
-                return (s("quickaccess", "Menu") ? `${ROOT} ${s("quickaccess", "Menu")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` : "") +
-                    (candidates.length ? `${candidates.join(",")}{${imp({ ...CLEAR, "backdrop-filter": "none", "border-radius": SQUARE })}}` +
-                        `${candidates.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}="1"]`).join(",")}{${imp({ "background-color": C.black, "background-image": "none" })}}` : "");
-            } },
-        // Everything over the stars is clear: the content column, plugin panels (Decky's and every plugin's own,
-        // CSS Loader's included), and any large opaque layer the runtime finds inside the panel.
-        // 3.3.8: TabContentColumn is gone on the November 2026 client; any one of the content layers is enough.
-        { id: "qam-clear", needs: [], needsAny: [["quickaccess", "TabContentColumn"], ["quickaccess", "AllTabContents"], ["quickaccess", "ContentTransition"], ["quickaccess", "TabGroupPanel"]], css: s => {
-                const keys = ["TabContentColumn", "AllTabContents", "ContentTransition", "TabGroupPanel", "PanelSection", "PanelOuterNav", "PopupBody", "FriendsListTabPanel"];
-                const list = keys.filter(key => s("quickaccess", key) !== "").map(key => `${ROOT} ${s("quickaccess", key)}`);
-                if (s("controls", "PanelSection") !== "")
-                    list.push(`${ROOT} ${s("controls", "PanelSection")}`);
-                list.push(`${ROOT} [${CORE_UI_CLEAR_ATTRIBUTE}]`);
-                return `${list.join(",")}{${imp({ ...CLEAR, "backdrop-filter": "none" })}}`;
-            } },
-        // The title strip: clear over the panel's black and stars (no gradient bars above or under it, no logo).
-        { id: "qam-title", needs: [["quickaccess", "Title"]], css: s => {
-                const keys = ["Title", "HeaderContainer"].filter(key => s("quickaccess", key) !== "").map(key => `${ROOT} ${s("quickaccess", key)}`);
-                const pseudo = keys.flatMap(key => [`${key}::before`, `${key}::after`]);
-                return `${keys.join(",")}{${imp({ ...CLEAR, "border-color": "transparent", "backdrop-filter": "none" })}}` +
-                    `${pseudo.join(",")}{${imp({ "background-image": "none", "background-color": "transparent", "box-shadow": "none" })}}`;
-            } },
-        // The tab rail: clear over the panel's black and stars, a thin gunmetal divider; the open tab gunmetal (its
-        // crimson bar is Core's own).
-        // 3.3.8: the rail's inner list and bottom group (TabList, BottomTabs; new on the November 2026 client) go clear too.
-        { id: "qam-tabs", needs: [["quickaccess", "Tab"]], needsAny: [["quickaccess", "Tabs"], ["quickaccess", "TabsWithFooter"], ["quickaccess", "TabList"]], css: s => (s("quickaccess", "Tabs") ? `${ROOT} ${s("quickaccess", "Tabs")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": `inset 1px 0 0 ${C.gunmetal}` })}}` : "") +
-                (["TabList", "BottomTabs"].filter(key => s("quickaccess", key)).map(key => `${ROOT} ${s("quickaccess", key)}`).join(",") || `${ROOT} [data-core-ui-none]`) +
-                `{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
-                `${ROOT} ${s("quickaccess", "Tab")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
-                `${ROOT} ${s("quickaccess", "Tab")}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", filter: "none", "border-radius": SQUARE })}}` },
-        // 3.3.10 (the approved board, QAMDecky): the rail on the RIGHT of the panel, the content to its left. Steam's Menu
-        // holds the rail and the content column side by side; its row is reversed. The D-pad follows the picture
-        // (coreQamRail.ts: left from the rail goes into the content, right from the content's edge into the rail).
-        { id: "qam-rail-right", needs: [["quickaccess", "Menu"]], needsAny: [["quickaccess", "Tabs"], ["quickaccess", "TabsWithFooter"]], css: s => `${ROOT} ${s("quickaccess", "Menu")}{${imp({ display: "flex", "flex-direction": "row-reverse" })}}` +
-                // 3.3.11: Steam's Quick Access window is wider than the part of it on screen (855 px, about 350 px visible on
-                // the TV), so the reversed row put the rail off screen. coreQamRail.ts measures the visible width and the Menu
-                // takes exactly that: the rail sits at the right edge of what the user sees.
-                `${ROOT} ${s("quickaccess", "Menu")}[${CORE_QAM_VISIBLE_ATTRIBUTE}]{${imp({ width: `var(${CORE_QAM_VISIBLE_VAR})`, "max-width": `var(${CORE_QAM_VISIBLE_VAR})`, "min-width": "0", "box-sizing": "border-box", overflow: "hidden" })}}` },
-        // The open tab: gunmetal, never Steam's grey-blue gradient (TV photo, 3.3.3). Every way Steam may mark it is in the
-        // selector table (qamTabSelected).
-        // 3.3.10: the fill is the tab's own box (48 x 64, square); any fill Steam draws in a pseudo-element goes.
-        { id: "qam-tab-selected", needs: [], targets: ["qamTabSelected"], css: (_s, t) => `${under(t("qamTabSelected"))}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", filter: "none", "border-radius": SQUARE })}}` +
-                `${under(t("qamTabSelected"), "::before")},${under(t("qamTabSelected"), "::after")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` },
-        // Rail icons. 3.3.10 (TV photo: plugin icons sat ~17px high, off the selected fill): live geometry, every tab is
-        // 48 x 64; Steam's own svg icons are 24px centred by a 20px 12px margin, plugin icons a 30px span pinned to the
-        // tab's top. Now every tab is a flex box that centres its child both ways, every icon (Steam's svg, a plugin's span,
-        // Core's glyph) is CORE_RAIL_ICON_PX square with no margin, and the selected fill is the whole square tab.
-        { id: "qam-rail-icons", needs: [], targets: ["qamTab"], css: (_s, t) => {
-                const px = `${CORE_RAIL_ICON_PX}px`;
-                const box = { width: px, height: px, "min-width": px, "min-height": px, "max-width": px, "max-height": px, margin: "0", padding: "0", flex: `0 0 ${px}` };
-                return `${under(t("qamTab"))}{${imp({ display: "flex", "align-items": "center", "justify-content": "center", "box-sizing": "border-box", padding: "0", "border-radius": SQUARE })}}` +
-                    `${under(t("qamTab"), " > *")}{${imp({ margin: "0", "align-self": "center" })}}` +
-                    `${under(t("qamTab"), " > svg")},${under(t("qamTab"), " > :is(span,div):has(> :is(svg,img))")},${under(t("qamTab"), " [data-core-rail-icon]")}{${imp({ ...box, display: "flex", "align-items": "center", "justify-content": "center", position: "static", top: "auto", transform: "none" })}}` +
-                    // 3.3.11: icons that set no fill drew black; they take the tab's colour.
-                    `${under(t("qamTab"), " svg:not([fill])")}{${imp({ fill: "currentColor" })}}` +
-                    `${under(t("qamTab"), " > :is(span,div):has(> :is(svg,img)) > :is(svg,img)")},${under(t("qamTab"), " [data-core-rail-icon] svg")}{${imp({ width: "100%", height: "100%", margin: "0", "max-width": "100%", "max-height": "100%", "shape-rendering": "geometricPrecision" })}}`;
-            } },
-        { id: "qam-tabs-footer", needs: [["quickaccess", "TabsWithFooter"]], css: s => `${ROOT} ${s("quickaccess", "TabsWithFooter")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` },
-        // The footer bar: black.
-        { id: "qam-footer", needs: [["footer", "QuickAccessFooter"]], css: s => `${ROOT} ${s("footer", "QuickAccessFooter")},${ROOT} ${s("footer", "QuickAccessFooter")}::before{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
-        { id: "qam-footer-shadow", needs: [["quickaccess", "FooterBoxShadow"]], css: s => `${ROOT} ${s("quickaccess", "FooterBoxShadow")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none" })}}` },
-        // Plugin content: Steam's buttons and dropdowns inside Quick Access lose the grey-blue gradient. Gunmetal,
-        // raised plus a 2px crimson ring when focused. DialogButton and gpfocus are Steam's unhashed global classes.
-        // 3.3.4 (TV photo of Decky's main page): rows are gunmetal with steel text, a focused row raised gunmetal with the
-        // square crimson left bar (never Steam's white); the title's Store / Settings buttons gunmetal with the same bar.
-        // A button that sets its own background inline (Jarvis's crimson "listening" buttons) keeps it.
-        { id: "qam-controls", needs: [], targets: ["qamRowButton"], css: (_s, t) => qamRowCss(t("qamRowButton"), t("qamRowField")) },
-        // Context menus and their submenus (a game's Options / "..." menu, Manage, and the menus the Steam menu and
-        // Quick Access open). The Context board: black panel with a 1px gunmetal edge and 10px corners, 8px top and
-        // bottom, 48px rows with a 22px inset and 16px text, a 13px hint-grey header, hairline gunmetal separators.
-        { id: "context-panel", needs: [["contextmenu", "contextMenuContents"]], css: s => `${ROOT} ${s("contextmenu", "contextMenuContents")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", outline: "none", border: "0",
-                "border-radius": FLOAT, overflow: "hidden", "padding-top": "8px", "padding-bottom": "8px", filter: "none", "backdrop-filter": "none" })}}` +
-                (s("contextmenu", "contextMenu") ? `${ROOT} ${s("contextmenu", "contextMenu")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` : "") },
-        { id: "context-header", needs: [["contextmenu", "BasicContextMenuHeader"]], css: s => {
-                const headers = ["BasicContextMenuHeader", "MenuSectionHeader"].filter(key => s("contextmenu", key)).map(key => `${ROOT} ${s("contextmenu", key)}`);
-                return `${headers.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", color: C.hint, "font-size": "13px", padding: "12px 22px 10px" })}}`;
-            } },
-        { id: "context-separator", needs: [["contextmenu", "ContextMenuSeparator"]], css: s => `${ROOT} ${s("contextmenu", "ContextMenuSeparator")}{${imp({ "background-color": C.gunmetal, "background-image": "none", height: "1px", "min-height": "1px", margin: "6px 0", border: "0", opacity: "1" })}}` },
-        { id: "context-items", needs: [["contextmenu", "contextMenuItem"]], css: s => {
-                const item = `${ROOT} ${s("contextmenu", "contextMenuItem")}`;
-                return `${item}{${imp({ display: "flex", "align-items": "center", "box-sizing": "border-box", "min-height": "48px", padding: "0 22px", "font-size": "16px",
-                    color: C.steel, "background-color": "transparent", "background-image": "none", "box-shadow": "none", "border-radius": "0", "text-shadow": "none", animation: "none" })}}` +
-                    `${item} svg{${imp({ flex: "0 0 auto", "margin-right": "12px", fill: "currentColor" })}}` +
-                    `${item}:is([disabled],[aria-disabled="true"])${s("contextmenu", "Disabled") ? `,${item}${s("contextmenu", "Disabled")}` : ""}{${imp({ color: C.hint })}}`;
-            } },
-        // Focused (and an open submenu's item): gunmetal with the Steam menu's crimson left bar. No glow.
-        { id: "context-focus", needs: [["contextmenu", "contextMenuItem"], ["contextmenu", "Focused"]], css: s => {
-                const item = `${ROOT} ${s("contextmenu", "contextMenuItem")}`;
-                const open = s("contextmenu", "SubMenu") && s("contextmenu", "active") ? `,${item}${s("contextmenu", "SubMenu")}${s("contextmenu", "active")}` : "";
-                return `${item}${s("contextmenu", "Focused")},${item}:is(.gpfocus,:focus-visible)${open}{${imp({ "background-color": C.gunmetal, "background-image": "none",
-                    "box-shadow": `inset 3px 0 0 ${C.crimson}`, color: C.white, filter: "none", outline: "none", "border-radius": SQUARE })}}`;
-            } },
-        // Danger items (Steam marks them Destructive: Uninstall, Remove...): crimson text, focused or not.
-        { id: "context-danger", needs: [["contextmenu", "contextMenuItem"], ["contextmenu", "Destructive"]], css: s => `${ROOT} ${s("contextmenu", "contextMenuItem")}${s("contextmenu", "Destructive")}{${imp({ color: C.crimsonText })}}` },
-        // ---- Phase 2: Home (the Home board: more art, less chrome, black with stars behind the shelves). ----
-        { id: "home-page", needs: [["gamepadui", "BasicHome"]], css: s => {
-                const home = `${ROOT} ${s("gamepadui", "BasicHome")}`;
-                return `${home}{${imp({ "background-color": C.black, "background-image": "none" })}}` +
-                    (s("home", "TabbedContent") ? `${ROOT} ${s("home", "TabbedContent")}{${imp(CLEAR)}}` : "");
-            } },
-        // Home is first about the art (3.3.9, TV: "more inspiration from the Art Hero theme", with the user's Art Hero options:
-        // Expanded Hero, Linear Gradient, carousel height 5, larger carousel font, font height -4, cover/center). The focused
-        // game's hero fills Home (the recent section is one screen tall) at full brightness, with a short fade at the bottom
-        // only; the carousel sits low over the art, the focused game's name in larger type above its capsule; Steam's
-        // "Recent games" header and the green play triangle are hidden. The tabs and shelves are below the fold, on black
-        // with stars (the home host). Measures: CORE_HOME_ART.
-        { id: "home-hero", needs: [["recentgames", "RecentGamesBackgroundContainer"]], css: s => {
-                const a = CORE_HOME_ART;
-                const r = (key) => s("recentgames", key) ? `${ROOT} ${s("recentgames", key)}` : "";
-                const k = (key) => s("carousel", key) ? `${ROOT} ${s("carousel", key)}` : "";
-                const mask = `linear-gradient(180deg, #000000 ${a.fadeFrom}%, transparent 100%)`;
-                const art = [r("RecentGamesBackgroundContainer"), r("RecentGamesBackgroundImages")].filter(Boolean);
-                const headers = [r("RecentGamesHeader"), r("RecentGamesHeaderLabel")].filter(Boolean);
-                const label = k("CarouselGameLabelWrapper");
-                const shown = label ? [`${ROOT} .gpfocuswithin > ${s("carousel", "CarouselGameLabelWrapper")}`,
-                    ...(s("carousel", "ShowAsHovered") ? [`${label}${s("carousel", "ShowAsHovered")}`] : [])] : [];
-                // 3.3.10 (TV photo: the Collector's shelf showed through the Favorites grid): screen one is exactly one screen and
-                // its own stacking context; the art is exactly one screen tall (it was a minimum, so it could run on under the
-                // next rows) and the carousel row is taken out of the flow (it was moved down 50vh relatively inside a 70vh box, so
-                // it reached 120vh, over whatever came next). The rows after screen one start at 100vh, in their own space.
-                return (s("home", "RecentSection") ? `${ROOT} ${s("home", "RecentSection")}{${imp({ position: "relative", height: `calc(100vh - ${CORE_HOME_SCREEN_CUT_PX}px)`, "min-height": `calc(100vh - ${CORE_HOME_SCREEN_CUT_PX}px)`, "max-height": `calc(100vh - ${CORE_HOME_SCREEN_CUT_PX}px)`,
-                    padding: "0", isolation: "isolate", "z-index": "0", overflow: "visible" })}}` : "") +
-                    `${art.join(",")}{${imp({ "-webkit-mask-image": mask, "mask-image": mask, height: "100vh", "min-height": "0", "max-height": "100vh", "z-index": "0" })}}` +
-                    (r("RecentGamesBackground") ? `${r("RecentGamesBackground")}{${imp({ position: "absolute", left: "0", width: "100vw", "min-width": "100vw", height: "100vh", "max-height": "none",
-                        opacity: "1", filter: "none", "border-radius": SQUARE })}}` : "") +
-                    (r("RecentGamesBackgroundImage") ? `${r("RecentGamesBackgroundImage")}{${imp({ "object-fit": "cover", "object-position": "center", opacity: "1", filter: "none" })}}` : "") +
-                    (headers.length ? `${headers.join(",")}{${imp({ display: "none" })}}` : "") +
-                    (r("RecentGamesContainer") ? `${r("RecentGamesContainer")}{${imp({ "margin-top": "-1vh", "padding-top": "0" })}}` : "") +
-                    (r("RecentGamesInnerContainer") ? `${r("RecentGamesInnerContainer")}{${imp({ position: "absolute", left: "0", right: "0", top: `${a.carouselTop}vh`, bottom: "auto",
-                        height: "auto", "max-height": `${100 - a.carouselTop}vh`, "z-index": "1" })}}` : "") +
-                    // 3.3.10 (the approved board): no game name and no status line on screen one, Steam's own included.
-                    (shown.length || label ? `${[...shown, ...(label ? [label] : [])].join(",")}{${imp({ display: "none" })}}` : "") +
-                    (k("Play") && s("carousel", "ActionIcon") ? `${k("Play")} ${s("carousel", "ActionIcon")}{${imp({ display: "none" })}}` : "");
-            } },
-        { id: "home-glow", needs: [["carousel", "CarouselCapsuleBackgroundGlow"]], css: s => `${ROOT} ${s("carousel", "CarouselCapsuleBackgroundGlow")}{${imp({ opacity: "0" })}}` },
-        // ---- Phase 2: the Library (the Library board: black grid, tabs like Quick Access, crimson focus ring). ----
-        { id: "library-page", needs: [["library", "GamepadLibrary"]], css: s => {
-                const library = `${ROOT} ${s("library", "GamepadLibrary")}`;
-                return `${library}{${imp({ "background-color": C.black, "background-image": "none" })}}` +
-                    (s("library", "CollectionHeader") ? `${ROOT} ${s("library", "CollectionHeader")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` : "");
-            } },
-        { id: "library-grid", needs: [["appgrid", "AppGridSectionLabel"]], css: s => (s("appgrid", "LibraryImageBackgroundGlow") ? `${ROOT} ${s("appgrid", "LibraryImageBackgroundGlow")}{${imp({ opacity: "0" })}}` : "") +
-                `${ROOT} ${s("appgrid", "AppGridSectionLabel")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` +
-                (s("appgrid", "Rule") ? `${ROOT} ${s("appgrid", "Rule")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-color": C.gunmetal })}}` : "") },
-        // Focused capsule. 3.3.10 (TV photo: the ring sat offset from Fight Night's tile, in Steam's accent colour): no
-        // ring at all, Core's or Steam's, on the Library or Home; Steam's own focus lift says which capsule has focus. No
-        // glow (Steam's capsule glow is off in home-glow and library-grid). Home keeps the 3.3.8 overflow fix: capsules
-        // drawn at CORE_HOME_CAPSULE_SCALE inside their slots, so Steam's focus growth stays inside the row and the screen.
-        { id: "capsule-focus", needs: [["portrait", "LibraryItemBox"]], css: s => {
-                const box = s("portrait", "LibraryItemBox");
-                const libraryScopes = [s("library", "GamepadLibrary")].filter(Boolean);
-                const homeScopes = [s("home", "TabbedContent"), s("recentgames", "RecentGamesContainer"), s("gamepadui", "BasicHome")].filter(Boolean);
-                if (!libraryScopes.length && !homeScopes.length)
-                    return "";
-                // Never a Library capsule (Steam may nest the Library inside BasicHome's tree).
-                const notLibrary = libraryScopes.length ? `:not(${libraryScopes[0]} *)` : "";
-                const home = homeScopes.map(scope => `${ROOT} ${scope} ${box}${notLibrary}`);
-                const all = [...libraryScopes.map(scope => `${ROOT} ${scope} ${box}`), ...home];
-                const focused = all.map(item => `${item}:is(.gpfocus,.gpfocuswithin,:focus,:focus-visible,:focus-within)`);
-                const ring = { outline: "none", "outline-offset": "0", "box-shadow": "none", animation: "none", filter: "none" };
-                return `${focused.join(",")}{${imp(ring)}}` +
-                    `${focused.flatMap(item => [`${item}::before`, `${item}::after`, `${item} *`]).join(",")}{${imp({ outline: "none", "box-shadow": "none" })}}` +
-                    (home.length ? `${home.join(",")}{${imp({ scale: String(CORE_HOME_CAPSULE_SCALE), "transform-origin": "50% 50%", translate: "none" })}}` : "");
-            } },
-        // The Library's tab bar (the game page has its own rule since 3.3.9, game-screen-two). 3.3.4, from the TV photos: one marker
-        // per tab and no more. Built by libraryTabCss (below), from the selector table.
-        { id: "library-tabs", needs: [["library", "GamepadLibrary"]], targets: ["libraryTab"], css: (s, t) => {
-                const lib = s("library", "GamepadLibrary");
-                const page = s("tabbedpage", "GamepadTabbedPage");
-                const scopes = [`${ROOT} ${lib}`, ...(page ? [`${ROOT} ${page}:has(${lib})`] : [])];
-                return libraryTabCss({ scopes, tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"),
-                    row: t("libraryTabRow"), count: s("tabbedpage", "TabCount") || undefined });
-            } },
-        // Home's tab row (3.3.8, TV: Steam's pill still showed on Jarvis brief / Consoles / Club / On this day): the same
-        // single marker as the Library, over a clear row so Home's stars show through it.
-        // 3.3.10 (TV photo: Favorites / Consoles / Club sat over the grid): Steam pins the row (its wrapper is absolute at the
-        // tabbed page's top), and with the row clear the tiles scrolled under it showed through. The row is now in the flow,
-        // so the tab content starts below it and scrolls with it; no fill is added.
-        { id: "home-tabs", needs: [], targets: ["homeTabPage", "libraryTab"], css: (s, t) => {
-                const scopes = t("homeTabPage").map(sel => `${ROOT} ${sel}`);
-                const wrapper = s("tabbedpage", "TabHeaderRowWrapper");
-                return libraryTabCss({ scopes, tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"), row: t("libraryTabRow"), rowFill: "transparent" }) +
-                    (wrapper ? `${scopes.map(scope => `${scope} ${wrapper}`).join(",")}{${imp({ position: "relative", top: "auto", bottom: "auto", "z-index": "1" })}}` : "");
-            } },
-        // 3.3.10: Home's tabbed page is its own layer above the hero's art, in the flow: nothing is drawn over or under it.
-        // (The Collector's family shelf, which also needed this, left Home in Collector win.36.)
-        { id: "home-layers", needs: [["gamepadui", "BasicHome"]], targets: ["homeTabPage"], css: (s, t) => {
-                const rows = t("homeTabPage").filter(sel => !sel.startsWith(s("gamepadui", "BasicHome"))).map(sel => `${ROOT} ${sel}`);
-                return rows.length ? `${rows.join(",")}{${imp({ position: "relative", "z-index": "1", "background-color": "transparent", "background-image": "none" })}}` : "";
-            } },
-        // 3.3.10 (the approved board): while Core's Home pages are on screen (screen one carries data-core-home-one), the top
-        // bar's clock goes back to the right (the left belongs to L1 HOME CONSOLES R1) and the search field leaves the bar.
-        // (Families appear nowhere on Home: The Collector's family shelf left Home in Collector win.36.)
-        { id: "home-pages", needs: [["header", "Header"]], css: s => {
-                const home = `${ROOT} body:has([data-core-home-one])`;
-                const header = `${home} ${s("header", "Header")}`;
-                return `${header} [data-playhub-clock-left]{${imp({ order: "0" })}}` +
-                    `${header} div:has(> input){${imp({ display: "none" })}}`;
-            } },
-        // ---- 3.3.9: Steam's game page as the clean game view (CORE-UI.md, "The game view"), matching The Collector's ROM
-        // page. Screen one: the art fills the view above the footer (cover, 60% brightness, Steam's top gradient cleared),
-        // the logo locked bottom-left at most 120px, an 80px transparent play bar. Measures: CORE_GAME_VIEW.
-        { id: "game-hero", needs: [["appheader", "TopCapsule"], ["appheader", "ImgSrc"]], css: s => {
-                const g = CORE_GAME_VIEW, screen = `calc(100vh - ${g.playbar + g.footer}px)`;
-                const cap = `${ROOT} ${s("appheader", "TopCapsule")}`;
-                const state = (key) => s("appheader", key) ? `${cap}${s("appheader", key)}` : "";
-                const full = ["FullscreenEnterActive", "FullscreenEnterDone", "FullscreenExitStart"].map(state).filter(Boolean);
-                const back = ["FullscreenExitActive", "FullscreenExitDone"].map(state).filter(Boolean);
-                // Steam's fullscreen enter (Play pressed): Clean Gameview's fix as a transition from screen one's height to the
-                // full screen and back, so the art grows instead of jumping (transitions out-rank !important in the cascade).
-                return `${cap}{${imp({ height: screen, transition: `height ${g.enterMs}ms ease-out` })}}` +
-                    (full.length ? `${full.join(",")}{${imp({ height: "100vh" })}}` : "") +
-                    (back.length ? `${back.join(",")}{${imp({ height: screen })}}` : "") +
-                    (s("appheader", "HeaderBackgroundImage") ? `${ROOT} ${s("appheader", "HeaderBackgroundImage")}{${imp({ height: "100vh" })}}` : "") +
-                    `${ROOT} ${s("appheader", "ImgSrc")}{${imp({ "object-fit": "cover", "object-position": "center", filter: `brightness(${g.brightness})` })}}` +
-                    (s("appheader", "TopGradient") ? `${ROOT} ${s("appheader", "TopGradient")}{${imp({ "background-color": "transparent", "background-image": "none", background: "transparent" })}}` : "") +
-                    (s("appheader", "BoxSizer") ? `${ROOT} ${s("appheader", "BoxSizer")}{${imp({ top: `calc(100vh - ${g.logo}px * 1.3 - ${g.playbar + g.footer}px)`, "max-height": `${g.logo}px`, "z-index": "2" })}}` : "") +
-                    `@media (prefers-reduced-motion: reduce){${cap}{${imp({ transition: "none" })}}}`;
-            } },
-        { id: "game-playbar", needs: [["appdetails", "PlaySection"]], css: s => {
-                const g = CORE_GAME_VIEW;
-                const bar = `${ROOT} ${s("appdetails", "PlaySection")}`;
-                const play = s("appdetails", "AppActionButton") ? `${ROOT} ${s("appdetails", "AppActionButton")}` : "";
-                const buttons = s("appdetails", "AppButtons") ? `${ROOT} ${s("appdetails", "AppButtons")}` : "";
-                const square = buttons ? [`${buttons} > *`, `${buttons} .DialogButton`] : [];
-                return `${bar}{${imp({ height: `${g.playbar + g.footer}px`, "min-height": `${g.playbar + g.footer}px`, "padding-bottom": `${g.footer}px`, "box-sizing": "border-box",
-                    "background-color": "transparent", "background-image": "none", "backdrop-filter": "none", "box-shadow": "none", color: C.steel })}}` +
-                    (s("appdetails", "AppDetailsRoot") ? `${ROOT} ${s("appdetails", "AppDetailsRoot")}{${imp({ "background-color": "transparent", "background-image": "none", "backdrop-filter": "none" })}}` : "") +
-                    (play ? `${play}{${imp({ "background-color": C.crimson, "background-image": "none", color: C.white, "border-radius": SQUARE, "box-shadow": "none", filter: "none" })}}` +
-                        `${play} *{${imp({ color: C.white })}}` +
-                        `${play}:is(.gpfocus,:focus-visible,:focus){${imp({ outline: `3px solid ${C.white}`, "outline-offset": "0", "box-shadow": "none", filter: "none", animation: "none" })}}` : "") +
-                    (square.length ? `${square.join(",")}{${imp({ "min-width": `${g.button}px`, height: `${g.button}px`, "background-color": C.black, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
-                        `${square.map(sel => `${sel}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.gunmetal, color: C.white, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}` : "");
-            } },
-        // The cloud as a button (Clean Gameview's "cloud as a button"): the status text hidden, its holder a 48px square.
-        { id: "game-cloud", needs: [["playsection", "CloudStatusLabel"]], css: s => {
-                const label = s("playsection", "CloudStatusLabel");
-                const holder = `${ROOT} :has(> ${label})`;
-                return `${ROOT} ${label}{${imp({ display: "none" })}}` +
-                    `${holder}{${imp({ width: `${CORE_GAME_VIEW.button}px`, height: `${CORE_GAME_VIEW.button}px`, "box-sizing": "border-box", display: "flex", "align-items": "center",
-                        "justify-content": "center", "background-color": C.black, "background-image": "none", "border-radius": SQUARE, "box-shadow": "none" })}}` +
-                    `${holder}::before,${holder}::after{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
-                    `${holder}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, outline: `2px solid ${C.crimson}`, "outline-offset": "0" })}}`;
-            } },
-        // Screen two: Steam's sections and tabs over black and the Starfield ("game-page" host, stars only below the play
-        // bar). The container itself stays clear, so the art behind the play bar is never covered.
-        { id: "game-screen-two", needs: [["appdetails", "AppDetailsContainer"]], targets: ["libraryTab"], css: (s, t) => {
-                const box = `${ROOT} ${s("appdetails", "AppDetailsContainer")}`;
-                return `${box}{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
-                    libraryTabCss({ scopes: [box], tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"), row: t("libraryTabRow"), rowFill: "transparent" });
-            } },
-        { id: "game-sections", needs: [["appsection", "AppDetailsSectionContainer"]], css: s => {
-                const cards = ["AppDetailsSectionContainer", "RightColumnSection"].filter(key => s("appsection", key)).map(key => `${ROOT} ${s("appsection", key)}`);
-                return `${cards.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": FLOAT, "box-shadow": "none", color: C.steel })}}` +
-                    `${cards.map(sel => `${sel}:is(.gpfocus,.gpfocuswithin,:focus-visible)`).join(",")}{${imp({ "background-color": C.raised, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}`;
-            } },
-        // ---- 3.3.11: the game view, one look for Steam's page and The Collector's ROM page (CORE-UI.md, "The game view
-        // in 3.3.11"). The Collector draws its play bar with Steam's own classes (ActionRow, ActionButtonAndStatusPanel,
-        // AppButtons, StatusAndStats, GameStatsSection), so one set of rules styles both; its own parts are reached by its
-        // fixed classes (.romm-game-view, .romm-tab, .romm-core-card).
-        // Screen two: Steam's tinted panels clear. Glassy (the light blue under the description and behind Steam's tabs),
-        // the overview panel and the scroll container are transparent on both pages; Steam's own page is black under them
-        // (The Collector already paints its page), the Starfield showing where the game-page host is live.
-        { id: "game-view-clear", needs: [["appview", "InnerContainer"]], css: s => {
-                const v = (key) => s("appview", key) ? `${ROOT} ${s("appview", key)}` : "";
-                const d = (key) => s("appdetails", key) ? `${ROOT} ${s("appdetails", key)}` : "";
-                const clear = [v("Glassy"), v("AppDetailsOverviewPanel"), v("ScrollContainer"), v("PlayBar"), d("AppDetailsContent"), d("AppDetailSectionList")].filter(Boolean);
-                const box = s("appdetails", "AppDetailsContainer");
-                const tabbed = box ? ["GamepadTabbedPage", "TabContents", "TabContentsScroll", "ContentTransition"].filter(key => s("tabbedpage", key))
-                    .map(key => `${ROOT} ${box} ${s("tabbedpage", key)}`) : [];
-                const all = [...clear, ...tabbed];
-                return (all.length ? `${all.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", "backdrop-filter": "none", "box-shadow": "none" })}}` : "") +
-                    `${v("InnerContainer")}:not(:has(.romm-game-view)){${imp({ "background-color": C.black, "background-image": "none" })}}`;
-            } },
-        // Screen two's cards on Steam's page: gunmetal, the crimson focus bar (the sections' own cards are in game-sections).
-        { id: "game-info-cards", needs: [["appdetails", "GameInfoContainer"]], css: s => {
-                const cards = ["GameInfoContainer", "GameInfoQuickLinks", "GameInfoCollections"].filter(key => s("appdetails", key)).map(key => `${ROOT} ${s("appdetails", key)}`);
-                return `${cards.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": FLOAT, "box-shadow": "none", color: C.steel })}}`;
-            } },
-        // Screen one, both pages: Play / Install crimson with white text, square, one size; the stats right after it in one
-        // row style (hint label over a steel value); the icon buttons square black right after the stats, never pushed to
-        // the far right.
-        { id: "game-actions", needs: [["appdetails", "ActionRow"]], css: s => {
-                const g = CORE_GAME_VIEW;
-                const d = (key) => s("appdetails", key) ? `${ROOT} ${s("appdetails", key)}` : "";
-                const p = (key) => s("playsection", key) ? `${ROOT} ${s("playsection", key)}` : "";
-                const a = (key) => s("actionbutton", key) ? `${ROOT} ${s("actionbutton", key)}` : "";
-                const row = d("ActionRow"), panel = d("ActionButtonAndStatusPanel"), buttons = d("AppButtons");
-                const play = [a("PlayButton"), a("PlayButtonContainer"), panel ? `${panel} > .DialogButton:first-child` : "", panel ? `${panel} > :first-child .DialogButton` : "",
-                    `${ROOT} .romm-game-view :is(.romm-native-play,.romm-btn-play)`].filter(Boolean);
-                const green = s("actionbutton", "Green") ? play.map(sel => `${sel}${s("actionbutton", "Green")}`) : [];
-                const stats = [p("StatusAndStats"), p("GameStatsSection")].filter(Boolean);
-                const label = [p("PlayBarDetailLabel"), p("PlayBarLabel")].filter(Boolean);
-                const icons = [buttons ? `${buttons} > *` : "", buttons ? `${buttons} .DialogButton` : "", p("MenuButton"), p("GameInfoButton"), p("FavoriteButton"), p("ControllerConfigButton"),
-                    `${ROOT} .romm-game-view .romm-core-playbar .romm-native-menu-btn`].filter(Boolean);
-                const side = [buttons, p("RightControls"), p("AppButtonsContainer")].filter(Boolean);
-                return `${row}{${imp({ display: "flex", "align-items": "center", "justify-content": "flex-start", gap: "28px" })}}` +
-                    `${row} > *{${imp({ "flex-grow": "0" })}}` +
-                    `${[...play, ...green].join(",")}{${imp({ "background-color": C.crimson, "background-image": "none", color: C.white, "border-radius": SQUARE, "box-shadow": "none",
-                        filter: "none", height: `${g.button}px`, "min-height": `${g.button}px`, "min-width": "200px", "font-size": "18px", "font-weight": "600" })}}` +
-                    `${play.map(sel => `${sel} *`).join(",")}{${imp({ color: C.white })}}` +
-                    `${play.map(sel => `${sel}:is(.gpfocus,:focus-visible,:focus)`).join(",")}{${imp({ outline: `3px solid ${C.white}`, "outline-offset": "0", "box-shadow": "none", filter: "none", animation: "none" })}}` +
-                    (stats.length ? `${stats.join(",")}{${imp({ display: "flex", "align-items": "center", gap: "32px", "background-color": "transparent", "background-image": "none", color: C.steel, "font-size": "16px" })}}` : "") +
-                    (label.length ? `${label.join(",")}{${imp({ color: C.hint, "font-size": "11px", "font-weight": "600", "letter-spacing": "0.12em", "text-transform": "uppercase" })}}` : "") +
-                    (side.length ? `${side.join(",")}{${imp({ "margin-left": "0", flex: "0 0 auto", display: "flex", gap: "8px", "justify-content": "flex-start" })}}` : "") +
-                    `${icons.join(",")}{${imp({ width: `${g.button}px`, "min-width": `${g.button}px`, height: `${g.button}px`, padding: "0", "background-color": C.black, "background-image": "none",
-                        color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
-                    `${icons.map(sel => `${sel}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.gunmetal, color: C.white, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}`;
-            } },
-        // The logo locked bottom-left on both pages, and still art only (no header video).
-        { id: "game-still-art", needs: [["appheader", "TopCapsule"]], css: s => {
-                const h = (key) => s("appheader", key) ? `${ROOT} ${s("appheader", key)}` : "";
-                return `${h("TopCapsule")} video{${imp({ display: "none" })}}` +
-                    (h("BoxSizer") ? `${h("BoxSizer")}{${imp({ left: "2.8vw", right: "auto", transform: "none" })}}` : "") +
-                    (h("TitleLogo") ? `${h("TitleLogo")}{${imp({ "object-position": "left bottom" })}}` : "");
-            } },
-        // The Collector's screen two: tabs without Steam's focus box (the crimson underline marks the open tab), gunmetal
-        // cards.
-        { id: "rom-screen-two", needs: [], css: () => {
-                const view = `${ROOT} .romm-game-view`;
-                const tab = `${view} .romm-tab.romm-tab`;
-                return `${tab},${tab}.gpfocus,${tab}:focus,${tab}:focus-visible{${imp({ outline: "none", "outline-offset": "0", border: "0", filter: "none", animation: "none", "border-radius": SQUARE })}}` +
-                    `${tab}::before,${tab}::after{${imp({ content: "none", display: "none" })}}` +
-                    `${tab}{${imp({ "background-color": "transparent", "background-image": "none", color: C.hint, "box-shadow": "inset 0 -3px 0 transparent" })}}` +
-                    `${tab}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, color: C.white })}}` +
-                    `${tab}.romm-tab-active{${imp({ color: C.white, "box-shadow": `inset 0 -3px 0 ${C.crimson}` })}}` +
-                    `${view} :is(.romm-core-card,.romm-ext-card,.romm-core-chip){${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": FLOAT, "box-shadow": "none" })}}` +
-                    `${view} .romm-core-card:is(.gpfocus,:focus-visible){${imp({ "background-color": C.raised, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}`;
-            } },
-        // ---- 3.3.9: the surfaces still in Steam's blue (CORE-UI.md, "Steam's other pages"): black pages, gunmetal rows,
-        // the square crimson focus bar, steel text.
-        { id: "settings-pages", needs: [], needsAny: [["settings", "PagedSettingsDialog_PageListColumn"], ["settings", "PageListColumn"]], css: s => {
-                const pick = (...keys) => keys.map(key => s("settings", key)).filter(Boolean).map(sel => `${ROOT} ${sel}`);
-                // 3.3.10: the responsive variants (Steam swaps to them at the TV's width) are black too.
-                const black = pick("PagedSettingsDialog", "PagedSettingsDialog_PageListColumn", "PageListColumn", "PagedSettingDialog_ContentColumn", "PagedSettingsDialog_PageContent", "ResponsivePageList", "ResponsiveActivePage", "PagedSettingsDialog_PageList", "PageList");
-                const title = pick("PagedSettingsDialog_Title");
-                const separators = pick("PageListSeparator");
-                const disabled = pick("DisabledItem");
-                const items = pick("PagedSettingsDialog_PageListItem", "PageListItem");
-                const active = s("settings", "Active") ? items.map(item => `${item}${s("settings", "Active")}`) : [];
-                const focus = items.map(item => `${item}:is(.gpfocus,:focus-visible)`);
-                return (black.length ? `${black.join(",")}{${imp(SOLID_BLACK)}}` : "") +
-                    (items.length ? `${items.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
-                        `${items.map(item => `${item} *`).join(",")}{${imp({ color: "inherit" })}}` : "") +
-                    (active.length ? `${active.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}` })}}` : "") +
-                    (focus.length ? `${focus.join(",")}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, outline: "none", filter: "none" })}}` : "") +
-                    (title.length ? `${title.join(",")}{${imp({ color: C.white, "background-color": "transparent", "background-image": "none" })}}` : "") +
-                    (separators.length ? `${separators.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-color": C.gunmetal })}}` : "") +
-                    (disabled.length ? `${disabled.join(",")}{${imp({ color: C.hint, opacity: "1" })}}` : "");
-            } },
-        // 3.3.10: Settings' text (its own module): sub-headers steel small caps, body steel, descriptions hint grey, links
-        // crimson text; Settings' own buttons gunmetal with the square crimson bar on focus.
-        { id: "settings-text", needs: [["settingstext", "SettingsDialogSubHeader"]], css: s => {
-                const k = (key) => s("settingstext", key) ? `${ROOT} ${s("settingstext", key)}` : "";
-                const button = k("SettingsDialogButton");
-                return `${k("SettingsDialogSubHeader")}{${imp({ color: C.steel, "letter-spacing": "0.1em", "text-transform": "uppercase", "background-color": "transparent", "background-image": "none" })}}` +
-                    [k("SettingsDialogBodyText")].filter(Boolean).map(sel => `${sel}{${imp({ color: C.steel })}}`).join("") +
-                    [k("SettingsDialogDescriptionText")].filter(Boolean).map(sel => `${sel}{${imp({ color: C.hint })}}`).join("") +
-                    [k("SettingsDialogLink")].filter(Boolean).map(sel => `${sel}{${imp({ color: C.crimsonText })}}`).join("") +
-                    (button ? `${button}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
-                        `${button}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "");
-            } },
-        // 3.3.10: Steam's global dialogs (unhashed classes: confirm dialogs, the modal box around them) gunmetal with the float
-        // radius, never the grey-blue gradient; their DialogButtons follow the Quick Access row look.
-        { id: "steam-dialogs", needs: [], css: () => {
-                const box = [".GenericConfirmDialog", ".ModalPosition_Content .DialogContent"].map(sel => `${ROOT} ${sel}${CORE_UI_BOOST}`);
-                const buttons = box.map(sel => `${sel} .DialogButton:not([style*="background"])`);
-                return `${box.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": `inset 0 0 0 1px ${C.raised}`, "border-radius": FLOAT, color: C.steel })}}` +
-                    `${buttons.join(",")}{${imp({ "background-color": C.raised, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
-                    `${buttons.map(sel => `${sel}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}`;
-            } },
-        // Toggles (gamepaddialog's copy with On, and the small toggle map): the rail gunmetal, crimson when on, a white knob.
-        { id: "toggles", needs: [], needsAny: [["gamepaddialog", "ToggleRail"], ["toggle", "ToggleRail"]], css: s => {
-                const out = [];
-                for (const map of ["gamepaddialog", "toggle"]) {
-                    if (!s(map, "ToggleRail"))
-                        continue;
-                    const rail = `${ROOT} ${s(map, "ToggleRail")}`;
-                    out.push(`${rail}{${imp({ "background-color": C.raised, "background-image": "none", "box-shadow": "none" })}}`);
-                    if (s(map, "ToggleSwitch"))
-                        out.push(`${ROOT} ${s(map, "ToggleSwitch")}{${imp({ "background-color": C.white, "background-image": "none", "box-shadow": "none" })}}`);
-                    const on = s("gamepaddialog", "On");
-                    if (on && s(map, "Toggle"))
-                        out.push(`${ROOT} ${s(map, "Toggle")}${on} ${s(map, "ToggleRail")},${rail}${on}{${imp({ "background-color": C.crimson, "background-image": "none" })}}`);
-                }
-                return out.join("");
-            } },
-        { id: "downloads-page", needs: [["downloads", "DownloadsPage"]], css: s => {
-                const d = (key) => s("downloads", key) ? `${ROOT} ${s("downloads", key)}` : "";
-                const item = d("SectionItem");
-                return `${d("DownloadsPage")}{${imp(SOLID_BLACK)}}` +
-                    (item ? `${item}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": SQUARE, "box-shadow": "none", color: C.steel })}}` +
-                        `${item}:is(.gpfocus,.gpfocuswithin,:focus-visible){${imp({ "background-color": C.raised, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "") +
-                    (d("HoverRing") ? `${d("HoverRing")}{${imp({ display: "none" })}}` : "") +
-                    (d("SectionTitle") ? `${d("SectionTitle")}{${imp({ color: C.steel, "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` : "") +
-                    (d("ProgressBar") ? `${d("ProgressBar")}{${imp({ "background-color": C.raised, "background-image": "none" })}}${d("ProgressBar")} > *{${imp({ "background-color": C.crimson, "background-image": "none" })}}` : "");
-            } },
-        { id: "download-bar", needs: [["downloadbar", "BottomBar"]], css: s => {
-                const b = (key) => s("downloadbar", key) ? `${ROOT} ${s("downloadbar", key)}` : "";
-                return `${b("BottomBar")}{${imp(SOLID_BLACK)}}` +
-                    (b("ProgressBar") ? `${b("ProgressBar")}{${imp({ "background-color": C.raised, "background-image": "none" })}}${b("ProgressBar")} > *{${imp({ "background-color": C.crimson, "background-image": "none" })}}` : "");
-            } },
-        // The Steam menu while a game runs: its three columns black, the rows gunmetal on focus with the crimson bar.
-        // The Steam menu's own module (3.3.11: the in-game keys are part of it; 3.3.10's separate map never matched).
-        { id: "ingame-menu", needs: [], needsAny: [["mainmenu", "AppColumn"], ["mainmenu", "NavigationColumn"]], css: s => {
-                const m = (key) => s("mainmenu", key) ? `${ROOT} ${s("mainmenu", key)}` : "";
-                const black = ["AppRunningControls", "NavigationColumn", "NavigationBox", "AppColumn", "AppColumnContent", "FocusedColumn", "NavColumnFocused", "ControllerColumnFocused", "ActiveContent"].map(m).filter(Boolean);
-                const rows = [m("NavigationMenuItem"), m("SelectableAppWindow")].filter(Boolean);
-                return (black.length ? `${black.join(",")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none" })}}` : "") +
-                    (m("CurrentGameBackground") ? `${m("CurrentGameBackground")}{${imp({ opacity: "0.35", filter: "none" })}}` : "") +
-                    (rows.length ? `${rows.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
-                        `${rows.map(row => `${row}:is(.gpfocus,:focus-visible,:focus-within)`).join(",")}{${imp({ "background-color": C.gunmetal, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "") +
-                    (m("NavigationMenuItemSeparator") ? `${m("NavigationMenuItemSeparator")}{${imp({ "background-color": C.gunmetal, "background-image": "none" })}}` : "");
-            } },
-        { id: "overlay-configurator", needs: [], needsAny: [["overlay", "OverlayPopup"], ["configurator", "ControllerConfiguratorMain"], ["configsummary", "ControllerConfiguratorSummary"]], css: s => {
-                const k = (map, key) => s(map, key) ? `${ROOT} ${s(map, key)}` : "";
-                const black = [k("overlay", "OverlayPopup"), k("overlay", "OverlayPopupBody"), k("overlay", "Toolbar"), k("overlay", "SettingsModalRoot"),
-                    k("configurator", "ControllerConfiguratorBackgroundContainer"), k("configurator", "ControllerConfiguratorMain"), k("configsummary", "ControllerConfiguratorSummary")].filter(Boolean);
-                const rows = [k("overlay", "ToolbarButton"), k("overlay", "BackToGame"), k("overlay", "ExitGameBtn"), k("configurator", "CurrentConfigurationButton"),
-                    k("configurator", "MainOptionsButton"), k("configsummary", "StandardControl")].filter(Boolean);
-                return (black.length ? `${black.join(",")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none" })}}` : "") +
-                    (rows.length ? `${rows.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
-                        `${rows.map(row => `${row}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "");
-            } },
-        // Search: the field by its own map now (the 3.3.8 structural rule stays as the fallback), results and suggestions.
-        { id: "search-pages", needs: [], needsAny: [["searchbar", "SearchFieldBackground"], ["searchresults", "GamepadSearch"], ["suggestions", "Suggestions"]], css: s => {
-                const k = (map, key) => s(map, key) ? `${ROOT} ${s(map, key)}` : "";
-                const field = k("searchbar", "SearchFieldBackground");
-                const results = [k("searchresults", "ResultTemplate"), k("suggestions", "Suggestion")].filter(Boolean);
-                return (field ? `${field}{${imp({ "background-color": "transparent", "background-image": "none", "border-radius": SQUARE, "box-shadow": `inset 0 -1px 0 ${C.steel}`, border: "0", "backdrop-filter": "none" })}}` +
-                    `${field}:focus-within{${imp({ "box-shadow": `inset 0 -2px 0 ${C.crimson}` })}}` : "") +
-                    (k("searchbar", "SearchBox") ? `${k("searchbar", "SearchBox")}{${imp({ color: C.steel, "background-color": "transparent", "caret-color": C.crimson })}}` : "") +
-                    [k("searchbar", "SearchIconLeft"), k("searchbar", "SearchIconRight")].filter(Boolean).map(sel => `${sel},${sel} *{${imp({ color: C.steel, fill: C.steel })}}`).join("") +
-                    ([k("searchresults", "GamepadSearch"), k("suggestions", "Suggestions")].filter(Boolean).map(sel => `${sel}{${imp(SOLID_BLACK)}}`).join("")) +
-                    (results.length ? `${results.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
-                        `${results.map(row => `${row}:is(.gpfocus,:focus-visible,:hover)`).join(",")}{${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "");
-            } },
-        // Library grid (3.3.4): capsules drawn about 16% smaller inside their slots, so even black gutters (and the stars)
-        // show between them. Steam's slots and focus order are untouched; art stays art (no stars behind it).
-        { id: "library-capsules", needs: [], targets: ["libraryCapsule"], css: (_s, t) => libraryCapsuleCss(t("libraryCapsule")) },
-    ];
-    return list;
-}
-// Rules that need no class map (Steam's unhashed globals only): alone, they do not make a stylesheet.
-const ALWAYS_ON = new Set(["corners", "steam-dialogs"]);
-// ---- Builders (pure; tests call them directly) ----
-// 3.3.10: 24px, the size of Steam's own rail icons (were 30, which sat off-centre in the 48 x 64 tab).
-const CORE_RAIL_ICON_PX = 24;
-// 3.3.11: the measured visible width of the Quick Access panel (coreQamRail.ts, measureQamVisible).
-const CORE_QAM_VISIBLE_ATTRIBUTE = "data-core-qam-visible";
-const CORE_QAM_VISIBLE_VAR = "--core-qam-visible";
-// 3.3.9: Home after Art Hero with the user's options: the art fades out over its last 12%, the carousel 50vh down in a
-// 70vh row (carousel height 5), the focused game's name 4em above its capsule (font height -4) at 22px (larger).
-// 3.3.10: carouselHeight is gone: the row is out of the flow at carouselTop and sized by Steam (its box ran past screen
-// one). The row's position and size wait for the approved Home row design.
-// 3.3.11: screen one ends this far above the bottom (the 42 px footer and screen two's 58 px tab names); equal to
-// coreHomePages.ts HOME_SCREEN_CUT_PX (a test keeps them equal).
-const CORE_HOME_SCREEN_CUT_PX = 100;
-const CORE_HOME_ART = { fadeFrom: 88, carouselTop: 50};
-// 3.3.10: how long the top bar takes to slide out and back.
-const CORE_HEADER_HIDE_MS = 200;
-// 3.3.10: whether the top bar is hidden for a page scrolled this far. Hidden once the page's first screen has scrolled
-// under the bar (the content below the fold would reach it: the viewport less two bar heights, at least 80px); shown
-// again once back above that line by more than HYSTERESIS, so a small scroll at the line does not flicker it.
-const CORE_HEADER_HYSTERESIS = 48;
-function headerHidden(scrollTop, viewportHeight, headerHeight, wasHidden) {
-    if (!(scrollTop > 0) || !(viewportHeight > 0))
-        return false;
-    const line = Math.max(80, viewportHeight - 2 * Math.max(0, headerHeight || 0));
-    if (scrollTop > line)
-        return true;
-    if (scrollTop < line - CORE_HEADER_HYSTERESIS)
-        return false;
-    return wasHidden;
-}
-// 3.3.9: the top bar's only shadow, for text over bright art (soft, dark, no glow colour).
-const CORE_HEADER_TEXT_SHADOW = "0 1px 3px rgba(0,0,0,0.65)";
-// 3.3.9: the clean game view's measures (Clean Gameview v1.8 Lz's defaults, as The Collector's GAME_VIEW): an 80px play bar
-// over the 40px footer, the logo at most 120px, the art at 60% brightness, 48px square buttons, a 600ms fullscreen enter.
-const CORE_GAME_VIEW = { playbar: 80, footer: 40, logo: 120, brightness: 0.6, button: 48, enterMs: 600 };
-const CORE_LIBRARY_CAPSULE_SCALE = 0.84;
-// Home's capsules (3.3.8): smaller at the TV's 1348 x 758 viewport, so Steam's focus growth stays inside the row.
-const CORE_HOME_CAPSULE_SCALE = 0.8;
-const CORE_TAB_ICON_PX = 24;
-// Quick Access rows (Decky's plugin list, every ButtonItem, dropdowns) and their dialog fields.
-function qamRowCss(buttons, fields = []) {
-    if (!buttons.length)
-        return "";
-    const at = (list, tail = "") => list.map(sel => `${ROOT} ${sel}${tail}`).join(",");
-    const focus = ":is(.gpfocus,:focus-visible,:focus)";
-    return `${at(buttons)}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "box-shadow": "none", "text-shadow": "none", "border-radius": SQUARE, filter: "none" })}}` +
-        `${at(buttons, focus)}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", animation: "none", "border-radius": SQUARE, outline: "none" })}}` +
-        `${at(buttons, `${focus} *`)}{${imp({ color: C.white })}}` +
-        (fields.length ? `${at(fields)},${at(fields, "::before")},${at(fields, "::after")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
-            `${at(fields, ":is(.gpfocuswithin,:focus-within)")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` : "");
-}
-// The Library's tab bar: icon (24px) and label on one line with even spacing; transparent tabs in steel; one marker
-// per tab, a short 3px underline centred under the label, shown only on hover or focus (the family's tone) and on
-// the open tab (crimson, which wins). Steam's or another theme's own underlines and markers on the tab are removed.
-function libraryTabCss(parts) {
-    const { scopes, tab } = parts;
-    if (!scopes.length || !tab.length)
-        return "";
-    const each = (inner, tail = "") => scopes.flatMap(scope => inner.map(sel => `${scope} ${sel}${tail}`)).join(",");
-    const title = parts.title ?? [], selected = parts.selected ?? [], row = parts.row ?? [];
-    const tagged = tab.map(sel => `${sel}[${CORE_UI_TAB_ATTRIBUTE}]`);
-    const label = title.length ? tab.flatMap(sel => title.map(inner => `${sel} ${inner}`)) : tab;
-    const hover = tab.map(sel => `${sel}:is(:hover,.gpfocus,:focus-visible)`);
-    const hoverLabel = title.length ? hover.flatMap(sel => title.map(inner => `${sel} ${inner}`)) : hover;
-    const activeLabel = title.length ? selected.flatMap(sel => title.map(inner => `${sel} ${inner}`)) : selected;
-    const marker = { content: '""', position: "absolute", left: "50%", bottom: "-8px", width: "28px", height: "3px", "margin-left": "-14px", "border-radius": SQUARE,
-        "background-image": "none", "pointer-events": "none", opacity: "0" };
-    return (row.length ? `${each(row)},${each(row, "::before")},${each(row, "::after")}{${imp({ "background-color": parts.rowFill ?? C.black, "background-image": "none", "backdrop-filter": "none", "box-shadow": "none" })}}` : "") +
-        `${each(tab)}{${imp({ position: "relative", "background-color": "transparent", "background-image": "none", color: C.steel, "box-shadow": "none",
-            "border-radius": SQUARE, "border-bottom-color": "transparent", "text-decoration": "none" })}}` +
-        // Nothing else draws on the tab: no second underline, no per-icon marker.
-        `${each(tab, "::before")},${each(tab, "::after")}{${imp({ content: "none", display: "none" })}}` +
-        `${each(label)}{${imp({ position: "relative", display: "inline-flex", "align-items": "center", gap: "8px", "line-height": `${CORE_TAB_ICON_PX}px`, "vertical-align": "middle",
-            "border-bottom-color": "transparent", "text-decoration": "none", "box-shadow": "none", "background-image": "none" })}}` +
-        `${each(label, "::after")}{${imp({ ...marker, "background-color": `var(--core-tone, ${C.steel})` })}}` +
-        `${each(hoverLabel, "::after")}{${imp({ opacity: "1" })}}` +
-        `${each(hover)}{${imp({ "background-color": C.gunmetal, color: C.white })}}` +
-        (activeLabel.length ? `${each(selected)}{${imp({ "background-color": "transparent", "background-image": "none", color: C.steel, "box-shadow": "none" })}}` +
-            `${each(activeLabel, "::after")}{${imp({ opacity: "1", "background-color": C.crimson })}}` : "") +
-        // The icon (the tagged tab's --core-icon) before the label, on the same line.
-        (title.length ? `${each(tagged.flatMap(sel => title.map(inner => `${sel}[${CORE_UI_ICON_ATTRIBUTE}] ${inner}::before`)))}` : `${each(tagged.map(sel => `${sel}[${CORE_UI_ICON_ATTRIBUTE}]::before`))}`) +
-        `{${imp({ content: '""', display: "inline-block", flex: `0 0 ${CORE_TAB_ICON_PX}px`, width: `${CORE_TAB_ICON_PX}px`, height: `${CORE_TAB_ICON_PX}px`, margin: "0", position: "static",
-            background: "var(--core-icon) center / contain no-repeat" })}}` +
-        toneVariables(scopes.flatMap(scope => tagged.map(sel => `${scope} ${sel}`))) +
-        (parts.count ? `${each([parts.count])}{${imp({ display: "none" })}}` : "");
-}
-// Library capsules drawn smaller inside Steam's slots (about 16%), so the gutters are even and black.
-function libraryCapsuleCss(capsules, factor = CORE_LIBRARY_CAPSULE_SCALE) {
-    if (!capsules.length)
-        return "";
-    const list = capsules.map(sel => `${ROOT} ${sel}`).join(",");
-    return `${list}{${imp({ scale: String(factor), "transform-origin": "50% 50%" })}}`;
-}
-// --core-tone per family, on any element the runtime tagged with data-core-tone.
-function toneVariables(prefix) {
-    const prefixes = Array.isArray(prefix) ? prefix : [prefix];
-    if (!prefixes.length)
-        return "";
-    return Object.entries(CORE_FAMILY_TONES).map(([family, tone]) => `${prefixes.map(p => `${p}[${CORE_UI_TONE_ATTRIBUTE}="${family}"]`).join(",")}{${imp({ "--core-tone": tone })}}`).join("");
-}
-// Collection tiles in Steam's Collections view (tagged by coreLibraryIcons.ts by collection name). 3.3.4: one card shape
-// for every console tile: gunmetal, the console's icon centred, its name below (data-core-name, set by the decorator),
-// the family tone as a short bar along the bottom, a crimson ring on focus. Steam's collage and its own label are
-// hidden only on a tile Core draws an icon for; a tile without one keeps Steam's look plus the tone bar.
-function collectionTileCss(tiles = [""]) {
-    const all = (tail = "") => tiles.map(sel => `${ROOT} ${sel}[${CORE_UI_TILE_ATTRIBUTE}]${CORE_UI_BOOST}${tail}`).join(",");
-    const iconed = (tail = "") => tiles.map(sel => `${ROOT} ${sel}[${CORE_UI_TILE_ATTRIBUTE}][${CORE_UI_ICON_ATTRIBUTE}]${CORE_UI_BOOST}${tail}`).join(",");
-    const toned = tiles.map(sel => `${ROOT} ${sel}[${CORE_UI_TILE_ATTRIBUTE}]${CORE_UI_BOOST}`);
-    return `/* library-collection-tiles */${all()}{${imp({ position: "relative", "border-radius": FLOAT, overflow: "hidden", "box-shadow": "none" })}}` +
-        `${iconed()}{${imp({ "background-color": C.gunmetal, "background-image": "none", "min-height": "160px" })}}` +
-        `${iconed(" > *")}{${imp({ opacity: "0" })}}` +
-        `${iconed("::before")}{${imp({ content: '""', position: "absolute", left: "50%", top: "18%", width: "44%", height: "44%", "max-width": "112px", "max-height": "112px", translate: "-50% 0",
-            background: "var(--core-icon) center / contain no-repeat", "pointer-events": "none", "z-index": "2" })}}` +
-        `${iconed("[data-core-name]::after")}{${imp({ content: "attr(data-core-name)", position: "absolute", left: "8px", right: "8px", top: "68%", "text-align": "center", color: C.steel,
-            "font-size": "15px", "line-height": "20px", "white-space": "nowrap", overflow: "hidden", "text-overflow": "ellipsis", "pointer-events": "none", "z-index": "2" })}}` +
-        // The tone: a 3px bar along the bottom edge (a background layer, so ::before and ::after stay free for icon and name).
-        `${toned.map(sel => `${sel}[${CORE_UI_TONE_ATTRIBUTE}]`).join(",")}{${imp({ "box-shadow": "inset 0 -3px 0 var(--core-tone)" })}}` +
-        `${all(":is(.gpfocus,:focus)")}{${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "0", filter: "none", animation: "none" })}}` + toneVariables(toned);
-}
-const CORE_UI_HOSTS = [
-    { id: "menu", map: "mainmenu", key: "Menu", minArea: 0, fullHeight: true, panel: true },
-    { id: "qam-container", map: "quickaccess", key: "Container", minArea: 0, fullHeight: true, panel: true },
-    { id: "qam-panel", map: "quickaccess", key: "QuickAccessMenu", minArea: 0, fullHeight: true, panel: true },
-    { id: "qam", map: "quickaccess", key: "Menu", minArea: 0, fullHeight: true, panel: true },
-    { id: "menu-footer", map: "mainmenu", key: "FooterBoxShadow", minArea: 24000 },
-    { id: "qam-footer", map: "footer", key: "QuickAccessFooter", minArea: 24000 },
-    { id: "qam-footer-shadow", map: "quickaccess", key: "FooterBoxShadow", minArea: 24000 },
-    { id: "footer-opaque", map: "footer", key: "Opaque", minArea: 24000 },
-    // 3.3.9: the top bar is never black any more (chrome-header), so it is never a Starfield host.
-    // Phase 2 pages: the canvas covers the visible part of the page only.
-    { id: "home", map: "gamepadui", key: "BasicHome", minArea: 0, page: true },
-    { id: "library", map: "library", key: "GamepadLibrary", minArea: 0, page: true },
-    // 3.3.9: Steam's game page, screen two (CORE-UI.md, "The game view"): the app details container, below the play bar,
-    // never a ROM page (The Collector's page is its own host).
-    { id: "game-page", map: "appdetails", key: "AppDetailsContainer", minArea: 0, page: true, viewport: true, exclude: ".romm-core-page", below: "{appdetails.PlaySection}" },
-    // Hosts from other plugins (3.3.7). The Collector's ROM game page (Eternal-Collector, corePageStyles.ts): the
-    // wrapper in place of Steam's overview panel, below the hero art.
-    { id: "collector-rom-page", selector: ".romm-core-page", minArea: 0, page: true },
-    { id: "awesome-mix-page", selector: ".awesome-mix-core-page", minArea: 0, page: true },
-];
-// A plugin host's selector: one or more plain class names, nothing else (no combinators, attributes or ids).
-const PLUGIN_HOST_SELECTOR = /^(\.[A-Za-z_][\w-]*)+$/;
-// Where a host is found: plain (querySelector) and strong (stylesheet: the class repeated plus the boost). Undefined
-// when its class map or key is missing on this client, or a plugin host's selector is not a plain class list.
-function resolveHostSelector(maps, host) {
-    if ("selector" in host) {
-        const plain = String(host.selector ?? "").trim();
-        if (!PLUGIN_HOST_SELECTOR.test(plain))
-            return undefined;
-        const first = plain.slice(0, plain.indexOf(".", 1) > 0 ? plain.indexOf(".", 1) : undefined);
-        return { plain, strong: plain + first + CORE_UI_BOOST };
-    }
-    const plain = plainSelector(maps[host.map], host.key), strong = classSelector(maps[host.map], host.key);
-    return plain && strong ? { plain, strong } : undefined;
-}
-// Jarvis's presence orb in the top bar, next to Steam's clock (jarvisPresence.ts decides its state). Dim steel ring
-// when idle, a slow crimson pulse (opacity only, no glow) while listening or thinking, a crimson ring when an answer
-// is ready. Still under reduced motion.
-const CORE_UI_ORB_ID = "core-jarvis-orb";
-function orbCss() {
-    const orb = `${ROOT} #${CORE_UI_ORB_ID}`;
-    return `/* jarvis-orb */${orb}{${imp({ display: "inline-block", width: "12px", height: "12px", margin: "0 10px", "border-radius": "50%", "box-sizing": "border-box",
-        "vertical-align": "middle", flex: "none", border: `2px solid ${C.steel}`, "background-color": "transparent", opacity: "0.45", "box-shadow": "none", animation: "none" })}}` +
-        `${orb}[data-state="hidden"]{${imp({ display: "none" })}}` +
-        `${orb}[data-state="busy"]{${imp({ "border-color": C.crimson, "background-color": C.crimson, opacity: "1", animation: "core-jarvis-pulse 1.6s ease-in-out infinite" })}}` +
-        `${orb}[data-state="ready"]{${imp({ "border-color": C.crimson, "background-color": "transparent", opacity: "1" })}}` +
-        `@keyframes core-jarvis-pulse{0%,100%{opacity:0.4}50%{opacity:1}}` +
-        `@media (prefers-reduced-motion: reduce){${orb}[data-state="busy"]{animation:none !important}}`;
-}
-// The stylesheet for the maps found, plus where the Starfield goes. `skipped` names each rule whose map or
-// class is missing on this client. `mark` is the Steam menu's logo (Core's ring mark by default; `wordmark`, the
-// phase 1 name, is accepted too).
-function buildCoreUiCss(maps, options = {}) {
-    const applied = [], skipped = [], parts = [];
-    const candidate = options.mark ?? options.wordmark ?? CORE_RING_MARK;
-    const mark = typeof candidate === "string" && /^(https?:|data:image\/)/.test(candidate) ? candidate : undefined;
-    const target = (id) => targetSelectors(maps, id);
-    for (const rule of rules(mark)) {
-        const anyOk = !rule.needsAny?.length || rule.needsAny.some(([map, key]) => classSelector(maps[map], key));
-        if (!anyOk || !rule.needs.every(([map, key]) => classSelector(maps[map], key)) || !(rule.targets ?? []).every(id => target(id).length > 0)) {
-            skipped.push(rule.id);
-            continue;
-        }
-        const select = (map, key) => classSelector(maps[map], key) ?? "";
-        let css;
-        try {
-            css = rule.css(select, target);
-        }
-        catch {
-            css = undefined;
-        }
-        if (!css) {
-            skipped.push(rule.id);
-            continue;
-        }
-        parts.push(`/* ${rule.id} */${css}`);
-        applied.push(rule.id);
-    }
-    // Nothing of Steam found (no class map at all): no stylesheet, not even the always-on parts.
-    if (applied.every(id => ALWAYS_ON.has(id))) {
-        parts.length = 0;
-        applied.length = 0;
-    }
-    const hosts = [];
-    for (const host of CORE_UI_HOSTS) {
-        const plugin = "selector" in host;
-        // A plugin's page is a host only next to Steam's own surfaces: without any class map there is no Core UI.
-        if (plugin && !applied.length)
-            continue;
-        const found = resolveHostSelector(maps, host);
-        if (!found)
-            continue;
-        hosts.push({ id: host.id, selector: found.plain, strong: found.strong, minArea: host.minArea,
-            fullHeight: !plugin && host.fullHeight === true, panel: !plugin && host.panel === true,
-            page: host.page === true, source: plugin ? "plugin" : "steam", viewport: plugin || host.viewport === true,
-            ...(!plugin && host.exclude ? { exclude: host.exclude } : {}),
-            ...(!plugin && host.below ? { below: resolveTemplate(maps, host.below, true) } : {}) });
-    }
-    // Black means starfield: every black surface above is a host. The runtime puts one canvas in each (the
-    // shared field), behind the surface's content; a host inside another host stays clear instead.
-    if (hosts.length) {
-        const all = hosts.map(host => `${ROOT} ${host.selector}`);
-        const strong = hosts.map(host => `${ROOT} ${host.strong}`);
-        parts.push(`/* starfield-hosts */${all.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}]`).join(",")}{${imp({ isolation: "isolate" })}}` +
-            `${all.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}] > canvas[${CORE_UI_STARS_ATTRIBUTE}]`).join(",")}{${imp({ position: "absolute", left: "0", right: "auto", bottom: "auto", width: "100%",
-                // The canvas follows the surface's scroll position and, for full-height surfaces, reaches the screen's edges.
-                top: "calc(var(--core-ui-scroll, 0px) - var(--core-ui-extend-top, 0px))",
-                height: "calc(100% + var(--core-ui-extend-top, 0px) + var(--core-ui-extend-bottom, 0px))",
-                "z-index": "-1", "pointer-events": "none", margin: "0", padding: "0", border: "0", "border-radius": "inherit", "background-color": C.black })}}` +
-            // A page host's canvas covers only what is on screen (--core-ui-page-height, 0 until measured), never more than
-            // its host (max-height 100% of the host, its containing block): 3.3.8, no viewport-tall fallback.
-            `${hosts.filter(host => host.page).map(host => `${ROOT} ${host.selector}[${CORE_UI_HOST_ATTRIBUTE}] > canvas[${CORE_UI_STARS_ATTRIBUTE}]`).join(",") || `${ROOT} [data-core-ui-none]`}{${imp({ height: "var(--core-ui-page-height, 0px)", "max-height": "100%" })}}` +
-            // 3.3.8: a canvas whose surface is not on screen (or that belongs to no live surface) is never drawn.
-            `${ROOT} canvas[${CORE_UI_STARS_ATTRIBUTE}]:not([${CORE_UI_LIVE_ATTRIBUTE}]){${imp({ display: "none" })}}` +
-            // A host inside another host (and a panel candidate that is not the panel) stays clear: the outer surface's
-            // stars show through it. Repeats the host's class so it out-ranks the host's own black rule.
-            `${strong.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}="nested"]`).join(",")}{${imp({ "background-color": "transparent", "background-image": "none" })}}`);
-    }
-    if (applied.length)
-        parts.push(collectionTileCss());
-    const clock = plainSelector(maps.header, "Clock");
-    if (clock)
-        parts.push(orbCss());
-    const dom = {
-        header: plainSelector(maps.header, "Header"), footer: plainSelector(maps.footer, "BasicFooter"),
-        menu: plainSelector(maps.mainmenu, "Menu"), menuItem: plainSelector(maps.mainmenu, "Item"), qamTab: plainSelector(maps.quickaccess, "Tab"),
-        tab: plainSelector(maps.tabbedpage, "Tab"), tabTitle: plainSelector(maps.tabbedpage, "TabTitle"), tabSelected: plainSelector(maps.tabbedpage, "Selected"),
-        library: plainSelector(maps.library, "GamepadLibrary"), tabbedPage: plainSelector(maps.tabbedpage, "GamepadTabbedPage"),
-        playSection: plainSelector(maps.appdetails, "PlaySection"), appContainer: plainSelector(maps.appdetails, "AppDetailsContainer"), tabRow: plainSelector(maps.tabbedpage, "TabRow"),
-        contextMenu: plainSelector(maps.contextmenu, "contextMenuContents"),
-        qamPlaceholder: plainSelector(maps.quickaccess, "ViewPlaceholder") ?? plainSelector(maps.quickaccess, "Container"),
-        qamMenu: plainSelector(maps.quickaccess, "Menu"), qamRail: plainSelector(maps.quickaccess, "Tabs") ?? plainSelector(maps.quickaccess, "TabsWithFooter"),
-        qamTabSelected: plainSelector(maps.quickaccess, "Tab") && plainSelector(maps.quickaccess, "Selected") ? `${plainSelector(maps.quickaccess, "Tab")}${plainSelector(maps.quickaccess, "Selected")}` : undefined,
-    };
-    const css = parts.join("\n");
-    return { css, applied, skipped, hosts, clock, dom, maps, ruleTargets: ruleTargetsFromCss(css) };
-}
-const STATE = /^(\.gpfocus|\.gpfocuswithin|:hover|:focus|:focus-visible|:focus-within)$/;
-// Splits a selector list on its top-level commas (not those inside :is(), :not() or :has()).
-function splitTopLevel(list) {
-    const out = [];
-    let depth = 0, current = "";
-    for (const ch of list) {
-        if (ch === "(")
-            depth++;
-        else if (ch === ")")
-            depth = Math.max(0, depth - 1);
-        if (ch === "," && depth === 0) {
-            out.push(current);
-            current = "";
-        }
-        else
-            current += ch;
-    }
-    if (current.trim())
-        out.push(current);
-    return out;
-}
-// Per rule (the `/* id */` that starts each part of the stylesheet), one selector list Element.matches can test:
-// pseudo-elements and the state pseudo-classes dropped, @media / @keyframes skipped. For the snapshot only.
-function ruleTargetsFromCss(css) {
-    const out = {};
-    for (const part of String(css).split("\n")) {
-        const head = /^\/\* ([\w-]+) \*\//.exec(part);
-        if (!head)
-            continue;
-        const found = new Set();
-        let depth = 0, selector = "";
-        const body = part.slice(head[0].length);
-        for (let i = 0; i < body.length; i++) {
-            const ch = body[i];
-            if (ch === "{") {
-                if (depth === 0 && !selector.trim().startsWith("@")) {
-                    for (const one of splitTopLevel(selector)) {
-                        const clean = one.replace(/::?(before|after|placeholder|-webkit-[\w-]+)/g, "")
-                            .replace(/:is\(([^()]*)\)/g, (all, inner) => inner.split(",").every(part => STATE.test(part.trim())) ? "" : all)
-                            .replace(/:(hover|focus|focus-visible|focus-within)(?![\w-])/g, "").trim();
-                        if (clean && !clean.startsWith("@"))
-                            found.add(clean);
-                    }
-                }
-                depth++;
-                selector = "";
-            }
-            else if (ch === "}") {
-                depth = Math.max(0, depth - 1);
-                selector = "";
-            }
-            else if (depth === 0)
-                selector += ch;
-        }
-        if (found.size)
-            out[head[1]] = [...found].join(",");
-    }
-    return out;
-}
-// The same class without the specificity repeat, for querySelector.
-function plainSelector(map, key) {
-    if (!has(map, key))
-        return undefined;
-    const alternatives = classAlternatives(map[key]);
-    if (!alternatives)
-        return undefined;
-    const one = (names) => "." + names.join(".");
-    return alternatives.length === 1 ? one(alternatives[0]) : `:is(${alternatives.map(one).join(",")})`;
-}
-// 3.3.11 (TV: the Steam menu, Settings and Downloads stayed Steam's although every rule was emitted): Steam ships some
-// class modules twice, with the same keys and different hashed classes, and either copy may be the one a window draws
-// (the Steam menu's MainMenu_uid2 window drew the copy that was not picked). Every module that fits a signature as well
-// as the best one is merged: each key holds every copy's class, and each rule targets them all.
-function mergeMaps(maps) {
-    const out = {};
-    for (const map of maps) {
-        for (const key of attempt(() => Object.keys(map)) ?? []) {
-            const value = map[key];
-            if (typeof value !== "string" || !value)
-                continue;
-            const parts = out[key] ? out[key].split(ALTERNATIVES) : [];
-            if (!parts.includes(value))
-                out[key] = [...parts, value].join(ALTERNATIVES);
-        }
-    }
-    return out;
-}
-
 // Eternal Core: Core UI's look at the live page (docs/eternal/CORE-UI.md). What a stylesheet cannot know from class
 // maps alone, checked once a second while Core UI is on:
 //
@@ -67201,7 +67599,7 @@ function style(view, element) {
         return undefined;
     }
 }
-function rectOf$2(element) {
+function rectOf$1(element) {
     try {
         const r = element.getBoundingClientRect();
         return { left: r.left, top: r.top, width: r.width, height: r.height, right: r.left + r.width, bottom: r.top + r.height };
@@ -67218,7 +67616,7 @@ const CLEAR_ATTRIBUTE = "data-core-ui-clear";
 // translucent colour (no picture) so the stylesheet makes it clear. Buttons, inputs, sliders and pictures are never
 // touched. Bounded: at most `limit` elements are looked at, `depth` levels down. Answers how many were tagged.
 function clearOpaqueLayers(host, view, options = {}) {
-    const hostRect = rectOf$2(host);
+    const hostRect = rectOf$1(host);
     if (!hostRect || hostRect.width <= 0 || hostRect.height <= 0)
         return 0;
     const share = options.share ?? 0.3, limit = options.limit ?? 600, maxDepth = options.depth ?? 10;
@@ -67253,7 +67651,7 @@ function clearOpaqueLayers(host, view, options = {}) {
         catch {
             already = false;
         }
-        const rect = rectOf$2(element);
+        const rect = rectOf$1(element);
         if (rect && rect.width * rect.height >= area * share && !already) {
             const computed = style(view, element);
             const colour = parseColor(computed?.backgroundColor ?? computed?.["background-color"]);
@@ -67280,7 +67678,7 @@ function clearOpaqueLayers(host, view, options = {}) {
 // What is behind the top bar or the button-hint bar: game art (a picture, a video, an image background) keeps it
 // clear; a plain page makes it pure black. Three points along it are checked; any art among them wins.
 function chromeState(element, doc, view, starsAttribute = "data-core-ui-stars") {
-    const rect = rectOf$2(element);
+    const rect = rectOf$1(element);
     if (!rect || rect.width <= 0 || rect.height <= 0 || typeof doc?.elementsFromPoint !== "function")
         return undefined;
     const y = Math.min(view.innerHeight - 1, Math.max(0, rect.top + rect.height / 2));
@@ -67322,7 +67720,7 @@ function chromeState(element, doc, view, starsAttribute = "data-core-ui-stars") 
 function keepBelowLogo(menu, itemSelector, band, view, edits) {
     if (!itemSelector)
         return undefined;
-    const menuRect = rectOf$2(menu);
+    const menuRect = rectOf$1(menu);
     if (!menuRect || menuRect.height <= 0)
         return undefined;
     let first;
@@ -67332,7 +67730,7 @@ function keepBelowLogo(menu, itemSelector, band, view, edits) {
     catch {
         first = undefined;
     }
-    const itemRect = first ? rectOf$2(first) : undefined;
+    const itemRect = first ? rectOf$1(first) : undefined;
     if (!first || !itemRect || itemRect.height <= 0)
         return undefined;
     const padding = px$1(style(view, menu)?.paddingTop);
@@ -67647,13 +68045,13 @@ function railMove(button, where) {
         return "into-rail";
     return "steam";
 }
-const rectOf$1 = (element) => { try {
+const rectOf = (element) => { try {
     return element.getBoundingClientRect();
 }
 catch {
     return undefined;
 } };
-const visible$1 = (rect) => !!rect && rect.width > 0 && rect.height > 0;
+const visible = (rect) => !!rect && rect.width > 0 && rect.height > 0;
 // A Steam Focusable with no Focusable inside it: what the D-pad lands on.
 function leaves(root) {
     let all = [];
@@ -67696,15 +68094,15 @@ function installQamRail(doc, select) {
             if (!rail)
                 return;
             const inRail = rail.contains(focused);
-            const content = Array.from(menu.children).find((child) => child !== rail && !child.contains(rail) && visible$1(rectOf$1(child)));
+            const content = Array.from(menu.children).find((child) => child !== rail && !child.contains(rail) && visible(rectOf(child)));
             if (!inRail)
                 lastContent = focused;
-            const here = rectOf$1(focused);
+            const here = rectOf(focused);
             const rightOfFocus = !inRail && !!here && leaves(content ?? menu).some(node => {
                 if (node === focused || rail.contains(node))
                     return false;
-                const r = rectOf$1(node);
-                return visible$1(r) && r.left >= here.right - 1 && r.top < here.bottom && r.bottom > here.top;
+                const r = rectOf(node);
+                return visible(r) && r.left >= here.right - 1 && r.top < here.bottom && r.bottom > here.top;
             });
             const move = railMove(button, { inRail, rightOfFocus, takesSides: !inRail && takesSides(focused) });
             if (move === "steam")
@@ -67719,14 +68117,14 @@ function installQamRail(doc, select) {
                 return;
             }
             // Into the content: where focus last was there, else the item nearest the open tab's height.
-            if (lastContent?.isConnected && content?.contains(lastContent) && visible$1(rectOf$1(lastContent))) {
+            if (lastContent?.isConnected && content?.contains(lastContent) && visible(rectOf(lastContent))) {
                 lastContent.focus?.();
                 return;
             }
-            const from = rectOf$1(focused);
-            const targets = leaves(content ?? menu).filter(node => !rail.contains(node) && visible$1(rectOf$1(node)));
-            const best = targets.sort((a, b) => Math.abs((rectOf$1(a).top + rectOf$1(a).bottom) / 2 - ((from?.top ?? 0) + (from?.bottom ?? 0)) / 2)
-                - Math.abs((rectOf$1(b).top + rectOf$1(b).bottom) / 2 - ((from?.top ?? 0) + (from?.bottom ?? 0)) / 2))[0];
+            const from = rectOf(focused);
+            const targets = leaves(content ?? menu).filter(node => !rail.contains(node) && visible(rectOf(node)));
+            const best = targets.sort((a, b) => Math.abs((rectOf(a).top + rectOf(a).bottom) / 2 - ((from?.top ?? 0) + (from?.bottom ?? 0)) / 2)
+                - Math.abs((rectOf(b).top + rectOf(b).bottom) / 2 - ((from?.top ?? 0) + (from?.bottom ?? 0)) / 2))[0];
             best?.focus?.();
         }
         catch { /* Steam's own navigation stands. */ }
@@ -68257,7 +68655,7 @@ function createCoreUi(deps) {
             }
             catch { /* Next document. */ }
         }
-        let placeholderLeft, hostWidth;
+        let placeholderLeft, hostWidth, hostHeight;
         if (dom.qamPlaceholder) {
             for (const doc of docs) {
                 if (menus.some(menu => menu.doc === doc))
@@ -68269,6 +68667,7 @@ function createCoreUi(deps) {
                     if (rect && rect.width > 0 && width > rect.left) {
                         placeholderLeft = rect.left;
                         hostWidth = width;
+                        hostHeight = Number(doc.defaultView?.innerHeight) || undefined;
                         break;
                     }
                 }
@@ -68289,6 +68688,16 @@ function createCoreUi(deps) {
                 }
                 else
                     unsizeQam(element);
+                // 3.3.11: a Quick Access window as tall as the main window (the placeholder no longer leaves the top bar's and
+                // the footer's room) gets a top safe area, so its first row is not where the clock sits.
+                const tall = !!hostHeight && (Number(view?.innerHeight) || 0) >= hostHeight - 2;
+                if (tall) {
+                    if (element.getAttribute(CORE_QAM_FULL_ATTRIBUTE) !== "1")
+                        element.setAttribute(CORE_QAM_FULL_ATTRIBUTE, "1");
+                    qamSized.add(element);
+                }
+                else if (element.hasAttribute?.(CORE_QAM_FULL_ATTRIBUTE))
+                    element.removeAttribute(CORE_QAM_FULL_ATTRIBUTE);
             }
             catch { /* Left as Steam lays it out. */ }
         }
@@ -68296,6 +68705,7 @@ function createCoreUi(deps) {
     function unsizeQam(element) {
         try {
             element.removeAttribute(CORE_QAM_VISIBLE_ATTRIBUTE);
+            element.removeAttribute(CORE_QAM_FULL_ATTRIBUTE);
             element.style.removeProperty(CORE_QAM_VISIBLE_VAR);
         }
         catch { }
@@ -69040,551 +69450,6 @@ function installCoreUi(options) {
     return () => runtime.dispose();
 }
 
-// Eternal Core: the Core UI snapshot (docs/eternal/CORE-UI.md, "The snapshot", 3.3.4). Ground truth for Core UI's
-// selectors: every selector up to 3.3.3 was inferred from Steam's readable class-map names, never observed, and the TV
-// showed most of them missing. The snapshot records how each surface is really built, so the next fixes are exact.
-//
-// - When: a few seconds after Core UI applies, then the first time each surface opens (the Steam menu, Quick Access and
-//   each of its tabs, a context menu, the Library's tab bar, a collection tile and the grid, Home, the footer and the
-//   top bar), and on demand (Quick Access > Core > Look > Save Core UI snapshot).
-// - What: per surface a pruned tree (at most SNAPSHOT_DEPTH levels and SNAPSHOT_NODES nodes): tag, classes, data-*
-//   attribute names, the box, a few computed styles, which Core UI rule matched, and a flag on opaque layers that cover
-//   more than 30% of the surface. Plus which class maps resolved and how, the selector table, the documents (main
-//   window or popup), the screen size and DPR, icon sources and the CSS Loader state.
-// - Never: text beyond short labels (at most 30 characters, and none at all on the grid and Home, where they would be
-//   game names), input values, URLs with queries, or anything the user typed.
-// - Where: the plugin backend writes it (main.py, save_core_ui_snapshot) to
-//   %APPDATA%\GamingMode\diagnostics\core-ui-snapshot-YYYYMMDD-HHMMSS.json, one file per capture (3.3.11; the newest
-//   20 kept), at most SNAPSHOT_MAX_BYTES each.
-//
-// Pure apart from what it is handed (documents, a view, the stylesheet's facts): tests drive it with fake DOMs.
-const SNAPSHOT_DEPTH = 6;
-const SNAPSHOT_NODES = 400;
-const SNAPSHOT_MAX_BYTES = 2 * 1024 * 1024;
-const SNAPSHOT_LABEL = 30;
-const SNAPSHOT_COVER_SHARE = 0.3;
-// How long after Core UI applies the first capture runs, and how long a newly opened surface settles before capture.
-const SNAPSHOT_FIRST_MS = 5000;
-const SNAPSHOT_SETTLE_MS = 1500;
-const SNAPSHOT_MIN_GAP_MS = 3000;
-const SNAPSHOT_SURFACES = [
-    { id: "steam-menu", targets: ["menu"], labels: true },
-    { id: "qam", targets: ["qamPanel", "qamMenu"], labels: true },
-    { id: "qam-rail", targets: ["qamRail"], labels: true },
-    { id: "qam-title", targets: ["qamTitle"], labels: true },
-    { id: "qam-content", targets: ["qamContent"], labels: true, perTab: true },
-    { id: "context-menu", targets: ["context"], labels: true },
-    { id: "library-tabs", targets: ["libraryTabRow"], labels: true },
-    { id: "library-collection-tile", targets: ["collectionTile"], labels: true },
-    { id: "library-grid", targets: ["libraryGrid"], labels: false },
-    { id: "home", targets: ["home"], labels: false },
-    { id: "footer", targets: ["footer"], labels: true },
-    { id: "top-bar", targets: ["header"], labels: false },
-    // 3.3.11: Steam's game page (no labels: game names and the user's activity).
-    { id: "game-hero", targets: ["gameHeader"], labels: false },
-    { id: "game-playbar", targets: ["gamePlayBar"], labels: false },
-    { id: "game-screen-two", targets: ["gameScreenTwo"], labels: false },
-    { id: "game-section", targets: ["gameSection"], labels: false },
-    // 3.3.7, a host from another plugin: The Collector's ROM game page (no labels: game names).
-    { id: "collector-rom-page", targets: ["collectorRomPage"], labels: false },
-];
-const STYLE_KEYS = [
-    // [short key, computed property, defaults left out]
-    ["bg", "backgroundColor", ["rgba(0, 0, 0, 0)", "transparent"]],
-    ["img", "backgroundImage", ["none"]],
-    ["op", "opacity", ["1"]],
-    ["pos", "position", ["static"]],
-    ["top", "top", ["auto"]],
-    ["bot", "bottom", ["auto"]],
-    ["mh", "maxHeight", ["none"]],
-    ["ov", "overflow", ["visible"]],
-    ["z", "zIndex", ["auto"]],
-    ["br", "borderRadius", ["0px"]],
-];
-// "url(...)" -> "url", "linear-gradient(...)" -> "linear-gradient": the type only, never the address.
-function imageType(value) {
-    const text = String(value ?? "").trim();
-    if (!text || text === "none")
-        return "none";
-    const kinds = new Set();
-    for (const match of text.matchAll(/(url|(?:repeating-)?(?:linear|radial|conic)-gradient|image-set|-webkit-image-set|cross-fade)\(/gi))
-        kinds.add(match[1].toLowerCase());
-    return kinds.size ? [...kinds].join("+") : "other";
-}
-const clip = (value, max = SNAPSHOT_LABEL) => {
-    const text = String(value ?? "").replace(/\s+/g, " ").trim();
-    return text.length > max ? text.slice(0, max) : text;
-};
-// A short label: aria-label, title, or the element's own text (its direct text nodes only), at most 30 characters.
-function shortLabel(element) {
-    try {
-        const aria = element.getAttribute?.("aria-label") || element.getAttribute?.("title");
-        if (aria)
-            return clip(aria) || undefined;
-        let own = "";
-        for (const node of Array.from(element.childNodes ?? []))
-            if (node?.nodeType === 3)
-                own += node.textContent ?? "";
-        return clip(own) || undefined;
-    }
-    catch {
-        return undefined;
-    }
-}
-function parseAlpha(colour) {
-    const text = colour.trim().toLowerCase();
-    if (!text || text === "transparent")
-        return 0;
-    const fn = /^rgba?\(([^)]*)\)$/.exec(text);
-    if (fn) {
-        const parts = fn[1].split(/[\s,/]+/).filter(Boolean);
-        if (parts.length >= 4) {
-            const a = parts[3];
-            return a.endsWith("%") ? Number.parseFloat(a) / 100 : Number.parseFloat(a);
-        }
-        return 1;
-    }
-    return text.startsWith("#") ? 1 : 0;
-}
-function rectOf(element) {
-    try {
-        const r = element.getBoundingClientRect();
-        return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)];
-    }
-    catch {
-        return [0, 0, 0, 0];
-    }
-}
-function classesOf(element) {
-    try {
-        const list = element.classList ? Array.from(element.classList) : String(element.className?.baseVal ?? element.className ?? "").split(/\s+/);
-        return list.filter(Boolean).slice(0, 12).map(name => clip(name, 60));
-    }
-    catch {
-        return [];
-    }
-}
-function dataNames(element) {
-    try {
-        const names = [];
-        for (const attribute of Array.from(element.attributes ?? []))
-            if (/^data-/.test(attribute?.name ?? ""))
-                names.push(String(attribute.name).slice(0, 40));
-        if (!element.attributes && element.dataset)
-            for (const key of Object.keys(element.dataset))
-                names.push("data-" + key.replace(/[A-Z]/g, c => "-" + c.toLowerCase()));
-        return names.slice(0, 12);
-    }
-    catch {
-        return [];
-    }
-}
-function stylesOf(view, element) {
-    let computed;
-    try {
-        computed = view.getComputedStyle?.(element);
-    }
-    catch {
-        computed = undefined;
-    }
-    if (!computed)
-        return { opaque: false };
-    const out = {};
-    for (const [key, prop, defaults] of STYLE_KEYS) {
-        let value = String(computed[prop] ?? computed[prop.replace(/[A-Z]/g, c => "-" + c.toLowerCase())] ?? "");
-        if (key === "img")
-            value = imageType(value);
-        if (value && !defaults.includes(value))
-            out[key] = clip(value, 60);
-    }
-    const alpha = parseAlpha(String(computed.backgroundColor ?? ""));
-    const image = imageType(computed.backgroundImage);
-    const opacity = Number.parseFloat(String(computed.opacity ?? "1"));
-    const opaque = (alpha >= 0.9 || /gradient|url/.test(image)) && (!Number.isFinite(opacity) || opacity >= 0.9);
-    return { s: Object.keys(out).length ? out : undefined, opaque };
-}
-function matchedRules(element, rules) {
-    const hits = [];
-    for (const [id, selector] of Object.entries(rules)) {
-        try {
-            if (element.matches?.(selector))
-                hits.push(id);
-        }
-        catch { /* A selector this engine cannot read. */ }
-    }
-    return hits.length ? hits : undefined;
-}
-// One surface as a pruned tree: breadth-first, so a cut keeps the outer structure (where the panels and their
-// backgrounds are) rather than one deep branch. `more` on a node says how many children were left out.
-function captureTree(root, view, options = {}) {
-    const maxDepth = options.depth ?? SNAPSHOT_DEPTH, maxNodes = Math.max(1, options.nodes ?? SNAPSHOT_NODES);
-    const rules = options.rules ?? {};
-    const rootRect = rectOf(root);
-    const area = Math.max(1, rootRect[2] * rootRect[3]);
-    let count = 0, truncated = false;
-    const make = (element) => {
-        count++;
-        const node = { t: String(element?.tagName ?? "?").toLowerCase(), r: rectOf(element) };
-        const c = classesOf(element);
-        if (c.length)
-            node.c = c;
-        const d = dataNames(element);
-        if (d.length)
-            node.d = d;
-        const { s, opaque } = stylesOf(view, element);
-        if (s)
-            node.s = s;
-        if (opaque && node.r[2] * node.r[3] > area * SNAPSHOT_COVER_SHARE)
-            node.cover = 1;
-        const m = matchedRules(element, rules);
-        if (m)
-            node.m = m;
-        if (options.labels) {
-            const l = shortLabel(element);
-            if (l)
-                node.l = l;
-        }
-        return node;
-    };
-    const tree = make(root);
-    const queue = [[root, tree, 0]];
-    while (queue.length) {
-        const [element, node, depth] = queue.shift();
-        let children = [];
-        try {
-            children = Array.from(element.children ?? []);
-        }
-        catch {
-            children = [];
-        }
-        if (!children.length)
-            continue;
-        if (depth + 1 >= maxDepth) {
-            node.more = children.length;
-            truncated = true;
-            continue;
-        }
-        const kids = [];
-        for (const child of children) {
-            if (count >= maxNodes) {
-                node.more = (node.more ?? 0) + 1;
-                truncated = true;
-                continue;
-            }
-            const kid = make(child);
-            kids.push(kid);
-            queue.push([child, kid, depth + 1]);
-        }
-        if (kids.length)
-            node.k = kids;
-    }
-    return { tree, nodes: count, truncated };
-}
-// Up to six ancestors of a surface's root (nearest first): enough to see what clips, scrolls or paints behind it.
-function ancestorsOf(element, view, limit = 6) {
-    const out = [];
-    let current = element?.parentElement;
-    while (current && out.length < limit) {
-        const node = { t: String(current.tagName ?? "?").toLowerCase(), r: rectOf(current) };
-        const c = classesOf(current);
-        if (c.length)
-            node.c = c;
-        const d = dataNames(current);
-        if (d.length)
-            node.d = d;
-        const { s } = stylesOf(view, current);
-        if (s)
-            node.s = s;
-        out.push(node);
-        current = current.parentElement;
-    }
-    return out;
-}
-function visible(element) {
-    try {
-        const r = element.getBoundingClientRect();
-        return r.width > 0 && r.height > 0;
-    }
-    catch {
-        return false;
-    }
-}
-// Which surfaces are on screen now, across Steam's documents, through the selector table. The first visible element
-// of the first strategy that finds one wins. Quick Access content is keyed per open tab ("qam-content:3:Core").
-function findSurfaces(docs, maps, surfaces = SNAPSHOT_SURFACES) {
-    const found = [];
-    for (const surface of surfaces) {
-        let hit;
-        for (const target of surface.targets) {
-            for (const selector of targetSelectors(maps, target, true)) {
-                for (let index = 0; index < docs.length && !hit; index++) {
-                    let list = [];
-                    try {
-                        list = Array.from(docs[index].querySelectorAll(selector)).slice(0, 12);
-                    }
-                    catch {
-                        list = [];
-                    }
-                    const element = list.find(visible);
-                    if (element)
-                        hit = { id: surface.id, key: surface.id, surface, element, doc: docs[index], docIndex: index, via: `${target}: ${selector}` };
-                }
-                if (hit)
-                    break;
-            }
-            if (hit)
-                break;
-        }
-        if (!hit)
-            continue;
-        if (surface.perTab)
-            hit.key = `${surface.id}:${selectedQamTab(hit.doc, maps)}`;
-        found.push(hit);
-    }
-    return found;
-}
-// The open Quick Access tab, as "<index>:<label>" (label at most 30 characters; index alone when it has none).
-function selectedQamTab(doc, maps) {
-    const tabs = [];
-    for (const selector of targetSelectors(maps, "qamTab", true)) {
-        try {
-            tabs.push(...Array.from(doc.querySelectorAll(selector)));
-        }
-        catch { /* Next. */ }
-        if (tabs.length)
-            break;
-    }
-    const selected = new Set();
-    for (const selector of targetSelectors(maps, "qamTabSelected", true)) {
-        try {
-            for (const tab of Array.from(doc.querySelectorAll(selector)))
-                selected.add(tab);
-        }
-        catch { /* Next. */ }
-    }
-    const index = tabs.findIndex(tab => selected.has(tab));
-    if (index < 0)
-        return "unknown";
-    const label = shortLabel(tabs[index]);
-    return label ? `${index}:${label}` : String(index);
-}
-function recordSurface(found, view, rules, nodes = SNAPSHOT_NODES, at = new Date().toISOString()) {
-    const { tree, nodes: count, truncated } = captureTree(found.element, view, { nodes, labels: found.surface.labels, rules });
-    return { id: found.id, key: found.key, doc: found.docIndex, via: found.via, at, rect: tree.r, nodes: count, truncated, tree, ancestors: ancestorsOf(found.element, view) };
-}
-// What each Steam document is: the main window or a popup, its size and DPR, and where Core UI's stylesheet sits among
-// the document's stylesheets (CSS Loader appends its own to <head>; Core UI keeps itself last).
-function documentRecord(doc, index, main, styleId) {
-    const view = doc?.defaultView ?? {};
-    let path = "", title = "";
-    try {
-        path = clip(String(doc.location?.pathname ?? ""), 80);
-    }
-    catch {
-        path = "";
-    }
-    try {
-        title = clip(doc.title ?? "", 40);
-    }
-    catch {
-        title = "";
-    }
-    let styles = [];
-    try {
-        styles = Array.from(doc.head?.querySelectorAll?.("style,link[rel~='stylesheet']") ?? []);
-    }
-    catch {
-        styles = [];
-    }
-    const at = styles.findIndex(style => style?.id === styleId);
-    return { index, main: doc === main, path, title, width: Number(view.innerWidth) || 0, height: Number(view.innerHeight) || 0, dpr: Number(view.devicePixelRatio) || 1,
-        coreStyle: at >= 0, coreStyleLast: at >= 0 && at === styles.length - 1, stylesAfterCore: at >= 0 ? styles.length - 1 - at : 0, styles: styles.length };
-}
-// The whole snapshot, held under SNAPSHOT_MAX_BYTES: when too big, every surface is captured again with half the nodes
-// (callers pass `recapture`), then trees are dropped largest first, each drop named in `dropped`.
-function assembleSnapshot(input, recapture) {
-    const firstView = input.docs[0]?.defaultView ?? {};
-    const base = {
-        kind: "core-ui-snapshot", format: 1, core: input.version || undefined, reason: input.reason, capturedAt: input.now.toISOString(),
-        screen: { width: Number(firstView.innerWidth) || 0, height: Number(firstView.innerHeight) || 0, dpr: Number(firstView.devicePixelRatio) || 1,
-            screenWidth: Number(firstView.screen?.width) || 0, screenHeight: Number(firstView.screen?.height) || 0 },
-        coreUi: { applied: input.sheet?.applied ?? [], skipped: input.sheet?.skipped ?? [], mapRoutes: input.sheet?.routes ?? {},
-            mapCandidates: candidateList(input.sheet?.candidates),
-            mapAmbiguity: ambiguityList(input.sheet?.ambiguous),
-            selectors: input.sheet?.maps ? resolvedTargetTable(input.sheet.maps) : {},
-            // 3.3.7: every Starfield host resolved on this client (Steam's and other plugins'), with its selector.
-            hosts: hostList(input.sheet?.hosts) },
-        documents: input.docs.map((doc, index) => documentRecord(doc, index, input.main, input.styleId)),
-        ...(input.extra ?? {}),
-    };
-    let surfaces = input.surfaces, dropped = [];
-    const encode = () => {
-        const list = [...surfaces.values()].sort((a, b) => a.key.localeCompare(b.key));
-        return JSON.stringify({ ...base, surfaces: list, dropped: dropped.length ? dropped : undefined });
-    };
-    let json = encode();
-    const size = (text) => utf8Length(text);
-    for (let nodes = SNAPSHOT_NODES / 2; size(json) > SNAPSHOT_MAX_BYTES && recapture && nodes >= 25; nodes = Math.floor(nodes / 2)) {
-        surfaces = recapture(nodes);
-        json = encode();
-    }
-    while (size(json) > SNAPSHOT_MAX_BYTES && surfaces.size) {
-        const largest = [...surfaces.values()].sort((a, b) => JSON.stringify(b).length - JSON.stringify(a).length)[0];
-        surfaces = new Map(surfaces);
-        surfaces.delete(largest.key);
-        dropped = [...dropped, largest.key];
-        json = encode();
-    }
-    if (size(json) > SNAPSHOT_MAX_BYTES)
-        json = JSON.stringify({ kind: "core-ui-snapshot", format: 1, core: input.version, reason: input.reason, capturedAt: input.now.toISOString(), error: "too_large" });
-    let nodes = 0;
-    for (const record of surfaces.values())
-        nodes += record.nodes;
-    return { json, bytes: size(json), nodes, dropped };
-}
-// Missing maps' closest modules as the snapshot records them: key names only, bounded.
-function candidateList(candidates) {
-    const out = {};
-    if (!candidates || typeof candidates !== "object")
-        return out;
-    const names = (list, max) => (Array.isArray(list) ? list : []).slice(0, max).map(key => String(key).slice(0, 80));
-    for (const [map, candidate] of Object.entries(candidates).slice(0, 32)) {
-        if (!candidate)
-            continue;
-        out[map] = { score: Number(candidate.score) || 0, matched: names(candidate.matched, 40), missing: names(candidate.missing, 40), keys: names(candidate.keys, 120) };
-    }
-    return out;
-}
-// 3.3.10: maps more than one module matched, as the snapshot records them: key names only, bounded.
-function ambiguityList(ambiguous) {
-    const out = {};
-    if (!ambiguous || typeof ambiguous !== "object")
-        return out;
-    const names = (list) => (Array.isArray(list) ? list : []).slice(0, 12).map(key => String(key).slice(0, 80));
-    for (const [map, seen] of Object.entries(ambiguous).slice(0, 40)) {
-        if (!seen)
-            continue;
-        out[map] = { matches: Number(seen.matches) || 0, switched: seen.switched === true, chosen: names(seen.chosen),
-            passedOver: (Array.isArray(seen.passedOver) ? seen.passedOver : []).slice(0, 8).map(names), merged: Number(seen.merged) || 1 };
-    }
-    return out;
-}
-// The host list as the snapshot records it: id, plain selector, where it came from and its kind.
-function hostList(hosts) {
-    if (!Array.isArray(hosts))
-        return [];
-    return hosts.slice(0, 64).map(host => ({ id: String(host.id), selector: String(host.selector).slice(0, 200), source: host.source === "plugin" ? "plugin" : "steam",
-        kind: host.page ? "page" : host.panel ? "panel" : "surface" }));
-}
-function utf8Length(text) {
-    let bytes = 0;
-    for (let i = 0; i < text.length; i++) {
-        const code = text.charCodeAt(i);
-        if (code < 0x80)
-            bytes += 1;
-        else if (code < 0x800)
-            bytes += 2;
-        else if (code >= 0xd800 && code <= 0xdbff) {
-            bytes += 4;
-            i++;
-        }
-        else
-            bytes += 3;
-    }
-    return bytes;
-}
-function createSnapshotProbe(deps) {
-    const captured = new Map();
-    const seen = new Set();
-    let docs = [], firstAt, dueAt, lastWrite = -Infinity, writing = false, reason = "start";
-    let last;
-    function captureAll(nodes = SNAPSHOT_NODES) {
-        const sheet = deps.sheet();
-        const maps = sheet?.maps ?? {};
-        const rules = sheet?.ruleTargets ?? {};
-        const at = new Date(deps.now()).toISOString();
-        const next = new Map(captured);
-        for (const found of findSurfaces(docs, maps)) {
-            try {
-                next.set(found.key, recordSurface(found, found.doc?.defaultView ?? {}, rules, nodes, at));
-            }
-            catch { /* That surface closed mid-capture. */ }
-        }
-        return next;
-    }
-    async function write(why) {
-        if (writing)
-            return last;
-        writing = true;
-        try {
-            const fresh = captureAll();
-            for (const [key, record] of fresh)
-                captured.set(key, record);
-            const assembled = assembleSnapshot({ reason: why, version: deps.version, now: new Date(deps.now()), docs, main: deps.main(), styleId: deps.styleId,
-                sheet: deps.sheet(), surfaces: captured, extra: deps.extra?.() }, nodes => captureAll(nodes));
-            lastWrite = deps.now();
-            const answer = await deps.write(assembled.json);
-            last = { ok: answer?.ok === true, path: answer?.path, error: answer?.error, bytes: assembled.bytes, at: new Date(deps.now()).toISOString() };
-            if (!last.ok)
-                deps.log?.(`[Core UI] snapshot not saved: ${answer?.error ?? "no answer"}`);
-            return last;
-        }
-        catch (error) {
-            last = { ok: false, error: String(error?.message ?? error).slice(0, 120) };
-            deps.log?.(`[Core UI] snapshot not saved: ${last.error}`);
-            return last;
-        }
-        finally {
-            writing = false;
-        }
-    }
-    return {
-        // Called by Core UI once a second with Steam's documents: schedules the first capture and one per newly opened surface.
-        tick(currentDocs) {
-            docs = currentDocs;
-            const now = deps.now();
-            if (firstAt === undefined) {
-                firstAt = now + SNAPSHOT_FIRST_MS;
-                dueAt = firstAt;
-                reason = "start";
-            }
-            if (now >= (firstAt ?? 0)) {
-                let fresh = [];
-                try {
-                    fresh = findSurfaces(docs, deps.sheet()?.maps ?? {}).map(found => found.key).filter(key => !seen.has(key));
-                }
-                catch {
-                    fresh = [];
-                }
-                if (fresh.length) {
-                    for (const key of fresh)
-                        seen.add(key);
-                    if (dueAt === undefined) {
-                        dueAt = now + SNAPSHOT_SETTLE_MS;
-                        reason = `opened: ${fresh.join(", ")}`;
-                    }
-                    else if (reason !== "start")
-                        reason = `${reason}, ${fresh.join(", ")}`;
-                }
-            }
-            if (dueAt !== undefined && now >= dueAt && now - lastWrite >= SNAPSHOT_MIN_GAP_MS && !writing) {
-                dueAt = undefined;
-                void write(reason);
-            }
-        },
-        saveNow: (currentDocs) => { if (currentDocs)
-            docs = currentDocs; return write("manual"); },
-        last: () => last,
-        keys: () => [...captured.keys()],
-    };
-}
-let control;
-function setCoreUiSnapshotControl(next) { control = next; }
-const coreUiSnapshotControl = {
-    available: () => !!control,
-    saveNow: () => control ? control.saveNow() : Promise.resolve({ ok: false, error: "unavailable" }),
-};
-
 // Eternal Core: Core UI and CSS Loader's legacy Core themes (docs/eternal/CORE-UI.md, "CSS Loader", 3.3.4).
 //
 // The TV showed the old "Core" CSS Loader theme still active on top of Core UI (its wordmark, grey-blue focus and grey
@@ -69670,146 +69535,6 @@ function createLegacyThemeGuard(deps) {
         return next;
     };
     return { disable: () => run("disable"), restore: () => run("restore"), report: () => report };
-}
-
-// Eternal Core: the Core UI setting's text in Core's 12 languages (Quick Access > Core). "Core UI" is the
-// feature's name and stays the same in every language. Self-contained: tests/coreUi.test.mjs loads it alone.
-const en = {
-    section: "Look", label: "Core UI",
-    hint: "Core's black, gunmetal and crimson look, with the Starfield, on the Steam menu, Quick Access and the top and bottom bars. Off gives them back to Steam.",
-    screensaver: "Use Core Starfield as screensaver", screensaverHint: "Steam's screensaver becomes the Core Starfield. Off goes back to Steam's slideshow.", snapshot: "Save Core UI snapshot", snapshotHint: "Writes how Steam's screens are built right now to a file for diagnosis. No personal data.", snapshotSaved: "Saved to", snapshotFailed: "Could not save the snapshot.",
-};
-const copy = {
-    en,
-    it: { section: "Aspetto", label: "Core UI", hint: "L'aspetto di Core in nero, canna di fucile e cremisi, con il campo stellare, sul menu di Steam, sull'Accesso rapido e sulle barre in alto e in basso. Spento li restituisce a Steam.", screensaver: "Usa Core Starfield come salvaschermo", screensaverHint: "Il salvaschermo di Steam diventa il campo stellare di Core. Spento torna alla presentazione di Steam.", snapshot: "Salva istantanea di Core UI", snapshotHint: "Scrive in un file come sono costruite ora le schermate di Steam, per la diagnosi. Nessun dato personale.", snapshotSaved: "Salvata in", snapshotFailed: "Impossibile salvare l'istantanea." },
-    es: { section: "Aspecto", label: "Core UI", hint: "El aspecto de Core en negro, gris metal y carmesí, con el campo de estrellas, en el menú de Steam, el Acceso rápido y las barras superior e inferior. Desactivado los devuelve a Steam.", screensaver: "Usar Core Starfield como salvapantallas", screensaverHint: "El salvapantallas de Steam pasa a ser el campo de estrellas de Core. Desactivado vuelve a la presentación de Steam.", snapshot: "Guardar instantánea de Core UI", snapshotHint: "Guarda en un archivo cómo están construidas ahora las pantallas de Steam, para el diagnóstico. Sin datos personales.", snapshotSaved: "Guardada en", snapshotFailed: "No se pudo guardar la instantánea." },
-    fr: { section: "Apparence", label: "Core UI", hint: "L'apparence de Core en noir, gris acier et cramoisi, avec le champ d'étoiles, sur le menu Steam, l'Accès rapide et les barres du haut et du bas. Désactivé, Steam reprend la sienne.", screensaver: "Utiliser Core Starfield comme économiseur d'écran", screensaverHint: "L'économiseur d'écran de Steam devient le champ d'étoiles de Core. Désactivé, Steam reprend son diaporama.", snapshot: "Enregistrer un instantané de Core UI", snapshotHint: "Écrit dans un fichier la structure actuelle des écrans de Steam, pour le diagnostic. Aucune donnée personnelle.", snapshotSaved: "Enregistré dans", snapshotFailed: "Impossible d'enregistrer l'instantané." },
-    de: { section: "Aussehen", label: "Core UI", hint: "Der Look von Core in Schwarz, Gunmetal und Karmesin mit dem Sternenfeld im Steam-Menü, im Schnellzugriff und in der oberen und unteren Leiste. Aus gibt sie an Steam zurück.", screensaver: "Core Starfield als Bildschirmschoner", screensaverHint: "Steams Bildschirmschoner wird das Sternenfeld von Core. Aus kehrt zu Steams Diashow zurück.", snapshot: "Core-UI-Momentaufnahme speichern", snapshotHint: "Schreibt zur Diagnose in eine Datei, wie Steams Bildschirme gerade aufgebaut sind. Keine persönlichen Daten.", snapshotSaved: "Gespeichert unter", snapshotFailed: "Die Momentaufnahme konnte nicht gespeichert werden." },
-    pt: { section: "Aparência", label: "Core UI", hint: "O visual do Core em preto, cinza-chumbo e carmesim, com o campo estelar, no menu Steam, no Acesso rápido e nas barras superior e inferior. Desligado devolve tudo ao Steam.", screensaver: "Usar Core Starfield como protetor de tela", screensaverHint: "O protetor de tela do Steam passa a ser o campo estelar do Core. Desligado volta à apresentação do Steam.", snapshot: "Salvar instantâneo do Core UI", snapshotHint: "Grava num arquivo como as telas do Steam estão montadas agora, para diagnóstico. Nenhum dado pessoal.", snapshotSaved: "Salvo em", snapshotFailed: "Não foi possível salvar o instantâneo." },
-    uk: { section: "Вигляд", label: "Core UI", hint: "Вигляд Core у чорному, сталевому й багряному кольорах із зоряним полем у меню Steam, швидкому доступі та на верхній і нижній панелях. Вимкнення повертає вигляд Steam.", screensaver: "Core Starfield як заставка", screensaverHint: "Заставкою Steam стає зоряне поле Core. Вимкнення повертає слайд-шоу Steam.", snapshot: "Зберегти знімок Core UI", snapshotHint: "Записує у файл, як зараз побудовані екрани Steam, для діагностики. Без особистих даних.", snapshotSaved: "Збережено в", snapshotFailed: "Не вдалося зберегти знімок." },
-    ru: { section: "Внешний вид", label: "Core UI", hint: "Оформление Core в чёрном, стальном и багровом цветах со звёздным полем в меню Steam, быстром доступе и на верхней и нижней панелях. Если выключить, вернётся оформление Steam.", screensaver: "Core Starfield как заставка", screensaverHint: "Заставкой Steam станет звёздное поле Core. Если выключить, вернётся слайд-шоу Steam.", snapshot: "Сохранить снимок Core UI", snapshotHint: "Записывает в файл, как сейчас устроены экраны Steam, для диагностики. Без личных данных.", snapshotSaved: "Сохранено в", snapshotFailed: "Не удалось сохранить снимок." },
-    zh: { section: "外观", label: "Core UI", hint: "在 Steam 菜单、快速访问以及顶部和底部栏使用 Core 的黑色、炮铜色和深红色外观，并显示星空。关闭后恢复 Steam 的外观。", screensaver: "使用 Core Starfield 作为屏幕保护程序", screensaverHint: "Steam 的屏幕保护程序改为 Core 星空。关闭后恢复 Steam 的幻灯片。", snapshot: "保存 Core UI 快照", snapshotHint: "将 Steam 各界面当前的结构写入文件，用于诊断。不含个人数据。", snapshotSaved: "已保存到", snapshotFailed: "无法保存快照。" },
-    ja: { section: "外観", label: "Core UI", hint: "Steam メニュー、クイックアクセス、上下のバーに、星空と黒・ガンメタル・クリムゾンの Core の外観を使います。オフにすると Steam の外観に戻ります。", screensaver: "Core Starfield をスクリーンセーバーにする", screensaverHint: "Steam のスクリーンセーバーを Core の星空にします。オフにすると Steam のスライドショーに戻ります。", snapshot: "Core UI のスナップショットを保存", snapshotHint: "診断用に、Steam の各画面の現在の構造をファイルに書き出します。個人データは含みません。", snapshotSaved: "保存先:", snapshotFailed: "スナップショットを保存できませんでした。" },
-    ko: { section: "모양", label: "Core UI", hint: "Steam 메뉴, 빠른 실행, 위아래 막대에 별빛 배경과 검정·건메탈·진홍색의 Core 모양을 적용합니다. 끄면 Steam 모양으로 돌아갑니다.", screensaver: "Core Starfield를 화면 보호기로 사용", screensaverHint: "Steam 화면 보호기가 Core 별빛으로 바뀝니다. 끄면 Steam 슬라이드쇼로 돌아갑니다.", snapshot: "Core UI 스냅샷 저장", snapshotHint: "진단을 위해 Steam 화면의 현재 구조를 파일로 저장합니다. 개인 데이터는 포함되지 않습니다.", snapshotSaved: "저장 위치:", snapshotFailed: "스냅샷을 저장할 수 없습니다." },
-    hi: { section: "रूप", label: "Core UI", hint: "Steam मेनू, क्विक एक्सेस और ऊपर-नीचे की पट्टियों पर तारों भरी पृष्ठभूमि के साथ Core का काला, गनमेटल और क्रिमसन रूप। बंद करने पर Steam का रूप लौट आता है।", screensaver: "Core Starfield को स्क्रीनसेवर बनाएँ", screensaverHint: "Steam का स्क्रीनसेवर Core का तारामंडल बन जाता है। बंद करने पर Steam का स्लाइडशो लौट आता है।", snapshot: "Core UI स्नैपशॉट सहेजें", snapshotHint: "जाँच के लिए Steam की स्क्रीनों की मौजूदा बनावट एक फ़ाइल में लिखता है। कोई निजी डेटा नहीं।", snapshotSaved: "यहाँ सहेजा गया:", snapshotFailed: "स्नैपशॉट सहेजा नहीं जा सका।" },
-};
-function coreUiCopy(locale) {
-    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return copy[language === "ua" ? "uk" : language] ?? en;
-}
-const packCopy = {
-    en: { pack: "Re-import icon pack", packHint: "Reads colorgrade-icons-heroes-logos.zip from Downloads again for the Consoles tab.", packDone: "Imported: {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip is not in Downloads.", packFailed: "The icon pack could not be imported." },
-    it: { pack: "Reimporta pacchetto icone", packHint: "Rilegge colorgrade-icons-heroes-logos.zip da Download per la scheda Console.", packDone: "Importate: {count} console.", packMissing: "colorgrade-icons-heroes-logos.zip non è in Download.", packFailed: "Impossibile importare il pacchetto icone." },
-    es: { pack: "Reimportar paquete de iconos", packHint: "Vuelve a leer colorgrade-icons-heroes-logos.zip de Descargas para la pestaña Consolas.", packDone: "Importadas: {count} consolas.", packMissing: "colorgrade-icons-heroes-logos.zip no está en Descargas.", packFailed: "No se pudo importar el paquete de iconos." },
-    fr: { pack: "Réimporter le pack d'icônes", packHint: "Relit colorgrade-icons-heroes-logos.zip dans Téléchargements pour l'onglet Consoles.", packDone: "Importées : {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip n'est pas dans Téléchargements.", packFailed: "Le pack d'icônes n'a pas pu être importé." },
-    de: { pack: "Icon-Paket neu importieren", packHint: "Liest colorgrade-icons-heroes-logos.zip aus Downloads erneut für den Tab Konsolen.", packDone: "Importiert: {count} Konsolen.", packMissing: "colorgrade-icons-heroes-logos.zip ist nicht in Downloads.", packFailed: "Das Icon-Paket konnte nicht importiert werden." },
-    pt: { pack: "Reimportar pacote de ícones", packHint: "Lê de novo colorgrade-icons-heroes-logos.zip em Downloads para a aba Consoles.", packDone: "Importados: {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip não está em Downloads.", packFailed: "Não foi possível importar o pacote de ícones." },
-    uk: { pack: "Повторно імпортувати піктограми", packHint: "Знову читає colorgrade-icons-heroes-logos.zip із Завантажень для вкладки Консолі.", packDone: "Імпортовано консолей: {count}.", packMissing: "colorgrade-icons-heroes-logos.zip немає в Завантаженнях.", packFailed: "Не вдалося імпортувати піктограми." },
-    ru: { pack: "Повторно импортировать значки", packHint: "Снова читает colorgrade-icons-heroes-logos.zip из Загрузок для вкладки Консоли.", packDone: "Импортировано консолей: {count}.", packMissing: "colorgrade-icons-heroes-logos.zip нет в Загрузках.", packFailed: "Не удалось импортировать значки." },
-    zh: { pack: "重新导入图标包", packHint: "为“主机”标签重新读取“下载”中的 colorgrade-icons-heroes-logos.zip。", packDone: "已导入 {count} 个主机。", packMissing: "“下载”中没有 colorgrade-icons-heroes-logos.zip。", packFailed: "无法导入图标包。" },
-    ja: { pack: "アイコンパックを再インポート", packHint: "コンソールタブ用に、ダウンロードの colorgrade-icons-heroes-logos.zip を読み直します。", packDone: "{count} 台のコンソールをインポートしました。", packMissing: "ダウンロードに colorgrade-icons-heroes-logos.zip がありません。", packFailed: "アイコンパックをインポートできませんでした。" },
-    ko: { pack: "아이콘 팩 다시 가져오기", packHint: "콘솔 탭을 위해 다운로드의 colorgrade-icons-heroes-logos.zip을 다시 읽습니다.", packDone: "콘솔 {count}개를 가져왔습니다.", packMissing: "다운로드에 colorgrade-icons-heroes-logos.zip이 없습니다.", packFailed: "아이콘 팩을 가져오지 못했습니다." },
-    hi: { pack: "आइकन पैक फिर से इम्पोर्ट करें", packHint: "कंसोल टैब के लिए Downloads से colorgrade-icons-heroes-logos.zip फिर से पढ़ता है।", packDone: "{count} कंसोल इम्पोर्ट हुए।", packMissing: "Downloads में colorgrade-icons-heroes-logos.zip नहीं है।", packFailed: "आइकन पैक इम्पोर्ट नहीं हो सका।" },
-};
-function coreUiPackCopy(locale) {
-    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return packCopy[language] ?? packCopy.en;
-}
-
-// Eternal Core: Quick Access rail icons at Steam's own size (docs/eternal/CORE-UI.md, "Plugin logos", 3.3.4). Core's
-// tab, Jarvis's tab and the Eternal plugins' glyphs were drawn at 1em (about 16px, half of Steam's own icons); with
-// Core UI on they fill the rail cell at CORE_RAIL_ICON_PX (24px in the 48 x 64 tab, Steam's own icon size, 3.3.10). Core UI off: 1em, as before.
-//
-// Pure (one import, coreUiStyles.ts, itself pure): tests check the box and the glyph markup.
-const CORE_RAIL_ICON_ATTRIBUTE = "data-core-rail-icon";
-// The box around a rail icon: CORE_RAIL_ICON_PX with Core UI on (its font size too, so an icon drawn at 1em fills it), 1em off.
-function railIconBox(on) {
-    const size = on ? CORE_RAIL_ICON_PX : "1em";
-    return { display: "flex", width: size, height: size, alignItems: "center", justifyContent: "center", flex: "none", ...(on ? { fontSize: CORE_RAIL_ICON_PX } : {}) };
-}
-// A glyph's SVG text made to fill its box crisply: 100% of the box, geometric precision, hidden from screen readers.
-// Only Core's own artwork goes through here (coreArtwork.ts), never user input.
-function railGlyphHtml(svg) {
-    if (!/^<svg[\s>]/.test(svg))
-        return "";
-    return svg.replace(/^<svg(?![^>]*\swidth=)/, '<svg width="100%" height="100%" shape-rendering="geometricPrecision" aria-hidden="true" focusable="false"');
-}
-
-// Eternal Core (Core UI phase 1, docs/eternal/CORE-UI.md): Quick Access > Core.
-// - CoreUiSection: the one "Core UI" setting, on by default; off removes everything Core UI adds.
-// - DigitalStoresEntry: Digital stores now opens from here (the Steam menu entry became Awesome Mix).
-const { PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1, ToggleField: ToggleField$1, ButtonItem: ButtonItem$1, Navigation: Navigation$1 } = CompatUI;
-function CoreUiSection({ locale }) {
-    const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
-    const text = coreUiCopy(locale);
-    return (SP_JSX.jsxs(PanelSection$1, { title: text.section, children: [SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ToggleField$1, { bottomSeparator: "none", label: text.label, description: text.hint, checked: on, onChange: (value) => coreUiSetting.set(value) }) }), SP_JSX.jsx(ScreensaverRow, { locale: locale }), SP_JSX.jsx(SnapshotRow, { locale: locale }), SP_JSX.jsx(IconPackRow, { locale: locale })] }));
-}
-// 3.3.4: a rail icon at Steam's own size while Core UI is on (coreRailIcons.ts), 1em off.
-function CoreRailIcon({ children, glyph }) {
-    const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
-    const props = { [CORE_RAIL_ICON_ATTRIBUTE]: "1", "aria-hidden": "true", style: railIconBox(on) };
-    if (glyph)
-        return SP_JSX.jsx("span", { ...props, dangerouslySetInnerHTML: { __html: railGlyphHtml(glyph) } });
-    return SP_JSX.jsx("span", { ...props, children: children });
-}
-// 3.3.9: "Re-import icon pack": the Consoles tab's art, read again from the user's Downloads zip.
-function IconPackRow({ locale }) {
-    const text = coreUiPackCopy(locale);
-    const [state, setState] = _global_SP_REACT.useState({ busy: false });
-    const press = async () => {
-        setState({ busy: true });
-        const answer = await loadConsolePack(true);
-        const result = answer?.import;
-        const line = result?.imported ? text.packDone.replace("{count}", String(result.slugs ?? answer?.slugs?.length ?? 0))
-            : result?.reason === "zip_missing" ? text.packMissing : text.packFailed;
-        setState({ busy: false, line });
-    };
-    return (SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ButtonItem$1, { bottomSeparator: "none", layout: "below", description: state.line ?? text.packHint, disabled: state.busy, onClick: () => void press(), children: text.pack }) }));
-}
-// "Save Core UI snapshot": writes the diagnostic snapshot now (coreUiSnapshot.ts); the line under it says where.
-function SnapshotRow({ locale }) {
-    const text = coreUiCopy(locale);
-    const [state, setState] = _global_SP_REACT.useState("idle");
-    const [path, setPath] = _global_SP_REACT.useState("");
-    if (!coreUiSnapshotControl.available())
-        return null;
-    const press = async () => {
-        setState("busy");
-        try {
-            const answer = await coreUiSnapshotControl.saveNow();
-            setPath(answer?.path ?? "");
-            setState(answer?.ok ? "saved" : "failed");
-        }
-        catch {
-            setState("failed");
-        }
-    };
-    const description = state === "saved" ? `${text.snapshotSaved}${path ? ` ${path}` : ""}` : state === "failed" ? text.snapshotFailed : text.snapshotHint;
-    return (SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ButtonItem$1, { bottomSeparator: "none", layout: "below", description: description, disabled: state === "busy", onClick: press, children: text.snapshot }) }));
-}
-// "Use Core Starfield as screensaver": selects Core Starfield in Steam's screensaver list, or goes back to Steam's
-// slideshow. Shown only once Steam's settings store is found.
-function ScreensaverRow({ locale }) {
-    const [, redraw] = _global_SP_REACT.useState(0);
-    _global_SP_REACT.useEffect(() => coreScreensaverControl.subscribe(() => redraw(n => n + 1)), []);
-    _global_SP_REACT.useEffect(() => { const timer = window.setInterval(() => redraw(n => n + 1), 3000); return () => window.clearInterval(timer); }, []);
-    if (!coreScreensaverControl.available())
-        return null;
-    const text = coreUiCopy(locale);
-    return (SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ToggleField$1, { bottomSeparator: "none", label: text.screensaver, description: text.screensaverHint, checked: coreScreensaverControl.get(), onChange: (value) => { coreScreensaverControl.set(value); } }) }));
-}
-function openDigitalStores() {
-    try {
-        Navigation$1?.CloseSideMenus?.();
-        window.setTimeout(() => Navigation$1?.Navigate?.(STORE_DIGITAL_ROUTE), 40);
-    }
-    catch (error) {
-        console.warn("Core Digital stores: route not reachable", error);
-    }
-}
-function DigitalStoresEntry({ locale }) {
-    const text = storeDigitalCopy(locale);
-    return (SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ButtonItem$1, { bottomSeparator: "none", layout: "below", description: text.subtitle, onClick: openDigitalStores, children: SP_JSX.jsxs("span", { style: { display: "inline-flex", alignItems: "center", gap: "10px" }, children: [SP_JSX.jsx("span", { style: { display: "inline-flex", width: "1em", height: "1em" }, children: SP_JSX.jsx(StoreDigitalStoreIcon, {}) }), SP_JSX.jsx("span", { children: text.title })] }) }) }));
 }
 
 // Eternal Core: Jarvis's push-to-talk and screen-helper flow in Core's plugin (docs/eternal/JARVIS.md). The combos
@@ -70052,7 +69777,8 @@ const noSubscribe = () => () => { };
 const alwaysOff = () => false;
 function CoreTitle() {
     const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting?.subscribe ?? noSubscribe, coreUiSetting?.get ?? alwaysOff, coreUiSetting?.get ?? alwaysOff);
-    return on ? SP_JSX.jsx("span", { style: { display: "block", lineHeight: "36px", fontSize: 20, fontWeight: 600, color: "#FFFFFF" }, children: "Core" }) : playhubWordmarkImage;
+    // 3.3.11 (the QAMCore board): the Core ring, then "Core".
+    return on ? SP_JSX.jsxs("span", { style: { display: "flex", alignItems: "center", gap: 12, lineHeight: "36px", fontSize: 20, fontWeight: 600, color: "#FFFFFF" }, children: [SP_JSX.jsx("span", { "aria-hidden": "true", style: { display: "inline-flex", fontSize: 26, color: CORE.crimson }, children: SP_JSX.jsx(PlayhubIcon, {}) }), "Core"] }) : playhubWordmarkImage;
 }
 const playhubTitle = SP_JSX.jsx(CoreTitle, {});
 function ModeButtonLabel({ mode }) {

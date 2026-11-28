@@ -62,8 +62,8 @@ test('unmount and invalid GPU response never install unconfirmed state',async()=
  const g=fixture();g.onRead(async()=>({...snapshot(true),gpu:false}));await g.load();assert.equal(g.view().displayed.rsr.enabled,false);assert.equal(g.view().unknown,true);
 });
 test('actual AMD controls keep their section and all become readonly for unknown readback',()=>{
- const block=text.slice(text.indexOf('{caps?.amd_radeon && amd?.available && section('),text.indexOf('{caps?.lossless && section('));
- const controls=[];function scan(n){if(ts.isJsxSelfClosingElement(n)&&['ToggleField','QuickSlider'].includes(n.tagName.getText(ast))&&n.pos>=text.indexOf('{caps?.amd_radeon && amd?.available && section(')&&n.end<=text.indexOf('{caps?.lossless && section('))controls.push(n);ts.forEachChild(n,scan)}scan(ast);
+ const block=text.slice(text.indexOf('caps?.amd_radeon && amd?.available && section('),text.indexOf('caps?.lossless && section('));
+ const controls=[];function scan(n){if(ts.isJsxSelfClosingElement(n)&&['ToggleField','QuickSlider'].includes(n.tagName.getText(ast))&&n.pos>=text.indexOf('caps?.amd_radeon && amd?.available && section(')&&n.end<=text.indexOf('caps?.lossless && section('))controls.push(n);ts.forEachChild(n,scan)}scan(ast);
  assert.ok(controls.length>=15);for(const n of controls)assert.ok(n.attributes.properties.some(p=>p.name?.getText(ast)==='disabled'&&p.initializer?.expression?.getText(ast)==='amdReadbackUnknown'));
  assert.match(block,/amdPending/);assert.match(block,/amdReadbackUnknown/);assert.match(block,/loadAmd/);assert.match(block,/controlLocale\(locale\)\.retry/);
 });

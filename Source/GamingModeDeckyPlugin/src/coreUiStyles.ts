@@ -575,6 +575,11 @@ function rules(mark: string | undefined): Rule[] {
       // the TV), so the reversed row put the rail off screen. coreQamRail.ts measures the visible width and the Menu
       // takes exactly that: the rail sits at the right edge of what the user sees.
       `${ROOT} ${s("quickaccess", "Menu")}[${CORE_QAM_VISIBLE_ATTRIBUTE}]{${imp({ width: `var(${CORE_QAM_VISIBLE_VAR})`, "max-width": `var(${CORE_QAM_VISIBLE_VAR})`, "min-width": "0", "box-sizing": "border-box", overflow: "hidden" })}}` },
+    { id: "panels-full-height", needs: [], needsAny: [["quickaccess", "ViewPlaceholder"], ["mainmenu", "ViewPlaceholder"]], css: s => {
+      const holders = [s("quickaccess", "ViewPlaceholder"), s("mainmenu", "ViewPlaceholder")].filter(Boolean).map(sel => `${ROOT} ${sel}`);
+      return `${holders.join(",")}{${imp({ top: "0", bottom: "0", "max-height": "none" })}}` +
+        (s("quickaccess", "Menu") ? `${ROOT} ${s("quickaccess", "Menu")}[${CORE_QAM_FULL_ATTRIBUTE}]{${imp({ "padding-top": `${CORE_PANEL_SAFE_TOP}px`, "box-sizing": "border-box" })}}` : "");
+    } },
     // The open tab: gunmetal, never Steam's grey-blue gradient (TV photo, 3.3.3). Every way Steam may mark it is in the
     // selector table (qamTabSelected).
     // 3.3.10: the fill is the tab's own box (48 x 64, square); any fill Steam draws in a pseudo-element goes.
@@ -867,7 +872,7 @@ function rules(mark: string | undefined): Rule[] {
     } },
     // The Collector's screen two: tabs without Steam's focus box (the crimson underline marks the open tab), gunmetal
     // cards.
-    { id: "rom-screen-two", needs: [], css: () => {
+    { id: "rom-screen-two", needs: [["appdetails", "ActionRow"]], css: () => {
       const view = `${ROOT} .romm-game-view`;
       const tab = `${view} .romm-tab.romm-tab`;
       return `${tab},${tab}.gpfocus,${tab}:focus,${tab}:focus-visible{${imp({ outline: "none", "outline-offset": "0", border: "0", filter: "none", animation: "none", "border-radius": SQUARE })}}` +
@@ -1002,6 +1007,12 @@ export const CORE_RAIL_ICON_PX = 24;
 // 3.3.11: the measured visible width of the Quick Access panel (coreQamRail.ts, measureQamVisible).
 export const CORE_QAM_VISIBLE_ATTRIBUTE = "data-core-qam-visible";
 export const CORE_QAM_VISIBLE_VAR = "--core-qam-visible";
+// 3.3.11: the Steam menu and Quick Access fill the screen top to bottom. Steam lays each popup window over its
+// ViewPlaceholder in the main window, which it inset by the top bar and the footer (top 40px, bottom 40px on the TV);
+// Core sets the placeholder to the full height. A Quick Access window that came out full height (coreUi.ts, sizeQam)
+// gets CORE_PANEL_SAFE_TOP of room at its top.
+export const CORE_QAM_FULL_ATTRIBUTE = "data-core-qam-full";
+export const CORE_PANEL_SAFE_TOP = 40;
 // 3.3.9: Home after Art Hero with the user's options: the art fades out over its last 12%, the carousel 50vh down in a
 // 70vh row (carousel height 5), the focused game's name 4em above its capsule (font height -4) at 22px (larger).
 // 3.3.10: carouselHeight is gone: the row is out of the flow at carouselTop and sized by Steam (its box ran past screen

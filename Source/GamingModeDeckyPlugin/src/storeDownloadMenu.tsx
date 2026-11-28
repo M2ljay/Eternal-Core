@@ -8,7 +8,7 @@ const { PanelSection, PanelSectionRow, DropdownItem, ConfirmModal, showModal } =
 const danger = `.ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) {
 background:${CORE.crimson}!important;color:${CORE.white}!important}
 .ph-store-download-cancel:is(:hover,:focus-visible,:focus-within,.gpfocus,.gpfocuswithin,[aria-selected=true]) * {color:inherit!important}`;
-const pendingStates = new Set(["queued", "blockedSteam", "starting", "downloading", "pausing", "pausedByUser", "pausedBySteam", "installing", "verifying", "canceling", "interrupted", "externalHandoff"]);
+export const pendingStates = new Set(["queued", "blockedSteam", "starting", "downloading", "pausing", "pausedByUser", "pausedBySteam", "installing", "verifying", "canceling", "interrupted", "externalHandoff"]);
 type JobAction = "pause" | "resume" | "cancel" | "downloadNow";
 const finiteCount = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value) && value >= 0;
 function transferBytes(value: number, locale: string) {
@@ -71,6 +71,10 @@ export function StoreDownloadMenu({ job, locale }: { job: StoreJob; locale: stri
       if (option.data === "cancel") confirmStoreDownloadCancel(job, locale, () => void run("cancel"));
       else void run(option.data);
     }} />;
+}
+// 3.3.11: whether a store download runs (Quick Access > Core shows its Downloads section only then).
+export function useStoreDownloadsRunning(): boolean {
+  return React.useSyncExternalStore(subscribeStoreLibrary, () => readStoreDownloads().some(job => pendingStates.has(job.state)));
 }
 export function StoreDownloadsQam({ locale }: { locale: string }) {
   const jobs = React.useSyncExternalStore(subscribeStoreLibrary, readStoreDownloads).filter(job => pendingStates.has(job.state));

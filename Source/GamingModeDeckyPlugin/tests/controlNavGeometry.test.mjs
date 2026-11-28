@@ -39,12 +39,10 @@ function fixture(source, visible, active, width) {
   return `<style>body{margin:0;background:#171a21;color:white}button:hover{transform:scale(1.1);padding:8px}button:focus{border-width:4px}${css}</style><div class="ph-controls" style="width:${width}px">${html(exports.nav)}</div>`;
 }
 
-test('Settings shares the actual native tab grid; editor remains independently scoped', () => {
-  const markup = fixture(source, ids, 'home', 300);
-  assert.match(markup, /grid-template-columns:minmax\(0,1fr\);align-items:center/);
-  assert.doesNotMatch(markup, /grid-template-columns:minmax\(0,1fr\) 32px/);
-  assert.ok(markup.indexOf('aria-label="settings"') < markup.lastIndexOf('</button></div></div>'));
-  assert.match(source, /\.ph-controls \.ph-tab-editor\{display:grid;grid-auto-flow:column/);
+// 3.3.11 (the QAMCore board): one list; the inner icon tab row and its gear are gone.
+test('Quick Access > Core has no inner tab row and no gear', () => {
+  assert.doesNotMatch(source, /ph-control-tabs|ph-tab-editor|setCustomizing\(true\)/);
+  assert.match(source, /className="ph-quick"/);
 });
 
 test('native-width tab tracks stay equal through hiding, selection and hover', {

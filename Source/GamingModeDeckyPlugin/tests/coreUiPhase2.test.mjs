@@ -11,7 +11,7 @@ import ts from "typescript";
 
 const compilerOptions = { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React };
 const local = { "./steamModules": "steamModules.ts", "./coreUiStyles": "coreUiStyles.ts", "./coreUiDom": "coreUiDom.ts", "./coreFullHeight": "coreFullHeight.ts",
-  "./coreArtwork": "coreArtwork.ts", "./coreStarfield": "coreStarfield.ts", "./coreUiSetting": "coreUiSetting.ts", "./coreInputPrompts": "coreInputPrompts.ts", "./coreQamRail": "coreQamRail.ts", "./coreHomePages": "coreHomePages.ts" };
+  "./coreArtwork": "coreArtwork.ts", "./coreStarfield": "coreStarfield.ts", "./coreUiSetting": "coreUiSetting.ts", "./coreInputPrompts": "coreInputPrompts.ts", "./coreQamRail": "coreQamRail.ts", "./coreLabels": "coreLabels.ts", "./coreHomePages": "coreHomePages.ts" };
 const cache = new Map();
 function load(file, globals = {}) {
   if (cache.has(file) && !Object.keys(globals).length) return cache.get(file);
@@ -313,7 +313,8 @@ test("Core Home: registered tabs (Club) in order; the brief, On this day, What's
   assert.match(source, /registerHomeTab\(\{ id: clubHomeTab\.id[^}]*order: HOME_TAB_ORDER\.club[^}]*subscribe: clubHomeTab\.subscribe/, "the Club through the registry");
   assert.doesNotMatch(source, /CoreBriefHero|JarvisBrief|HistoryTabs/, "no brief and no On this day on Home (3.3.8)");
   assert.match(source, /class HomeBoundary/); assert.match(source, /return fallback;/);
-  assert.match(readFileSync(new URL("../src/ControlCenter.tsx", import.meta.url), "utf8"), /<ControlSection id="club".*?TbTrophy.*?><ClubSettings locale=\{locale\} \/><\/ControlSection>/);
+  // 3.3.11: the Club lives on Home only; Quick Access > Core has no Club section.
+  assert.doesNotMatch(readFileSync(new URL("../src/ControlCenter.tsx", import.meta.url), "utf8"), /ClubSettings|id="club"/);
 });
 
 test("Core Home data: console shelves by family, last played, Forge's updates, greetings in 12 languages", () => {

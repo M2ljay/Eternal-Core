@@ -8,6 +8,7 @@ import {getSteamLocale,subscribeSteamLocale,startSteamLocaleObservation} from ".
 import {TbMusic} from "react-icons/tb";
 import {coreSteamMenuEntries,AWESOME_MIX_PLUGIN,type CoreMenuEntry} from "./coreMenuEntries";
 import {corePluginGlyph} from "./corePluginLogos";
+import {coreUiSetting} from "./coreUiSetting";
 export function StoreDigitalMenuIcon(){return <span style={{display:"flex",width:"1em",height:"1em"}}><StoreDigitalStoreIcon/></span>;}
 // Eternal Core: the Awesome Mix entry shows Core's awesome-mix mark (corePluginLogos.ts), single colour like Steam's own
 // menu icons; Steam's music note only if the mark is missing.
@@ -26,14 +27,16 @@ export function syncCoreSteamMenu(current:Map<string,MenuRegistration>,wanted:Co
 export function installStoreDigitalPortal(locale:()=>string=()=>navigator.language){
  const controller=new StoreDigitalController(),stopLocale=startSteamLocaleObservation();
  const menu=new Map<string,MenuRegistration>();
- const register=(entry:CoreMenuEntry)=>registerSteamMenu({...entry,icon:<AwesomeMixMenuIcon/>});
- const refresh=()=>{let state:any;try{state=(window as any).DeckyPluginLoader?.deckyState?.publicState?.();}catch{state=undefined;}syncCoreSteamMenu(menu,coreSteamMenuEntries(state),register);};
+ const register=(entry:CoreMenuEntry)=>registerSteamMenu({...entry,icon:entry.hide?null:<AwesomeMixMenuIcon/>});
+ const refresh=()=>{let state:any,coreUi=false;try{state=(window as any).DeckyPluginLoader?.deckyState?.publicState?.();}catch{state=undefined;}try{coreUi=coreUiSetting.get();}catch{coreUi=false;}syncCoreSteamMenu(menu,coreSteamMenuEntries(state,coreUi),register);};
  refresh();
  const bus=(window as any).DeckyPluginLoader?.deckyState?.eventBus;
  try{bus?.addEventListener?.("update",refresh);}catch{}
+ // 3.3.11: Friends & Chat follows the Core UI switch at once.
+ let unsubscribeCoreUi=()=>{};try{unsubscribeCoreUi=coreUiSetting.subscribe(refresh);}catch{}
  const Route=()=>{const language=React.useSyncExternalStore(subscribeSteamLocale,getSteamLocale);return <StoreDigitalPage controller={controller} locale={language}/>;};
  routerHook.addRoute(STORE_DIGITAL_ROUTE,Route,{exact:true});
  const stopIntent=installStoreDigitalIntentPump(storeDigitalApi.request);
  const timer=setInterval(refresh,5000);
- return()=>{clearInterval(timer);try{bus?.removeEventListener?.("update",refresh);}catch{}stopLocale();stopIntent();syncCoreSteamMenu(menu,[],register);routerHook.removeRoute(STORE_DIGITAL_ROUTE);controller.dispose();};
+ return()=>{clearInterval(timer);try{unsubscribeCoreUi();}catch{}try{bus?.removeEventListener?.("update",refresh);}catch{}stopLocale();stopIntent();syncCoreSteamMenu(menu,[],register);routerHook.removeRoute(STORE_DIGITAL_ROUTE);controller.dispose();};
 }

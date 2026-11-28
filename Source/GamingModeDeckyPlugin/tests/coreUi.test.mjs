@@ -20,7 +20,7 @@ function load(file, stubs = {}, globals = {}) {
     if (name in stubs) return stubs[name];
     const local = { "./steamModules": "steamModules.ts", "./coreUiStyles": "coreUiStyles.ts", "./coreStarfield": "coreStarfield.ts",
       "./coreUiSetting": "coreUiSetting.ts", "./coreMenuEntries": "coreMenuEntries.ts", "./coreUiDom": "coreUiDom.ts",
-      "./coreFullHeight": "coreFullHeight.ts", "./coreArtwork": "coreArtwork.ts", "./coreQamRail": "coreQamRail.ts", "./coreHomePages": "coreHomePages.ts" }[name];
+      "./coreFullHeight": "coreFullHeight.ts", "./coreArtwork": "coreArtwork.ts", "./coreQamRail": "coreQamRail.ts", "./coreLabels": "coreLabels.ts", "./coreHomePages": "coreHomePages.ts" }[name];
     if (local) return load(local);
     return {};
   };
@@ -135,7 +135,8 @@ function checkSheet(sheet) {
   assert.match(css, /_FtBasic\._FtBasic[^{]*\{[^}]*background-color:transparent/, "clear button-hint bar");
   assert.match(css, /url\("http:\/\/127\.0\.0\.1:1337\/plugins\/Playhub\/assets\/w\.png"\) 24px center \/ 44px 44px/, "the mark on the Steam menu, 44px, top left");
   // Context menus: the Context board, with the Steam menu's left bar for focus and crimson danger text.
-  assert.match(css, /_CmContents\._CmContents\{[^}]*background-color:#000000[^}]*inset 0 0 0 1px #1A1D21[^}]*border-radius:var\(--core-radius-float, 10px\)/, "black panel, hairline edge, the float corner token");
+  // 3.3.11 (TV: the menu showed no panel): solid gunmetal, no outline, the float corner token.
+  assert.match(css, /_CmContents\._CmContents\{[^}]*background-color:#1A1D21[^}]*box-shadow:none[^}]*outline:none[^}]*border-radius:var\(--core-radius-float, 10px\)/, "gunmetal panel, no outline, the float corner token");
   assert.match(css, /_CmItem\._CmItem\{[^}]*min-height:48px[^}]*padding:0 22px[^}]*font-size:16px[^}]*color:#C9D1D9/, "board rows, steel text");
   assert.match(css, /_CmItem\._CmItem\._CmFocused\._CmFocused,[^{]*\{[^}]*background-color:#1A1D21[^}]*inset 3px 0 0 #D7263D/, "focused: gunmetal and crimson left bar");
   assert.match(css, /_CmItem\._CmItem\._CmSub\._CmSub\._CmActive\._CmActive/, "an open submenu's item keeps the marker");
@@ -156,7 +157,9 @@ function checkSheet(sheet) {
   // 3.3.9's surfaces (the game page, Settings, Downloads...) are not in these fake maps; tests/coreUiMatchers.test.mjs
   // builds them from the live key lists.
   const later = new Set(["game-hero", "game-playbar", "game-cloud", "game-screen-two", "game-sections", "settings-pages", "toggles", "downloads-page",
-    "download-bar", "ingame-menu", "overlay-configurator", "search-pages", "settings-text"]);
+    "download-bar", "ingame-menu", "overlay-configurator", "search-pages", "settings-text",
+    // 3.3.11's game view (built in tests/coreUiMatchers.test.mjs from the live key lists).
+    "game-view-clear", "game-info-cards", "game-actions", "game-still-art", "rom-screen-two", "panels-full-height"]);
   assert.deepEqual(JSON.parse(JSON.stringify(sheet.skipped)).filter(id => !later.has(id)), []);
 }
 
@@ -513,7 +516,7 @@ test("plugin hosts: The Collector's page is a page host by its fixed selector, n
     fullHeight: false, panel: false, page: true, source: "plugin", viewport: true });
   // Its canvas: behind the content, the visible height only, in the shared host rules.
   assert.match(sheet.css, /html\[data-core-ui\] \.romm-core-page\[data-core-ui-host\] > canvas\[data-core-ui-stars\][,{]/);
-  assert.match(sheet.css, /html\[data-core-ui\] \.romm-core-page\[data-core-ui-host\] > canvas\[data-core-ui-stars\]\{height:var\(--core-ui-page-height, 0px\) !important;max-height:100% !important\}/);
+  assert.match(sheet.css, /html\[data-core-ui\] \.romm-core-page\[data-core-ui-host\] > canvas\[data-core-ui-stars\],html\[data-core-ui\] \.awesome-mix-core-page\[data-core-ui-host\] > canvas\[data-core-ui-stars\]\{height:var\(--core-ui-page-height, 0px\) !important;max-height:100% !important\}/);
   // 3.3.8: a canvas without data-core-ui-live (its surface off screen, or no live surface) is never drawn.
   assert.match(sheet.css, /html\[data-core-ui\] canvas\[data-core-ui-stars\]:not\(\[data-core-ui-live\]\)\{display:none !important\}/);
   assert.match(sheet.css, /\.romm-core-page\.romm-core-page:not\(#core-ui-boost\)\[data-core-ui-host="nested"\]/);

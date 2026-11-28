@@ -40,15 +40,16 @@ test("pages: L1 and R1 switch Home and Consoles without wrapping; nothing else d
   pages.setHomePage("home"); stop();
 });
 
-test("screen one's row at the TV (1348 x 758) is the board's (1920 x 1080) scaled: 29% tall, portrait games, landscape consoles", () => {
+test("3.3.11: screen one's row at the TV (1348 x 758): 27% tall, above screen two's tab names, portrait games, landscape consoles", () => {
   const tv = plain(pages.rowSizes(1348, 758));
-  assert.deepEqual(tv.gameFocused, { width: 146, height: 219 });
-  assert.deepEqual(tv.game, { width: 127, height: 191 });
-  assert.deepEqual(tv.consoleFocused, { width: 281, height: 158 });
-  assert.deepEqual(tv.console, { width: 238, height: 134 });
-  assert.equal(tv.bottom, 62, "just above the 42 px footer");
+  assert.deepEqual(tv.gameFocused, { width: 137, height: 205 });
+  assert.deepEqual(tv.game, { width: 119, height: 178 });
+  assert.deepEqual(tv.consoleFocused, { width: 263, height: 148 });
+  assert.deepEqual(tv.console, { width: 222, height: 125 });
+  assert.equal(tv.bottom, 112, "above the 42 px footer and the 58 px tab names");
+  assert.equal(pages.HOME_SCREEN_CUT_PX, 100);
   const board = plain(pages.rowSizes(1920, 1080));
-  assert.deepEqual(board.gameFocused, { width: 208, height: 312 }); assert.deepEqual(board.game, { width: 181, height: 272 });
+  assert.deepEqual(board.gameFocused, { width: 195, height: 292 }); assert.deepEqual(board.game, { width: 169, height: 254 });
   assert.ok(tv.gameFocused.height + tv.bottom + pages.HOME_ROW.liftPx < 758, "the lifted tile stays on screen");
 });
 

@@ -53,7 +53,8 @@ test("A opens the console's collection; board 1's measures", () => {
   assert.deepEqual({ ...consoles.CONSOLE_TILE }, { across: 8, width: 206, height: 150, gap: 20, toneBar: 4 });
   // 3.3.10: the Consoles page (coreHomeScreen.tsx): A on a console opens its collection.
   const source = readFileSync(new URL("../src/coreHomeScreen.tsx", import.meta.url), "utf8");
-  assert.match(source, /const open = \(\) => \{ try \{ Navigation\?\.Navigate\?\.\(collectionRoute\(card\.id\)\)/);
+  assert.match(source, /const open = \(\) => openCollection\(card\.id\);/);
+  assert.match(source, /const openCollection = \(id: string\) => \{ lookUpCollectionRoutes\(\); try \{ Navigation\?\.Navigate\?\.\(collectionRoute\(id\)\)/);
   for (const file of ["coreHomeScreen.tsx", "coreHome.tsx", "coreConsolePack.ts", "coreConsoles.ts"]) {
     assert.doesNotMatch(readFileSync(new URL(`../src/${file}`, import.meta.url), "utf8"), /colorgrade[^"]*\.png/i, `${file}: no pack file is named in the source`);
   }
@@ -61,6 +62,24 @@ test("A opens the console's collection; board 1's measures", () => {
 
 // 3.3.10 (the approved board, HomeConsolesPage): one card per console, most recently played first; families (The
 // Collector's family collections) never appear; PS1 is "PlayStation 1".
+// 3.3.11 (TV: A on a console opened All Games): Steam's own route builder, when one is found, makes the route.
+test("3.3.11: the collection route comes from Steam's builder; only collection-path builders are called", () => {
+  const steam = id => `/library/collection/${id}/`;
+  const other = id => `/routes/collection/${id}`;
+  assert.equal(consoles.collectionRouteFrom([() => 42, () => "https://x/collection/a", other, steam], "uc-1"), "/library/collection/uc-1/", "a Library route first");
+  assert.equal(consoles.collectionRouteFrom([other], "uc-1"), "/routes/collection/uc-1");
+  assert.equal(consoles.collectionRouteFrom([id => "/library/app/1", () => { throw new Error("x"); }], "uc-1"), undefined);
+  assert.equal(consoles.looksLikeCollectionRoute(e => "/library/collection/" + e), true);
+  assert.equal(consoles.looksLikeCollectionRoute(e => `/library/collection/${e}`), true);
+  assert.equal(consoles.looksLikeCollectionRoute((a, b) => "/library/collection/" + a), false, "one argument only");
+  assert.equal(consoles.looksLikeCollectionRoute(e => { window.x = 1; return "/collection/" + e; }), false, "nothing that touches the page");
+  assert.equal(consoles.looksLikeCollectionRoute(e => "/library/app/" + e), false);
+  consoles.setCollectionRoutes([steam]);
+  assert.equal(consoles.collectionRoute("uc-2"), "/library/collection/uc-2/");
+  consoles.setCollectionRoutes([]);
+  assert.equal(consoles.collectionRoute("uc-2"), "/library/collection/uc-2");
+});
+
 test("3.3.10 Consoles page: most recently played first, no family collections, PlayStation 1, games kept for screen two", () => {
   const app = (appid, last) => ({ appid, display_name: `Game ${appid}`, rt_last_time_played: last });
   const collections = [

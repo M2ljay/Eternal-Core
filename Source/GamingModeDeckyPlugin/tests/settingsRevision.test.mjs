@@ -24,8 +24,9 @@ test('audio and video route separately; energy profile and RTSS are absent from 
 });
 test('settings hide bumper hints and restore/replay use the same native button style',()=>{
  const source=read('ControlCenter.tsx');
- assert.match(source,/actionDescriptionMap=\{customizing \? \{\} :/);
- assert.equal((source.match(/className="ph-settings-action"/g)||[]).length,2);
+ // 3.3.11: no tab switching on the bumpers any more (one list); replay keeps the native button style.
+ assert.doesNotMatch(source,/BUMPER_LEFT|BUMPER_RIGHT/);
+ assert.equal((source.match(/className="ph-settings-action"/g)||[]).length,1);
  assert.ok(!source.includes('open_windows_update'));
  assert.ok(!source.includes('<PowerStatus'));
  assert.ok(!source.includes('font-size:13px!important'));

@@ -6,7 +6,7 @@
 //
 // Pure on purpose (no imports): tests/coreUi.test.mjs checks the swap with and without the plugin.
 
-export type CoreMenuEntry = { id: string; label: string; route: string; order: number };
+export type CoreMenuEntry = { id: string; label: string; route: string; order: number; hide?: (item: any) => boolean };
 
 export const AWESOME_MIX_PLUGIN = "Awesome Mix";
 // Registered by Awesome Mix itself (Eternal-Mix src/index.tsx, YOUTUBE_MUSIC_BIG_PICTURE_ROUTE).
@@ -33,6 +33,24 @@ export function awesomeMixInstalled(state: DeckyPublicState): boolean {
   } catch { return false; }
 }
 
-export function coreSteamMenuEntries(state: DeckyPublicState): CoreMenuEntry[] {
-  return awesomeMixInstalled(state) ? [AWESOME_MIX_ENTRY] : [];
+// `coreUi`: Core UI is on, so Steam's Friends & Chat entry is left out (HIDE_FRIENDS_ENTRY, below).
+export function coreSteamMenuEntries(state: DeckyPublicState, coreUi = false): CoreMenuEntry[] {
+  return [...(awesomeMixInstalled(state) ? [AWESOME_MIX_ENTRY] : []), ...(coreUi ? [HIDE_FRIENDS_ENTRY] : [])];
 }
+
+// 3.3.11: Steam's "Friends & Chat" entry is hidden from the Steam menu while Core UI is on. Told by what Steam gives the
+// entry, never by its (localised) label: its route or its React key names friends or chat. The entry is left out of
+// the menu's item list before React renders it (StoreDigitalMenuRegistry.ts), so focus runs from the entry above it to
+// the one below with no gap. An entry that matches neither stays.
+export const HIDDEN_MENU_ITEM = /(^|[/:_-])(friends?|chat)([/:_-]|$)/i;
+export function isFriendsMenuItem(item: any): boolean {
+  try {
+    const route = String(item?.props?.route ?? "");
+    const key = String(item?.key ?? "");
+    if (key.startsWith("necro-menu:")) return false;
+    return HIDDEN_MENU_ITEM.test(route) || HIDDEN_MENU_ITEM.test(key);
+  } catch { return false; }
+}
+
+// The registry entry that adds no item and leaves Friends & Chat out.
+export const HIDE_FRIENDS_ENTRY: CoreMenuEntry = { id: "core-hide-friends", label: "", route: "", order: 0, hide: isFriendsMenuItem };

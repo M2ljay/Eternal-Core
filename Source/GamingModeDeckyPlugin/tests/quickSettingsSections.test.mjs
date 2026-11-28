@@ -110,7 +110,8 @@ test('malformed saved expansion is closed, known IDs are deduplicated, and legac
   const prefs = state.normalizeControlPreferences({ expandedSections: ['mixer', 'power', 'mixer', {}, '__proto__', 'news:new'], collapsed: ['radeon'] });
   assert.deepEqual(Array.from(prefs.expandedSections), ['mixer', 'power']);
   assert.deepEqual(Array.from(prefs.collapsed), ['radeon']);
-  assert.deepEqual(Array.from(state.CONTROL_SECTION_IDS), ["topbar-date", "device", "device/details", "news", "daily-history", "measurement", "display", "mixer", "devices", "power", "game", "shaders", "nvidia", "radeon", "lossless", "agent"]);
+  assert.deepEqual(Array.from(state.CONTROL_SECTION_IDS), ["topbar-date", "device", "device/details", "news", "daily-history", "measurement", "display", "mixer", "devices", "power", "game", "shaders", "nvidia", "radeon", "lossless", "agent",
+    "group/sound", "group/display", "group/controller", "group/downloads", "group/look", "group/system"]);
   assert.deepEqual(Array.from(state.normalizeExpandedSections(["nvidia", "nvidia", "unknown"])), ["nvidia"]);
   assert.deepEqual(Array.from(state.normalizeExpandedSections([...state.CONTROL_SECTION_IDS, ...state.CONTROL_SECTION_IDS])), Array.from(state.CONTROL_SECTION_IDS));
   assert.deepEqual(Array.from(state.normalizeExpandedSections([...Array(64).fill('unknown'), 'power'])), []);
@@ -152,8 +153,11 @@ const context = { React: { createElement, Fragment: 'Fragment' },
 };
 for (const name of source.match(/\b(?:Fa[A-Z]\w+|on[A-Z]\w+|queueAmdWrite)\b/g)) context[name] ??= () => {};
 vm.createContext(context);
-vm.runInContext(compile(`function render(page, expanded = [], gamingMode = false, gameAppId = 123) {
-  const groups = quickSettingsGroups(locale); ${section.getText(ast)} ${surface.getText(ast)}
+// 3.3.11: the sections are named parts between `section` and the return (Quick Access > Core lays them out as one list).
+const body = component.body.statements.slice(component.body.statements.indexOf(section), component.body.statements.indexOf(surface) + 1)
+  .map(node => node.getText(ast)).join("\n");
+vm.runInContext(compile(`function render(page, expanded = [], gamingMode = false, gameAppId = 123, layout = undefined) {
+  const groups = quickSettingsGroups(locale); const core = page === "core"; ${body}
 }`), context);
 function nodes(value, found = []) {
   if (value && typeof value === 'object') { found.push(value); for (const child of value.children ?? []) nodes(child, found); }
