@@ -61,9 +61,14 @@ export function loadClub(force = false): Promise<void> {
 
 // Starts one background load the first time anything asks; later calls just read the state.
 let started = false;
+// 3.3.8: and keeps the feed fresh in the background, hourly (the backend refreshes only when its copy is an hour old
+// and its politeness rules allow; otherwise the call is answered from its cache).
+export const CLUB_BACKGROUND_MS = 60 * 60_000;
+let schedule: any;
 export function ensureClubLoaded(): Promise<void> | null {
   if (started) return inflight;
   started = true;
+  try { schedule ??= setInterval(() => void loadClub(false), CLUB_BACKGROUND_MS); } catch { schedule = undefined; }
   return loadClub(false);
 }
 

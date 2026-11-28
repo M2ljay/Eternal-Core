@@ -12,7 +12,7 @@
 // Nothing here throws into Steam: a lookup that fails leaves that part of Steam as it was.
 
 import {
-  buildCoreUiCss, findCoreUiMapsDetailed, CORE_UI_ATTRIBUTE, CORE_UI_HOST_ATTRIBUTE, CORE_UI_ORB_ID, CORE_UI_STARS_ATTRIBUTE, CORE_UI_STYLE_ID,
+  CORE_UI_LIVE_ATTRIBUTE, buildCoreUiCss, findCoreUiMapsDetailed, CORE_UI_ATTRIBUTE, CORE_UI_HOST_ATTRIBUTE, CORE_UI_ORB_ID, CORE_UI_STARS_ATTRIBUTE, CORE_UI_STYLE_ID,
   CORE_UI_CHROME_ATTRIBUTE, CORE_UI_CLEAR_ATTRIBUTE, CORE_MENU_LOGO_BAND,
   type CoreUiHost, type CoreUiSheet,
 } from "./coreUiStyles";
@@ -76,6 +76,7 @@ export function createCoreUi(deps: CoreUiDeps) {
   const edits = new InlineEdits();
   const fullHeight = createFullHeight(edits);
   const chromes = new Set<Element>();
+  const observers = new Map<Document, { disconnect(): void }>();
   const diagnostics: CoreUiDiagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {}, restyled: 0, hosts: {} };
 
   function orbState(): string {
@@ -151,8 +152,67 @@ export function createCoreUi(deps: CoreUiDeps) {
       const check = (element as any).checkVisibility;
       if (typeof check === "function" && check.call(element, { checkOpacity: true, checkVisibilityCSS: true, opacityProperty: true, visibilityProperty: true }) === false) return false;
       const style = view?.getComputedStyle?.(element);
-      return !style || (style.visibility !== "hidden" && style.display !== "none" && String(style.opacity ?? "1") !== "0");
+      if (style && (style.visibility === "hidden" || style.display === "none" || String(style.opacity ?? "1") === "0")) return false;
+      // 3.3.8: a plugin's page counts only while its plugin paints it (CORE-UI.md, "Hosts from other plugins": the
+      // plugin paints its own page black). A page left behind after its plugin's stylesheet went is not a surface.
+      if (surface.host.source === "plugin" && style && transparent(style.backgroundColor)) return false;
+      return true;
     } catch { return false; }
+  }
+
+  function transparent(colour: unknown): boolean {
+    if (typeof colour !== "string" || !colour) return false;
+    const value = colour.replace(/\s+/g, "").toLowerCase();
+    return value === "transparent" || /^rgba\(\d+,\d+,\d+,0(\.0*)?\)$/.test(value);
+  }
+
+  // 3.3.8 (TV: a black, starry band stayed over every page after a ROM page closed): a canvas is visible only while
+  // its surface is on screen (data-core-ui-live; without it the stylesheet hides the canvas), and its host is always its
+  // containing block, so a canvas can never outlive or reach outside the element it belongs to.
+  function setLive(surface: Surface, live: boolean) {
+    try {
+      if (live) { if (surface.canvas.getAttribute(CORE_UI_LIVE_ATTRIBUTE) !== "1") surface.canvas.setAttribute(CORE_UI_LIVE_ATTRIBUTE, "1"); }
+      else if (surface.canvas.getAttribute(CORE_UI_LIVE_ATTRIBUTE) !== null) surface.canvas.removeAttribute(CORE_UI_LIVE_ATTRIBUTE);
+    } catch { /* Gone with its window. */ }
+  }
+
+  function containingBlock(surface: Surface) {
+    try {
+      if (surface.doc.defaultView?.getComputedStyle?.(surface.element).position === "static") {
+        if (surface.position === undefined) surface.position = surface.element.style.position;
+        surface.element.style.position = "relative";
+      }
+    } catch { /* Left as it is. */ }
+  }
+
+  // Every surface whose element left the page, or whose canvas left its element, is released; every Starfield canvas
+  // that belongs to no live surface is removed; a surface off screen has its canvas hidden.
+  function sweep(docs?: Document[]) {
+    for (const surface of [...surfaces.values()]) {
+      if (!surface.element.isConnected || surface.canvas.parentElement !== surface.element || (docs && !docs.includes(surface.doc))) { release(surface); continue; }
+      if (!shown(surface)) { setLive(surface, false); surface.still = false; }
+    }
+    const known = new Set<any>([...surfaces.values()].map(surface => surface.canvas));
+    for (const doc of docs ?? [...new Set([...surfaces.values()].map(surface => surface.doc))]) {
+      let stray: Element[] = [];
+      try { stray = Array.from(doc.querySelectorAll(`[${CORE_UI_STARS_ATTRIBUTE}]`)); } catch { stray = []; }
+      for (const canvas of stray) if (String(canvas.tagName).toLowerCase() === "canvas" && !known.has(canvas)) { try { canvas.remove(); } catch { /* Gone already. */ } }
+    }
+  }
+
+  // Removals (a route change, a page closing) are swept at once instead of on the next one-second sync.
+  function observe(doc: Document) {
+    if (observers.has(doc)) return;
+    const Observer = (doc.defaultView as any)?.MutationObserver;
+    if (typeof Observer !== "function" || !doc.body) return;
+    try {
+      const observer = new Observer((records: any[]) => {
+        if (!surfaces.size) return;
+        if (records.some(record => record?.removedNodes?.length)) sweep();
+      });
+      observer.observe(doc.body, { childList: true, subtree: true });
+      observers.set(doc, observer);
+    } catch { /* The one-second sync still sweeps. */ }
   }
 
   // Where the canvas goes: at the surface's scroll position, and for the Steam menu and Quick Access from the
@@ -194,6 +254,7 @@ export function createCoreUi(deps: CoreUiDeps) {
 
   function paint(surface: Surface) {
     place(surface);
+    setLive(surface, true);
     const canvas = surface.canvas;
     const width = Math.max(0, Math.round(surface.element.clientWidth));
     const height = surface.host.page ? surface.pageHeight : Math.max(0, Math.round(surface.element.clientHeight)) + surface.top + surface.bottom;
@@ -213,7 +274,7 @@ export function createCoreUi(deps: CoreUiDeps) {
     try { running = deps.running(); } catch { running = false; }
     let moving = false, advanced = false, visible = 0, view: any, still: CoreUiDiagnostics["state"] | undefined;
     for (const surface of surfaces.values()) {
-      if (!shown(surface)) { surface.still = false; continue; }
+      if (!shown(surface)) { surface.still = false; setLive(surface, false); continue; }
       visible++;
       const held = running ? "still-game" : reduced(surface.doc) ? "still-reduced" : undefined;
       if (held) {
@@ -247,6 +308,7 @@ export function createCoreUi(deps: CoreUiDeps) {
   function release(surface: Surface) {
     try { fullHeight.release(surface.element); } catch { /* Already gone with its window. */ }
     try { surface.canvas.remove(); } catch { /* Already gone with its window. */ }
+    try { surface.canvas.removeAttribute(CORE_UI_LIVE_ATTRIBUTE); } catch { /* Already gone with its window. */ }
     try {
       surface.element.removeAttribute(CORE_UI_HOST_ATTRIBUTE);
       if (surface.position !== undefined) surface.element.style.position = surface.position;
@@ -284,12 +346,11 @@ export function createCoreUi(deps: CoreUiDeps) {
           canvas.setAttribute("aria-hidden", "true");
           element.insertBefore(canvas, element.firstChild);
           surface = { element, canvas, host, doc, still: false, top: -1, bottom: -1, scroll: -1, pageHeight: -1 };
-          // The canvas sits inside the surface: a surface Steam leaves static becomes the containing block.
-          try {
-            if (doc.defaultView?.getComputedStyle?.(element).position === "static") { surface.position = element.style.position; element.style.position = "relative"; }
-          } catch { /* Left as it is. */ }
           surfaces.set(element, surface);
         }
+        // The canvas sits inside the surface: a surface left static becomes the containing block, checked on every
+        // pass (a plugin's stylesheet that made it relative can go while the element stays).
+        containingBlock(surface);
         if (element.getAttribute(CORE_UI_HOST_ATTRIBUTE) !== "1") element.setAttribute(CORE_UI_HOST_ATTRIBUTE, "1");
         const view = doc.defaultView as unknown as View | null;
         if (view && host.fullHeight && shown(surface)) {
@@ -345,7 +406,8 @@ export function createCoreUi(deps: CoreUiDeps) {
     let docs: Document[] = [];
     try { docs = deps.documents().filter(doc => !!doc?.head && !!doc.documentElement); } catch { docs = []; }
     for (const [doc, style] of styles) if (!docs.includes(doc)) { try { style.remove(); } catch {} styles.delete(doc); }
-    for (const surface of [...surfaces.values()]) if (!docs.includes(surface.doc) || !surface.element.isConnected) release(surface);
+    sweep(docs);
+    for (const [doc, observer] of observers) if (!docs.includes(doc)) { try { observer.disconnect(); } catch {} observers.delete(doc); }
     for (const doc of docs) {
       try {
         let style = styles.get(doc);
@@ -361,6 +423,7 @@ export function createCoreUi(deps: CoreUiDeps) {
         if (laterStylesheet(style)) { doc.head.appendChild(style); diagnostics.restyled++; }
         if (doc.documentElement.getAttribute(CORE_UI_ATTRIBUTE) !== "1") doc.documentElement.setAttribute(CORE_UI_ATTRIBUTE, "1");
         attach(doc, current.hosts);
+        observe(doc);
         const dom = current.dom ?? {};
         tagChrome(doc, dom);
         reserveLogo(doc, dom);
@@ -368,6 +431,7 @@ export function createCoreUi(deps: CoreUiDeps) {
         placeOrb(doc, current.clock);
       } catch { /* A Steam popup may close while it is being styled. */ }
     }
+    sweep(docs);
     const counts: Record<string, number> = {};
     for (const surface of surfaces.values()) counts[surface.host.id] = (counts[surface.host.id] ?? 0) + 1;
     diagnostics.hosts = counts;
@@ -389,6 +453,8 @@ export function createCoreUi(deps: CoreUiDeps) {
     orbs.clear();
     last = undefined;
     for (const surface of [...surfaces.values()]) release(surface);
+    for (const observer of observers.values()) { try { observer.disconnect(); } catch {} }
+    observers.clear();
     try { fullHeight.releaseAll(); } catch {}
     edits.restoreAll();
     for (const element of chromes) { try { element.removeAttribute(CORE_UI_CHROME_ATTRIBUTE); } catch {} }

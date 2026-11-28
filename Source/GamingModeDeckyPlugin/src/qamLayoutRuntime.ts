@@ -68,6 +68,7 @@ export function createQamLayoutRuntime(hook: Hook, nativeRender: Hook["render"],
   const changed = () => { if (!stopped) refresh(); };
   refreshers.add(changed);
   return { beforeRender: restore, refreshInventory, getManagedVisibility: () => managedVisibility,
+    protectedIds: () => [...entries.values()].map(entry => entry.id),
     afterRender(tabs: Tab[], visible: boolean) {
       if (stopped) return;
       const state = inventory();
@@ -97,9 +98,17 @@ export function createQamLayoutRuntime(hook: Hook, nativeRender: Hook["render"],
       for (let i=tabs.length-1;i>=0;i--) if(preferences.hidden.includes(keyOf(tabs[i]))) tabs.splice(i,1);
       const rank = new Map(preferences.order.map((key,index)=>[key,index]));
       tabs.sort((a,b)=>(rank.get(keyOf(a)) ?? Number.MAX_SAFE_INTEGER)-(rank.get(keyOf(b)) ?? Number.MAX_SAFE_INTEGER));
-      managedVisibility = new Map(original.filter(tab => String(tab.key) !== "999").map(tab => [String(tab.key), !preferences.hidden.includes(keyOf(tab))]));
-      managedVisibility.set(String(ownId), tabs.some(tab => String(tab.key) === String(ownId)));
-      for (const [name, entry] of entries) managedVisibility.set(String(entry.id), preferences.selected.includes(name) && tabs.some(tab => String(tab.key) === String(entry.id)));
+      // Eternal Core 3.3.8 (TV: Quick Access tabs flickering): the DOM override only ever hides a Steam tab the user hid,
+      // keyed by its native key (the label check is in qamTabVisibility.ts). It comes from the preferences alone, not from
+      // this render's array, so renders of different tab arrays can no longer flip it; Core's own tab, Decky's (999) and
+      // the layout's plugin shortcuts are shown or left out by the React list itself and are never touched.
+      const next = new Map<string, boolean>();
+      for (const hidden of preferences.hidden) {
+        const key = hidden.startsWith("steam:") ? hidden.slice(6) : "";
+        if (!/^\d+$/.test(key) || key === "999" || key === String(ownId) || [...entries.values()].some(entry => String(entry.id) === key)) continue;
+        next.set(key, false);
+      }
+      managedVisibility = next;
       records.add({array:new (globalThis as any).WeakRef(tabs),original,projected:[...tabs]});
     },
     stop() {stopped=true;refreshers.delete(changed);restore();snapshot={...snapshot,active:false};notify();}

@@ -2,7 +2,7 @@
 //
 // Home tab registry (being added on core-ui-2; order: Jarvis brief, Consoles, Club, On this day): register
 // `clubHomeTab`, or use ClubTab + clubAvailable + subscribeClub directly.
-// Jarvis brief: `clubBriefLine()` returns e.g. "Two days left on this week's pick, sir." or null.
+// Today (the brief): `clubBriefLine()` returns e.g. "Two days left on this week's pick." or null.
 
 import { SP_REACT as React } from "../decky";
 import { ClubTab } from "./ClubTab";

@@ -57,6 +57,8 @@ const maps = {
   recentgames: { RecentGamesContainer: "_RgCont", RecentGamesBackgroundContainer: "_RgBg", RecentGamesBackgroundImages: "_RgImgs", RecentGamesHeaderLabel: "_RgLabel" },
   carousel: { CarouselCapsuleBackgroundGlow: "_CaGlow" },
   home: { TabbedContent: "_HmTabbed" },
+  // 3.3.8: the dialog fields as the November 2026 client ships them (no FieldChildren).
+  gamepaddialog: { Field: "_GdField", FieldLabel: "_GdLabel", FieldDescription: "_GdDesc", FieldChildrenInner: "_GdKids" },
 };
 // Lookalikes: a dialog map with a dropdown key, a desktop context menu (no BasicContextMenuHeader).
 const unrelated = [{ GamepadDialogContent: "_gdc", DropDownControlButton: "_wrongDd" }, { Item: "_otherItem", Menu: "_otherMenu" },
@@ -97,7 +99,7 @@ function checkSheet(sheet) {
   // 3.3.4: every class target carries the id-level boost; the checks below read the selectors without it.
   const css = sheet.css.replaceAll(styles.CORE_UI_BOOST, "");
   for (const value of Object.values(maps).flatMap(map => Object.values(map))) {
-    if (["_OpenM", "_RunIcon", "_QamBat", "_CtlPst", "_CtlRow", "_FtLegend", "_HdDl", "_HdClock", "_CmPos", "_QamTab", "_GuAnchor", "_GuOpaque"].includes(value) && !css.includes("." + value)) continue;
+    if (["_OpenM", "_RunIcon", "_QamBat", "_CtlPst", "_CtlRow", "_FtLegend", "_HdDl", "_HdClock", "_CmPos", "_QamTab", "_GuAnchor", "_GuOpaque", "_GdDesc", "_GdKids"].includes(value) && !css.includes("." + value)) continue;
     assert.ok(css.includes("." + value), `class ${value} used`);
   }
   assert.ok(!/mainmenu_|quickaccessmenu_|_23IDiI-F_FxXotrgpY71r8/.test(css), "no readable or hard-coded hashed Steam class names");
@@ -497,7 +499,9 @@ test("plugin hosts: The Collector's page is a page host by its fixed selector, n
     fullHeight: false, panel: false, page: true, source: "plugin", viewport: true });
   // Its canvas: behind the content, the visible height only, in the shared host rules.
   assert.match(sheet.css, /html\[data-core-ui\] \.romm-core-page\[data-core-ui-host\] > canvas\[data-core-ui-stars\][,{]/);
-  assert.match(sheet.css, /html\[data-core-ui\] \.romm-core-page\[data-core-ui-host\] > canvas\[data-core-ui-stars\]\{height:var\(--core-ui-page-height, 100vh\) !important\}/);
+  assert.match(sheet.css, /html\[data-core-ui\] \.romm-core-page\[data-core-ui-host\] > canvas\[data-core-ui-stars\]\{height:var\(--core-ui-page-height, 0px\) !important;max-height:100% !important\}/);
+  // 3.3.8: a canvas without data-core-ui-live (its surface off screen, or no live surface) is never drawn.
+  assert.match(sheet.css, /html\[data-core-ui\] canvas\[data-core-ui-stars\]:not\(\[data-core-ui-live\]\)\{display:none !important\}/);
   assert.match(sheet.css, /\.romm-core-page\.romm-core-page:not\(#core-ui-boost\)\[data-core-ui-host="nested"\]/);
   // Core UI paints nothing else on it: no rule targets the page or Steam's header art for it.
   const other = sheet.css.split("\n").filter(line => !line.startsWith("/* starfield-hosts */"));
@@ -601,5 +605,61 @@ test("plugin hosts: The Collector's page is held still under reduced motion and 
   f.runtime.sync();
   assert.equal(f.runtime.diagnostics().hosts["collector-rom-page"], undefined);
   assert.equal(f.runtime.surfaces().length, 0);
+  f.runtime.dispose();
+});
+
+// 3.3.8 (TV: after closing a ROM page a black, starry band covered the bottom of every page).
+test("plugin hosts: leaving a ROM page for another route leaves no canvas, no live layer and no host attribute behind", () => {
+  const f = collectorFixture();
+  const { doc, page } = f;
+  f.step(0);
+  const canvas = page.firstChild;
+  assert.equal(canvas.getAttribute("data-core-ui-live"), "1", "live while the page is on screen");
+  // Route change: Steam replaces the game page with Downloads.
+  page.parentElement.remove();
+  const downloads = doc.body.appendChild(new Node(doc, "div", ["_DownloadsPage"]));
+  downloads.rect = { left: 0, top: 0, width: 1920, height: 1080 };
+  f.runtime.sync();
+  f.step(40);
+  const left = doc.querySelectorAll("[data-core-ui-stars]").filter(node => node.getAttribute("data-core-ui-stars") === "collector-rom-page");
+  assert.equal(left.length, 0, "no Collector canvas anywhere");
+  assert.equal(doc.querySelectorAll("[data-core-ui-host]").filter(node => node.classes.includes("romm-core-page")).length, 0);
+  assert.equal(f.runtime.diagnostics().hosts["collector-rom-page"], undefined);
+  assert.equal(downloads.children.length, 0, "nothing put on the next page");
+  f.runtime.dispose();
+});
+
+test("plugin hosts: a ROM page kept in the DOM but no longer painted by its plugin has its canvas hidden and never escapes it", () => {
+  const f = collectorFixture();
+  const { doc, page } = f;
+  f.step(0);
+  const canvas = page.firstChild;
+  assert.equal(canvas.getAttribute("data-core-ui-live"), "1");
+  // The Collector's stylesheet goes (page closed) while Steam keeps the element: transparent and static.
+  const computed = doc.defaultView.getComputedStyle;
+  doc.defaultView.getComputedStyle = node => node === page ? { position: "static", visibility: "visible", display: "block", backgroundColor: "rgba(0, 0, 0, 0)" } : computed(node);
+  page.style.position = "";
+  f.runtime.sync();
+  assert.equal(canvas.getAttribute("data-core-ui-live"), null, "hidden: its plugin no longer paints the page");
+  assert.equal(page.style.position, "relative", "the host stays the canvas's containing block");
+  f.step(40);
+  assert.equal(canvas.getAttribute("data-core-ui-live"), null);
+  f.runtime.dispose();
+});
+
+test("every Starfield canvas that belongs to no connected host is removed", () => {
+  const f = collectorFixture();
+  const { doc, page } = f;
+  f.step(0);
+  // A canvas moved out of its host (React re-parenting) and a stray one in the body.
+  const canvas = page.firstChild;
+  doc.body.appendChild(canvas);
+  const stray = doc.body.appendChild(doc.createElement("canvas"));
+  stray.setAttribute("data-core-ui-stars", "collector-rom-page");
+  f.runtime.sync();
+  assert.ok(!doc.body.children.includes(stray), "stray canvas removed");
+  assert.ok(!doc.body.children.includes(canvas), "orphaned canvas removed");
+  const now = page.children.filter(child => child.tagName === "canvas");
+  assert.equal(now.length, 1, "the host gets one fresh canvas");
   f.runtime.dispose();
 });

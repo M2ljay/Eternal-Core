@@ -1,6 +1,6 @@
-// Eternal Core: the Jarvis brief hero's data (docs/eternal/CORE-UI.md, "Phase 2: Home", 3.3.4). Everything the hero
-// shows, assembled from what is handed in (Steam's stores, the Decky weather plugin's top-bar state, the Club, Forge),
-// so the component (CoreBriefHero.tsx) only draws and the tests use fakes. Missing sources leave their part out.
+// Eternal Core: the brief's data (docs/eternal/CORE-UI.md, "Phase 2: Home", 3.3.4). Dormant since 3.3.8: the brief tab
+// and its hero left Home (the user's call); kept, pure and tested, for the next Home pieces that need the same data
+// (Steam's stores, the Decky weather plugin's top-bar state, the Club, Forge). Missing sources leave their part out.
 //
 // Pure (two imports, both pure): tests load it with fakes.
 

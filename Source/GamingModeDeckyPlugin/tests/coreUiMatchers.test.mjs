@@ -132,3 +132,23 @@ test("Home's tab row: one crimson marker on the open tab, no pill, a clear row, 
   // The Library keeps its own rule (black row) untouched.
   assert.ok(sheet.applied.includes("library-tabs"));
 });
+
+test("the top bar's search: found through the header map and structure, gunmetal and square, crimson underline on focus", () => {
+  const sheet = styles.buildCoreUiCss({ ...others, ...real });
+  assert.ok(sheet.applied.includes("search-field"));
+  const part = sheet.css.split("\n").find(line => line.startsWith("/* search-field */"));
+  assert.ok(part.includes("._HdHeader") && part.includes("div:has(> input)"));
+  assert.ok(!part.includes("_2a1-sPpExCp24Q8dfImB0a"), "no hashed class written");
+  assert.match(part, /background-color:#1A1D21 !important;[^}]*border-radius:0 !important/);
+  assert.match(part, /::placeholder\{color:#9AA4AE !important/);
+  assert.match(part, /box-shadow:inset 0 -2px 0 #D7263D !important/);
+  assert.doesNotMatch(part, /#1a9fff|blur|drop-shadow/i);
+});
+
+test("Steam's dialog field rows (Settings and other pages): the focused row gunmetal with the crimson bar", () => {
+  const sheet = styles.buildCoreUiCss({ ...others, ...real });
+  assert.ok(sheet.applied.includes("dialog-fields"));
+  const part = sheet.css.split("\n").find(line => line.startsWith("/* dialog-fields */"));
+  assert.ok(part.includes(real.gamepaddialog.Field) && part.includes(real.gamepaddialog.FieldLabel));
+  assert.match(part, /background-color:#1A1D21 !important;background-image:none !important;box-shadow:inset 3px 0 0 #D7263D/);
+});

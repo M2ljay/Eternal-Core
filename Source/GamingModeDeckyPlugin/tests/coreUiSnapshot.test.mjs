@@ -282,20 +282,20 @@ test("Starfield: denser on large pages, a few near stars, never brighter than th
   assert.ok(starfield.worstStarContrast("#9AA4AE") >= 4.5);
 });
 
-test("Jarvis brief: greeting, date and time, weather, Continue, the Club's pick and the chips, from fakes", () => {
+test("Today (the brief): greeting, date and time, weather, Continue, the Club's pick and the chips, from fakes", () => {
   const now = new Date(2026, 10, 27, 21, 5);
   const model = brief.assembleBrief({ now, locale: "en", weather: { enabled: true, iconText: "☀", tempText: "18°" },
     last: { appid: 1245620, name: "Elden Ring", minutes: 144, hero: ["a.jpg", "", "b.jpg"] },
     club: { title: "Chrono Trigger", endsAt: now.getTime() / 1000 + 2.5 * 86400, art: "art.jpg", appId: 7 },
     steamUpdate: { holdPhase: "held" }, downloads: 2, mods: 1, achievements: 3 });
-  assert.equal(model.greeting, "Good evening, sir");
+  assert.equal(model.greeting, "Good evening");
   assert.match(model.date, /Friday/); assert.match(model.time, /9:05/);
   assert.equal(model.weather, "☀ 18°");
   assert.deepEqual({ ...model.continue, hero: [...model.continue.hero] }, { appid: 1245620, name: "Elden Ring", played: "2.4 hours played", hero: ["a.jpg", "b.jpg"] });
   assert.equal(model.club.title, "Chrono Trigger"); assert.equal(model.club.left, "2 days left"); assert.equal(model.club.label, "Club pick");
   assert.deepEqual(JSON.parse(JSON.stringify(model.chips.map(c => [c.id, c.text, c.tone]))), [["steam-update", "Steam update waiting", "amber"], ["downloads", "2 downloading", "steel"], ["mods", "1 mod update", "steel"], ["achievements", "3 nearly done", "green"]]);
   const empty = brief.assembleBrief({ now: new Date(2026, 10, 27, 3, 0), locale: "it", weather: { enabled: false, tempText: "18°" } });
-  assert.equal(empty.greeting, "Ancora sveglio, signore"); assert.equal(empty.weather, undefined); assert.equal(empty.continue, undefined); assert.equal(empty.club, undefined);
+  assert.equal(empty.greeting, "Ancora sveglio"); assert.equal(empty.weather, undefined); assert.equal(empty.continue, undefined); assert.equal(empty.club, undefined);
   assert.deepEqual([...empty.chips], []);
   const t = briefLocale.coreBriefCopy("en");
   assert.equal(brief.playedText(0, t), "Not played yet"); assert.equal(brief.playedText(42, t), "42 minutes played");

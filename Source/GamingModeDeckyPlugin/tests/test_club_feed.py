@@ -295,12 +295,12 @@ class FeedTests(unittest.TestCase):
         self.assertEqual(len(self.make().get()["snapshot"]["picks"]), 4)
         self.assertEqual(self.site.requests, [])
 
-    def test_at_most_every_6_hours_and_on_demand_at_most_once_per_10_minutes(self):
+    def test_at_most_hourly_and_on_demand_at_most_once_per_10_minutes(self):
         self.feed.get()
         self.site.requests.clear()
-        self.clock.now += 5 * 3600
+        self.clock.now += 50 * 60
         self.feed.get()
-        self.assertEqual(self.site.requests, [], "inside 6 hours: cache")
+        self.assertEqual(self.site.requests, [], "inside the hour: cache")
         self.clock.now = NOW + 9 * 60
         self.assertFalse(self.feed.get(force=True)["refreshed"])
         self.assertEqual(self.site.requests, [], "on demand inside 10 minutes: refused")

@@ -115,12 +115,12 @@ test("Jarvis's brief line: the nearest unbeaten pick ending within three days, o
     { kind: "month", slug: "donkey-kong-country-snes", ends_at: s(Date.UTC(2026, 11, 1)) },
     { kind: "season", slug: "paper-mario-n64", ends_at: s(Date.UTC(2027, 0, 1)) },
   ];
-  assert.equal(brief.briefLineFor({ picks }, NOW), "One day left on this week's pick, sir.");
-  assert.equal(brief.briefLineFor({ picks }, NOW - 86_400_000), "Two days left on this week's pick, sir.");
-  assert.equal(brief.briefLineFor({ picks }, Date.UTC(2026, 10, 28, 12)), "Last day for this week's pick, sir.");
-  assert.equal(brief.briefLineFor({ picks, member: { beaten_slugs: ["mega-man-nes"] } }, NOW), "Three days left on this month's pick, sir.");
+  assert.equal(brief.briefLineFor({ picks }, NOW), "One day left on this week's pick.");
+  assert.equal(brief.briefLineFor({ picks }, NOW - 86_400_000), "Two days left on this week's pick.");
+  assert.equal(brief.briefLineFor({ picks }, Date.UTC(2026, 10, 28, 12)), "Last day for this week's pick.");
+  assert.equal(brief.briefLineFor({ picks, member: { beaten_slugs: ["mega-man-nes"] } }, NOW), "Three days left on this month's pick.");
   assert.equal(brief.briefLineFor({ picks: [picks[2]] }, NOW), null);
-  assert.equal(brief.briefLineFor({ picks: [{ kind: "special", label: "Christmas Special", ends_at: s(NOW + 2 * 86_400_000 + 1) }] }, NOW), "Two days left on the Christmas Special, sir.");
+  assert.equal(brief.briefLineFor({ picks: [{ kind: "special", label: "Christmas Special", ends_at: s(NOW + 2 * 86_400_000 + 1) }] }, NOW), "Two days left on the Christmas Special.");
   assert.equal(brief.briefLineFor(null, NOW), null);
 });
 
@@ -158,12 +158,13 @@ test("every language has every string, and the setting is on by default in the b
   assert.match(backend, /return \{"enabled": True, "display_name": ""\}/);
 });
 
-test("the tab follows the Core palette: crimson square focus, 10 px cards, no site art until allowed", () => {
+test("the tab follows the Core palette: crimson square focus, 10 px cards, the club's box art (3.3.8), no \"Updated\" text", () => {
   const source = readFileSync(new URL("../src/club/ClubTab.tsx", import.meta.url), "utf8");
   assert.match(source, /\.ph-club-focus\.gpfocus,\.ph-club-focus:focus-visible\{box-shadow:0 0 0 3px \$\{CORE\.crimson\};border-radius:0\}/);
   assert.match(source, /\.ph-club-card\{background:\$\{CORE\.gunmetal\};border-radius:10px/);
   assert.match(source, /<CoreStars \/>/);
-  assert.match(source, /export const CLUB_SITE_ART_ALLOWED = false;/);
+  assert.match(source, /export const CLUB_SITE_ART_ALLOWED = true;/);
+  assert.doesNotMatch(source, /copy\.updated/, "no \"Updated N minutes ago\" text (3.3.8)");
   assert.doesNotMatch(source, /#[0-9a-fA-F]{6}/, "colours come from corePalette");
 });
 

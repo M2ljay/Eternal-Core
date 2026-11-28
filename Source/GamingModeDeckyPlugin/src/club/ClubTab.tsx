@@ -2,7 +2,7 @@ import { SP_REACT as React, DFL } from "../decky";
 import { CORE, coreAlpha } from "../corePalette";
 import { CoreStars } from "../CoreStars";
 import { clubCopy, daysLeftText, fill, type ClubCopy } from "./clubLocale";
-import { formatAgo, formatClubDate, timeLeft, updatedAgo } from "./clubTime";
+import { formatClubDate, timeLeft } from "./clubTime";
 import { matchPick, type LibraryEntry, type Match } from "./clubMatch";
 import { openGamePage, playApp, readLibrary, steamArtFor } from "./clubLibrary";
 import { clubState, loadClub, subscribeClub, type ClubMember, type ClubNomination, type ClubPick, type ClubRow } from "./clubStore";
@@ -15,9 +15,18 @@ import { CLUB_COMPLETION_COMMAND, assembleBridge, assembleEventFor, openClubComp
 
 const { Focusable, DialogButton, Navigation } = DFL as any;
 
-// The club's box art is not offered for embedding (no statement either way, 2026-11-27). Until the organisers say
-// yes, tiles use Steam's own artwork for a matched game, or the platform badge.
-export const CLUB_SITE_ART_ALLOWED = false;
+// 3.3.8 (the user's call, TV pass): a pick not in the library shows the club's own box art (the home page's
+// /img/<id>.png, read by the parser). Steam's artwork still wins for a matched game; the platform badge is the fallback
+// when there is no image or it fails to load.
+export const CLUB_SITE_ART_ALLOWED = true;
+const CLUB_ART = /^https:\/\/www\.playretrogamesclub\.com\/img\/\d{1,9}\.(?:png|jpe?g|webp)$/;
+
+// The club's image only from the club's own /img/ path (never another host).
+export function clubArtUrl(pick: { image?: string; cover?: string }): string {
+  if (typeof pick.image === "string" && CLUB_ART.test(pick.image)) return pick.image;
+  const path = typeof pick.cover === "string" ? `https://www.playretrogamesclub.com${pick.cover}` : "";
+  return CLUB_ART.test(path) ? path : "";
+}
 
 const css = `
 .ph-club{position:relative;isolation:isolate;min-height:100%;padding:24px 36px 48px;color:${CORE.text};background:${CORE.black};box-sizing:border-box}
@@ -32,6 +41,7 @@ const css = `
 .ph-club-tile{padding:4px}
 .ph-club-card{background:${CORE.gunmetal};border-radius:10px;overflow:hidden;height:100%;display:flex;flex-direction:column}
 .ph-club-art{position:relative;aspect-ratio:2/3;background:${CORE.gunmetalRaised} center/cover no-repeat;display:flex;align-items:center;justify-content:center}
+.ph-club-art-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .ph-club-badge{font-size:44px;font-weight:800;letter-spacing:.04em;color:${CORE.steel};border-bottom:4px solid ${CORE.crimson};padding-bottom:6px}
 .ph-club-event{position:absolute;left:0;top:0;padding:6px 10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:${coreAlpha(CORE.black, 0.78)};color:${CORE.white}}
 .ph-club-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px}
@@ -69,7 +79,9 @@ function useClub() {
 
 function PickTile({ pick, match, copy, locale, now }: { pick: ClubPick; match: Match | null; copy: ClubCopy; locale: string; now: number }) {
   const art = match ? steamArtFor(match.appId) : "";
-  const image = art || (CLUB_SITE_ART_ALLOWED ? pick.image : "");
+  const candidate = art || (CLUB_SITE_ART_ALLOWED ? clubArtUrl(pick) : "");
+  const [failed, setFailed] = React.useState("");
+  const image = candidate && failed !== candidate ? candidate : "";
   const left = timeLeft(pick.ends_at, now);
   const leftText = left.state === "days" ? daysLeftText(locale, left.days) : left.state === "last" ? copy.lastDay
     : left.state === "ended" ? copy.ended : copy.noDate;
@@ -84,8 +96,9 @@ function PickTile({ pick, match, copy, locale, now }: { pick: ClubPick; match: M
     onSecondaryButton={match ? (event: any) => { event?.preventDefault?.(); event?.stopPropagation?.(); details(); } : undefined}
     onSecondaryActionDescription={match ? copy.details : undefined}>
     <div className="ph-club-card">
-      <div className="ph-club-art" style={image ? { backgroundImage: `url("${image.replace(/"/g, "%22")}")` } : undefined}>
-        {!image && <span className="ph-club-badge">{pick.platform || "?"}</span>}
+      <div className="ph-club-art">
+        {image ? <img className="ph-club-art-img" src={image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(image)} />
+          : <span className="ph-club-badge">{pick.platform || "?"}</span>}
         <span className="ph-club-event">{pick.label}</span>
       </div>
       <div className="ph-club-body">
@@ -181,9 +194,10 @@ export function ClubTab({ locale, getLocale }: { locale?: string; getLocale?: ()
   const [now, setNow] = React.useState(() => Date.now());
   const [library, setLibrary] = React.useState<LibraryEntry[]>(() => readLibrary());
   React.useEffect(() => {
+    // Opening the tab: the backend refreshes when its copy is older than an hour (its politeness rules decide), and
+    // the background schedule (clubStore.ts) keeps it fresh while the tab is closed.
     void loadClub(false);
-    // The backend serves its cache between refreshes, so asking every 30 minutes costs no request to the club.
-    const poll = window.setInterval(() => void loadClub(false), 30 * 60_000);
+    const poll = window.setInterval(() => void loadClub(false), 10 * 60_000);
     const clock = window.setInterval(() => setNow(Date.now()), 60_000);
     // Steam fills its library stores shortly after the UI appears: read them again a few times.
     let reads = 0;
@@ -193,7 +207,6 @@ export function ClubTab({ locale, getLocale }: { locale?: string; getLocale?: ()
   const feed = state.feed, snapshot = feed?.snapshot ?? null;
   const matches = React.useMemo(() => new Map((snapshot?.picks ?? []).map(pick => [pick, matchPick({ title: pick.title, platform: pick.platform }, library)])),
     [snapshot, library]);
-  const ago = updatedAgo(feed?.updated ?? snapshot?.fetched_at, now);
   const canRefresh = !state.loading && now / 1000 >= (feed?.refresh_available_at ?? 0);
   const name = feed?.display_name ?? state.settings?.display_name ?? "";
   return <Focusable className="ph-club" flow-children="column">
@@ -201,8 +214,7 @@ export function ClubTab({ locale, getLocale }: { locale?: string; getLocale?: ()
     <CoreStars />
     <div className="ph-club-head">
       <h2>{copy.title}</h2>
-      {ago && <span className={`ph-club-updated${feed?.stale ? " stale" : ""}`} role="status">
-        {fill(copy.updated, { ago: formatAgo(resolved, ago) })}{feed?.stale ? ` · ${copy.saved}` : ""}</span>}
+      {feed?.stale && <span className="ph-club-updated stale" role="status">{copy.saved}</span>}
       <DialogButton style={{ width: "auto", minWidth: 0, padding: "6px 16px", marginLeft: "auto" }} disabled={!canRefresh}
         onClick={() => void loadClub(true)}>{copy.refresh}</DialogButton>
     </div>

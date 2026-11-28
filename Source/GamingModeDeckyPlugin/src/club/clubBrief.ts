@@ -21,6 +21,6 @@ export function briefLineFor(snapshot: BriefSnapshot, nowMs: number): string | n
   if (!chosen) return null;
   const days = Math.floor(chosen.remaining / 86_400_000);
   const which = WHOSE[chosen.pick.kind] ?? (chosen.pick.label ? `the ${chosen.pick.label}` : "the club's pick");
-  if (days === 0) return `Last day for ${which}, sir.`;
-  return `${WORDS[days]} day${days === 1 ? "" : "s"} left on ${which}, sir.`;
+  if (days === 0) return `Last day for ${which}.`;
+  return `${WORDS[days]} day${days === 1 ? "" : "s"} left on ${which}.`;
 }

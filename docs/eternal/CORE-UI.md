@@ -142,13 +142,29 @@ The real key lists (Steam client, November 2026, read through Steam's CEF debugg
   FieldChildrenInner, FieldChildrenWithIcon, FieldLeftColumn, FieldRightColumn, Button, Toggle, ToggleRail,
   ToggleSwitch, DropDownControlButtonContents, QuickAccess-Menu` (no `FieldChildren`, no `DropDownControlButton`).
 
+### Home in 3.3.8: Consoles and Club only
+
+The user's call from the TV: Home's tabs are now **Consoles** (the default) and **Club**. The Jarvis brief tab (with
+its hero) and the On this day tab are gone; Steam's What's new, Recommended and Friends stay removed. A remembered
+active tab that pointed at a removed one (`WhatsNew`, `Recommended`, `Friends`) opens Consoles (`activeHomeTab`,
+`RETIRED_HOME_TABS` in `src/coreHomeTabs.ts`). The On this day settings section left Quick Access > Core, and
+`HomeNews.tsx` no longer wraps Home in `HistoryTabs` (`DailyHistory.tsx` stays in the tree, unused). `CoreBriefHero.tsx`
+is deleted; `src/coreBrief.ts` (the brief's data, pure and tested) stays dormant for the next Home pieces. Jarvis keeps
+his top-bar orb, his Quick Access tab and the listening pill. No UI text says "sir" any more (the greetings and the
+Club's line); the forms of address stay in Jarvis's spoken and chat replies. The Consoles tab's redesign (every
+console as a logo tile) comes in the next build.
+
+Home's capsules (TV at 1348 x 758: the focused one grew out of its row and off the screen): Steam's capsules on Home are
+drawn at `CORE_HOME_CAPSULE_SCALE` (0.8) inside their slots, with the crimson ring inside the capsule and no lift; Core's
+own shelf tiles are 120 x 180 (were 150 x 225) with the ring inside. The Library keeps its own capsule rules.
+
 ### Home's tab row (3.3.8)
 
-Home's tabs (Jarvis brief, Consoles, Club, On this day) are Steam's tabbed page, the same `tabbedpage` classes as the
+Home's tabs (Consoles, Club) are Steam's tabbed page, the same `tabbedpage` classes as the
 Library, but the `library-tabs` rule is scoped to the Library, so Steam's pill (`rgba(255,255,255,.15)`, 64px radius)
 still showed. The `home-tabs` rule gives them the Library's single marker (transparent tabs, steel text, one short
 crimson underline on the open tab, no pill) over a clear row, so Home's stars show through it. Its scope is Steam's
-tabbed page that holds Core Home's content: `CoreHomeTabs` (and `HistoryTabs` for On this day) wrap each tab's content
+tabbed page that holds Core Home's content: `CoreHomeTabs` wraps each tab's content
 in `<div data-core-home-tab style="display: contents">`, and the rule targets
 `{tabbedpage.GamepadTabbedPage}:has([data-core-home-tab])` (with `{gamepadui.BasicHome}:has(...)` as the fallback). The
 Library's and a game page's tab bars are not touched.
@@ -167,6 +183,53 @@ CSS px were checked against it:
 - The Starfield canvas is sized in CSS px, so at devicePixelRatio 2.85 its stars are upscaled (soft). Left as is for
   now; a device-pixel canvas is a possible follow-up.
 - Jarvis's listening pill is drawn by the Gaming Mode agent (native, Windows DPI), not by Core UI's CSS.
+
+### Starfield canvases can no longer outlive their page (3.3.8)
+
+TV: after leaving a ROM page of The Collector, a black band with drifting stars covered the bottom half of every page
+(Downloads, Settings, a Steam game page). The page host's canvas had stayed: The Collector removes its stylesheet when
+its page closes, the element can stay in Steam's tree, and a canvas positioned against an element that is no longer its
+containing block was free to sit anywhere on the screen. Now:
+
+- a canvas is drawn only while its surface is on screen: the runtime sets `data-core-ui-live` when it paints it and
+  removes it the moment the surface is off screen; without it the stylesheet hides the canvas (`display: none`);
+- a plugin's page counts only while its plugin paints it (a transparent background means the plugin let it go);
+- the host is checked on every pass to be the canvas's containing block (made `position: relative` if it went static),
+  and a page host's canvas is never taller than its host (`max-height: 100%`, no viewport-tall fallback);
+- every sync sweeps: a surface whose element left the page, or whose canvas left its element, is released, and any
+  Starfield canvas that belongs to no live surface is removed; a MutationObserver runs the same sweep as soon as nodes
+  are removed (a route change), not only on the one-second sync.
+
+Tests (`tests/coreUi.test.mjs`): ROM page to another route leaves no canvas, layer or attribute; a page kept in the
+tree but no longer painted has its canvas hidden and stays its containing block; orphaned and stray canvases go.
+
+### Quick Access tabs no longer flicker (3.3.8)
+
+TV: tabs kept appearing and disappearing, every tab carrying an inline `display: flex !important`. The cause was
+`src/qamTabVisibility.ts`: it wrote `flex` or `none` on every managed tab, on every DOM mutation (its own style
+writes and React's included) and every 500 ms, from a map `qamLayoutRuntime.ts` rebuilt from whichever tab array React
+had rendered last, so two arrays gave two answers and the observer fought React. Now the map comes from the user's
+hidden list alone (only `steam:<key>` entries), only hiding is ever written (a tab to show is left as Steam renders
+it), Decky's tab (999), Core's tab, Jarvis's and the layout's plugin shortcuts can never be hidden, a hide applies only
+to a node whose `aria-label` still matches the one first seen for that id (an id Steam re-assigns is left alone), and
+mutations are coalesced into one pass per 120 ms, for added or removed nodes only. Tests: `tests/qamTabVisibility.test.mjs`
+(protected ids, a re-assigned id, the debounce and no pass for style changes) and `tests/qamLayoutRuntime.test.mjs`
+(the same answer for different render arrays). The Quick Access window's width (855 of 1348 px on the TV) is Steam's:
+Core's full-height code writes only height, box-sizing and overflow.
+
+### The top bar's search and Steam's dialog rows (3.3.8)
+
+- `search-field`: the universal search inside `{header.Header}`, found as the header's element that holds the
+  `<input>` (no hashed class): a square gunmetal field, steel text, a #9AA4AE placeholder, a steel magnifier, and on
+  focus a 2px crimson underline with no glow; its height is the bar's own.
+- `dialog-fields`: Steam's dialog field rows anywhere (`{gamepaddialog.Field}`; Settings rows, Downloads and other
+  pages built from them): the focused row gunmetal with the square crimson left bar and a white label, no blue band.
+  Quick Access's own row rules are more specific and still win there.
+
+Not reached yet (their class maps are unknown on this client; their names are needed from the live client): the
+search's results dropdown, Settings' left navigation and page background, the Downloads page's own panels, the in-game
+overlay menu's variant of the Steam menu (Resume game, Controller settings, Notes, Game Recording, Exit game), the
+controller layout viewer, and Steam's toggles (the rail's checked colour).
 
 ## Phases
 
@@ -440,17 +503,17 @@ registerHomeTab({ id: "club", label: locale => clubCopy(locale).tab, order: 30,
 ```
 
 `label` is a string or a function of the locale; `render({ locale, getLocale })` (or `component`) is what the tab
-shows; `order` places it (brief 10, Consoles 20, Club 30, On this day 40; Steam tabs Core does not know come after). A
+shows; `order` places it (Consoles 20, Club 30; Steam tabs Core does not know come after). A
 tab whose `isAvailable()` is false or throws is left out; `subscribe` tells Home when that may have changed; the returned
 function unregisters it. The Club (`src/club/`, merged from `core-club`) registers this way from `coreHome.tsx` with
-its `clubHomeTab` (shown once the Club is on and has data), and its line ("Two days left on this week's pick, sir.")
-joins the Jarvis brief through `clubBriefLine()`. Its settings sit in Quick Access > Core next to News and On this day.
+its `clubHomeTab` (shown once the Club is on and has data). Its line for the brief (`clubBriefLine()`, "Two days left on
+this week's pick.") is dormant since the brief left Home in 3.3.8. Its settings sit in Quick Access > Core next to News.
 
 ### The Club tab (Play Retro Games Club)
 
 The backend (`quick_settings/club_feed.py`, `ClubFeed`) reads three public pages of playretrogamesclub.com: `/`,
-`/nominations/` and `/leaderboards/` (plus one member page for "Your standing"). Politeness is unchanged: robots.txt
-first and obeyed (Crawl-delay included), a full refresh at most every 6 hours and on demand at most once per
+`/nominations/` and `/leaderboards/` (plus one member page for "Your standing"). Politeness: robots.txt
+first and obeyed (Crawl-delay included), a full refresh at most once an hour (3.3.8; was 6 hours) and on demand at most once per
 10 minutes, doubling backoff after failures, Retry-After honoured, one page at a time with a pause, a bounded body,
 User-Agent `Core/<version> (+contact: club member)`, no cookies or sign-in, cached to disk.
 
@@ -471,7 +534,11 @@ The output shape is the one the tab already used; 3.3.6 only adds fields: on pic
 `gotm`, `rhotm`, `gots`, `special`), `cover`, `at100`, `rating`, `hours`, `first_clear`, `first_100`; on nominations
 `event`, `period`, `closes_at` and per row `order`, `ra_game_id`, `cover`, `nominator_slug`; on leaderboard rows `hours`
 (and the full stats and `by_event` on `top`); on schedule items `title`, `tags`, `until`; and `carried` on the snapshot.
-The club's box art is still not shown (`CLUB_SITE_ART_ALLOWED = false`); `cover` is only its path.
+3.3.8: a pick that is not in the library shows the club's own box art (`CLUB_SITE_ART_ALLOWED = true`, the user's call;
+only `https://www.playretrogamesclub.com/img/<id>.png|jpg|webp`, from `image` or `cover`), falling back to the platform
+badge when there is none or it fails to load; Steam's art still wins for a matched game. The tab refreshes on its own:
+hourly in the background (`clubStore.ts`, `CLUB_BACKGROUND_MS`) and on opening the tab, the backend deciding whether its
+copy is old enough; the "Updated N minutes ago" line is gone (only "Showing saved data" when the copy is stale).
 
 **Structure flags.** Each flag is true only when its section was parsed: `home.playing_now`, `home.picks`,
 `home.top_players`, `home.schedule`, `home.nominations`, `home.stats`, `nominations.categories`, `leaderboards.rows`
@@ -691,7 +758,15 @@ Same setup, Core 3.3.8.
    gunmetal (no grey-blue), Core's rail icons full size. Decky's plugin list: gunmetal rows, the crimson left bar on
    focus. The snapshot's `coreUi.mapRoutes` shows `quickaccess` and `gamepaddialog` found, `coreUi.skipped` has no
    `qam-*` rule, and `coreUi.mapCandidates` is empty.
-2. Home: the tab row (Jarvis brief / Consoles / Club / On this day) has no pill; steel labels, one short crimson
-   underline under the open tab, stars visible behind the row. Switch to On this day: still no pill.
+2. Home: only Consoles (open by default) and Club; no brief, no On this day. The tab row has no pill: steel labels,
+   one short crimson underline under the open tab, stars visible behind the row. No "sir" anywhere on screen.
 3. Library: tabs unchanged from 3.3.7 (black row, one marker). A game page's tabs keep Steam's look.
 4. The Steam menu has about as many stars as on a 1080p screen; full pages are denser than in 3.3.7.
+5. Open a ROM in The Collector, then go to Downloads, Settings > System and a Steam game page: no black band, no stars
+   over the page content (the snapshot's diagnostics `hosts` has no `collector-rom-page`).
+6. Quick Access: the rail stays put for a minute (no tab appearing or vanishing); no tab carries an inline
+   `display: flex`; Decky's, Core's and Jarvis's tabs are always there.
+7. The top bar's search: square gunmetal field, grey placeholder, crimson underline when focused, no blue.
+8. Settings: the focused row gunmetal with the crimson left bar (the left navigation may still be Steam's).
+9. Home: capsules smaller; the focused one stays inside its row and the screen. Club: box art on every pick (or the
+   platform badge if an image fails); no "Updated" line; it refreshes on its own.

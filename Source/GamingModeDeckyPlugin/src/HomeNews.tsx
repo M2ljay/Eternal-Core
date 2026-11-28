@@ -2,7 +2,7 @@ import { SP_REACT as React, DFL, routerHook, toaster } from "./decky";
 import { createOutputPatch } from "./reactOutputPatch";
 import { call } from "./controlBackend";
 import { CORE } from "./corePalette";
-import { HistoryTabs, notifyHistoryLanguageChanged } from "./DailyHistory";
+import { notifyHistoryLanguageChanged } from "./DailyHistory";
 import { newsCopy, NEWS_COUNTRIES } from "./homeNewsLocale";
 import { CoreHomeTabs } from "./coreHome";
 
@@ -172,8 +172,9 @@ export function installHomeNews(getLocale: () => string) {
     const tabs = tree.props.tabs.map((tab: any) => tab.id === "WhatsNew"
       ? { ...tab, content: news.apply(tab.content) } : tab);
     const native = React.cloneElement(tree, { tabs });
-    // Eternal Core: Core Home (coreHome.tsx) arranges the tabs; On this day still comes from HistoryTabs.
-    return <CoreHomeTabs native={native} getLocale={getLocale} render={(tabs: any) => <HistoryTabs native={tabs} getLocale={getLocale} />} />;
+    // Eternal Core: Core Home (coreHome.tsx) arranges the tabs. 3.3.8: On this day is gone from Home (the user's call),
+    // so Steam's tree is rendered as Core Home composed it.
+    return <CoreHomeTabs native={native} getLocale={getLocale} render={(tabs: any) => tabs} />;
   }, onError);
   const patch = routerHook.addPatch("/library/home", (props: any) => {
     const children = alive ? descend.apply(props.children) : props.children;

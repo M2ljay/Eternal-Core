@@ -2,7 +2,7 @@
 
 Until the organisers offer a feed, this reads the club's public pages politely:
 - robots.txt is read first (once a day) and obeyed, including Crawl-delay;
-- a full refresh at most every 6 hours, an on-demand refresh at most once per 10 minutes,
+- a full refresh at most once an hour (3.3.8), an on-demand refresh at most once per 10 minutes,
   with exponential backoff after failures and Retry-After honoured;
 - one page at a time with a pause between pages, a bounded body size, and a User-Agent
   that names Core and says who is asking ("Core/<version> (+contact: club member)");
@@ -38,7 +38,7 @@ import urllib.request
 BASE = "https://www.playretrogamesclub.com"
 HOST = "www.playretrogamesclub.com"
 SCHEMA = 1
-REFRESH = 6 * 3600          # automatic refresh: at most every 6 hours
+REFRESH = 3600              # automatic refresh: at most hourly (3.3.8; was 6 hours)
 ON_DEMAND = 10 * 60         # on-demand refresh: at most once per 10 minutes
 ROBOTS_TTL = 24 * 3600
 PAGE_PAUSE = 1.5            # seconds between page requests (raised by robots Crawl-delay)
@@ -990,7 +990,7 @@ class ClubFeed:
     @staticmethod
     def _on_demand_at(state):
         """Earliest on-demand refresh: 10 minutes after the last attempt, doubling per failure
-        in a row (capped at the 6-hour cadence)."""
+        in a row (capped at the hourly cadence)."""
         attempt = state.get("attempt_at") or 0
         if not attempt: return 0
         failures = int(state.get("failures") or 0)

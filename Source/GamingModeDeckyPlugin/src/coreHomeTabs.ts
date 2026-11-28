@@ -1,11 +1,10 @@
 // Eternal Core: Core Home's bottom tabs (docs/eternal/CORE-UI.md, "Phase 2: Home"). Pure: tests drive it with fake
 // Steam tab lists and fake collection stores.
 //
-// Steam's Home tabs come in as `{ id, title, content, ... }`. Core Home answers, in this order:
-//   Jarvis brief (10, takes Steam's "WhatsNew" id so a remembered active tab still opens) - Consoles (20) -
-//   any registered tab (Club, 30, from src/club/) - On this day (40, Steam's "Recommended" slot, filled by
-//   DailyHistory.tsx) - any other Steam tab Core does not know.
-// Steam's "What's new" (its content moves into the brief) and "Friends" are removed.
+// Steam's Home tabs come in as `{ id, title, content, ... }`. Core Home answers, in this order (3.3.8):
+//   Consoles (20, the default) - any registered tab (Club, 30, from src/club/) - any other Steam tab Core does not know.
+// Steam's "What's new", "Recommended" and "Friends" are removed. The Jarvis brief and On this day tabs of 3.3.3-3.3.7
+// are gone (the user's call); a remembered active tab that pointed at them opens Consoles.
 //
 // Registration point: registerHomeTab({ id, label, order, component, isAvailable }) adds a tab without touching Home's
 // internals; an unavailable tab (isAvailable() false or throwing) is left out.
@@ -50,10 +49,15 @@ export function availableHomeTabs(): HomeTabRegistration[] {
   }).sort((a, b) => a.order - b.order);
 }
 
-export const HOME_TAB_ORDER = { brief: 10, consoles: 20, club: 30, onThisDay: 40 } as const;
-export const REMOVED_STEAM_TABS = new Set(["WhatsNew", "Friends"]);
+// 3.3.8 (the user's call): Home is Consoles (the default) and Club. Steam's What's new (Core's brief took its id),
+// Recommended (On this day took its slot) and Friends are all removed.
+export const HOME_TAB_ORDER = { consoles: 20, club: 30 } as const;
+export const CONSOLES_ID = "CoreConsoles";
+export const REMOVED_STEAM_TABS = new Set(["WhatsNew", "Friends", "Recommended"]);
 export const ON_THIS_DAY_ID = "Recommended";
 export const BRIEF_ID = "WhatsNew";
+// Ids a remembered active tab may still hold from 3.3.3-3.3.7; each now opens Consoles.
+export const RETIRED_HOME_TABS = new Set([BRIEF_ID, ON_THIS_DAY_ID, "CoreBrief", "Friends"]);
 
 type Tab = { id: any; [key: string]: any };
 
@@ -61,18 +65,17 @@ type Tab = { id: any; [key: string]: any };
 // brief's.
 export function composeHomeTabs(native: Tab[], core: Array<Tab & { order: number }>): Tab[] {
   const list = Array.isArray(native) ? native : [];
-  const onThisDay = list.find(tab => tab?.id === ON_THIS_DAY_ID);
-  const known = new Set([...REMOVED_STEAM_TABS, ON_THIS_DAY_ID]);
-  const others = list.filter(tab => tab && !known.has(tab.id));
-  const ordered = [...core, ...(onThisDay ? [{ ...onThisDay, order: HOME_TAB_ORDER.onThisDay }] : [])]
+  const others = list.filter(tab => tab && !REMOVED_STEAM_TABS.has(tab.id) && !RETIRED_HOME_TABS.has(tab.id));
+  const ordered = [...core].filter(tab => tab && !RETIRED_HOME_TABS.has(tab.id))
     .sort((a, b) => a.order - b.order)
     .map(({ order, ...tab }) => { void order; return tab as Tab; });
   return [...ordered, ...others];
 }
 
-// The active tab Steam remembers may be one Core removed (Friends): fall back to the brief.
+// The active tab Steam remembers may be one Core removed (the brief, On this day, Friends): Consoles opens instead.
 export function activeHomeTab(active: unknown, tabs: Tab[]): unknown {
-  return tabs.some(tab => tab.id === active) ? active : tabs[0]?.id ?? active;
+  if (tabs.some(tab => tab.id === active) && !RETIRED_HOME_TABS.has(active as any)) return active;
+  return tabs.find(tab => tab.id === CONSOLES_ID)?.id ?? tabs[0]?.id ?? active;
 }
 
 // ---- Data for the brief and the console shelves ----

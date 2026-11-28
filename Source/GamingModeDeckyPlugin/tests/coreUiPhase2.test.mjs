@@ -279,14 +279,17 @@ test("plugin logos: matched by Decky plugin name or repository; others keep thei
   assert.equal(logos.corePluginTile("LoZazaMastro/Playhub-Discord"), undefined, "upstream keeps its own cover");
 });
 
-test("Core Home: Jarvis brief, Consoles, registered tabs (Club), On this day; What's new and Friends gone", () => {
+test("Core Home (3.3.8): Consoles (the default) and registered tabs (Club); the brief, On this day, What's new and Friends gone", () => {
   const steam = [{ id: "WhatsNew", title: "What's new" }, { id: "Recommended", title: "On this day" }, { id: "Friends", title: "Friends" }, { id: "Other", title: "Other" }];
-  const core = [{ id: "WhatsNew", title: "Jarvis brief", order: 10 }, { id: "CoreConsoles", title: "Consoles", order: 20 }, { id: "CoreClub", title: "Club", order: 30 }];
+  // A stale brief entry from an older caller is dropped too.
+  const core = [{ id: "WhatsNew", title: "Brief", order: 10 }, { id: "CoreConsoles", title: "Consoles", order: 20 }, { id: "CoreClub", title: "Club", order: 30 }];
   const next = homeTabs.composeHomeTabs(steam, core);
-  assert.deepEqual([...next.map(tab => tab.title)], ["Jarvis brief", "Consoles", "Club", "On this day", "Other"]);
+  assert.deepEqual([...next.map(tab => tab.title)], ["Consoles", "Club", "Other"]);
   assert.ok(next.every(tab => !("order" in tab)));
-  assert.equal(homeTabs.activeHomeTab("Friends", next), "WhatsNew", "a removed active tab opens the brief");
-  assert.equal(homeTabs.activeHomeTab("Recommended", next), "Recommended");
+  // A remembered active tab that pointed at a removed tab opens Consoles.
+  for (const old of ["Friends", "WhatsNew", "Recommended", "CoreBrief", undefined]) assert.equal(homeTabs.activeHomeTab(old, next), "CoreConsoles", String(old));
+  assert.equal(homeTabs.activeHomeTab("CoreClub", next), "CoreClub");
+  assert.equal(homeTabs.HOME_TAB_ORDER.brief, undefined);
 
   let clubReady = false; const clubListeners = new Set();
   const off = homeTabs.registerHomeTab({ id: "club", label: "Club", order: 30, render: () => null, isAvailable: () => clubReady,
@@ -304,7 +307,7 @@ test("Core Home: Jarvis brief, Consoles, registered tabs (Club), On this day; Wh
 
   const source = readFileSync(new URL("../src/coreHome.tsx", import.meta.url), "utf8");
   assert.match(source, /registerHomeTab\(\{ id: clubHomeTab\.id[^}]*order: HOME_TAB_ORDER\.club[^}]*subscribe: clubHomeTab\.subscribe/, "the Club through the registry");
-  assert.match(source, /clubBriefLine\(/, "the Club's line in the brief");
+  assert.doesNotMatch(source, /CoreBriefHero|JarvisBrief|HistoryTabs/, "no brief and no On this day on Home (3.3.8)");
   assert.match(source, /class HomeBoundary/); assert.match(source, /return fallback;/);
   assert.match(readFileSync(new URL("../src/ControlCenter.tsx", import.meta.url), "utf8"), /<ControlSection id="club".*?TbTrophy.*?><ClubSettings locale=\{locale\} \/><\/ControlSection>/);
 });
@@ -328,7 +331,7 @@ test("Core Home data: console shelves by family, last played, Forge's updates, g
     for (const value of Object.values(copy)) assert.ok(typeof value === "string" && value.length > 0, language);
     assert.ok(copy.lastPlayed.includes("{game}") && copy.mods.includes("{count}"), language);
   }
-  assert.equal(homeLocale.coreHomeCopy("en").evening, "Good evening, sir");
+  assert.equal(homeLocale.coreHomeCopy("en").evening, "Good evening");
   assert.deepEqual([0, 4, 5, 11, 12, 17, 18, 23].map(homeLocale.greetingKey), ["night", "night", "morning", "morning", "afternoon", "afternoon", "evening", "evening"]);
 });
 

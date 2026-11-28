@@ -133,7 +133,8 @@ export function installStandaloneQam(hook: Hook, options: PlayhubQamOptions, isV
   const deckyHost = createStandaloneDeckyHost(hook, previous, TAB_ID,
     () => hook.render === wrapper && isVisible(), refresh);
   const layout = createQamLayoutRuntime(hook, previous, TAB_ID, refresh);
-  const visibility = createQamTabVisibility();
+  // Core's tab, Jarvis's (and any extra) and the layout's plugin shortcuts are never hidden by the DOM override.
+  const visibility = createQamTabVisibility(undefined, { protectedIds: () => [TAB_ID, ...extras.map(extra => extra.id), ...layout.protectedIds()] });
   (window as any)[STANDALONE_HOST] = deckyHost.capability;
   return {
     refresh, refreshInventory: layout.refreshInventory,

@@ -72,3 +72,15 @@ test('native icon references are retained without serializing React owner cycles
  f.runtime.beforeRender(tabs);const newIcon={type:'svg',props:{updated:true}};tabs[0].tab=newIcon;f.runtime.afterRender(tabs,true);
  assert.equal(f.api.getQamLayoutSnapshot().native[0].icon,newIcon);f.runtime.stop();
 });
+test('3.3.8: the managed visibility only hides user-hidden Steam tabs and does not flip between renders of different arrays',()=>{
+ const f=fixture();f.api.setQamLayoutPreferences(prefs({hidden:['steam:2']}));
+ const full=[{key:1,title:'Settings'},{key:2,title:'Friends'},{key:999,decky:true},{key:100}];
+ const partial=[{key:1,title:'Settings'},{key:999,decky:true}];
+ const answers=[];
+ for(let i=0;i<4;i++){const tabs=i%2?[...partial]:[...full];f.runtime.afterRender(tabs,true);answers.push(JSON.stringify([...f.runtime.getManagedVisibility()]));f.runtime.beforeRender(tabs);}
+ assert.equal(answers[0],JSON.stringify([['2',false]]));
+ assert.ok(answers.every(answer=>answer===answers[0]),'the same answer for every array');
+ for(const answer of answers){assert.ok(!answer.includes('"100"')&&!answer.includes('"999"'),'Core and Decky never managed');assert.ok(!answer.includes('true'),'showing is never written');}
+ assert.ok(f.runtime.protectedIds().length>=1,'plugin shortcuts are protected');
+ f.runtime.stop();
+});

@@ -25,6 +25,8 @@ export const CORE_UI_ATTRIBUTE = "data-core-ui";
 export const CORE_UI_STYLE_ID = "core-ui-style";
 export const CORE_UI_STARS_ATTRIBUTE = "data-core-ui-stars";
 export const CORE_UI_HOST_ATTRIBUTE = "data-core-ui-host";
+// 3.3.8: set by the runtime on a Starfield canvas only while its surface is on screen; without it the canvas is hidden.
+export const CORE_UI_LIVE_ATTRIBUTE = "data-core-ui-live";
 // Set by the runtime on large opaque layers inside a black panel (they would hide the stars).
 export const CORE_UI_CLEAR_ATTRIBUTE = "data-core-ui-clear";
 // Set by the runtime on the top bar and the button-hint bar: "black" when Steam paints them over a plain page,
@@ -320,6 +322,31 @@ function rules(mark: string | undefined): Rule[] {
       return `${opaque}{${imp(SOLID_BLACK)}}${opaque}::before,${opaque}::after{${imp({ ...CLEAR, "backdrop-filter": "none" })}}`;
     } },
 
+    // The top bar's universal search (3.3.8, TV: "the search bar is ugly"). Found through the header's class map plus
+    // structure only (the field is the header's element that holds the <input>), never a hashed class: a square
+    // gunmetal field with steel text, a #9AA4AE placeholder and a steel magnifier; focused, a 2px crimson underline and
+    // no glow. Its height is the top bar's (Steam already sizes it to the bar); Steam's blue is gone.
+    { id: "search-field", needs: [["header", "Header"]], css: s => {
+      const header = `${ROOT} ${s("header", "Header")}`;
+      const field = `${header} div:has(> input)`;
+      return `${field}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": SQUARE, "box-shadow": "none", border: "0", outline: "none", filter: "none" })}}` +
+        `${field} > input{${imp({ color: C.steel, "background-color": "transparent", "background-image": "none", "box-shadow": "none", border: "0", outline: "none", "caret-color": C.crimson })}}` +
+        `${field} > input::placeholder{${imp({ color: C.hint, opacity: "1" })}}` +
+        `${field} > svg,${field} > svg *{${imp({ color: C.steel, fill: C.steel })}}` +
+        `${field}:focus-within,${field}:has(> input:focus),${field}.gpfocuswithin{${imp({ "background-color": C.gunmetal, "box-shadow": `inset 0 -2px 0 ${C.crimson}`, outline: "none", filter: "none" })}}`;
+    } },
+    // Steam's dialog field rows everywhere (3.3.8: Settings rows, Downloads, any page built from DialogField): no blue
+    // band; the focused row gunmetal with the square crimson left bar, like the Steam menu. Quick Access keeps its own
+    // (more specific) row rules.
+    { id: "dialog-fields", needs: [["gamepaddialog", "Field"]], css: s => {
+      const field = `${ROOT} ${s("gamepaddialog", "Field")}`;
+      const focus = `${field}:is(.gpfocus,.gpfocuswithin,:focus-visible)`;
+      return `${field}::before,${field}::after{${imp({ "background-image": "none", "box-shadow": "none" })}}` +
+        `${focus}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": `inset 3px 0 0 ${C.crimson}`, "border-radius": SQUARE, filter: "none", animation: "none", outline: "none" })}}` +
+        `${focus}::before,${focus}::after{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
+        `${focus} ${s("gamepaddialog", "FieldLabel")}{${imp({ color: C.white })}}`;
+    } },
+
     // Steam menu: AMOLED black panel (stars drawn behind the rows by coreUi.ts). Core's ring mark sits top left in a
     // band of its own: an in-flow block before every row, so no row and no focus fill can ever overlap it (the
     // runtime also checks the first row starts below it; coreUiDom.ts, keepBelowLogo).
@@ -480,16 +507,26 @@ function rules(mark: string | undefined): Rule[] {
       (s("appgrid", "LibraryImageBackgroundGlow") ? `${ROOT} ${s("appgrid", "LibraryImageBackgroundGlow")}{${imp({ opacity: "0" })}}` : "") +
       `${ROOT} ${s("appgrid", "AppGridSectionLabel")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` +
       (s("appgrid", "Rule") ? `${ROOT} ${s("appgrid", "Rule")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-color": C.gunmetal })}}` : "") },
-    // Focused capsule (Home and the Library): a 3px crimson ring, no glow, lifted 6px (still under reduced motion).
+    // Focused capsule. The Library: a 3px crimson ring, no glow, lifted 6px (still under reduced motion). Home (3.3.8,
+    // TV at 1348 x 758: the focused capsule grew out of its row and off the screen): capsules drawn at
+    // CORE_HOME_CAPSULE_SCALE inside their slots, the ring drawn inside the capsule and no lift, so focus never reaches
+    // past the row or the screen's edges.
     { id: "capsule-focus", needs: [["portrait", "LibraryItemBox"]], css: s => {
-      const scopes = [s("library", "GamepadLibrary"), s("home", "TabbedContent"), s("recentgames", "RecentGamesContainer"), s("gamepadui", "BasicHome")].filter(Boolean);
-      if (!scopes.length) return "";
       const box = s("portrait", "LibraryItemBox");
-      const items = scopes.map(scope => `${ROOT} ${scope} ${box}`);
+      const libraryScopes = [s("library", "GamepadLibrary")].filter(Boolean);
+      const homeScopes = [s("home", "TabbedContent"), s("recentgames", "RecentGamesContainer"), s("gamepadui", "BasicHome")].filter(Boolean);
+      if (!libraryScopes.length && !homeScopes.length) return "";
+      const items = libraryScopes.map(scope => `${ROOT} ${scope} ${box}`);
       const focused = items.map(item => `${item}:is(.gpfocus,:focus)`);
-      return `${items.join(",")}{${imp({ transition: "translate 0.15s ease-out" })}}` +
+      // Never a Library capsule (Steam may nest the Library inside BasicHome's tree).
+      const notLibrary = libraryScopes.length ? `:not(${libraryScopes[0]} *)` : "";
+      const home = homeScopes.map(scope => `${ROOT} ${scope} ${box}${notLibrary}`);
+      const homeFocused = home.map(item => `${item}:is(.gpfocus,:focus)`);
+      return (items.length ? `${items.join(",")}{${imp({ transition: "translate 0.15s ease-out" })}}` +
         `${focused.join(",")}{${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "0", animation: "none", filter: "none", translate: "0 -6px" })}}` +
-        `@media (prefers-reduced-motion: reduce){${[...items, ...focused].join(",")}{${imp({ transition: "none", translate: "none" })}}}`;
+        `@media (prefers-reduced-motion: reduce){${[...items, ...focused].join(",")}{${imp({ transition: "none", translate: "none" })}}}` : "") +
+        (home.length ? `${home.join(",")}{${imp({ scale: String(CORE_HOME_CAPSULE_SCALE), "transform-origin": "50% 50%", translate: "none" })}}` +
+          `${homeFocused.join(",")}{${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "-3px", animation: "none", filter: "none", translate: "none", "box-shadow": "none" })}}` : "");
     } },
     // The tab bar (Library only; the game page keeps Steam's tabs in this phase). 3.3.4, from the TV photos: one marker
     // per tab and no more. Built by libraryTabCss (below), from the selector table.
@@ -516,6 +553,8 @@ function rules(mark: string | undefined): Rule[] {
 
 export const CORE_RAIL_ICON_PX = 30;
 export const CORE_LIBRARY_CAPSULE_SCALE = 0.84;
+// Home's capsules (3.3.8): smaller at the TV's 1348 x 758 viewport, so Steam's focus growth stays inside the row.
+export const CORE_HOME_CAPSULE_SCALE = 0.8;
 export const CORE_TAB_ICON_PX = 24;
 
 // Quick Access rows (Decky's plugin list, every ButtonItem, dropdowns) and their dialog fields.
@@ -718,8 +757,11 @@ export function buildCoreUiCss(maps: CoreUiMaps, options: { mark?: string; wordm
         top: "calc(var(--core-ui-scroll, 0px) - var(--core-ui-extend-top, 0px))",
         height: "calc(100% + var(--core-ui-extend-top, 0px) + var(--core-ui-extend-bottom, 0px))",
         "z-index": "-1", "pointer-events": "none", margin: "0", padding: "0", border: "0", "border-radius": "inherit", "background-color": C.black })}}` +
-      // A page host's canvas covers only what is on screen (--core-ui-page-height), not a tall scrolling page.
-      `${hosts.filter(host => host.page).map(host => `${ROOT} ${host.selector}[${CORE_UI_HOST_ATTRIBUTE}] > canvas[${CORE_UI_STARS_ATTRIBUTE}]`).join(",") || `${ROOT} [data-core-ui-none]`}{${imp({ height: "var(--core-ui-page-height, 100vh)" })}}` +
+      // A page host's canvas covers only what is on screen (--core-ui-page-height, 0 until measured), never more than
+      // its host (max-height 100% of the host, its containing block): 3.3.8, no viewport-tall fallback.
+      `${hosts.filter(host => host.page).map(host => `${ROOT} ${host.selector}[${CORE_UI_HOST_ATTRIBUTE}] > canvas[${CORE_UI_STARS_ATTRIBUTE}]`).join(",") || `${ROOT} [data-core-ui-none]`}{${imp({ height: "var(--core-ui-page-height, 0px)", "max-height": "100%" })}}` +
+      // 3.3.8: a canvas whose surface is not on screen (or that belongs to no live surface) is never drawn.
+      `${ROOT} canvas[${CORE_UI_STARS_ATTRIBUTE}]:not([${CORE_UI_LIVE_ATTRIBUTE}]){${imp({ display: "none" })}}` +
       // A host inside another host (and a panel candidate that is not the panel) stays clear: the outer surface's
       // stars show through it. Repeats the host's class so it out-ranks the host's own black rule.
       `${strong.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}="nested"]`).join(",")}{${imp({ "background-color": "transparent", "background-image": "none" })}}`);

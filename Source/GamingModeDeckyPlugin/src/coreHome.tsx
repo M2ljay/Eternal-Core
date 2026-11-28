@@ -1,23 +1,22 @@
 // Eternal Core: Core Home, Core UI phase 2 (docs/eternal/CORE-UI.md, "Phase 2: Home"). Extends how Core's plugin already
-// renders Home (HomeNews.tsx patches /library/home and DailyHistory.tsx fills "On this day"): the bottom tabs become
-// Jarvis brief, Consoles, any registered tab (Club) and On this day; Steam's What's new and Friends go.
+// renders Home (HomeNews.tsx patches /library/home): the bottom tabs become Consoles (the default) and any registered
+// tab (Club); Steam's What's new, Recommended and Friends go. 3.3.8: the Jarvis brief and On this day tabs are gone
+// (the user's call). Jarvis stays in the top bar's orb, his Quick Access tab and the listening pill.
 //
-// Fail soft: everything renders inside an error boundary whose fallback is the tab list Core had before (Steam's Home
-// plus the news and On this day), and Core UI off gives Steam's tabs back at once.
+// Fail soft: everything renders inside an error boundary whose fallback is Steam's own tab list (with the news), and
+// Core UI off gives Steam's tabs back at once.
 
 import { SP_REACT as React, DFL } from "./decky";
 import { coreUiSetting } from "./coreUiSetting";
-import { coreHomeCopy, greetingKey } from "./coreHomeLocale";
+import { coreHomeCopy } from "./coreHomeLocale";
 import {
-  activeHomeTab, availableHomeTabs, composeHomeTabs, consoleShelves, forgeUpdateCount, homeTabsRevision, lastPlayedApp, registerHomeTab,
-  subscribeHomeTabs, BRIEF_ID, HOME_TAB_ORDER, type HomeApp, type ShelfFamily,
+  activeHomeTab, availableHomeTabs, composeHomeTabs, consoleShelves, homeTabsRevision, registerHomeTab,
+  subscribeHomeTabs, CONSOLES_ID, HOME_TAB_ORDER, type HomeApp, type ShelfFamily,
 } from "./coreHomeTabs";
 import { matchCollection, matchTab, tabIcon, CORE_FAMILY_TONES, type CoreIconSet } from "./coreLibraryIcons";
-import { jarvisMenuStore, toggleJarvisTab } from "./jarvisPresence";
-import { clubBriefLine, clubHomeTab } from "./club";
-import { BriefBoundary, CoreBriefHero } from "./CoreBriefHero";
+import { clubHomeTab } from "./club";
 
-const { Focusable, DialogButton, Navigation } = DFL as any;
+const { Focusable, Navigation } = DFL as any;
 
 // The Club tab (src/club/): registered through Home's registry like any other module's tab; shown once the Club is on
 // and has data (clubAvailable), re-checked whenever the Club's store changes.
@@ -36,11 +35,11 @@ const css = `
 .core-home .core-home-label{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C9D1D9;margin:22px 0 12px}
 .core-home .core-home-label img{width:26px;height:26px;object-fit:contain}
 .core-home .core-home-label i{display:inline-block;width:24px;height:3px;background:var(--core-tone,#C9D1D9)}
-.core-home .core-home-row{display:flex;gap:16px;overflow-x:auto;overflow-y:visible;padding:8px 2px 10px;scrollbar-width:none}
-.core-home .core-home-tile{flex:0 0 150px;height:225px;position:relative;background:#1A1D21;border-radius:8px;overflow:hidden;transition:translate .15s ease-out}
+.core-home .core-home-row{display:flex;gap:14px;overflow-x:auto;overflow-y:visible;padding:8px 2px 10px;scrollbar-width:none}
+.core-home .core-home-tile{flex:0 0 120px;height:180px;position:relative;background:#1A1D21;border-radius:8px;overflow:hidden;transition:translate .15s ease-out}
 .core-home .core-home-tile img{width:100%;height:100%;object-fit:cover;display:block}
 .core-home .core-home-tile span{position:absolute;inset:auto 0 0 0;padding:8px;font-size:13px;color:#E6EAEE;background:#000000}
-.core-home .core-home-tile.gpfocus,.core-home .core-home-tile:focus-visible{outline:3px solid #D7263D;outline-offset:0;translate:0 -6px}
+.core-home .core-home-tile.gpfocus,.core-home .core-home-tile:focus-visible{outline:3px solid #D7263D;outline-offset:-3px}
 .core-home .core-home-actions{display:flex;gap:12px;flex-wrap:wrap}
 .core-home .core-home-actions .DialogButton{width:auto;min-width:200px;border-radius:0}
 .core-home .core-home-note{font-size:14px;color:#9AA4AE}
@@ -48,10 +47,6 @@ const css = `
 `;
 
 const steamWindow = () => window as any;
-function appStoreApps(): any {
-  const host = steamWindow();
-  try { return host.appStore?.allApps ?? host.collectionStore?.allAppsCollection?.allApps ?? []; } catch { return []; }
-}
 function userCollections(): any[] {
   const host = steamWindow();
   try { const list = host.collectionStore?.userCollections; return Array.isArray(list) ? list : list && typeof list.values === "function" ? Array.from(list.values()) : []; } catch { return []; }
@@ -81,41 +76,6 @@ function GameTile({ app }: { app: HomeApp }) {
   </Focusable>;
 }
 
-function openJarvis() {
-  const host = steamWindow();
-  toggleJarvisTab({
-    menuStore: () => jarvisMenuStore(host.SteamUIStore?.WindowStore ?? (DFL as any).Router?.WindowStore, 0),
-    navigation: () => Navigation,
-  });
-}
-
-// 3.3.4: the brief is a hero panel (CoreBriefHero.tsx); the 3.3.3 lines stay as its fallback.
-function JarvisBrief({ locale, native }: { locale: string; native: any }) {
-  const text = coreHomeCopy(locale);
-  return <div className="core-home"><style>{css}</style>
-    <BriefBoundary fallback={<PlainBrief locale={locale} />}><CoreBriefHero locale={locale} onTalk={openJarvis} /></BriefBoundary>
-    {native ? <><div className="core-home-label">{text.updates}</div>{native}</> : null}
-  </div>;
-}
-
-function PlainBrief({ locale }: { locale: string }) {
-  const text = coreHomeCopy(locale);
-  const [now, setNow] = React.useState(() => new Date());
-  React.useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60 * 1000); return () => window.clearInterval(timer); }, []);
-  const last = React.useMemo(() => lastPlayedApp(appStoreApps()), [now]);
-  const mods = forgeUpdateCount(steamWindow());
-  let club: string | null = null;
-  try { club = clubBriefLine(now.getTime()); } catch { club = null; }
-  return <div className="core-home"><style>{css}</style>
-    <h2>{text[greetingKey(now.getHours())]}</h2>
-    <p className="core-home-line">{last ? text.lastPlayed.replace("{game}", last.name) : text.nothingYet}</p>
-    {club ? <p className="core-home-line">{club}</p> : null}
-    {mods > 0 ? <p className="core-home-line">{mods === 1 ? text.modsOne : text.mods.replace("{count}", String(mods))}</p> : null}
-    <Focusable className="core-home-actions" flow-children="row">
-      <DialogButton onClick={openJarvis}>{text.talk}</DialogButton>
-    </Focusable>
-  </div>;
-}
 
 const familyName: Record<ShelfFamily, string> = { playstation: "PlayStation", nintendo: "Nintendo", sega: "Sega", xbox: "Xbox", retro: "Retro", vr: "VR" };
 function shelfFamily(name: string): ShelfFamily | undefined {
@@ -151,8 +111,8 @@ class HomeBoundary extends React.Component<{ fallback: any; children?: React.Rea
   render() { return this.state.failed ? this.props.fallback : this.props.children; }
 }
 
-// `native` is Steam's tab container (props.tabs), with What's new already carrying Core's news; `render` adds On this
-// day (DailyHistory's HistoryTabs). Answers Core Home, or what Core rendered before on any failure.
+// `native` is Steam's tab container (props.tabs), with What's new already carrying Core's news; `render` draws the
+// final tree. Answers Core Home, or what Core rendered before on any failure.
 export function CoreHomeTabs({ native, getLocale, render }: { native: any; getLocale: () => string; render: (tree: any) => any }) {
   const on = React.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
   React.useSyncExternalStore(subscribeHomeTabs, homeTabsRevision, homeTabsRevision);
@@ -163,10 +123,8 @@ export function CoreHomeTabs({ native, getLocale, render }: { native: any; getLo
     const locale = getLocale();
     const text = coreHomeCopy(locale);
     const tabs: any[] = native.props.tabs;
-    const whatsNew = tabs.find(tab => tab?.id === BRIEF_ID);
     const core: any[] = [
-      { ...(whatsNew ?? {}), id: BRIEF_ID, title: text.brief, content: <JarvisBrief locale={locale} native={whatsNew?.content} />, order: HOME_TAB_ORDER.brief },
-      { id: "CoreConsoles", title: text.consoles, content: <Consoles locale={locale} />, order: HOME_TAB_ORDER.consoles },
+      { id: CONSOLES_ID, title: text.consoles, content: <Consoles locale={locale} />, order: HOME_TAB_ORDER.consoles },
       ...availableHomeTabs().map(tab => {
         const Component = tab.component as any;
         const content = tab.render ? tab.render({ locale, getLocale }) : Component ? <Component locale={locale} getLocale={getLocale} /> : null;

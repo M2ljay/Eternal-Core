@@ -21,7 +21,7 @@ test('Home editorial survives uninstall/reinstall without mutating native or ano
  const render = root=>{let node=root;for(let n=0;n<3;n++)node=node.type(node.props);return node;};
  const stop=install();const first=[...routes][0](route);
  assert.equal(route.children.type,OtherPlugin,'native route must not be mutated');
- // Core UI 3.3.3: Core Home (coreHome.tsx) arranges the tabs and renders HistoryTabs inside.
+ // Core UI: Core Home (coreHome.tsx) arranges the tabs (3.3.8: Consoles and Club; no On this day).
  assert.equal(render(first.children).type.name,'CoreHomeTabs');
  assert.equal([...routes][0](first).children.type,first.children.type,'stable identity on repeat patch');
  stop();assert.equal(routes.size,0);assert.equal(render(first.children).type,'section','stopped wrapper renders native');

@@ -1,5 +1,4 @@
 import { registerQamVisibilityDocument } from './qamTabVisibility';
-import { HomeHistorySettings, historyTitle } from "./DailyHistory";
 import { HomeNewsSettings } from "./HomeNews";
 import { ClubSettings } from "./club";
 import { call } from "./controlBackend";
@@ -275,7 +274,6 @@ export function ControlCenter({ locale, origin, session, store, controller, sett
         </ControlSection>}
       </div>
       <ControlSection id="news" title="News" locale={locale} icon={<TbPhoto />} collapsed={!expanded.includes("news")} onToggle={toggleSection}><HomeNewsSettings locale={locale} /></ControlSection>
-      <ControlSection id="daily-history" title={historyTitle(locale)} locale={locale} icon={<TbPhoto />} collapsed={!expanded.includes("daily-history")} onToggle={toggleSection}><HomeHistorySettings locale={locale} /></ControlSection>
       <ControlSection id="club" title="Club" locale={locale} icon={<TbTrophy />} collapsed={!expanded.includes("club")} onToggle={toggleSection}><ClubSettings locale={locale} /></ControlSection>
       <QuickSettingsContent page="tools" locale={locale} expanded={expanded} onToggle={toggleSection} />
       <DialogButton className="ph-settings-action" onClick={() => { setCustomizing(false); replayPlayhubOnboarding(); }}>

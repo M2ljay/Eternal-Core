@@ -1,4 +1,4 @@
-// Eternal Core: the Jarvis brief hero's text in Core's 12 languages (docs/eternal/CORE-UI.md, "Phase 2: Home", 3.3.4).
+// Eternal Core: the Today tab's hero (the brief)'s text in Core's 12 languages (docs/eternal/CORE-UI.md, "Phase 2: Home", 3.3.4).
 // The greeting, "Talk to Jarvis" and the mods line stay in coreHomeLocale.ts. Self-contained: tests load it alone.
 
 export type BriefCopy = {
