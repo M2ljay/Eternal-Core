@@ -33,7 +33,7 @@ Events switch themselves on and off by date. One switch in Quick Access > Core >
 - Large game releases: countdown, pre-load reminder, the game's art takes over Home's hero on launch day.
 
 **Core Events (middle)** — themed from a template, not individually designed: own colours, a starfield variant, a
-one-day countdown and a Jarvis line, all generated. Candidates (owner to confirm): New Year, Thanksgiving, Angel's and
+one-day countdown and a Jarvis line, all generated. Members (confirmed by the owner): New Year, Thanksgiving, Angel's and
 the owner's birthdays, other Marvel films, mid-size game releases, favourite artists below Uzi and Drake.
 
 **Events (standard)** — every other holiday or release: an accent, a Jarvis greeting, and "Out now" in the speed dial for music.
@@ -53,7 +53,8 @@ the owner's birthdays, other Marvel films, mid-size game releases, favourite art
 
 - Standard holidays are built in.
 - The owner's own events come from a dedicated calendar named "Variants" (Google or iCloud) edited from his phone; Core reads
-  its private ICS link. The event title picks the theme ("Christmas", "Doomsday", …); unknown titles get a generic
+  its private ICS link. The title's prefix sets the tier: "Canon Event: Avengers Doomsday", "Core Event: <name>", or no prefix for a plain
+Event; the rest of the title picks the theme ("Christmas", "Doomsday", …), matched loosely (case and punctuation ignored); unknown titles get a generic
   accent plus a Jarvis greeting naming the occasion. Multi-day events are supported. Angel may add events if the
   calendar is shared with her.
 - Music: Awesome Mix checks YouTube Music for new releases from followed artists automatically; anticipated albums go
