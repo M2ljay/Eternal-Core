@@ -1,4 +1,7 @@
-# Core Events — agreed specification
+# Events and Canon Events — agreed specification
+
+Naming: the massive tier is called **Canon Events** (a nod to Spider-Man: Across the Spider-Verse, where a canon event
+is a fixed moment that must happen); everyday ones are plain **events**. The Look switch reads "Canon Events".
 
 Status: approved by the owner on 2026-11-28; not built yet. Build after 3.3.12. Design each massive event on the
 "Core: current vision" canvas before building it (Christmas first).
@@ -13,11 +16,11 @@ Only accents, never layout or the base design rules (AMOLED black, crimson, squa
 - Jarvis greeting line
 - Home hero art and countdowns (see tiers)
 
-Events switch themselves on and off by date. One switch in Quick Access > Core > Look turns events off.
+Events switch themselves on and off by date. One switch in Quick Access > Core > Look, labelled "Canon Events", turns events off.
 
 ## Tiers
 
-**Massive** — individually designed, multi-day, with a countdown on Home in the run-up:
+**Canon Events (massive)** — individually designed, multi-day, with a countdown on Home in the run-up:
 
 - Christmas and Halloween: full seasonal treatment (own starfield, boot screen, Home look, Jarvis lines, multi-day
   run-up).
@@ -28,7 +31,7 @@ Events switch themselves on and off by date. One switch in Quick Access > Core >
   it when it drops, the album pinned first in the speed dial until the owner unpins it.
 - Large game releases: countdown, pre-load reminder, the game's art takes over Home's hero on launch day.
 
-**Standard** — every other holiday or release: an accent, a Jarvis greeting, and "Out now" in the speed dial for music.
+**Events (standard)** — every other holiday or release: an accent, a Jarvis greeting, and "Out now" in the speed dial for music.
 
 ## Overlap rules
 
@@ -44,7 +47,7 @@ Events switch themselves on and off by date. One switch in Quick Access > Core >
 ## Sources
 
 - Standard holidays are built in.
-- The owner's own events come from a dedicated "Core Events" calendar (Google or iCloud) edited from his phone; Core reads
+- The owner's own events come from a dedicated "Core Events" calendar (Google or iCloud; the calendar may be named "Canon Events") edited from his phone; Core reads
   its private ICS link. The event title picks the theme ("Christmas", "Doomsday", …); unknown titles get a generic
   accent plus a Jarvis greeting naming the occasion. Multi-day events are supported. Angel may add events if the
   calendar is shared with her.
