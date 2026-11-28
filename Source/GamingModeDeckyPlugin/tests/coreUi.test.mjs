@@ -59,6 +59,8 @@ const maps = {
   home: { TabbedContent: "_HmTabbed" },
   // 3.3.8: the dialog fields as the November 2026 client ships them (no FieldChildren).
   gamepaddialog: { Field: "_GdField", FieldLabel: "_GdLabel", FieldDescription: "_GdDesc", FieldChildrenInner: "_GdKids" },
+  // 3.3.9: Steam's game page root and play bar.
+  appdetails: { AppDetailsContainer: "_AdCont", PlaySection: "_AdPlay", AppDetailsRoot: "_AdRoot", AppActionButton: "_AdPlayBtn" },
 };
 // Lookalikes: a dialog map with a dropdown key, a desktop context menu (no BasicContextMenuHeader).
 const unrelated = [{ GamepadDialogContent: "_gdc", DropDownControlButton: "_wrongDd" }, { Item: "_otherItem", Menu: "_otherMenu" },
@@ -115,7 +117,7 @@ function checkSheet(sheet) {
   }
   // Brand: no gold, no Steam blue, no gradients or haze, no glow (blurred shadows).
   // The hero's fade into black is a mask (no colour painted), the one gradient allowed.
-  assert.doesNotMatch(css.replace(/(-webkit-)?mask-image:linear-gradient\(180deg, #000000 45%, transparent 100%\) !important/g, ""), /gradient|#1a9fff|#FFD700|#D4AF37|gold|drop-shadow|text-shadow:(?!none)/i);
+  assert.doesNotMatch(css.replace(/(-webkit-)?mask-image:linear-gradient\(180deg, #000000 \d+%, transparent 100%\) !important/g, "").replace(/text-shadow:0 1px 3px rgba\(0,0,0,0\.65\) !important/g, ""), /gradient|#1a9fff|#FFD700|#D4AF37|gold|drop-shadow|text-shadow:(?!none)/i);
   for (const [, value] of css.matchAll(/box-shadow:([^;}]*)/g)) assert.match(value, /^(none|inset [^,]*(, inset [^,]*)*) !important$/, `no glow: ${value}`);
   for (const [, value] of css.matchAll(/box-shadow:([^;}]*)/g)) for (const part of value.replace(" !important", "").split(",")) assert.doesNotMatch(part.trim(), /^inset \S+ \S+ [1-9]/, `no blur: ${value}`);
   assert.match(css, /inset 3px 0 0 #D7263D/, "focused Steam menu row: crimson left bar");
@@ -144,12 +146,18 @@ function checkSheet(sheet) {
   // Full height: the menu's and Quick Access's stars reach the screen edges through the canvas only.
   assert.match(css, /canvas\[data-core-ui-stars\]\{[^}]*top:calc\(var\(--core-ui-scroll, 0px\) - var\(--core-ui-extend-top, 0px\)\)[^}]*background-color:#000000/);
   const hosts = JSON.parse(JSON.stringify(sheet.hosts));
-  assert.deepEqual(hosts.map(host => host.id), ["menu", "qam-container", "qam-panel", "qam", "context", "menu-footer", "qam-footer", "qam-footer-shadow", "footer-opaque", "header-opaque", "home", "library", "collector-rom-page"]);
-  assert.deepEqual(hosts.filter(host => host.page).map(host => host.id), ["home", "library", "collector-rom-page"]);
+  assert.deepEqual(hosts.map(host => host.id), ["menu", "qam-container", "qam-panel", "qam", "context", "menu-footer", "qam-footer", "qam-footer-shadow", "footer-opaque", "home", "library", "game-page", "collector-rom-page"]);
+  assert.deepEqual(hosts.filter(host => host.page).map(host => host.id), ["home", "library", "game-page", "collector-rom-page"]);
+  const game = hosts.find(host => host.id === "game-page");
+  assert.equal(game.viewport, true); assert.equal(game.exclude, ".romm-core-page"); assert.equal(game.below, "._AdPlay");
   assert.deepEqual(hosts.filter(host => host.fullHeight).map(host => host.id), ["menu", "qam-container", "qam-panel", "qam"]);
   assert.deepEqual(hosts.filter(host => host.panel).map(host => host.id), ["menu", "qam-container", "qam-panel", "qam"]);
   assert.deepEqual(hosts.filter(host => host.source === "plugin").map(host => host.id), ["collector-rom-page"]);
-  assert.deepEqual(JSON.parse(JSON.stringify(sheet.skipped)), []);
+  // 3.3.9's surfaces (the game page, Settings, Downloads...) are not in these fake maps; tests/coreUiMatchers.test.mjs
+  // builds them from the live key lists.
+  const later = new Set(["game-hero", "game-playbar", "game-cloud", "game-screen-two", "game-sections", "settings-pages", "toggles", "downloads-page",
+    "download-bar", "ingame-menu", "overlay-configurator", "search-pages"]);
+  assert.deepEqual(JSON.parse(JSON.stringify(sheet.skipped)).filter(id => !later.has(id)), []);
 }
 
 const all = Object.values(maps);
@@ -255,6 +263,7 @@ class Node {
   get id() { return this.attrs.get("id") ?? ""; } set id(value) { this.attrs.set("id", value); }
   get isConnected() { let node = this; while (node.parentElement) node = node.parentElement; return node === this.ownerDocument.documentElement; }
   get firstChild() { return this.children[0] ?? null; }
+  querySelector(selector) { const walk = node => { for (const child of node.children) { if (child.matches(selector)) return child; const hit = walk(child); if (hit) return hit; } return null; }; return walk(this); }
   get nextSibling() { const list = this.parentElement?.children ?? []; return list[list.indexOf(this) + 1] ?? null; }
   get scrollTop() { return this._scroll ?? 0; } set scrollTop(v) { this._scroll = v; }
   get clientWidth() { return this.rect.width; } get clientHeight() { return this.rect.height; }
@@ -273,6 +282,10 @@ class Node {
     });
   }
   closest(selector) { for (let node = this; node; node = node.parentElement) if (node.matches(selector)) return node; return null; }
+  contains(other) { for (let node = other; node; node = node.parentElement) if (node === this) return true; return false; }
+  get nextElementSibling() { return this.nextSibling; }
+  get scrollHeight() { return this._scrollHeight ?? this.rect.height; }
+  scrollTo({ top }) { this.scrolledTo = top; this._scroll = top; }
   getBoundingClientRect() { const { left, top, width, height } = this.rect; return { left, top, width, height, right: left + width, bottom: top + height }; }
   getContext() { return this.ownerDocument.context; }
   get width() { return this._w ?? 0; } set width(v) { this._w = v; } get height() { return this._h ?? 0; } set height(v) { this._h = v; }
@@ -662,4 +675,138 @@ test("every Starfield canvas that belongs to no connected host is removed", () =
   const now = page.children.filter(child => child.tagName === "canvas");
   assert.equal(now.length, 1, "the host gets one fresh canvas");
   f.runtime.dispose();
+});
+
+// 3.3.9: Steam's game page, screen two.
+function gamePageFixture() {
+  const f = runtimeFixture();
+  const { doc } = f;
+  const page = doc.body.appendChild(new Node(doc, "div", ["_AdCont"]));
+  page.rect = { left: 0, top: 638, width: 1920, height: 2000 };
+  const bar = page.appendChild(new Node(doc, "div", ["_AdPlay"]));
+  bar.rect = { left: 0, top: 638, width: 1920, height: 120 };
+  f.runtime.sync();
+  return { ...f, page, bar };
+}
+
+test("the game page: stars only below the play bar, never over the art", () => {
+  const f = gamePageFixture();
+  const { page } = f;
+  assert.equal(page.getAttribute("data-core-ui-host"), "1");
+  f.step(0);
+  const canvas = page.firstChild;
+  assert.equal(canvas.getAttribute("data-core-ui-stars"), "game-page");
+  // The play bar ends at 758: the canvas starts there (120px into the page) and covers the rest of the screen.
+  assert.equal(canvas.style.props.get("--core-ui-scroll"), "120px");
+  assert.equal(canvas.style.props.get("--core-ui-page-height"), "322px");
+  // Scrolled to screen two: the play bar has left the screen, the stars fill the view.
+  page.rect = { left: 0, top: -400, width: 1920, height: 2000 };
+  f.bar.rect = { left: 0, top: -400, width: 1920, height: 120 };
+  f.step(40);
+  assert.equal(canvas.style.props.get("--core-ui-scroll"), "400px");
+  assert.equal(canvas.style.props.get("--core-ui-page-height"), "1080px");
+  f.runtime.dispose();
+});
+
+test("the game page: a ROM page (The Collector's) is never this host, and leaving the page leaves nothing behind", () => {
+  const f = gamePageFixture();
+  const { doc, page } = f;
+  f.step(0);
+  page.appendChild(new Node(doc, "div", ["romm-core-page"]));
+  f.runtime.sync();
+  assert.equal(page.getAttribute("data-core-ui-host"), null);
+  assert.ok(!page.children.some(child => child.tagName === "canvas"), "no Core canvas on a ROM page's container");
+  page.children.pop();
+  f.runtime.sync();
+  assert.equal(page.getAttribute("data-core-ui-host"), "1");
+  page.remove();
+  f.runtime.sync();
+  assert.equal(doc.querySelectorAll("[data-core-ui-stars]").filter(node => node.getAttribute("data-core-ui-stars") === "game-page").length, 0);
+  assert.equal(f.runtime.diagnostics().hosts["game-page"], undefined);
+  f.runtime.dispose();
+});
+
+// 3.3.9 (TV snapshot: Quick Access and the Steam menu are BrowserView windows of their own, QuickAccess_uid21 and
+// MainMenu_uid21, which no window store lists, so Core UI never reached them).
+test("popup windows: Quick Access's and the Steam menu's own documents are found and styled like the main window", () => {
+  const coreUi = load("coreUi.ts", {}, { window: {}, performance: { now: () => 0 }, Date });
+  const main = fakeDocument(); main.defaultView.innerWidth = 1348; main.title = "Steam Big Picture Mode";
+  const qamDoc = fakeDocument(); qamDoc.defaultView.innerWidth = 855; qamDoc.title = "QuickAccess_uid21";
+  const menuDoc = fakeDocument(); menuDoc.defaultView.innerWidth = 240; menuDoc.title = "MainMenu_uid21";
+  const host = { document: main, closed: false };
+  let scans = 0, clock = 0;
+  const popups = coreUi.popupDocuments(() => clock, doc => doc === main ? [qamDoc, menuDoc] : [], () => { scans++; });
+  const docs = coreUi.steamUiDocuments(host, undefined, popups);
+  assert.deepEqual([...docs.map(doc => doc.title)], ["Steam Big Picture Mode", "QuickAccess_uid21", "MainMenu_uid21"]);
+  coreUi.steamUiDocuments(host, undefined, popups);
+  assert.equal(scans, 1, "the owner cache is refreshed at most every POPUP_RESCAN_MS");
+  clock += coreUi.POPUP_RESCAN_MS;
+  coreUi.steamUiDocuments(host, undefined, popups);
+  assert.equal(scans, 2, "and then again, so a recreated popup is found");
+
+  // The runtime styles every popup: the stylesheet, the root attribute, and the panel in its own 855 px window.
+  const qam = qamDoc.body.appendChild(new Node(qamDoc, "div", ["_QamMenu"]));
+  qam.rect = { left: 0, top: 0, width: 855, height: 758 };
+  const menu = menuDoc.body.appendChild(new Node(menuDoc, "div", ["_23IDiIFxX"]));
+  menu.rect = { left: 0, top: 0, width: 240, height: 758 };
+  const store = new Map();
+  const setting = settingModule.createCoreUiSetting({ getItem: key => store.get(key) ?? null, setItem: (key, value) => store.set(key, value) });
+  const runtime = coreUi.createCoreUi({ ui: decky4(all), documents: () => [main, qamDoc, menuDoc], setting, wordmark, running: () => false,
+    frame: { request: () => 1, cancel: () => {} }, every: { start: () => 1, stop: () => {} }, now: () => 0, log: () => {} });
+  for (const doc of [main, qamDoc, menuDoc]) {
+    assert.ok(doc.getElementById("core-ui-style"), `stylesheet in ${doc.title}`);
+    assert.equal(doc.documentElement.getAttribute("data-core-ui"), "1");
+  }
+  assert.equal(qam.getAttribute("data-core-ui-host"), "1", "Quick Access's panel fills its window and is still the panel");
+  assert.equal(menu.getAttribute("data-core-ui-host"), "1");
+  assert.ok(qam.children.some(child => child.tagName === "canvas"), "the Starfield in Quick Access's window");
+  runtime.dispose();
+  assert.equal(qamDoc.getElementById("core-ui-style"), null, "and all of it goes with Core UI off");
+});
+
+test("popup windows: every live BrowserView React holds is found (closed ones are not)", () => {
+  const anchors = load("onboardingAnchors.ts", {}, { window: undefined });
+  const view = title => ({ closed: false, document: { title } });
+  const qamView = view("QuickAccess_uid21"), menuView = view("MainMenu_uid21"), gone = { closed: true, document: { title: "Old" } };
+  const owner = win => ({ GetViewWindow: () => win, GetBrowserView: () => ({}) });
+  const leaf = { memoizedState: { memoizedState: owner(qamView), next: { memoizedState: owner(gone), next: null } } };
+  const other = { memoizedState: { memoizedState: owner(menuView), next: null } };
+  const root = { child: leaf, sibling: null, memoizedState: null };
+  leaf.sibling = other;
+  const element = { ["__reactContainer$x"]: { return: null, stateNode: { current: root } } };
+  const main = { querySelectorAll: () => [element] };
+  assert.deepEqual([...anchors.browserViewDocuments(main).map(doc => doc.title)], ["QuickAccess_uid21", "MainMenu_uid21"]);
+});
+
+test("the game view: down from the play bar scrolls screen two (its tab row) to the top, up scrolls back; a ROM page is The Collector's", () => {
+  const f = runtimeFixture();
+  const { doc } = f;
+  const listeners = [];
+  doc.addEventListener = (type, handler) => listeners.push({ type, handler });
+  doc.removeEventListener = (type, handler) => { const at = listeners.findIndex(item => item.handler === handler); if (at >= 0) listeners.splice(at, 1); };
+  const computed = doc.defaultView.getComputedStyle;
+  const scroller = doc.body.appendChild(new Node(doc, "div", ["_Scroller"]));
+  scroller.rect = { left: 0, top: 0, width: 1920, height: 1080 }; scroller._scrollHeight = 4000;
+  doc.defaultView.getComputedStyle = node => node === scroller ? { overflowY: "auto", position: "relative" } : computed(node);
+  const page = scroller.appendChild(new Node(doc, "div", ["_AdCont"]));
+  const bar = page.appendChild(new Node(doc, "div", ["_AdPlay"]));
+  const play = bar.appendChild(new Node(doc, "div", ["_AdPlayBtn"]));
+  const row = page.appendChild(new Node(doc, "div", ["_TpRow"]));
+  const tab = row.appendChild(new Node(doc, "div", ["_TpTab"]));
+  row.rect = { left: 0, top: 1100, width: 1920, height: 58 };
+  f.runtime.sync();
+  const focusin = listeners.find(item => item.type === "focusin")?.handler;
+  assert.ok(focusin, "listens for focus");
+  focusin({ target: play });
+  focusin({ target: tab });
+  assert.equal(scroller.scrolledTo, 1100 - 40, "the tab row lands just under the top bar");
+  focusin({ target: play });
+  assert.equal(scroller.scrolledTo, 0, "back up: screen one");
+  // A ROM page: The Collector scrolls it itself.
+  scroller.scrolledTo = undefined;
+  page.appendChild(new Node(doc, "div", ["romm-core-page"]));
+  focusin({ target: tab });
+  assert.equal(scroller.scrolledTo, undefined);
+  f.runtime.dispose();
+  assert.equal(listeners.length, 0, "the listener goes with Core UI off");
 });

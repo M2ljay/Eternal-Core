@@ -62,7 +62,10 @@ export const CORE_MENU_LOGO_BAND = 80;
 export const CORE_MENU_LOGO_SIZE = 44;
 
 export type CoreUiMapName = "mainmenu" | "quickaccess" | "controls" | "footer" | "header" | "dropdown" | "contextmenu"
-  | "gamepadui" | "tabbedpage" | "library" | "appgrid" | "portrait" | "recentgames" | "carousel" | "home" | "gamepaddialog";
+  | "gamepadui" | "tabbedpage" | "library" | "appgrid" | "portrait" | "recentgames" | "carousel" | "home" | "gamepaddialog"
+  // 3.3.9: the game page, Settings, Downloads, the overlay and the controller configurator, search.
+  | "appheader" | "appdetails" | "appsection" | "playsection" | "settings" | "toggle" | "downloads" | "downloadbar"
+  | "overlay" | "configurator" | "configsummary" | "searchbar" | "searchresults" | "suggestions";
 export type CoreUiMaps = Partial<Record<CoreUiMapName, Record<string, string>>>;
 
 // How each class map is recognised (3.3.8): a signature of keys, never one key. `all` must all be present (kept to keys
@@ -72,7 +75,8 @@ export type CoreUiMaps = Partial<Record<CoreUiMapName, Record<string, string>>>;
 // The real key lists of both modules are test fixtures (tests/fixtures/steam-class-maps.json); CORE-UI.md has them.
 export type CoreUiMapSignature = { all: string[]; any?: string[][]; none?: string[] };
 export const CORE_UI_MAP_SIGNATURES: Record<CoreUiMapName, CoreUiMapSignature> = {
-  mainmenu: { all: ["Menu", "ItemIcon", "ItemLabel"], any: [["ActiveDot", "FooterBoxShadow"]] },
+  // 3.3.9: the in-game variant is the same map (AppRunningControls, NavigationColumn, AppColumn...).
+  mainmenu: { all: ["Menu", "ItemIcon", "ItemLabel"], any: [["ActiveDot", "FooterBoxShadow", "AppRunningControls", "NavigationColumn"]] },
   // @decky/ui's quickAccessMenuClasses (webpack 34544 on the November 2026 client: no TabContentColumn any more).
   quickaccess: { all: ["TabGroupPanel", "Tab", "Title"],
     any: [["Tabs", "TabsWithFooter", "BottomTabs", "TabList"], ["TabContentColumn", "AllTabContents", "ContentTransition"], ["QuickAccessMenu", "Menu", "Container"]] },
@@ -95,6 +99,27 @@ export const CORE_UI_MAP_SIGNATURES: Record<CoreUiMapName, CoreUiMapSignature> =
   // Webpack 2053 on the November 2026 client: no FieldChildren (FieldChildrenInner / FieldChildrenWithIcon instead).
   gamepaddialog: { all: ["Field", "FieldLabel"],
     any: [["FieldChildren", "FieldChildrenInner", "FieldChildrenWithIcon"], ["FieldDescription", "FieldLeftColumn", "FieldRightColumn"]] },
+  // 3.3.9, from the coordinator's live read (steam-class-signatures-2026-11-27; tests/fixtures/steam-class-maps.json).
+  // The game page: Steam's header (sharedappdetailsheader), the page root and play bar (basicappdetailssectionstyler),
+  // its sections (appdetailssection) and the play section's cloud status (appdetailsplaysection; key names from Clean
+  // Gameview's readable class names, not yet read live: CORE-UI.md says how to confirm them from the snapshot).
+  appheader: { all: ["TopCapsule", "HeaderBackgroundImage", "ImgSrc"], any: [["TopGradient", "BoxSizer"], ["FullscreenEnterStart", "FullscreenEnterDone"]] },
+  appdetails: { all: ["AppDetailsContainer", "PlaySection"], any: [["AppActionButton", "ActionRow", "AppButtons"], ["AppDetailsRoot", "AppDetailsContent", "AppDetailSectionList"]] },
+  appsection: { all: ["AppDetailsSection", "AppDetailsSectionContainer"], any: [["RightColumnSection", "AppDetailsSectionHasLabel", "Body"]] },
+  playsection: { all: ["CloudStatusLabel"], any: [["CloudSyncProblem", "CloudSyncProblemIcon"]] },
+  // Settings (the paged settings dialog; an older module has the keys without the PagedSettingsDialog_ prefix).
+  settings: { all: [], any: [["PagedSettingsDialog_PageListColumn", "PageListColumn"], ["PagedSettingsDialog_PageListItem", "PageListItem"],
+    ["PageListItem_Title", "PagedSettingsDialog_PageList", "PageList"]] },
+  // The small toggle map (Toggle, ToggleRail, ToggleSwitch, ToggleRow); gamepaddialog carries its own copy plus On.
+  toggle: { all: ["Toggle", "ToggleRail", "ToggleSwitch"], any: [["ToggleRow"]], none: ["Field"] },
+  downloads: { all: ["DownloadsPage", "SectionItem"], any: [["SectionTitle", "ItemLists"], ["ProgressBar", "SectionItemStatus"]] },
+  downloadbar: { all: ["BottomBar", "DownloadStatus"], any: [["DetailedDownloadProgress", "ProgressBarWrapper"]] },
+  overlay: { all: ["OverlayPopup", "ControllerConfiguratorWrapper"], any: [["BackToGame", "ExitGameBtn", "Toolbar"]] },
+  configurator: { all: ["ControllerConfiguratorMain", "ControllerConfiguratorGamepadPage"], any: [["TopSectionHeader", "ConfigurationName", "MainOptionsButton"]] },
+  configsummary: { all: ["ControllerConfiguratorSummary", "ControllerLayout"], any: [["ControlsListSection", "StandardControl"]] },
+  searchbar: { all: ["SearchBox", "SearchFieldBackground"], any: [["SearchIconLeft", "SearchIconRight"], ["ShowingSearch", "SearchAndTitleContainer"]] },
+  searchresults: { all: ["GamepadSearch", "ResultsRow"], any: [["ResultTemplate", "ResultsGridWrapper"]] },
+  suggestions: { all: ["Suggestions", "Suggestion"] },
 };
 
 export function matchesSignature(map: any, signature: CoreUiMapSignature): boolean {
@@ -303,14 +328,16 @@ function rules(mark: string | undefined): Rule[] {
       `${ROOT} body{${imp({ [CORE_RADIUS_FLOAT_VAR]: CORE_RADIUS_FLOAT })}}${ROOT} .GenericConfirmDialog{${imp({ "border-radius": FLOAT })}}` },
     // Global chrome: the top bar and the button-hint bar are clear over game art and pure black anywhere else
     // (the runtime says which: data-core-ui-chrome), and whenever Steam paints them opaque.
+    // 3.3.9 (TV: "either fully black or fully transparent, including search"): the top bar is fully transparent
+    // everywhere, over art and over black alike: no bar, no blur, no gradient, whatever Steam marks it (HeaderOpaque
+    // included). Clock, icons and avatar steel or white, with one soft text shadow so they read over bright art.
     { id: "chrome-header", needs: [["header", "Header"]], css: s => {
       const header = `${ROOT} ${s("header", "Header")}`;
-      return `${header},${header}::before,${header}::after{${imp({ ...CLEAR, "backdrop-filter": "none", filter: "none", "border-bottom-color": "transparent" })}}` +
-        `${header}[${CORE_UI_CHROME_ATTRIBUTE}="black"]{${imp(SOLID_BLACK)}}${header}{${imp({ "border-radius": SQUARE })}}`;
-    } },
-    { id: "chrome-header-opaque", needs: [["header", "HeaderOpaque"]], css: s => {
-      const opaque = `${ROOT} ${s("header", "HeaderOpaque")}`;
-      return `${opaque}{${imp(SOLID_BLACK)}}${opaque}::before,${opaque}::after{${imp({ ...CLEAR, "backdrop-filter": "none" })}}`;
+      const opaque = s("header", "HeaderOpaque") ? `${ROOT} ${s("header", "HeaderOpaque")}` : "";
+      const all = [header, ...(opaque ? [opaque] : [])];
+      return `${all.flatMap(sel => [sel, `${sel}::before`, `${sel}::after`, `${sel}[${CORE_UI_CHROME_ATTRIBUTE}]`]).join(",")}{${imp({ ...CLEAR, "backdrop-filter": "none", filter: "none",
+          "border-bottom-color": "transparent", "border-radius": SQUARE, opacity: "1" })}}` +
+        `${header}{${imp({ color: C.steel })}}${header} :is(svg,span,div){${imp({ "text-shadow": CORE_HEADER_TEXT_SHADOW })}}`;
     } },
     { id: "chrome-footer", needs: [["footer", "BasicFooter"]], css: s => {
       const footer = `${ROOT} ${s("footer", "BasicFooter")}`;
@@ -326,14 +353,15 @@ function rules(mark: string | undefined): Rule[] {
     // structure only (the field is the header's element that holds the <input>), never a hashed class: a square
     // gunmetal field with steel text, a #9AA4AE placeholder and a steel magnifier; focused, a 2px crimson underline and
     // no glow. Its height is the top bar's (Steam already sizes it to the bar); Steam's blue is gone.
+    // 3.3.9: transparent like the bar: the steel magnifier and text over a 1px steel underline, 2px crimson when focused.
     { id: "search-field", needs: [["header", "Header"]], css: s => {
       const header = `${ROOT} ${s("header", "Header")}`;
       const field = `${header} div:has(> input)`;
-      return `${field}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": SQUARE, "box-shadow": "none", border: "0", outline: "none", filter: "none" })}}` +
+      return `${field}{${imp({ "background-color": "transparent", "background-image": "none", "border-radius": SQUARE, "box-shadow": `inset 0 -1px 0 ${C.steel}`, border: "0", outline: "none", filter: "none", "backdrop-filter": "none" })}}` +
         `${field} > input{${imp({ color: C.steel, "background-color": "transparent", "background-image": "none", "box-shadow": "none", border: "0", outline: "none", "caret-color": C.crimson })}}` +
         `${field} > input::placeholder{${imp({ color: C.hint, opacity: "1" })}}` +
         `${field} > svg,${field} > svg *{${imp({ color: C.steel, fill: C.steel })}}` +
-        `${field}:focus-within,${field}:has(> input:focus),${field}.gpfocuswithin{${imp({ "background-color": C.gunmetal, "box-shadow": `inset 0 -2px 0 ${C.crimson}`, outline: "none", filter: "none" })}}`;
+        `${field}:focus-within,${field}:has(> input:focus),${field}.gpfocuswithin{${imp({ "background-color": "transparent", "box-shadow": `inset 0 -2px 0 ${C.crimson}`, outline: "none", filter: "none" })}}`;
     } },
     // Steam's dialog field rows everywhere (3.3.8: Settings rows, Downloads, any page built from DialogField): no blue
     // band; the focused row gunmetal with the square crimson left bar, like the Steam menu. Quick Access keeps its own
@@ -485,14 +513,32 @@ function rules(mark: string | undefined): Rule[] {
       return `${home}{${imp({ "background-color": C.black, "background-image": "none" })}}` +
         (s("home", "TabbedContent") ? `${ROOT} ${s("home", "TabbedContent")}{${imp(CLEAR)}}` : "");
     } },
-    // The hero: Steam's recent-games art runs taller (more art) and fades into the black through a mask, so
-    // nothing is painted over it.
+    // Home is first about the art (3.3.9, TV: "more inspiration from the Art Hero theme", with the user's Art Hero options:
+    // Expanded Hero, Linear Gradient, carousel height 5, larger carousel font, font height -4, cover/center). The focused
+    // game's hero fills Home (the recent section is one screen tall) at full brightness, with a short fade at the bottom
+    // only; the carousel sits low over the art, the focused game's name in larger type above its capsule; Steam's
+    // "Recent games" header and the green play triangle are hidden. The tabs and shelves are below the fold, on black
+    // with stars (the home host). Measures: CORE_HOME_ART.
     { id: "home-hero", needs: [["recentgames", "RecentGamesBackgroundContainer"]], css: s => {
-      const keys = ["RecentGamesBackgroundContainer", "RecentGamesBackgroundImages"].filter(key => s("recentgames", key) !== "")
-        .map(key => `${ROOT} ${s("recentgames", key)}`);
-      return `${keys.join(",")}{${imp({ "-webkit-mask-image": "linear-gradient(180deg, #000000 45%, transparent 100%)",
-        "mask-image": "linear-gradient(180deg, #000000 45%, transparent 100%)", "min-height": "62vh" })}}` +
-        (s("recentgames", "RecentGamesHeaderLabel") ? `${ROOT} ${s("recentgames", "RecentGamesHeaderLabel")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` : "");
+      const a = CORE_HOME_ART;
+      const r = (key: string) => s("recentgames", key) ? `${ROOT} ${s("recentgames", key)}` : "";
+      const k = (key: string) => s("carousel", key) ? `${ROOT} ${s("carousel", key)}` : "";
+      const mask = `linear-gradient(180deg, #000000 ${a.fadeFrom}%, transparent 100%)`;
+      const art = [r("RecentGamesBackgroundContainer"), r("RecentGamesBackgroundImages")].filter(Boolean);
+      const headers = [r("RecentGamesHeader"), r("RecentGamesHeaderLabel")].filter(Boolean);
+      const label = k("CarouselGameLabelWrapper");
+      const shown = label ? [`${ROOT} .gpfocuswithin > ${s("carousel", "CarouselGameLabelWrapper")}`,
+        ...(s("carousel", "ShowAsHovered") ? [`${label}${s("carousel", "ShowAsHovered")}`] : [])] : [];
+      return (s("home", "RecentSection") ? `${ROOT} ${s("home", "RecentSection")}{${imp({ height: "100vh", padding: "0" })}}` : "") +
+        `${art.join(",")}{${imp({ "-webkit-mask-image": mask, "mask-image": mask, "min-height": "100vh", "z-index": "1" })}}` +
+        (r("RecentGamesBackground") ? `${r("RecentGamesBackground")}{${imp({ position: "absolute", left: "0", width: "100vw", "min-width": "100vw", height: "100vh", "max-height": "none",
+          opacity: "1", filter: "none", "border-radius": SQUARE })}}` : "") +
+        (r("RecentGamesBackgroundImage") ? `${r("RecentGamesBackgroundImage")}{${imp({ "object-fit": "cover", "object-position": "center", opacity: "1", filter: "none" })}}` : "") +
+        (headers.length ? `${headers.join(",")}{${imp({ display: "none" })}}` : "") +
+        (r("RecentGamesContainer") ? `${r("RecentGamesContainer")}{${imp({ "margin-top": "-1vh", "padding-top": "0" })}}` : "") +
+        (r("RecentGamesInnerContainer") ? `${r("RecentGamesInnerContainer")}{${imp({ position: "relative", top: `${a.carouselTop}vh`, height: `${a.carouselHeight}vh` })}}` : "") +
+        (shown.length ? `${shown.join(",")}{${imp({ position: "absolute", top: `-${a.labelEm}em`, visibility: "visible", "font-size": `${a.labelPx}px`, color: C.white })}}` : "") +
+        (k("Play") && s("carousel", "ActionIcon") ? `${k("Play")} ${s("carousel", "ActionIcon")}{${imp({ display: "none" })}}` : "");
     } },
     { id: "home-glow", needs: [["carousel", "CarouselCapsuleBackgroundGlow"]], css: s =>
       `${ROOT} ${s("carousel", "CarouselCapsuleBackgroundGlow")}{${imp({ opacity: "0" })}}` },
@@ -528,7 +574,7 @@ function rules(mark: string | undefined): Rule[] {
         (home.length ? `${home.join(",")}{${imp({ scale: String(CORE_HOME_CAPSULE_SCALE), "transform-origin": "50% 50%", translate: "none" })}}` +
           `${homeFocused.join(",")}{${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "-3px", animation: "none", filter: "none", translate: "none", "box-shadow": "none" })}}` : "");
     } },
-    // The tab bar (Library only; the game page keeps Steam's tabs in this phase). 3.3.4, from the TV photos: one marker
+    // The Library's tab bar (the game page has its own rule since 3.3.9, game-screen-two). 3.3.4, from the TV photos: one marker
     // per tab and no more. Built by libraryTabCss (below), from the selector table.
     { id: "library-tabs", needs: [["library", "GamepadLibrary"]], targets: ["libraryTab"], css: (s, t) => {
       const lib = s("library", "GamepadLibrary");
@@ -542,6 +588,140 @@ function rules(mark: string | undefined): Rule[] {
     { id: "home-tabs", needs: [], targets: ["homeTabPage", "libraryTab"], css: (_s, t) =>
       libraryTabCss({ scopes: t("homeTabPage").map(sel => `${ROOT} ${sel}`), tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"),
         row: t("libraryTabRow"), rowFill: "transparent" }) },
+    // ---- 3.3.9: Steam's game page as the clean game view (CORE-UI.md, "The game view"), matching The Collector's ROM
+    // page. Screen one: the art fills the view above the footer (cover, 60% brightness, Steam's top gradient cleared),
+    // the logo locked bottom-left at most 120px, an 80px transparent play bar. Measures: CORE_GAME_VIEW.
+    { id: "game-hero", needs: [["appheader", "TopCapsule"], ["appheader", "ImgSrc"]], css: s => {
+      const g = CORE_GAME_VIEW, screen = `calc(100vh - ${g.playbar + g.footer}px)`;
+      const cap = `${ROOT} ${s("appheader", "TopCapsule")}`;
+      const state = (key: string) => s("appheader", key) ? `${cap}${s("appheader", key)}` : "";
+      const full = ["FullscreenEnterActive", "FullscreenEnterDone", "FullscreenExitStart"].map(state).filter(Boolean);
+      const back = ["FullscreenExitActive", "FullscreenExitDone"].map(state).filter(Boolean);
+      // Steam's fullscreen enter (Play pressed): Clean Gameview's fix as a transition from screen one's height to the
+      // full screen and back, so the art grows instead of jumping (transitions out-rank !important in the cascade).
+      return `${cap}{${imp({ height: screen, transition: `height ${g.enterMs}ms ease-out` })}}` +
+        (full.length ? `${full.join(",")}{${imp({ height: "100vh" })}}` : "") +
+        (back.length ? `${back.join(",")}{${imp({ height: screen })}}` : "") +
+        (s("appheader", "HeaderBackgroundImage") ? `${ROOT} ${s("appheader", "HeaderBackgroundImage")}{${imp({ height: "100vh" })}}` : "") +
+        `${ROOT} ${s("appheader", "ImgSrc")}{${imp({ "object-fit": "cover", "object-position": "center", filter: `brightness(${g.brightness})` })}}` +
+        (s("appheader", "TopGradient") ? `${ROOT} ${s("appheader", "TopGradient")}{${imp({ "background-color": "transparent", "background-image": "none", background: "transparent" })}}` : "") +
+        (s("appheader", "BoxSizer") ? `${ROOT} ${s("appheader", "BoxSizer")}{${imp({ top: `calc(100vh - ${g.logo}px * 1.3 - ${g.playbar + g.footer}px)`, "max-height": `${g.logo}px`, "z-index": "2" })}}` : "") +
+        `@media (prefers-reduced-motion: reduce){${cap}{${imp({ transition: "none" })}}}`;
+    } },
+    { id: "game-playbar", needs: [["appdetails", "PlaySection"]], css: s => {
+      const g = CORE_GAME_VIEW;
+      const bar = `${ROOT} ${s("appdetails", "PlaySection")}`;
+      const play = s("appdetails", "AppActionButton") ? `${ROOT} ${s("appdetails", "AppActionButton")}` : "";
+      const buttons = s("appdetails", "AppButtons") ? `${ROOT} ${s("appdetails", "AppButtons")}` : "";
+      const square = buttons ? [`${buttons} > *`, `${buttons} .DialogButton`] : [];
+      return `${bar}{${imp({ height: `${g.playbar + g.footer}px`, "min-height": `${g.playbar + g.footer}px`, "padding-bottom": `${g.footer}px`, "box-sizing": "border-box",
+          "background-color": "transparent", "background-image": "none", "backdrop-filter": "none", "box-shadow": "none", color: C.steel })}}` +
+        (s("appdetails", "AppDetailsRoot") ? `${ROOT} ${s("appdetails", "AppDetailsRoot")}{${imp({ "background-color": "transparent", "background-image": "none", "backdrop-filter": "none" })}}` : "") +
+        (play ? `${play}{${imp({ "background-color": C.crimson, "background-image": "none", color: C.white, "border-radius": SQUARE, "box-shadow": "none", filter: "none" })}}` +
+          `${play} *{${imp({ color: C.white })}}` +
+          `${play}:is(.gpfocus,:focus-visible,:focus){${imp({ outline: `3px solid ${C.white}`, "outline-offset": "0", "box-shadow": "none", filter: "none", animation: "none" })}}` : "") +
+        (square.length ? `${square.join(",")}{${imp({ "min-width": `${g.button}px`, height: `${g.button}px`, "background-color": C.black, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+          `${square.map(sel => `${sel}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.gunmetal, color: C.white, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}` : "");
+    } },
+    // The cloud as a button (Clean Gameview's "cloud as a button"): the status text hidden, its holder a 48px square.
+    { id: "game-cloud", needs: [["playsection", "CloudStatusLabel"]], css: s => {
+      const label = s("playsection", "CloudStatusLabel");
+      const holder = `${ROOT} :has(> ${label})`;
+      return `${ROOT} ${label}{${imp({ display: "none" })}}` +
+        `${holder}{${imp({ width: `${CORE_GAME_VIEW.button}px`, height: `${CORE_GAME_VIEW.button}px`, "box-sizing": "border-box", display: "flex", "align-items": "center",
+          "justify-content": "center", "background-color": C.black, "background-image": "none", "border-radius": SQUARE, "box-shadow": "none" })}}` +
+        `${holder}::before,${holder}::after{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
+        `${holder}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, outline: `2px solid ${C.crimson}`, "outline-offset": "0" })}}`;
+    } },
+    // Screen two: Steam's sections and tabs over black and the Starfield ("game-page" host, stars only below the play
+    // bar). The container itself stays clear, so the art behind the play bar is never covered.
+    { id: "game-screen-two", needs: [["appdetails", "AppDetailsContainer"]], targets: ["libraryTab"], css: (s, t) => {
+      const box = `${ROOT} ${s("appdetails", "AppDetailsContainer")}`;
+      return `${box}{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
+        libraryTabCss({ scopes: [box], tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"), row: t("libraryTabRow"), rowFill: "transparent" });
+    } },
+    { id: "game-sections", needs: [["appsection", "AppDetailsSectionContainer"]], css: s => {
+      const cards = ["AppDetailsSectionContainer", "RightColumnSection"].filter(key => s("appsection", key)).map(key => `${ROOT} ${s("appsection", key)}`);
+      return `${cards.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": FLOAT, "box-shadow": "none", color: C.steel })}}` +
+        `${cards.map(sel => `${sel}:is(.gpfocus,.gpfocuswithin,:focus-visible)`).join(",")}{${imp({ "background-color": C.raised, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}`;
+    } },
+
+    // ---- 3.3.9: the surfaces still in Steam's blue (CORE-UI.md, "Steam's other pages"): black pages, gunmetal rows,
+    // the square crimson focus bar, steel text.
+    { id: "settings-pages", needs: [], needsAny: [["settings", "PagedSettingsDialog_PageListColumn"], ["settings", "PageListColumn"]], css: s => {
+      const pick = (...keys: string[]) => keys.map(key => s("settings", key)).filter(Boolean).map(sel => `${ROOT} ${sel}`);
+      const black = pick("PagedSettingsDialog", "PagedSettingsDialog_PageListColumn", "PageListColumn", "PagedSettingDialog_ContentColumn", "PagedSettingsDialog_PageContent");
+      const items = pick("PagedSettingsDialog_PageListItem", "PageListItem");
+      const active = s("settings", "Active") ? items.map(item => `${item}${s("settings", "Active")}`) : [];
+      const focus = items.map(item => `${item}:is(.gpfocus,:focus-visible)`);
+      return (black.length ? `${black.join(",")}{${imp(SOLID_BLACK)}}` : "") +
+        (items.length ? `${items.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+          `${items.map(item => `${item} *`).join(",")}{${imp({ color: "inherit" })}}` : "") +
+        (active.length ? `${active.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}` })}}` : "") +
+        (focus.length ? `${focus.join(",")}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, outline: "none", filter: "none" })}}` : "");
+    } },
+    // Toggles (gamepaddialog's copy with On, and the small toggle map): the rail gunmetal, crimson when on, a white knob.
+    { id: "toggles", needs: [], needsAny: [["gamepaddialog", "ToggleRail"], ["toggle", "ToggleRail"]], css: s => {
+      const out: string[] = [];
+      for (const map of ["gamepaddialog", "toggle"] as CoreUiMapName[]) {
+        if (!s(map, "ToggleRail")) continue;
+        const rail = `${ROOT} ${s(map, "ToggleRail")}`;
+        out.push(`${rail}{${imp({ "background-color": C.raised, "background-image": "none", "box-shadow": "none" })}}`);
+        if (s(map, "ToggleSwitch")) out.push(`${ROOT} ${s(map, "ToggleSwitch")}{${imp({ "background-color": C.white, "background-image": "none", "box-shadow": "none" })}}`);
+        const on = s("gamepaddialog", "On");
+        if (on && s(map, "Toggle")) out.push(`${ROOT} ${s(map, "Toggle")}${on} ${s(map, "ToggleRail")},${rail}${on}{${imp({ "background-color": C.crimson, "background-image": "none" })}}`);
+      }
+      return out.join("");
+    } },
+    { id: "downloads-page", needs: [["downloads", "DownloadsPage"]], css: s => {
+      const d = (key: string) => s("downloads", key) ? `${ROOT} ${s("downloads", key)}` : "";
+      const item = d("SectionItem");
+      return `${d("DownloadsPage")}{${imp(SOLID_BLACK)}}` +
+        (item ? `${item}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": SQUARE, "box-shadow": "none", color: C.steel })}}` +
+          `${item}:is(.gpfocus,.gpfocuswithin,:focus-visible){${imp({ "background-color": C.raised, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "") +
+        (d("HoverRing") ? `${d("HoverRing")}{${imp({ display: "none" })}}` : "") +
+        (d("SectionTitle") ? `${d("SectionTitle")}{${imp({ color: C.steel, "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` : "") +
+        (d("ProgressBar") ? `${d("ProgressBar")}{${imp({ "background-color": C.raised, "background-image": "none" })}}${d("ProgressBar")} > *{${imp({ "background-color": C.crimson, "background-image": "none" })}}` : "");
+    } },
+    { id: "download-bar", needs: [["downloadbar", "BottomBar"]], css: s => {
+      const b = (key: string) => s("downloadbar", key) ? `${ROOT} ${s("downloadbar", key)}` : "";
+      return `${b("BottomBar")}{${imp(SOLID_BLACK)}}` +
+        (b("ProgressBar") ? `${b("ProgressBar")}{${imp({ "background-color": C.raised, "background-image": "none" })}}${b("ProgressBar")} > *{${imp({ "background-color": C.crimson, "background-image": "none" })}}` : "");
+    } },
+    // The Steam menu while a game runs: its three columns black, the rows gunmetal on focus with the crimson bar.
+    { id: "ingame-menu", needs: [], needsAny: [["mainmenu", "AppColumn"], ["mainmenu", "NavigationColumn"]], css: s => {
+      const m = (key: string) => s("mainmenu", key) ? `${ROOT} ${s("mainmenu", key)}` : "";
+      const black = ["AppRunningControls", "NavigationColumn", "NavigationBox", "AppColumn", "AppColumnContent", "FocusedColumn", "NavColumnFocused", "ControllerColumnFocused", "ActiveContent"].map(m).filter(Boolean);
+      const rows = [m("NavigationMenuItem"), m("SelectableAppWindow")].filter(Boolean);
+      return (black.length ? `${black.join(",")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none" })}}` : "") +
+        (m("CurrentGameBackground") ? `${m("CurrentGameBackground")}{${imp({ opacity: "0.35", filter: "none" })}}` : "") +
+        (rows.length ? `${rows.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+          `${rows.map(row => `${row}:is(.gpfocus,:focus-visible,:focus-within)`).join(",")}{${imp({ "background-color": C.gunmetal, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "") +
+        (m("NavigationMenuItemSeparator") ? `${m("NavigationMenuItemSeparator")}{${imp({ "background-color": C.gunmetal, "background-image": "none" })}}` : "");
+    } },
+    { id: "overlay-configurator", needs: [], needsAny: [["overlay", "OverlayPopup"], ["configurator", "ControllerConfiguratorMain"], ["configsummary", "ControllerConfiguratorSummary"]], css: s => {
+      const k = (map: CoreUiMapName, key: string) => s(map, key) ? `${ROOT} ${s(map, key)}` : "";
+      const black = [k("overlay", "OverlayPopup"), k("overlay", "OverlayPopupBody"), k("overlay", "Toolbar"), k("overlay", "SettingsModalRoot"),
+        k("configurator", "ControllerConfiguratorBackgroundContainer"), k("configurator", "ControllerConfiguratorMain"), k("configsummary", "ControllerConfiguratorSummary")].filter(Boolean);
+      const rows = [k("overlay", "ToolbarButton"), k("overlay", "BackToGame"), k("overlay", "ExitGameBtn"), k("configurator", "CurrentConfigurationButton"),
+        k("configurator", "MainOptionsButton"), k("configsummary", "StandardControl")].filter(Boolean);
+      return (black.length ? `${black.join(",")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none" })}}` : "") +
+        (rows.length ? `${rows.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+          `${rows.map(row => `${row}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "");
+    } },
+    // Search: the field by its own map now (the 3.3.8 structural rule stays as the fallback), results and suggestions.
+    { id: "search-pages", needs: [], needsAny: [["searchbar", "SearchFieldBackground"], ["searchresults", "GamepadSearch"], ["suggestions", "Suggestions"]], css: s => {
+      const k = (map: CoreUiMapName, key: string) => s(map, key) ? `${ROOT} ${s(map, key)}` : "";
+      const field = k("searchbar", "SearchFieldBackground");
+      const results = [k("searchresults", "ResultTemplate"), k("suggestions", "Suggestion")].filter(Boolean);
+      return (field ? `${field}{${imp({ "background-color": "transparent", "background-image": "none", "border-radius": SQUARE, "box-shadow": `inset 0 -1px 0 ${C.steel}`, border: "0", "backdrop-filter": "none" })}}` +
+          `${field}:focus-within{${imp({ "box-shadow": `inset 0 -2px 0 ${C.crimson}` })}}` : "") +
+        (k("searchbar", "SearchBox") ? `${k("searchbar", "SearchBox")}{${imp({ color: C.steel, "background-color": "transparent", "caret-color": C.crimson })}}` : "") +
+        [k("searchbar", "SearchIconLeft"), k("searchbar", "SearchIconRight")].filter(Boolean).map(sel => `${sel},${sel} *{${imp({ color: C.steel, fill: C.steel })}}`).join("") +
+        ([k("searchresults", "GamepadSearch"), k("suggestions", "Suggestions")].filter(Boolean).map(sel => `${sel}{${imp(SOLID_BLACK)}}`).join("")) +
+        (results.length ? `${results.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+          `${results.map(row => `${row}:is(.gpfocus,:focus-visible,:hover)`).join(",")}{${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "");
+    } },
     // Library grid (3.3.4): capsules drawn about 16% smaller inside their slots, so even black gutters (and the stars)
     // show between them. Steam's slots and focus order are untouched; art stays art (no stars behind it).
     { id: "library-capsules", needs: [], targets: ["libraryCapsule"], css: (_s, t) => libraryCapsuleCss(t("libraryCapsule")) },
@@ -552,6 +732,14 @@ function rules(mark: string | undefined): Rule[] {
 // ---- Builders (pure; tests call them directly) ----
 
 export const CORE_RAIL_ICON_PX = 30;
+// 3.3.9: Home after Art Hero with the user's options: the art fades out over its last 12%, the carousel 50vh down in a
+// 70vh row (carousel height 5), the focused game's name 4em above its capsule (font height -4) at 22px (larger).
+export const CORE_HOME_ART = { fadeFrom: 88, carouselTop: 50, carouselHeight: 70, labelEm: 4, labelPx: 22 } as const;
+// 3.3.9: the top bar's only shadow, for text over bright art (soft, dark, no glow colour).
+export const CORE_HEADER_TEXT_SHADOW = "0 1px 3px rgba(0,0,0,0.65)";
+// 3.3.9: the clean game view's measures (Clean Gameview v1.8 Lz's defaults, as The Collector's GAME_VIEW): an 80px play bar
+// over the 40px footer, the logo at most 120px, the art at 60% brightness, 48px square buttons, a 600ms fullscreen enter.
+export const CORE_GAME_VIEW = { playbar: 80, footer: 40, logo: 120, brightness: 0.6, button: 48, enterMs: 600 } as const;
 export const CORE_LIBRARY_CAPSULE_SCALE = 0.84;
 // Home's capsules (3.3.8): smaller at the TV's 1348 x 758 viewport, so Steam's focus growth stays inside the row.
 export const CORE_HOME_CAPSULE_SCALE = 0.8;
@@ -649,7 +837,11 @@ export function collectionTileCss(tiles: string[] = [""]): string {
 // (CORE-UI.md, "Hosts from other plugins"). The plugin paints its own page black and keeps any art outside that
 // element; Core only marks it (data-core-ui-host="1") and puts the Starfield inside it, over the part on screen.
 // Such a host is never full height and never a panel, and is used only when Core UI found Steam's maps.
-export type CoreUiMapHostSpec = { id: string; map: CoreUiMapName; key: string; minArea: number; fullHeight?: boolean; panel?: boolean; page?: boolean };
+// 3.3.9: viewport (a Steam page that scrolls inside Steam's page, like a plugin's), exclude (a selector: an element
+// holding one is not this host, e.g. a ROM page The Collector draws itself) and below (a selector, map tokens allowed:
+// stars start under that child, so a transparent play bar over the art never gets any).
+export type CoreUiMapHostSpec = { id: string; map: CoreUiMapName; key: string; minArea: number; fullHeight?: boolean; panel?: boolean; page?: boolean;
+  viewport?: boolean; exclude?: string; below?: string };
 export type CoreUiSelectorHostSpec = { id: string; selector: string; minArea: number; page?: boolean };
 export type CoreUiHostSpec = CoreUiMapHostSpec | CoreUiSelectorHostSpec;
 export const CORE_UI_HOSTS: CoreUiHostSpec[] = [
@@ -662,10 +854,13 @@ export const CORE_UI_HOSTS: CoreUiHostSpec[] = [
   { id: "qam-footer", map: "footer", key: "QuickAccessFooter", minArea: 24000 },
   { id: "qam-footer-shadow", map: "quickaccess", key: "FooterBoxShadow", minArea: 24000 },
   { id: "footer-opaque", map: "footer", key: "Opaque", minArea: 24000 },
-  { id: "header-opaque", map: "header", key: "HeaderOpaque", minArea: 24000 },
+  // 3.3.9: the top bar is never black any more (chrome-header), so it is never a Starfield host.
   // Phase 2 pages: the canvas covers the visible part of the page only.
   { id: "home", map: "gamepadui", key: "BasicHome", minArea: 0, page: true },
   { id: "library", map: "library", key: "GamepadLibrary", minArea: 0, page: true },
+  // 3.3.9: Steam's game page, screen two (CORE-UI.md, "The game view"): the app details container, below the play bar,
+  // never a ROM page (The Collector's page is its own host).
+  { id: "game-page", map: "appdetails", key: "AppDetailsContainer", minArea: 0, page: true, viewport: true, exclude: ".romm-core-page", below: "{appdetails.PlaySection}" },
   // Hosts from other plugins (3.3.7). The Collector's ROM game page (Eternal-Collector, corePageStyles.ts): the
   // wrapper in place of Steam's overview panel, below the hero art.
   { id: "collector-rom-page", selector: ".romm-core-page", minArea: 0, page: true },
@@ -689,7 +884,8 @@ export function resolveHostSelector(maps: CoreUiMaps, host: CoreUiHostSpec): { p
 
 // source: "steam" (a class map) or "plugin" (a fixed selector from a cooperating plugin). viewport: the canvas covers
 // only the part of the element on screen (a plugin page scrolls inside Steam's page, not inside itself).
-export type CoreUiHost = { id: string; selector: string; strong: string; minArea: number; fullHeight: boolean; panel: boolean; page: boolean; source: "steam" | "plugin"; viewport: boolean };
+export type CoreUiHost = { id: string; selector: string; strong: string; minArea: number; fullHeight: boolean; panel: boolean; page: boolean; source: "steam" | "plugin"; viewport: boolean;
+  exclude?: string; below?: string };
 export type CoreUiSheet = {
   css: string; applied: string[]; skipped: string[]; hosts: CoreUiHost[]; clock?: string;
   // 3.3.4, for the snapshot: the maps found, how each was found, and per rule the plain selectors it targets.
@@ -697,7 +893,9 @@ export type CoreUiSheet = {
   // 3.3.8: per missing map, the closest class map's key names (closestCoreUiCandidates).
   candidates?: Partial<Record<CoreUiMapName, CoreUiMapCandidate>>;
   // Selectors the runtime needs (plain, no specificity repeat).
-  dom: { header?: string; footer?: string; menu?: string; menuItem?: string; qamTab?: string; tab?: string; tabTitle?: string; tabSelected?: string; library?: string; tabbedPage?: string };
+  dom: { header?: string; footer?: string; menu?: string; menuItem?: string; qamTab?: string; tab?: string; tabTitle?: string; tabSelected?: string; library?: string; tabbedPage?: string;
+    // 3.3.9: the game view's two screens (coreUi.ts, gameViewScroll).
+    playSection?: string; appContainer?: string; tabRow?: string };
 };
 
 // Jarvis's presence orb in the top bar, next to Steam's clock (jarvisPresence.ts decides its state). Dim steel ring
@@ -744,7 +942,9 @@ export function buildCoreUiCss(maps: CoreUiMaps, options: { mark?: string; wordm
     if (!found) continue;
     hosts.push({ id: host.id, selector: found.plain, strong: found.strong, minArea: host.minArea,
       fullHeight: !plugin && (host as CoreUiMapHostSpec).fullHeight === true, panel: !plugin && (host as CoreUiMapHostSpec).panel === true,
-      page: host.page === true, source: plugin ? "plugin" : "steam", viewport: plugin });
+      page: host.page === true, source: plugin ? "plugin" : "steam", viewport: plugin || (host as CoreUiMapHostSpec).viewport === true,
+      ...(!plugin && (host as CoreUiMapHostSpec).exclude ? { exclude: (host as CoreUiMapHostSpec).exclude } : {}),
+      ...(!plugin && (host as CoreUiMapHostSpec).below ? { below: resolveTemplate(maps, (host as CoreUiMapHostSpec).below!, true) } : {}) });
   }
   // Black means starfield: every black surface above is a host. The runtime puts one canvas in each (the
   // shared field), behind the surface's content; a host inside another host stays clear instead.
@@ -774,6 +974,7 @@ export function buildCoreUiCss(maps: CoreUiMaps, options: { mark?: string; wordm
     menu: plainSelector(maps.mainmenu, "Menu"), menuItem: plainSelector(maps.mainmenu, "Item"), qamTab: plainSelector(maps.quickaccess, "Tab"),
     tab: plainSelector(maps.tabbedpage, "Tab"), tabTitle: plainSelector(maps.tabbedpage, "TabTitle"), tabSelected: plainSelector(maps.tabbedpage, "Selected"),
     library: plainSelector(maps.library, "GamepadLibrary"), tabbedPage: plainSelector(maps.tabbedpage, "GamepadTabbedPage"),
+    playSection: plainSelector(maps.appdetails, "PlaySection"), appContainer: plainSelector(maps.appdetails, "AppDetailsContainer"), tabRow: plainSelector(maps.tabbedpage, "TabRow"),
   };
   const css = parts.join("\n");
   return { css, applied, skipped, hosts, clock, dom, maps, ruleTargets: ruleTargetsFromCss(css) };

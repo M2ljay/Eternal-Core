@@ -21,6 +21,7 @@ import { createFullHeight } from "./coreFullHeight";
 import { sharedStarfield, STARFIELD_FPS, type Starfield } from "./coreStarfield";
 import { coreUiSetting, type CoreUiSetting } from "./coreUiSetting";
 import { pinControllerPrompts, promptsMemory } from "./coreInputPrompts";
+import { browserViewDocuments, invalidateOnboardingBrowserViewOwners } from "./onboardingAnchors";
 
 function storage(): Storage | undefined {
   try { return typeof localStorage === "undefined" ? undefined : localStorage; } catch { return undefined; }
@@ -63,6 +64,29 @@ export type CoreUiDiagnostics = { surfaces: number; shown: number; state: "off" 
 type Surface = { element: HTMLElement; canvas: HTMLCanvasElement; host: CoreUiHost; doc: Document; position?: string; still: boolean; top: number; bottom: number; scroll: number; pageHeight: number };
 
 const MAX_BUILDS = 20;
+// The game view's screen two starts this far below the top edge: the top bar's height, so the tab row is not under it.
+export const GAME_VIEW_TOP_INSET = 40;
+
+// The nearest ancestor that scrolls vertically (Steam's page scroller), else undefined.
+export function scrollParent(element: Element, doc: Document): any {
+  const view: any = doc.defaultView;
+  for (let node: any = element.parentElement; node; node = node.parentElement) {
+    try {
+      const overflow = String(view?.getComputedStyle?.(node)?.overflowY ?? "");
+      if ((overflow === "auto" || overflow === "scroll" || overflow === "overlay") && node.scrollHeight > node.clientHeight) return node;
+    } catch { /* Next ancestor. */ }
+  }
+  return undefined;
+}
+
+function smoothScroll(scroller: any, top: number) {
+  const target = Math.max(0, Math.round(top));
+  try { if (typeof scroller.scrollTo === "function") { scroller.scrollTo({ top: target, behavior: "smooth" }); return; } } catch { /* Plain set below. */ }
+  scroller.scrollTop = target;
+}
+// A panel candidate wider than this share of the screen is a full-screen wrapper, never the panel (3.3.9: 0.7, so
+// Quick Access's own 855 px window on a 1348 px screen counts).
+export const PANEL_SHARE = 0.7;
 
 export function createCoreUi(deps: CoreUiDeps) {
   let sheet: CoreUiSheet | undefined, builds = 0, field: Starfield | undefined;
@@ -77,6 +101,7 @@ export function createCoreUi(deps: CoreUiDeps) {
   const fullHeight = createFullHeight(edits);
   const chromes = new Set<Element>();
   const observers = new Map<Document, { disconnect(): void }>();
+  const focusWatch = new Map<Document, (event: any) => void>();
   const diagnostics: CoreUiDiagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {}, restyled: 0, hosts: {} };
 
   function orbState(): string {
@@ -200,6 +225,34 @@ export function createCoreUi(deps: CoreUiDeps) {
     }
   }
 
+  // 3.3.9 (TV: "pressing down from the play bar must jump fully to screen two, the tab row at the top"): when focus
+  // moves from the play bar into the rest of a game page, the page scrolls so screen two starts at the top (its tab row
+  // when there is one); back up into the play bar, it scrolls to screen one. The Collector does the same on a ROM page,
+  // so a ROM page is left to it.
+  function watchGameView(doc: Document, dom: CoreUiSheet["dom"]) {
+    if (focusWatch.has(doc) || !dom.playSection || !dom.appContainer) return;
+    let inBar = false;
+    const handler = (event: any) => {
+      try {
+        const target = event?.target as Element | null;
+        const page = target?.closest?.(dom.appContainer!);
+        if (!page || page.querySelector(".romm-core-page")) { inBar = false; return; }
+        const bar = page.querySelector(dom.playSection!);
+        const nowInBar = !!bar && (bar === target || bar.contains(target));
+        if (nowInBar === inBar) return;
+        inBar = nowInBar;
+        const scroller = scrollParent(page, doc);
+        if (!scroller) return;
+        if (nowInBar) { smoothScroll(scroller, 0); return; }
+        const anchor = (dom.tabRow ? page.querySelector(dom.tabRow) : null) ?? (bar?.nextElementSibling as Element | null) ?? null;
+        if (!anchor) return;
+        const offset = anchor.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+        smoothScroll(scroller, scroller.scrollTop + offset - GAME_VIEW_TOP_INSET);
+      } catch { /* Steam's own scrolling stands. */ }
+    };
+    try { doc.addEventListener("focusin", handler, true); focusWatch.set(doc, handler); } catch { /* Steam's own scrolling stands. */ }
+  }
+
   // Removals (a route change, a page closing) are swept at once instead of on the next one-second sync.
   function observe(doc: Document) {
     if (observers.has(doc)) return;
@@ -227,7 +280,13 @@ export function createCoreUi(deps: CoreUiDeps) {
       scroll = Math.max(0, Math.round(surface.element.scrollTop || 0));
       if (surface.host.viewport) {
         const rect = surface.element.getBoundingClientRect(), height = surface.doc.defaultView?.innerHeight ?? 0;
-        const from = Math.max(0, rect.top), to = Math.min(height, rect.bottom);
+        // 3.3.9: a host with `below` starts its stars under that child (the game page's play bar over the art).
+        let floor = 0;
+        if (surface.host.below) {
+          const child = surface.element.querySelector(surface.host.below);
+          if (child) floor = Math.max(0, child.getBoundingClientRect().bottom);
+        }
+        const from = Math.max(0, rect.top, floor), to = Math.min(height, rect.bottom);
         scroll += Math.max(0, Math.round(from - rect.top));
         pageHeight = Math.max(0, Math.round(to - from));
       } else if (surface.host.page) pageHeight = Math.max(0, Math.round(Math.min(surface.element.clientHeight || 0, surface.doc.defaultView?.innerHeight ?? 0)));
@@ -316,10 +375,12 @@ export function createCoreUi(deps: CoreUiDeps) {
     surfaces.delete(surface.element);
   }
 
-  function attach(doc: Document, hosts: CoreUiHost[]) {
+  function attach(doc: Document, hosts: CoreUiHost[], screenWidth = 0) {
     if (!hosts.length) return;
     const any = `[${CORE_UI_HOST_ATTRIBUTE}="1"]`;
-    const width = Number(doc.defaultView?.innerWidth) || 0;
+    // 3.3.9: measured against the screen (the widest Steam window), not the document: Quick Access and the Steam menu
+    // are windows of their own (855 and 240 px wide on the TV), and the panel fills its window.
+    const width = Math.max(Number(doc.defaultView?.innerWidth) || 0, screenWidth);
     for (const host of hosts) {
       let found: HTMLElement[] = [];
       try { found = Array.from(doc.querySelectorAll<HTMLElement>(host.selector)).slice(0, 8); } catch { found = []; }
@@ -330,7 +391,7 @@ export function createCoreUi(deps: CoreUiDeps) {
         let nested = false;
         try { nested = !!element.parentElement?.closest(any); } catch { nested = false; }
         if (!nested && host.panel && width > 0) {
-          try { nested = element.getBoundingClientRect().width > width * 0.6; } catch { nested = false; }
+          try { nested = element.getBoundingClientRect().width > width * PANEL_SHARE; } catch { nested = false; }
         }
         if (nested) {
           const prior = surfaces.get(element);
@@ -339,6 +400,14 @@ export function createCoreUi(deps: CoreUiDeps) {
           continue;
         }
         let surface = surfaces.get(element);
+        // 3.3.9: an element holding the host's exclusion (a ROM page The Collector draws) is not this host.
+        let excluded = false;
+        if (host.exclude) { try { excluded = !!element.querySelector(host.exclude); } catch { excluded = false; } }
+        if (excluded) {
+          if (surface) release(surface);
+          if (element.getAttribute(CORE_UI_HOST_ATTRIBUTE) !== null) element.removeAttribute(CORE_UI_HOST_ATTRIBUTE);
+          continue;
+        }
         if (surface && !surface.canvas.isConnected) { release(surface); surface = undefined; }
         if (!surface) {
           const canvas = doc.createElement("canvas");
@@ -407,7 +476,10 @@ export function createCoreUi(deps: CoreUiDeps) {
     try { docs = deps.documents().filter(doc => !!doc?.head && !!doc.documentElement); } catch { docs = []; }
     for (const [doc, style] of styles) if (!docs.includes(doc)) { try { style.remove(); } catch {} styles.delete(doc); }
     sweep(docs);
+    let screenWidth = 0;
+    for (const doc of docs) { try { screenWidth = Math.max(screenWidth, Number(doc.defaultView?.innerWidth) || 0); } catch {} }
     for (const [doc, observer] of observers) if (!docs.includes(doc)) { try { observer.disconnect(); } catch {} observers.delete(doc); }
+    for (const [doc, handler] of focusWatch) if (!docs.includes(doc)) { try { doc.removeEventListener("focusin", handler, true); } catch {} focusWatch.delete(doc); }
     for (const doc of docs) {
       try {
         let style = styles.get(doc);
@@ -422,8 +494,9 @@ export function createCoreUi(deps: CoreUiDeps) {
         // only when a stylesheet actually follows it.
         if (laterStylesheet(style)) { doc.head.appendChild(style); diagnostics.restyled++; }
         if (doc.documentElement.getAttribute(CORE_UI_ATTRIBUTE) !== "1") doc.documentElement.setAttribute(CORE_UI_ATTRIBUTE, "1");
-        attach(doc, current.hosts);
+        attach(doc, current.hosts, screenWidth);
         observe(doc);
+        watchGameView(doc, current.dom ?? {});
         const dom = current.dom ?? {};
         tagChrome(doc, dom);
         reserveLogo(doc, dom);
@@ -455,6 +528,8 @@ export function createCoreUi(deps: CoreUiDeps) {
     for (const surface of [...surfaces.values()]) release(surface);
     for (const observer of observers.values()) { try { observer.disconnect(); } catch {} }
     observers.clear();
+    for (const [doc, handler] of focusWatch) { try { doc.removeEventListener("focusin", handler, true); } catch {} }
+    focusWatch.clear();
     try { fullHeight.releaseAll(); } catch {}
     edits.restoreAll();
     for (const element of chromes) { try { element.removeAttribute(CORE_UI_CHROME_ATTRIBUTE); } catch {} }
@@ -506,8 +581,11 @@ export function laterStylesheet(style: any): boolean {
 }
 
 // Steam's UI documents: the Big Picture window, every Steam UI window and their popups (the Steam menu and
-// Quick Access are popups on some clients).
-export function steamUiDocuments(host: any, router: any): Document[] {
+// Quick Access are popups on some clients). 3.3.9 (TV snapshot: Quick Access and the Steam menu unstyled): on the
+// current client they are BrowserViews, separate windows titled QuickAccess_uid* and MainMenu_uid* that no window store
+// lists; `popups` answers those for each document found (popupDocuments below), so every popup gets the stylesheet,
+// the Starfield and the full-height logic like the main window.
+export function steamUiDocuments(host: any, router: any, popups?: (main: Document) => Document[]): Document[] {
   const documents = new Set<Document>(), windows: any[] = [];
   const values = (value: any): any[] => {
     try { return value?.values ? Array.from(value.values()) : Array.isArray(value) ? value : value && typeof value === "object" ? Object.values(value) : []; }
@@ -524,7 +602,27 @@ export function steamUiDocuments(host: any, router: any): Document[] {
   for (let i = 0; i < windows.length; i++) {
     try { for (const popup of values(windows[i].g_PopupManager?.m_mapPopups)) addWindow(popup); } catch {}
   }
+  if (popups) {
+    for (const main of [...documents]) {
+      let found: Document[] = [];
+      try { found = popups(main) ?? []; } catch { found = []; }
+      for (const doc of found.slice(0, 16)) { try { if (doc?.head && doc.documentElement && documents.size < 48) documents.add(doc); } catch {} }
+    }
+  }
   return [...documents];
+}
+
+// BrowserView popups, re-discovered every POPUP_RESCAN_MS: Steam creates them lazily and can recreate them, and the
+// owner cache only notices a closed one, never a new one.
+export const POPUP_RESCAN_MS = 3000;
+export function popupDocuments(now: () => number = () => Date.now(), find: (main: Document) => Document[] = browserViewDocuments,
+  invalidate: (main: Document) => void = invalidateOnboardingBrowserViewOwners) {
+  const scanned = new WeakMap<Document, number>();
+  return (main: Document): Document[] => {
+    const at = now(), last = scanned.get(main);
+    if (last === undefined || at - last >= POPUP_RESCAN_MS) { try { invalidate(main); } catch {} scanned.set(main, at); }
+    try { return find(main); } catch { return []; }
+  };
 }
 
 // One animation frame in `view` (the window being drawn), with a timer backstop: a window Steam has stopped
@@ -548,7 +646,7 @@ export function installCoreUi(options: {
   const host: any = window;
   const runtime = createCoreUi({
     ui: options.ui,
-    documents: () => steamUiDocuments(host, options.ui?.Router),
+    documents: (() => { const popups = popupDocuments(); return () => steamUiDocuments(host, options.ui?.Router, popups); })(),
     setting: options.setting ?? coreUiSetting,
     mark: options.mark,
     wordmark: options.wordmark,

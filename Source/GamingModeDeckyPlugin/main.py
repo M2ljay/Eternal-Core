@@ -1580,6 +1580,39 @@ class Plugin(QuickSettingsPlugin):
             raise RuntimeError("News unavailable; see Playhub log")
         return await asyncio.to_thread(self._home_news.save, enabled, country)
 
+    def _colorgrade_module(self):
+        module = getattr(self, "_colorgrade", None)
+        if module is None:
+            spec = importlib.util.spec_from_file_location("playhub_colorgrade_pack", os.path.join(os.path.dirname(__file__), "quick_settings", "colorgrade_pack.py"))
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            self._colorgrade = module
+        return module
+
+    def _colorgrade_homes(self):
+        homes = []
+        try:
+            import decky
+            homes.append(getattr(decky, "DECKY_USER_HOME", None))
+        except Exception:
+            pass
+        return homes + [os.environ.get("USERPROFILE"), os.path.expanduser("~")]
+
+    async def get_colorgrade_pack(self, force=False):
+        # Eternal Core 3.3.9: the Consoles tab's art (the user's own ColorGrade pack, never shipped). Imports the
+        # platforms from the user's Downloads zip when missing (or on "Re-import icon pack"), then answers the logos.
+        try:
+            module = self._colorgrade_module()
+            answer = await asyncio.to_thread(module.ensure_and_read, _user_appdata(), self._colorgrade_homes(), bool(force))
+            summary = (answer.get("ok"), len(answer.get("slugs", [])), len(answer.get("logos", {})), (answer.get("import") or {}).get("reason"), tuple(answer.get("errors", [])[:3]))
+            if summary != getattr(self, "_colorgrade_logged", None):
+                self._colorgrade_logged = summary
+                logging.info("Core Consoles icon pack: ok=%s slugs=%d logos=%d import=%s errors=%s", *summary)
+            return answer
+        except Exception:
+            logging.exception("Core Consoles icon pack unavailable")
+            return {"ok": False, "slugs": [], "logos": {}, "families": {}, "errors": ["failed"]}
+
     async def get_core_icons(self):
         # Core UI's Library icons (the user's own set); an absent folder is the normal case.
         try:

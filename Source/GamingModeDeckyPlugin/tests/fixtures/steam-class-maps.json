@@ -1,5 +1,5 @@
 {
-  "_about": "Key names of Steam class maps read from the live Big Picture client (Steam's CEF debugger) on the user's PC, November 2026. Names only; the hashed classes are not recorded. gamepaddialog lists the keys that were read (the module has more, marked partial).",
+  "_about": "Key names of Steam class maps read from the live Big Picture client (Steam's CEF debugger) on the user's PC, November 2026. Names only; the hashed classes are not recorded. gamepaddialog lists the keys that were read (the module has more, marked partial). 3.3.9: the game page, Settings, Downloads, the in-game menu, the overlay and controller configurator, and search, from the coordinator's live read (key names only; all partial). mainmenu lists only the keys named for the in-game menu.",
   "maps": {
     "quickaccess": {
       "webpack": 34544,
@@ -72,7 +72,312 @@
         "ToggleRail",
         "ToggleSwitch",
         "DropDownControlButtonContents",
-        "QuickAccess-Menu"
+        "QuickAccess-Menu",
+        "On"
+      ]
+    },
+    "appheader": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "TopCapsule",
+        "NoArt",
+        "ImgSrc",
+        "ImgContainer",
+        "FallbackArt",
+        "Background",
+        "FullscreenEnterStart",
+        "FullscreenEnterActive",
+        "FullscreenEnterDone",
+        "FullscreenExitStart",
+        "FullscreenExitActive",
+        "FullscreenExitDone",
+        "TitleImageContainer",
+        "TitleLogo",
+        "Loaded",
+        "BottomLeft",
+        "UpperLeft",
+        "UpperCenter",
+        "CenterCenter",
+        "BottomCenter",
+        "HeaderBackgroundImage",
+        "ImgBlurBackdrop",
+        "ImgBlur",
+        "Hidden",
+        "PinBox",
+        "BoxSizerContainer",
+        "BoxSizer",
+        "BoxSizerEdge",
+        "BoxSizerValidRegion",
+        "BoxSizerDragBox",
+        "TitleSection",
+        "Features",
+        "SVGTitle",
+        "TopGradient"
+      ]
+    },
+    "appdetails": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "Header",
+        "AppDetailsContent",
+        "AppDetailsContainer",
+        "AppDetailsRoot",
+        "GameInfoContainer",
+        "GameInfoQuickLinks",
+        "GameInfoCollections",
+        "PlaySection",
+        "ActionRow",
+        "AppDetailSectionList",
+        "AppActionButton",
+        "ActionButtonAndStatusPanel",
+        "AppButtons",
+        "InvertFocusedIcon"
+      ]
+    },
+    "appsection": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "AppDetailsSection",
+        "AppDetailsSectionContainer",
+        "RightColumnSection",
+        "AppDetailsSectionHasLabel",
+        "Body",
+        "Highlight",
+        "ButtonContainer"
+      ]
+    },
+    "settings": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "PagedSettingsDialog",
+        "PagedSettingDialog_ContentColumn",
+        "PagedSettingsDialog_PageListColumn",
+        "ResponsivePageList",
+        "ResponsiveActivePage",
+        "PagedSettingsDialog_PageContent",
+        "PagedSettingsDialog_Title",
+        "PagedSettingsDialog_PageList",
+        "PagedSettingsDialog_PageListItem",
+        "PageListItem_Icon",
+        "PageListItem_Title",
+        "DisabledItem",
+        "Active",
+        "PageListSpacer",
+        "PageListSeparator",
+        "Transparent",
+        "HidePageListButton",
+        "ReturnToPageListButton"
+      ]
+    },
+    "toggle": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "Toggle",
+        "ToggleRail",
+        "ToggleSwitch",
+        "ToggleRow"
+      ]
+    },
+    "downloads": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "DownloadsPage",
+        "TopSection",
+        "ItemLists",
+        "SectionList",
+        "ItemListWrapper",
+        "Section",
+        "Empty",
+        "EmptyQueue",
+        "SectionTitle",
+        "TitleAndCount",
+        "Count",
+        "Rule",
+        "Title",
+        "Active",
+        "SectionItemWrapper",
+        "HoverRing",
+        "SectionItem",
+        "SectionItemContent",
+        "SectionItemCenter",
+        "SectionItemButtons",
+        "SectionItemColumn",
+        "SectionItemStatusLine",
+        "SectionItemStatus",
+        "ProgressBar",
+        "Button",
+        "PlayButton",
+        "AppPortrait",
+        "Name",
+        "ContentType",
+        "Buttons",
+        "RemoveFromQueue",
+        "AutoUpdateSettings",
+        "PatchNotes",
+        "Throttle",
+        "PauseResumeButton",
+        "RemoveAllButton",
+        "ItemFocusAnim-darkerGrey",
+        "ItemFocusAnim-darkGrey"
+      ]
+    },
+    "downloadbar": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "BottomBarContainer",
+        "BottomBar",
+        "DownloadStatus",
+        "DownloadStatusContent",
+        "DetailedDownloadProgress",
+        "ProgressBarWrapper",
+        "StatusLine",
+        "Percentage",
+        "ProgressBar"
+      ]
+    },
+    "mainmenu": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "Menu",
+        "Item",
+        "Active",
+        "ItemIcon",
+        "ItemLabel",
+        "AppRunningControls",
+        "NavigationColumn",
+        "NavColumnFocused",
+        "ControllerColumnFocused",
+        "NavigationBox",
+        "NavigationMenuItem",
+        "NavigationMenuItemSeparator",
+        "AppColumn",
+        "FocusedColumn",
+        "AppColumnContent",
+        "ActiveContent",
+        "CurrentGameBackground",
+        "CurrentGameLogo",
+        "CurrentGameTitle",
+        "SwitchAppsTitle",
+        "SelectableAppWindow",
+        "OverlayAchievements",
+        "OverlayGuides",
+        "OverlayNotes"
+      ]
+    },
+    "overlay": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "OverlayPopup",
+        "OverlayPopupBody",
+        "ControllerConfiguratorWrapper",
+        "TopSection",
+        "BackToGame",
+        "ExitGameBtn",
+        "Toolbar",
+        "ToolbarButton",
+        "GameOverview",
+        "GameOverviewSection",
+        "SettingsModalRoot",
+        "SettingsTitleBar"
+      ]
+    },
+    "configurator": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "ControllerConfiguratorBackgroundContainer",
+        "ControllerConfiguratorGamepadPage",
+        "ControllerConfiguratorMain",
+        "ControllerConfigurationActionButtons",
+        "TopSection",
+        "BottomSection",
+        "TopSectionHeader",
+        "CurrentConfigurationButton",
+        "MainOptionsButton",
+        "ConfigurationName",
+        "ConfigurationDescription",
+        "QuickSettingsHeader"
+      ]
+    },
+    "configsummary": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "ControllerConfiguratorSummary",
+        "ControllerLayout",
+        "ControlsListSection",
+        "StandardControl",
+        "InputGlyph",
+        "Title",
+        "Overlay",
+        "MainMenu",
+        "BackgroundController",
+        "SettingsDialogButton"
+      ]
+    },
+    "searchbar": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "SearchAndTitleContainer",
+        "ShowingSearch",
+        "ShowingTitle",
+        "SearchIconLeft",
+        "SearchIconRight",
+        "SearchFieldBackground",
+        "SearchBox",
+        "Visible",
+        "IconMovesOnHover",
+        "WhiteBackground",
+        "ForceExpanded"
+      ]
+    },
+    "searchresults": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "GamepadSearch",
+        "ResultsGridWrapper",
+        "ResultsRow",
+        "ResultTemplate",
+        "ResultTemplateImage",
+        "Title",
+        "Description",
+        "Icon",
+        "NoResultsFound",
+        "LibraryImageWithName",
+        "GameIcon"
+      ]
+    },
+    "suggestions": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "Suggestions",
+        "Suggestion"
       ]
     }
   }

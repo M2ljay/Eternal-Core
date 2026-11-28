@@ -47,6 +47,17 @@ function onboardingBrowserViewOwners(main: Document): any[] {
   return entries.map(entry => entry.owner);
 }
 
+/** Eternal Core 3.3.9: every live BrowserView document React holds under `main` (Quick Access is `QuickAccess_uid*`, the
+ *  Steam menu `MainMenu_uid*`, notification toasts and context menus are others). Core UI styles each of them. */
+export function browserViewDocuments(main: Document): Document[] {
+  const out: Document[] = [];
+  for (const owner of onboardingBrowserViewOwners(main)) {
+    try { const view = owner.GetViewWindow(); if (view && !view.closed && view.document && !out.includes(view.document)) out.push(view.document); }
+    catch { /* Replaced BrowserView. */ }
+  }
+  return out;
+}
+
 export function findOnboardingBrowserViewDocument(main: Document, tabId: number): Document | null {
   for (const owner of onboardingBrowserViewOwners(main)) {
     try {

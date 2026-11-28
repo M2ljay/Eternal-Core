@@ -110,16 +110,16 @@ jobs:
 
       - name: Mark III Big Picture plugin tests (heartbeat, Core Repair tile, optional startup, Health with the console guards, Voice and Stream mode sections, batches 1 and 2, Jarvis, Core UI phases 1 and 2, the 3.3.4 snapshot, 3.3.5 emulators, game exit and controls)
         working-directory: Source/GamingModeDeckyPlugin
-        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs tests/coreHealthSection.test.mjs tests/coreVoiceSection.test.mjs tests/coreStreamMode.test.mjs tests/steamModules.test.mjs tests/steamUpdateCard.test.mjs tests/consoleGuards.test.mjs tests/coreBatchOne.test.mjs tests/coreBatchTwo.test.mjs tests/coreJarvis.test.mjs tests/coreUi.test.mjs tests/coreUiPhase2.test.mjs tests/coreJarvisTab.test.mjs tests/coreUiSnapshot.test.mjs tests/coreEmulators.test.mjs
+        run: node --test tests/coreHealth.test.mjs tests/optionalStartup.test.mjs tests/coreHealthSection.test.mjs tests/coreVoiceSection.test.mjs tests/coreStreamMode.test.mjs tests/steamModules.test.mjs tests/steamUpdateCard.test.mjs tests/consoleGuards.test.mjs tests/coreBatchOne.test.mjs tests/coreBatchTwo.test.mjs tests/coreJarvis.test.mjs tests/coreUi.test.mjs tests/coreUiPhase2.test.mjs tests/coreJarvisTab.test.mjs tests/coreUiSnapshot.test.mjs tests/coreEmulators.test.mjs tests/coreUiMatchers.test.mjs tests/qamTabVisibility.test.mjs tests/qamLayoutRuntime.test.mjs tests/coreConsoles.test.mjs
 
       # Core UI 3.3.3: the user's own Library icons (%APPDATA%\GamingMode\icons\map.json), read by the plugin backend.
       # 3.3.4: the Core UI snapshot (%APPDATA%\GamingMode\diagnostics\core-ui-snapshot.json) and the legacy CSS themes.
       - name: Core UI icon folder, snapshot and legacy CSS themes (plugin backend)
         working-directory: Source/GamingModeDeckyPlugin
-        run: python -m unittest tests.test_core_icons tests.test_core_ui_snapshot
+        run: python -m unittest tests.test_core_icons tests.test_core_ui_snapshot tests.test_colorgrade_pack
 
       # The Club tab: Play Retro Games Club's real pages (captured fixtures) parsed per section with honest structure
-      # flags, robots.txt, the 6-hour / 10-minute fetch limits with backoff and stale data, library matching, days left,
+      # flags, robots.txt, the hourly / 10-minute fetch limits with backoff and stale data, library matching, days left,
       # Jarvis's brief line and the Log completion bridge to Eternal-Assemble.
       - name: Club tab tests (Decky plugin)
         working-directory: Source/GamingModeDeckyPlugin

@@ -1,6 +1,7 @@
 import { DFL, SP_REACT as React } from "./decky";
 import { coreUiSetting } from "./coreUiSetting";
-import { coreUiCopy } from "./coreUiLocale";
+import { coreUiCopy, coreUiPackCopy } from "./coreUiLocale";
+import { loadConsolePack } from "./coreConsolePack";
 import { coreScreensaverControl } from "./circlesScreensaver";
 import { storeDigitalCopy } from "./StoreDigitalLocale";
 import { StoreDigitalStoreIcon } from "./StoreDigitalPage";
@@ -23,6 +24,7 @@ export function CoreUiSection({ locale }: { locale: string }) {
       </PanelSectionRow>
       <ScreensaverRow locale={locale} />
       <SnapshotRow locale={locale} />
+      <IconPackRow locale={locale} />
     </PanelSection>
   );
 }
@@ -33,6 +35,25 @@ export function CoreRailIcon({ children, glyph }: { children?: any; glyph?: stri
   const props: any = { [CORE_RAIL_ICON_ATTRIBUTE]: "1", "aria-hidden": "true", style: railIconBox(on) };
   if (glyph) return <span {...props} dangerouslySetInnerHTML={{ __html: railGlyphHtml(glyph) }} />;
   return <span {...props}>{children}</span>;
+}
+
+// 3.3.9: "Re-import icon pack": the Consoles tab's art, read again from the user's Downloads zip.
+function IconPackRow({ locale }: { locale: string }) {
+  const text = coreUiPackCopy(locale);
+  const [state, setState] = React.useState<{ busy: boolean; line?: string }>({ busy: false });
+  const press = async () => {
+    setState({ busy: true });
+    const answer = await loadConsolePack(true);
+    const result = answer?.import;
+    const line = result?.imported ? text.packDone.replace("{count}", String(result.slugs ?? answer?.slugs?.length ?? 0))
+      : result?.reason === "zip_missing" ? text.packMissing : text.packFailed;
+    setState({ busy: false, line });
+  };
+  return (
+    <PanelSectionRow>
+      <ButtonItem bottomSeparator="none" layout="below" description={state.line ?? text.packHint} disabled={state.busy} onClick={() => void press()}>{text.pack}</ButtonItem>
+    </PanelSectionRow>
+  );
 }
 
 // "Save Core UI snapshot": writes the diagnostic snapshot now (coreUiSnapshot.ts); the line under it says where.

@@ -118,6 +118,10 @@ paddles as A and B, Vibepollo and per-device game settings, Jarvis tap to talk):
 3.3.8 (Quick Access styled again: class maps found by a signature of keys; no Starfield band left after a ROM page;
 Quick Access tabs no longer flicker; Home is Consoles and Club only; no "sir" in the UI; the Club refreshes hourly with
 its box art; the search bar and Steam's dialog rows in the Core look; Starfield density for the TV's 1348 x 758 viewport): [CORE-UI.md](CORE-UI.md#338-how-class-maps-are-found-quick-access-was-unstyled).
+3.3.9 (Quick Access and the Steam menu styled at last (their own windows); Home after Art Hero with Favorites first; a
+transparent top bar; Steam's game page as the clean game view, matching The Collector's ROM page; every console as a tile from the
+user's own icon pack; Settings, Downloads, the in-game menu, the controller configurator and search in the Core look):
+[CORE-UI.md](CORE-UI.md#339-the-game-view-the-consoles-tab-and-steams-other-pages).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

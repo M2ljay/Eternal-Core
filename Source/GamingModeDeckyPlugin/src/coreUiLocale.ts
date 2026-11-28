@@ -31,3 +31,24 @@ export function coreUiCopy(locale: string): Copy {
   const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
   return copy[language === "ua" ? "uk" : language] ?? en;
 }
+
+// 3.3.9: "Re-import icon pack" (the user's own ColorGrade pack for the Consoles tab; quick_settings/colorgrade_pack.py).
+type PackCopy = { pack: string; packHint: string; packDone: string; packMissing: string; packFailed: string };
+const packCopy: Record<string, PackCopy> = {
+  en: { pack: "Re-import icon pack", packHint: "Reads colorgrade-icons-heroes-logos.zip from Downloads again for the Consoles tab.", packDone: "Imported: {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip is not in Downloads.", packFailed: "The icon pack could not be imported." },
+  it: { pack: "Reimporta pacchetto icone", packHint: "Rilegge colorgrade-icons-heroes-logos.zip da Download per la scheda Console.", packDone: "Importate: {count} console.", packMissing: "colorgrade-icons-heroes-logos.zip non è in Download.", packFailed: "Impossibile importare il pacchetto icone." },
+  es: { pack: "Reimportar paquete de iconos", packHint: "Vuelve a leer colorgrade-icons-heroes-logos.zip de Descargas para la pestaña Consolas.", packDone: "Importadas: {count} consolas.", packMissing: "colorgrade-icons-heroes-logos.zip no está en Descargas.", packFailed: "No se pudo importar el paquete de iconos." },
+  fr: { pack: "Réimporter le pack d'icônes", packHint: "Relit colorgrade-icons-heroes-logos.zip dans Téléchargements pour l'onglet Consoles.", packDone: "Importées : {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip n'est pas dans Téléchargements.", packFailed: "Le pack d'icônes n'a pas pu être importé." },
+  de: { pack: "Icon-Paket neu importieren", packHint: "Liest colorgrade-icons-heroes-logos.zip aus Downloads erneut für den Tab Konsolen.", packDone: "Importiert: {count} Konsolen.", packMissing: "colorgrade-icons-heroes-logos.zip ist nicht in Downloads.", packFailed: "Das Icon-Paket konnte nicht importiert werden." },
+  pt: { pack: "Reimportar pacote de ícones", packHint: "Lê de novo colorgrade-icons-heroes-logos.zip em Downloads para a aba Consoles.", packDone: "Importados: {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip não está em Downloads.", packFailed: "Não foi possível importar o pacote de ícones." },
+  uk: { pack: "Повторно імпортувати піктограми", packHint: "Знову читає colorgrade-icons-heroes-logos.zip із Завантажень для вкладки Консолі.", packDone: "Імпортовано консолей: {count}.", packMissing: "colorgrade-icons-heroes-logos.zip немає в Завантаженнях.", packFailed: "Не вдалося імпортувати піктограми." },
+  ru: { pack: "Повторно импортировать значки", packHint: "Снова читает colorgrade-icons-heroes-logos.zip из Загрузок для вкладки Консоли.", packDone: "Импортировано консолей: {count}.", packMissing: "colorgrade-icons-heroes-logos.zip нет в Загрузках.", packFailed: "Не удалось импортировать значки." },
+  zh: { pack: "重新导入图标包", packHint: "为“主机”标签重新读取“下载”中的 colorgrade-icons-heroes-logos.zip。", packDone: "已导入 {count} 个主机。", packMissing: "“下载”中没有 colorgrade-icons-heroes-logos.zip。", packFailed: "无法导入图标包。" },
+  ja: { pack: "アイコンパックを再インポート", packHint: "コンソールタブ用に、ダウンロードの colorgrade-icons-heroes-logos.zip を読み直します。", packDone: "{count} 台のコンソールをインポートしました。", packMissing: "ダウンロードに colorgrade-icons-heroes-logos.zip がありません。", packFailed: "アイコンパックをインポートできませんでした。" },
+  ko: { pack: "아이콘 팩 다시 가져오기", packHint: "콘솔 탭을 위해 다운로드의 colorgrade-icons-heroes-logos.zip을 다시 읽습니다.", packDone: "콘솔 {count}개를 가져왔습니다.", packMissing: "다운로드에 colorgrade-icons-heroes-logos.zip이 없습니다.", packFailed: "아이콘 팩을 가져오지 못했습니다." },
+  hi: { pack: "आइकन पैक फिर से इम्पोर्ट करें", packHint: "कंसोल टैब के लिए Downloads से colorgrade-icons-heroes-logos.zip फिर से पढ़ता है।", packDone: "{count} कंसोल इम्पोर्ट हुए।", packMissing: "Downloads में colorgrade-icons-heroes-logos.zip नहीं है।", packFailed: "आइकन पैक इम्पोर्ट नहीं हो सका।" },
+};
+export function coreUiPackCopy(locale: string): PackCopy {
+  const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
+  return packCopy[language] ?? packCopy.en;
+}

@@ -1235,11 +1235,11 @@ function detect() {
     const fallback = typeof document !== "undefined" && document.documentElement?.lang || typeof navigator !== "undefined" && navigator.language;
     return normalizeSteamLocale$2(fallback) ?? "en";
 }
-const listeners$d = new Set();
+const listeners$e = new Set();
 let current = null, request$1 = 0, users = 0, observation = 0;
 let timer;
 const getSteamLocale = () => current ?? detect();
-const subscribeSteamLocale = (listener) => { listeners$d.add(listener); return () => { listeners$d.delete(listener); }; };
+const subscribeSteamLocale = (listener) => { listeners$e.add(listener); return () => { listeners$e.delete(listener); }; };
 async function read() {
     const win = typeof window !== "undefined" ? window : {};
     const settings = win.SteamClient?.Settings;
@@ -1265,7 +1265,7 @@ async function refreshSteamLocale() {
     const old = getSteamLocale();
     current = value;
     if (old !== value)
-        for (const listener of [...listeners$d])
+        for (const listener of [...listeners$e])
             listener();
     return value;
 }
@@ -1921,20 +1921,20 @@ function storeBytes(value) { if (typeof value !== "number" || !Number.isFinite(v
 // SPDX-License-Identifier: MIT. Playhub, Copyright (c) 2026 LoZazaMastro.
 const STORE_DIGITAL_ROUTE = "/playhub/stores";
 function exitStoreDigitalToHome() { const navigation = CompatUI.Navigation; navigation?.CloseSideMenus?.(); navigation?.Navigate?.("/library/home", true); }
-let pending$3 = null, sequence = 0;
+let pending$4 = null, sequence = 0;
 let downloads = null;
-const listeners$c = new Set();
-const readStoreDigitalSelection = () => pending$3;
-const consumeStoreDigitalSelection = (value) => { if (pending$3 === value)
-    pending$3 = null; };
-const subscribeStoreDigitalSelection = (fn) => { listeners$c.add(fn); return () => { listeners$c.delete(fn); }; };
+const listeners$d = new Set();
+const readStoreDigitalSelection = () => pending$4;
+const consumeStoreDigitalSelection = (value) => { if (pending$4 === value)
+    pending$4 = null; };
+const subscribeStoreDigitalSelection = (fn) => { listeners$d.add(fn); return () => { listeners$d.delete(fn); }; };
 const readStoreDigitalDownloads = () => downloads;
 const consumeStoreDigitalDownloads = (value) => { if (downloads === value)
     downloads = null; };
-function openStoreDigitalDownloads() { pending$3 = null; downloads = ++sequence; for (const listener of listeners$c)
+function openStoreDigitalDownloads() { pending$4 = null; downloads = ++sequence; for (const listener of listeners$d)
     listener(); CompatUI.Navigation.Navigate(STORE_DIGITAL_ROUTE); }
 function openStoreDigitalGame(key, action = "install") { if (!validStoreKey(key) || !["install", "manage"].includes(action))
-    return false; downloads = null; pending$3 = { key: { ...key }, action, sequence: ++sequence }; for (const listener of listeners$c)
+    return false; downloads = null; pending$4 = { key: { ...key }, action, sequence: ++sequence }; for (const listener of listeners$d)
     listener(); CompatUI.Navigation.Navigate(`${STORE_DIGITAL_ROUTE}?store=${encodeURIComponent(key.store)}&game=${encodeURIComponent(key.id)}&action=${action}`); return true; }
 function validStoreDigitalIntent(value, now = Date.now()) { const item = value; return !!item && typeof item.requestId === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(item.requestId) && validStoreKey(item.key) && ["install", "manage"].includes(item.action) && Number.isFinite(Date.parse(item.expiresAt)) && Date.parse(item.expiresAt) > now && Date.parse(item.expiresAt) <= now + 31000; }
 function installStoreDigitalIntentPump(request, open = openStoreDigitalGame, clock = () => Date.now()) {
@@ -2261,8 +2261,8 @@ let owned = new Map();
 let jobs = [];
 let steamLinks = new Map(), steamLinksAt = 0;
 let repairSteamLink;
-const listeners$b = new Set();
-function subscribeStoreLibrary(listener) { listeners$b.add(listener); return () => { listeners$b.delete(listener); }; }
+const listeners$c = new Set();
+function subscribeStoreLibrary(listener) { listeners$c.add(listener); return () => { listeners$c.delete(listener); }; }
 const readStoreLibrary = () => owned;
 const readStoreDownloads = () => jobs;
 const readStoreSteamLink = (key) => Date.now() - steamLinksAt < 5000 ? steamLinks.get(nativeStoreKey({ key })) ?? "unknown" : "unknown";
@@ -2755,7 +2755,7 @@ function installStoreLibraryRuntime() {
     const notifyCompleted = createStoreCompletionNotifications();
     const current = () => alive && root[symbol] === stop;
     const updateLinks = (next) => { const changed = JSON.stringify([...steamLinks]) !== JSON.stringify([...next]); steamLinks = next; steamLinksAt = Date.now(); if (changed)
-        listeners$b.forEach(listener => { try {
+        listeners$c.forEach(listener => { try {
             listener();
         }
         catch { } }); };
@@ -2862,7 +2862,7 @@ function installStoreLibraryRuntime() {
             if (Array.isArray(currentJobs) && serializedJobs !== lastJobs) {
                 lastJobs = serializedJobs;
                 jobs = currentJobs;
-                listeners$b.forEach(listener => { try {
+                listeners$c.forEach(listener => { try {
                     listener();
                 }
                 catch { } });
@@ -2905,7 +2905,7 @@ function installStoreLibraryRuntime() {
             if (serial !== lastOwned) {
                 lastOwned = serial;
                 owned = new Map(rows.map(row => [row.appId, row]));
-                listeners$b.forEach(listener => { try {
+                listeners$c.forEach(listener => { try {
                     listener();
                 }
                 catch { } });
@@ -2958,7 +2958,7 @@ function installStoreLibraryRuntime() {
             jobs = [];
             steamLinks = new Map();
             steamLinksAt = 0;
-            listeners$b.forEach(listener => { try {
+            listeners$c.forEach(listener => { try {
                 listener();
             }
             catch { } });
@@ -21375,14 +21375,14 @@ function qamNativeLabel(key, fallback, locale) {
 
 let preferences = { version: 3, selected: ["Playhub"], icons: {}, order: [], hidden: [], updated_at: 0 };
 let snapshot$2 = { active: false, native: [], plugins: [] };
-const listeners$a = new Set();
+const listeners$b = new Set();
 const refreshers = new Set();
-let pending$2 = false;
-function notify$3() { if (pending$2)
-    return; pending$2 = true; void Promise.resolve().then(() => { pending$2 = false; listeners$a.forEach(fn => fn()); }); }
+let pending$3 = false;
+function notify$4() { if (pending$3)
+    return; pending$3 = true; void Promise.resolve().then(() => { pending$3 = false; listeners$b.forEach(fn => fn()); }); }
 const getQamLayoutPreferences = () => preferences;
 const getQamLayoutSnapshot = () => snapshot$2;
-function subscribeQamLayout(fn) { listeners$a.add(fn); return () => { listeners$a.delete(fn); }; }
+function subscribeQamLayout(fn) { listeners$b.add(fn); return () => { listeners$b.delete(fn); }; }
 function setQamLayoutPreferences(value) {
     const strings = (items) => Array.isArray(items) ? [...new Set(items.filter((v) => typeof v === "string" && !!v))] : [];
     const next = { version: 3, selected: strings(value?.selected), order: strings(value?.order),
@@ -21393,7 +21393,7 @@ function setQamLayoutPreferences(value) {
         return;
     preferences = next;
     refreshers.forEach(fn => fn());
-    notify$3();
+    notify$4();
 }
 // Eternal Core (Core UI, docs/eternal/CORE-UI.md, "Plugin logos"): Core's own logo for the user's Eternal plugin forks,
 // set by index.tsx while Core UI is on. A user-chosen icon still wins; a plugin without a Core logo keeps its own.
@@ -21401,7 +21401,7 @@ let pluginIconFallback;
 function setQamPluginIconFallback(fallback) {
     pluginIconFallback = fallback;
     refreshers.forEach(fn => fn());
-    notify$3();
+    notify$4();
 }
 function icon(name, original) {
     let core;
@@ -21464,7 +21464,7 @@ function createQamLayoutRuntime(hook, nativeRender, ownId, refresh, inventory = 
             if (!snapshot$2.active || native.length !== snapshot$2.native.length || native.some((tab, index) => tab.key !== snapshot$2.native[index]?.key || tab.label !== snapshot$2.native[index]?.label || tab.icon !== snapshot$2.native[index]?.icon) || available.length !== snapshot$2.plugins.length
                 || available.some((p, i) => p.name !== snapshot$2.plugins[i]?.name || p.icon !== snapshot$2.plugins[i]?.icon)) {
                 snapshot$2 = { active: true, native, plugins: available };
-                notify$3();
+                notify$4();
             }
             const original = [...tabs];
             for (const name of preferences.selected) {
@@ -21515,7 +21515,7 @@ function createQamLayoutRuntime(hook, nativeRender, ownId, refresh, inventory = 
             managedVisibility = next;
             records.add({ array: new globalThis.WeakRef(tabs), original, projected: [...tabs] });
         },
-        stop() { stopped = true; refreshers.delete(changed); restore(); snapshot$2 = { ...snapshot$2, active: false }; notify$3(); } };
+        stop() { stopped = true; refreshers.delete(changed); restore(); snapshot$2 = { ...snapshot$2, active: false }; notify$4(); } };
 }
 
 const text$3 = {
@@ -21725,7 +21725,7 @@ Object.assign(historyPhotoIntegrity, { "https://raw.githubusercontent.com/LoZaza
 const CACHE = 'playhub-history-photos-v1';
 const MAX_BYTES = 256 * 1024 * 1024;
 const memory = new Map();
-const pending$1 = new Map();
+const pending$2 = new Map();
 const failedUntil = new Map();
 let active = 0;
 const queue = [];
@@ -21823,7 +21823,7 @@ function loadHistoryPhoto(url, expected) {
     }
     if ((failedUntil.get(key) || 0) > Date.now())
         return Promise.resolve(null);
-    const existing = pending$1.get(key);
+    const existing = pending$2.get(key);
     if (existing)
         return existing;
     const job = slot(async () => {
@@ -21870,8 +21870,8 @@ function loadHistoryPhoto(url, expected) {
                 failedUntil.delete(failedUntil.keys().next().value);
         }
         return blob;
-    }).catch(() => null).finally(() => pending$1.delete(key));
-    pending$1.set(key, job);
+    }).catch(() => null).finally(() => pending$2.delete(key));
+    pending$2.set(key, job);
     return job;
 }
 
@@ -21940,9 +21940,9 @@ function openHistoryImage(url, subject, locale, ownerWindow = window) {
 @media(max-width:550px){.ph-history-card{grid-template-columns:1fr}.ph-history-card.reverse .ph-history-image,.ph-history-card.reverse .ph-history-copy{grid-column:auto;grid-row:auto}.ph-history-sub{max-width:180px}}
 @media(prefers-reduced-motion:reduce){.ph-history *{transition:none!important}}
 `;
-const listeners$9 = new Set();
-const notify$2 = () => listeners$9.forEach(listener => listener());
-const notifyHistoryLanguageChanged = () => { notify$2(); };
+const listeners$a = new Set();
+const notify$3 = () => listeners$a.forEach(listener => listener());
+const notifyHistoryLanguageChanged = () => { notify$3(); };
 
 const words$2 = {
     en: ["Gaming news", "Show gaming news in Home", "Country", "Follow Core language", "News unavailable. Try again later.", "Could not save news settings.", "Last available news"],
@@ -22008,7 +22008,7 @@ const coreUiSetting = createCoreUiSetting(defaultStorage());
 // Eternal Core: Core Home's text in Core's 12 languages (docs/eternal/CORE-UI.md, "Phase 2: Home"). "Jarvis", "Forge"
 // and the console names are names and stay the same everywhere. Self-contained: tests load it alone.
 const en$9 = {
-    brief: "Today", consoles: "Consoles",
+    brief: "Today", consoles: "Consoles", favorites: "Favorites", favoritesEmpty: "Favorite a game in your Library to see it here",
     morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening", night: "Up late",
     lastPlayed: "You were last playing {game}.", nothingYet: "Nothing on the go yet. Pick something and I'll keep track.",
     talk: "Talk to Jarvis", mods: "{count} mods have updates in Forge", modsOne: "1 mod has an update in Forge",
@@ -22016,37 +22016,37 @@ const en$9 = {
 };
 const copy$e = {
     en: en$9,
-    it: { brief: "Oggi", consoles: "Console", morning: "Buongiorno", afternoon: "Buon pomeriggio", evening: "Buonasera", night: "Ancora sveglio",
+    it: { brief: "Oggi", consoles: "Console", favorites: "Preferiti", favoritesEmpty: "Aggiungi un gioco ai preferiti nella Libreria per vederlo qui", morning: "Buongiorno", afternoon: "Buon pomeriggio", evening: "Buonasera", night: "Ancora sveglio",
         lastPlayed: "L'ultima volta giocavi a {game}.", nothingYet: "Ancora niente in corso. Scegli un gioco e ne terrò traccia.", talk: "Parla con Jarvis",
         mods: "{count} mod hanno aggiornamenti in Forge", modsOne: "1 mod ha un aggiornamento in Forge", updates: "Notizie e aggiornamenti dei tuoi giochi", empty: "Ancora nessun gioco in questa raccolta", vr: "VR", retro: "Retro" },
-    es: { brief: "Hoy", consoles: "Consolas", morning: "Buenos días", afternoon: "Buenas tardes", evening: "Buenas noches", night: "Trasnochando",
+    es: { brief: "Hoy", consoles: "Consolas", favorites: "Favoritos", favoritesEmpty: "Marca un juego como favorito en tu Biblioteca para verlo aquí", morning: "Buenos días", afternoon: "Buenas tardes", evening: "Buenas noches", night: "Trasnochando",
         lastPlayed: "Lo último que jugaste fue {game}.", nothingYet: "Nada en curso todavía. Elige algo y llevaré la cuenta.", talk: "Hablar con Jarvis",
         mods: "{count} mods tienen actualizaciones en Forge", modsOne: "1 mod tiene una actualización en Forge", updates: "Noticias y actualizaciones de tus juegos", empty: "Aún no hay juegos en esta colección", vr: "RV", retro: "Retro" },
-    fr: { brief: "Aujourd'hui", consoles: "Consoles", morning: "Bonjour", afternoon: "Bon après-midi", evening: "Bonsoir", night: "Encore debout",
+    fr: { brief: "Aujourd'hui", consoles: "Consoles", favorites: "Favoris", favoritesEmpty: "Ajoutez un jeu aux favoris dans votre bibliothèque pour le voir ici", morning: "Bonjour", afternoon: "Bon après-midi", evening: "Bonsoir", night: "Encore debout",
         lastPlayed: "Votre dernière partie : {game}.", nothingYet: "Rien en cours pour l'instant. Choisissez un jeu, je m'occupe du reste.", talk: "Parler à Jarvis",
         mods: "{count} mods ont des mises à jour dans Forge", modsOne: "1 mod a une mise à jour dans Forge", updates: "Actualités et mises à jour de vos jeux", empty: "Aucun jeu dans cette collection pour l'instant", vr: "VR", retro: "Rétro" },
-    de: { brief: "Heute", consoles: "Konsolen", morning: "Guten Morgen", afternoon: "Guten Tag", evening: "Guten Abend", night: "Noch wach",
+    de: { brief: "Heute", consoles: "Konsolen", favorites: "Favoriten", favoritesEmpty: "Markiere ein Spiel in deiner Bibliothek als Favorit, um es hier zu sehen", morning: "Guten Morgen", afternoon: "Guten Tag", evening: "Guten Abend", night: "Noch wach",
         lastPlayed: "Zuletzt hast du {game} gespielt.", nothingYet: "Noch nichts angefangen. Such dir etwas aus, ich behalte den Überblick.", talk: "Mit Jarvis sprechen",
         mods: "{count} Mods haben Updates in Forge", modsOne: "1 Mod hat ein Update in Forge", updates: "Neuigkeiten und Updates zu deinen Spielen", empty: "Noch keine Spiele in dieser Sammlung", vr: "VR", retro: "Retro" },
-    pt: { brief: "Hoje", consoles: "Consoles", morning: "Bom dia", afternoon: "Boa tarde", evening: "Boa noite", night: "Acordado até tarde",
+    pt: { brief: "Hoje", consoles: "Consoles", favorites: "Favoritos", favoritesEmpty: "Marque um jogo como favorito na sua Biblioteca para vê-lo aqui", morning: "Bom dia", afternoon: "Boa tarde", evening: "Boa noite", night: "Acordado até tarde",
         lastPlayed: "Você jogou {game} por último.", nothingYet: "Nada em andamento ainda. Escolha algo e eu acompanho.", talk: "Falar com o Jarvis",
         mods: "{count} mods têm atualizações no Forge", modsOne: "1 mod tem uma atualização no Forge", updates: "Notícias e atualizações dos seus jogos", empty: "Ainda não há jogos nesta coleção", vr: "RV", retro: "Retrô" },
-    uk: { brief: "Сьогодні", consoles: "Консолі", morning: "Доброго ранку", afternoon: "Добрий день", evening: "Добрий вечір", night: "Не спиться",
+    uk: { brief: "Сьогодні", consoles: "Консолі", favorites: "Улюблені", favoritesEmpty: "Додайте гру до улюблених у Бібліотеці, щоб побачити її тут", morning: "Доброго ранку", afternoon: "Добрий день", evening: "Добрий вечір", night: "Не спиться",
         lastPlayed: "Востаннє ви грали в {game}.", nothingYet: "Поки нічого не розпочато. Оберіть гру, а я стежитиму.", talk: "Поговорити з Jarvis",
         mods: "Модів з оновленнями у Forge: {count}", modsOne: "1 мод має оновлення у Forge", updates: "Новини й оновлення ваших ігор", empty: "У цій колекції ще немає ігор", vr: "VR", retro: "Ретро" },
-    ru: { brief: "Сегодня", consoles: "Консоли", morning: "Доброе утро", afternoon: "Добрый день", evening: "Добрый вечер", night: "Не спится",
+    ru: { brief: "Сегодня", consoles: "Консоли", favorites: "Избранное", favoritesEmpty: "Добавьте игру в избранное в Библиотеке, чтобы увидеть её здесь", morning: "Доброе утро", afternoon: "Добрый день", evening: "Добрый вечер", night: "Не спится",
         lastPlayed: "В последний раз вы играли в {game}.", nothingYet: "Пока ничего не начато. Выберите игру, а я буду следить.", talk: "Поговорить с Jarvis",
         mods: "Модов с обновлениями в Forge: {count}", modsOne: "1 мод получил обновление в Forge", updates: "Новости и обновления ваших игр", empty: "В этой коллекции пока нет игр", vr: "VR", retro: "Ретро" },
-    zh: { brief: "今天", consoles: "主机", morning: "早上好", afternoon: "下午好", evening: "晚上好", night: "这么晚还没睡",
+    zh: { brief: "今天", consoles: "主机", favorites: "收藏", favoritesEmpty: "在库中收藏一款游戏，即可在这里看到它", morning: "早上好", afternoon: "下午好", evening: "晚上好", night: "这么晚还没睡",
         lastPlayed: "你上次在玩 {game}。", nothingYet: "还没有进行中的游戏。选一个吧，我会帮你记着。", talk: "与 Jarvis 对话",
         mods: "Forge 中有 {count} 个模组可更新", modsOne: "Forge 中有 1 个模组可更新", updates: "你的游戏的新闻和更新", empty: "此收藏中还没有游戏", vr: "VR", retro: "复古" },
-    ja: { brief: "今日", consoles: "コンソール", morning: "おはようございます", afternoon: "こんにちは", evening: "こんばんは", night: "夜更かしですね",
+    ja: { brief: "今日", consoles: "コンソール", favorites: "お気に入り", favoritesEmpty: "ライブラリでゲームをお気に入りに追加すると、ここに表示されます", morning: "おはようございます", afternoon: "こんにちは", evening: "こんばんは", night: "夜更かしですね",
         lastPlayed: "最後に遊んだのは {game} です。", nothingYet: "進行中のゲームはまだありません。選んでいただければ記録しておきます。", talk: "Jarvis と話す",
         mods: "Forge で {count} 件の MOD に更新があります", modsOne: "Forge で 1 件の MOD に更新があります", updates: "あなたのゲームのニュースと更新", empty: "このコレクションにはまだゲームがありません", vr: "VR", retro: "レトロ" },
-    ko: { brief: "오늘", consoles: "콘솔", morning: "좋은 아침입니다", afternoon: "좋은 오후입니다", evening: "좋은 저녁입니다", night: "늦게까지 계시네요",
+    ko: { brief: "오늘", consoles: "콘솔", favorites: "즐겨찾기", favoritesEmpty: "라이브러리에서 게임을 즐겨찾기에 추가하면 여기에 표시됩니다", morning: "좋은 아침입니다", afternoon: "좋은 오후입니다", evening: "좋은 저녁입니다", night: "늦게까지 계시네요",
         lastPlayed: "마지막으로 {game}을(를) 플레이했습니다.", nothingYet: "아직 진행 중인 게임이 없습니다. 하나 고르시면 기록해 두겠습니다.", talk: "Jarvis와 대화",
         mods: "Forge에 업데이트가 있는 모드 {count}개", modsOne: "Forge에 업데이트가 있는 모드 1개", updates: "내 게임의 소식과 업데이트", empty: "이 컬렉션에는 아직 게임이 없습니다", vr: "VR", retro: "레트로" },
-    hi: { brief: "आज", consoles: "कंसोल", morning: "सुप्रभात", afternoon: "नमस्कार", evening: "शुभ संध्या", night: "देर तक जाग रहे हैं",
+    hi: { brief: "आज", consoles: "कंसोल", favorites: "पसंदीदा", favoritesEmpty: "यहाँ देखने के लिए अपनी लाइब्रेरी में किसी गेम को पसंदीदा बनाएँ", morning: "सुप्रभात", afternoon: "नमस्कार", evening: "शुभ संध्या", night: "देर तक जाग रहे हैं",
         lastPlayed: "आपने आख़िरी बार {game} खेला था।", nothingYet: "अभी कुछ चल नहीं रहा। कुछ चुनिए, मैं ध्यान रखूँगा।", talk: "Jarvis से बात करें",
         mods: "Forge में {count} मॉड के अपडेट हैं", modsOne: "Forge में 1 मॉड का अपडेट है", updates: "आपके गेम की ख़बरें और अपडेट", empty: "इस संग्रह में अभी कोई गेम नहीं है", vr: "VR", retro: "रेट्रो" },
 };
@@ -22058,8 +22058,8 @@ function coreHomeCopy(locale) {
 // Eternal Core: Core Home's bottom tabs (docs/eternal/CORE-UI.md, "Phase 2: Home"). Pure: tests drive it with fake
 // Steam tab lists and fake collection stores.
 //
-// Steam's Home tabs come in as `{ id, title, content, ... }`. Core Home answers, in this order (3.3.8):
-//   Consoles (20, the default) - any registered tab (Club, 30, from src/club/) - any other Steam tab Core does not know.
+// Steam's Home tabs come in as `{ id, title, content, ... }`. Core Home answers, in this order (3.3.9):
+//   Favorites (10, the default) - Consoles (20) - any registered tab (Club, 30, from src/club/) - any other Steam tab.
 // Steam's "What's new", "Recommended" and "Friends" are removed. The Jarvis brief and On this day tabs of 3.3.3-3.3.7
 // are gone (the user's call); a remembered active tab that pointed at them opens Consoles.
 //
@@ -22067,9 +22067,9 @@ function coreHomeCopy(locale) {
 // internals; an unavailable tab (isAvailable() false or throwing) is left out.
 const registry = new Map();
 const unsubscribers = new Map();
-const listeners$8 = new Set();
+const listeners$9 = new Set();
 let revision = 0;
-const notify$1 = () => { revision++; for (const listener of [...listeners$8]) {
+const notify$2 = () => { revision++; for (const listener of [...listeners$9]) {
     try {
         listener();
     }
@@ -22082,7 +22082,7 @@ function registerHomeTab(tab) {
     registry.set(tab.id, tab);
     let stop;
     try {
-        stop = tab.subscribe?.(notify$1);
+        stop = tab.subscribe?.(notify$2);
     }
     catch {
         stop = undefined;
@@ -22091,14 +22091,14 @@ function registerHomeTab(tab) {
         stop?.();
     }
     catch { /* Gone already. */ } unsubscribers.delete(tab.id); });
-    notify$1();
+    notify$2();
     return () => { if (registry.get(tab.id) === tab) {
         unsubscribers.get(tab.id)?.();
         registry.delete(tab.id);
-        notify$1();
+        notify$2();
     } };
 }
-function subscribeHomeTabs(listener) { listeners$8.add(listener); return () => { listeners$8.delete(listener); }; }
+function subscribeHomeTabs(listener) { listeners$9.add(listener); return () => { listeners$9.delete(listener); }; }
 const homeTabsRevision = () => revision;
 // Registered tabs that are available now, by order.
 function availableHomeTabs() {
@@ -22113,7 +22113,9 @@ function availableHomeTabs() {
 }
 // 3.3.8 (the user's call): Home is Consoles (the default) and Club. Steam's What's new (Core's brief took its id),
 // Recommended (On this day took its slot) and Friends are all removed.
-const HOME_TAB_ORDER = { consoles: 20, club: 30 };
+// 3.3.9: Favorites first (the default), then Consoles and Club.
+const HOME_TAB_ORDER = { favorites: 10, consoles: 20, club: 30 };
+const FAVORITES_ID = "CoreFavorites";
 const CONSOLES_ID = "CoreConsoles";
 const REMOVED_STEAM_TABS = new Set(["WhatsNew", "Friends", "Recommended"]);
 const ON_THIS_DAY_ID = "Recommended";
@@ -22130,11 +22132,44 @@ function composeHomeTabs(native, core) {
         .map(({ order, ...tab }) => { return tab; });
     return [...ordered, ...others];
 }
-// The active tab Steam remembers may be one Core removed (the brief, On this day, Friends): Consoles opens instead.
-function activeHomeTab(active, tabs) {
+// The active tab Steam remembers may be one Core removed (the brief, On this day, Friends): Favorites opens instead,
+// then Consoles. `migrate` (3.3.9, once per install: coreHome.tsx keeps the flag) moves a remembered Consoles to the new
+// default, Favorites, as well.
+function activeHomeTab(active, tabs, migrate = false) {
+    const fallback = tabs.find(tab => tab.id === FAVORITES_ID)?.id ?? tabs.find(tab => tab.id === CONSOLES_ID)?.id ?? tabs[0]?.id ?? active;
+    if (migrate && (active === CONSOLES_ID || active === undefined))
+        return fallback;
     if (tabs.some(tab => tab.id === active) && !RETIRED_HOME_TABS.has(active))
         return active;
-    return tabs.find(tab => tab.id === CONSOLES_ID)?.id ?? tabs[0]?.id ?? active;
+    return fallback;
+}
+// 3.3.9: the Favorites tab: the games in Steam's own Favorites collection (Steam games and ROM shortcuts alike), read
+// from the collection store each time, most recently played first, then by name. Never a copy.
+function favoriteApps(collection, limit = 200) {
+    const out = new Map();
+    for (const raw of appsOf(collection).slice(0, 5000)) {
+        const app = homeApp(raw);
+        if (app && !out.has(app.appid))
+            out.set(app.appid, app);
+    }
+    return [...out.values()].sort((a, b) => b.lastPlayed - a.lastPlayed || a.name.localeCompare(b.name)).slice(0, limit);
+}
+// Steam's Favorites collection from its collection store (id "favorite"), by the store's own getter, then its list.
+function favoritesCollection(store) {
+    try {
+        const found = store?.GetCollection?.("favorite");
+        if (found)
+            return found;
+    }
+    catch { /* The list below. */ }
+    try {
+        const list = store?.userCollections;
+        const items = Array.isArray(list) ? list : list && typeof list.values === "function" ? Array.from(list.values()) : [];
+        return items.find((item) => item?.id === "favorite") ?? store?.favoritesCollection;
+    }
+    catch {
+        return undefined;
+    }
 }
 function appsOf(collection) {
     for (const key of ["allApps", "visibleApps", "apps", "m_rgApps"]) {
@@ -22156,38 +22191,6 @@ function homeApp(app) {
     const name = String(app?.display_name ?? app?.strDisplayName ?? app?.name ?? "").trim();
     const lastPlayed = Number(app?.rt_last_time_played ?? app?.rtLastTimePlayed ?? 0) || 0;
     return { appid, name, lastPlayed };
-}
-const SHELF_ORDER = ["playstation", "nintendo", "sega", "xbox", "retro", "vr"];
-// One shelf per family from the user's collections, matched by name through `familyOf` (coreLibraryIcons'
-// matchCollection, or a VR collection). Games de-duplicated, most recently played first, at most `limit`.
-function consoleShelves(collections, familyOf, limit = 24) {
-    const shelves = new Map();
-    for (const collection of Array.isArray(collections) ? collections.slice(0, 400) : []) {
-        let name = "";
-        try {
-            name = String(collection?.displayName ?? collection?.strName ?? collection?.name ?? "");
-        }
-        catch {
-            name = "";
-        }
-        const family = familyOf(name);
-        if (!family)
-            continue;
-        let shelf = shelves.get(family);
-        if (!shelf) {
-            shelf = new Map();
-            shelves.set(family, shelf);
-        }
-        for (const raw of appsOf(collection).slice(0, 5000)) {
-            const app = homeApp(raw);
-            if (app && !shelf.has(app.appid))
-                shelf.set(app.appid, app);
-        }
-    }
-    return SHELF_ORDER.filter(family => shelves.has(family)).map(family => ({
-        family,
-        apps: [...shelves.get(family).values()].sort((a, b) => b.lastPlayed - a.lastPlayed || a.name.localeCompare(b.name)).slice(0, limit),
-    }));
 }
 
 // Eternal Core: the Library's tab icons, family tones and collection tiles (docs/eternal/CORE-UI.md, "Library icons
@@ -22324,9 +22327,6 @@ function collectionIconPick(name, found, set) {
         return { url: byKey, source: "user-key" };
     const drawn = found ? original(ORIGINAL_FOR_KEY[found.key]) : undefined;
     return drawn ? { url: drawn, source: "original" } : { source: "none" };
-}
-function tabIcon(title, found, set) {
-    return tabIconPick(title, found, set).url;
 }
 // ---- The live page ----
 const TAB_ATTRIBUTE = "data-core-tab";
@@ -22494,6 +22494,117 @@ function createIconStore(source, now = Date.now, log = () => { }) {
         }
     };
     return { get: () => { void refresh(); return current; }, refresh, status: () => status };
+}
+
+// Eternal Core 3.3.9: the Consoles tab's tiles (docs/eternal/CORE-UI.md, "The Consoles tab"). Every console in the
+// library (a Steam collection Core recognises as a console, RomM's included) becomes one tile; A opens that collection.
+// Art comes from the user's own ColorGrade pack, imported by the plugin backend into
+// %APPDATA%\GamingMode\icons\colorgrade\platforms\<slug>\ (quick_settings/colorgrade_pack.py). The pack is personal and
+// unlicensed: nothing of it is in this repository, its tests or its bundle.
+//
+// Pure: tests drive it with fake collections and fake slug lists.
+const CONSOLE_FAMILY_ORDER = ["playstation", "nintendo", "sega", "xbox", "retro"];
+// Board 1: eight tiles across at 1920 px (206 x 150, 20 px apart); the grid keeps eight across and scales with the view.
+const CONSOLE_TILE = { across: 8, width: 206, height: 150, gap: 20, toneBar: 4 };
+// Pack slugs to try for each Core collection key, best first (the pack's own names, then common alternatives). The pack
+// answers which slugs it has; the first one it has wins.
+const SLUGS_FOR_KEY = {
+    ps1: ["psx", "ps1", "playstation"], ps2: ["ps2"], ps3: ["ps3"], ps4: ["ps4"], ps5: ["ps5"], psp: ["psp"], vita: ["psvita", "vita"],
+    nes: ["nes", "famicom"], snes: ["snes", "sfc"], n64: ["n64"], gamecube: ["gc", "gamecube", "ngc"], wii: ["wii"], wiiu: ["wiiu"],
+    switch: ["switch"], gb: ["gb"], gbc: ["gbc"], gba: ["gba"], ds: ["nds", "ds"], "3ds": ["n3ds", "3ds"],
+    sms: ["mastersystem", "sms"], megadrive: ["genesis", "megadrive", "md"], sega: ["segacd", "megacd", "scd"], saturn: ["saturn"],
+    dreamcast: ["dreamcast", "dc"], gamegear: ["gamegear", "gg"], xbox: ["xbox"], xbox360: ["xbox360"],
+    arcade: ["mame", "arcade", "fbneo"], atari2600: ["atari2600", "atari"], neogeo: ["neogeo"], pcengine: ["pcengine", "tg16", "turbografx16", "pce"],
+};
+// Names matched only to the generic key, by their own name.
+const SLUGS_FOR_NAME = [
+    [/^(sega )?32x$/, ["sega32x", "32x"]], [/^sega (cd|mega cd)$/, ["segacd", "megacd"]], [/virtual boy/, ["virtualboy", "vb"]],
+    [/neo ?geo pocket/, ["ngpc", "ngp", "neogeopocket"]], [/wonderswan/, ["wonderswan", "wswan", "ws"]], [/^3do/, ["3do"]],
+    [/jaguar/, ["atarijaguar", "jaguar"]], [/lynx/, ["atarilynx", "lynx"]], [/^msx/, ["msx"]], [/amiga/, ["amiga"]],
+    [/commodore 64|^c64/, ["c64"]], [/^(dos|ms dos)$/, ["dos", "pc"]], [/colecovision/, ["colecovision"]],
+    [/intellivision/, ["intellivision"]], [/vectrex/, ["vectrex"]], [/zx spectrum/, ["zxspectrum"]], [/amstrad/, ["amstradcpc"]],
+];
+const compact = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+// The pack slug for a collection name, or undefined when the pack has none.
+function packSlugFor(name, slugs, key) {
+    if (!slugs.size)
+        return undefined;
+    const plain = plainCollectionName(name).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const tries = [...(key ? SLUGS_FOR_KEY[key] ?? [] : []), ...SLUGS_FOR_NAME.filter(([pattern]) => pattern.test(plain)).flatMap(([, list]) => list), compact(plain)];
+    return tries.find(slug => slugs.has(slug));
+}
+function appCount(collection) {
+    for (const key of ["allApps", "visibleApps", "apps", "m_rgApps"]) {
+        try {
+            const value = collection?.[key];
+            if (Array.isArray(value))
+                return value.length;
+            if (value && typeof value.size === "number")
+                return value.size;
+        }
+        catch { /* Next shape. */ }
+    }
+    return 0;
+}
+// Every console collection as a tile: one per console (the collection with the most games wins when a console has
+// several, e.g. a Steam one and a RomM one), by family order then name.
+function consoleTiles(collections, slugs = new Set()) {
+    const list = Array.isArray(collections) ? collections.slice(0, 400) : [];
+    const byConsole = new Map();
+    for (const collection of list) {
+        let raw = "", id = "";
+        try {
+            raw = String(collection?.displayName ?? collection?.strName ?? collection?.name ?? "");
+            id = String(collection?.id ?? collection?.strId ?? "");
+        }
+        catch {
+            continue;
+        }
+        const found = matchCollection(raw);
+        if (!found?.family || !id)
+            continue;
+        const name = plainCollectionName(raw);
+        const slug = packSlugFor(raw, slugs, found.key);
+        const identity = slug ?? (found.key === "generic" ? `name:${compact(name)}` : found.key);
+        const tile = { id, name, family: found.family, key: found.key, slug, count: appCount(collection) };
+        const prior = byConsole.get(identity);
+        if (!prior || tile.count > prior.count)
+            byConsole.set(identity, tile);
+    }
+    return [...byConsole.values()].filter(tile => CONSOLE_FAMILY_ORDER.includes(tile.family))
+        .sort((a, b) => CONSOLE_FAMILY_ORDER.indexOf(a.family) - CONSOLE_FAMILY_ORDER.indexOf(b.family) || a.name.localeCompare(b.name));
+}
+// Steam's route for a collection (the Library's own collection page).
+const collectionRoute = (id) => `/library/collection/${encodeURIComponent(id)}`;
+
+// Eternal Core 3.3.9: the Consoles tab's icon pack, as the plugin backend answers it (get_colorgrade_pack). One shared
+// answer for the tab and Quick Access > Core > Look ("Re-import icon pack"), loaded once and on demand.
+let pack;
+let pending$1;
+const listeners$8 = new Set();
+const notify$1 = () => { for (const listener of [...listeners$8]) {
+    try {
+        listener();
+    }
+    catch { /* Others still hear it. */ }
+} };
+const consolePack = () => pack;
+function subscribeConsolePack(listener) { listeners$8.add(listener); return () => { listeners$8.delete(listener); }; }
+function loadConsolePack(force = false) {
+    if (pending$1 && !force)
+        return pending$1;
+    const run = (async () => {
+        try {
+            pack = await call("get_colorgrade_pack", force);
+        }
+        catch { /* The tiles keep their names. */ }
+        notify$1();
+        return pack;
+    })();
+    pending$1 = run;
+    void run.finally(() => { if (pending$1 === run)
+        pending$1 = undefined; });
+    return run;
 }
 
 // Eternal Core: the Core Starfield for Core UI surfaces (docs/eternal/CORE-UI.md, "Black means starfield").
@@ -23443,6 +23554,8 @@ const clubHomeTab = {
     render: (props) => _global_SP_REACT.createElement(ClubTab, props),
 };
 
+// 3.3.9: Favorites as big portrait art, six across at the TV's 1348 px (about 200 x 300 px each), 16px apart.
+const FAVORITE_TILE = { across: 6, gap: 16 };
 const { Focusable: Focusable$e, Navigation: Navigation$7 } = CompatUI;
 // The Club tab (src/club/): registered through Home's registry like any other module's tab; shown once the Club is on
 // and has data (clubAvailable), re-checked whenever the Club's store changes.
@@ -23451,8 +23564,6 @@ try {
         isAvailable: clubHomeTab.available, subscribe: clubHomeTab.subscribe });
 }
 catch { /* No Club tab. */ }
-let iconSet = () => undefined;
-function setCoreHomeIcons(source) { iconSet = source; }
 const css$4 = `
 .core-home{padding:8px 0 32px;color:#E6EAEE;min-width:0}
 .core-home h2{margin:0 0 6px;font-size:30px;font-weight:600;letter-spacing:-.01em;color:#FFFFFF}
@@ -23468,9 +23579,38 @@ const css$4 = `
 .core-home .core-home-actions{display:flex;gap:12px;flex-wrap:wrap}
 .core-home .core-home-actions .DialogButton{width:auto;min-width:200px;border-radius:0}
 .core-home .core-home-note{font-size:14px;color:#9AA4AE}
+.core-home .core-favorites{display:grid;grid-template-columns:repeat(${FAVORITE_TILE.across},minmax(0,1fr));gap:calc(${FAVORITE_TILE.gap} / 1348 * 100vw);padding:8px 2px 12px}
+.core-home .core-favorite{position:relative;aspect-ratio:2/3;background:#1A1D21;border-radius:var(--core-radius-float,10px);overflow:hidden;display:flex;align-items:flex-end}
+.core-home .core-favorite img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.core-home .core-favorite span{padding:10px;font-size:15px;font-weight:600;color:#FFFFFF}
+.core-home .core-favorite.gpfocus,.core-home .core-favorite:focus-visible{outline:3px solid #D7263D;outline-offset:-3px}
+.core-home .core-home-empty{display:flex;align-items:center;gap:12px;font-size:18px;color:#C9D1D9;padding:24px 2px}
+.core-home .core-home-prompt{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid #C9D1D9;border-radius:50%;font-size:15px;font-weight:700}
+.core-home .core-consoles{display:grid;grid-template-columns:repeat(${CONSOLE_TILE.across},minmax(0,1fr));gap:calc(${CONSOLE_TILE.gap} / 1920 * 100vw);padding:8px 2px 12px}
+.core-home .core-console{position:relative;aspect-ratio:${CONSOLE_TILE.width}/${CONSOLE_TILE.height};background:#1A1D21;border-radius:var(--core-radius-float,10px);overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -${CONSOLE_TILE.toneBar}px 0 var(--core-tone,#C9D1D9)}
+.core-home .core-console img{max-width:78%;max-height:52%;object-fit:contain;display:block}
+.core-home .core-console span{padding:0 8px;font-size:15px;font-weight:700;color:#FFFFFF;text-align:center;line-height:1.2}
+.core-home .core-console.gpfocus,.core-home .core-console:focus-visible{outline:3px solid #D7263D;outline-offset:-3px}
 @media (prefers-reduced-motion: reduce){.core-home .core-home-tile{transition:none}.core-home .core-home-tile.gpfocus{translate:none}}
 `;
 const steamWindow = () => window;
+// 3.3.9: the first Home render after the update opens Favorites (the new default) once, whatever tab Steam remembers.
+const FAVORITES_MIGRATED = "core.home.favoritesDefault";
+let migrationAnswered = false;
+function favoritesMigration() {
+    if (migrationAnswered)
+        return false;
+    migrationAnswered = true;
+    try {
+        if (window.localStorage?.getItem(FAVORITES_MIGRATED) === "1")
+            return false;
+        window.localStorage?.setItem(FAVORITES_MIGRATED, "1");
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
 function userCollections() {
     const host = steamWindow();
     try {
@@ -23481,7 +23621,11 @@ function userCollections() {
         return [];
     }
 }
-// The art Steam shows for an app: its own portrait capsule URLs where the store offers them, then the local cache.
+// 3.3.9: the Favorites tab (first, the default): Steam's own Favorites collection, read from the collection store on
+// every render (never a copy), most recently played first, as big portrait art in a grid: each game's library capsule,
+// or for a ROM shortcut its portrait grid image (where The Collector publishes its case art). No counts, no text, no
+// clutter; the crimson ring sits inside the tile. A opens the game view. (Y to add or remove a favourite is left out:
+// Steam offers no documented, simple call for it, and Steam's own Options menu already does it.)
 function portraitSources(appid) {
     const host = steamWindow(), out = [];
     try {
@@ -23493,38 +23637,48 @@ function portraitSources(appid) {
         }
     }
     catch { /* The local cache below. */ }
-    out.push(`https://steamloopback.host/assets/${appid}/library_600x900.jpg`, `https://steamloopback.host/customimages/${appid}p.png`, `https://steamloopback.host/customimages/${appid}p.jpg`);
+    out.push(`https://steamloopback.host/customimages/${appid}p.png`, `https://steamloopback.host/customimages/${appid}p.jpg`, `https://steamloopback.host/assets/${appid}/library_600x900.jpg`);
     return [...new Set(out)];
 }
-function GameTile({ app }) {
+function FavoriteTile({ app }) {
     const sources = _global_SP_REACT.useMemo(() => portraitSources(app.appid), [app.appid]);
     const [index, setIndex] = _global_SP_REACT.useState(0);
-    return SP_JSX.jsxs(Focusable$e, { className: "core-home-tile", focusable: true, "aria-label": app.name, onActivate: () => { try {
-            Navigation$7?.Navigate?.(`/library/app/${app.appid}`);
-        }
-        catch { /* Stay on Home. */ } }, children: [index < sources.length ? SP_JSX.jsx("img", { alt: "", loading: "lazy", src: sources[index], onError: () => setIndex(i => i + 1) }) : null, index >= sources.length ? SP_JSX.jsx("span", { children: app.name }) : null] });
+    const open = () => { try {
+        Navigation$7?.Navigate?.(`/library/app/${app.appid}`);
+    }
+    catch { /* Stay on Home. */ } };
+    return SP_JSX.jsx(Focusable$e, { className: "core-favorite", focusable: true, "aria-label": app.name, onActivate: open, onClick: open, children: index < sources.length ? SP_JSX.jsx("img", { alt: "", loading: "lazy", src: sources[index], onError: () => setIndex(i => i + 1) }) : SP_JSX.jsx("span", { children: app.name }) });
 }
-const familyName = { playstation: "PlayStation", nintendo: "Nintendo", sega: "Sega", xbox: "Xbox", retro: "Retro", vr: "VR" };
-function shelfFamily(name) {
-    const found = matchCollection(name);
-    if (found?.key === "vr")
-        return "vr";
-    return found?.family;
+function Favorites({ locale }) {
+    const text = coreHomeCopy(locale);
+    const apps = favoriteApps(favoritesCollection(steamWindow().collectionStore));
+    if (!apps.length)
+        return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsxs("p", { className: "core-home-empty", children: [SP_JSX.jsx("span", { className: "core-home-prompt", "aria-hidden": "true", children: "\u2261" }), text.favoritesEmpty] })] });
+    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx(Focusable$e, { className: "core-favorites", "flow-children": "grid", children: apps.map(app => SP_JSX.jsx(FavoriteTile, { app: app }, app.appid)) })] });
 }
+// 3.3.9 (board 1): every console in the library as one tile, eight across (scaled to the view), by family. The tile is
+// the console's white logo from the user's ColorGrade pack on gunmetal with the family's tone bar: at TV size the logo
+// reads at a glance where the pack's dimmed hero art turns to noise (and each hero is megabytes; the logos are a few
+// tens of kilobytes). Without a pack logo, the console's name. A opens that console's collection.
 function Consoles({ locale }) {
     const text = coreHomeCopy(locale);
-    const shelves = _global_SP_REACT.useMemo(() => consoleShelves(userCollections(), shelfFamily), []);
-    const icons = iconSet();
-    if (!shelves.length)
+    const pack = _global_SP_REACT.useSyncExternalStore(subscribeConsolePack, consolePack, consolePack);
+    _global_SP_REACT.useEffect(() => { if (!consolePack())
+        void loadConsolePack(false); }, []);
+    const slugs = _global_SP_REACT.useMemo(() => new Set(pack?.slugs ?? []), [pack]);
+    const tiles = _global_SP_REACT.useMemo(() => consoleTiles(userCollections(), slugs), [slugs]);
+    if (!tiles.length)
         return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx("p", { className: "core-home-note", children: text.empty })] });
-    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), shelves.map(shelf => {
-                const label = shelf.family === "vr" ? text.vr : shelf.family === "retro" ? text.retro : familyName[shelf.family];
-                const icon = tabIcon(familyName[shelf.family], matchTab(familyName[shelf.family]), icons);
-                const tone = shelf.family === "vr" ? "#C9D1D9" : CORE_FAMILY_TONES$1[shelf.family];
-                return SP_JSX.jsxs("section", { style: { ["--core-tone"]: tone }, "aria-label": label, children: [SP_JSX.jsxs("div", { className: "core-home-label", children: [icon ? SP_JSX.jsx("img", { alt: "", src: icon }) : null, SP_JSX.jsx("span", { children: label }), SP_JSX.jsx("i", {})] }), shelf.apps.length
-                            ? SP_JSX.jsx(Focusable$e, { className: "core-home-row", "flow-children": "row", children: shelf.apps.map(app => SP_JSX.jsx(GameTile, { app: app }, app.appid)) })
-                            : SP_JSX.jsx("p", { className: "core-home-note", children: text.empty })] }, shelf.family);
-            })] });
+    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx(Focusable$e, { className: "core-consoles", "flow-children": "grid", children: tiles.map(tile => {
+                    const logo = tile.slug ? pack?.logos?.[tile.slug] : undefined;
+                    return SP_JSX.jsx(Focusable$e, { className: "core-console", focusable: true, "aria-label": tile.name, style: { ["--core-tone"]: CORE_FAMILY_TONES$1[tile.family] }, onActivate: () => { try {
+                            Navigation$7?.Navigate?.(collectionRoute(tile.id));
+                        }
+                        catch { /* Stay on Home. */ } }, onClick: () => { try {
+                            Navigation$7?.Navigate?.(collectionRoute(tile.id));
+                        }
+                        catch { /* Stay on Home. */ } }, children: logo ? SP_JSX.jsx("img", { alt: "", src: logo }) : SP_JSX.jsx("span", { children: tile.name }) }, tile.id);
+                }) })] });
 }
 class HomeBoundary extends _global_SP_REACT.Component {
     constructor() {
@@ -23549,6 +23703,7 @@ function CoreHomeTabs({ native, getLocale, render }) {
         const text = coreHomeCopy(locale);
         const tabs = native.props.tabs;
         const core = [
+            { id: FAVORITES_ID, title: text.favorites, content: SP_JSX.jsx(Favorites, { locale: locale }), order: HOME_TAB_ORDER.favorites },
             { id: CONSOLES_ID, title: text.consoles, content: SP_JSX.jsx(Consoles, { locale: locale }), order: HOME_TAB_ORDER.consoles },
             ...availableHomeTabs().map(tab => {
                 const Component = tab.component;
@@ -23561,7 +23716,7 @@ function CoreHomeTabs({ native, getLocale, render }) {
         const next = composeHomeTabs(tabs, core).map(tab => ({ ...tab, content: SP_JSX.jsx("div", { "data-core-home-tab": String(tab.id), style: { display: "contents" }, children: tab.content }) }));
         const props = { tabs: next };
         if ("strActiveTab" in native.props)
-            props.strActiveTab = activeHomeTab(native.props.strActiveTab, next);
+            props.strActiveTab = activeHomeTab(native.props.strActiveTab, next, favoritesMigration());
         tree = _global_SP_REACT.cloneElement(native, props);
     }
     catch (error) {
@@ -27651,6 +27806,20 @@ function onboardingBrowserViewOwners(main) {
     });
     browserViewOwners.set(main, entries);
     return entries.map(entry => entry.owner);
+}
+/** Eternal Core 3.3.9: every live BrowserView document React holds under `main` (Quick Access is `QuickAccess_uid*`, the
+ *  Steam menu `MainMenu_uid*`, notification toasts and context menus are others). Core UI styles each of them. */
+function browserViewDocuments(main) {
+    const out = [];
+    for (const owner of onboardingBrowserViewOwners(main)) {
+        try {
+            const view = owner.GetViewWindow();
+            if (view && !view.closed && view.document && !out.includes(view.document))
+                out.push(view.document);
+        }
+        catch { /* Replaced BrowserView. */ }
+    }
+    return out;
 }
 function findOnboardingBrowserViewDocument(main, tabId) {
     for (const owner of onboardingBrowserViewOwners(main)) {
@@ -64403,7 +64572,8 @@ const CORE_RING_MARK = "data:image/svg+xml," + encodeURIComponent(CORE_RING_MARK
 const CORE_MENU_LOGO_BAND = 80;
 const CORE_MENU_LOGO_SIZE = 44;
 const CORE_UI_MAP_SIGNATURES = {
-    mainmenu: { all: ["Menu", "ItemIcon", "ItemLabel"], any: [["ActiveDot", "FooterBoxShadow"]] },
+    // 3.3.9: the in-game variant is the same map (AppRunningControls, NavigationColumn, AppColumn...).
+    mainmenu: { all: ["Menu", "ItemIcon", "ItemLabel"], any: [["ActiveDot", "FooterBoxShadow", "AppRunningControls", "NavigationColumn"]] },
     // @decky/ui's quickAccessMenuClasses (webpack 34544 on the November 2026 client: no TabContentColumn any more).
     quickaccess: { all: ["TabGroupPanel", "Tab", "Title"],
         any: [["Tabs", "TabsWithFooter", "BottomTabs", "TabList"], ["TabContentColumn", "AllTabContents", "ContentTransition"], ["QuickAccessMenu", "Menu", "Container"]] },
@@ -64426,6 +64596,27 @@ const CORE_UI_MAP_SIGNATURES = {
     // Webpack 2053 on the November 2026 client: no FieldChildren (FieldChildrenInner / FieldChildrenWithIcon instead).
     gamepaddialog: { all: ["Field", "FieldLabel"],
         any: [["FieldChildren", "FieldChildrenInner", "FieldChildrenWithIcon"], ["FieldDescription", "FieldLeftColumn", "FieldRightColumn"]] },
+    // 3.3.9, from the coordinator's live read (steam-class-signatures-2026-11-27; tests/fixtures/steam-class-maps.json).
+    // The game page: Steam's header (sharedappdetailsheader), the page root and play bar (basicappdetailssectionstyler),
+    // its sections (appdetailssection) and the play section's cloud status (appdetailsplaysection; key names from Clean
+    // Gameview's readable class names, not yet read live: CORE-UI.md says how to confirm them from the snapshot).
+    appheader: { all: ["TopCapsule", "HeaderBackgroundImage", "ImgSrc"], any: [["TopGradient", "BoxSizer"], ["FullscreenEnterStart", "FullscreenEnterDone"]] },
+    appdetails: { all: ["AppDetailsContainer", "PlaySection"], any: [["AppActionButton", "ActionRow", "AppButtons"], ["AppDetailsRoot", "AppDetailsContent", "AppDetailSectionList"]] },
+    appsection: { all: ["AppDetailsSection", "AppDetailsSectionContainer"], any: [["RightColumnSection", "AppDetailsSectionHasLabel", "Body"]] },
+    playsection: { all: ["CloudStatusLabel"], any: [["CloudSyncProblem", "CloudSyncProblemIcon"]] },
+    // Settings (the paged settings dialog; an older module has the keys without the PagedSettingsDialog_ prefix).
+    settings: { all: [], any: [["PagedSettingsDialog_PageListColumn", "PageListColumn"], ["PagedSettingsDialog_PageListItem", "PageListItem"],
+            ["PageListItem_Title", "PagedSettingsDialog_PageList", "PageList"]] },
+    // The small toggle map (Toggle, ToggleRail, ToggleSwitch, ToggleRow); gamepaddialog carries its own copy plus On.
+    toggle: { all: ["Toggle", "ToggleRail", "ToggleSwitch"], any: [["ToggleRow"]], none: ["Field"] },
+    downloads: { all: ["DownloadsPage", "SectionItem"], any: [["SectionTitle", "ItemLists"], ["ProgressBar", "SectionItemStatus"]] },
+    downloadbar: { all: ["BottomBar", "DownloadStatus"], any: [["DetailedDownloadProgress", "ProgressBarWrapper"]] },
+    overlay: { all: ["OverlayPopup", "ControllerConfiguratorWrapper"], any: [["BackToGame", "ExitGameBtn", "Toolbar"]] },
+    configurator: { all: ["ControllerConfiguratorMain", "ControllerConfiguratorGamepadPage"], any: [["TopSectionHeader", "ConfigurationName", "MainOptionsButton"]] },
+    configsummary: { all: ["ControllerConfiguratorSummary", "ControllerLayout"], any: [["ControlsListSection", "StandardControl"]] },
+    searchbar: { all: ["SearchBox", "SearchFieldBackground"], any: [["SearchIconLeft", "SearchIconRight"], ["ShowingSearch", "SearchAndTitleContainer"]] },
+    searchresults: { all: ["GamepadSearch", "ResultsRow"], any: [["ResultTemplate", "ResultsGridWrapper"]] },
+    suggestions: { all: ["Suggestions", "Suggestion"] },
 };
 function matchesSignature(map, signature) {
     return signature.all.every(key => has(map, key)) && (signature.any ?? []).every(group => group.some(key => has(map, key)))
@@ -64620,14 +64811,16 @@ function rules(mark) {
         { id: "corners", needs: [], css: () => `${ROOT} body{${imp({ [CORE_RADIUS_FLOAT_VAR]: CORE_RADIUS_FLOAT })}}${ROOT} .GenericConfirmDialog{${imp({ "border-radius": FLOAT })}}` },
         // Global chrome: the top bar and the button-hint bar are clear over game art and pure black anywhere else
         // (the runtime says which: data-core-ui-chrome), and whenever Steam paints them opaque.
+        // 3.3.9 (TV: "either fully black or fully transparent, including search"): the top bar is fully transparent
+        // everywhere, over art and over black alike: no bar, no blur, no gradient, whatever Steam marks it (HeaderOpaque
+        // included). Clock, icons and avatar steel or white, with one soft text shadow so they read over bright art.
         { id: "chrome-header", needs: [["header", "Header"]], css: s => {
                 const header = `${ROOT} ${s("header", "Header")}`;
-                return `${header},${header}::before,${header}::after{${imp({ ...CLEAR, "backdrop-filter": "none", filter: "none", "border-bottom-color": "transparent" })}}` +
-                    `${header}[${CORE_UI_CHROME_ATTRIBUTE}="black"]{${imp(SOLID_BLACK)}}${header}{${imp({ "border-radius": SQUARE })}}`;
-            } },
-        { id: "chrome-header-opaque", needs: [["header", "HeaderOpaque"]], css: s => {
-                const opaque = `${ROOT} ${s("header", "HeaderOpaque")}`;
-                return `${opaque}{${imp(SOLID_BLACK)}}${opaque}::before,${opaque}::after{${imp({ ...CLEAR, "backdrop-filter": "none" })}}`;
+                const opaque = s("header", "HeaderOpaque") ? `${ROOT} ${s("header", "HeaderOpaque")}` : "";
+                const all = [header, ...(opaque ? [opaque] : [])];
+                return `${all.flatMap(sel => [sel, `${sel}::before`, `${sel}::after`, `${sel}[${CORE_UI_CHROME_ATTRIBUTE}]`]).join(",")}{${imp({ ...CLEAR, "backdrop-filter": "none", filter: "none",
+                    "border-bottom-color": "transparent", "border-radius": SQUARE, opacity: "1" })}}` +
+                    `${header}{${imp({ color: C.steel })}}${header} :is(svg,span,div){${imp({ "text-shadow": CORE_HEADER_TEXT_SHADOW })}}`;
             } },
         { id: "chrome-footer", needs: [["footer", "BasicFooter"]], css: s => {
                 const footer = `${ROOT} ${s("footer", "BasicFooter")}`;
@@ -64642,14 +64835,15 @@ function rules(mark) {
         // structure only (the field is the header's element that holds the <input>), never a hashed class: a square
         // gunmetal field with steel text, a #9AA4AE placeholder and a steel magnifier; focused, a 2px crimson underline and
         // no glow. Its height is the top bar's (Steam already sizes it to the bar); Steam's blue is gone.
+        // 3.3.9: transparent like the bar: the steel magnifier and text over a 1px steel underline, 2px crimson when focused.
         { id: "search-field", needs: [["header", "Header"]], css: s => {
                 const header = `${ROOT} ${s("header", "Header")}`;
                 const field = `${header} div:has(> input)`;
-                return `${field}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": SQUARE, "box-shadow": "none", border: "0", outline: "none", filter: "none" })}}` +
+                return `${field}{${imp({ "background-color": "transparent", "background-image": "none", "border-radius": SQUARE, "box-shadow": `inset 0 -1px 0 ${C.steel}`, border: "0", outline: "none", filter: "none", "backdrop-filter": "none" })}}` +
                     `${field} > input{${imp({ color: C.steel, "background-color": "transparent", "background-image": "none", "box-shadow": "none", border: "0", outline: "none", "caret-color": C.crimson })}}` +
                     `${field} > input::placeholder{${imp({ color: C.hint, opacity: "1" })}}` +
                     `${field} > svg,${field} > svg *{${imp({ color: C.steel, fill: C.steel })}}` +
-                    `${field}:focus-within,${field}:has(> input:focus),${field}.gpfocuswithin{${imp({ "background-color": C.gunmetal, "box-shadow": `inset 0 -2px 0 ${C.crimson}`, outline: "none", filter: "none" })}}`;
+                    `${field}:focus-within,${field}:has(> input:focus),${field}.gpfocuswithin{${imp({ "background-color": "transparent", "box-shadow": `inset 0 -2px 0 ${C.crimson}`, outline: "none", filter: "none" })}}`;
             } },
         // Steam's dialog field rows everywhere (3.3.8: Settings rows, Downloads, any page built from DialogField): no blue
         // band; the focused row gunmetal with the square crimson left bar, like the Steam menu. Quick Access keeps its own
@@ -64786,14 +64980,32 @@ function rules(mark) {
                 return `${home}{${imp({ "background-color": C.black, "background-image": "none" })}}` +
                     (s("home", "TabbedContent") ? `${ROOT} ${s("home", "TabbedContent")}{${imp(CLEAR)}}` : "");
             } },
-        // The hero: Steam's recent-games art runs taller (more art) and fades into the black through a mask, so
-        // nothing is painted over it.
+        // Home is first about the art (3.3.9, TV: "more inspiration from the Art Hero theme", with the user's Art Hero options:
+        // Expanded Hero, Linear Gradient, carousel height 5, larger carousel font, font height -4, cover/center). The focused
+        // game's hero fills Home (the recent section is one screen tall) at full brightness, with a short fade at the bottom
+        // only; the carousel sits low over the art, the focused game's name in larger type above its capsule; Steam's
+        // "Recent games" header and the green play triangle are hidden. The tabs and shelves are below the fold, on black
+        // with stars (the home host). Measures: CORE_HOME_ART.
         { id: "home-hero", needs: [["recentgames", "RecentGamesBackgroundContainer"]], css: s => {
-                const keys = ["RecentGamesBackgroundContainer", "RecentGamesBackgroundImages"].filter(key => s("recentgames", key) !== "")
-                    .map(key => `${ROOT} ${s("recentgames", key)}`);
-                return `${keys.join(",")}{${imp({ "-webkit-mask-image": "linear-gradient(180deg, #000000 45%, transparent 100%)",
-                    "mask-image": "linear-gradient(180deg, #000000 45%, transparent 100%)", "min-height": "62vh" })}}` +
-                    (s("recentgames", "RecentGamesHeaderLabel") ? `${ROOT} ${s("recentgames", "RecentGamesHeaderLabel")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` : "");
+                const a = CORE_HOME_ART;
+                const r = (key) => s("recentgames", key) ? `${ROOT} ${s("recentgames", key)}` : "";
+                const k = (key) => s("carousel", key) ? `${ROOT} ${s("carousel", key)}` : "";
+                const mask = `linear-gradient(180deg, #000000 ${a.fadeFrom}%, transparent 100%)`;
+                const art = [r("RecentGamesBackgroundContainer"), r("RecentGamesBackgroundImages")].filter(Boolean);
+                const headers = [r("RecentGamesHeader"), r("RecentGamesHeaderLabel")].filter(Boolean);
+                const label = k("CarouselGameLabelWrapper");
+                const shown = label ? [`${ROOT} .gpfocuswithin > ${s("carousel", "CarouselGameLabelWrapper")}`,
+                    ...(s("carousel", "ShowAsHovered") ? [`${label}${s("carousel", "ShowAsHovered")}`] : [])] : [];
+                return (s("home", "RecentSection") ? `${ROOT} ${s("home", "RecentSection")}{${imp({ height: "100vh", padding: "0" })}}` : "") +
+                    `${art.join(",")}{${imp({ "-webkit-mask-image": mask, "mask-image": mask, "min-height": "100vh", "z-index": "1" })}}` +
+                    (r("RecentGamesBackground") ? `${r("RecentGamesBackground")}{${imp({ position: "absolute", left: "0", width: "100vw", "min-width": "100vw", height: "100vh", "max-height": "none",
+                        opacity: "1", filter: "none", "border-radius": SQUARE })}}` : "") +
+                    (r("RecentGamesBackgroundImage") ? `${r("RecentGamesBackgroundImage")}{${imp({ "object-fit": "cover", "object-position": "center", opacity: "1", filter: "none" })}}` : "") +
+                    (headers.length ? `${headers.join(",")}{${imp({ display: "none" })}}` : "") +
+                    (r("RecentGamesContainer") ? `${r("RecentGamesContainer")}{${imp({ "margin-top": "-1vh", "padding-top": "0" })}}` : "") +
+                    (r("RecentGamesInnerContainer") ? `${r("RecentGamesInnerContainer")}{${imp({ position: "relative", top: `${a.carouselTop}vh`, height: `${a.carouselHeight}vh` })}}` : "") +
+                    (shown.length ? `${shown.join(",")}{${imp({ position: "absolute", top: `-${a.labelEm}em`, visibility: "visible", "font-size": `${a.labelPx}px`, color: C.white })}}` : "") +
+                    (k("Play") && s("carousel", "ActionIcon") ? `${k("Play")} ${s("carousel", "ActionIcon")}{${imp({ display: "none" })}}` : "");
             } },
         { id: "home-glow", needs: [["carousel", "CarouselCapsuleBackgroundGlow"]], css: s => `${ROOT} ${s("carousel", "CarouselCapsuleBackgroundGlow")}{${imp({ opacity: "0" })}}` },
         // ---- Phase 2: the Library (the Library board: black grid, tabs like Quick Access, crimson focus ring). ----
@@ -64827,7 +65039,7 @@ function rules(mark) {
                     (home.length ? `${home.join(",")}{${imp({ scale: String(CORE_HOME_CAPSULE_SCALE), "transform-origin": "50% 50%", translate: "none" })}}` +
                         `${homeFocused.join(",")}{${imp({ outline: `3px solid ${C.crimson}`, "outline-offset": "-3px", animation: "none", filter: "none", translate: "none", "box-shadow": "none" })}}` : "");
             } },
-        // The tab bar (Library only; the game page keeps Steam's tabs in this phase). 3.3.4, from the TV photos: one marker
+        // The Library's tab bar (the game page has its own rule since 3.3.9, game-screen-two). 3.3.4, from the TV photos: one marker
         // per tab and no more. Built by libraryTabCss (below), from the selector table.
         { id: "library-tabs", needs: [["library", "GamepadLibrary"]], targets: ["libraryTab"], css: (s, t) => {
                 const lib = s("library", "GamepadLibrary");
@@ -64840,6 +65052,142 @@ function rules(mark) {
         // single marker as the Library, over a clear row so Home's stars show through it.
         { id: "home-tabs", needs: [], targets: ["homeTabPage", "libraryTab"], css: (_s, t) => libraryTabCss({ scopes: t("homeTabPage").map(sel => `${ROOT} ${sel}`), tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"),
                 row: t("libraryTabRow"), rowFill: "transparent" }) },
+        // ---- 3.3.9: Steam's game page as the clean game view (CORE-UI.md, "The game view"), matching The Collector's ROM
+        // page. Screen one: the art fills the view above the footer (cover, 60% brightness, Steam's top gradient cleared),
+        // the logo locked bottom-left at most 120px, an 80px transparent play bar. Measures: CORE_GAME_VIEW.
+        { id: "game-hero", needs: [["appheader", "TopCapsule"], ["appheader", "ImgSrc"]], css: s => {
+                const g = CORE_GAME_VIEW, screen = `calc(100vh - ${g.playbar + g.footer}px)`;
+                const cap = `${ROOT} ${s("appheader", "TopCapsule")}`;
+                const state = (key) => s("appheader", key) ? `${cap}${s("appheader", key)}` : "";
+                const full = ["FullscreenEnterActive", "FullscreenEnterDone", "FullscreenExitStart"].map(state).filter(Boolean);
+                const back = ["FullscreenExitActive", "FullscreenExitDone"].map(state).filter(Boolean);
+                // Steam's fullscreen enter (Play pressed): Clean Gameview's fix as a transition from screen one's height to the
+                // full screen and back, so the art grows instead of jumping (transitions out-rank !important in the cascade).
+                return `${cap}{${imp({ height: screen, transition: `height ${g.enterMs}ms ease-out` })}}` +
+                    (full.length ? `${full.join(",")}{${imp({ height: "100vh" })}}` : "") +
+                    (back.length ? `${back.join(",")}{${imp({ height: screen })}}` : "") +
+                    (s("appheader", "HeaderBackgroundImage") ? `${ROOT} ${s("appheader", "HeaderBackgroundImage")}{${imp({ height: "100vh" })}}` : "") +
+                    `${ROOT} ${s("appheader", "ImgSrc")}{${imp({ "object-fit": "cover", "object-position": "center", filter: `brightness(${g.brightness})` })}}` +
+                    (s("appheader", "TopGradient") ? `${ROOT} ${s("appheader", "TopGradient")}{${imp({ "background-color": "transparent", "background-image": "none", background: "transparent" })}}` : "") +
+                    (s("appheader", "BoxSizer") ? `${ROOT} ${s("appheader", "BoxSizer")}{${imp({ top: `calc(100vh - ${g.logo}px * 1.3 - ${g.playbar + g.footer}px)`, "max-height": `${g.logo}px`, "z-index": "2" })}}` : "") +
+                    `@media (prefers-reduced-motion: reduce){${cap}{${imp({ transition: "none" })}}}`;
+            } },
+        { id: "game-playbar", needs: [["appdetails", "PlaySection"]], css: s => {
+                const g = CORE_GAME_VIEW;
+                const bar = `${ROOT} ${s("appdetails", "PlaySection")}`;
+                const play = s("appdetails", "AppActionButton") ? `${ROOT} ${s("appdetails", "AppActionButton")}` : "";
+                const buttons = s("appdetails", "AppButtons") ? `${ROOT} ${s("appdetails", "AppButtons")}` : "";
+                const square = buttons ? [`${buttons} > *`, `${buttons} .DialogButton`] : [];
+                return `${bar}{${imp({ height: `${g.playbar + g.footer}px`, "min-height": `${g.playbar + g.footer}px`, "padding-bottom": `${g.footer}px`, "box-sizing": "border-box",
+                    "background-color": "transparent", "background-image": "none", "backdrop-filter": "none", "box-shadow": "none", color: C.steel })}}` +
+                    (s("appdetails", "AppDetailsRoot") ? `${ROOT} ${s("appdetails", "AppDetailsRoot")}{${imp({ "background-color": "transparent", "background-image": "none", "backdrop-filter": "none" })}}` : "") +
+                    (play ? `${play}{${imp({ "background-color": C.crimson, "background-image": "none", color: C.white, "border-radius": SQUARE, "box-shadow": "none", filter: "none" })}}` +
+                        `${play} *{${imp({ color: C.white })}}` +
+                        `${play}:is(.gpfocus,:focus-visible,:focus){${imp({ outline: `3px solid ${C.white}`, "outline-offset": "0", "box-shadow": "none", filter: "none", animation: "none" })}}` : "") +
+                    (square.length ? `${square.join(",")}{${imp({ "min-width": `${g.button}px`, height: `${g.button}px`, "background-color": C.black, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                        `${square.map(sel => `${sel}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.gunmetal, color: C.white, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}` : "");
+            } },
+        // The cloud as a button (Clean Gameview's "cloud as a button"): the status text hidden, its holder a 48px square.
+        { id: "game-cloud", needs: [["playsection", "CloudStatusLabel"]], css: s => {
+                const label = s("playsection", "CloudStatusLabel");
+                const holder = `${ROOT} :has(> ${label})`;
+                return `${ROOT} ${label}{${imp({ display: "none" })}}` +
+                    `${holder}{${imp({ width: `${CORE_GAME_VIEW.button}px`, height: `${CORE_GAME_VIEW.button}px`, "box-sizing": "border-box", display: "flex", "align-items": "center",
+                        "justify-content": "center", "background-color": C.black, "background-image": "none", "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                    `${holder}::before,${holder}::after{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
+                    `${holder}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, outline: `2px solid ${C.crimson}`, "outline-offset": "0" })}}`;
+            } },
+        // Screen two: Steam's sections and tabs over black and the Starfield ("game-page" host, stars only below the play
+        // bar). The container itself stays clear, so the art behind the play bar is never covered.
+        { id: "game-screen-two", needs: [["appdetails", "AppDetailsContainer"]], targets: ["libraryTab"], css: (s, t) => {
+                const box = `${ROOT} ${s("appdetails", "AppDetailsContainer")}`;
+                return `${box}{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
+                    libraryTabCss({ scopes: [box], tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"), row: t("libraryTabRow"), rowFill: "transparent" });
+            } },
+        { id: "game-sections", needs: [["appsection", "AppDetailsSectionContainer"]], css: s => {
+                const cards = ["AppDetailsSectionContainer", "RightColumnSection"].filter(key => s("appsection", key)).map(key => `${ROOT} ${s("appsection", key)}`);
+                return `${cards.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": FLOAT, "box-shadow": "none", color: C.steel })}}` +
+                    `${cards.map(sel => `${sel}:is(.gpfocus,.gpfocuswithin,:focus-visible)`).join(",")}{${imp({ "background-color": C.raised, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}`;
+            } },
+        // ---- 3.3.9: the surfaces still in Steam's blue (CORE-UI.md, "Steam's other pages"): black pages, gunmetal rows,
+        // the square crimson focus bar, steel text.
+        { id: "settings-pages", needs: [], needsAny: [["settings", "PagedSettingsDialog_PageListColumn"], ["settings", "PageListColumn"]], css: s => {
+                const pick = (...keys) => keys.map(key => s("settings", key)).filter(Boolean).map(sel => `${ROOT} ${sel}`);
+                const black = pick("PagedSettingsDialog", "PagedSettingsDialog_PageListColumn", "PageListColumn", "PagedSettingDialog_ContentColumn", "PagedSettingsDialog_PageContent");
+                const items = pick("PagedSettingsDialog_PageListItem", "PageListItem");
+                const active = s("settings", "Active") ? items.map(item => `${item}${s("settings", "Active")}`) : [];
+                const focus = items.map(item => `${item}:is(.gpfocus,:focus-visible)`);
+                return (black.length ? `${black.join(",")}{${imp(SOLID_BLACK)}}` : "") +
+                    (items.length ? `${items.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                        `${items.map(item => `${item} *`).join(",")}{${imp({ color: "inherit" })}}` : "") +
+                    (active.length ? `${active.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}` })}}` : "") +
+                    (focus.length ? `${focus.join(",")}{${imp({ "background-color": C.raised, "background-image": "none", color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, outline: "none", filter: "none" })}}` : "");
+            } },
+        // Toggles (gamepaddialog's copy with On, and the small toggle map): the rail gunmetal, crimson when on, a white knob.
+        { id: "toggles", needs: [], needsAny: [["gamepaddialog", "ToggleRail"], ["toggle", "ToggleRail"]], css: s => {
+                const out = [];
+                for (const map of ["gamepaddialog", "toggle"]) {
+                    if (!s(map, "ToggleRail"))
+                        continue;
+                    const rail = `${ROOT} ${s(map, "ToggleRail")}`;
+                    out.push(`${rail}{${imp({ "background-color": C.raised, "background-image": "none", "box-shadow": "none" })}}`);
+                    if (s(map, "ToggleSwitch"))
+                        out.push(`${ROOT} ${s(map, "ToggleSwitch")}{${imp({ "background-color": C.white, "background-image": "none", "box-shadow": "none" })}}`);
+                    const on = s("gamepaddialog", "On");
+                    if (on && s(map, "Toggle"))
+                        out.push(`${ROOT} ${s(map, "Toggle")}${on} ${s(map, "ToggleRail")},${rail}${on}{${imp({ "background-color": C.crimson, "background-image": "none" })}}`);
+                }
+                return out.join("");
+            } },
+        { id: "downloads-page", needs: [["downloads", "DownloadsPage"]], css: s => {
+                const d = (key) => s("downloads", key) ? `${ROOT} ${s("downloads", key)}` : "";
+                const item = d("SectionItem");
+                return `${d("DownloadsPage")}{${imp(SOLID_BLACK)}}` +
+                    (item ? `${item}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": SQUARE, "box-shadow": "none", color: C.steel })}}` +
+                        `${item}:is(.gpfocus,.gpfocuswithin,:focus-visible){${imp({ "background-color": C.raised, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "") +
+                    (d("HoverRing") ? `${d("HoverRing")}{${imp({ display: "none" })}}` : "") +
+                    (d("SectionTitle") ? `${d("SectionTitle")}{${imp({ color: C.steel, "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` : "") +
+                    (d("ProgressBar") ? `${d("ProgressBar")}{${imp({ "background-color": C.raised, "background-image": "none" })}}${d("ProgressBar")} > *{${imp({ "background-color": C.crimson, "background-image": "none" })}}` : "");
+            } },
+        { id: "download-bar", needs: [["downloadbar", "BottomBar"]], css: s => {
+                const b = (key) => s("downloadbar", key) ? `${ROOT} ${s("downloadbar", key)}` : "";
+                return `${b("BottomBar")}{${imp(SOLID_BLACK)}}` +
+                    (b("ProgressBar") ? `${b("ProgressBar")}{${imp({ "background-color": C.raised, "background-image": "none" })}}${b("ProgressBar")} > *{${imp({ "background-color": C.crimson, "background-image": "none" })}}` : "");
+            } },
+        // The Steam menu while a game runs: its three columns black, the rows gunmetal on focus with the crimson bar.
+        { id: "ingame-menu", needs: [], needsAny: [["mainmenu", "AppColumn"], ["mainmenu", "NavigationColumn"]], css: s => {
+                const m = (key) => s("mainmenu", key) ? `${ROOT} ${s("mainmenu", key)}` : "";
+                const black = ["AppRunningControls", "NavigationColumn", "NavigationBox", "AppColumn", "AppColumnContent", "FocusedColumn", "NavColumnFocused", "ControllerColumnFocused", "ActiveContent"].map(m).filter(Boolean);
+                const rows = [m("NavigationMenuItem"), m("SelectableAppWindow")].filter(Boolean);
+                return (black.length ? `${black.join(",")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none" })}}` : "") +
+                    (m("CurrentGameBackground") ? `${m("CurrentGameBackground")}{${imp({ opacity: "0.35", filter: "none" })}}` : "") +
+                    (rows.length ? `${rows.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                        `${rows.map(row => `${row}:is(.gpfocus,:focus-visible,:focus-within)`).join(",")}{${imp({ "background-color": C.gunmetal, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "") +
+                    (m("NavigationMenuItemSeparator") ? `${m("NavigationMenuItemSeparator")}{${imp({ "background-color": C.gunmetal, "background-image": "none" })}}` : "");
+            } },
+        { id: "overlay-configurator", needs: [], needsAny: [["overlay", "OverlayPopup"], ["configurator", "ControllerConfiguratorMain"], ["configsummary", "ControllerConfiguratorSummary"]], css: s => {
+                const k = (map, key) => s(map, key) ? `${ROOT} ${s(map, key)}` : "";
+                const black = [k("overlay", "OverlayPopup"), k("overlay", "OverlayPopupBody"), k("overlay", "Toolbar"), k("overlay", "SettingsModalRoot"),
+                    k("configurator", "ControllerConfiguratorBackgroundContainer"), k("configurator", "ControllerConfiguratorMain"), k("configsummary", "ControllerConfiguratorSummary")].filter(Boolean);
+                const rows = [k("overlay", "ToolbarButton"), k("overlay", "BackToGame"), k("overlay", "ExitGameBtn"), k("configurator", "CurrentConfigurationButton"),
+                    k("configurator", "MainOptionsButton"), k("configsummary", "StandardControl")].filter(Boolean);
+                return (black.length ? `${black.join(",")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none" })}}` : "") +
+                    (rows.length ? `${rows.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                        `${rows.map(row => `${row}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "");
+            } },
+        // Search: the field by its own map now (the 3.3.8 structural rule stays as the fallback), results and suggestions.
+        { id: "search-pages", needs: [], needsAny: [["searchbar", "SearchFieldBackground"], ["searchresults", "GamepadSearch"], ["suggestions", "Suggestions"]], css: s => {
+                const k = (map, key) => s(map, key) ? `${ROOT} ${s(map, key)}` : "";
+                const field = k("searchbar", "SearchFieldBackground");
+                const results = [k("searchresults", "ResultTemplate"), k("suggestions", "Suggestion")].filter(Boolean);
+                return (field ? `${field}{${imp({ "background-color": "transparent", "background-image": "none", "border-radius": SQUARE, "box-shadow": `inset 0 -1px 0 ${C.steel}`, border: "0", "backdrop-filter": "none" })}}` +
+                    `${field}:focus-within{${imp({ "box-shadow": `inset 0 -2px 0 ${C.crimson}` })}}` : "") +
+                    (k("searchbar", "SearchBox") ? `${k("searchbar", "SearchBox")}{${imp({ color: C.steel, "background-color": "transparent", "caret-color": C.crimson })}}` : "") +
+                    [k("searchbar", "SearchIconLeft"), k("searchbar", "SearchIconRight")].filter(Boolean).map(sel => `${sel},${sel} *{${imp({ color: C.steel, fill: C.steel })}}`).join("") +
+                    ([k("searchresults", "GamepadSearch"), k("suggestions", "Suggestions")].filter(Boolean).map(sel => `${sel}{${imp(SOLID_BLACK)}}`).join("")) +
+                    (results.length ? `${results.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+                        `${results.map(row => `${row}:is(.gpfocus,:focus-visible,:hover)`).join(",")}{${imp({ "background-color": C.raised, color: C.white, "box-shadow": `inset 3px 0 0 ${C.crimson}`, filter: "none", outline: "none" })}}` : "");
+            } },
         // Library grid (3.3.4): capsules drawn about 16% smaller inside their slots, so even black gutters (and the stars)
         // show between them. Steam's slots and focus order are untouched; art stays art (no stars behind it).
         { id: "library-capsules", needs: [], targets: ["libraryCapsule"], css: (_s, t) => libraryCapsuleCss(t("libraryCapsule")) },
@@ -64848,6 +65196,14 @@ function rules(mark) {
 }
 // ---- Builders (pure; tests call them directly) ----
 const CORE_RAIL_ICON_PX = 30;
+// 3.3.9: Home after Art Hero with the user's options: the art fades out over its last 12%, the carousel 50vh down in a
+// 70vh row (carousel height 5), the focused game's name 4em above its capsule (font height -4) at 22px (larger).
+const CORE_HOME_ART = { fadeFrom: 88, carouselTop: 50, carouselHeight: 70, labelEm: 4, labelPx: 22 };
+// 3.3.9: the top bar's only shadow, for text over bright art (soft, dark, no glow colour).
+const CORE_HEADER_TEXT_SHADOW = "0 1px 3px rgba(0,0,0,0.65)";
+// 3.3.9: the clean game view's measures (Clean Gameview v1.8 Lz's defaults, as The Collector's GAME_VIEW): an 80px play bar
+// over the 40px footer, the logo at most 120px, the art at 60% brightness, 48px square buttons, a 600ms fullscreen enter.
+const CORE_GAME_VIEW = { playbar: 80, footer: 40, logo: 120, brightness: 0.6, button: 48, enterMs: 600 };
 const CORE_LIBRARY_CAPSULE_SCALE = 0.84;
 // Home's capsules (3.3.8): smaller at the TV's 1348 x 758 viewport, so Steam's focus growth stays inside the row.
 const CORE_HOME_CAPSULE_SCALE = 0.8;
@@ -64942,10 +65298,13 @@ const CORE_UI_HOSTS = [
     { id: "qam-footer", map: "footer", key: "QuickAccessFooter", minArea: 24000 },
     { id: "qam-footer-shadow", map: "quickaccess", key: "FooterBoxShadow", minArea: 24000 },
     { id: "footer-opaque", map: "footer", key: "Opaque", minArea: 24000 },
-    { id: "header-opaque", map: "header", key: "HeaderOpaque", minArea: 24000 },
+    // 3.3.9: the top bar is never black any more (chrome-header), so it is never a Starfield host.
     // Phase 2 pages: the canvas covers the visible part of the page only.
     { id: "home", map: "gamepadui", key: "BasicHome", minArea: 0, page: true },
     { id: "library", map: "library", key: "GamepadLibrary", minArea: 0, page: true },
+    // 3.3.9: Steam's game page, screen two (CORE-UI.md, "The game view"): the app details container, below the play bar,
+    // never a ROM page (The Collector's page is its own host).
+    { id: "game-page", map: "appdetails", key: "AppDetailsContainer", minArea: 0, page: true, viewport: true, exclude: ".romm-core-page", below: "{appdetails.PlaySection}" },
     // Hosts from other plugins (3.3.7). The Collector's ROM game page (Eternal-Collector, corePageStyles.ts): the
     // wrapper in place of Steam's overview panel, below the hero art.
     { id: "collector-rom-page", selector: ".romm-core-page", minArea: 0, page: true },
@@ -65024,7 +65383,9 @@ function buildCoreUiCss(maps, options = {}) {
             continue;
         hosts.push({ id: host.id, selector: found.plain, strong: found.strong, minArea: host.minArea,
             fullHeight: !plugin && host.fullHeight === true, panel: !plugin && host.panel === true,
-            page: host.page === true, source: plugin ? "plugin" : "steam", viewport: plugin });
+            page: host.page === true, source: plugin ? "plugin" : "steam", viewport: plugin || host.viewport === true,
+            ...(!plugin && host.exclude ? { exclude: host.exclude } : {}),
+            ...(!plugin && host.below ? { below: resolveTemplate(maps, host.below, true) } : {}) });
     }
     // Black means starfield: every black surface above is a host. The runtime puts one canvas in each (the
     // shared field), behind the surface's content; a host inside another host stays clear instead.
@@ -65056,6 +65417,7 @@ function buildCoreUiCss(maps, options = {}) {
         menu: plainSelector(maps.mainmenu, "Menu"), menuItem: plainSelector(maps.mainmenu, "Item"), qamTab: plainSelector(maps.quickaccess, "Tab"),
         tab: plainSelector(maps.tabbedpage, "Tab"), tabTitle: plainSelector(maps.tabbedpage, "TabTitle"), tabSelected: plainSelector(maps.tabbedpage, "Selected"),
         library: plainSelector(maps.library, "GamepadLibrary"), tabbedPage: plainSelector(maps.tabbedpage, "GamepadTabbedPage"),
+        playSection: plainSelector(maps.appdetails, "PlaySection"), appContainer: plainSelector(maps.appdetails, "AppDetailsContainer"), tabRow: plainSelector(maps.tabbedpage, "TabRow"),
     };
     const css = parts.join("\n");
     return { css, applied, skipped, hosts, clock, dom, maps, ruleTargets: ruleTargetsFromCss(css) };
@@ -65649,6 +66011,35 @@ function storage() {
     }
 }
 const MAX_BUILDS = 20;
+// The game view's screen two starts this far below the top edge: the top bar's height, so the tab row is not under it.
+const GAME_VIEW_TOP_INSET = 40;
+// The nearest ancestor that scrolls vertically (Steam's page scroller), else undefined.
+function scrollParent(element, doc) {
+    const view = doc.defaultView;
+    for (let node = element.parentElement; node; node = node.parentElement) {
+        try {
+            const overflow = String(view?.getComputedStyle?.(node)?.overflowY ?? "");
+            if ((overflow === "auto" || overflow === "scroll" || overflow === "overlay") && node.scrollHeight > node.clientHeight)
+                return node;
+        }
+        catch { /* Next ancestor. */ }
+    }
+    return undefined;
+}
+function smoothScroll(scroller, top) {
+    const target = Math.max(0, Math.round(top));
+    try {
+        if (typeof scroller.scrollTo === "function") {
+            scroller.scrollTo({ top: target, behavior: "smooth" });
+            return;
+        }
+    }
+    catch { /* Plain set below. */ }
+    scroller.scrollTop = target;
+}
+// A panel candidate wider than this share of the screen is a full-screen wrapper, never the panel (3.3.9: 0.7, so
+// Quick Access's own 855 px window on a 1348 px screen counts).
+const PANEL_SHARE = 0.7;
 function createCoreUi(deps) {
     let sheet, builds = 0, field;
     const logged = new Set();
@@ -65662,6 +66053,7 @@ function createCoreUi(deps) {
     const fullHeight = createFullHeight(edits);
     const chromes = new Set();
     const observers = new Map();
+    const focusWatch = new Map();
     const diagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {}, restyled: 0, hosts: {} };
     function orbState() {
         try {
@@ -65848,6 +66240,48 @@ function createCoreUi(deps) {
                 }
         }
     }
+    // 3.3.9 (TV: "pressing down from the play bar must jump fully to screen two, the tab row at the top"): when focus
+    // moves from the play bar into the rest of a game page, the page scrolls so screen two starts at the top (its tab row
+    // when there is one); back up into the play bar, it scrolls to screen one. The Collector does the same on a ROM page,
+    // so a ROM page is left to it.
+    function watchGameView(doc, dom) {
+        if (focusWatch.has(doc) || !dom.playSection || !dom.appContainer)
+            return;
+        let inBar = false;
+        const handler = (event) => {
+            try {
+                const target = event?.target;
+                const page = target?.closest?.(dom.appContainer);
+                if (!page || page.querySelector(".romm-core-page")) {
+                    inBar = false;
+                    return;
+                }
+                const bar = page.querySelector(dom.playSection);
+                const nowInBar = !!bar && (bar === target || bar.contains(target));
+                if (nowInBar === inBar)
+                    return;
+                inBar = nowInBar;
+                const scroller = scrollParent(page, doc);
+                if (!scroller)
+                    return;
+                if (nowInBar) {
+                    smoothScroll(scroller, 0);
+                    return;
+                }
+                const anchor = (dom.tabRow ? page.querySelector(dom.tabRow) : null) ?? bar?.nextElementSibling ?? null;
+                if (!anchor)
+                    return;
+                const offset = anchor.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+                smoothScroll(scroller, scroller.scrollTop + offset - GAME_VIEW_TOP_INSET);
+            }
+            catch { /* Steam's own scrolling stands. */ }
+        };
+        try {
+            doc.addEventListener("focusin", handler, true);
+            focusWatch.set(doc, handler);
+        }
+        catch { /* Steam's own scrolling stands. */ }
+    }
     // Removals (a route change, a page closing) are swept at once instead of on the next one-second sync.
     function observe(doc) {
         if (observers.has(doc))
@@ -65879,7 +66313,14 @@ function createCoreUi(deps) {
             scroll = Math.max(0, Math.round(surface.element.scrollTop || 0));
             if (surface.host.viewport) {
                 const rect = surface.element.getBoundingClientRect(), height = surface.doc.defaultView?.innerHeight ?? 0;
-                const from = Math.max(0, rect.top), to = Math.min(height, rect.bottom);
+                // 3.3.9: a host with `below` starts its stars under that child (the game page's play bar over the art).
+                let floor = 0;
+                if (surface.host.below) {
+                    const child = surface.element.querySelector(surface.host.below);
+                    if (child)
+                        floor = Math.max(0, child.getBoundingClientRect().bottom);
+                }
+                const from = Math.max(0, rect.top, floor), to = Math.min(height, rect.bottom);
                 scroll += Math.max(0, Math.round(from - rect.top));
                 pageHeight = Math.max(0, Math.round(to - from));
             }
@@ -66014,11 +66455,13 @@ function createCoreUi(deps) {
         catch { /* Already gone with its window. */ }
         surfaces.delete(surface.element);
     }
-    function attach(doc, hosts) {
+    function attach(doc, hosts, screenWidth = 0) {
         if (!hosts.length)
             return;
         const any = `[${CORE_UI_HOST_ATTRIBUTE}="1"]`;
-        const width = Number(doc.defaultView?.innerWidth) || 0;
+        // 3.3.9: measured against the screen (the widest Steam window), not the document: Quick Access and the Steam menu
+        // are windows of their own (855 and 240 px wide on the TV), and the panel fills its window.
+        const width = Math.max(Number(doc.defaultView?.innerWidth) || 0, screenWidth);
         for (const host of hosts) {
             let found = [];
             try {
@@ -66040,7 +66483,7 @@ function createCoreUi(deps) {
                 }
                 if (!nested && host.panel && width > 0) {
                     try {
-                        nested = element.getBoundingClientRect().width > width * 0.6;
+                        nested = element.getBoundingClientRect().width > width * PANEL_SHARE;
                     }
                     catch {
                         nested = false;
@@ -66055,6 +66498,23 @@ function createCoreUi(deps) {
                     continue;
                 }
                 let surface = surfaces.get(element);
+                // 3.3.9: an element holding the host's exclusion (a ROM page The Collector draws) is not this host.
+                let excluded = false;
+                if (host.exclude) {
+                    try {
+                        excluded = !!element.querySelector(host.exclude);
+                    }
+                    catch {
+                        excluded = false;
+                    }
+                }
+                if (excluded) {
+                    if (surface)
+                        release(surface);
+                    if (element.getAttribute(CORE_UI_HOST_ATTRIBUTE) !== null)
+                        element.removeAttribute(CORE_UI_HOST_ATTRIBUTE);
+                    continue;
+                }
                 if (surface && !surface.canvas.isConnected) {
                     release(surface);
                     surface = undefined;
@@ -66175,6 +66635,13 @@ function createCoreUi(deps) {
                 styles.delete(doc);
             }
         sweep(docs);
+        let screenWidth = 0;
+        for (const doc of docs) {
+            try {
+                screenWidth = Math.max(screenWidth, Number(doc.defaultView?.innerWidth) || 0);
+            }
+            catch { }
+        }
         for (const [doc, observer] of observers)
             if (!docs.includes(doc)) {
                 try {
@@ -66182,6 +66649,14 @@ function createCoreUi(deps) {
                 }
                 catch { }
                 observers.delete(doc);
+            }
+        for (const [doc, handler] of focusWatch)
+            if (!docs.includes(doc)) {
+                try {
+                    doc.removeEventListener("focusin", handler, true);
+                }
+                catch { }
+                focusWatch.delete(doc);
             }
         for (const doc of docs) {
             try {
@@ -66202,8 +66677,9 @@ function createCoreUi(deps) {
                 }
                 if (doc.documentElement.getAttribute(CORE_UI_ATTRIBUTE) !== "1")
                     doc.documentElement.setAttribute(CORE_UI_ATTRIBUTE, "1");
-                attach(doc, current.hosts);
+                attach(doc, current.hosts, screenWidth);
                 observe(doc);
+                watchGameView(doc, current.dom ?? {});
                 const dom = current.dom ?? {};
                 tagChrome(doc, dom);
                 reserveLogo(doc, dom);
@@ -66271,6 +66747,13 @@ function createCoreUi(deps) {
             catch { }
         }
         observers.clear();
+        for (const [doc, handler] of focusWatch) {
+            try {
+                doc.removeEventListener("focusin", handler, true);
+            }
+            catch { }
+        }
+        focusWatch.clear();
         try {
             fullHeight.releaseAll();
         }
@@ -66340,8 +66823,11 @@ function laterStylesheet(style) {
     return false;
 }
 // Steam's UI documents: the Big Picture window, every Steam UI window and their popups (the Steam menu and
-// Quick Access are popups on some clients).
-function steamUiDocuments(host, router) {
+// Quick Access are popups on some clients). 3.3.9 (TV snapshot: Quick Access and the Steam menu unstyled): on the
+// current client they are BrowserViews, separate windows titled QuickAccess_uid* and MainMenu_uid* that no window store
+// lists; `popups` answers those for each document found (popupDocuments below), so every popup gets the stylesheet,
+// the Starfield and the full-height logic like the main window.
+function steamUiDocuments(host, router, popups) {
     const documents = new Set(), windows = [];
     const values = (value) => {
         try {
@@ -66374,7 +66860,47 @@ function steamUiDocuments(host, router) {
         }
         catch { }
     }
+    if (popups) {
+        for (const main of [...documents]) {
+            let found = [];
+            try {
+                found = popups(main) ?? [];
+            }
+            catch {
+                found = [];
+            }
+            for (const doc of found.slice(0, 16)) {
+                try {
+                    if (doc?.head && doc.documentElement && documents.size < 48)
+                        documents.add(doc);
+                }
+                catch { }
+            }
+        }
+    }
     return [...documents];
+}
+// BrowserView popups, re-discovered every POPUP_RESCAN_MS: Steam creates them lazily and can recreate them, and the
+// owner cache only notices a closed one, never a new one.
+const POPUP_RESCAN_MS = 3000;
+function popupDocuments(now = () => Date.now(), find = browserViewDocuments, invalidate = invalidateOnboardingBrowserViewOwners) {
+    const scanned = new WeakMap();
+    return (main) => {
+        const at = now(), last = scanned.get(main);
+        if (last === undefined || at - last >= POPUP_RESCAN_MS) {
+            try {
+                invalidate(main);
+            }
+            catch { }
+            scanned.set(main, at);
+        }
+        try {
+            return find(main);
+        }
+        catch {
+            return [];
+        }
+    };
 }
 // One animation frame in `view` (the window being drawn), with a timer backstop: a window Steam has stopped
 // compositing never answers requestAnimationFrame, and the stars must not freeze because of it. The time passed on
@@ -66413,7 +66939,7 @@ function installCoreUi(options) {
     const host = window;
     const runtime = createCoreUi({
         ui: options.ui,
-        documents: () => steamUiDocuments(host, options.ui?.Router),
+        documents: (() => { const popups = popupDocuments(); return () => steamUiDocuments(host, options.ui?.Router, popups); })(),
         setting: options.setting ?? coreUiSetting,
         mark: options.mark,
         wordmark: options.wordmark,
@@ -67078,6 +67604,24 @@ function coreUiCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
     return copy[language === "ua" ? "uk" : language] ?? en;
 }
+const packCopy = {
+    en: { pack: "Re-import icon pack", packHint: "Reads colorgrade-icons-heroes-logos.zip from Downloads again for the Consoles tab.", packDone: "Imported: {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip is not in Downloads.", packFailed: "The icon pack could not be imported." },
+    it: { pack: "Reimporta pacchetto icone", packHint: "Rilegge colorgrade-icons-heroes-logos.zip da Download per la scheda Console.", packDone: "Importate: {count} console.", packMissing: "colorgrade-icons-heroes-logos.zip non è in Download.", packFailed: "Impossibile importare il pacchetto icone." },
+    es: { pack: "Reimportar paquete de iconos", packHint: "Vuelve a leer colorgrade-icons-heroes-logos.zip de Descargas para la pestaña Consolas.", packDone: "Importadas: {count} consolas.", packMissing: "colorgrade-icons-heroes-logos.zip no está en Descargas.", packFailed: "No se pudo importar el paquete de iconos." },
+    fr: { pack: "Réimporter le pack d'icônes", packHint: "Relit colorgrade-icons-heroes-logos.zip dans Téléchargements pour l'onglet Consoles.", packDone: "Importées : {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip n'est pas dans Téléchargements.", packFailed: "Le pack d'icônes n'a pas pu être importé." },
+    de: { pack: "Icon-Paket neu importieren", packHint: "Liest colorgrade-icons-heroes-logos.zip aus Downloads erneut für den Tab Konsolen.", packDone: "Importiert: {count} Konsolen.", packMissing: "colorgrade-icons-heroes-logos.zip ist nicht in Downloads.", packFailed: "Das Icon-Paket konnte nicht importiert werden." },
+    pt: { pack: "Reimportar pacote de ícones", packHint: "Lê de novo colorgrade-icons-heroes-logos.zip em Downloads para a aba Consoles.", packDone: "Importados: {count} consoles.", packMissing: "colorgrade-icons-heroes-logos.zip não está em Downloads.", packFailed: "Não foi possível importar o pacote de ícones." },
+    uk: { pack: "Повторно імпортувати піктограми", packHint: "Знову читає colorgrade-icons-heroes-logos.zip із Завантажень для вкладки Консолі.", packDone: "Імпортовано консолей: {count}.", packMissing: "colorgrade-icons-heroes-logos.zip немає в Завантаженнях.", packFailed: "Не вдалося імпортувати піктограми." },
+    ru: { pack: "Повторно импортировать значки", packHint: "Снова читает colorgrade-icons-heroes-logos.zip из Загрузок для вкладки Консоли.", packDone: "Импортировано консолей: {count}.", packMissing: "colorgrade-icons-heroes-logos.zip нет в Загрузках.", packFailed: "Не удалось импортировать значки." },
+    zh: { pack: "重新导入图标包", packHint: "为“主机”标签重新读取“下载”中的 colorgrade-icons-heroes-logos.zip。", packDone: "已导入 {count} 个主机。", packMissing: "“下载”中没有 colorgrade-icons-heroes-logos.zip。", packFailed: "无法导入图标包。" },
+    ja: { pack: "アイコンパックを再インポート", packHint: "コンソールタブ用に、ダウンロードの colorgrade-icons-heroes-logos.zip を読み直します。", packDone: "{count} 台のコンソールをインポートしました。", packMissing: "ダウンロードに colorgrade-icons-heroes-logos.zip がありません。", packFailed: "アイコンパックをインポートできませんでした。" },
+    ko: { pack: "아이콘 팩 다시 가져오기", packHint: "콘솔 탭을 위해 다운로드의 colorgrade-icons-heroes-logos.zip을 다시 읽습니다.", packDone: "콘솔 {count}개를 가져왔습니다.", packMissing: "다운로드에 colorgrade-icons-heroes-logos.zip이 없습니다.", packFailed: "아이콘 팩을 가져오지 못했습니다." },
+    hi: { pack: "आइकन पैक फिर से इम्पोर्ट करें", packHint: "कंसोल टैब के लिए Downloads से colorgrade-icons-heroes-logos.zip फिर से पढ़ता है।", packDone: "{count} कंसोल इम्पोर्ट हुए।", packMissing: "Downloads में colorgrade-icons-heroes-logos.zip नहीं है।", packFailed: "आइकन पैक इम्पोर्ट नहीं हो सका।" },
+};
+function coreUiPackCopy(locale) {
+    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
+    return packCopy[language] ?? packCopy.en;
+}
 
 // Eternal Core: Quick Access rail icons at Steam's own size (docs/eternal/CORE-UI.md, "Plugin logos", 3.3.4). Core's
 // tab, Jarvis's tab and the Eternal plugins' glyphs were drawn at 1em (about 16px, half of Steam's own icons); with
@@ -67105,7 +67649,7 @@ const { PanelSection: PanelSection$1, PanelSectionRow: PanelSectionRow$1, Toggle
 function CoreUiSection({ locale }) {
     const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
     const text = coreUiCopy(locale);
-    return (SP_JSX.jsxs(PanelSection$1, { title: text.section, children: [SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ToggleField$1, { bottomSeparator: "none", label: text.label, description: text.hint, checked: on, onChange: (value) => coreUiSetting.set(value) }) }), SP_JSX.jsx(ScreensaverRow, { locale: locale }), SP_JSX.jsx(SnapshotRow, { locale: locale })] }));
+    return (SP_JSX.jsxs(PanelSection$1, { title: text.section, children: [SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ToggleField$1, { bottomSeparator: "none", label: text.label, description: text.hint, checked: on, onChange: (value) => coreUiSetting.set(value) }) }), SP_JSX.jsx(ScreensaverRow, { locale: locale }), SP_JSX.jsx(SnapshotRow, { locale: locale }), SP_JSX.jsx(IconPackRow, { locale: locale })] }));
 }
 // 3.3.4: a rail icon at Steam's own size while Core UI is on (coreRailIcons.ts), 1em off.
 function CoreRailIcon({ children, glyph }) {
@@ -67114,6 +67658,20 @@ function CoreRailIcon({ children, glyph }) {
     if (glyph)
         return SP_JSX.jsx("span", { ...props, dangerouslySetInnerHTML: { __html: railGlyphHtml(glyph) } });
     return SP_JSX.jsx("span", { ...props, children: children });
+}
+// 3.3.9: "Re-import icon pack": the Consoles tab's art, read again from the user's Downloads zip.
+function IconPackRow({ locale }) {
+    const text = coreUiPackCopy(locale);
+    const [state, setState] = _global_SP_REACT.useState({ busy: false });
+    const press = async () => {
+        setState({ busy: true });
+        const answer = await loadConsolePack(true);
+        const result = answer?.import;
+        const line = result?.imported ? text.packDone.replace("{count}", String(result.slugs ?? answer?.slugs?.length ?? 0))
+            : result?.reason === "zip_missing" ? text.packMissing : text.packFailed;
+        setState({ busy: false, line });
+    };
+    return (SP_JSX.jsx(PanelSectionRow$1, { children: SP_JSX.jsx(ButtonItem$1, { bottomSeparator: "none", layout: "below", description: state.line ?? text.packHint, disabled: state.busy, onClick: () => void press(), children: text.pack }) }));
 }
 // "Save Core UI snapshot": writes the diagnostic snapshot now (coreUiSnapshot.ts); the line under it says where.
 function SnapshotRow({ locale }) {
@@ -68426,7 +68984,6 @@ var index = definePlugin(() => {
                 subscribe: presence.subscribe,
             } });
         setQamPluginIconFallback(railIcon);
-        setCoreHomeIcons(coreIcons.get);
         const stopRailIcons = coreUiSetting.subscribe(() => { setQamPluginIconFallback(railIcon); void coreIcons.refresh(true); });
         return () => { stopRailIcons(); stopLegacy(); window.clearTimeout(legacyTimer); setCoreUiSnapshotControl(undefined); setQamPluginIconFallback(undefined); stopLook(); };
     });

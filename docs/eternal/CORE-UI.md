@@ -231,6 +231,157 @@ search's results dropdown, Settings' left navigation and page background, the Do
 overlay menu's variant of the Steam menu (Resume game, Controller settings, Notes, Game Recording, Exit game), the
 controller layout viewer, and Steam's toggles (the rail's checked colour).
 
+## 3.3.9: the game view, the Consoles tab and Steam's other pages
+
+### Quick Access and the Steam menu are windows of their own (the 3.3.8 root cause)
+
+The 3.3.8 snapshot found every map and applied every rule, yet Quick Access and the Steam menu stayed Steam's: its
+`documents` listed only SharedJSContext, Big Picture (1348 px) and a 96 px "Menu". On this client Quick Access is a
+BrowserView window titled `QuickAccess_uid21` (855 px wide) and the Steam menu `MainMenu_uid21` (240 px); no window store
+lists them, so Core's stylesheet never reached them (the `qamPanel` that matched was Big Picture's `ViewPlaceholder`).
+Now `steamUiDocuments` also takes every live BrowserView React holds (`browserViewDocuments` in
+`src/onboardingAnchors.ts`, the discovery `qamTabVisibility.ts` already used), re-scanned at most every 3 s
+(`POPUP_RESCAN_MS`) because Steam creates popups lazily and recreates them. Each popup gets the stylesheet, the
+Starfield and the full-height logic, and the snapshot lists it under `documents`. A panel candidate counts as the
+panel while it is under 70% of the screen's width (the widest Steam window), not the document's, since Quick Access
+fills its own 855 px window. Tests: fake popup documents in `tests/coreUi.test.mjs`.
+
+### Home after Art Hero (3.3.9)
+
+The user's Art Hero options (Expanded Hero, Linear Gradient, no footer, carousel height 5, larger carousel font, font
+height -4, cover and center) are Home's look now (`home-hero`, `CORE_HOME_ART`): the recent section is one screen
+tall; the focused game's hero fills it at full brightness, `object-fit: cover`, with a fade over its last 12% only;
+the carousel sits 50vh down in a 70vh row; the focused game's name sits 4em above its capsule at 22px; Steam's "Recent
+games" header and the green play triangle are hidden. The tabs and shelves are below the fold, on black with the
+Starfield. Capsules keep the 3.3.8 overflow fix (0.8 inside their slots, the ring inside).
+
+### Favorites, Home's first tab (3.3.9)
+
+Home's tabs are **Favorites** (the default), Consoles and Club (`HOME_TAB_ORDER` 10, 20, 30). Favorites shows the games
+in Steam's own Favorites collection (`collectionStore.GetCollection("favorite")`, else the store's list), Steam games and
+ROM shortcuts alike, read from the store on every render (never a copy), most recently played first, then by name
+(`favoriteApps`). Each tile is big portrait art, six across at the TV's 1348 px (about 200 x 300): the game's library
+capsule, or for a ROM shortcut its portrait grid image, where The Collector publishes its case art. No counts, no
+last-played text; the crimson ring sits inside the tile; A opens the game view. Y to add or remove a favourite is left
+out: Steam has no documented, simple call for it, and the game's Options menu already does it. Empty, the tab says
+"Favorite a game in your Library to see it here" with the Options button's prompt (12 languages, `coreHomeLocale.ts`).
+The first Home render after updating opens Favorites once, whatever tab Steam remembered (`activeHomeTab(..., migrate)`,
+flag `core.home.favoritesDefault` in local storage); a remembered brief or On this day tab always opens Favorites.
+
+### The top bar: fully transparent (3.3.9)
+
+The top bar is transparent everywhere (over art and over black alike, `HeaderOpaque` included): no bar, no blur, no
+gradient, never a Starfield host. Clock, icons and avatar are steel or white with one soft text shadow
+(`CORE_HEADER_TEXT_SHADOW`, `0 1px 3px rgba(0,0,0,0.65)`) so they read over bright art. The search is transparent too:
+the steel magnifier and text over a 1px steel underline, 2px crimson when focused; no gunmetal field.
+
+### Class maps read live (2026-11-27)
+
+The coordinator read the remaining surfaces from the live client through Steam's CEF debugger
+(`steam-class-signatures-2026-11-27`). Their key lists (names only, partial) are fixtures in
+`tests/fixtures/steam-class-maps.json`, and `tests/coreUiMatchers.test.mjs` checks each matches its own signature and
+no other. New maps (`CORE_UI_MAP_SIGNATURES`):
+
+| Map | Steam module (readable name) | Signature |
+| --- | --- | --- |
+| `appheader` | sharedappdetailsheader | all `TopCapsule`, `HeaderBackgroundImage`, `ImgSrc`; any `TopGradient`/`BoxSizer`; any `FullscreenEnterStart`/`FullscreenEnterDone` |
+| `appdetails` | basicappdetailssectionstyler | all `AppDetailsContainer`, `PlaySection`; any `AppActionButton`/`ActionRow`/`AppButtons`; any `AppDetailsRoot`/`AppDetailsContent`/`AppDetailSectionList` |
+| `appsection` | appdetailssection | all `AppDetailsSection`, `AppDetailsSectionContainer`; any `RightColumnSection`/`AppDetailsSectionHasLabel`/`Body` |
+| `playsection` | appdetailsplaysection | `CloudStatusLabel` and `CloudSyncProblem` (from Clean Gameview's readable names; **not read live yet**) |
+| `settings` | the paged settings dialog | any `PagedSettingsDialog_PageListColumn`/`PageListColumn`; any `..._PageListItem`/`PageListItem`; any `PageListItem_Title`/`..._PageList`/`PageList` |
+| `toggle` | the small toggle map | all `Toggle`, `ToggleRail`, `ToggleSwitch`; `ToggleRow`; never `Field` (gamepaddialog has its own copy plus `On`) |
+| `downloads`, `downloadbar` | the Downloads page; the bottom download bar | `DownloadsPage` + `SectionItem` + ...; `BottomBar` + `DownloadStatus` + ... |
+| `overlay`, `configurator`, `configsummary` | the overlay popup; the controller configurator; its layout summary | `OverlayPopup` + `ControllerConfiguratorWrapper`; `ControllerConfiguratorMain` + `...GamepadPage`; `ControllerConfiguratorSummary` + `ControllerLayout` |
+| `searchbar`, `searchresults`, `suggestions` | the top bar's search; the results page; the suggestions dropdown | `SearchBox` + `SearchFieldBackground`; `GamepadSearch` + `ResultsRow`; `Suggestions` + `Suggestion` |
+
+The in-game Steam menu is the main menu's own map (`mainmenu` also accepts `AppRunningControls`/`NavigationColumn`).
+
+### The game view (Steam's game page)
+
+Steam's game page now matches The Collector's ROM page (Eternal-Collector `collector-game-view`,
+`docs/architecture/rom-game-page.md`): the clean game view after Clean Gameview v1.8 Lz (SuchMeme and Leozito, MIT) with
+the user's options (cover art, no gradient, locked logo, semi-transparent play bar, cloud as a button). Measures are
+`CORE_GAME_VIEW` (`playbar` 80, `footer` 40, `logo` 120, `brightness` 0.6, `button` 48, `enterMs` 600), the same as
+The Collector's `GAME_VIEW`.
+
+- **Screen one** (`game-hero`, `game-playbar`, `game-cloud`): `TopCapsule` is `100vh - 120px` tall,
+  `HeaderBackgroundImage` 100vh, `ImgSrc` cover at 60% brightness, `TopGradient` cleared, the logo (`BoxSizer`) locked
+  bottom-left at most 120px. The play bar (`PlaySection`) is 120px with 40px of bottom padding over the footer and
+  transparent (so is `AppDetailsRoot`, Clean Gameview's play bar background). Play (`AppActionButton`) is crimson with
+  white text and a 3px white ring on focus; LAST PLAYED and PLAY TIME are Steam's own cells in steel; the square icon
+  buttons (`AppButtons`' children: controller, cog; the cloud through `playsection`) are 48px black with a 2px crimson
+  edge on focus; the cloud's status text is hidden (cloud as a button).
+- **The fullscreen enter** (Play pressed): Clean Gameview animates `TopCapsule` from screen one's height to the full
+  screen. Core does it as a transition on `TopCapsule`'s height (`FullscreenEnterActive`, `FullscreenEnterDone` and
+  `FullscreenExitStart` are 100vh, `FullscreenExitActive`/`Done` screen one's height), so the art grows instead of
+  jumping; transitions out-rank `!important` in the cascade, so Core UI's rules keep their weight. Still under reduced
+  motion.
+- **Screen two** (`game-screen-two`, `game-sections`): the container (`AppDetailsContainer`) stays clear; Steam's tab
+  row takes the Library's single marker over a clear row; the section cards (`AppDetailsSectionContainer`,
+  `RightColumnSection`) are gunmetal with the 10px float radius, raised with a 2px crimson outline on focus. The black
+  and the stars come from the `game-page` Starfield host.
+- **The `game-page` host**: `AppDetailsContainer`, a page host like The Collector's (`viewport`: the canvas covers only
+  the part on screen) with two 3.3.9 options. `below` starts the stars under the play bar (`{appdetails.PlaySection}`),
+  so the transparent play bar over the art never gets any. `exclude` (`.romm-core-page`) makes a container that holds a
+  ROM page not this host: The Collector's page is its own host. Every 3.3.8 guard applies (live only while on screen,
+  never taller than the host, swept on removal), and `tests/coreUi.test.mjs` checks stars below the play bar, the ROM
+  page exclusion and that leaving the page leaves nothing.
+- **Down to screen two** (`coreUi.ts`, `watchGameView`): when focus moves from the play bar into the rest of the page,
+  the page's scroller scrolls so screen two's tab row lands just under the top bar (`GAME_VIEW_TOP_INSET`, 40px); back up
+  into the play bar, it scrolls to screen one. A ROM page is left to The Collector, which does the same. Screen two has
+  no "Steam" or "Collector" chip.
+- **What is not touched**: non-Steam shortcuts get the same view (they are Steam game pages); a ROM page gets the same
+  header rules from both The Collector and Core (identical values); VR titles' pages are ordinary game pages, and
+  SteamVR's own UI is not Big Picture's document, so Core UI never reaches it.
+
+**For Forge (its Mods tab, a separate build).** On screen two, Steam's lower area is the element with
+`{appdetails.AppDetailsContainer}` (basicappdetailssectionstyler's `AppDetailsContainer`), the `game-page` host. Inside
+it, below the play bar (`{appdetails.PlaySection}`), Steam draws its tabbed page: the tab row is
+`{tabbedpage.TabRow}` (`Tab`, `TabTitle`, `Selected`; the same `tabbedpage` map as the Library) and each tab's content
+is a list of `{appsection.AppDetailsSection}` cards (`AppDetailsSectionContainer`, right column `RightColumnSection`).
+A Mods tab belongs in that tab row (Steam's tabs prop of the tabbed page inside `AppDetailsContainer`, not a sibling
+DOM node), so it takes the Core marker and the black-and-stars background with no rule of its own; its content should
+use gunmetal cards with `var(--core-radius-float, 10px)` like Steam's sections. These positions come from the class maps
+and Clean Gameview; confirm them with the Core UI snapshot on a Steam game page before building on them.
+
+### The Consoles tab
+
+Every console in the library is a tile (board 1, `src/coreConsoles.ts`): each Steam collection Core recognises as a
+console (RomM's included; `matchCollection`), one tile per console (the collection with the most games when there are
+several), by family order (PlayStation, Nintendo, Sega, Xbox, retro) then name. Eight across as on the board (206 x 150
+at 1920 px, 20px apart), scaled to the view (about 145 x 105 at 1348 px). A opens that console's collection
+(`/library/collection/<id>`). Focus is a 3px crimson ring inside the tile.
+
+**Art: the user's ColorGrade pack** (personal, no licence: never committed, bundled or used in tests). The tile is the
+console's **white logo on gunmetal with the family's tone bar**: at TV size a logo reads at a glance, where the pack's
+dimmed hero art turns to noise behind a small tile, and each hero or square icon is one to three megabytes where a logo
+is tens of kilobytes. Without a pack logo, the tile shows the console's name. Families are in
+`%APPDATA%\GamingMode\icons\colorgrade\families\<family>\`; platforms are imported by the backend
+(`quick_settings/colorgrade_pack.py`, `get_colorgrade_pack`) when `...\colorgrade\platforms` is missing, from
+`%USERPROFILE%\Downloads\colorgrade-icons-heroes-logos.zip`: every `.../by_platform/<slug>/{icon,hero,logo}.png`
+(83 slugs in the user's copy) to `...\colorgrade\platforms\<slug>\`. Only plain slugs and those three names are
+written; the new copy replaces the old one only when complete; a broken zip keeps what was there. Quick Access > Core >
+Look has **Re-import icon pack**. RomM or collection names map to pack slugs through Core's collection keys plus the
+pack's own names (`packSlugFor`: `ps1` to `psx`, `3ds` to `n3ds`, `megadrive` to `genesis`...), the first slug the pack
+has wins. Tests: `tests/coreConsoles.test.mjs`, `tests/test_colorgrade_pack.py` (generated zips only).
+
+### Steam's other pages
+
+Black pages, gunmetal rows with the square crimson focus bar, steel text, no Steam blue:
+
+- `settings-pages`: Settings' page list column and content black; list items steel, the active one gunmetal with the
+  crimson bar, the focused one raised. `toggles`: the rail raised gunmetal, crimson when on (`On`), a white knob.
+- `downloads-page`, `download-bar`: the Downloads page black, items gunmetal with the bar on focus, Steam's hover ring
+  off, progress crimson on raised gunmetal; the bottom download bar black.
+- `ingame-menu`: the Steam menu while a game runs, its three columns black, rows gunmetal with the bar on focus, the
+  current game's background dimmed.
+- `overlay-configurator`: the overlay popup and toolbar, the controller configurator and its layout summary black; the
+  toolbar, Back to game, Exit game and configurator buttons gunmetal rows with the bar on focus.
+- `search-pages`: the search field by its own map (the 3.3.8 structural `search-field` stays as the fallback), the
+  results page and suggestions dropdown black with gunmetal rows.
+
+These are built from class maps only; the hashed values were not seen on screen. Check each on the TV (below).
+
 ## Phases
 
 | Phase | Scope | Status |
@@ -770,3 +921,27 @@ Same setup, Core 3.3.8.
 8. Settings: the focused row gunmetal with the crimson left bar (the left navigation may still be Steam's).
 9. Home: capsules smaller; the focused one stays inside its row and the screen. Club: box art on every pick (or the
    platform badge if an image fails); no "Updated" line; it refreshes on its own.
+
+## TV checklist (3.3.9)
+
+Same setup, Core 3.3.9.
+
+1. A Steam game page: the art fills the screen above the footer, no top gradient, the logo bottom-left (at most 120px);
+   the transparent play bar with crimson Play (white ring on focus), LAST PLAYED and PLAY TIME, square black icon
+   buttons with a crimson edge on focus; the cloud as a button. Press Play: the art grows to full screen smoothly.
+2. Press down: screen two is black with stars from the play bar down, never over the art; tabs with the single crimson
+   underline; section cards gunmetal with rounded corners. The snapshot's diagnostics show `hosts.game-page: 1`.
+3. A ROM page (The Collector) looks the same as before and has no Core `game-page` canvas; a non-Steam shortcut's page
+   looks like a Steam game's; leaving any game page leaves no stars behind.
+4. Home opens on Favorites: big portrait art of the user's favourites, most recent first, the ring inside the tile, A
+   opens the game; empty, the hint with the Options prompt. Home > Consoles: one tile per console, eight across, white logos on gunmetal with the family bar (names where the
+   pack has no logo); A opens that console's games. Quick Access > Core > Look > Re-import icon pack answers with the count.
+5. Settings, Downloads, the in-game Steam menu, the controller configurator and search: black, gunmetal rows, crimson
+   focus bar, no blue. Anything still blue: save a Core UI snapshot (its `mapCandidates` names the closest map).
+6. Quick Access and the Steam menu are styled at last: black with stars, Core's rows and tabs. The snapshot's
+   `documents` lists `QuickAccess_uid*` and `MainMenu_uid*` with `coreStyle: true`.
+7. Home: the focused game's art fills the screen at full brightness, the carousel low with the game's name above it, no
+   "Recent games" header, no green triangle; scroll down for the tabs and shelves on black with stars.
+8. The top bar is transparent on every page, the search too (steel underline, crimson when focused); the clock and
+   icons readable over bright art.
+9. A Steam game page: down from the play bar lands on screen two with its tab row at the top; up returns to screen one.

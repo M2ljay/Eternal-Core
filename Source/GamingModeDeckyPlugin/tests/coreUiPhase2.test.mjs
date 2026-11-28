@@ -145,10 +145,13 @@ test("full height: a clipping wrapper (Decky's QAM wrapper) is opened, a scrolli
   assert.equal(full.createFullHeight().apply(already.panel, already.view), "full");
 });
 
-test("top bar and hint bar: pure black over a plain page, clear over game art", () => {
-  const css = rule("chrome-header") + rule("chrome-footer") + rule("chrome-header-opaque") + rule("chrome-footer-opaque");
+test("hint bar: pure black over a plain page, clear over game art; the top bar always clear (3.3.9)", () => {
+  const css = rule("chrome-footer") + rule("chrome-footer-opaque");
   assert.match(css, /\[data-core-ui-chrome="black"\]\{background-color:#000000 !important;background-image:none !important;box-shadow:none !important;backdrop-filter:none !important;filter:none !important;opacity:1 !important\}/);
-  assert.match(rule("chrome-header-opaque"), /_HdOpaque\._HdOpaque\{background-color:#000000/);
+  const header = rule("chrome-header");
+  assert.doesNotMatch(header, /#000000/, "the top bar is never black");
+  assert.match(header, /_HdOpaque\._HdOpaque[^{]*\{background-color:transparent !important;background-image:none !important;box-shadow:none !important;backdrop-filter:none !important/);
+  assert.equal(rule("chrome-header-opaque"), "", "no separate opaque rule");
   const bar = { tagName: "DIV", contains: () => false, getBoundingClientRect: () => ({ left: 0, top: 0, width: 1920, height: 48 }) };
   const view = { innerWidth: 1920, innerHeight: 1080, getComputedStyle: el => el.css ?? {} };
   const page = { tagName: "DIV", css: { backgroundColor: "rgb(14, 20, 27)" } };
@@ -279,7 +282,7 @@ test("plugin logos: matched by Decky plugin name or repository; others keep thei
   assert.equal(logos.corePluginTile("LoZazaMastro/Playhub-Discord"), undefined, "upstream keeps its own cover");
 });
 
-test("Core Home (3.3.8): Consoles (the default) and registered tabs (Club); the brief, On this day, What's new and Friends gone", () => {
+test("Core Home (3.3.8): Consoles and registered tabs (Club) without Favorites in the list; the brief, On this day, What's new and Friends gone", () => {
   const steam = [{ id: "WhatsNew", title: "What's new" }, { id: "Recommended", title: "On this day" }, { id: "Friends", title: "Friends" }, { id: "Other", title: "Other" }];
   // A stale brief entry from an older caller is dropped too.
   const core = [{ id: "WhatsNew", title: "Brief", order: 10 }, { id: "CoreConsoles", title: "Consoles", order: 20 }, { id: "CoreClub", title: "Club", order: 30 }];
@@ -391,4 +394,34 @@ test("Starfield frames: each surface's own window, a timer backstop, one clock",
   const field = starfield.createStarfield();
   field.advanceTo(0); field.advanceTo(200);
   assert.ok(Math.abs(field.depth() - 0.2 * starfield.STARFIELD_SPEED) < 1e-9, "a 5 fps popup still moves at full speed");
+});
+
+test("3.3.9 Favorites: first and the default, Steam's own collection most recently played first, the old default migrated once", () => {
+  const core = [{ id: "CoreFavorites", title: "Favorites", order: 10 }, { id: "CoreConsoles", title: "Consoles", order: 20 }, { id: "CoreClub", title: "Club", order: 30 }];
+  const next = homeTabs.composeHomeTabs([{ id: "WhatsNew" }, { id: "Recommended" }], core);
+  assert.deepEqual([...next.map(tab => tab.id)], ["CoreFavorites", "CoreConsoles", "CoreClub"]);
+  for (const old of ["WhatsNew", "Recommended", "Friends", undefined]) assert.equal(homeTabs.activeHomeTab(old, next), "CoreFavorites", String(old));
+  assert.equal(homeTabs.activeHomeTab("CoreConsoles", next), "CoreConsoles", "a chosen tab stays");
+  assert.equal(homeTabs.activeHomeTab("CoreConsoles", next, true), "CoreFavorites", "the saved 3.3.8 default moves to Favorites once");
+  assert.equal(homeTabs.activeHomeTab("CoreClub", next, true), "CoreClub");
+  assert.deepEqual({ ...homeTabs.HOME_TAB_ORDER }, { favorites: 10, consoles: 20, club: 30 });
+
+  const app = (appid, name, last) => ({ appid, display_name: name, rt_last_time_played: last });
+  const favorite = { id: "favorite", allApps: [app(10, "Steam game", 5), app(2147483650, "ROM shortcut", 9), app(10, "Steam game", 5), app(3, "Never", 0), app(4, "Alpha", 0)] };
+  const store = { GetCollection: id => id === "favorite" ? favorite : undefined };
+  const apps = homeTabs.favoriteApps(homeTabs.favoritesCollection(store));
+  assert.deepEqual([...apps.map(a => a.name)], ["ROM shortcut", "Steam game", "Alpha", "Never"], "recent first, then by name, no duplicates");
+  assert.equal(homeTabs.favoritesCollection({ userCollections: [{ id: "x" }, favorite] }), favorite, "the store's list when there is no getter");
+  assert.deepEqual([...homeTabs.favoriteApps(homeTabs.favoritesCollection({}))], []);
+
+  for (const language of homeLocale.coreHomeLanguages) {
+    const copy = homeLocale.coreHomeCopy(language);
+    assert.ok(copy.favorites && copy.favoritesEmpty, language);
+    assert.doesNotMatch(copy.favoritesEmpty, /\bsir\b/i);
+  }
+  assert.equal(homeLocale.coreHomeCopy("en").favoritesEmpty, "Favorite a game in your Library to see it here");
+  const source = readFileSync(new URL("../src/coreHome.tsx", import.meta.url), "utf8");
+  assert.match(source, /id: FAVORITES_ID, title: text\.favorites, content: <Favorites/);
+  assert.match(source, /core-favorite\.gpfocus[^{]*\{outline:3px solid #D7263D;outline-offset:-3px\}/, "the ring inside the tile");
+  assert.match(source, /Navigate\?\.\(`\/library\/app\/\$\{app\.appid\}`\)/, "A opens the game view");
 });
