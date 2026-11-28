@@ -1,7 +1,8 @@
 # Events and Canon Events — agreed specification
 
-Naming: the massive tier is called **Canon Events** (a nod to Spider-Man: Across the Spider-Verse, where a canon event
-is a fixed moment that must happen); everyday ones are plain **events**. The Look switch reads "Canon Events".
+Naming: three tiers, **Canon Events > Core Events > Events**. Canon Events (a nod to Spider-Man: Across the Spider-Verse,
+where a canon event is a fixed moment that must happen) are the massive ones. The owner's phone calendar is named
+**Variants**. The Look switch reads "Canon Events".
 
 Status: approved by the owner on 2026-11-28; not built yet. Build after 3.3.12. Design each massive event on the
 "Core: current vision" canvas before building it (Christmas first).
@@ -31,6 +32,10 @@ Events switch themselves on and off by date. One switch in Quick Access > Core >
   it when it drops, the album pinned first in the speed dial until the owner unpins it.
 - Large game releases: countdown, pre-load reminder, the game's art takes over Home's hero on launch day.
 
+**Core Events (middle)** — themed from a template, not individually designed: own colours, a starfield variant, a
+one-day countdown and a Jarvis line, all generated. Candidates (owner to confirm): New Year, Thanksgiving, Angel's and
+the owner's birthdays, other Marvel films, mid-size game releases, favourite artists below Uzi and Drake.
+
 **Events (standard)** — every other holiday or release: an accent, a Jarvis greeting, and "Out now" in the speed dial for music.
 
 ## Overlap rules
@@ -47,7 +52,7 @@ Events switch themselves on and off by date. One switch in Quick Access > Core >
 ## Sources
 
 - Standard holidays are built in.
-- The owner's own events come from a dedicated "Core Events" calendar (Google or iCloud; the calendar may be named "Canon Events") edited from his phone; Core reads
+- The owner's own events come from a dedicated "Variants" calendar named "Variants" (Google or iCloud) edited from his phone; Core reads
   its private ICS link. The event title picks the theme ("Christmas", "Doomsday", …); unknown titles get a generic
   accent plus a Jarvis greeting naming the occasion. Multi-day events are supported. Angel may add events if the
   calendar is shared with her.
