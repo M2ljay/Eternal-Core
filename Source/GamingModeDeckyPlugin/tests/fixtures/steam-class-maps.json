@@ -1,5 +1,5 @@
 {
-  "_about": "Key names of Steam class maps read from the live Big Picture client (Steam's CEF debugger) on the user's PC, November 2026. Names only; the hashed classes are not recorded. gamepaddialog lists the keys that were read (the module has more, marked partial). 3.3.9: the game page, Settings, Downloads, the in-game menu, the overlay and controller configurator, and search, from the coordinator's live read (key names only; all partial). mainmenu lists only the keys named for the in-game menu.",
+  "_about": "Key names of Steam class maps read from the live Big Picture client (Steam's CEF debugger) on the user's PC, November 2026. Names only; the hashed classes are not recorded. gamepaddialog lists the keys that were read (the module has more, marked partial). 3.3.9: the game page, Settings, Downloads, the in-game menu, the overlay and controller configurator, and search, from the coordinator's live read (key names only; all partial). 3.3.10: mainmenu is the Steam menu's own module (webpack 56461, read live in the MainMenu_uid2 popup); the 3.3.9 in-game key list is ingamemenu.",
   "maps": {
     "quickaccess": {
       "webpack": 34544,
@@ -249,37 +249,6 @@
         "ProgressBar"
       ]
     },
-    "mainmenu": {
-      "client": "2026-11",
-      "partial": true,
-      "source": "steam-class-signatures-2026-11-27",
-      "keys": [
-        "Menu",
-        "Item",
-        "Active",
-        "ItemIcon",
-        "ItemLabel",
-        "AppRunningControls",
-        "NavigationColumn",
-        "NavColumnFocused",
-        "ControllerColumnFocused",
-        "NavigationBox",
-        "NavigationMenuItem",
-        "NavigationMenuItemSeparator",
-        "AppColumn",
-        "FocusedColumn",
-        "AppColumnContent",
-        "ActiveContent",
-        "CurrentGameBackground",
-        "CurrentGameLogo",
-        "CurrentGameTitle",
-        "SwitchAppsTitle",
-        "SelectableAppWindow",
-        "OverlayAchievements",
-        "OverlayGuides",
-        "OverlayNotes"
-      ]
-    },
     "overlay": {
       "client": "2026-11",
       "partial": true,
@@ -378,6 +347,72 @@
       "keys": [
         "Suggestions",
         "Suggestion"
+      ]
+    },
+    "ingamemenu": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "Menu",
+        "Item",
+        "Active",
+        "ItemIcon",
+        "ItemLabel",
+        "AppRunningControls",
+        "NavigationColumn",
+        "NavColumnFocused",
+        "ControllerColumnFocused",
+        "NavigationBox",
+        "NavigationMenuItem",
+        "NavigationMenuItemSeparator",
+        "AppColumn",
+        "FocusedColumn",
+        "AppColumnContent",
+        "ActiveContent",
+        "CurrentGameBackground",
+        "CurrentGameLogo",
+        "CurrentGameTitle",
+        "SwitchAppsTitle",
+        "SelectableAppWindow",
+        "OverlayAchievements",
+        "OverlayGuides",
+        "OverlayNotes"
+      ],
+      "note": "3.3.10: this key list was recorded as the Steam menu in 3.3.9; it is the in-game menu's module (no ActiveDot, none of the Steam menu's own keys), the one the old mainmenu signature matched first."
+    },
+    "mainmenu": {
+      "webpack": 56461,
+      "client": "2026-11",
+      "partial": true,
+      "source": "coordinator's live CEF read, 2026-11-27 (MainMenu_uid2 popup)",
+      "keys": [
+        "Container",
+        "Menu",
+        "ItemOuter",
+        "Item",
+        "Active",
+        "ItemIcon",
+        "ItemLabel",
+        "ActiveDot",
+        "MainMenuEmbedded",
+        "mainMenuCloseDurationMS",
+        "RunningAppIcon",
+        "CurrentUserAvatar",
+        "RunnningAppSeparator"
+      ]
+    },
+    "settingstext": {
+      "client": "2026-11",
+      "partial": true,
+      "source": "steam-class-signatures-2026-11-27",
+      "keys": [
+        "SettingsDialogButton",
+        "SettingsDialogSubHeader",
+        "SettingsDialogBodyText",
+        "SettingsDialogDescriptionText",
+        "SettingsDialogLinkContainer",
+        "SettingsDialogLink"
       ]
     }
   }

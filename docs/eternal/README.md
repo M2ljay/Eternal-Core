@@ -122,6 +122,10 @@ its box art; the search bar and Steam's dialog rows in the Core look; Starfield 
 transparent top bar; Steam's game page as the clean game view, matching The Collector's ROM page; every console as a tile from the
 user's own icon pack; Settings, Downloads, the in-game menu, the controller configurator and search in the Core look):
 [CORE-UI.md](CORE-UI.md#339-the-game-view-the-consoles-tab-and-steams-other-pages).
+3.3.10 (TV fixes: the Steam menu styled (its class map was the in-game menu's; no first match wins silently any more);
+Quick Access rail icons centred at 24px; Settings in the Core look; no focus ring on capsules; Home's rows in their own
+space and Favorites tiles never empty; the top bar slides away past the first screen):
+[CORE-UI.md](CORE-UI.md#3310-tv-fixes-after-339).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

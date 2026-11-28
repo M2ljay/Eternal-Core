@@ -13,7 +13,7 @@
 
 import {
   CORE_UI_LIVE_ATTRIBUTE, buildCoreUiCss, findCoreUiMapsDetailed, CORE_UI_ATTRIBUTE, CORE_UI_HOST_ATTRIBUTE, CORE_UI_ORB_ID, CORE_UI_STARS_ATTRIBUTE, CORE_UI_STYLE_ID,
-  CORE_UI_CHROME_ATTRIBUTE, CORE_UI_CLEAR_ATTRIBUTE, CORE_MENU_LOGO_BAND,
+  CORE_UI_CHROME_ATTRIBUTE, CORE_UI_CLEAR_ATTRIBUTE, CORE_MENU_LOGO_BAND, CORE_UI_HEADER_ATTRIBUTE, headerHidden,
   type CoreUiHost, type CoreUiSheet,
 } from "./coreUiStyles";
 import { InlineEdits, chromeState, clearOpaqueLayers, keepBelowLogo, type View } from "./coreUiDom";
@@ -102,6 +102,8 @@ export function createCoreUi(deps: CoreUiDeps) {
   const chromes = new Set<Element>();
   const observers = new Map<Document, { disconnect(): void }>();
   const focusWatch = new Map<Document, (event: any) => void>();
+  // 3.3.10: per document, the scroll listener and the page scroller it last saw (the top bar hides past screen one).
+  const scrollWatch = new Map<Document, { handler: (event: any) => void; scroller?: Element; hidden: boolean }>();
   const diagnostics: CoreUiDiagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {}, restyled: 0, hosts: {} };
 
   function orbState(): string {
@@ -148,10 +150,15 @@ export function createCoreUi(deps: CoreUiDeps) {
       next = buildCoreUiCss(found.maps, { mark: deps.mark ?? deps.wordmark });
       next.routes = found.routes;
       next.candidates = found.candidates;
+      next.ambiguous = found.ambiguous;
     } catch { next = undefined; }
     if (next && (!sheet || next.applied.length >= sheet.applied.length)) sheet = next;
     if (sheet && (sheet.skipped.length === 0 || builds >= MAX_BUILDS)) {
       for (const id of sheet.skipped) logOnce(`skip:${id}`, `[Core UI] ${id}: Steam class map not found on this client; that part keeps Steam's look`);
+      // 3.3.10: two modules matched one signature (the Steam menu matched the in-game menu's module first).
+      for (const [map, seen] of Object.entries(sheet.ambiguous ?? {})) {
+        if (seen) logOnce(`ambiguous:${map}`, `[Core UI] class map ${map}: ${seen.matches} modules match; ${seen.switched ? "took the one with" : "kept the first, with"} ${seen.chosen.join(", ") || "no unique key"}`);
+      }
       for (const [map, candidate] of Object.entries(sheet.candidates ?? {})) {
         if (candidate) logOnce(`map:${map}`, `[Core UI] class map ${map} not found; closest module (${Math.round(candidate.score * 100)}%) lacks ${candidate.missing.join(", ")}`);
       }
@@ -251,6 +258,57 @@ export function createCoreUi(deps: CoreUiDeps) {
       } catch { /* Steam's own scrolling stands. */ }
     };
     try { doc.addEventListener("focusin", handler, true); focusWatch.set(doc, handler); } catch { /* Steam's own scrolling stands. */ }
+  }
+
+  // 3.3.10 (TV: the clock, weather and search sat over Home's tiles): the top bar slides out once the page under it has
+  // scrolled past its first screen, and comes back near the top. A page scroller is an element that scrolls vertically
+  // and is at least 60% of the window tall (a shelf or carousel scrolling sideways never counts). Checked on every
+  // scroll (one capture listener per document) and on every sync, so a route change that removes the scroller brings
+  // the bar back.
+  function pageScroller(element: any, doc: Document): boolean {
+    try {
+      const height = Number(doc.defaultView?.innerHeight) || 0;
+      return !!element && element.nodeType === 1 && element.clientHeight >= height * 0.6 && element.scrollHeight > element.clientHeight + 1;
+    } catch { return false; }
+  }
+  function applyHeader(doc: Document, dom: CoreUiSheet["dom"], hidden: boolean) {
+    if (!dom.header) return;
+    let found: Element[] = [];
+    try { found = Array.from(doc.querySelectorAll(dom.header)).slice(0, 4); } catch { found = []; }
+    for (const element of found) {
+      try {
+        if (hidden) { if (element.getAttribute(CORE_UI_HEADER_ATTRIBUTE) !== "hidden") element.setAttribute(CORE_UI_HEADER_ATTRIBUTE, "hidden"); }
+        else if (element.getAttribute(CORE_UI_HEADER_ATTRIBUTE) !== null) element.removeAttribute(CORE_UI_HEADER_ATTRIBUTE);
+        chromes.add(element);
+      } catch { /* The bar stays as it is. */ }
+    }
+  }
+  function headerHeight(doc: Document, dom: CoreUiSheet["dom"]): number {
+    try { const bar = dom.header ? doc.querySelector(dom.header) : null; return bar ? Math.round(bar.getBoundingClientRect().height) || 0 : 0; } catch { return 0; }
+  }
+  function updateHeader(doc: Document, dom: CoreUiSheet["dom"], scroller?: Element) {
+    const watch = scrollWatch.get(doc);
+    if (!watch) return;
+    if (scroller) watch.scroller = scroller;
+    let hidden = false;
+    const current: any = watch.scroller;
+    if (current && current.isConnected !== false && pageScroller(current, doc)) {
+      hidden = headerHidden(Number(current.scrollTop) || 0, Number(doc.defaultView?.innerHeight) || 0, headerHeight(doc, dom), watch.hidden);
+    } else watch.scroller = undefined;
+    watch.hidden = hidden;
+    applyHeader(doc, dom, hidden);
+  }
+  function watchScroll(doc: Document, dom: CoreUiSheet["dom"]) {
+    if (!dom.header) return;
+    if (scrollWatch.has(doc)) { updateHeader(doc, dom); return; }
+    const handler = (event: any) => {
+      try {
+        const target = event?.target;
+        if (!pageScroller(target, doc)) return;
+        updateHeader(doc, sheet?.dom ?? dom, target);
+      } catch { /* The bar stays as it is. */ }
+    };
+    try { doc.addEventListener("scroll", handler, true); scrollWatch.set(doc, { handler, hidden: false }); } catch { /* The bar stays visible. */ }
   }
 
   // Removals (a route change, a page closing) are swept at once instead of on the next one-second sync.
@@ -480,6 +538,7 @@ export function createCoreUi(deps: CoreUiDeps) {
     for (const doc of docs) { try { screenWidth = Math.max(screenWidth, Number(doc.defaultView?.innerWidth) || 0); } catch {} }
     for (const [doc, observer] of observers) if (!docs.includes(doc)) { try { observer.disconnect(); } catch {} observers.delete(doc); }
     for (const [doc, handler] of focusWatch) if (!docs.includes(doc)) { try { doc.removeEventListener("focusin", handler, true); } catch {} focusWatch.delete(doc); }
+    for (const [doc, watch] of scrollWatch) if (!docs.includes(doc)) { try { doc.removeEventListener("scroll", watch.handler, true); } catch {} scrollWatch.delete(doc); }
     for (const doc of docs) {
       try {
         let style = styles.get(doc);
@@ -499,6 +558,7 @@ export function createCoreUi(deps: CoreUiDeps) {
         watchGameView(doc, current.dom ?? {});
         const dom = current.dom ?? {};
         tagChrome(doc, dom);
+        watchScroll(doc, dom);
         reserveLogo(doc, dom);
         try { deps.decorate?.(doc, dom); } catch { /* The Library keeps Steam's look. */ }
         placeOrb(doc, current.clock);
@@ -530,16 +590,18 @@ export function createCoreUi(deps: CoreUiDeps) {
     observers.clear();
     for (const [doc, handler] of focusWatch) { try { doc.removeEventListener("focusin", handler, true); } catch {} }
     focusWatch.clear();
+    for (const [doc, watch] of scrollWatch) { try { doc.removeEventListener("scroll", watch.handler, true); } catch {} }
+    scrollWatch.clear();
     try { fullHeight.releaseAll(); } catch {}
     edits.restoreAll();
-    for (const element of chromes) { try { element.removeAttribute(CORE_UI_CHROME_ATTRIBUTE); } catch {} }
+    for (const element of chromes) { try { element.removeAttribute(CORE_UI_CHROME_ATTRIBUTE); element.removeAttribute(CORE_UI_HEADER_ATTRIBUTE); } catch {} }
     chromes.clear();
     for (const [doc, style] of styles) {
       try { style.remove(); } catch {}
       try { deps.undecorate?.(doc); } catch {}
       try {
         doc.documentElement.removeAttribute(CORE_UI_ATTRIBUTE);
-        for (const attribute of [CORE_UI_HOST_ATTRIBUTE, CORE_UI_CLEAR_ATTRIBUTE, CORE_UI_CHROME_ATTRIBUTE]) {
+        for (const attribute of [CORE_UI_HOST_ATTRIBUTE, CORE_UI_CLEAR_ATTRIBUTE, CORE_UI_CHROME_ATTRIBUTE, CORE_UI_HEADER_ATTRIBUTE]) {
           for (const element of Array.from(doc.querySelectorAll(`[${attribute}]`))) element.removeAttribute(attribute);
         }
       } catch {}

@@ -11,7 +11,7 @@ export const CORE_PLUGIN_TILES: Record<string, string> = {
 };
 
 // Single-colour glyphs derived from the tiles for the Quick Access tab rail (currentColor: steel, white when focused).
-// 3.3.4: drawn for 30px (CORE_RAIL_ICON_PX): one fill colour only (cut-outs are holes, never black paint, so a focused
+// 3.3.4: drawn for 30px, shown at CORE_RAIL_ICON_PX (24px since 3.3.10): one fill colour only (cut-outs are holes, never black paint, so a focused
 // gunmetal cell shows through), strokes and dots at least 4 units of the 92-unit box (about 1.3px), and a square box
 // tight around each drawing so it fills the cell.
 export const CORE_PLUGIN_GLYPHS: Record<string, string> = {

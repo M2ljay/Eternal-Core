@@ -34,7 +34,7 @@ const starfield = load("coreStarfield.ts");
 const runtime = load("coreUi.ts");
 
 const maps = {
-  mainmenu: { Menu: "_Mm", Item: "_MmItem", ItemIcon: "_MmIcon", ItemLabel: "_MmLabel", ActiveDot: "_MmDot" },
+  mainmenu: { MainMenuEmbedded: "_MmEmbed", Menu: "_Mm", Item: "_MmItem", ItemIcon: "_MmIcon", ItemLabel: "_MmLabel", ActiveDot: "_MmDot" },
   quickaccess: { Menu: "_QaMenu", Container: "_QaCont", QuickAccessMenu: "_QaQam", Title: "_QaTitle", Tab: "_QaTab", Tabs: "_QaTabs", Selected: "_QaSel",
     TabGroupPanel: "_QaTgp", TabContentColumn: "_QaTcc" },
   tabbedpage: { TabRow: "_TpRow", TabTitle: "_TpTitle", TabHeaderRowWrapper: "_TpWrap", Tab: "_TpTab", Selected: "_TpSel" },
@@ -213,24 +213,34 @@ test("stylesheet order: Core UI's stays after CSS Loader's", () => {
   assert.equal(runtime.laterStylesheet({ nextElementSibling: link }), true);
 });
 
-test("rail icons: 30px in a Steam-sized cell with Core UI on, 1em off; glyphs are single-colour and fill their box", () => {
-  assert.equal(rail.CORE_RAIL_ICON_PX, 30);
-  assert.ok(rail.CORE_RAIL_ICON_PX >= 28 && rail.CORE_RAIL_ICON_PX <= 32);
+// 3.3.10 (TV photo: plugin icons sat ~17px high in the 48 x 64 tab, off the selected fill): every rail icon is 24px,
+// Steam's own icon size, centred both ways in a flex tab.
+test("rail icons: 24px (Steam's own) with Core UI on, 1em off; glyphs are single-colour and fill their box", () => {
+  assert.equal(rail.CORE_RAIL_ICON_PX, 24);
   const on = rail.railIconBox(true), off = rail.railIconBox(false);
-  assert.equal(on.width, 30); assert.equal(on.height, 30); assert.equal(on.fontSize, 30, "icons drawn at 1em fill it");
+  assert.equal(on.width, 24); assert.equal(on.height, 24); assert.equal(on.fontSize, 24, "icons drawn at 1em fill it");
   assert.equal(off.width, "1em"); assert.equal(off.fontSize, undefined);
   for (const [name, svg] of Object.entries(artwork.CORE_PLUGIN_GLYPHS)) {
     assert.doesNotMatch(svg, /#000|black/i, `${name}: cut-outs are holes, not black paint`);
     const [, , w, h] = /viewBox="([\d.-]+) ([\d.-]+) ([\d.]+) ([\d.]+)"/.exec(svg).slice(1).map(Number);
     assert.equal(w, h, `${name}: square box`);
-    for (const [, r] of svg.matchAll(/ r="([\d.]+)"/g)) assert.ok(Number(r) * 30 / w >= 1, `${name}: dots at least 1px at 30px (r=${r})`);
-    for (const [, sw] of svg.matchAll(/stroke-width="([\d.]+)"/g)) assert.ok(Number(sw) * 30 / w >= 1.2, `${name}: strokes at least 1.2px at 30px`);
+    for (const [, r] of svg.matchAll(/ r="([\d.]+)"/g)) assert.ok(Number(r) * 24 / w >= 0.8, `${name}: dots at least 0.8px at 24px (r=${r})`);
+    for (const [, sw] of svg.matchAll(/stroke-width="([\d.]+)"/g)) assert.ok(Number(sw) * 24 / w >= 0.96, `${name}: strokes at least about 1px at 24px`);
     const html = rail.railGlyphHtml(svg);
     assert.match(html, /^<svg width="100%" height="100%" shape-rendering="geometricPrecision" aria-hidden="true" focusable="false" /);
   }
   assert.equal(rail.railGlyphHtml("<img onerror=x>"), "", "only SVG markup");
   const css = styles.buildCoreUiCss(maps).css;
-  assert.match(css, /qam-rail-icons \*\/[^{]*\[data-core-rail-icon\]\{[^}]*width:30px !important;height:30px !important/);
+  const part = css.split("\n").find(line => line.startsWith("/* qam-rail-icons */"));
+  assert.ok(part, "the rule applies");
+  const blocks = part.slice("/* qam-rail-icons */".length).split("}").filter(Boolean).map(block => block.split("{"));
+  const tab = blocks.find(([sel]) => /^html\[data-core-ui\] \._QaTab\._QaTab:not\(#core-ui-boost\)$/.test(sel.trim()));
+  assert.ok(tab, "a rule on the tab itself");
+  for (const want of ["display:flex", "align-items:center", "justify-content:center", "padding:0", "border-radius:0"]) assert.match(tab[1], new RegExp(want + " !important"), `the tab: ${want}`);
+  const icons = blocks.find(([sel]) => sel.includes("> svg") && sel.includes(":has(> :is(svg,img))") && sel.includes("[data-core-rail-icon]"));
+  assert.ok(icons, "Steam's svg, a plugin's span and Core's glyph share one box");
+  for (const want of ["width:24px", "height:24px", "margin:0", "position:static"]) assert.match(icons[1], new RegExp(want + " !important"), `icons: ${want}`);
+  assert.doesNotMatch(part, /30px/);
 });
 
 test("Library tabs: icon and label on one line, ONE marker under the label (tone on hover or focus, crimson when open)", () => {

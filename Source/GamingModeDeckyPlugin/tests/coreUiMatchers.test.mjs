@@ -35,7 +35,7 @@ const live = Object.fromEntries(Object.entries(fixture.maps).map(([name, entry])
 
 // The other maps, as the earlier tests shape them.
 const others = {
-  mainmenu: { Menu: "_Mm", Item: "_MmItem", ItemIcon: "_MmIcon", ItemLabel: "_MmLabel", ActiveDot: "_MmDot", FooterBoxShadow: "_MmFbs" },
+  mainmenu: { MainMenuEmbedded: "_MmEmbed", Menu: "_Mm", Item: "_MmItem", ItemIcon: "_MmIcon", ItemLabel: "_MmLabel", ActiveDot: "_MmDot", FooterBoxShadow: "_MmFbs" },
   controls: { PanelSection: "_CtlPs", PanelSectionTitle: "_CtlPst", PanelSectionRow: "_CtlRow" },
   footer: { BasicFooter: "_FtBasic", QuickAccessFooter: "_FtQam", Opaque: "_FtOpaque" },
   header: { Header: "_HdHeader", HeaderDownloadContainer: "_HdDl", HeaderOpaque: "_HdOpaque", Clock: "_HdClock" },
@@ -206,11 +206,113 @@ test("3.3.9 Home after Art Hero: the art one screen tall with a short fade, the 
   const part = sheet.css.split("\n").find(line => line.startsWith("/* home-hero */")).replaceAll(styles.CORE_UI_BOOST, "");
   const a = styles.CORE_HOME_ART;
   assert.ok(part.includes(`mask-image:linear-gradient(180deg, #000000 ${a.fadeFrom}%, transparent 100%)`), "a short fade at the bottom only");
-  assert.match(part, /_HmRecent\._HmRecent\{height:100vh !important;padding:0/);
+  // 3.3.10: screen one is exactly one screen and its own stacking context (TV: rows stacked over each other).
+  assert.match(part, /_HmRecent\._HmRecent\{position:relative !important;height:100vh !important;min-height:100vh !important;max-height:100vh !important;padding:0 !important;isolation:isolate/);
+  assert.match(part, /_RgBg\._RgBg,[^{]*_RgImgs\._RgImgs\{[^}]*height:100vh !important;min-height:0 !important;max-height:100vh/, "the art never runs on under the next rows");
   assert.match(part, /_RgImg\._RgImg\{object-fit:cover !important;object-position:center !important;opacity:1 !important;filter:none/, "full brightness");
   assert.match(part, /_RgHead\._RgHead\{display:none/);
-  assert.match(part, /_RgInner\._RgInner\{position:relative !important;top:50vh !important;height:70vh/);
+  assert.match(part, /_RgInner\._RgInner\{position:absolute !important;left:0 !important;right:0 !important;top:50vh !important;bottom:auto !important;height:auto !important;max-height:50vh/,
+    "the carousel row is out of the flow and never reaches past screen one's box");
+  assert.doesNotMatch(part, /70vh|position:relative !important;top:50vh/);
   assert.match(part, /\.gpfocuswithin > \._CaLabel\._CaLabel[^{]*\{position:absolute !important;top:-4em !important;visibility:visible !important;font-size:22px/);
   assert.match(part, /_CaPlay\._CaPlay \._CaIcon\._CaIcon\{display:none/, "no green triangle");
   assert.doesNotMatch(part, /brightness\(0/);
+});
+
+// 3.3.10 (TV: the Steam menu kept Steam's colours). The old mainmenu signature (Menu, ItemIcon, ItemLabel and any of
+// ActiveDot / FooterBoxShadow / AppRunningControls / NavigationColumn) also matched the in-game menu's module, which the
+// search answered first, so every menu rule styled a menu that was not on screen. The Steam menu's own module (webpack
+// 56461, read live in the MainMenu_uid2 popup) is now required to carry one of its own keys.
+test("3.3.10: the in-game menu's module can never be taken for the Steam menu, in either order", () => {
+  const ingame = live.ingamemenu, menu = live.mainmenu;
+  assert.equal(styles.CORE_UI_MAP_FILTERS.mainmenu(ingame), false, "the in-game module is not the Steam menu");
+  assert.equal(styles.CORE_UI_MAP_FILTERS.ingamemenu(menu), false, "and the Steam menu is not the in-game module");
+  // The 3.3.9 signature, kept here only to show it was ambiguous.
+  const old = { all: ["Menu", "ItemIcon", "ItemLabel"], any: [["ActiveDot", "FooterBoxShadow", "AppRunningControls", "NavigationColumn"]] };
+  assert.ok(styles.matchesSignature(ingame, old) && styles.matchesSignature(menu, old), "the old signature matched both");
+  for (const order of [[ingame, menu], [menu, ingame]]) {
+    const found = styles.findCoreUiMapsDetailed(decky3(order), { candidates: false });
+    assert.equal(found.maps.mainmenu, menu, "the Steam menu's own module");
+    assert.equal(found.maps.ingamemenu, ingame);
+    const css = styles.buildCoreUiCss(found.maps).css;
+    assert.match(css, new RegExp(`/\\* menu-panel \\*/[^\\n]*\\.${menu.Menu}\\.`), "menu-panel targets the real menu's class");
+    assert.doesNotMatch(css.split("\n").find(line => line.startsWith("/* menu-panel */")), new RegExp(`\\.${ingame.Menu}\\b`));
+  }
+});
+
+test("3.3.10: when two modules match one signature, the better fit wins and the snapshot says so", () => {
+  // A lookalike that does carry one Steam-menu key, searched first: the module with more of them still wins.
+  const lookalike = { Menu: "_LkMenu", ItemIcon: "_LkIcon", ItemLabel: "_LkLabel", CurrentUserAvatar: "_LkAvatar" };
+  const menu = live.mainmenu;
+  const found = styles.findCoreUiMapsDetailed(decky3([lookalike, menu]), { candidates: false });
+  assert.equal(found.maps.mainmenu, menu);
+  assert.equal(found.ambiguous.mainmenu.matches, 2);
+  assert.equal(found.ambiguous.mainmenu.switched, true);
+  assert.ok(found.ambiguous.mainmenu.chosen.includes("mainMenuCloseDurationMS"));
+  assert.deepEqual([...found.ambiguous.mainmenu.passedOver[0]], ["CurrentUserAvatar"]);
+  const record = snap.ambiguityList(found.ambiguous);
+  assert.equal(record.mainmenu.switched, true);
+  assert.ok(!JSON.stringify(record).includes("_Lk"), "key names only, never hashed classes");
+  // One module, no ambiguity recorded; the same map reached twice counts once.
+  const once = styles.findCoreUiMapsDetailed(decky3([menu, { ...menu }]), { candidates: false });
+  assert.equal(once.ambiguous.mainmenu, undefined);
+});
+
+test("3.3.10: Settings takes the prefixed module over the older one, whichever comes first", () => {
+  const older = { PageListColumn: "_OldCol", PageListItem: "_OldItem", PageList: "_OldList" };
+  for (const order of [[older, live.settings], [live.settings, older]]) {
+    const found = styles.findCoreUiMapsDetailed(decky3(order), { candidates: false });
+    assert.equal(found.maps.settings, live.settings);
+  }
+  const css = styles.buildCoreUiCss({ settings: live.settings }).css;
+  assert.doesNotMatch(css, /_OldCol/);
+});
+
+test("3.3.10: every signature is checked for a second matching module (no first-match wins silently)", () => {
+  for (const [name, map] of Object.entries(live)) {
+    const twin = Object.fromEntries(Object.keys(map).map(key => [key, `_twin${key}`]));
+    const found = styles.findCoreUiMapsDetailed(decky3([map, twin]), { candidates: false });
+    assert.equal(found.ambiguous[name]?.matches, 2, `${name}: two different modules match, recorded`);
+    assert.equal(found.ambiguous[name].switched, false, `${name}: an equal fit keeps the first`);
+  }
+});
+
+test("3.3.10: Settings, from the live key lists: black pages and their responsive variants, steel text, gunmetal rows", () => {
+  const sheet = styles.buildCoreUiCss({ settings: live.settings, settingstext: live.settingstext, gamepaddialog: real.gamepaddialog });
+  assert.ok(sheet.applied.includes("settings-pages") && sheet.applied.includes("settings-text"), sheet.skipped.join(", "));
+  const pages = sheet.css.split("\n").find(line => line.startsWith("/* settings-pages */"));
+  for (const key of ["PagedSettingsDialog_PageListColumn", "PagedSettingDialog_ContentColumn", "ResponsivePageList", "ResponsiveActivePage", "PagedSettingsDialog_Title"]) {
+    assert.ok(pages.includes(`.${live.settings[key]}.`), `${key} is styled`);
+  }
+  const text = sheet.css.split("\n").find(line => line.startsWith("/* settings-text */"));
+  assert.match(text, /text-transform:uppercase/);
+  assert.match(text, /#EA5A68/, "links in crimson text");
+  assert.doesNotMatch(sheet.css, /#1a9fff|#1999ff|rgb\(26, ?159/i, "no Steam blue anywhere");
+});
+
+test("3.3.10: Steam's global confirm dialogs are gunmetal floats; alone they never make a stylesheet", () => {
+  assert.equal(styles.buildCoreUiCss({}).css, "", "nothing of Steam found: no stylesheet at all");
+  const css = styles.buildCoreUiCss({ settings: live.settings }).css;
+  assert.match(css, /\/\* steam-dialogs \*\/[^\n]*\.GenericConfirmDialog:not\(#core-ui-boost\),[^{]*\{[^}]*background-color:#1A1D21 !important[^}]*border-radius:var\(--core-radius-float, 10px\)/);
+});
+
+test("3.3.10 Home: the shelf and the tabbed page are their own rows after screen one; the tab row is in the flow", () => {
+  const sheet = styles.buildCoreUiCss({ ...others });
+  const layers = sheet.css.split("\n").find(line => line.startsWith("/* home-layers */")).replaceAll(styles.CORE_UI_BOOST, "");
+  assert.match(layers, /\._GuHome\._GuHome \[data-collector-shelf\],[^{]*\._TpPage\._TpPage:has\(\[data-core-home-tab\]\)\{position:relative !important;z-index:1/);
+  assert.doesNotMatch(layers.split("{")[0], /_GuHome\._GuHome:has/, "never the whole of Home");
+  const tabs = sheet.css.split("\n").find(line => line.startsWith("/* home-tabs */")).replaceAll(styles.CORE_UI_BOOST, "");
+  assert.match(tabs, /:has\(\[data-core-home-tab\]\) \._TpWrap\._TpWrap[^{]*\{position:relative !important;top:auto !important;bottom:auto/, "Steam's pinned tab row now takes its own space");
+  const library = sheet.css.split("\n").find(line => line.startsWith("/* library-tabs */")) ?? "";
+  assert.doesNotMatch(library, /_TpWrap[^{]*\{position:relative/, "the Library's tab row is untouched");
+});
+
+test("3.3.10: no focus ring on any capsule, Core's or Steam's; Home keeps its overflow scale", () => {
+  const sheet = styles.buildCoreUiCss({ ...others });
+  const part = sheet.css.split("\n").find(line => line.startsWith("/* capsule-focus */"));
+  assert.doesNotMatch(part, /outline:\d|solid|translate:0 -6px|#D7263D/);
+  assert.match(part, /outline:none !important/);
+  assert.match(part, new RegExp(`scale:${styles.CORE_HOME_CAPSULE_SCALE} !important`));
+  const source = readFileSync(new URL("../src/coreHome.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /core-favorite[^{]*\{[^}]*outline:3px/, "Favorites tiles lift instead of a ring");
 });

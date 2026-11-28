@@ -20,6 +20,7 @@ import { collectionRoute, consoleTiles, CONSOLE_TILE } from "./coreConsoles";
 export const FAVORITE_TILE = { across: 6, gap: 16 } as const;
 import { consolePack, loadConsolePack, subscribeConsolePack } from "./coreConsolePack";
 import { clubHomeTab } from "./club";
+import { favoriteArt, favoriteLayers } from "./coreFavoriteArt";
 
 const { Focusable, Navigation } = DFL as any;
 
@@ -52,10 +53,12 @@ const css = `
 .core-home .core-home-actions .DialogButton{width:auto;min-width:200px;border-radius:0}
 .core-home .core-home-note{font-size:14px;color:#9AA4AE}
 .core-home .core-favorites{display:grid;grid-template-columns:repeat(${FAVORITE_TILE.across},minmax(0,1fr));gap:calc(${FAVORITE_TILE.gap} / 1348 * 100vw);padding:8px 2px 12px}
-.core-home .core-favorite{position:relative;aspect-ratio:2/3;background:#1A1D21;border-radius:var(--core-radius-float,10px);overflow:hidden;display:flex;align-items:flex-end}
+.core-home .core-favorite{position:relative;aspect-ratio:2/3;background:linear-gradient(180deg,#1A1D21 0%,#000000 100%);border-radius:var(--core-radius-float,10px);overflow:hidden;display:flex;align-items:flex-end;transition:translate .15s ease-out}
 .core-home .core-favorite img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.core-home .core-favorite span{padding:10px;font-size:15px;font-weight:600;color:#FFFFFF}
-.core-home .core-favorite.gpfocus,.core-home .core-favorite:focus-visible{outline:3px solid #D7263D;outline-offset:-3px}
+.core-home .core-favorite .core-favorite-hero{filter:brightness(.7)}
+.core-home .core-favorite .core-favorite-logo{inset:auto 10% 0 10%;top:0;bottom:0;margin:auto;width:80%;height:40%;object-fit:contain}
+.core-home .core-favorite span{position:relative;padding:12px;font-size:17px;font-weight:700;line-height:1.25;color:#FFFFFF;text-shadow:0 1px 3px rgba(0,0,0,.65)}
+.core-home .core-favorite.gpfocus,.core-home .core-favorite:focus-visible{outline:none;translate:0 -6px}
 .core-home .core-home-empty{display:flex;align-items:center;gap:12px;font-size:18px;color:#C9D1D9;padding:24px 2px}
 .core-home .core-home-prompt{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid #C9D1D9;border-radius:50%;font-size:15px;font-weight:700}
 .core-home .core-consoles{display:grid;grid-template-columns:repeat(${CONSOLE_TILE.across},minmax(0,1fr));gap:calc(${CONSOLE_TILE.gap} / 1920 * 100vw);padding:8px 2px 12px}
@@ -63,7 +66,7 @@ const css = `
 .core-home .core-console img{max-width:78%;max-height:52%;object-fit:contain;display:block}
 .core-home .core-console span{padding:0 8px;font-size:15px;font-weight:700;color:#FFFFFF;text-align:center;line-height:1.2}
 .core-home .core-console.gpfocus,.core-home .core-console:focus-visible{outline:3px solid #D7263D;outline-offset:-3px}
-@media (prefers-reduced-motion: reduce){.core-home .core-home-tile{transition:none}.core-home .core-home-tile.gpfocus{translate:none}}
+@media (prefers-reduced-motion: reduce){.core-home .core-home-tile,.core-home .core-favorite{transition:none}.core-home .core-home-tile.gpfocus{translate:none}}
 `;
 
 const steamWindow = () => window as any;
@@ -86,29 +89,23 @@ function userCollections(): any[] {
 }
 
 // 3.3.9: the Favorites tab (first, the default): Steam's own Favorites collection, read from the collection store on
-// every render (never a copy), most recently played first, as big portrait art in a grid: each game's library capsule,
-// or for a ROM shortcut its portrait grid image (where The Collector publishes its case art). No counts, no text, no
-// clutter; the crimson ring sits inside the tile. A opens the game view. (Y to add or remove a favourite is left out:
-// Steam offers no documented, simple call for it, and Steam's own Options menu already does it.)
-function portraitSources(appid: number): string[] {
-  const host = steamWindow(), out: string[] = [];
-  try {
-    const overview = host.appStore?.GetAppOverviewByAppID?.(appid);
-    for (const name of ["GetCustomVerticalCapsuleURLs", "GetVerticalCapsuleURLs", "GetCustomPortraitImageURLs", "GetCachedPortraitImageURLs"]) {
-      const urls = host.appStore?.[name]?.(overview);
-      if (Array.isArray(urls)) out.push(...urls.filter((url: unknown) => typeof url === "string"));
-    }
-  } catch { /* The local cache below. */ }
-  out.push(`https://steamloopback.host/customimages/${appid}p.png`, `https://steamloopback.host/customimages/${appid}p.jpg`, `https://steamloopback.host/assets/${appid}/library_600x900.jpg`);
-  return [...new Set(out)];
-}
-
+// every render (never a copy), most recently played first, as big portrait art in a grid. No counts, no clutter. A opens
+// the game view. (Y to add or remove a favourite is left out: Steam offers no documented, simple call for it, and
+// Steam's own Options menu already does it.) 3.3.10: no focus ring (TV: rings sat offset from the art); the focused tile
+// lifts 6px. A tile whose portrait never loads draws the game's hero with its logo (coreFavoriteArt.ts), else its name.
 function FavoriteTile({ app }: { app: HomeApp }) {
-  const sources = React.useMemo(() => portraitSources(app.appid), [app.appid]);
-  const [index, setIndex] = React.useState(0);
+  const art = React.useMemo(() => favoriteArt(app.appid, steamWindow().appStore), [app.appid]);
+  const [failed, setFailed] = React.useState({ portrait: 0, hero: 0, logo: 0 });
+  const fail = (kind: "portrait" | "hero" | "logo") => () => setFailed(prior => ({ ...prior, [kind]: prior[kind] + 1 }));
+  const layers = favoriteLayers(art, failed);
   const open = () => { try { Navigation?.Navigate?.(`/library/app/${app.appid}`); } catch { /* Stay on Home. */ } };
   return <Focusable className="core-favorite" focusable={true} aria-label={app.name} onActivate={open} onClick={open}>
-    {index < sources.length ? <img alt="" loading="lazy" src={sources[index]} onError={() => setIndex(i => i + 1)} /> : <span>{app.name}</span>}
+    {layers.kind === "portrait"
+      ? <img key={layers.src} alt="" loading="lazy" src={layers.src} onError={fail("portrait")} />
+      : <>
+        {layers.hero && <img key={layers.hero} className="core-favorite-hero" alt="" loading="lazy" src={layers.hero} onError={fail("hero")} />}
+        {layers.logo ? <img key={layers.logo} className="core-favorite-logo" alt="" loading="lazy" src={layers.logo} onError={fail("logo")} /> : <span>{app.name}</span>}
+      </>}
   </Focusable>;
 }
 

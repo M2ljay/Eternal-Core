@@ -37,7 +37,7 @@ const locale = load("coreUiLocale.ts");
 
 // Steam's class maps as the readable key -> hashed class Steam ships (shapes from css_translations.json).
 const maps = {
-  mainmenu: { Menu: "_23IDiIFxX", Item: "_2w9TpItem", ItemOuter: "_9OuterX", ItemIcon: "_3IconQ", ItemLabel: "_1LabelZ", ActiveDot: "_1uLVHdot",
+  mainmenu: { MainMenuEmbedded: "_MmEmbedQ", Menu: "_23IDiIFxX", Item: "_2w9TpItem", ItemOuter: "_9OuterX", ItemIcon: "_3IconQ", ItemLabel: "_1LabelZ", ActiveDot: "_1uLVHdot",
     FooterBoxShadow: "_FbsMain", Open: "_OpenM", RunningAppIcon: "_RunIcon" },
   quickaccess: { Menu: "_QamMenu", Container: "_QamCont", QuickAccessMenu: "_QamQam", Title: "_QamTitle", HeaderContainer: "_QamHead", Tab: "_QamTab",
     Tabs: "_QamTabs", TabsWithFooter: "_QamTwf", Selected: "_QamSel", TabGroupPanel: "_QamTgp", TabContentColumn: "_QamTcc", AllTabContents: "_QamAtc",
@@ -156,7 +156,7 @@ function checkSheet(sheet) {
   // 3.3.9's surfaces (the game page, Settings, Downloads...) are not in these fake maps; tests/coreUiMatchers.test.mjs
   // builds them from the live key lists.
   const later = new Set(["game-hero", "game-playbar", "game-cloud", "game-screen-two", "game-sections", "settings-pages", "toggles", "downloads-page",
-    "download-bar", "ingame-menu", "overlay-configurator", "search-pages"]);
+    "download-bar", "ingame-menu", "overlay-configurator", "search-pages", "settings-text"]);
   assert.deepEqual(JSON.parse(JSON.stringify(sheet.skipped)).filter(id => !later.has(id)), []);
 }
 
@@ -260,6 +260,7 @@ test("the Core UI setting: on by default, stored, and listeners hear changes onc
 // A small DOM: enough for the runtime's style, attribute and canvas work.
 class Node {
   constructor(doc, tag, classes = []) { this.ownerDocument = doc; this.tagName = tag; this.attrs = new Map(); this.children = []; this.parentElement = null; this.style = { position: "", props: new Map(), setProperty(name, value) { this.props.set(name, value); } }; this.classes = classes; this.textContent = ""; this.rect = { left: 0, top: 0, width: 400, height: 900 }; }
+  get nodeType() { return 1; }
   get id() { return this.attrs.get("id") ?? ""; } set id(value) { this.attrs.set("id", value); }
   get isConnected() { let node = this; while (node.parentElement) node = node.parentElement; return node === this.ownerDocument.documentElement; }
   get firstChild() { return this.children[0] ?? null; }
@@ -727,17 +728,18 @@ test("the game page: a ROM page (The Collector's) is never this host, and leavin
 });
 
 // 3.3.9 (TV snapshot: Quick Access and the Steam menu are BrowserView windows of their own, QuickAccess_uid21 and
-// MainMenu_uid21, which no window store lists, so Core UI never reached them).
+// MainMenu_uid21, which no window store lists, so Core UI never reached them). 3.3.10: the TV now titles them
+// QuickAccess_uid2 and MainMenu_uid2; nothing may depend on the number.
 test("popup windows: Quick Access's and the Steam menu's own documents are found and styled like the main window", () => {
   const coreUi = load("coreUi.ts", {}, { window: {}, performance: { now: () => 0 }, Date });
   const main = fakeDocument(); main.defaultView.innerWidth = 1348; main.title = "Steam Big Picture Mode";
-  const qamDoc = fakeDocument(); qamDoc.defaultView.innerWidth = 855; qamDoc.title = "QuickAccess_uid21";
-  const menuDoc = fakeDocument(); menuDoc.defaultView.innerWidth = 240; menuDoc.title = "MainMenu_uid21";
+  const qamDoc = fakeDocument(); qamDoc.defaultView.innerWidth = 855; qamDoc.title = "QuickAccess_uid2";
+  const menuDoc = fakeDocument(); menuDoc.defaultView.innerWidth = 240; menuDoc.title = "MainMenu_uid2";
   const host = { document: main, closed: false };
   let scans = 0, clock = 0;
   const popups = coreUi.popupDocuments(() => clock, doc => doc === main ? [qamDoc, menuDoc] : [], () => { scans++; });
   const docs = coreUi.steamUiDocuments(host, undefined, popups);
-  assert.deepEqual([...docs.map(doc => doc.title)], ["Steam Big Picture Mode", "QuickAccess_uid21", "MainMenu_uid21"]);
+  assert.deepEqual([...docs.map(doc => doc.title)], ["Steam Big Picture Mode", "QuickAccess_uid2", "MainMenu_uid2"]);
   coreUi.steamUiDocuments(host, undefined, popups);
   assert.equal(scans, 1, "the owner cache is refreshed at most every POPUP_RESCAN_MS");
   clock += coreUi.POPUP_RESCAN_MS;
@@ -767,7 +769,7 @@ test("popup windows: Quick Access's and the Steam menu's own documents are found
 test("popup windows: every live BrowserView React holds is found (closed ones are not)", () => {
   const anchors = load("onboardingAnchors.ts", {}, { window: undefined });
   const view = title => ({ closed: false, document: { title } });
-  const qamView = view("QuickAccess_uid21"), menuView = view("MainMenu_uid21"), gone = { closed: true, document: { title: "Old" } };
+  const qamView = view("QuickAccess_uid2"), menuView = view("MainMenu_uid7"), gone = { closed: true, document: { title: "Old" } };
   const owner = win => ({ GetViewWindow: () => win, GetBrowserView: () => ({}) });
   const leaf = { memoizedState: { memoizedState: owner(qamView), next: { memoizedState: owner(gone), next: null } } };
   const other = { memoizedState: { memoizedState: owner(menuView), next: null } };
@@ -775,7 +777,7 @@ test("popup windows: every live BrowserView React holds is found (closed ones ar
   leaf.sibling = other;
   const element = { ["__reactContainer$x"]: { return: null, stateNode: { current: root } } };
   const main = { querySelectorAll: () => [element] };
-  assert.deepEqual([...anchors.browserViewDocuments(main).map(doc => doc.title)], ["QuickAccess_uid21", "MainMenu_uid21"]);
+  assert.deepEqual([...anchors.browserViewDocuments(main).map(doc => doc.title)], ["QuickAccess_uid2", "MainMenu_uid7"]);
 });
 
 test("the game view: down from the play bar scrolls screen two (its tab row) to the top, up scrolls back; a ROM page is The Collector's", () => {
@@ -807,6 +809,45 @@ test("the game view: down from the play bar scrolls screen two (its tab row) to 
   page.appendChild(new Node(doc, "div", ["romm-core-page"]));
   focusin({ target: tab });
   assert.equal(scroller.scrolledTo, undefined);
+  f.runtime.dispose();
+  assert.equal(listeners.length, 0, "the listener goes with Core UI off");
+});
+
+// 3.3.10 (TV photo: the clock, weather and search sat over Home's tiles): the top bar stays fully transparent at the top of
+// a page, slides out once the page's first screen has scrolled under it, and comes back near the top.
+test("3.3.10 top bar: hidden past the first screen, back near the top, never for a sideways shelf; gone with Core UI off", () => {
+  assert.equal(styles.headerHidden(0, 758, 40, false), false, "the top of a page");
+  assert.equal(styles.headerHidden(600, 758, 40, false), false, "still inside screen one");
+  assert.equal(styles.headerHidden(700, 758, 40, false), true, "past screen one (758 less two 40px bars)");
+  assert.equal(styles.headerHidden(660, 758, 40, true), true, "a small scroll back at the line keeps it hidden");
+  assert.equal(styles.headerHidden(600, 758, 40, true), false, "back near the top, it returns");
+  assert.equal(styles.headerHidden(90, 120, 40, false), true, "a short window still hides it, after 80px at least");
+
+  const f = runtimeFixture();
+  const { doc, header } = f;
+  doc.defaultView.innerHeight = 758;
+  header.rect = { left: 0, top: 0, width: 1348, height: 40 };
+  const listeners = [];
+  doc.addEventListener = (type, handler) => listeners.push({ type, handler });
+  doc.removeEventListener = (type, handler) => { const at = listeners.findIndex(item => item.handler === handler); if (at >= 0) listeners.splice(at, 1); };
+  const page = doc.body.appendChild(new Node(doc, "div", ["_HomeScroller"]));
+  page.rect = { left: 0, top: 0, width: 1348, height: 758 }; page._scrollHeight = 3000;
+  const shelf = doc.body.appendChild(new Node(doc, "div", ["_Shelf"]));
+  shelf.rect = { left: 0, top: 500, width: 1348, height: 240 }; shelf._scrollHeight = 240;
+  f.runtime.sync();
+  const scroll = listeners.find(item => item.type === "scroll")?.handler;
+  assert.ok(scroll, "one scroll listener per document");
+  page.scrollTop = 900; scroll({ target: page });
+  assert.equal(header.getAttribute("data-core-ui-header"), "hidden");
+  scroll({ target: shelf });
+  assert.equal(header.getAttribute("data-core-ui-header"), "hidden", "a shelf scrolling sideways says nothing about the page");
+  page.scrollTop = 0; scroll({ target: page });
+  assert.equal(header.getAttribute("data-core-ui-header"), null, "back at the top");
+  page.scrollTop = 900; scroll({ target: page });
+  page.remove(); f.runtime.sync();
+  assert.equal(header.getAttribute("data-core-ui-header"), null, "the page left (a route change): the bar comes back");
+  const css = f.runtime.sheet().css;
+  assert.match(css, /\[data-core-ui-header="hidden"\]\{opacity:0 !important;translate:0 -100% !important;pointer-events:none/);
   f.runtime.dispose();
   assert.equal(listeners.length, 0, "the listener goes with Core UI off");
 });

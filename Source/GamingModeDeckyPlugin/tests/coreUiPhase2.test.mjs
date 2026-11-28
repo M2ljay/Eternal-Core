@@ -34,7 +34,7 @@ const saver = load("coreScreensaverDefault.ts");
 const artwork = load("coreArtwork.ts");
 
 const maps = {
-  mainmenu: { Menu: "_Mm", Item: "_MmItem", ItemOuter: "_MmOuter", ItemIcon: "_MmIcon", ItemLabel: "_MmLabel", ActiveDot: "_MmDot", FooterBoxShadow: "_MmFbs" },
+  mainmenu: { MainMenuEmbedded: "_MmEmbed", Menu: "_Mm", Item: "_MmItem", ItemOuter: "_MmOuter", ItemIcon: "_MmIcon", ItemLabel: "_MmLabel", ActiveDot: "_MmDot", FooterBoxShadow: "_MmFbs" },
   quickaccess: { Menu: "_QaMenu", Container: "_QaCont", QuickAccessMenu: "_QaQam", Title: "_QaTitle", HeaderContainer: "_QaHead", Tab: "_QaTab", Tabs: "_QaTabs",
     TabsWithFooter: "_QaTwf", Selected: "_QaSel", TabGroupPanel: "_QaTgp", TabContentColumn: "_QaTcc", AllTabContents: "_QaAtc", ContentTransition: "_QaCt",
     PanelSection: "_QaPs", FooterBoxShadow: "_QaFbs" },
@@ -422,6 +422,35 @@ test("3.3.9 Favorites: first and the default, Steam's own collection most recent
   assert.equal(homeLocale.coreHomeCopy("en").favoritesEmpty, "Favorite a game in your Library to see it here");
   const source = readFileSync(new URL("../src/coreHome.tsx", import.meta.url), "utf8");
   assert.match(source, /id: FAVORITES_ID, title: text\.favorites, content: <Favorites/);
-  assert.match(source, /core-favorite\.gpfocus[^{]*\{outline:3px solid #D7263D;outline-offset:-3px\}/, "the ring inside the tile");
+  assert.match(source, /core-favorite\.gpfocus[^{]*\{outline:none;translate:0 -6px\}/, "3.3.10: no ring, the tile lifts");
   assert.match(source, /Navigate\?\.\(`\/library\/app\/\$\{app\.appid\}`\)/, "A opens the game view");
+});
+
+// 3.3.10 (TV photo: Street Fighter 6 was an empty gunmetal box on Favorites): a tile tries Steam's portraits, then draws
+// the hero with the logo, the hero with the name, or the name on a gradient; never an empty box.
+test("3.3.10 Favorites art: portrait first (Steam's own lookups too), then hero and logo, never an empty tile", () => {
+  const art = load("coreFavoriteArt.ts");
+  const overview = { appid: 1364780 };
+  const store = {
+    GetAppOverviewByAppID: id => id === 1364780 ? overview : undefined,
+    GetVerticalCapsuleURLForApp: o => o === overview ? "https://steamloopback.host/assets/1364780/abc/library_600x900.jpg" : "",
+    GetCustomHeroImageURLs: () => { throw new Error("not on this client"); },
+    GetHeroImageURLs: () => ["https://steamloopback.host/assets/1364780/abc/library_hero.jpg"],
+    GetLogoImageURLForApp: () => "https://steamloopback.host/assets/1364780/abc/logo.png",
+  };
+  const found = art.favoriteArt(1364780, store);
+  assert.equal(found.portrait[0], "https://steamloopback.host/assets/1364780/abc/library_600x900.jpg", "Steam's own portrait lookup (hashed folder)");
+  assert.ok(found.portrait.includes("https://steamloopback.host/customimages/1364780p.png"), "then the local cache");
+  assert.equal(found.hero[0], "https://steamloopback.host/assets/1364780/abc/library_hero.jpg");
+  assert.equal(found.logo[0], "https://steamloopback.host/assets/1364780/abc/logo.png");
+  assert.equal(new Set(found.portrait).size, found.portrait.length, "no source twice");
+
+  const none = { portrait: found.portrait.length, hero: 0, logo: 0 };
+  assert.deepEqual({ ...art.favoriteLayers(found, { portrait: 0, hero: 0, logo: 0 }) }, { kind: "portrait", src: found.portrait[0] });
+  assert.deepEqual({ ...art.favoriteLayers(found, none) }, { kind: "fallback", hero: found.hero[0], logo: found.logo[0] }, "no portrait: hero and logo");
+  const bare = art.favoriteLayers(found, { portrait: found.portrait.length, hero: found.hero.length, logo: found.logo.length });
+  assert.equal(bare.kind, "fallback"); assert.equal(bare.hero, undefined); assert.equal(bare.logo, undefined);
+  const source = readFileSync(new URL("../src/coreHome.tsx", import.meta.url), "utf8");
+  assert.match(source, /layers\.logo \? <img[^>]*className="core-favorite-logo"[^>]*\/> : <span>\{app\.name\}<\/span>/, "with no logo, the name is drawn");
+  assert.equal(JSON.stringify(art.favoriteArt(-1, undefined)), JSON.stringify({ portrait: [], hero: [], logo: [] }), "a bad id asks for nothing");
 });

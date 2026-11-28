@@ -294,7 +294,8 @@ no other. New maps (`CORE_UI_MAP_SIGNATURES`):
 | `overlay`, `configurator`, `configsummary` | the overlay popup; the controller configurator; its layout summary | `OverlayPopup` + `ControllerConfiguratorWrapper`; `ControllerConfiguratorMain` + `...GamepadPage`; `ControllerConfiguratorSummary` + `ControllerLayout` |
 | `searchbar`, `searchresults`, `suggestions` | the top bar's search; the results page; the suggestions dropdown | `SearchBox` + `SearchFieldBackground`; `GamepadSearch` + `ResultsRow`; `Suggestions` + `Suggestion` |
 
-The in-game Steam menu is the main menu's own map (`mainmenu` also accepts `AppRunningControls`/`NavigationColumn`).
+The in-game Steam menu was read as the main menu's own map (`mainmenu` also accepted `AppRunningControls`/`NavigationColumn`).
+That was wrong, and it is why the Steam menu stayed blue: 3.3.10 below.
 
 ### The game view (Steam's game page)
 
@@ -382,6 +383,100 @@ Black pages, gunmetal rows with the square crimson focus bar, steel text, no Ste
 
 These are built from class maps only; the hashed values were not seen on screen. Check each on the TV (below).
 
+## 3.3.10: TV fixes after 3.3.9
+
+Seven items came back from the 3.3.9 TV pass with four photos and a snapshot taken on Home. Items 1 to 6 are in 3.3.10;
+the Consoles redesign (item 7) and a larger, lower Home row wait for a design the user approves first.
+
+### 1. The Steam menu matched the wrong class map
+
+Root cause, found live through Steam's CEF debugger: the `mainmenu` signature (all `Menu`, `ItemIcon`, `ItemLabel`;
+any of `ActiveDot`, `FooterBoxShadow`, `AppRunningControls`, `NavigationColumn`) also matched the in-game menu's module,
+and the search answered that one first. Every menu rule wrote `.s1FCUcjnu-HHPONgHERgk`, a class not on screen; the real
+menu in the `MainMenu_uid2` popup is webpack module 56461 (`Container`, `Menu`, `ItemOuter`, `Item`, `Active`,
+`ItemIcon`, `ItemLabel`, `ActiveDot`, plus keys only it has: `MainMenuEmbedded`, `mainMenuCloseDurationMS`,
+`RunningAppIcon`, `CurrentUserAvatar`, `RunnningAppSeparator`, Steam's spelling). The key list 3.3.9 recorded as
+`mainmenu` was the in-game module's.
+
+- `mainmenu` now needs one of the Steam menu's own keys; the in-game menu is its own map, `ingamemenu` (all
+  `AppRunningControls`, `NavigationColumn`; never `mainMenuCloseDurationMS` or `MainMenuEmbedded`), and the
+  `ingame-menu` rule reads it. The menu's outer `Container` (and `MainMenuEmbedded`) is black too, and the item Steam
+  marks `Active` (the page you are on) has no fill of Steam's, only the crimson dot.
+- **No first match wins silently.** A signature may name `prefer` keys (keys only the right module has). After the
+  first search, one walk over every class map collects every module that matches each found signature
+  (`allCoreUiMatches`). When there are two or more, the one with the most `prefer` keys wins, then the one carrying the
+  most of the signature's keys; an equal fit keeps the first. The choice is logged once (`[Core UI] class map <name>: N
+  modules match; took the one with <keys>`) and recorded in the snapshot under `coreUi.mapAmbiguity` (per map:
+  `matches`, `switched`, the chosen module's unique keys and each passed-over module's; key names only). Audited:
+  `quickaccess`, `footer`, `header`, `gamepaddialog` and `settings` got `prefer` keys; every other map falls back to
+  the signature-key count.
+- Fixtures: `mainmenu` (56461) and `ingamemenu` (the old list) in `tests/fixtures/steam-class-maps.json`.
+  `tests/coreUiMatchers.test.mjs` checks that the old signature matched both, that the new ones match one each in
+  either search order, that a lookalike carrying one unique key loses to the real module, and that every live map
+  records a second matching module.
+- Popup windows: the TV now titles them `QuickAccess_uid2` and `MainMenu_uid2` (not `uid21`). Nothing reads the number
+  (popups are found through React's BrowserView owners, never by title); the tests use `uid2` and `uid7`.
+
+### 2. Quick Access rail icons line up
+
+Live geometry: each tab (`{quickaccess.Tab}`) is 48 x 64; Steam's svg icons are 24px centred by a 20px 12px margin,
+plugin icons a 30 x 30 `span` pinned to the tab's top (about 17px high), off the selected fill. Now (`qam-rail-icons`)
+every tab is a flex box that centres its child both ways with no padding; its direct child has no margin; every icon
+(Steam's direct `svg`, a plugin's `span`/`div` holding an `svg` or `img`, Core's `[data-core-rail-icon]` glyph) is
+`CORE_RAIL_ICON_PX` = 24px square (was 30) with no margin, static, untransformed. The selected fill is the whole
+square tab; any fill Steam draws in the selected tab's `::before`/`::after` is cleared.
+
+### 3. Settings and the other unstyled screens
+
+The snapshot found every map (`mapRoutes` all `classic`, `mapCandidates` empty), so the remaining blue was not a missing
+map but a wrong one, as with the Steam menu. `settings` matches both the paged settings dialog and an older module
+without the `PagedSettingsDialog_` prefix; the prefixed module is preferred now. `settings-pages` also paints the
+responsive variants (`ResponsivePageList`, `ResponsiveActivePage`) and the page lists black, the title white, separators
+gunmetal and disabled items hint grey. New: `settings-text` (map `settingstext`: `SettingsDialogSubHeader` in steel small
+caps, body text steel, descriptions hint grey, links crimson text `#EA5A68`, Settings' own buttons gunmetal with the
+crimson bar on focus) and `steam-dialogs` (Steam's unhashed `.GenericConfirmDialog` and
+`.ModalPosition_Content .DialogContent`: gunmetal with the float radius and a raised edge, their buttons raised gunmetal).
+The two rules that need no class map (`corners`, `steam-dialogs`) never make a stylesheet on their own.
+
+### 4. No focus ring on capsules
+
+`capsule-focus` no longer draws a ring (TV: it sat offset from Fight Night's tile, in Steam's accent colour). On the
+Library and on Home a focused capsule has no outline and no box shadow, nor do its pseudo-elements or children; Steam's
+own focus lift shows focus. Core's lift on Library capsules is gone too. Home keeps the 3.3.8 overflow fix (capsules at
+0.8 inside their slots). Core's Favorites tiles lift 6px when focused, with no ring.
+
+### 5. Home's rows have their own space
+
+Causes (photo 1, Favorites): screen one's carousel row was moved down 50vh *relatively* inside a 70vh box, so it reached
+120vh, over whatever came next; the hero art had a *minimum* height of one screen, so it could run on under the next
+rows; and Steam pins Home's tab row (its wrapper is absolute at the tabbed page's top), which Core had made clear, so
+tiles scrolled under it showed through.
+
+- `home-hero`: the recent section is exactly one screen (`height`, `min-height` and `max-height` 100vh) and its own
+  stacking context (`isolation: isolate`, `z-index: 0`); the art is exactly 100vh; the carousel row is out of the flow
+  (`position: absolute`, left and right 0, `top` 50vh, at most 50vh tall, sized by Steam). `CORE_HOME_ART.carouselHeight`
+  is gone. The row's size and position are unchanged otherwise: a lower, larger row waits for the approved design.
+- `home-tabs`: Home's tab row wrapper (`{tabbedpage.TabHeaderRowWrapper}` under the Home tab page) is in the flow
+  (`position: relative`), so the tab content starts below it and scrolls with it. No fill is added; the Library's tab
+  row is untouched.
+- `home-layers` (new): The Collector's console shelf (`[data-collector-shelf]`) and Home's tabbed page are each
+  `position: relative; z-index: 1` over the hero, in the flow after screen one.
+- Favorites tiles never show an empty box (`src/coreFavoriteArt.ts`): the tile tries Steam's portrait lookups
+  (`GetCustomVerticalCapsuleURLs`, ..., now also `GetVerticalCapsuleURLForApp`, which knows the new hashed library-cache
+  folders), then the local cache; when no portrait loads, it draws the game's hero (at 70% brightness) with its logo on
+  top, else the hero with the name, else the name over a gunmetal-to-black gradient. Hero and logo come from Steam's
+  lookups when the client has them, then `customimages` and `assets/<appid>/library_hero.jpg` / `logo.png`.
+
+### 6. The top bar slides out past the first screen
+
+The top bar stays fully transparent at the top of a page. Once the page under it has scrolled past its first screen it
+slides up and fades out whole (`data-core-ui-header="hidden"`: opacity 0, `translate: 0 -100%`, no pointer events,
+200ms, `CORE_HEADER_HIDE_MS`; instant under reduced motion), and it comes back near the top. The line is the viewport
+less two bar heights (at least 80px: 678px on the TV's 758px viewport), with 48px of hysteresis so a small scroll at the
+line does not flicker it (`headerHidden`, pure). The runtime listens to `scroll` once per document (capture) and counts
+only page scrollers (vertical, at least 60% of the window tall), so a shelf scrolling sideways never moves the bar; every
+sync re-checks, and a route change that removes the scroller brings the bar back. No partial background is ever drawn.
+
 ## Phases
 
 | Phase | Scope | Status |
@@ -405,7 +500,8 @@ Core palette (`src/corePalette.ts`, `docs/eternal/brand/PALETTE.md`):
   top bar, the footer and every focus or selection highlight, the crimson bar included. One token,
   `--core-radius-float: 10px` (set on `body` by the stylesheet; `CORE_RADIUS_FLOAT` in `coreUiStyles.ts`), for floating
   things only: context menus and submenus, dialogs (`.GenericConfirmDialog`), modals, toasts and cards (collection
-  tiles, Core Home's tiles). Capsules and art keep Steam's own radius; a focus ring around a capsule follows the art.
+  tiles, Core Home's tiles). Capsules and art keep Steam's own radius. Capsules and game tiles have no focus ring
+  (3.3.10): Steam's own focus lift, or Core's 6px lift on its own tiles, shows focus.
 - **Focus** is a gunmetal fill plus a crimson ring, underline or left bar, with no glow. The Starfield screensaver's
   corner flash and the Jarvis orb's slow pulse (opacity only) are the only exceptions.
 - **Black means starfield.** Every AMOLED-black surface Core UI paints gets the Core Starfield behind its content.
@@ -945,3 +1041,25 @@ Same setup, Core 3.3.9.
 8. The top bar is transparent on every page, the search too (steel underline, crimson when focused); the clock and
    icons readable over bright art.
 9. A Steam game page: down from the play bar lands on screen two with its tab row at the top; up returns to screen one.
+
+## TV checklist (3.3.10)
+
+Same setup, Core 3.3.10.
+
+1. The Steam menu (and the menu while a game runs): black with stars, the ring mark top left, steel rows, the focused row
+   gunmetal with the crimson left bar, the current page's dot crimson; no Steam blue anywhere, the area around the rows
+   included. Core's log has `[Core UI] class map mainmenu: 2 modules match; took the one with ...` (or no line when only
+   one matched), and a saved snapshot's `coreUi.mapAmbiguity` says which module was taken.
+2. Quick Access: every rail icon, Steam's and the plugins' (Discord, Awesome Mix, Core, Jarvis), the same size and centred
+   in its tab; the selected fill is the full square tab and the icon sits in its middle.
+3. Settings: the page list and page black, the open page gunmetal with the crimson bar, sub-headers steel small caps,
+   toggles crimson when on; a confirm dialog (for example Exit Big Picture) gunmetal with rounded corners. Anything
+   still blue: save a snapshot (`mapAmbiguity`, `mapCandidates`).
+4. Home and the Library: no ring or box around a focused capsule (Fight Night included); Steam's own lift shows focus. A
+   focused Favorites tile lifts with no ring.
+5. Home > Favorites, scrolled down: the tab row above the grid (not over it), nothing of The Collector's shelf behind the
+   grid, the shelf in its own row between screen one and the tabs. Street Fighter 6 (or any game without portrait art)
+   shows its hero with its logo, or its name, never an empty box.
+6. Scroll Home past the first screen: the clock, weather, search and icons slide away; back to the top, they return.
+   A shelf scrolled sideways never hides them. The same on the Library past its first screen.
+7. Not in this build (waiting for the approved design): the Consoles tab redesign and a larger, lower Home row.

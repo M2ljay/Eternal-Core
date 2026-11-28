@@ -282,6 +282,8 @@ export type SnapshotInput = {
   sheet?: { applied?: string[]; skipped?: string[]; routes?: Record<string, string>; maps?: CoreUiMaps; ruleTargets?: Record<string, string>;
     // 3.3.8: per missing class map, the closest module's key names (names only, never hashed classes).
     candidates?: Record<string, { score: number; matched: string[]; missing: string[]; keys: string[] } | undefined>;
+    // 3.3.10: per map more than one module matched, which was taken (key names only).
+    ambiguous?: Record<string, { matches: number; switched: boolean; chosen: string[]; passedOver: string[][] } | undefined>;
     hosts?: Array<{ id: string; selector: string; source?: string; page?: boolean; fullHeight?: boolean; panel?: boolean }> };
   surfaces: Map<string, SurfaceRecord>;
   extra?: Record<string, unknown>;
@@ -297,6 +299,7 @@ export function assembleSnapshot(input: SnapshotInput, recapture?: (nodes: numbe
       screenWidth: Number(firstView.screen?.width) || 0, screenHeight: Number(firstView.screen?.height) || 0 },
     coreUi: { applied: input.sheet?.applied ?? [], skipped: input.sheet?.skipped ?? [], mapRoutes: input.sheet?.routes ?? {},
       mapCandidates: candidateList(input.sheet?.candidates),
+      mapAmbiguity: ambiguityList(input.sheet?.ambiguous),
       selectors: input.sheet?.maps ? resolvedTargetTable(input.sheet.maps) : {},
       // 3.3.7: every Starfield host resolved on this client (Steam's and other plugins'), with its selector.
       hosts: hostList(input.sheet?.hosts) },
@@ -333,6 +336,19 @@ export function candidateList(candidates: NonNullable<SnapshotInput["sheet"]>["c
   for (const [map, candidate] of Object.entries(candidates).slice(0, 32)) {
     if (!candidate) continue;
     out[map] = { score: Number(candidate.score) || 0, matched: names(candidate.matched, 40), missing: names(candidate.missing, 40), keys: names(candidate.keys, 120) };
+  }
+  return out;
+}
+
+// 3.3.10: maps more than one module matched, as the snapshot records them: key names only, bounded.
+export function ambiguityList(ambiguous: NonNullable<SnapshotInput["sheet"]>["ambiguous"]): Record<string, { matches: number; switched: boolean; chosen: string[]; passedOver: string[][] }> {
+  const out: Record<string, { matches: number; switched: boolean; chosen: string[]; passedOver: string[][] }> = {};
+  if (!ambiguous || typeof ambiguous !== "object") return out;
+  const names = (list: unknown) => (Array.isArray(list) ? list : []).slice(0, 12).map(key => String(key).slice(0, 80));
+  for (const [map, seen] of Object.entries(ambiguous).slice(0, 40)) {
+    if (!seen) continue;
+    out[map] = { matches: Number(seen.matches) || 0, switched: seen.switched === true, chosen: names(seen.chosen),
+      passedOver: (Array.isArray(seen.passedOver) ? seen.passedOver : []).slice(0, 8).map(names) };
   }
   return out;
 }
