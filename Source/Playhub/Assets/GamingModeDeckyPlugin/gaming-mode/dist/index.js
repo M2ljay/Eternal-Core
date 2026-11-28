@@ -65633,12 +65633,10 @@ const CORE_MENU_LOGO_SIZE = 44;
 // Steam's spelling).
 const MAIN_MENU_UNIQUE = ["mainMenuCloseDurationMS", "MainMenuEmbedded", "RunnningAppSeparator", "RunningAppIcon", "CurrentUserAvatar"];
 const CORE_UI_MAP_SIGNATURES = {
-    // 3.3.10 (TV: the Steam menu kept Steam's blue): Menu/ItemIcon/ItemLabel plus ActiveDot or AppRunningControls also
-    // matched the in-game menu's module, which came first, so every menu rule styled a menu that was not on screen. The
-    // Steam menu now needs one of its own keys; the in-game menu is its own map (ingamemenu).
+    // The Steam menu and its in-game variant (AppRunningControls, NavigationColumn, AppColumn...) are one module
+    // (3.3.11 snapshot: one module carries mainMenuCloseDurationMS and AppRunningControls together). It needs one of the
+    // menu's own keys; Steam ships it twice (3.3.11: identical key lists), and the copies are merged (mergeMaps).
     mainmenu: { all: ["Menu", "ItemIcon", "ItemLabel"], any: [MAIN_MENU_UNIQUE], prefer: MAIN_MENU_UNIQUE },
-    ingamemenu: { all: ["AppRunningControls", "NavigationColumn"], any: [["AppColumn", "NavigationMenuItem", "CurrentGameBackground", "NavigationBox"]],
-        none: ["mainMenuCloseDurationMS", "MainMenuEmbedded"], prefer: ["CurrentGameBackground", "SelectableAppWindow", "NavigationMenuItem"] },
     // @decky/ui's quickAccessMenuClasses (webpack 34544 on the November 2026 client: no TabContentColumn any more).
     quickaccess: { all: ["TabGroupPanel", "Tab", "Title"],
         any: [["Tabs", "TabsWithFooter", "BottomTabs", "TabList"], ["TabContentColumn", "AllTabContents", "ContentTransition"], ["QuickAccessMenu", "Menu", "Container"]],
@@ -65849,9 +65847,11 @@ function findCoreUiMapsDetailed(ui, options = {}) {
                     bestFit = fit;
                 }
             }
-            maps[name] = best;
+            // Every module as good as the best one is merged (Steam's duplicate copies); a worse fit is passed over.
+            const ties = [best, ...list.filter(map => !sameMap(map, best) && signatureFit(map, signature) === bestFit)];
+            maps[name] = ties.length > 1 ? mergeMaps(ties) : best;
             ambiguous[name] = { matches: list.length, switched: !sameMap(best, first), chosen: uniqueKeys(best, signature),
-                passedOver: list.filter(map => !sameMap(map, best)).map(map => uniqueKeys(map, signature)) };
+                passedOver: list.filter(map => !ties.some(tie => sameMap(tie, map))).map(map => uniqueKeys(map, signature)), merged: ties.length };
         }
     }
     const candidates = options.candidates === false ? {} : closestCoreUiCandidates(ui, missing);
@@ -65864,13 +65864,21 @@ const CLASS_NAME = /^-?[A-Za-z_][\w-]*$/;
 const CORE_UI_BOOST = ":not(#core-ui-boost)";
 // ".hashed.hashed:not(#core-ui-boost)": the class from the map, repeated once, plus the boost. Undefined when the key
 // is missing or its value is not a plain class list.
+// 3.3.11: a merged map (mergeMaps: Steam ships the same module twice, either copy may be the one on screen) holds a
+// key's alternatives separated by "|"; the selector is then :is(one, other), which keeps a single compound's weight.
+const ALTERNATIVES = "|";
+function classAlternatives(value) {
+    const out = String(value).split(ALTERNATIVES).map(part => part.trim().split(/\s+/).filter(Boolean)).filter(names => names.length);
+    return out.length && out.every(names => names.every(name => CLASS_NAME.test(name))) ? out : undefined;
+}
 function classSelector(map, key) {
     if (!has(map, key))
         return undefined;
-    const names = String(map[key]).trim().split(/\s+/);
-    if (!names.length || !names.every(name => CLASS_NAME.test(name)))
+    const alternatives = classAlternatives(map[key]);
+    if (!alternatives)
         return undefined;
-    return "." + names.join(".") + "." + names[0] + CORE_UI_BOOST;
+    const one = (names) => "." + names.join(".") + "." + names[0];
+    return (alternatives.length === 1 ? one(alternatives[0]) : `:is(${alternatives.map(one).join(",")})`) + CORE_UI_BOOST;
 }
 // ---- The selector table (3.3.4) ----
 //
@@ -66373,9 +66381,9 @@ function rules(mark) {
                     (b("ProgressBar") ? `${b("ProgressBar")}{${imp({ "background-color": C.raised, "background-image": "none" })}}${b("ProgressBar")} > *{${imp({ "background-color": C.crimson, "background-image": "none" })}}` : "");
             } },
         // The Steam menu while a game runs: its three columns black, the rows gunmetal on focus with the crimson bar.
-        // 3.3.10: from its own module (ingamemenu), no longer read as the Steam menu's.
-        { id: "ingame-menu", needs: [], needsAny: [["ingamemenu", "AppColumn"], ["ingamemenu", "NavigationColumn"]], css: s => {
-                const m = (key) => s("ingamemenu", key) ? `${ROOT} ${s("ingamemenu", key)}` : "";
+        // The Steam menu's own module (3.3.11: the in-game keys are part of it; 3.3.10's separate map never matched).
+        { id: "ingame-menu", needs: [], needsAny: [["mainmenu", "AppColumn"], ["mainmenu", "NavigationColumn"]], css: s => {
+                const m = (key) => s("mainmenu", key) ? `${ROOT} ${s("mainmenu", key)}` : "";
                 const black = ["AppRunningControls", "NavigationColumn", "NavigationBox", "AppColumn", "AppColumnContent", "FocusedColumn", "NavColumnFocused", "ControllerColumnFocused", "ActiveContent"].map(m).filter(Boolean);
                 const rows = [m("NavigationMenuItem"), m("SelectableAppWindow")].filter(Boolean);
                 return (black.length ? `${black.join(",")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "backdrop-filter": "none" })}}` : "") +
@@ -66548,6 +66556,7 @@ const CORE_UI_HOSTS = [
     // Hosts from other plugins (3.3.7). The Collector's ROM game page (Eternal-Collector, corePageStyles.ts): the
     // wrapper in place of Steam's overview panel, below the hero art.
     { id: "collector-rom-page", selector: ".romm-core-page", minArea: 0, page: true },
+    { id: "awesome-mix-page", selector: ".awesome-mix-core-page", minArea: 0, page: true },
 ];
 // A plugin host's selector: one or more plain class names, nothing else (no combinators, attributes or ids).
 const PLUGIN_HOST_SELECTOR = /^(\.[A-Za-z_][\w-]*)+$/;
@@ -66727,8 +66736,29 @@ function ruleTargetsFromCss(css) {
 function plainSelector(map, key) {
     if (!has(map, key))
         return undefined;
-    const names = String(map[key]).trim().split(/\s+/);
-    return names.every(name => CLASS_NAME.test(name)) ? "." + names.join(".") : undefined;
+    const alternatives = classAlternatives(map[key]);
+    if (!alternatives)
+        return undefined;
+    const one = (names) => "." + names.join(".");
+    return alternatives.length === 1 ? one(alternatives[0]) : `:is(${alternatives.map(one).join(",")})`;
+}
+// 3.3.11 (TV: the Steam menu, Settings and Downloads stayed Steam's although every rule was emitted): Steam ships some
+// class modules twice, with the same keys and different hashed classes, and either copy may be the one a window draws
+// (the Steam menu's MainMenu_uid2 window drew the copy that was not picked). Every module that fits a signature as well
+// as the best one is merged: each key holds every copy's class, and each rule targets them all.
+function mergeMaps(maps) {
+    const out = {};
+    for (const map of maps) {
+        for (const key of attempt(() => Object.keys(map)) ?? []) {
+            const value = map[key];
+            if (typeof value !== "string" || !value)
+                continue;
+            const parts = out[key] ? out[key].split(ALTERNATIVES) : [];
+            if (!parts.includes(value))
+                out[key] = [...parts, value].join(ALTERNATIVES);
+        }
+    }
+    return out;
 }
 
 // Eternal Core: Core UI's look at the live page (docs/eternal/CORE-UI.md). What a stylesheet cannot know from class
@@ -67506,7 +67536,7 @@ function createCoreUi(deps) {
             // 3.3.10: two modules matched one signature (the Steam menu matched the in-game menu's module first).
             for (const [map, seen] of Object.entries(sheet.ambiguous ?? {})) {
                 if (seen)
-                    logOnce(`ambiguous:${map}`, `[Core UI] class map ${map}: ${seen.matches} modules match; ${seen.switched ? "took the one with" : "kept the first, with"} ${seen.chosen.join(", ") || "no unique key"}`);
+                    logOnce(`ambiguous:${map}`, `[Core UI] class map ${map}: ${seen.matches} modules match; ${seen.merged > 1 ? `${seen.merged} equal copies merged` : seen.switched ? "took the one with" : "kept the first, with"} ${seen.chosen.join(", ") || "no unique key"}`);
             }
             for (const [map, candidate] of Object.entries(sheet.candidates ?? {})) {
                 if (candidate)
@@ -68975,7 +69005,7 @@ function ambiguityList(ambiguous) {
         if (!seen)
             continue;
         out[map] = { matches: Number(seen.matches) || 0, switched: seen.switched === true, chosen: names(seen.chosen),
-            passedOver: (Array.isArray(seen.passedOver) ? seen.passedOver : []).slice(0, 8).map(names) };
+            passedOver: (Array.isArray(seen.passedOver) ? seen.passedOver : []).slice(0, 8).map(names), merged: Number(seen.merged) || 1 };
     }
     return out;
 }

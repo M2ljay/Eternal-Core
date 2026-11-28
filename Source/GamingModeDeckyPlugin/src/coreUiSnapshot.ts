@@ -283,7 +283,7 @@ export type SnapshotInput = {
     // 3.3.8: per missing class map, the closest module's key names (names only, never hashed classes).
     candidates?: Record<string, { score: number; matched: string[]; missing: string[]; keys: string[] } | undefined>;
     // 3.3.10: per map more than one module matched, which was taken (key names only).
-    ambiguous?: Record<string, { matches: number; switched: boolean; chosen: string[]; passedOver: string[][] } | undefined>;
+    ambiguous?: Record<string, { matches: number; switched: boolean; chosen: string[]; passedOver: string[][]; merged?: number } | undefined>;
     hosts?: Array<{ id: string; selector: string; source?: string; page?: boolean; fullHeight?: boolean; panel?: boolean }> };
   surfaces: Map<string, SurfaceRecord>;
   extra?: Record<string, unknown>;
@@ -341,14 +341,14 @@ export function candidateList(candidates: NonNullable<SnapshotInput["sheet"]>["c
 }
 
 // 3.3.10: maps more than one module matched, as the snapshot records them: key names only, bounded.
-export function ambiguityList(ambiguous: NonNullable<SnapshotInput["sheet"]>["ambiguous"]): Record<string, { matches: number; switched: boolean; chosen: string[]; passedOver: string[][] }> {
-  const out: Record<string, { matches: number; switched: boolean; chosen: string[]; passedOver: string[][] }> = {};
+export function ambiguityList(ambiguous: NonNullable<SnapshotInput["sheet"]>["ambiguous"]): Record<string, { matches: number; switched: boolean; chosen: string[]; passedOver: string[][]; merged: number }> {
+  const out: Record<string, { matches: number; switched: boolean; chosen: string[]; passedOver: string[][]; merged: number }> = {};
   if (!ambiguous || typeof ambiguous !== "object") return out;
   const names = (list: unknown) => (Array.isArray(list) ? list : []).slice(0, 12).map(key => String(key).slice(0, 80));
   for (const [map, seen] of Object.entries(ambiguous).slice(0, 40)) {
     if (!seen) continue;
     out[map] = { matches: Number(seen.matches) || 0, switched: seen.switched === true, chosen: names(seen.chosen),
-      passedOver: (Array.isArray(seen.passedOver) ? seen.passedOver : []).slice(0, 8).map(names) };
+      passedOver: (Array.isArray(seen.passedOver) ? seen.passedOver : []).slice(0, 8).map(names), merged: Number(seen.merged) || 1 };
   }
   return out;
 }

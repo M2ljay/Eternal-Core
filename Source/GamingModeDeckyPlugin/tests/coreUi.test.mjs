@@ -146,13 +146,13 @@ function checkSheet(sheet) {
   // Full height: the menu's and Quick Access's stars reach the screen edges through the canvas only.
   assert.match(css, /canvas\[data-core-ui-stars\]\{[^}]*top:calc\(var\(--core-ui-scroll, 0px\) - var\(--core-ui-extend-top, 0px\)\)[^}]*background-color:#000000/);
   const hosts = JSON.parse(JSON.stringify(sheet.hosts));
-  assert.deepEqual(hosts.map(host => host.id), ["menu", "qam-container", "qam-panel", "qam", "context", "menu-footer", "qam-footer", "qam-footer-shadow", "footer-opaque", "home", "library", "game-page", "collector-rom-page"]);
-  assert.deepEqual(hosts.filter(host => host.page).map(host => host.id), ["home", "library", "game-page", "collector-rom-page"]);
+  assert.deepEqual(hosts.map(host => host.id), ["menu", "qam-container", "qam-panel", "qam", "context", "menu-footer", "qam-footer", "qam-footer-shadow", "footer-opaque", "home", "library", "game-page", "collector-rom-page", "awesome-mix-page"]);
+  assert.deepEqual(hosts.filter(host => host.page).map(host => host.id), ["home", "library", "game-page", "collector-rom-page", "awesome-mix-page"]);
   const game = hosts.find(host => host.id === "game-page");
   assert.equal(game.viewport, true); assert.equal(game.exclude, ".romm-core-page"); assert.equal(game.below, "._AdPlay");
   assert.deepEqual(hosts.filter(host => host.fullHeight).map(host => host.id), ["menu", "qam-container", "qam-panel", "qam"]);
   assert.deepEqual(hosts.filter(host => host.panel).map(host => host.id), ["menu", "qam-container", "qam-panel", "qam"]);
-  assert.deepEqual(hosts.filter(host => host.source === "plugin").map(host => host.id), ["collector-rom-page"]);
+  assert.deepEqual(hosts.filter(host => host.source === "plugin").map(host => host.id), ["collector-rom-page", "awesome-mix-page"]);
   // 3.3.9's surfaces (the game page, Settings, Downloads...) are not in these fake maps; tests/coreUiMatchers.test.mjs
   // builds them from the live key lists.
   const later = new Set(["game-hero", "game-playbar", "game-cloud", "game-screen-two", "game-sections", "settings-pages", "toggles", "downloads-page",

@@ -219,24 +219,25 @@ test("Home after Art Hero (Steam's row, the fallback since 3.3.10): the art one 
   assert.doesNotMatch(part, /brightness\(0/);
 });
 
-// 3.3.10 (TV: the Steam menu kept Steam's colours). The old mainmenu signature (Menu, ItemIcon, ItemLabel and any of
-// ActiveDot / FooterBoxShadow / AppRunningControls / NavigationColumn) also matched the in-game menu's module, which the
-// search answered first, so every menu rule styled a menu that was not on screen. The Steam menu's own module (webpack
-// 56461, read live in the MainMenu_uid2 popup) is now required to carry one of its own keys.
-test("3.3.10: the in-game menu's module can never be taken for the Steam menu, in either order", () => {
-  const ingame = live.ingamemenu, menu = live.mainmenu;
-  assert.equal(styles.CORE_UI_MAP_FILTERS.mainmenu(ingame), false, "the in-game module is not the Steam menu");
-  assert.equal(styles.CORE_UI_MAP_FILTERS.ingamemenu(menu), false, "and the Steam menu is not the in-game module");
-  // The 3.3.9 signature, kept here only to show it was ambiguous.
+// 3.3.10 (TV: the Steam menu kept Steam's colours): the 3.3.9 mainmenu signature (Menu, ItemIcon, ItemLabel and any of
+// ActiveDot / FooterBoxShadow / AppRunningControls / NavigationColumn) matched more than the menu. It now needs one of the
+// menu's own keys. 3.3.11: the in-game keys turned out to be the same module (the snapshot's full key list is the
+// fixture), so the in-game menu's rule reads mainmenu again.
+test("the Steam menu's module (with its in-game keys) is the menu; a lookalike without the menu's own keys is not", () => {
+  const menu = live.mainmenu;
+  assert.equal(styles.CORE_UI_MAP_FILTERS.mainmenu(menu), true);
+  assert.ok("AppRunningControls" in menu && "mainMenuCloseDurationMS" in menu, "one module");
+  const lookalike = { Menu: "_x", Item: "_y", ItemIcon: "_z", ItemLabel: "_w", AppRunningControls: "_a", NavigationColumn: "_n", ActiveDot: "_d" };
   const old = { all: ["Menu", "ItemIcon", "ItemLabel"], any: [["ActiveDot", "FooterBoxShadow", "AppRunningControls", "NavigationColumn"]] };
-  assert.ok(styles.matchesSignature(ingame, old) && styles.matchesSignature(menu, old), "the old signature matched both");
-  for (const order of [[ingame, menu], [menu, ingame]]) {
+  assert.ok(styles.matchesSignature(lookalike, old), "the old signature took a lookalike");
+  assert.equal(styles.CORE_UI_MAP_FILTERS.mainmenu(lookalike), false, "the new one does not");
+  for (const order of [[lookalike, menu], [menu, lookalike]]) {
     const found = styles.findCoreUiMapsDetailed(decky3(order), { candidates: false });
-    assert.equal(found.maps.mainmenu, menu, "the Steam menu's own module");
-    assert.equal(found.maps.ingamemenu, ingame);
+    assert.equal(found.maps.mainmenu, menu);
     const css = styles.buildCoreUiCss(found.maps).css;
     assert.match(css, new RegExp(`/\\* menu-panel \\*/[^\\n]*\\.${menu.Menu}\\.`), "menu-panel targets the real menu's class");
-    assert.doesNotMatch(css.split("\n").find(line => line.startsWith("/* menu-panel */")), new RegExp(`\\.${ingame.Menu}\\b`));
+    assert.ok(css.includes("/* ingame-menu */") && css.split("\n").find(line => line.startsWith("/* ingame-menu */")).includes(`.${menu.AppColumn}.`), "the in-game menu from the same module");
+    assert.doesNotMatch(css, /_x\b|_a\b/);
   }
 });
 
@@ -273,7 +274,10 @@ test("3.3.10: every signature is checked for a second matching module (no first-
     const twin = Object.fromEntries(Object.keys(map).map(key => [key, `_twin${key}`]));
     const found = styles.findCoreUiMapsDetailed(decky3([map, twin]), { candidates: false });
     assert.equal(found.ambiguous[name]?.matches, 2, `${name}: two different modules match, recorded`);
-    assert.equal(found.ambiguous[name].switched, false, `${name}: an equal fit keeps the first`);
+    assert.equal(found.ambiguous[name].switched, false, `${name}: an equal fit keeps the first first`);
+    // 3.3.11: an equal fit is merged, not dropped: either copy may be the one on screen.
+    assert.equal(found.ambiguous[name].merged, 2, `${name}: both copies merged`);
+    for (const key of Object.keys(map)) assert.equal(found.maps[name][key], `${map[key]}|${twin[key]}`, `${name}.${key} holds both classes`);
   }
 });
 
@@ -316,4 +320,45 @@ test("3.3.10: no focus ring on any capsule, Core's or Steam's; Home keeps its ov
   assert.match(part, new RegExp(`scale:${styles.CORE_HOME_CAPSULE_SCALE} !important`));
   const source = readFileSync(new URL("../src/coreHome.tsx", import.meta.url), "utf8");
   assert.doesNotMatch(source, /core-favorite[^{]*\{[^}]*outline:3px/, "Favorites tiles lift instead of a ring");
+});
+
+// 3.3.11 (TV: the Steam menu, Settings and Downloads stayed Steam's blue although every rule was emitted). Steam ships
+// some class modules twice, same keys, different hashed classes; the MainMenu_uid2 window drew the copy that was not
+// picked (snapshot: mapAmbiguity.mainmenu 2 matches, identical key lists; selectors.menu the other copy's class).
+test("3.3.11: two copies of a module with the same keys: every rule targets both, as one selector each", () => {
+  const keys = fixture.maps.mainmenu.keys;
+  const copyA = asMap(keys, "mmA"), copyB = asMap(keys, "mmB");
+  for (const order of [[copyA, copyB], [copyB, copyA]]) {
+    const found = styles.findCoreUiMapsDetailed(decky3(order), { candidates: false });
+    assert.equal(found.ambiguous.mainmenu.merged, 2);
+    const sheet = styles.buildCoreUiCss(found.maps);
+    for (const rule of ["menu-panel", "menu-rows", "menu-focus", "menu-active"]) {
+      const part = sheet.css.split("\n").find(line => line.startsWith(`/* ${rule} */`));
+      assert.ok(part, rule);
+      assert.ok(part.includes(`.${copyA.Menu}.${copyA.Menu}`) && part.includes(`.${copyB.Menu}.${copyB.Menu}`) || rule === "menu-active", `${rule}: both Menu classes`);
+    }
+    const panel = sheet.css.split("\n").find(line => line.startsWith("/* menu-panel */"));
+    assert.ok(panel.includes(`:is(.${order[0].Menu}.${order[0].Menu},.${order[1].Menu}.${order[1].Menu})`), "one :is() selector, a single compound's weight");
+    assert.equal(sheet.dom.menu, order[0] === copyA ? `:is(.${copyA.Menu},.${copyB.Menu})` : `:is(.${copyB.Menu},.${copyA.Menu})`, "the runtime finds either copy");
+    assert.equal(sheet.hosts.find(host => host.id === "menu").selector, sheet.dom.menu, "the Starfield host too");
+    assert.ok(!sheet.skipped.includes("menu-panel"));
+  }
+  // A worse fit is still passed over (Settings: three matches, one of them an older, smaller module).
+  const older = { PagedSettingsDialog: "_oldDlg", PageListColumn: "_oldCol", PageListItem: "_oldItem", PageList: "_oldList" };
+  const twin = asMap(fixture.maps.settings.keys, "setB");
+  const found = styles.findCoreUiMapsDetailed(decky3([older, live.settings, twin]), { candidates: false });
+  assert.equal(found.ambiguous.settings.matches, 3);
+  assert.equal(found.ambiguous.settings.merged, 2);
+  assert.ok(!JSON.stringify(found.maps.settings).includes("_old"), "the smaller module is not merged");
+  const css = styles.buildCoreUiCss(found.maps).css;
+  assert.ok(css.includes(`.${live.settings.PagedSettingsDialog_PageListColumn}.`) && css.includes(`.${twin.PagedSettingsDialog_PageListColumn}.`));
+  assert.equal(snap.ambiguityList(found.ambiguous).settings.merged, 2, "the snapshot records the merge");
+});
+
+test("3.3.11: a merged class map stays safe: a bad class in any copy drops the key, never the guard", () => {
+  assert.equal(styles.classSelector({ K: "a|b" }, "K"), ":is(.a.a,.b.b)" + styles.CORE_UI_BOOST);
+  assert.equal(styles.plainSelector({ K: "a b|c" }, "K"), ":is(.a.b,.c)");
+  assert.equal(styles.classSelector({ K: "a|b{x}" }, "K"), undefined);
+  assert.equal(styles.classSelector({ K: "a" }, "K"), ".a.a" + styles.CORE_UI_BOOST, "one copy: as before");
+  assert.deepEqual({ ...styles.mergeMaps([{ A: "x", B: "y" }, { A: "z", B: "y" }, { C: "w" }]) }, { A: "x|z", B: "y", C: "w" });
 });

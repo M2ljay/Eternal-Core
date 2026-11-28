@@ -162,7 +162,7 @@ export function createCoreUi(deps: CoreUiDeps) {
       for (const id of sheet.skipped) logOnce(`skip:${id}`, `[Core UI] ${id}: Steam class map not found on this client; that part keeps Steam's look`);
       // 3.3.10: two modules matched one signature (the Steam menu matched the in-game menu's module first).
       for (const [map, seen] of Object.entries(sheet.ambiguous ?? {})) {
-        if (seen) logOnce(`ambiguous:${map}`, `[Core UI] class map ${map}: ${seen.matches} modules match; ${seen.switched ? "took the one with" : "kept the first, with"} ${seen.chosen.join(", ") || "no unique key"}`);
+        if (seen) logOnce(`ambiguous:${map}`, `[Core UI] class map ${map}: ${seen.matches} modules match; ${seen.merged > 1 ? `${seen.merged} equal copies merged` : seen.switched ? "took the one with" : "kept the first, with"} ${seen.chosen.join(", ") || "no unique key"}`);
       }
       for (const [map, candidate] of Object.entries(sheet.candidates ?? {})) {
         if (candidate) logOnce(`map:${map}`, `[Core UI] class map ${map} not found; closest module (${Math.round(candidate.score * 100)}%) lacks ${candidate.missing.join(", ")}`);

@@ -948,6 +948,8 @@ A cooperating plugin can have its own black page take the Core Starfield, as Hom
   (`src/coreUiStyles.ts`) as `{ id, selector, minArea, page }` instead of a Steam class map (`map` + `key`). The
   selector must be plain class names only (`resolveHostSelector` refuses anything else). Today: The Collector's ROM game
   page, `{ id: "collector-rom-page", selector: ".romm-core-page", page: true, minArea: 0 }`.
+- 3.3.11: Awesome Mix's page is a page host too, `{ id: "awesome-mix-page", selector: ".awesome-mix-core-page", page: true, minArea: 0 }`,
+  so it gets the starfield the same way.
 - **Attribute.** While Core UI is on, Core sets `data-core-ui-host="1"` on that element and puts its canvas
   (`canvas[data-core-ui-stars="collector-rom-page"]`) first inside it, behind the content. Core UI off (or the page
   closing) removes both. A plugin keys off the attribute: The Collector shows its still fallback field only under
@@ -1195,3 +1197,12 @@ Same setup, Core 3.3.10.
     focus starting on the first pick. Empty tabs: one grey line.
 11. Quick Access: the rail on the right; left from the rail enters the content, right from the content's edge returns to
     the open tab; sliders still move with left and right; Decky's list and the Jarvis tab look as before.
+
+## 3.3.11 (partial)
+
+- Duplicate Steam class modules (identical key sets) are merged: every rule targets the union of their classes as
+  `:is(...)`. The snapshot's `mapAmbiguity` records `merged`. This is what left the Steam menu and Settings in Steam's
+  colours. The separate `ingamemenu` map was removed: the in-game keys live in the main menu's module.
+- Awesome Mix page host (above).
+- Not done yet: QAM rail visible edge, Home tab names above the footer, Home tile focus ring, context menu panel and
+  Core labels, Steam/ROM game views.
