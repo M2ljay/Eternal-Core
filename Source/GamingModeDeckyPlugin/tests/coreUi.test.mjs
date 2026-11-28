@@ -146,7 +146,7 @@ function checkSheet(sheet) {
   // Full height: the menu's and Quick Access's stars reach the screen edges through the canvas only.
   assert.match(css, /canvas\[data-core-ui-stars\]\{[^}]*top:calc\(var\(--core-ui-scroll, 0px\) - var\(--core-ui-extend-top, 0px\)\)[^}]*background-color:#000000/);
   const hosts = JSON.parse(JSON.stringify(sheet.hosts));
-  assert.deepEqual(hosts.map(host => host.id), ["menu", "qam-container", "qam-panel", "qam", "context", "menu-footer", "qam-footer", "qam-footer-shadow", "footer-opaque", "home", "library", "game-page", "collector-rom-page", "awesome-mix-page"]);
+  assert.deepEqual(hosts.map(host => host.id), ["menu", "qam-container", "qam-panel", "qam", "menu-footer", "qam-footer", "qam-footer-shadow", "footer-opaque", "home", "library", "game-page", "collector-rom-page", "awesome-mix-page"]);
   assert.deepEqual(hosts.filter(host => host.page).map(host => host.id), ["home", "library", "game-page", "collector-rom-page", "awesome-mix-page"]);
   const game = hosts.find(host => host.id === "game-page");
   assert.equal(game.viewport, true); assert.equal(game.exclude, ".romm-core-page"); assert.equal(game.below, "._AdPlay");

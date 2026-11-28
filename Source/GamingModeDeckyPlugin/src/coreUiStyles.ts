@@ -69,7 +69,9 @@ export type CoreUiMapName = "mainmenu" | "quickaccess" | "controls" | "footer" |
   | "appheader" | "appdetails" | "appsection" | "playsection" | "settings" | "toggle" | "downloads" | "downloadbar"
   | "overlay" | "configurator" | "configsummary" | "searchbar" | "searchresults" | "suggestions"
   // 3.3.10: the in-game Steam menu's own module (it was matched as mainmenu), Settings' text styles.
-  | "settingstext";
+  | "settingstext"
+  // 3.3.11: the game page's outer view (its overview panel and the "Glassy" panel Steam tints) and the Play button.
+  | "appview" | "actionbutton";
 export type CoreUiMaps = Partial<Record<CoreUiMapName, Record<string, string>>>;
 
 // How each class map is recognised (3.3.8): a signature of keys, never one key. `all` must all be present (kept to keys
@@ -121,6 +123,11 @@ export const CORE_UI_MAP_SIGNATURES: Record<CoreUiMapName, CoreUiMapSignature> =
   appdetails: { all: ["AppDetailsContainer", "PlaySection"], any: [["AppActionButton", "ActionRow", "AppButtons"], ["AppDetailsRoot", "AppDetailsContent", "AppDetailSectionList"]] },
   appsection: { all: ["AppDetailsSection", "AppDetailsSectionContainer"], any: [["RightColumnSection", "AppDetailsSectionHasLabel", "Body"]] },
   playsection: { all: ["CloudStatusLabel"], any: [["CloudSyncProblem", "CloudSyncProblemIcon"]] },
+  // 3.3.11 (the keys @decky/ui's appDetailsClasses and appActionButtonClasses find these modules by): the page's
+  // outer view (AppDetailsOverviewPanel, InnerContainer, Glassy: Steam's tinted panel, the light blue under the
+  // description and behind screen two) and the Play / Install button (green PlayButton, its container).
+  appview: { all: ["HeaderLoaded", "InnerContainer"], any: [["AppDetailsOverviewPanel", "ScrollContainer", "Glassy", "ShowPlayBar"]] },
+  actionbutton: { all: ["PlayButtonContainer", "PlayButton"], any: [["Green", "ButtonText", "ShowStreaming", "ButtonChild"]] },
   // Settings (the paged settings dialog; an older module has the keys without the PagedSettingsDialog_ prefix).
   // 3.3.10: Settings stayed Steam's: the signature also matches an older module (PageListColumn / PageListItem without
   // the prefix) that is not the one on screen; the prefixed module is preferred.
@@ -369,6 +376,12 @@ export const CORE_UI_TARGETS: Record<string, string[]> = {
   libraryGrid: ["{library.GamepadLibrary} {appgrid.AppGrid}", "{library.GamepadLibrary} {appgrid.LibraryAppGrid}", "{library.GamepadLibrary}"],
   libraryCapsule: ["{library.GamepadLibrary} {portrait.LibraryItemBox}"],
   collectionTile: ['a[href*="/library/collection/"]', "[data-collection-id]"],
+  // 3.3.11: the game page's parts, for the snapshot (it recorded none of them, so a missing match could not be told
+  // from a missing capture).
+  gameHeader: ["{appheader.TopCapsule}"],
+  gamePlayBar: ["{appdetails.PlaySection}"],
+  gameScreenTwo: ["{appdetails.AppDetailsContainer} {tabbedpage.GamepadTabbedPage}", "{appdetails.AppDetailsContainer}"],
+  gameSection: ["{appsection.AppDetailsSectionContainer}", "{appsection.AppDetailsSection}"],
   // Hosts from other plugins (3.3.7): The Collector's ROM game page (CORE_UI_HOSTS, "collector-rom-page").
   collectorRomPage: [".romm-core-page"],
 };
@@ -557,7 +570,11 @@ function rules(mark: string | undefined): Rule[] {
     // holds the rail and the content column side by side; its row is reversed. The D-pad follows the picture
     // (coreQamRail.ts: left from the rail goes into the content, right from the content's edge into the rail).
     { id: "qam-rail-right", needs: [["quickaccess", "Menu"]], needsAny: [["quickaccess", "Tabs"], ["quickaccess", "TabsWithFooter"]], css: s =>
-      `${ROOT} ${s("quickaccess", "Menu")}{${imp({ display: "flex", "flex-direction": "row-reverse" })}}` },
+      `${ROOT} ${s("quickaccess", "Menu")}{${imp({ display: "flex", "flex-direction": "row-reverse" })}}` +
+      // 3.3.11: Steam's Quick Access window is wider than the part of it on screen (855 px, about 350 px visible on
+      // the TV), so the reversed row put the rail off screen. coreQamRail.ts measures the visible width and the Menu
+      // takes exactly that: the rail sits at the right edge of what the user sees.
+      `${ROOT} ${s("quickaccess", "Menu")}[${CORE_QAM_VISIBLE_ATTRIBUTE}]{${imp({ width: `var(${CORE_QAM_VISIBLE_VAR})`, "max-width": `var(${CORE_QAM_VISIBLE_VAR})`, "min-width": "0", "box-sizing": "border-box", overflow: "hidden" })}}` },
     // The open tab: gunmetal, never Steam's grey-blue gradient (TV photo, 3.3.3). Every way Steam may mark it is in the
     // selector table (qamTabSelected).
     // 3.3.10: the fill is the tab's own box (48 x 64, square); any fill Steam draws in a pseudo-element goes.
@@ -574,6 +591,8 @@ function rules(mark: string | undefined): Rule[] {
       return `${under(t("qamTab"))}{${imp({ display: "flex", "align-items": "center", "justify-content": "center", "box-sizing": "border-box", padding: "0", "border-radius": SQUARE })}}` +
         `${under(t("qamTab"), " > *")}{${imp({ margin: "0", "align-self": "center" })}}` +
         `${under(t("qamTab"), " > svg")},${under(t("qamTab"), " > :is(span,div):has(> :is(svg,img))")},${under(t("qamTab"), " [data-core-rail-icon]")}{${imp({ ...box, display: "flex", "align-items": "center", "justify-content": "center", position: "static", top: "auto", transform: "none" })}}` +
+        // 3.3.11: icons that set no fill drew black; they take the tab's colour.
+        `${under(t("qamTab"), " svg:not([fill])")}{${imp({ fill: "currentColor" })}}` +
         `${under(t("qamTab"), " > :is(span,div):has(> :is(svg,img)) > :is(svg,img)")},${under(t("qamTab"), " [data-core-rail-icon] svg")}{${imp({ width: "100%", height: "100%", margin: "0", "max-width": "100%", "max-height": "100%", "shape-rendering": "geometricPrecision" })}}`;
     } },
     { id: "qam-tabs-footer", needs: [["quickaccess", "TabsWithFooter"]], css: s =>
@@ -594,7 +613,7 @@ function rules(mark: string | undefined): Rule[] {
     // Quick Access open). The Context board: black panel with a 1px gunmetal edge and 10px corners, 8px top and
     // bottom, 48px rows with a 22px inset and 16px text, a 13px hint-grey header, hairline gunmetal separators.
     { id: "context-panel", needs: [["contextmenu", "contextMenuContents"]], css: s =>
-      `${ROOT} ${s("contextmenu", "contextMenuContents")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": `inset 0 0 0 1px ${C.gunmetal}`,
+      `${ROOT} ${s("contextmenu", "contextMenuContents")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", outline: "none", border: "0",
         "border-radius": FLOAT, overflow: "hidden", "padding-top": "8px", "padding-bottom": "8px", filter: "none", "backdrop-filter": "none" })}}` +
       (s("contextmenu", "contextMenu") ? `${ROOT} ${s("contextmenu", "contextMenu")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` : "") },
     { id: "context-header", needs: [["contextmenu", "BasicContextMenuHeader"]], css: s => {
@@ -647,7 +666,7 @@ function rules(mark: string | undefined): Rule[] {
       // its own stacking context; the art is exactly one screen tall (it was a minimum, so it could run on under the
       // next rows) and the carousel row is taken out of the flow (it was moved down 50vh relatively inside a 70vh box, so
       // it reached 120vh, over whatever came next). The rows after screen one start at 100vh, in their own space.
-      return (s("home", "RecentSection") ? `${ROOT} ${s("home", "RecentSection")}{${imp({ position: "relative", height: "100vh", "min-height": "100vh", "max-height": "100vh",
+      return (s("home", "RecentSection") ? `${ROOT} ${s("home", "RecentSection")}{${imp({ position: "relative", height: `calc(100vh - ${CORE_HOME_SCREEN_CUT_PX}px)`, "min-height": `calc(100vh - ${CORE_HOME_SCREEN_CUT_PX}px)`, "max-height": `calc(100vh - ${CORE_HOME_SCREEN_CUT_PX}px)`,
           padding: "0", isolation: "isolate", "z-index": "0", overflow: "visible" })}}` : "") +
         `${art.join(",")}{${imp({ "-webkit-mask-image": mask, "mask-image": mask, height: "100vh", "min-height": "0", "max-height": "100vh", "z-index": "0" })}}` +
         (r("RecentGamesBackground") ? `${r("RecentGamesBackground")}{${imp({ position: "absolute", left: "0", width: "100vw", "min-width": "100vw", height: "100vh", "max-height": "none",
@@ -786,6 +805,80 @@ function rules(mark: string | undefined): Rule[] {
         `${cards.map(sel => `${sel}:is(.gpfocus,.gpfocuswithin,:focus-visible)`).join(",")}{${imp({ "background-color": C.raised, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}`;
     } },
 
+    // ---- 3.3.11: the game view, one look for Steam's page and The Collector's ROM page (CORE-UI.md, "The game view
+    // in 3.3.11"). The Collector draws its play bar with Steam's own classes (ActionRow, ActionButtonAndStatusPanel,
+    // AppButtons, StatusAndStats, GameStatsSection), so one set of rules styles both; its own parts are reached by its
+    // fixed classes (.romm-game-view, .romm-tab, .romm-core-card).
+    // Screen two: Steam's tinted panels clear. Glassy (the light blue under the description and behind Steam's tabs),
+    // the overview panel and the scroll container are transparent on both pages; Steam's own page is black under them
+    // (The Collector already paints its page), the Starfield showing where the game-page host is live.
+    { id: "game-view-clear", needs: [["appview", "InnerContainer"]], css: s => {
+      const v = (key: string) => s("appview", key) ? `${ROOT} ${s("appview", key)}` : "";
+      const d = (key: string) => s("appdetails", key) ? `${ROOT} ${s("appdetails", key)}` : "";
+      const clear = [v("Glassy"), v("AppDetailsOverviewPanel"), v("ScrollContainer"), v("PlayBar"), d("AppDetailsContent"), d("AppDetailSectionList")].filter(Boolean);
+      const box = s("appdetails", "AppDetailsContainer");
+      const tabbed = box ? ["GamepadTabbedPage", "TabContents", "TabContentsScroll", "ContentTransition"].filter(key => s("tabbedpage", key))
+        .map(key => `${ROOT} ${box} ${s("tabbedpage", key)}`) : [];
+      const all = [...clear, ...tabbed];
+      return (all.length ? `${all.join(",")}{${imp({ "background-color": "transparent", "background-image": "none", "backdrop-filter": "none", "box-shadow": "none" })}}` : "") +
+        `${v("InnerContainer")}:not(:has(.romm-game-view)){${imp({ "background-color": C.black, "background-image": "none" })}}`;
+    } },
+    // Screen two's cards on Steam's page: gunmetal, the crimson focus bar (the sections' own cards are in game-sections).
+    { id: "game-info-cards", needs: [["appdetails", "GameInfoContainer"]], css: s => {
+      const cards = ["GameInfoContainer", "GameInfoQuickLinks", "GameInfoCollections"].filter(key => s("appdetails", key)).map(key => `${ROOT} ${s("appdetails", key)}`);
+      return `${cards.join(",")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": FLOAT, "box-shadow": "none", color: C.steel })}}`;
+    } },
+    // Screen one, both pages: Play / Install crimson with white text, square, one size; the stats right after it in one
+    // row style (hint label over a steel value); the icon buttons square black right after the stats, never pushed to
+    // the far right.
+    { id: "game-actions", needs: [["appdetails", "ActionRow"]], css: s => {
+      const g = CORE_GAME_VIEW;
+      const d = (key: string) => s("appdetails", key) ? `${ROOT} ${s("appdetails", key)}` : "";
+      const p = (key: string) => s("playsection", key) ? `${ROOT} ${s("playsection", key)}` : "";
+      const a = (key: string) => s("actionbutton", key) ? `${ROOT} ${s("actionbutton", key)}` : "";
+      const row = d("ActionRow"), panel = d("ActionButtonAndStatusPanel"), buttons = d("AppButtons");
+      const play = [a("PlayButton"), a("PlayButtonContainer"), panel ? `${panel} > .DialogButton:first-child` : "", panel ? `${panel} > :first-child .DialogButton` : "",
+        `${ROOT} .romm-game-view :is(.romm-native-play,.romm-btn-play)`].filter(Boolean);
+      const green = s("actionbutton", "Green") ? play.map(sel => `${sel}${s("actionbutton", "Green")}`) : [];
+      const stats = [p("StatusAndStats"), p("GameStatsSection")].filter(Boolean);
+      const label = [p("PlayBarDetailLabel"), p("PlayBarLabel")].filter(Boolean);
+      const icons = [buttons ? `${buttons} > *` : "", buttons ? `${buttons} .DialogButton` : "", p("MenuButton"), p("GameInfoButton"), p("FavoriteButton"), p("ControllerConfigButton"),
+        `${ROOT} .romm-game-view .romm-core-playbar .romm-native-menu-btn`].filter(Boolean);
+      const side = [buttons, p("RightControls"), p("AppButtonsContainer")].filter(Boolean);
+      return `${row}{${imp({ display: "flex", "align-items": "center", "justify-content": "flex-start", gap: "28px" })}}` +
+        `${row} > *{${imp({ "flex-grow": "0" })}}` +
+        `${[...play, ...green].join(",")}{${imp({ "background-color": C.crimson, "background-image": "none", color: C.white, "border-radius": SQUARE, "box-shadow": "none",
+          filter: "none", height: `${g.button}px`, "min-height": `${g.button}px`, "min-width": "200px", "font-size": "18px", "font-weight": "600" })}}` +
+        `${play.map(sel => `${sel} *`).join(",")}{${imp({ color: C.white })}}` +
+        `${play.map(sel => `${sel}:is(.gpfocus,:focus-visible,:focus)`).join(",")}{${imp({ outline: `3px solid ${C.white}`, "outline-offset": "0", "box-shadow": "none", filter: "none", animation: "none" })}}` +
+        (stats.length ? `${stats.join(",")}{${imp({ display: "flex", "align-items": "center", gap: "32px", "background-color": "transparent", "background-image": "none", color: C.steel, "font-size": "16px" })}}` : "") +
+        (label.length ? `${label.join(",")}{${imp({ color: C.hint, "font-size": "11px", "font-weight": "600", "letter-spacing": "0.12em", "text-transform": "uppercase" })}}` : "") +
+        (side.length ? `${side.join(",")}{${imp({ "margin-left": "0", flex: "0 0 auto", display: "flex", gap: "8px", "justify-content": "flex-start" })}}` : "") +
+        `${icons.join(",")}{${imp({ width: `${g.button}px`, "min-width": `${g.button}px`, height: `${g.button}px`, padding: "0", "background-color": C.black, "background-image": "none",
+          color: C.steel, "border-radius": SQUARE, "box-shadow": "none" })}}` +
+        `${icons.map(sel => `${sel}:is(.gpfocus,:focus-visible)`).join(",")}{${imp({ "background-color": C.gunmetal, color: C.white, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}`;
+    } },
+    // The logo locked bottom-left on both pages, and still art only (no header video).
+    { id: "game-still-art", needs: [["appheader", "TopCapsule"]], css: s => {
+      const h = (key: string) => s("appheader", key) ? `${ROOT} ${s("appheader", key)}` : "";
+      return `${h("TopCapsule")} video{${imp({ display: "none" })}}` +
+        (h("BoxSizer") ? `${h("BoxSizer")}{${imp({ left: "2.8vw", right: "auto", transform: "none" })}}` : "") +
+        (h("TitleLogo") ? `${h("TitleLogo")}{${imp({ "object-position": "left bottom" })}}` : "");
+    } },
+    // The Collector's screen two: tabs without Steam's focus box (the crimson underline marks the open tab), gunmetal
+    // cards.
+    { id: "rom-screen-two", needs: [], css: () => {
+      const view = `${ROOT} .romm-game-view`;
+      const tab = `${view} .romm-tab.romm-tab`;
+      return `${tab},${tab}.gpfocus,${tab}:focus,${tab}:focus-visible{${imp({ outline: "none", "outline-offset": "0", border: "0", filter: "none", animation: "none", "border-radius": SQUARE })}}` +
+        `${tab}::before,${tab}::after{${imp({ content: "none", display: "none" })}}` +
+        `${tab}{${imp({ "background-color": "transparent", "background-image": "none", color: C.hint, "box-shadow": "inset 0 -3px 0 transparent" })}}` +
+        `${tab}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, color: C.white })}}` +
+        `${tab}.romm-tab-active{${imp({ color: C.white, "box-shadow": `inset 0 -3px 0 ${C.crimson}` })}}` +
+        `${view} :is(.romm-core-card,.romm-ext-card,.romm-core-chip){${imp({ "background-color": C.gunmetal, "background-image": "none", "border-radius": FLOAT, "box-shadow": "none" })}}` +
+        `${view} .romm-core-card:is(.gpfocus,:focus-visible){${imp({ "background-color": C.raised, outline: `2px solid ${C.crimson}`, "outline-offset": "0", filter: "none" })}}`;
+    } },
+
     // ---- 3.3.9: the surfaces still in Steam's blue (CORE-UI.md, "Steam's other pages"): black pages, gunmetal rows,
     // the square crimson focus bar, steel text.
     { id: "settings-pages", needs: [], needsAny: [["settings", "PagedSettingsDialog_PageListColumn"], ["settings", "PageListColumn"]], css: s => {
@@ -906,10 +999,16 @@ const ALWAYS_ON = new Set(["corners", "steam-dialogs"]);
 
 // 3.3.10: 24px, the size of Steam's own rail icons (were 30, which sat off-centre in the 48 x 64 tab).
 export const CORE_RAIL_ICON_PX = 24;
+// 3.3.11: the measured visible width of the Quick Access panel (coreQamRail.ts, measureQamVisible).
+export const CORE_QAM_VISIBLE_ATTRIBUTE = "data-core-qam-visible";
+export const CORE_QAM_VISIBLE_VAR = "--core-qam-visible";
 // 3.3.9: Home after Art Hero with the user's options: the art fades out over its last 12%, the carousel 50vh down in a
 // 70vh row (carousel height 5), the focused game's name 4em above its capsule (font height -4) at 22px (larger).
 // 3.3.10: carouselHeight is gone: the row is out of the flow at carouselTop and sized by Steam (its box ran past screen
 // one). The row's position and size wait for the approved Home row design.
+// 3.3.11: screen one ends this far above the bottom (the 42 px footer and screen two's 58 px tab names); equal to
+// coreHomePages.ts HOME_SCREEN_CUT_PX (a test keeps them equal).
+export const CORE_HOME_SCREEN_CUT_PX = 100;
 export const CORE_HOME_ART = { fadeFrom: 88, carouselTop: 50, labelEm: 4, labelPx: 22 } as const;
 // 3.3.10: how long the top bar takes to slide out and back.
 export const CORE_HEADER_HIDE_MS = 200;
@@ -1038,7 +1137,6 @@ export const CORE_UI_HOSTS: CoreUiHostSpec[] = [
   { id: "qam-container", map: "quickaccess", key: "Container", minArea: 0, fullHeight: true, panel: true },
   { id: "qam-panel", map: "quickaccess", key: "QuickAccessMenu", minArea: 0, fullHeight: true, panel: true },
   { id: "qam", map: "quickaccess", key: "Menu", minArea: 0, fullHeight: true, panel: true },
-  { id: "context", map: "contextmenu", key: "contextMenuContents", minArea: 0 },
   { id: "menu-footer", map: "mainmenu", key: "FooterBoxShadow", minArea: 24000 },
   { id: "qam-footer", map: "footer", key: "QuickAccessFooter", minArea: 24000 },
   { id: "qam-footer-shadow", map: "quickaccess", key: "FooterBoxShadow", minArea: 24000 },
@@ -1085,7 +1183,7 @@ export type CoreUiSheet = {
   // 3.3.10: per map that more than one module matched, which was taken (findCoreUiMapsDetailed).
   ambiguous?: Partial<Record<CoreUiMapName, CoreUiMapAmbiguity>>;
   // Selectors the runtime needs (plain, no specificity repeat).
-  dom: { header?: string; footer?: string; menu?: string; menuItem?: string; qamTab?: string; tab?: string; tabTitle?: string; tabSelected?: string; library?: string; tabbedPage?: string;
+  dom: { header?: string; footer?: string; contextMenu?: string; qamPlaceholder?: string; menu?: string; menuItem?: string; qamTab?: string; tab?: string; tabTitle?: string; tabSelected?: string; library?: string; tabbedPage?: string;
     // 3.3.9: the game view's two screens (coreUi.ts, gameViewScroll).
     playSection?: string; appContainer?: string; tabRow?: string;
     // 3.3.10: Quick Access's row (rail on the right, coreQamRail.ts).
@@ -1169,6 +1267,8 @@ export function buildCoreUiCss(maps: CoreUiMaps, options: { mark?: string; wordm
     tab: plainSelector(maps.tabbedpage, "Tab"), tabTitle: plainSelector(maps.tabbedpage, "TabTitle"), tabSelected: plainSelector(maps.tabbedpage, "Selected"),
     library: plainSelector(maps.library, "GamepadLibrary"), tabbedPage: plainSelector(maps.tabbedpage, "GamepadTabbedPage"),
     playSection: plainSelector(maps.appdetails, "PlaySection"), appContainer: plainSelector(maps.appdetails, "AppDetailsContainer"), tabRow: plainSelector(maps.tabbedpage, "TabRow"),
+    contextMenu: plainSelector(maps.contextmenu, "contextMenuContents"),
+    qamPlaceholder: plainSelector(maps.quickaccess, "ViewPlaceholder") ?? plainSelector(maps.quickaccess, "Container"),
     qamMenu: plainSelector(maps.quickaccess, "Menu"), qamRail: plainSelector(maps.quickaccess, "Tabs") ?? plainSelector(maps.quickaccess, "TabsWithFooter"),
     qamTabSelected: plainSelector(maps.quickaccess, "Tab") && plainSelector(maps.quickaccess, "Selected") ? `${plainSelector(maps.quickaccess, "Tab")}${plainSelector(maps.quickaccess, "Selected")}` : undefined,
   };

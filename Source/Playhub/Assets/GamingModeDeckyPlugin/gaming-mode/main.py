@@ -390,7 +390,7 @@ def _core_ui_legacy_record_path():
     return os.path.join(base, "GamingMode", "core-ui-css-themes.json") if base else ""
 
 
-def _save_core_ui_snapshot(text, appdata=None, themes_dir=None):
+def _save_core_ui_snapshot(text, appdata=None, themes_dir=None, now=None):
     """Writes the frontend's snapshot (JSON text) with a backend section added. Answers where it went."""
     if not isinstance(text, str) or not text:
         return {"ok": False, "error": "empty"}
@@ -424,13 +424,53 @@ def _save_core_ui_snapshot(text, appdata=None, themes_dir=None):
         data = json.dumps(snapshot, ensure_ascii=False, separators=(",", ":"))
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        temp = path + ".tmp"
+        # 3.3.11: one file per capture (core-ui-snapshot-YYYYMMDD-HHMMSS.json, local time), the newest
+        # _CORE_UI_SNAPSHOT_KEEP kept; the old single core-ui-snapshot.json is left as it is.
+        target = _core_ui_snapshot_stamped(path, now)
+        temp = target + ".tmp"
         with open(temp, "w", encoding="utf-8") as handle:
             handle.write(data)
-        os.replace(temp, path)
+        os.replace(temp, target)
+        _prune_core_ui_snapshots(os.path.dirname(path))
     except OSError as error:
         return {"ok": False, "error": "write_failed", "detail": str(error)[:120]}
-    return {"ok": True, "path": path, "bytes": len(data.encode("utf-8"))}
+    return {"ok": True, "path": target, "bytes": len(data.encode("utf-8"))}
+
+
+_CORE_UI_SNAPSHOT_KEEP = 20
+_CORE_UI_SNAPSHOT_NAME = re.compile(r"^core-ui-snapshot-\d{8}-\d{6}(?:-\d{1,3})?\.json$")
+
+
+def _core_ui_snapshot_stamped(path, now=None):
+    folder = os.path.dirname(path)
+    stamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(now if now is not None else time.time()))
+    target = os.path.join(folder, "core-ui-snapshot-%s.json" % stamp)
+    count = 2
+    while os.path.exists(target) and count < 1000:
+        target = os.path.join(folder, "core-ui-snapshot-%s-%d.json" % (stamp, count))
+        count += 1
+    return target
+
+
+def _prune_core_ui_snapshots(folder, keep=None):
+    keep = _CORE_UI_SNAPSHOT_KEEP if keep is None else keep
+    try:
+        names = [name for name in os.listdir(folder) if _CORE_UI_SNAPSHOT_NAME.match(name)]
+    except OSError:
+        return []
+    def order(name):
+        stem = name[len("core-ui-snapshot-"):-len(".json")]
+        parts = stem.split("-")
+        return (parts[0], parts[1], int(parts[2]) if len(parts) > 2 else 1)
+    names.sort(key=order)
+    removed = []
+    for name in names[:-keep] if keep > 0 else names:
+        try:
+            os.remove(os.path.join(folder, name))
+            removed.append(name)
+        except OSError:
+            pass
+    return removed
 
 
 def _core_icon_set(folder):
@@ -1636,7 +1676,7 @@ class Plugin(QuickSettingsPlugin):
             return {"ok": False, "tabs": {}, "collections": {}, "keys": {}, "errors": ["failed"]}
 
     async def save_core_ui_snapshot(self, text):
-        # 3.3.4: the Core UI snapshot, to %APPDATA%\GamingMode\diagnostics\core-ui-snapshot.json (overwritten).
+        # 3.3.11: the Core UI snapshot, to %APPDATA%\GamingMode\diagnostics\core-ui-snapshot-YYYYMMDD-HHMMSS.json (last 20 kept).
         try:
             answer = await asyncio.to_thread(_save_core_ui_snapshot, text)
             if answer.get("ok"):

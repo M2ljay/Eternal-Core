@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import time
 import logging
 import os
 import pathlib
@@ -47,12 +48,14 @@ class CoreUiSnapshotBackendTests(unittest.TestCase):
     def snapshot(self, **extra):
         return json.dumps({"kind": "core-ui-snapshot", "format": 1, "surfaces": [], **extra})
 
-    def test_snapshot_written_to_appdata_and_overwritten(self):
+    def test_snapshot_written_to_its_own_timestamped_file(self):
         self.theme("Core", True, installed=False)
         self.theme("CapyMenu (Context Menus)", True)
-        answer = self.module._save_core_ui_snapshot(self.snapshot(reason="start"), appdata=str(self.appdata), themes_dir=str(self.themes))
+        stamp = time.mktime((2026, 11, 28, 4, 34, 6, 0, 0, -1))
+        answer = self.module._save_core_ui_snapshot(self.snapshot(reason="start"), appdata=str(self.appdata), themes_dir=str(self.themes), now=stamp)
         self.assertTrue(answer["ok"], answer)
-        path = self.appdata / "GamingMode" / "diagnostics" / "core-ui-snapshot.json"
+        folder = self.appdata / "GamingMode" / "diagnostics"
+        path = folder / "core-ui-snapshot-20261128-043406.json"
         self.assertEqual(pathlib.Path(answer["path"]), path)
         data = json.loads(path.read_text(encoding="utf-8"))
         self.assertEqual(data["reason"], "start")
@@ -60,10 +63,25 @@ class CoreUiSnapshotBackendTests(unittest.TestCase):
         self.assertEqual(sorted(css["active"]), ["CapyMenu (Context Menus)", "Core"])
         self.assertEqual(css["legacyActive"], ["Core"])
         self.assertFalse([t for t in css["themes"] if t["folder"] == "Core"][0]["installed"])
-        again = self.module._save_core_ui_snapshot(self.snapshot(reason="manual"), appdata=str(self.appdata), themes_dir=str(self.themes))
+        again = self.module._save_core_ui_snapshot(self.snapshot(reason="manual"), appdata=str(self.appdata), themes_dir=str(self.themes), now=stamp)
         self.assertTrue(again["ok"])
-        self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["reason"], "manual")
-        self.assertEqual(len(list(path.parent.iterdir())), 1, "one file, overwritten")
+        self.assertEqual(pathlib.Path(again["path"]).name, "core-ui-snapshot-20261128-043406-2.json", "the same second gets a suffix")
+        self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["reason"], "start", "never overwritten")
+
+    def test_snapshot_keeps_the_newest_twenty(self):
+        folder = self.appdata / "GamingMode" / "diagnostics"
+        folder.mkdir(parents=True)
+        (folder / "core-ui-snapshot.json").write_text("{}", encoding="utf-8")
+        (folder / "notes.txt").write_text("mine", encoding="utf-8")
+        base = time.mktime((2026, 11, 1, 10, 0, 0, 0, 0, -1))
+        for index in range(25):
+            answer = self.module._save_core_ui_snapshot(self.snapshot(reason=str(index)), appdata=str(self.appdata), themes_dir=str(self.themes), now=base + index * 60)
+            self.assertTrue(answer["ok"], answer)
+        stamped = sorted(name for name in os.listdir(folder) if name.startswith("core-ui-snapshot-"))
+        self.assertEqual(len(stamped), 20)
+        self.assertEqual(json.loads((folder / stamped[0]).read_text(encoding="utf-8"))["reason"], "5", "the five oldest went")
+        self.assertTrue((folder / "core-ui-snapshot.json").exists(), "the old single file is left alone")
+        self.assertTrue((folder / "notes.txt").exists())
 
     def test_snapshot_refuses_bad_input_and_paths_outside_appdata(self):
         ok = dict(appdata=str(self.appdata), themes_dir=str(self.themes))

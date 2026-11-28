@@ -1,4 +1,5 @@
 import { DFL, SP_REACT as React, toaster } from "./decky";
+import { corePluginLabel } from "./coreLabels";
 import {
   CatalogPlugin,
   GithubRelease,
@@ -611,7 +612,7 @@ function PluginRow({ plugin, shared, onOpen, manage = false }: {
     <>
       <div className="ph-store-row-media"><PluginImage plugin={plugin} /></div>
       <div className="ph-store-row-copy">
-        <h3 className="ph-store-row-title">{plugin.name}</h3>
+        <h3 className="ph-store-row-title">{corePluginLabel(plugin.name)}</h3>
         <p className="ph-store-row-description">{plugin.shortDescription}</p>
       </div>
       <div className="ph-store-row-trailing">
@@ -862,7 +863,7 @@ function PluginDetail({ plugin, shared, onBack }: {
         </Focusable>
         <div className="ph-store-detail-summary">
           <SourceBadge source={plugin.catalogSource} />
-          <h1 className="ph-store-detail-title">{plugin.name}</h1>
+          <h1 className="ph-store-detail-title">{corePluginLabel(plugin.name)}</h1>
           <div className="ph-store-detail-status">
             {installed ? <span>{shared.copy.installedVersion}: {installed.version || "?"}</span> : null}
             <span>{shared.copy.latestVersion}: {latestVersion || "?"}</span>

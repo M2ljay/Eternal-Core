@@ -15,12 +15,13 @@ import { coreUiSetting } from "./coreUiSetting";
 import { coreHomeCopy } from "./coreHomeLocale";
 import { favoriteArt, favoriteLayers } from "./coreFavoriteArt";
 import {
-  HERO_DELAY_MS, HERO_FADE_MS, HOME_ROW, consolePicks, homeIconSet, homePage, neighbours, pageForButton, setFocusedConsole, setHomePage,
+  HERO_DELAY_MS, HERO_FADE_MS, HOME_ROW, HOME_SCREEN_CUT_PX, consolePicks, homeGames, homeIconSet, homePage, neighbours, pageForButton, setFocusedConsole, setHomePage,
   subscribeHomePage, focusedConsoleId, type ConsolePick, type HomePage,
 } from "./coreHomePages";
-import { collectionRoute, consoleCards, type ConsoleCard } from "./coreConsoles";
+import { collectionRoute, consoleCards, looksLikeCollectionRoute, setCollectionRoutes, type ConsoleCard } from "./coreConsoles";
 import { collectionIcon, matchCollection } from "./coreLibraryIcons";
 import { CoreStars } from "./CoreStars";
+import { gameMenuProps } from "./coreGameMenu";
 import { clubState, loadClub, subscribeClub } from "./club/clubStore";
 import { assembleEventFor } from "./club/clubAssemble";
 import { matchPick } from "./club/clubMatch";
@@ -31,6 +32,38 @@ import { consoleHero, consolePack, loadConsolePack, subscribeConsoleHeroes, subs
 const { Focusable, Navigation } = DFL as any;
 
 export const steamWindow = () => window as any;
+
+// 3.3.11: Steam's own route builders for a collection, looked up once in Steam's modules (route tables nest two or
+// three levels deep); coreConsoles.ts calls only short one-argument builders whose source builds a collection path.
+let routesLooked = false;
+export function lookUpCollectionRoutes(find: ((filter: (mod: any) => any) => any) | undefined = (DFL as any)?.findModuleChild): number {
+  if (routesLooked) return 0;
+  routesLooked = true;
+  if (typeof find !== "function") return 0;
+  const found: Array<(id: string) => unknown> = [];
+  const walk = (value: any, depth: number, seen: Set<any>) => {
+    if (!value || found.length >= 8 || depth > 3 || seen.has(value)) return;
+    seen.add(value);
+    if (looksLikeCollectionRoute(value)) { found.push(value); return; }
+    if (typeof value !== "object") return;
+    let keys: string[] = [];
+    try { keys = Object.keys(value).slice(0, 200); } catch { return; }
+    for (const key of keys) { let child: any; try { child = value[key]; } catch { continue; } if (child && (typeof child === "object" || typeof child === "function")) walk(child, depth + 1, seen); }
+  };
+  try {
+    find((mod: any) => {
+      if (!mod || typeof mod !== "object") return undefined;
+      const before = found.length;
+      try { walk(mod, 0, new Set()); } catch { /* Next module. */ }
+      return found.length > before && found.length >= 8 ? true : undefined;
+    });
+  } catch { /* The fallback route stays. */ }
+  setCollectionRoutes(found);
+  if (found.length) console.info(`[Core Home] Steam's collection route: ${collectionRoute("<id>")}`);
+  else console.info("[Core Home] Steam's collection route builder was not found; using /library/collection/<id>");
+  return found.length;
+}
+const openCollection = (id: string) => { lookUpCollectionRoutes(); try { Navigation?.Navigate?.(collectionRoute(id)); } catch { /* Stay on Home. */ } };
 export function userCollections(): any[] {
   try { const list = steamWindow().collectionStore?.userCollections; return Array.isArray(list) ? list : list && typeof list.values === "function" ? Array.from(list.values()) : []; } catch { return []; }
 }
@@ -39,25 +72,26 @@ const openGame = (appid: number) => { try { Navigation?.Navigate?.(`/library/app
 
 const R = HOME_ROW;
 export const homeScreenCss = `
-.core-screen{position:relative;width:100%;height:100vh;min-height:100vh;overflow:visible;isolation:isolate;background:#000000}
-.core-screen-hero{position:absolute;inset:0;z-index:0;overflow:hidden;background:#000000;isolation:isolate}
+.core-screen{position:relative;width:100%;height:calc(100vh - ${HOME_SCREEN_CUT_PX}px);min-height:calc(100vh - ${HOME_SCREEN_CUT_PX}px);overflow:visible;isolation:isolate;background:#000000}
+.core-screen-hero{position:absolute;left:0;right:0;top:0;height:100vh;z-index:0;overflow:hidden;background:#000000;isolation:isolate}
 .core-screen-layer{position:absolute;inset:0}
 .core-screen-layer.core-fade-in{animation:core-hero-in ${HERO_FADE_MS}ms ease-out both}
 @keyframes core-hero-in{from{opacity:0}to{opacity:1}}
 .core-screen-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block}
 .core-screen-hero canvas{position:absolute;inset:0;width:100%;height:100%}
-.core-screen-fade{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 45%,rgba(0,0,0,.85) 82%,#000000 100%)}
+.core-screen-fade{position:absolute;left:0;right:0;top:0;height:100vh;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 45%,rgba(0,0,0,.85) 82%,#000000 100%)}
 .core-pages{position:absolute;left:${R.insetVw}vw;top:0;height:40px;z-index:3;display:flex;align-items:center;gap:17px;pointer-events:none}
 .core-pages .core-key{display:inline-flex;align-items:center;justify-content:center;height:17px;padding:0 5px;border:1.5px solid #9AA4AE;font-size:9px;font-weight:700;color:#9AA4AE;line-height:1}
 .core-pages .core-page{position:relative;height:28px;display:inline-flex;align-items:center;font-size:13px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#9AA4AE}
 .core-pages .core-page.active{color:#FFFFFF;font-weight:600}
 .core-pages .core-page.active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:#D7263D}
-.core-row{position:absolute;left:0;right:0;bottom:calc(${R.footerPx}px + ${R.aboveFooterVh}vh);z-index:2;display:flex;align-items:flex-end;gap:${R.gapVw}vw;padding:12px ${R.insetVw}vw 0;overflow-x:auto;overflow-y:visible;scrollbar-width:none;scroll-padding-inline:${R.insetVw}vw}
+.core-row{position:absolute;left:0;right:0;bottom:calc(${HOME_SCREEN_CUT_PX}px + ${R.aboveFooterVh}vh);z-index:2;display:flex;align-items:flex-end;gap:${R.gapVw}vw;padding:12px ${R.insetVw}vw 0;overflow-x:auto;overflow-y:visible;scrollbar-width:none;scroll-padding-inline:${R.insetVw}vw}
 .core-row::-webkit-scrollbar{display:none}
 .core-tile{position:relative;flex:0 0 auto;height:${R.gameVh}vh;aspect-ratio:2/3;border-radius:6px;overflow:hidden;opacity:${R.dim};outline:none;
   background:linear-gradient(160deg,#2A2F36 0%,#15181C 100%);box-shadow:0 10px 24px rgba(0,0,0,.6);transition:height .15s ease-out,translate .15s ease-out,opacity .15s ease-out}
 .core-tile.core-console{aspect-ratio:16/9;height:${R.consoleVh}vh}
 .core-tile.gpfocus,.core-tile:focus-visible,.core-tile:focus{opacity:1;height:${R.gameFocusedVh}vh;translate:0 -${R.liftPx}px;outline:none;box-shadow:0 14px 30px rgba(0,0,0,.75)}
+.core-tile::before,.core-tile::after{content:none !important;display:none !important;box-shadow:none !important;outline:none !important}
 .core-tile.core-console.gpfocus,.core-tile.core-console:focus-visible,.core-tile.core-console:focus{height:${R.consoleFocusedVh}vh}
 .core-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .core-tile .core-tile-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.6) 100%)}
@@ -65,7 +99,7 @@ export const homeScreenCss = `
 .core-tile.core-plain{background:#1A1D21}
 .core-tile .core-tile-name{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 10px;text-align:center;font-size:15px;font-weight:700;color:#FFFFFF}
 .core-tile .core-tile-tag{position:absolute;left:0;top:0;z-index:2;padding:4px 8px;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#000000;border-radius:0}
-.core-two{position:relative;padding:28px ${R.insetVw}vw 64px;min-height:60vh}
+.core-two{position:relative;padding:${R.footerPx + 28}px ${R.insetVw}vw 64px;min-height:60vh}
 .core-two .core-two-label{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#C9D1D9;margin:0 0 14px}
 .core-two .core-two-row{display:flex;gap:16px;overflow-x:auto;padding:10px 2px 14px;scrollbar-width:none}
 .core-two .core-two-row::-webkit-scrollbar{display:none}
@@ -99,8 +133,8 @@ function GameTile({ appid, autoFocus, onFocus }: { appid: number; autoFocus?: bo
   const [failed, setFailed] = React.useState({ portrait: 0, hero: 0, logo: 0 });
   const layers = favoriteLayers(art, failed);
   const fail = (kind: "portrait" | "hero" | "logo") => () => setFailed(prior => ({ ...prior, [kind]: prior[kind] + 1 }));
-  return <Focusable className="core-tile" focusable={true} aria-label={appName(appid)} autoFocus={autoFocus}
-    onActivate={() => openGame(appid)} onClick={() => openGame(appid)} onGamepadFocus={onFocus} onFocus={onFocus}>
+  return <Focusable className="core-tile" focusable={true} noFocusRing={true} aria-label={appName(appid)} autoFocus={autoFocus}
+    onActivate={() => openGame(appid)} onClick={() => openGame(appid)} onGamepadFocus={onFocus} onFocus={onFocus} {...gameMenuProps(appid)}>
     {layers.kind === "portrait"
       ? <img key={layers.src} alt="" loading="lazy" src={layers.src} onError={fail("portrait")} />
       : <>{layers.hero && <img key={layers.hero} alt="" src={layers.hero} onError={fail("hero")} />}
@@ -112,11 +146,11 @@ function GameTile({ appid, autoFocus, onFocus }: { appid: number; autoFocus?: bo
 // icon (the user's Library icon set or Core's own drawing), else its name. Never an empty box. A club pick held by this
 // console carries the pick's tag.
 function ConsoleTile({ card, logo, hero, tag, autoFocus, onFocus }: { card: ConsoleCard; logo?: string; hero?: string; tag?: ConsolePick; autoFocus?: boolean; onFocus: () => void }) {
-  const open = () => { try { Navigation?.Navigate?.(collectionRoute(card.id)); } catch { /* Stay on Home. */ } };
+  const open = () => openCollection(card.id);
   const [logoFailed, setLogoFailed] = React.useState(false);
   const icon = React.useMemo(() => { try { return collectionIcon(card.name, matchCollection(card.name), homeIconSet()); } catch { return undefined; } }, [card.name]);
   const mark = !logoFailed && logo ? logo : icon;
-  return <Focusable className={`core-tile core-console${hero ? "" : " core-plain"}`} focusable={true} aria-label={card.name} autoFocus={autoFocus}
+  return <Focusable className={`core-tile core-console${hero ? "" : " core-plain"}`} focusable={true} noFocusRing={true} aria-label={card.name} autoFocus={autoFocus}
     onActivate={open} onClick={open} onGamepadFocus={onFocus} onFocus={onFocus}>
     {hero && <img alt="" src={hero} />}
     {hero && <span className="core-tile-shade" />}
@@ -129,8 +163,8 @@ function ConsoleTile({ card, logo, hero, tag, autoFocus, onFocus }: { card: Cons
 // the pick's tag at the top; A opens the game page.
 function PickTile({ pick, autoFocus, onFocus }: { pick: ConsolePick; autoFocus?: boolean; onFocus: () => void }) {
   const art = React.useMemo(() => favoriteArt(pick.appId, steamWindow().appStore), [pick.appId]);
-  return <Focusable className="core-tile core-console core-plain" focusable={true} aria-label={`${pick.label}: ${pick.title}`} autoFocus={autoFocus}
-    onActivate={() => openGame(pick.appId)} onClick={() => openGame(pick.appId)} onGamepadFocus={onFocus} onFocus={onFocus}>
+  return <Focusable className="core-tile core-console core-plain" focusable={true} noFocusRing={true} aria-label={`${pick.label}: ${pick.title}`} autoFocus={autoFocus}
+    onActivate={() => openGame(pick.appId)} onClick={() => openGame(pick.appId)} onGamepadFocus={onFocus} onFocus={onFocus} {...gameMenuProps(pick.appId)}>
     <Art sources={[...art.hero, ...art.portrait]} />
     <span className="core-tile-shade" />
     <span className="core-tile-tag" style={{ background: pick.tone }}>{pick.label}</span>
@@ -199,7 +233,7 @@ export function HomeScreenOne({ games, autoFocus, getLocale }: { games: number[]
   const items: RowItem[] = React.useMemo(() => page === "consoles"
     ? [...picks.map(pick => ({ kind: "pick" as const, pick })),
       ...cards.map(card => ({ kind: "console" as const, card, tag: picks.find(pick => card.games.some(game => game.appid === pick.appId)) }))]
-    : games.map(appid => ({ kind: "game" as const, appid })), [page, picks, cards, games]);
+    : homeGames(games, appid => steamWindow().appStore?.GetAppOverviewByAppID?.(appid)).map(appid => ({ kind: "game" as const, appid })), [page, picks, cards, games]);
   const index = Math.min(focused, Math.max(0, items.length - 1));
   const heroAt = Math.min(rested, Math.max(0, items.length - 1));
   // The art follows focus once it has rested on a tile (HERO_DELAY_MS).
@@ -246,7 +280,7 @@ export function HomeScreenOne({ games, autoFocus, getLocale }: { games: number[]
     <div className="core-screen-fade" />
     <PageTabs page={page} locale={locale} />
     {!items.length
-      ? <div className="core-row"><Focusable className={`core-tile${page === "consoles" ? " core-console" : ""} core-plain`} focusable={true} autoFocus={autoFocus}
+      ? <div className="core-row"><Focusable className={`core-tile${page === "consoles" ? " core-console" : ""} core-plain`} focusable={true} noFocusRing={true} autoFocus={autoFocus}
         aria-label={page === "consoles" ? coreHomeCopy(locale).consolesEmpty : ""} /></div>
       : <Focusable className="core-row" flow-children="row">
         {items.map((item, i) => {
@@ -276,6 +310,8 @@ export function ConsoleScreenTwo({ getLocale }: { getLocale: () => string }) {
     <p className="core-two-label">{text.recentlyPlayed}</p>
     {games.length ? <Focusable className="core-two-row" flow-children="row">
       {games.map(game => <GameTile key={game.appid} appid={game.appid} onFocus={() => {}} />)}
+      {card ? <Focusable className="core-tile core-plain core-all" focusable={true} noFocusRing={true} aria-label={text.all}
+        onActivate={() => openCollection(card.id)} onClick={() => openCollection(card.id)}><span className="core-tile-name">{text.all}</span></Focusable> : null}
     </Focusable> : <p className="core-two-empty">{text.empty}</p>}
   </div>;
 }

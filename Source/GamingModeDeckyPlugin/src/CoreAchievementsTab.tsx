@@ -5,6 +5,7 @@
 
 import { SP_REACT as React, DFL } from "./decky";
 import { coreHomeCopy } from "./coreHomeLocale";
+import { gameMenuProps } from "./coreGameMenu";
 import {
   CLOSEST_LIMIT, COLLECTOR_ACHIEVEMENTS_READY, MODEL_KEY, RARITY_KEY, RECENT_LIMIT, collectorBridge, fromBridge, mergeClosest, mergeUnlocks, percentOf, raNearlyDone, raUnlock,
   rarityCache, rarityStale, ratesFrom, readJson, steamClosest, steamUnlocks, storeRates, storedModel, unlockNote, whenText, withRarity, writeJson,
@@ -23,7 +24,7 @@ const REFRESH_MS = 10 * 60_000;
 const SHORTCUT_BASE = 0x80000000; // non-Steam shortcuts have no Steam achievements
 
 const css = `
-.core-ach{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:28px;padding:8px 2px 24px;color:#C9D1D9}
+.core-ach{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:28px;padding:50px 2px 24px;color:#C9D1D9}
 .core-ach h3{margin:0 0 14px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#C9D1D9}
 .core-ach-list{display:flex;flex-direction:column;gap:10px}
 .core-ach-row{display:flex;align-items:center;gap:14px;min-height:64px;box-sizing:border-box;padding:0 15px;background:#1A1D21;border-radius:var(--core-radius-float,10px);transition:translate .15s ease-out;outline:none}
@@ -127,7 +128,7 @@ export function CoreAchievementsTab({ locale }: { locale: string }) {
         {recent.length ? <div className="core-ach-list">{recent.map((unlock, i) => {
           const note = unlockNote(unlock, { hardcore: text.hardcore, players: text.players });
           return <Focusable key={`${unlock.source}-${unlock.appId ?? unlock.game}-${unlock.name}-${i}`} className="core-ach-row" focusable={true}
-            aria-label={`${unlock.name}, ${unlock.game}`} onActivate={() => openAchievements(unlock.appId)} onClick={() => openAchievements(unlock.appId)}>
+            aria-label={`${unlock.name}, ${unlock.game}`} onActivate={() => openAchievements(unlock.appId)} onClick={() => openAchievements(unlock.appId)} {...gameMenuProps(unlock.appId)}>
             {unlock.icon ? <img className="core-ach-icon" alt="" src={unlock.icon} /> : <span className="core-ach-icon" />}
             <div className="core-ach-text"><div className="core-ach-name">{unlock.name}</div>
               <div className="core-ach-sub">{[unlock.game, whenText(unlock.at, now, locale)].filter(Boolean).join(" · ")}</div></div>
@@ -142,7 +143,7 @@ export function CoreAchievementsTab({ locale }: { locale: string }) {
           const pct = percentOf(entry);
           const left = text.left.replace("{n}", String(entry.total - entry.unlocked));
           return <Focusable key={`${entry.source}-${entry.appId ?? entry.game}-${i}`} className="core-ach-card" focusable={true} aria-label={`${entry.game}, ${pct}%`}
-            onActivate={() => openAchievements(entry.appId)} onClick={() => openAchievements(entry.appId)}>
+            onActivate={() => openAchievements(entry.appId)} onClick={() => openAchievements(entry.appId)} {...gameMenuProps(entry.appId)}>
             <div className="core-ach-head"><span>{entry.game}</span><span>{pct}%</span></div>
             <div className="core-ach-bar"><i style={{ width: `${pct}%` }} /></div>
             <div className="core-ach-left">{entry.source === "ra" ? `RA · ${left}` : left}</div>

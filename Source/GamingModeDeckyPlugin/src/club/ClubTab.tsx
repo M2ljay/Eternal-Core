@@ -41,7 +41,7 @@ export const pickTone = (pick: { kind?: string; event?: string }) => PICK_TONE[a
 export const CLUB_LAYOUT = { cardVh: 51.9, boxVh: 23.1, gapVw: 1.04 } as const;
 
 const css = `
-.ph-club{position:relative;isolation:isolate;min-height:100%;padding:12px 2px 40px;color:${CORE.text};box-sizing:border-box}
+.ph-club{position:relative;isolation:isolate;min-height:100%;padding:54px 2px 40px;color:${CORE.text};box-sizing:border-box}
 .ph-club h3{margin:0 0 10px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:${CORE.steel}}
 .ph-club-lift{outline:none;transition:translate .15s ease-out,box-shadow .15s ease-out}
 .ph-club-lift.gpfocus,.ph-club-lift:focus-visible{translate:0 -7px;outline:none}

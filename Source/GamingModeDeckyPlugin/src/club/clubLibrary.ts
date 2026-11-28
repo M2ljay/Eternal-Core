@@ -25,8 +25,10 @@ function overviews(): any[] {
     if (Array.isArray(value)) { value.forEach(add); return; }
     if (typeof value === "object") values.push(value);
   };
+  // 3.3.11: both sources, always. A pick the user owns but has not installed must still match (the Consoles row
+  // showed only installed picks); readLibrary keeps the first entry per app id.
   try { add(store?.allApps); } catch { /* the next source may still answer */ }
-  if (!values.length) { try { add(store?.m_mapAppOverview); } catch { /* none */ } }
+  try { add(store?.m_mapAppOverview); } catch { /* none */ }
   return values;
 }
 

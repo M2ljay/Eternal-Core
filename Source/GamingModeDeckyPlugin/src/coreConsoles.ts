@@ -119,8 +119,36 @@ export function consoleCards(collections: unknown, slugs: ReadonlySet<string> = 
   }).sort((a, b) => (b.lastPlayed > 0 ? 1 : 0) - (a.lastPlayed > 0 ? 1 : 0) || b.lastPlayed - a.lastPlayed || a.name.localeCompare(b.name));
 }
 
-// Steam's route for a collection (the Library's own collection page).
-export const collectionRoute = (id: string) => `/library/collection/${encodeURIComponent(id)}`;
+// Steam's route for a collection (the Library's own collection page). 3.3.11 (TV: A on a console opened the Library
+// on All Games): the route is Steam's own, read from Steam's route builders when they can be found (setCollectionRoutes,
+// coreHomeScreen.tsx); the fixed form is only the fallback.
+export const COLLECTION_ROUTE_FALLBACK = (id: string) => `/library/collection/${encodeURIComponent(id)}`;
+let routeBuilders: Array<(id: string) => unknown> = [];
+export function setCollectionRoutes(builders: Array<(id: string) => unknown>) { routeBuilders = Array.isArray(builders) ? builders.slice(0, 8) : []; }
+// The first builder that answers a path naming the collection: absolute, holding "collection" and the id, no scheme.
+export function collectionRouteFrom(builders: Array<(id: string) => unknown>, id: string): string | undefined {
+  const plain = String(id ?? "");
+  if (!plain) return undefined;
+  const answers: string[] = [];
+  for (const build of builders) {
+    let route: unknown;
+    try { route = build(plain); } catch { continue; }
+    if (typeof route !== "string" || !route.startsWith("/") || route.includes("://") || !/collection/i.test(route)) continue;
+    if (!route.includes(plain) && !route.includes(encodeURIComponent(plain))) continue;
+    answers.push(route);
+  }
+  // A Library route first (the gamepad UI's), then any other.
+  return answers.find(route => route.startsWith("/library/")) ?? answers[0];
+}
+export const collectionRoute = (id: string) => collectionRouteFrom(routeBuilders, id) ?? COLLECTION_ROUTE_FALLBACK(id);
+// Whether a function looks like one of Steam's route builders for a collection: short, one argument, its source
+// building a path with "collection" in it. Only such functions are ever called.
+export function looksLikeCollectionRoute(fn: unknown): fn is (id: string) => unknown {
+  if (typeof fn !== "function" || fn.length !== 1) return false;
+  let source = "";
+  try { source = Function.prototype.toString.call(fn); } catch { return false; }
+  return source.length < 240 && /["'`]\/[^"'`]*collection/i.test(source) && !/\b(fetch|XMLHttpRequest|SteamClient|Navigate|window|document)\b/.test(source);
+}
 
 // What the backend answers (get_colorgrade_pack): the slugs it has, and per slug the white logo as a data URL.
 export type ColorGradePack = { ok: boolean; slugs: string[]; logos: Record<string, string>; families?: Record<string, string>; imported?: boolean; errors?: string[] };

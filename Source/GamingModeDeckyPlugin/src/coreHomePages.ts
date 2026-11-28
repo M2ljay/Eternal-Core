@@ -43,10 +43,15 @@ export function pageForButton(current: HomePage, button: unknown): HomePage | un
 // proportions: the focused tile 29% of the height (about 219 px on the TV), the others 25%, sitting 2.6% above the
 // footer (28 px on the board). Games are portrait (2:3), consoles landscape (16:9). The focused tile lifts 10 px on the
 // board (7 px on the TV); the others are dimmed to 82%.
+// 3.3.11 (TV: screen two's tab names were cut off by the footer): screen one ends `tabsPx` above the footer, so on
+// screen one exactly screen two's tab names show, right above the footer. The row sits 1.6% above the tab names and is
+// slightly smaller (focused 27%, others 23.5%).
 export const HOME_ROW = {
-  gameFocusedVh: 28.9, gameVh: 25.2, consoleFocusedVh: 20.8, consoleVh: 17.7,
-  gapVw: 1.15, insetVw: 3.33, aboveFooterVh: 2.6, footerPx: 42, liftPx: 7, dim: 0.82,
+  gameFocusedVh: 27, gameVh: 23.5, consoleFocusedVh: 19.5, consoleVh: 16.5,
+  gapVw: 1.15, insetVw: 3.33, aboveFooterVh: 1.6, footerPx: 42, tabsPx: 58, liftPx: 7, dim: 0.82,
 } as const;
+// Screen one's height is the screen less this (the footer and screen two's tab names).
+export const HOME_SCREEN_CUT_PX = HOME_ROW.footerPx + HOME_ROW.tabsPx;
 
 // Px at a viewport, for the docs and tests (the CSS uses the vh/vw values directly).
 export function rowSizes(width: number, height: number) {
@@ -56,7 +61,7 @@ export function rowSizes(width: number, height: number) {
   return {
     game: portrait(vh(HOME_ROW.gameVh)), gameFocused: portrait(vh(HOME_ROW.gameFocusedVh)),
     console: landscape(vh(HOME_ROW.consoleVh)), consoleFocused: landscape(vh(HOME_ROW.consoleFocusedVh)),
-    gap: vw(HOME_ROW.gapVw), inset: vw(HOME_ROW.insetVw), bottom: HOME_ROW.footerPx + vh(HOME_ROW.aboveFooterVh),
+    gap: vw(HOME_ROW.gapVw), inset: vw(HOME_ROW.insetVw), bottom: HOME_SCREEN_CUT_PX + vh(HOME_ROW.aboveFooterVh),
   };
 }
 
@@ -127,3 +132,32 @@ export function consolePicks<P extends { label?: string; title?: string }>(picks
 let iconSource: () => any = () => undefined;
 export function setHomeIconSource(source: () => any) { iconSource = source; }
 export const homeIconSet = () => { try { return iconSource(); } catch { return undefined; } };
+
+// 3.3.11: the Home row holds games only. Steam's app types: 1 game, 8 demo, 32 mod are kept; tools (SteamVR, the
+// Proton runtimes), applications, videos, music and the rest go. A non-Steam shortcut has no type of its own, so a
+// launcher, an emulator front end or another app is told by its name (the list below, whole words, any case). VR
+// games are games (Beat Saber stays). An app without an overview is kept: Steam handed it to the row.
+export const HOME_GAME_TYPES = new Set([1, 8, 32]);
+export const HOME_SHORTCUT_TYPE = 1073741824;
+export const HOME_NOT_GAMES = [
+  "steamvr", "steam link", "steamworks common redistributables", "proton", "steam linux runtime",
+  "playnite", "ea app", "ea desktop", "origin", "ubisoft connect", "uplay", "epic games launcher", "epic games", "battle.net", "gog galaxy",
+  "xbox", "xbox app", "microsoft store", "amazon games", "itch", "heroic", "lutris", "launchbox", "big box", "es-de", "emulationstation",
+  "retroarch", "retrodeck", "emudeck", "steam rom manager", "pegasus", "dolphin", "pcsx2", "rpcs3", "duckstation", "ppsspp", "cemu", "yuzu",
+  "ryujinx", "citra", "azahar", "xemu", "xenia", "melonds", "mgba", "vita3k", "eden", "citron", "shadps4", "flycast", "redream",
+  "moonlight", "chiaki", "parsec", "sunshine", "chrome", "google chrome", "firefox", "microsoft edge", "edge", "kodi", "plex", "jellyfin",
+  "spotify", "discord", "youtube", "netflix", "twitch", "obs studio", "decky", "playhub", "core", "gaming mode", "desktop", "explorer",
+] as const;
+const notGameNames = new Set<string>(HOME_NOT_GAMES);
+const plainName = (value: unknown) => String(value ?? "").toLowerCase().replace(/[™®©]/g, "").replace(/[^a-z0-9.+\- ]+/g, " ").replace(/\s+/g, " ").trim();
+export function isHomeGame(overview: any): boolean {
+  if (!overview || typeof overview !== "object") return true;
+  const type = Number(overview.app_type ?? overview.eAppType);
+  const name = plainName(overview.display_name ?? overview.localized_name ?? overview.strDisplayName ?? overview.name);
+  if (type === HOME_SHORTCUT_TYPE || (!Number.isFinite(type) && Number(overview.appid) >= 0x80000000)) return !notGameNames.has(name);
+  if (Number.isFinite(type) && type > 0) return HOME_GAME_TYPES.has(type);
+  return !notGameNames.has(name);
+}
+export function homeGames(appids: number[], overviewOf: (appid: number) => any): number[] {
+  return appids.filter(appid => { let overview: any; try { overview = overviewOf(appid); } catch { overview = undefined; } return isHomeGame(overview); });
+}

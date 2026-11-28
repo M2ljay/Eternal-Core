@@ -23,6 +23,7 @@ import { homePage, setHomeIconSource, subscribeHomePage } from "./coreHomePages"
 export const FAVORITE_TILE = { across: 8, gap: 20 } as const;
 import { clubHomeTab } from "./club";
 import { favoriteArt, favoriteLayers } from "./coreFavoriteArt";
+import { gameMenuProps } from "./coreGameMenu";
 
 const { Focusable, Navigation } = DFL as any;
 
@@ -40,7 +41,7 @@ export function setCoreHomeIcons(source: () => CoreIconSet | undefined) { iconSe
 export const coreHomeIcons = () => iconSet();
 
 const css = `
-.core-home{padding:8px 0 32px;color:#E6EAEE;min-width:0}
+.core-home{padding:50px 0 32px;color:#E6EAEE;min-width:0}
 .core-home h2{margin:0 0 6px;font-size:30px;font-weight:600;letter-spacing:-.01em;color:#FFFFFF}
 .core-home .core-home-line{font-size:16px;color:#C9D1D9;margin:0 0 18px}
 .core-home .core-home-label{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C9D1D9;margin:22px 0 12px}
@@ -92,7 +93,7 @@ function FavoriteTile({ app }: { app: HomeApp }) {
   const fail = (kind: "portrait" | "hero" | "logo") => () => setFailed(prior => ({ ...prior, [kind]: prior[kind] + 1 }));
   const layers = favoriteLayers(art, failed);
   const open = () => { try { Navigation?.Navigate?.(`/library/app/${app.appid}`); } catch { /* Stay on Home. */ } };
-  return <Focusable className="core-favorite" focusable={true} aria-label={app.name} onActivate={open} onClick={open}>
+  return <Focusable className="core-favorite" focusable={true} aria-label={app.name} onActivate={open} onClick={open} {...gameMenuProps(app.appid)}>
     {layers.kind === "portrait"
       ? <img key={layers.src} alt="" loading="lazy" src={layers.src} onError={fail("portrait")} />
       : <>

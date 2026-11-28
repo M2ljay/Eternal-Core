@@ -13,7 +13,7 @@
 
 import {
   CORE_UI_LIVE_ATTRIBUTE, buildCoreUiCss, findCoreUiMapsDetailed, CORE_UI_ATTRIBUTE, CORE_UI_HOST_ATTRIBUTE, CORE_UI_ORB_ID, CORE_UI_STARS_ATTRIBUTE, CORE_UI_STYLE_ID,
-  CORE_UI_CHROME_ATTRIBUTE, CORE_UI_CLEAR_ATTRIBUTE, CORE_MENU_LOGO_BAND, CORE_UI_HEADER_ATTRIBUTE, headerHidden,
+  CORE_UI_CHROME_ATTRIBUTE, CORE_UI_CLEAR_ATTRIBUTE, CORE_MENU_LOGO_BAND, CORE_UI_HEADER_ATTRIBUTE, headerHidden, CORE_QAM_VISIBLE_ATTRIBUTE, CORE_QAM_VISIBLE_VAR,
   type CoreUiHost, type CoreUiSheet,
 } from "./coreUiStyles";
 import { InlineEdits, chromeState, clearOpaqueLayers, keepBelowLogo, type View } from "./coreUiDom";
@@ -22,8 +22,9 @@ import { sharedStarfield, STARFIELD_FPS, type Starfield } from "./coreStarfield"
 import { coreUiSetting, type CoreUiSetting } from "./coreUiSetting";
 import { pinControllerPrompts, promptsMemory } from "./coreInputPrompts";
 import { browserViewDocuments, invalidateOnboardingBrowserViewOwners } from "./onboardingAnchors";
-import { installQamRail } from "./coreQamRail";
+import { installQamRail, measureQamVisible } from "./coreQamRail";
 import { backToScreenOne } from "./coreHomePages";
+import { relabelContextMenus } from "./coreLabels";
 
 function storage(): Storage | undefined {
   try { return typeof localStorage === "undefined" ? undefined : localStorage; } catch { return undefined; }
@@ -103,6 +104,7 @@ export function createCoreUi(deps: CoreUiDeps) {
   const fullHeight = createFullHeight(edits);
   const chromes = new Set<Element>();
   const observers = new Map<Document, { disconnect(): void }>();
+  let lastDom: CoreUiSheet["dom"] = {};
   const focusWatch = new Map<Document, (event: any) => void>();
   // 3.3.10: per document, the scroll listener and the page scroller it last saw (the top bar hides past screen one).
   const scrollWatch = new Map<Document, { handler: (event: any) => void; scroller?: Element; hidden: boolean }>();
@@ -380,6 +382,45 @@ export function createCoreUi(deps: CoreUiDeps) {
     } catch { railWatch.set(doc, () => {}); }
   }
 
+  // 3.3.11: the Quick Access Menu takes the width of the part of its window that is on screen, so the rail (the
+  // reversed row's last item) sits at the visible right edge (coreQamRail.ts, measureQamVisible).
+  const qamSized = new Set<HTMLElement>();
+  function sizeQam(docs: Document[], dom: CoreUiSheet["dom"]) {
+    if (!dom.qamMenu) return;
+    const menus: Array<{ doc: Document; element: HTMLElement }> = [];
+    for (const doc of docs) {
+      try { for (const element of Array.from(doc.querySelectorAll<HTMLElement>(dom.qamMenu)).slice(0, 2)) menus.push({ doc, element }); } catch { /* Next document. */ }
+    }
+    let placeholderLeft: number | undefined, hostWidth: number | undefined;
+    if (dom.qamPlaceholder) {
+      for (const doc of docs) {
+        if (menus.some(menu => menu.doc === doc)) continue;
+        try {
+          const width = Number(doc.defaultView?.innerWidth) || 0;
+          const holder = doc.querySelector(dom.qamPlaceholder);
+          const rect = holder?.getBoundingClientRect();
+          if (rect && rect.width > 0 && width > rect.left) { placeholderLeft = rect.left; hostWidth = width; break; }
+        } catch { /* Next document. */ }
+      }
+    }
+    for (const { doc, element } of menus) {
+      try {
+        const view = doc.defaultView as any;
+        const full = Number(view?.innerWidth) || 0;
+        const visible = measureQamVisible({ placeholderLeft, hostWidth, screenX: Number(view?.screenX), screenWidth: Number(view?.screen?.width), full });
+        if (visible && visible < full) {
+          if (element.style.getPropertyValue(CORE_QAM_VISIBLE_VAR) !== `${visible}px`) element.style.setProperty(CORE_QAM_VISIBLE_VAR, `${visible}px`);
+          if (element.getAttribute(CORE_QAM_VISIBLE_ATTRIBUTE) !== "1") element.setAttribute(CORE_QAM_VISIBLE_ATTRIBUTE, "1");
+          qamSized.add(element);
+        } else unsizeQam(element);
+      } catch { /* Left as Steam lays it out. */ }
+    }
+  }
+  function unsizeQam(element: HTMLElement) {
+    try { element.removeAttribute(CORE_QAM_VISIBLE_ATTRIBUTE); element.style.removeProperty(CORE_QAM_VISIBLE_VAR); } catch {}
+    qamSized.delete(element);
+  }
+
   // Removals (a route change, a page closing) are swept at once instead of on the next one-second sync.
   function observe(doc: Document) {
     if (observers.has(doc)) return;
@@ -387,6 +428,8 @@ export function createCoreUi(deps: CoreUiDeps) {
     if (typeof Observer !== "function" || !doc.body) return;
     try {
       const observer = new Observer((records: any[]) => {
+        // 3.3.11: a context menu that just opened shows Core's names at once, not after the next sync.
+        if (lastDom.contextMenu && records.some(record => record?.addedNodes?.length)) relabelContextMenus(doc, lastDom.contextMenu);
         if (!surfaces.size) return;
         if (records.some(record => record?.removedNodes?.length)) sweep();
       });
@@ -628,6 +671,8 @@ export function createCoreUi(deps: CoreUiDeps) {
         observe(doc);
         watchGameView(doc, current.dom ?? {});
         const dom = current.dom ?? {};
+        lastDom = dom;
+        relabelContextMenus(doc, dom.contextMenu);
         tagChrome(doc, dom);
         watchScroll(doc, dom);
         watchHomeScreens(doc, dom);
@@ -637,6 +682,7 @@ export function createCoreUi(deps: CoreUiDeps) {
         placeOrb(doc, current.clock);
       } catch { /* A Steam popup may close while it is being styled. */ }
     }
+    try { sizeQam(docs, current.dom ?? {}); } catch { /* Quick Access keeps Steam's width. */ }
     sweep(docs);
     const counts: Record<string, number> = {};
     for (const surface of surfaces.values()) counts[surface.host.id] = (counts[surface.host.id] ?? 0) + 1;
@@ -670,6 +716,7 @@ export function createCoreUi(deps: CoreUiDeps) {
     for (const stop of homeWatch.values()) { try { stop(); } catch {} }
     homeWatch.clear();
     try { fullHeight.releaseAll(); } catch {}
+    for (const element of [...qamSized]) unsizeQam(element);
     edits.restoreAll();
     for (const element of chromes) { try { element.removeAttribute(CORE_UI_CHROME_ATTRIBUTE); element.removeAttribute(CORE_UI_HEADER_ATTRIBUTE); } catch {} }
     chromes.clear();

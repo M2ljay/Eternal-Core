@@ -84,3 +84,26 @@ export function installQamRail(doc: Document, select: () => QamRailSelectors): (
   try { doc.addEventListener("vgp_onbuttondown", handler, true); } catch { return () => {}; }
   return () => { try { doc.removeEventListener("vgp_onbuttondown", handler, true); } catch { /* Gone with its window. */ } };
 }
+
+// 3.3.11: how much of the Quick Access window is on screen. Steam's Quick Access is a window of its own, wider than the
+// part of it the user sees (855 px, about 350 px on screen on the TV), so a rail at the window's right edge is off
+// screen. Two ways to tell, in order:
+// - `placeholder`: the main window's Quick Access placeholder (left edge, in the main window's px) and that window's
+//   width: the panel shows from its left edge to the window's right edge;
+// - `window`: the Quick Access window's own screenX, width and the screen's width.
+// Returns the visible width in px, at most `full` (the Quick Access window's width), or undefined when neither is sane.
+export const QAM_MIN_VISIBLE = 160;
+export function measureQamVisible(input: { placeholderLeft?: number; hostWidth?: number; screenX?: number; screenWidth?: number; full: number }): number | undefined {
+  const full = Number(input.full) || 0;
+  if (full < QAM_MIN_VISIBLE) return undefined;
+  const sane = (value: number) => Number.isFinite(value) && value >= QAM_MIN_VISIBLE ? Math.round(Math.min(value, full)) : undefined;
+  const { placeholderLeft, hostWidth, screenX, screenWidth } = input;
+  if (Number.isFinite(placeholderLeft) && Number.isFinite(hostWidth) && (hostWidth as number) > (placeholderLeft as number) && (placeholderLeft as number) >= 0) {
+    const fromPlaceholder = sane((hostWidth as number) - (placeholderLeft as number));
+    if (fromPlaceholder) return fromPlaceholder;
+  }
+  if (Number.isFinite(screenX) && Number.isFinite(screenWidth) && (screenWidth as number) > 1 && (screenX as number) >= 0 && (screenX as number) < (screenWidth as number)) {
+    return sane((screenWidth as number) - (screenX as number));
+  }
+  return undefined;
+}

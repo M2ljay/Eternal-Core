@@ -12,7 +12,8 @@
 // - Never: text beyond short labels (at most 30 characters, and none at all on the grid and Home, where they would be
 //   game names), input values, URLs with queries, or anything the user typed.
 // - Where: the plugin backend writes it (main.py, save_core_ui_snapshot) to
-//   %APPDATA%\GamingMode\diagnostics\core-ui-snapshot.json, overwritten each time, at most SNAPSHOT_MAX_BYTES.
+//   %APPDATA%\GamingMode\diagnostics\core-ui-snapshot-YYYYMMDD-HHMMSS.json, one file per capture (3.3.11; the newest
+//   20 kept), at most SNAPSHOT_MAX_BYTES each.
 //
 // Pure apart from what it is handed (documents, a view, the stylesheet's facts): tests drive it with fake DOMs.
 
@@ -44,6 +45,11 @@ export const SNAPSHOT_SURFACES: SnapshotSurface[] = [
   { id: "home", targets: ["home"], labels: false },
   { id: "footer", targets: ["footer"], labels: true },
   { id: "top-bar", targets: ["header"], labels: false },
+  // 3.3.11: Steam's game page (no labels: game names and the user's activity).
+  { id: "game-hero", targets: ["gameHeader"], labels: false },
+  { id: "game-playbar", targets: ["gamePlayBar"], labels: false },
+  { id: "game-screen-two", targets: ["gameScreenTwo"], labels: false },
+  { id: "game-section", targets: ["gameSection"], labels: false },
   // 3.3.7, a host from another plugin: The Collector's ROM game page (no labels: game names).
   { id: "collector-rom-page", targets: ["collectorRomPage"], labels: false },
 ];
