@@ -108,6 +108,66 @@ once per change; the snapshot shows which source each tab used.
   yet), and Jarvis's orb (slow opacity pulse, still under reduced motion) with **Talk to Jarvis**. Inside its own error
   boundary; the 3.3.3 lines are the fallback.
 
+## 3.3.8: how class maps are found (Quick Access was unstyled)
+
+The 3.3.7 snapshot from the TV showed `mapRoutes.quickaccess = "missing"` and `mapRoutes.gamepaddialog = "missing"`, so
+every Quick Access rule was skipped (`qam-panel`, `qam-clear`, `qam-title`, `qam-tabs`, `qam-tab-selected`,
+`qam-rail-icons`, `qam-tabs-footer`, `qam-footer-shadow`, `qam-controls`). Each matcher hung on one key Steam has since
+dropped: `TabContentColumn` (Quick Access) and `FieldChildren` (dialog fields, the rows of Decky's plugin list).
+
+Now every map is recognised by a **signature** (`CORE_UI_MAP_SIGNATURES` in `src/coreUiStyles.ts`): `all` (at most three
+keys Steam has carried for years), `any` groups (at least one key of each; a renamed or dropped key has siblings that
+stand in for it) and `none` (keys that rule out a lookalike). Rules that used to need one key take `needsAny`:
+`qam-clear` needs any of `TabContentColumn`, `AllTabContents`, `ContentTransition`, `TabGroupPanel`; `qam-panel` any of
+`Menu`, `QuickAccessMenu`, `Container`; `qam-tabs` any of `Tabs`, `TabsWithFooter`, `TabList` (and clears the new
+`TabList` and `BottomTabs`). The Quick Access row targets also resolve under `QuickAccessMenu` and `Container`, and
+`library-page` / `library-grid` no longer write a selector for an optional key that is missing.
+
+When a map is still not found, Core walks every class map once and records the closest one (the share of the
+signature's keys it has, which keys it lacks, and its key names only, never hashed classes) in the snapshot under
+`coreUi.mapCandidates`, and logs `[Core UI] class map <name> not found; closest module (<n>%) lacks <keys>` once. The
+next fix is one look at the snapshot.
+
+The real key lists (Steam client, November 2026, read through Steam's CEF debugger) are test fixtures in
+`tests/fixtures/steam-class-maps.json`, and `tests/coreUiMatchers.test.mjs` runs every matcher against them:
+
+- Quick Access, webpack module 34544: `PopupBody, ViewPlaceholder, FullHeight, Expanded, QuickAccessMenuEmbedded,
+  OSKActive, HeaderAndFooterVisible, IMEVisible, QuickAccessMenuEmbeddedContainer, Open, Title, Container, VR, OOBE,
+  QuickAccessMenu, HeaderContainer, Menu, BottomTabs, TabList, Tabs, TabsWithFooter, Tab, Selected,
+  ItemFocusAnim-darkerGrey, ItemFocusAnim-darkerGrey-nocolor, ItemFocusAnim-translucent-white-10, VoiceTab,
+  ItemFocusAnim-green, Blocked, TabPanelHidden, FriendsTitle, FriendsListTabPanel, PanelOuterNav, PanelExitAnchor,
+  TabGroupPanel, FooterBoxShadow, Footer, AllTabContents, ContentTransition, ActiveTab, Up, Enter, EnterActive, Exit,
+  ExitActive, Down, KeyboardButton` (no `TabContentColumn`).
+- Dialog fields, webpack module 2053 (the keys read; the module has more): `Field, FieldLabel, FieldDescription,
+  FieldChildrenInner, FieldChildrenWithIcon, FieldLeftColumn, FieldRightColumn, Button, Toggle, ToggleRail,
+  ToggleSwitch, DropDownControlButtonContents, QuickAccess-Menu` (no `FieldChildren`, no `DropDownControlButton`).
+
+### Home's tab row (3.3.8)
+
+Home's tabs (Jarvis brief, Consoles, Club, On this day) are Steam's tabbed page, the same `tabbedpage` classes as the
+Library, but the `library-tabs` rule is scoped to the Library, so Steam's pill (`rgba(255,255,255,.15)`, 64px radius)
+still showed. The `home-tabs` rule gives them the Library's single marker (transparent tabs, steel text, one short
+crimson underline on the open tab, no pill) over a clear row, so Home's stars show through it. Its scope is Steam's
+tabbed page that holds Core Home's content: `CoreHomeTabs` (and `HistoryTabs` for On this day) wrap each tab's content
+in `<div data-core-home-tab style="display: contents">`, and the rule targets
+`{tabbedpage.GamepadTabbedPage}:has([data-core-home-tab])` (with `{gamepadui.BasicHome}:has(...)` as the fallback). The
+Library's and a game page's tab bars are not touched.
+
+### The TV's viewport (3.3.8)
+
+Big Picture on the 4K TV runs at **1348 x 758 CSS px with devicePixelRatio 2.85**, not 1920 x 1080. Sizes Core sets in
+CSS px were checked against it:
+
+- Starfield density: `STARFIELD_AREA_PER_STAR` was chosen for a 400 x 1080 menu; at 758 tall the Steam menu drew about
+  110 stars and a full page about 380. Now 1900 CSS px² per star: the menu (about 400 x 758) keeps its 160 and a full
+  page reaches the maximum (420).
+- Rail icons (30px in Steam's 48-56px rail cell), Library tab icons (24px), the tab marker (28 x 3px), the menu logo
+  band (80px, 44px mark) and Jarvis's orb (12px): kept. They sit inside Steam's own CSS-px layout, which Steam already
+  sizes for this viewport (close to the Steam Deck's 1280 x 800), so they keep their proportion to Steam's elements.
+- The Starfield canvas is sized in CSS px, so at devicePixelRatio 2.85 its stars are upscaled (soft). Left as is for
+  now; a device-pixel canvas is a possible follow-up.
+- Jarvis's listening pill is drawn by the Gaming Mode agent (native, Windows DPI), not by Core UI's CSS.
+
 ## Phases
 
 | Phase | Scope | Status |
@@ -505,7 +565,8 @@ theme. Enhanced Library and Enhanced Collection are no longer needed: Core UI dr
 ## How it works
 
 - `src/coreUiStyles.ts`: finds Steam's class maps (main menu, Quick Access, Quick Access controls, footer, header,
-  dropdown, Big Picture context menu) by keys only that map has, and builds the stylesheet. A rule whose map or class
+  dropdown, Big Picture context menu, dialog fields and the phase 2 maps) by a signature of keys (3.3.8, above), and
+  builds the stylesheet. A rule whose map or class
   is missing on the running client is left out and logged once (`[Core UI] <rule>: Steam class map not found`); the
   rest still applies. No hashed class name is written in the source.
 - `src/coreUi.ts`: injects the one stylesheet into every Steam UI document (Big Picture and its popups), places the
@@ -532,6 +593,9 @@ builders, the Starfield's density, the brief's data, the legacy CSS Loader guard
 `tests/test_core_icons.py` (the icon folder), the 3.3.7 plugin host tests in `tests/coreUi.test.mjs` and
 `tests/coreUiSnapshot.test.mjs` (The Collector's page found by its class, the attribute on and off, the canvas only over
 the visible part, reduced motion, the snapshot's host list) and
+`tests/coreUiMatchers.test.mjs` (3.3.8: every matcher against the real key lists in `tests/fixtures/steam-class-maps.json`,
+no matcher hanging on one key, every Quick Access rule applying on today's client, the closest-candidate record, Home's
+tab row) and
 `tests/coreJarvisTab.test.mjs` (tap/hold split, opening and closing the Jarvis tab, the tab
 after Core's, the orb states, defaults, text).
 
@@ -618,3 +682,16 @@ Same setup, Core 3.3.7, The Collector with the Core game page (`collector-core-l
 2. Scroll down the page: the stars stay behind the whole visible black area and do not slide over the art.
 3. Core UI off (Quick Access > Core > Look): the page is plain black, with no stars; on again: the animated
    field is back. With reduced motion, the stars hold still.
+
+## TV checklist (3.3.8)
+
+Same setup, Core 3.3.8.
+
+1. Quick Access: black panel with stars, clear title strip, the rail clear with a thin gunmetal divider, the open tab
+   gunmetal (no grey-blue), Core's rail icons full size. Decky's plugin list: gunmetal rows, the crimson left bar on
+   focus. The snapshot's `coreUi.mapRoutes` shows `quickaccess` and `gamepaddialog` found, `coreUi.skipped` has no
+   `qam-*` rule, and `coreUi.mapCandidates` is empty.
+2. Home: the tab row (Jarvis brief / Consoles / Club / On this day) has no pill; steel labels, one short crimson
+   underline under the open tab, stars visible behind the row. Switch to On this day: still no pill.
+3. Library: tabs unchanged from 3.3.7 (black row, one marker). A game page's tabs keep Steam's look.
+4. The Steam menu has about as many stars as on a 1080p screen; full pages are denser than in 3.3.7.

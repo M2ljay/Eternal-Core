@@ -266,7 +266,8 @@ test("Quick Access rows, collection tiles and capsules", () => {
 });
 
 test("Starfield: denser on large pages, a few near stars, never brighter than the readable ceiling", () => {
-  assert.equal(starfield.starsForArea(400, 1080), 160, "the Steam menu keeps its stars");
+  assert.equal(starfield.starsForArea(400, 758), 160, "the Steam menu keeps its stars at the TV's 1348 x 758 viewport");
+  assert.equal(starfield.starsForArea(1348, 758), starfield.STARFIELD_MAX_COUNT, "a full page at the TV's viewport gets the maximum");
   assert.ok(starfield.starsForArea(1920, 1080) > 300, "a full page gets more");
   assert.equal(starfield.starsForArea(3840, 2160), starfield.STARFIELD_MAX_COUNT);
   assert.equal(starfield.starsForArea(100, 100), starfield.STARFIELD_MIN_COUNT);

@@ -24764,7 +24764,8 @@ function HistoryTabs({ native, getLocale }) {
         void loadHistorySettings().catch(error => console.warn('[Playhub History] settings unavailable', error)); }, []);
     if (!config.enabled)
         return native;
-    return _global_SP_REACT.cloneElement(native, { tabs: native.props.tabs.map((tab) => tab.id === 'Recommended' ? { ...tab, title: historyTitle(getLocale()), content: SP_JSX.jsx(DailyHistory, { getLocale: getLocale }) } : tab) });
+    // Eternal Core 3.3.8: the data-core-home-tab wrapper (no box) keeps Core UI's Home tab row scope on this tab too.
+    return _global_SP_REACT.cloneElement(native, { tabs: native.props.tabs.map((tab) => tab.id === 'Recommended' ? { ...tab, title: historyTitle(getLocale()), content: SP_JSX.jsx("div", { "data-core-home-tab": "Recommended", style: { display: 'contents' }, children: SP_JSX.jsx(DailyHistory, { getLocale: getLocale }) }) } : tab) });
 }
 function HomeHistorySettings({ locale }) {
     const config = _global_SP_REACT.useSyncExternalStore(subscribe$2, () => historyConfig);
@@ -25535,9 +25536,12 @@ const STARFIELD_COLOURS = { crimson: "215,38,61", steel: "201,209,217", white: "
 const STARFIELD_SPEED = 0.035;
 const STARFIELD_COUNT = 160;
 // 3.3.4 (TV: "stars are hard to see on full pages"): density follows the surface's area. A Steam-menu-sized panel
-// (about 400 x 1080) keeps its 160 stars; a full page gets proportionally more, up to STARFIELD_MAX_COUNT. The field
-// holds the maximum; a surface draws the first N (the seeded sequence, so the menu's stars are the same as before).
-const STARFIELD_AREA_PER_STAR = 2700;
+// keeps its 160 stars; a full page gets proportionally more, up to STARFIELD_MAX_COUNT. The field holds the maximum; a
+// surface draws the first N (the seeded sequence, so the menu's stars are the same as before).
+// 3.3.8: sized for the viewport Big Picture really has on the TV (1348 x 758 CSS px at devicePixelRatio 2.85, a 4K
+// set), not 1920 x 1080: a full-height menu is about 400 x 758 there (160 stars) and a full page reaches the maximum.
+// At 2700 (the 1080p figure) the menu drew about 110 and a full page about 380.
+const STARFIELD_AREA_PER_STAR = 1900;
 const STARFIELD_MIN_COUNT = 60;
 const STARFIELD_MAX_COUNT = 420;
 // One star in NEAR_EVERY is "near": larger and always at the readable ceiling, so a big page has a few stars that read
@@ -26969,7 +26973,9 @@ function CoreHomeTabs({ native, getLocale, render }) {
                 return { id: tab.id, title: typeof tab.label === "function" ? tab.label(locale) : tab.label, content, order: tab.order };
             }),
         ];
-        const next = composeHomeTabs(tabs, core);
+        // Each tab's content carries data-core-home-tab (display: contents, so no box), the Core UI stylesheet's scope for
+        // Home's tab row ("home-tabs" in coreUiStyles.ts): the Library's and a game page's tab bars stay out of it.
+        const next = composeHomeTabs(tabs, core).map(tab => ({ ...tab, content: SP_JSX.jsx("div", { "data-core-home-tab": String(tab.id), style: { display: "contents" }, children: tab.content }) }));
         const props = { tabs: next };
         if ("strActiveTab" in native.props)
             props.strActiveTab = activeHomeTab(native.props.strActiveTab, next);
@@ -67602,29 +67608,36 @@ const CORE_RING_MARK = "data:image/svg+xml," + encodeURIComponent(CORE_RING_MARK
 // The mark's reserved band at the top of the Steam menu: no row and no focus highlight is ever inside it.
 const CORE_MENU_LOGO_BAND = 80;
 const CORE_MENU_LOGO_SIZE = 44;
-// How each class map is recognised: keys only that map has (from Steam's readable module names, e.g.
-// mainmenu_ItemIcon, quickaccessmenu_TabGroupPanel). quickaccess matches @decky/ui's quickAccessMenuClasses.
-const CORE_UI_MAP_FILTERS = {
-    mainmenu: map => has(map, "ItemIcon") && has(map, "ItemLabel") && has(map, "ActiveDot") && has(map, "Menu"),
-    quickaccess: map => has(map, "TabGroupPanel") && has(map, "TabContentColumn") && has(map, "Tab") && has(map, "Title"),
-    controls: map => has(map, "PanelSection") && has(map, "PanelSectionTitle") && !has(map, "TabGroupPanel") && !has(map, "QuickAccessMenu"),
-    footer: map => has(map, "BasicFooter") && has(map, "QuickAccessFooter"),
-    header: map => has(map, "Header") && has(map, "HeaderDownloadContainer"),
-    dropdown: map => has(map, "DropDownControlButton") && !has(map, "GamepadDialogContent"),
+const CORE_UI_MAP_SIGNATURES = {
+    mainmenu: { all: ["Menu", "ItemIcon", "ItemLabel"], any: [["ActiveDot", "FooterBoxShadow"]] },
+    // @decky/ui's quickAccessMenuClasses (webpack 34544 on the November 2026 client: no TabContentColumn any more).
+    quickaccess: { all: ["TabGroupPanel", "Tab", "Title"],
+        any: [["Tabs", "TabsWithFooter", "BottomTabs", "TabList"], ["TabContentColumn", "AllTabContents", "ContentTransition"], ["QuickAccessMenu", "Menu", "Container"]] },
+    controls: { all: ["PanelSection"], any: [["PanelSectionTitle", "PanelSectionRow"]], none: ["TabGroupPanel", "QuickAccessMenu"] },
+    footer: { all: ["BasicFooter"], any: [["QuickAccessFooter", "Opaque"]] },
+    header: { all: ["Header"], any: [["HeaderDownloadContainer", "HeaderOpaque"]] },
+    dropdown: { all: ["DropDownControlButton"], none: ["GamepadDialogContent"] },
     // Big Picture's context menus (gamepadcontextmenu_*), not the desktop client's (no BasicContextMenuHeader).
-    contextmenu: map => has(map, "contextMenuContents") && has(map, "contextMenuItem") && has(map, "BasicContextMenuHeader") && has(map, "Focused"),
+    contextmenu: { all: ["contextMenuContents", "contextMenuItem", "BasicContextMenuHeader"], any: [["Focused", "active"]] },
     // Phase 2 (readable names from the retired Core CSS Loader theme and @decky/ui's static class maps).
-    gamepadui: map => has(map, "BasicHome") && has(map, "MainNavMenuAnchor") && has(map, "OpaqueBackground"),
-    tabbedpage: map => has(map, "TabRow") && has(map, "TabTitle") && has(map, "TabHeaderRowWrapper") && has(map, "Tab"),
-    library: map => has(map, "GamepadLibrary") && has(map, "CollectionHeader"),
-    appgrid: map => has(map, "AppGridSectionLabel") && has(map, "LibraryImageBackgroundGlow"),
-    portrait: map => has(map, "LibraryItemBox") && !has(map, "TabRow"),
-    recentgames: map => has(map, "RecentGamesContainer") && has(map, "RecentGamesBackgroundContainer"),
-    carousel: map => has(map, "CarouselCapsuleBackgroundGlow"),
-    home: map => has(map, "TabbedContent") && !has(map, "TabRow") && !has(map, "Tab") && !has(map, "BasicHome"),
+    gamepadui: { all: ["BasicHome"], any: [["MainNavMenuAnchor", "OpaqueBackground"]] },
+    tabbedpage: { all: ["TabRow", "Tab", "TabTitle"], any: [["TabHeaderRowWrapper", "GamepadTabbedPage"]] },
+    library: { all: ["GamepadLibrary"] },
+    appgrid: { all: ["AppGridSectionLabel"], any: [["LibraryImageBackgroundGlow", "AppGrid", "LibraryAppGrid"]] },
+    portrait: { all: ["LibraryItemBox"], none: ["TabRow"] },
+    recentgames: { all: ["RecentGamesContainer"], any: [["RecentGamesBackgroundContainer", "RecentGamesBackgroundImages"]] },
+    carousel: { all: ["CarouselCapsuleBackgroundGlow"] },
+    home: { all: ["TabbedContent"], none: ["TabRow", "Tab", "BasicHome"] },
     // 3.3.4: Steam's dialog fields (@decky/ui's gamepadDialogClasses): the rows ButtonItem draws, Decky's plugin list too.
-    gamepaddialog: map => has(map, "Field") && has(map, "FieldLabel") && has(map, "FieldChildren") && has(map, "FieldDescription"),
+    // Webpack 2053 on the November 2026 client: no FieldChildren (FieldChildrenInner / FieldChildrenWithIcon instead).
+    gamepaddialog: { all: ["Field", "FieldLabel"],
+        any: [["FieldChildren", "FieldChildrenInner", "FieldChildrenWithIcon"], ["FieldDescription", "FieldLeftColumn", "FieldRightColumn"]] },
 };
+function matchesSignature(map, signature) {
+    return signature.all.every(key => has(map, key)) && (signature.any ?? []).every(group => group.some(key => has(map, key)))
+        && !(signature.none ?? []).some(key => has(map, key));
+}
+const CORE_UI_MAP_FILTERS = Object.fromEntries(Object.keys(CORE_UI_MAP_SIGNATURES).map(name => [name, (map) => matchesSignature(map, CORE_UI_MAP_SIGNATURES[name])]));
 function has(map, key) {
     try {
         return !!map && typeof map === "object" && typeof map[key] === "string" && map[key].length > 0;
@@ -67662,15 +67675,64 @@ function findCoreUiMapRoute(ui, filter) {
     }
     return { route: "missing" };
 }
-function findCoreUiMapsDetailed(ui) {
+const CORE_UI_CANDIDATE_KEYS = 120;
+function signatureKeys(signature) {
+    return [...new Set([...signature.all, ...(signature.any ?? []).flat()])];
+}
+function looksLikeClassMap(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+        return false;
+    const entries = attempt(() => Object.entries(value)) ?? [];
+    return entries.length > 0 && entries.length <= 600 && entries.every(([, v]) => typeof v === "string");
+}
+function scoreCandidate(map, signature) {
+    if (!looksLikeClassMap(map))
+        return undefined;
+    const wanted = signatureKeys(signature);
+    const matched = wanted.filter(key => has(map, key));
+    if (!matched.length)
+        return undefined;
+    const keys = (attempt(() => Object.keys(map)) ?? []).slice(0, CORE_UI_CANDIDATE_KEYS);
+    return { score: Math.round(matched.length / wanted.length * 100) / 100, matched, missing: wanted.filter(key => !matched.includes(key)), keys };
+}
+// One walk over every class map the loader exposes (the filter never accepts, so the search visits them all), scoring
+// each against every missing signature.
+function closestCoreUiCandidates(ui, names) {
+    const best = {};
+    if (!names.length)
+        return best;
+    const seen = new Set();
+    const visit = (value) => {
+        if (!value || typeof value !== "object" || seen.has(value))
+            return false;
+        seen.add(value);
+        for (const name of names) {
+            const found = attempt(() => scoreCandidate(value, CORE_UI_MAP_SIGNATURES[name]));
+            if (found && (!best[name] || found.score > best[name].score))
+                best[name] = found;
+        }
+        return false;
+    };
+    attempt(() => findClassModule(ui, visit));
+    if (typeof ui?.findVar === "function")
+        attempt(() => ui.findVar(visit));
+    if (typeof ui?.findModuleScopeByVar === "function")
+        attempt(() => ui.findModuleScopeByVar((value) => { visit(value); return false; }));
+    return best;
+}
+function findCoreUiMapsDetailed(ui, options = {}) {
     const maps = {}, routes = {};
+    const missing = [];
     for (const name of Object.keys(CORE_UI_MAP_FILTERS)) {
         const found = findCoreUiMapRoute(ui, CORE_UI_MAP_FILTERS[name]);
         routes[name] = found.route;
         if (found.map)
             maps[name] = found.map;
+        else
+            missing.push(name);
     }
-    return { maps, routes };
+    const candidates = options.candidates === false ? {} : closestCoreUiCandidates(ui, missing);
+    return { maps, routes, candidates };
 }
 const CLASS_NAME = /^-?[A-Za-z_][\w-]*$/;
 // 3.3.4: every target also carries an id-level boost, `:not(#core-ui-boost)` (no element has that id, so it matches
@@ -67700,14 +67762,17 @@ const CORE_UI_TARGETS = {
     menuItem: ["{mainmenu.Item}"],
     qamMenu: ["{quickaccess.Menu}"],
     qamPanel: ["{quickaccess.Container}", "{quickaccess.QuickAccessMenu}", "{quickaccess.ViewPlaceholder}"],
-    qamRail: ["{quickaccess.Tabs}", "{quickaccess.TabsWithFooter}"],
+    qamRail: ["{quickaccess.Tabs}", "{quickaccess.TabsWithFooter}", "{quickaccess.TabList}", "{quickaccess.BottomTabs}"],
     qamTab: ["{quickaccess.Tab}"],
     qamTabSelected: ["{quickaccess.Tab}{quickaccess.Selected}", '{quickaccess.Tab}[aria-selected="true"]', "{quickaccess.Tab}.Selected", "{quickaccess.Tab}.Active"],
     qamTitle: ["{quickaccess.Title}", "{quickaccess.HeaderContainer}"],
     qamContent: ["{quickaccess.TabContentColumn}", "{quickaccess.AllTabContents}", "{quickaccess.ContentTransition}"],
     // Decky's plugin list and every ButtonItem: Steam's dialog field rows and their DialogButton.
-    qamRowField: ["{quickaccess.Menu} {gamepaddialog.Field}"],
-    qamRowButton: ['{quickaccess.Menu} .DialogButton:not([style*="background"])', "{quickaccess.Menu} {dropdown.DropDownControlButton}"],
+    // 3.3.8: each also under QuickAccessMenu and Container, so one missing key never drops the rows.
+    qamRowField: ["{quickaccess.Menu} {gamepaddialog.Field}", "{quickaccess.QuickAccessMenu} {gamepaddialog.Field}", "{quickaccess.Container} {gamepaddialog.Field}"],
+    qamRowButton: ['{quickaccess.Menu} .DialogButton:not([style*="background"])', "{quickaccess.Menu} {dropdown.DropDownControlButton}",
+        '{quickaccess.QuickAccessMenu} .DialogButton:not([style*="background"])', "{quickaccess.QuickAccessMenu} {dropdown.DropDownControlButton}",
+        '{quickaccess.Container} .DialogButton:not([style*="background"])'],
     qamTitleButton: ["{quickaccess.Title} .DialogButton"],
     context: ["{contextmenu.contextMenuContents}"],
     home: ["{gamepadui.BasicHome}"],
@@ -67716,6 +67781,9 @@ const CORE_UI_TARGETS = {
     libraryTab: ["{tabbedpage.Tab}"],
     libraryTabSelected: ["{tabbedpage.Tab}{tabbedpage.Selected}", '{tabbedpage.Tab}[aria-selected="true"]'],
     libraryTabTitle: ["{tabbedpage.TabTitle}"],
+    // Home's tab row (3.3.8): Steam's tabbed page that holds Core Home's tab content (CoreHomeTabs marks each tab's
+    // content with data-core-home-tab), so the Library's and a game page's tab bars are not touched.
+    homeTabPage: ["{tabbedpage.GamepadTabbedPage}:has([data-core-home-tab])", "{gamepadui.BasicHome}:has([data-core-home-tab])"],
     libraryGrid: ["{library.GamepadLibrary} {appgrid.AppGrid}", "{library.GamepadLibrary} {appgrid.LibraryAppGrid}", "{library.GamepadLibrary}"],
     libraryCapsule: ["{library.GamepadLibrary} {portrait.LibraryItemBox}"],
     collectionTile: ['a[href*="/library/collection/"]', "[data-collection-id]"],
@@ -67817,16 +67885,17 @@ function rules(mark) {
         // Quick Access: one black panel with the Starfield behind everything. Which element is the real panel differs
         // between clients (Menu, QuickAccessMenu or Container): each is a candidate, the runtime picks the outermost one
         // that is panel-sized (CORE_UI_HOSTS) and only that one is painted black; the others go clear.
-        { id: "qam-panel", needs: [["quickaccess", "Menu"]], css: s => {
+        { id: "qam-panel", needs: [], needsAny: [["quickaccess", "Menu"], ["quickaccess", "QuickAccessMenu"], ["quickaccess", "Container"]], css: s => {
                 const candidates = ["Container", "QuickAccessMenu", "ViewPlaceholder"].filter(key => s("quickaccess", key) !== "")
                     .map(key => `${ROOT} ${s("quickaccess", key)}`);
-                return `${ROOT} ${s("quickaccess", "Menu")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` +
+                return (s("quickaccess", "Menu") ? `${ROOT} ${s("quickaccess", "Menu")}{${imp({ "background-color": C.black, "background-image": "none", "box-shadow": "none", "border-radius": SQUARE })}}` : "") +
                     (candidates.length ? `${candidates.join(",")}{${imp({ ...CLEAR, "backdrop-filter": "none", "border-radius": SQUARE })}}` +
                         `${candidates.map(sel => `${sel}[${CORE_UI_HOST_ATTRIBUTE}="1"]`).join(",")}{${imp({ "background-color": C.black, "background-image": "none" })}}` : "");
             } },
         // Everything over the stars is clear: the content column, plugin panels (Decky's and every plugin's own,
         // CSS Loader's included), and any large opaque layer the runtime finds inside the panel.
-        { id: "qam-clear", needs: [["quickaccess", "TabContentColumn"]], css: s => {
+        // 3.3.8: TabContentColumn is gone on the November 2026 client; any one of the content layers is enough.
+        { id: "qam-clear", needs: [], needsAny: [["quickaccess", "TabContentColumn"], ["quickaccess", "AllTabContents"], ["quickaccess", "ContentTransition"], ["quickaccess", "TabGroupPanel"]], css: s => {
                 const keys = ["TabContentColumn", "AllTabContents", "ContentTransition", "TabGroupPanel", "PanelSection", "PanelOuterNav", "PopupBody", "FriendsListTabPanel"];
                 const list = keys.filter(key => s("quickaccess", key) !== "").map(key => `${ROOT} ${s("quickaccess", key)}`);
                 if (s("controls", "PanelSection") !== "")
@@ -67843,7 +67912,10 @@ function rules(mark) {
             } },
         // The tab rail: clear over the panel's black and stars, a thin gunmetal divider; the open tab gunmetal (its
         // crimson bar is Core's own).
-        { id: "qam-tabs", needs: [["quickaccess", "Tabs"], ["quickaccess", "Tab"]], css: s => `${ROOT} ${s("quickaccess", "Tabs")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": `inset -1px 0 0 ${C.gunmetal}` })}}` +
+        // 3.3.8: the rail's inner list and bottom group (TabList, BottomTabs; new on the November 2026 client) go clear too.
+        { id: "qam-tabs", needs: [["quickaccess", "Tab"]], needsAny: [["quickaccess", "Tabs"], ["quickaccess", "TabsWithFooter"], ["quickaccess", "TabList"]], css: s => (s("quickaccess", "Tabs") ? `${ROOT} ${s("quickaccess", "Tabs")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": `inset -1px 0 0 ${C.gunmetal}` })}}` : "") +
+                (["TabList", "BottomTabs"].filter(key => s("quickaccess", key)).map(key => `${ROOT} ${s("quickaccess", key)}`).join(",") || `${ROOT} [data-core-ui-none]`) +
+                `{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
                 `${ROOT} ${s("quickaccess", "Tab")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
                 `${ROOT} ${s("quickaccess", "Tab")}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", filter: "none", "border-radius": SQUARE })}}` },
         // The open tab: gunmetal, never Steam's grey-blue gradient (TV photo, 3.3.3). Every way Steam may mark it is in the
@@ -67862,7 +67934,7 @@ function rules(mark) {
         // 3.3.4 (TV photo of Decky's main page): rows are gunmetal with steel text, a focused row raised gunmetal with the
         // square crimson left bar (never Steam's white); the title's Store / Settings buttons gunmetal with the same bar.
         // A button that sets its own background inline (Jarvis's crimson "listening" buttons) keeps it.
-        { id: "qam-controls", needs: [["quickaccess", "Menu"]], targets: ["qamRowButton"], css: (_s, t) => qamRowCss(t("qamRowButton"), t("qamRowField")) },
+        { id: "qam-controls", needs: [], targets: ["qamRowButton"], css: (_s, t) => qamRowCss(t("qamRowButton"), t("qamRowField")) },
         // Context menus and their submenus (a game's Options / "..." menu, Manage, and the menus the Steam menu and
         // Quick Access open). The Context board: black panel with a 1px gunmetal edge and 10px corners, 8px top and
         // bottom, 48px rows with a 22px inset and 16px text, a 13px hint-grey header, hairline gunmetal separators.
@@ -67910,9 +67982,9 @@ function rules(mark) {
         { id: "library-page", needs: [["library", "GamepadLibrary"]], css: s => {
                 const library = `${ROOT} ${s("library", "GamepadLibrary")}`;
                 return `${library}{${imp({ "background-color": C.black, "background-image": "none" })}}` +
-                    `${ROOT} ${s("library", "CollectionHeader")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}`;
+                    (s("library", "CollectionHeader") ? `${ROOT} ${s("library", "CollectionHeader")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` : "");
             } },
-        { id: "library-grid", needs: [["appgrid", "AppGridSectionLabel"]], css: s => `${ROOT} ${s("appgrid", "LibraryImageBackgroundGlow")}{${imp({ opacity: "0" })}}` +
+        { id: "library-grid", needs: [["appgrid", "AppGridSectionLabel"]], css: s => (s("appgrid", "LibraryImageBackgroundGlow") ? `${ROOT} ${s("appgrid", "LibraryImageBackgroundGlow")}{${imp({ opacity: "0" })}}` : "") +
                 `${ROOT} ${s("appgrid", "AppGridSectionLabel")}{${imp({ color: C.steel, "font-size": "12px", "letter-spacing": "0.1em", "text-transform": "uppercase" })}}` +
                 (s("appgrid", "Rule") ? `${ROOT} ${s("appgrid", "Rule")}{${imp({ "background-color": C.gunmetal, "background-image": "none", "border-color": C.gunmetal })}}` : "") },
         // Focused capsule (Home and the Library): a 3px crimson ring, no glow, lifted 6px (still under reduced motion).
@@ -67936,6 +68008,10 @@ function rules(mark) {
                 return libraryTabCss({ scopes, tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"),
                     row: t("libraryTabRow"), count: s("tabbedpage", "TabCount") || undefined });
             } },
+        // Home's tab row (3.3.8, TV: Steam's pill still showed on Jarvis brief / Consoles / Club / On this day): the same
+        // single marker as the Library, over a clear row so Home's stars show through it.
+        { id: "home-tabs", needs: [], targets: ["homeTabPage", "libraryTab"], css: (_s, t) => libraryTabCss({ scopes: t("homeTabPage").map(sel => `${ROOT} ${sel}`), tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"),
+                row: t("libraryTabRow"), rowFill: "transparent" }) },
         // Library grid (3.3.4): capsules drawn about 16% smaller inside their slots, so even black gutters (and the stars)
         // show between them. Steam's slots and focus order are untouched; art stays art (no stars behind it).
         { id: "library-capsules", needs: [], targets: ["libraryCapsule"], css: (_s, t) => libraryCapsuleCss(t("libraryCapsule")) },
@@ -67974,7 +68050,7 @@ function libraryTabCss(parts) {
     const activeLabel = title.length ? selected.flatMap(sel => title.map(inner => `${sel} ${inner}`)) : selected;
     const marker = { content: '""', position: "absolute", left: "50%", bottom: "-8px", width: "28px", height: "3px", "margin-left": "-14px", "border-radius": SQUARE,
         "background-image": "none", "pointer-events": "none", opacity: "0" };
-    return (row.length ? `${each(row)},${each(row, "::before")},${each(row, "::after")}{${imp({ "background-color": C.black, "background-image": "none", "backdrop-filter": "none", "box-shadow": "none" })}}` : "") +
+    return (row.length ? `${each(row)},${each(row, "::before")},${each(row, "::after")}{${imp({ "background-color": parts.rowFill ?? C.black, "background-image": "none", "backdrop-filter": "none", "box-shadow": "none" })}}` : "") +
         `${each(tab)}{${imp({ position: "relative", "background-color": "transparent", "background-image": "none", color: C.steel, "box-shadow": "none",
             "border-radius": SQUARE, "border-bottom-color": "transparent", "text-decoration": "none" })}}` +
         // Nothing else draws on the tab: no second underline, no per-icon marker.
@@ -68082,7 +68158,8 @@ function buildCoreUiCss(maps, options = {}) {
     const mark = typeof candidate === "string" && /^(https?:|data:image\/)/.test(candidate) ? candidate : undefined;
     const target = (id) => targetSelectors(maps, id);
     for (const rule of rules(mark)) {
-        if (!rule.needs.every(([map, key]) => classSelector(maps[map], key)) || !(rule.targets ?? []).every(id => target(id).length > 0)) {
+        const anyOk = !rule.needsAny?.length || rule.needsAny.some(([map, key]) => classSelector(maps[map], key));
+        if (!anyOk || !rule.needs.every(([map, key]) => classSelector(maps[map], key)) || !(rule.targets ?? []).every(id => target(id).length > 0)) {
             skipped.push(rule.id);
             continue;
         }
@@ -68821,6 +68898,7 @@ function createCoreUi(deps) {
             const found = findCoreUiMapsDetailed(deps.ui);
             next = buildCoreUiCss(found.maps, { mark: deps.mark ?? deps.wordmark });
             next.routes = found.routes;
+            next.candidates = found.candidates;
         }
         catch {
             next = undefined;
@@ -68830,6 +68908,10 @@ function createCoreUi(deps) {
         if (sheet && (sheet.skipped.length === 0 || builds >= MAX_BUILDS)) {
             for (const id of sheet.skipped)
                 logOnce(`skip:${id}`, `[Core UI] ${id}: Steam class map not found on this client; that part keeps Steam's look`);
+            for (const [map, candidate] of Object.entries(sheet.candidates ?? {})) {
+                if (candidate)
+                    logOnce(`map:${map}`, `[Core UI] class map ${map} not found; closest module (${Math.round(candidate.score * 100)}%) lacks ${candidate.missing.join(", ")}`);
+            }
         }
         return sheet;
     }
@@ -69787,6 +69869,7 @@ function assembleSnapshot(input, recapture) {
         screen: { width: Number(firstView.innerWidth) || 0, height: Number(firstView.innerHeight) || 0, dpr: Number(firstView.devicePixelRatio) || 1,
             screenWidth: Number(firstView.screen?.width) || 0, screenHeight: Number(firstView.screen?.height) || 0 },
         coreUi: { applied: input.sheet?.applied ?? [], skipped: input.sheet?.skipped ?? [], mapRoutes: input.sheet?.routes ?? {},
+            mapCandidates: candidateList(input.sheet?.candidates),
             selectors: input.sheet?.maps ? resolvedTargetTable(input.sheet.maps) : {},
             // 3.3.7: every Starfield host resolved on this client (Steam's and other plugins'), with its selector.
             hosts: hostList(input.sheet?.hosts) },
@@ -69817,6 +69900,19 @@ function assembleSnapshot(input, recapture) {
     for (const record of surfaces.values())
         nodes += record.nodes;
     return { json, bytes: size(json), nodes, dropped };
+}
+// Missing maps' closest modules as the snapshot records them: key names only, bounded.
+function candidateList(candidates) {
+    const out = {};
+    if (!candidates || typeof candidates !== "object")
+        return out;
+    const names = (list, max) => (Array.isArray(list) ? list : []).slice(0, max).map(key => String(key).slice(0, 80));
+    for (const [map, candidate] of Object.entries(candidates).slice(0, 32)) {
+        if (!candidate)
+            continue;
+        out[map] = { score: Number(candidate.score) || 0, matched: names(candidate.matched, 40), missing: names(candidate.missing, 40), keys: names(candidate.keys, 120) };
+    }
+    return out;
 }
 // The host list as the snapshot records it: id, plain selector, where it came from and its kind.
 function hostList(hosts) {

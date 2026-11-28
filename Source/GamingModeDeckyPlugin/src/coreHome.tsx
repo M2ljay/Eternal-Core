@@ -173,7 +173,9 @@ export function CoreHomeTabs({ native, getLocale, render }: { native: any; getLo
         return { id: tab.id, title: typeof tab.label === "function" ? tab.label(locale) : tab.label, content, order: tab.order };
       }),
     ];
-    const next = composeHomeTabs(tabs, core);
+    // Each tab's content carries data-core-home-tab (display: contents, so no box), the Core UI stylesheet's scope for
+    // Home's tab row ("home-tabs" in coreUiStyles.ts): the Library's and a game page's tab bars stay out of it.
+    const next = composeHomeTabs(tabs, core).map(tab => ({ ...tab, content: <div data-core-home-tab={String(tab.id)} style={{ display: "contents" }}>{tab.content}</div> }));
     const props: any = { tabs: next };
     if ("strActiveTab" in native.props) props.strActiveTab = activeHomeTab(native.props.strActiveTab, next);
     tree = React.cloneElement(native, props);

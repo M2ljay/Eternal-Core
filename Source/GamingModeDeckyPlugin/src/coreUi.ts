@@ -121,10 +121,14 @@ export function createCoreUi(deps: CoreUiDeps) {
       const found = findCoreUiMapsDetailed(deps.ui);
       next = buildCoreUiCss(found.maps, { mark: deps.mark ?? deps.wordmark });
       next.routes = found.routes;
+      next.candidates = found.candidates;
     } catch { next = undefined; }
     if (next && (!sheet || next.applied.length >= sheet.applied.length)) sheet = next;
     if (sheet && (sheet.skipped.length === 0 || builds >= MAX_BUILDS)) {
       for (const id of sheet.skipped) logOnce(`skip:${id}`, `[Core UI] ${id}: Steam class map not found on this client; that part keeps Steam's look`);
+      for (const [map, candidate] of Object.entries(sheet.candidates ?? {})) {
+        if (candidate) logOnce(`map:${map}`, `[Core UI] class map ${map} not found; closest module (${Math.round(candidate.score * 100)}%) lacks ${candidate.missing.join(", ")}`);
+      }
     }
     return sheet;
   }

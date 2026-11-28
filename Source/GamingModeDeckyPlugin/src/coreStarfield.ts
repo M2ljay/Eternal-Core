@@ -18,9 +18,12 @@ export const STARFIELD_COLOURS = { crimson: "215,38,61", steel: "201,209,217", w
 export const STARFIELD_SPEED = 0.035;
 export const STARFIELD_COUNT = 160;
 // 3.3.4 (TV: "stars are hard to see on full pages"): density follows the surface's area. A Steam-menu-sized panel
-// (about 400 x 1080) keeps its 160 stars; a full page gets proportionally more, up to STARFIELD_MAX_COUNT. The field
-// holds the maximum; a surface draws the first N (the seeded sequence, so the menu's stars are the same as before).
-export const STARFIELD_AREA_PER_STAR = 2700;
+// keeps its 160 stars; a full page gets proportionally more, up to STARFIELD_MAX_COUNT. The field holds the maximum; a
+// surface draws the first N (the seeded sequence, so the menu's stars are the same as before).
+// 3.3.8: sized for the viewport Big Picture really has on the TV (1348 x 758 CSS px at devicePixelRatio 2.85, a 4K
+// set), not 1920 x 1080: a full-height menu is about 400 x 758 there (160 stars) and a full page reaches the maximum.
+// At 2700 (the 1080p figure) the menu drew about 110 and a full page about 380.
+export const STARFIELD_AREA_PER_STAR = 1900;
 export const STARFIELD_MIN_COUNT = 60;
 export const STARFIELD_MAX_COUNT = 420;
 // One star in NEAR_EVERY is "near": larger and always at the readable ceiling, so a big page has a few stars that read

@@ -115,6 +115,8 @@ paddles as A and B, Vibepollo and per-device game settings, Jarvis tap to talk):
 [CORE-UI.md](CORE-UI.md#the-club-tab-play-retro-games-club).
 3.3.7 (The Collector's ROM game page takes the Core Starfield: hosts from other plugins):
 [CORE-UI.md](CORE-UI.md#hosts-from-other-plugins-337).
+3.3.8 (Quick Access styled again: class maps found by a signature of keys, not one key; Home's tab row without Steam's pill;
+Starfield density for the TV's 1348 x 758 viewport): [CORE-UI.md](CORE-UI.md#338-how-class-maps-are-found-quick-access-was-unstyled).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

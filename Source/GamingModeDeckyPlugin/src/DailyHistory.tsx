@@ -160,7 +160,8 @@ export function HistoryTabs({native,getLocale}:{native:any;getLocale:()=>string}
  const config = React.useSyncExternalStore(subscribe,()=>historyConfig);
  React.useEffect(()=>{if(!historyReady)void loadHistorySettings().catch(error=>console.warn('[Playhub History] settings unavailable',error));},[]);
  if(!config.enabled)return native;
- return React.cloneElement(native, {tabs:native.props.tabs.map((tab:any)=>tab.id==='Recommended'?{...tab,title:historyTitle(getLocale()),content:<DailyHistory getLocale={getLocale}/>} :tab)});
+ // Eternal Core 3.3.8: the data-core-home-tab wrapper (no box) keeps Core UI's Home tab row scope on this tab too.
+ return React.cloneElement(native, {tabs:native.props.tabs.map((tab:any)=>tab.id==='Recommended'?{...tab,title:historyTitle(getLocale()),content:<div data-core-home-tab="Recommended" style={{display:'contents'}}><DailyHistory getLocale={getLocale}/></div>} :tab)});
 }
 export function HomeHistorySettings({locale}:{locale:string}) {
  const config = React.useSyncExternalStore(subscribe,()=>historyConfig);

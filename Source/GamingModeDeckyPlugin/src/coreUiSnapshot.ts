@@ -280,6 +280,8 @@ export type SnapshotInput = {
   reason: string; version: string; now: Date;
   docs: any[]; main: any; styleId: string;
   sheet?: { applied?: string[]; skipped?: string[]; routes?: Record<string, string>; maps?: CoreUiMaps; ruleTargets?: Record<string, string>;
+    // 3.3.8: per missing class map, the closest module's key names (names only, never hashed classes).
+    candidates?: Record<string, { score: number; matched: string[]; missing: string[]; keys: string[] } | undefined>;
     hosts?: Array<{ id: string; selector: string; source?: string; page?: boolean; fullHeight?: boolean; panel?: boolean }> };
   surfaces: Map<string, SurfaceRecord>;
   extra?: Record<string, unknown>;
@@ -294,6 +296,7 @@ export function assembleSnapshot(input: SnapshotInput, recapture?: (nodes: numbe
     screen: { width: Number(firstView.innerWidth) || 0, height: Number(firstView.innerHeight) || 0, dpr: Number(firstView.devicePixelRatio) || 1,
       screenWidth: Number(firstView.screen?.width) || 0, screenHeight: Number(firstView.screen?.height) || 0 },
     coreUi: { applied: input.sheet?.applied ?? [], skipped: input.sheet?.skipped ?? [], mapRoutes: input.sheet?.routes ?? {},
+      mapCandidates: candidateList(input.sheet?.candidates),
       selectors: input.sheet?.maps ? resolvedTargetTable(input.sheet.maps) : {},
       // 3.3.7: every Starfield host resolved on this client (Steam's and other plugins'), with its selector.
       hosts: hostList(input.sheet?.hosts) },
@@ -320,6 +323,18 @@ export function assembleSnapshot(input: SnapshotInput, recapture?: (nodes: numbe
   let nodes = 0;
   for (const record of surfaces.values()) nodes += record.nodes;
   return { json, bytes: size(json), nodes, dropped };
+}
+
+// Missing maps' closest modules as the snapshot records them: key names only, bounded.
+export function candidateList(candidates: NonNullable<SnapshotInput["sheet"]>["candidates"]): Record<string, { score: number; matched: string[]; missing: string[]; keys: string[] }> {
+  const out: Record<string, { score: number; matched: string[]; missing: string[]; keys: string[] }> = {};
+  if (!candidates || typeof candidates !== "object") return out;
+  const names = (list: unknown, max: number) => (Array.isArray(list) ? list : []).slice(0, max).map(key => String(key).slice(0, 80));
+  for (const [map, candidate] of Object.entries(candidates).slice(0, 32)) {
+    if (!candidate) continue;
+    out[map] = { score: Number(candidate.score) || 0, matched: names(candidate.matched, 40), missing: names(candidate.missing, 40), keys: names(candidate.keys, 120) };
+  }
+  return out;
 }
 
 // The host list as the snapshot records it: id, plain selector, where it came from and its kind.
