@@ -11,14 +11,16 @@ import { coreUiSetting } from "./coreUiSetting";
 import { coreHomeCopy } from "./coreHomeLocale";
 import {
   activeHomeTab, availableHomeTabs, composeHomeTabs, homeTabsRevision, registerHomeTab,
-  subscribeHomeTabs, CONSOLES_ID, FAVORITES_ID, HOME_TAB_ORDER, favoriteApps, favoritesCollection, type HomeApp,
+  subscribeHomeTabs, ACHIEVEMENTS_ID, FAVORITES_ID, HOME_TAB_ORDER, favoriteApps, favoritesCollection, collectorFavorites, type HomeApp,
 } from "./coreHomeTabs";
-import { CORE_FAMILY_TONES, type CoreIconSet } from "./coreLibraryIcons";
-import { collectionRoute, consoleTiles, CONSOLE_TILE } from "./coreConsoles";
+import { type CoreIconSet } from "./coreLibraryIcons";
+import { CoreAchievementsTab } from "./CoreAchievementsTab";
+import { ConsoleScreenTwo, userCollections } from "./coreHomeScreen";
+import { homePage, setHomeIconSource, subscribeHomePage } from "./coreHomePages";
 
-// 3.3.9: Favorites as big portrait art, six across at the TV's 1348 px (about 200 x 300 px each), 16px apart.
-export const FAVORITE_TILE = { across: 6, gap: 16 } as const;
-import { consolePack, loadConsolePack, subscribeConsolePack } from "./coreConsolePack";
+// 3.3.9: Favorites as big portrait art. 3.3.10 (the approved board): eight across, 20px apart at 1920 px (206 x 309), so
+// about 145 x 217 px at the TV's 1348 px.
+export const FAVORITE_TILE = { across: 8, gap: 20 } as const;
 import { clubHomeTab } from "./club";
 import { favoriteArt, favoriteLayers } from "./coreFavoriteArt";
 
@@ -34,7 +36,7 @@ try {
 // The user's Library icon set (index.tsx hands it in). 3.3.9: the Consoles tiles take the ColorGrade pack instead;
 // kept for the next Home pieces.
 let iconSet: () => CoreIconSet | undefined = () => undefined;
-export function setCoreHomeIcons(source: () => CoreIconSet | undefined) { iconSet = source; }
+export function setCoreHomeIcons(source: () => CoreIconSet | undefined) { iconSet = source; setHomeIconSource(source); }
 export const coreHomeIcons = () => iconSet();
 
 const css = `
@@ -52,20 +54,15 @@ const css = `
 .core-home .core-home-actions{display:flex;gap:12px;flex-wrap:wrap}
 .core-home .core-home-actions .DialogButton{width:auto;min-width:200px;border-radius:0}
 .core-home .core-home-note{font-size:14px;color:#9AA4AE}
-.core-home .core-favorites{display:grid;grid-template-columns:repeat(${FAVORITE_TILE.across},minmax(0,1fr));gap:calc(${FAVORITE_TILE.gap} / 1348 * 100vw);padding:8px 2px 12px}
+.core-home .core-favorites{display:grid;grid-template-columns:repeat(${FAVORITE_TILE.across},minmax(0,1fr));gap:calc(${FAVORITE_TILE.gap} / 1920 * 100vw);padding:8px 2px 12px}
 .core-home .core-favorite{position:relative;aspect-ratio:2/3;background:linear-gradient(180deg,#1A1D21 0%,#000000 100%);border-radius:var(--core-radius-float,10px);overflow:hidden;display:flex;align-items:flex-end;transition:translate .15s ease-out}
 .core-home .core-favorite img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .core-home .core-favorite .core-favorite-hero{filter:brightness(.7)}
 .core-home .core-favorite .core-favorite-logo{inset:auto 10% 0 10%;top:0;bottom:0;margin:auto;width:80%;height:40%;object-fit:contain}
 .core-home .core-favorite span{position:relative;padding:12px;font-size:17px;font-weight:700;line-height:1.25;color:#FFFFFF;text-shadow:0 1px 3px rgba(0,0,0,.65)}
 .core-home .core-favorite.gpfocus,.core-home .core-favorite:focus-visible{outline:none;translate:0 -6px}
-.core-home .core-home-empty{display:flex;align-items:center;gap:12px;font-size:18px;color:#C9D1D9;padding:24px 2px}
+.core-home .core-home-empty{font-size:15px;color:#9AA4AE;padding:8px 2px;text-align:left;outline:none;background:transparent}
 .core-home .core-home-prompt{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid #C9D1D9;border-radius:50%;font-size:15px;font-weight:700}
-.core-home .core-consoles{display:grid;grid-template-columns:repeat(${CONSOLE_TILE.across},minmax(0,1fr));gap:calc(${CONSOLE_TILE.gap} / 1920 * 100vw);padding:8px 2px 12px}
-.core-home .core-console{position:relative;aspect-ratio:${CONSOLE_TILE.width}/${CONSOLE_TILE.height};background:#1A1D21;border-radius:var(--core-radius-float,10px);overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -${CONSOLE_TILE.toneBar}px 0 var(--core-tone,#C9D1D9)}
-.core-home .core-console img{max-width:78%;max-height:52%;object-fit:contain;display:block}
-.core-home .core-console span{padding:0 8px;font-size:15px;font-weight:700;color:#FFFFFF;text-align:center;line-height:1.2}
-.core-home .core-console.gpfocus,.core-home .core-console:focus-visible{outline:3px solid #D7263D;outline-offset:-3px}
 @media (prefers-reduced-motion: reduce){.core-home .core-home-tile,.core-home .core-favorite{transition:none}.core-home .core-home-tile.gpfocus{translate:none}}
 `;
 
@@ -82,10 +79,6 @@ function favoritesMigration(): boolean {
     window.localStorage?.setItem(FAVORITES_MIGRATED, "1");
     return true;
   } catch { return false; }
-}
-function userCollections(): any[] {
-  const host = steamWindow();
-  try { const list = host.collectionStore?.userCollections; return Array.isArray(list) ? list : list && typeof list.values === "function" ? Array.from(list.values()) : []; } catch { return []; }
 }
 
 // 3.3.9: the Favorites tab (first, the default): Steam's own Favorites collection, read from the collection store on
@@ -111,37 +104,13 @@ function FavoriteTile({ app }: { app: HomeApp }) {
 
 function Favorites({ locale }: { locale: string }) {
   const text = coreHomeCopy(locale);
-  const apps = favoriteApps(favoritesCollection(steamWindow().collectionStore));
+  // 3.3.10: Steam's Favorites and The Collector's Favourites collection in one grid (each game once).
+  const apps = favoriteApps(favoritesCollection(steamWindow().collectionStore), 200, collectorFavorites(userCollections()));
+  // 3.3.10: empty, one line of hint text where the grid would start.
   if (!apps.length) return <div className="core-home"><style>{css}</style>
-    <p className="core-home-empty"><span className="core-home-prompt" aria-hidden="true">≡</span>{text.favoritesEmpty}</p></div>;
+    <Focusable className="core-home-empty" focusable={true}>{text.favoritesEmpty}</Focusable></div>;
   return <div className="core-home"><style>{css}</style>
     <Focusable className="core-favorites" flow-children="grid">{apps.map(app => <FavoriteTile key={app.appid} app={app} />)}</Focusable>
-  </div>;
-}
-
-// 3.3.9 (board 1): every console in the library as one tile, eight across (scaled to the view), by family. The tile is
-// the console's white logo from the user's ColorGrade pack on gunmetal with the family's tone bar: at TV size the logo
-// reads at a glance where the pack's dimmed hero art turns to noise (and each hero is megabytes; the logos are a few
-// tens of kilobytes). Without a pack logo, the console's name. A opens that console's collection.
-function Consoles({ locale }: { locale: string }) {
-  const text = coreHomeCopy(locale);
-  const pack = React.useSyncExternalStore(subscribeConsolePack, consolePack, consolePack);
-  React.useEffect(() => { if (!consolePack()) void loadConsolePack(false); }, []);
-  const slugs = React.useMemo(() => new Set(pack?.slugs ?? []), [pack]);
-  const tiles = React.useMemo(() => consoleTiles(userCollections(), slugs), [slugs]);
-  if (!tiles.length) return <div className="core-home"><style>{css}</style><p className="core-home-note">{text.empty}</p></div>;
-  return <div className="core-home"><style>{css}</style>
-    <Focusable className="core-consoles" flow-children="grid">
-      {tiles.map(tile => {
-        const logo = tile.slug ? pack?.logos?.[tile.slug] : undefined;
-        return <Focusable key={tile.id} className="core-console" focusable={true} aria-label={tile.name}
-          style={{ ["--core-tone" as any]: CORE_FAMILY_TONES[tile.family] }}
-          onActivate={() => { try { Navigation?.Navigate?.(collectionRoute(tile.id)); } catch { /* Stay on Home. */ } }}
-          onClick={() => { try { Navigation?.Navigate?.(collectionRoute(tile.id)); } catch { /* Stay on Home. */ } }}>
-          {logo ? <img alt="" src={logo} /> : <span>{tile.name}</span>}
-        </Focusable>;
-      })}
-    </Focusable>
   </div>;
 }
 
@@ -157,8 +126,11 @@ class HomeBoundary extends React.Component<{ fallback: any; children?: React.Rea
 export function CoreHomeTabs({ native, getLocale, render }: { native: any; getLocale: () => string; render: (tree: any) => any }) {
   const on = React.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
   React.useSyncExternalStore(subscribeHomeTabs, homeTabsRevision, homeTabsRevision);
+  const page = React.useSyncExternalStore(subscribeHomePage, homePage, homePage);
   const fallback = render(native);
   if (!on) return fallback;
+  // 3.3.10: on the Consoles page, screen two is the focused console's recent games, in place of the tabs.
+  if (page === "consoles") return <HomeBoundary fallback={fallback}><ConsoleScreenTwo getLocale={getLocale} /></HomeBoundary>;
   let tree: any;
   try {
     const locale = getLocale();
@@ -166,7 +138,7 @@ export function CoreHomeTabs({ native, getLocale, render }: { native: any; getLo
     const tabs: any[] = native.props.tabs;
     const core: any[] = [
       { id: FAVORITES_ID, title: text.favorites, content: <Favorites locale={locale} />, order: HOME_TAB_ORDER.favorites },
-      { id: CONSOLES_ID, title: text.consoles, content: <Consoles locale={locale} />, order: HOME_TAB_ORDER.consoles },
+      { id: ACHIEVEMENTS_ID, title: text.achievements, content: <CoreAchievementsTab locale={locale} />, order: HOME_TAB_ORDER.achievements },
       ...availableHomeTabs().map(tab => {
         const Component = tab.component as any;
         const content = tab.render ? tab.render({ locale, getLocale }) : Component ? <Component locale={locale} getLocale={getLocale} /> : null;

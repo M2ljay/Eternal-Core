@@ -12,9 +12,26 @@ export type ClubCopy = {
   saved: string; refresh: string; loading: string; noData: string; setting: string; settingHint: string;
   nameLabel: string; nameSave: string; saveFailed: string; logAssemble: string; logButton: string; logOpening: string;
   logOpened: string; logFailed: string;
+} & ClubCopy3310;
+
+// 3.3.10: the Club tab as approved (full-width pick cards, two actions on the focused pick, three boxes).
+export type ClubCopy3310 = { unreachable: string; inLibrary: string; openInLibrary: string; comingUp: string; beatenCount: string; topLine: string; logUnavailable: string };
+const extra: Record<string, ClubCopy3310> = {
+  en: { unreachable: "The club couldn't be reached. It'll try again within the hour.", inLibrary: "In your library", openInLibrary: "Open in Library", comingUp: "Coming up", beatenCount: "{n} beaten", topLine: "Top", logUnavailable: "Load Assemble to log a completion from here" },
+  it: { unreachable: "Impossibile raggiungere il club. Riproverà entro un'ora.", inLibrary: "Nella tua libreria", openInLibrary: "Apri nella Libreria", comingUp: "In arrivo", beatenCount: "{n} completati", topLine: "In testa", logUnavailable: "Carica Assemble per registrare un completamento da qui" },
+  es: { unreachable: "No se pudo contactar con el club. Lo volverá a intentar dentro de una hora.", inLibrary: "En tu biblioteca", openInLibrary: "Abrir en la Biblioteca", comingUp: "Próximamente", beatenCount: "{n} superados", topLine: "En cabeza", logUnavailable: "Carga Assemble para registrar un completado desde aquí" },
+  fr: { unreachable: "Impossible de joindre le club. Nouvel essai d'ici une heure.", inLibrary: "Dans votre bibliothèque", openInLibrary: "Ouvrir dans la Bibliothèque", comingUp: "À venir", beatenCount: "{n} terminés", topLine: "En tête", logUnavailable: "Chargez Assemble pour enregistrer une partie terminée d'ici" },
+  de: { unreachable: "Der Club war nicht erreichbar. Innerhalb einer Stunde wird es erneut versucht.", inLibrary: "In deiner Bibliothek", openInLibrary: "In der Bibliothek öffnen", comingUp: "Demnächst", beatenCount: "{n} geschafft", topLine: "Spitze", logUnavailable: "Lade Assemble, um hier einen Abschluss einzutragen" },
+  pt: { unreachable: "Não foi possível acessar o clube. Uma nova tentativa será feita em até uma hora.", inLibrary: "Na sua biblioteca", openInLibrary: "Abrir na Biblioteca", comingUp: "Em breve", beatenCount: "{n} zerados", topLine: "No topo", logUnavailable: "Carregue o Assemble para registrar uma conclusão daqui" },
+  uk: { unreachable: "Не вдалося зв'язатися з клубом. Нова спроба буде протягом години.", inLibrary: "У вашій бібліотеці", openInLibrary: "Відкрити в Бібліотеці", comingUp: "Незабаром", beatenCount: "пройдено {n}", topLine: "Лідери", logUnavailable: "Завантажте Assemble, щоб записати проходження звідси" },
+  ru: { unreachable: "Не удалось связаться с клубом. Новая попытка будет в течение часа.", inLibrary: "В вашей библиотеке", openInLibrary: "Открыть в Библиотеке", comingUp: "Скоро", beatenCount: "пройдено {n}", topLine: "Лидеры", logUnavailable: "Загрузите Assemble, чтобы записать прохождение отсюда" },
+  zh: { unreachable: "无法连接到俱乐部。将在一小时内重试。", inLibrary: "已在你的库中", openInLibrary: "在库中打开", comingUp: "即将到来", beatenCount: "{n} 人通关", topLine: "领先", logUnavailable: "加载 Assemble 后即可在此记录通关" },
+  ja: { unreachable: "クラブに接続できませんでした。1 時間以内に再試行します。", inLibrary: "ライブラリにあります", openInLibrary: "ライブラリで開く", comingUp: "今後の予定", beatenCount: "{n} 人クリア", topLine: "上位", logUnavailable: "ここからクリアを記録するには Assemble を読み込んでください" },
+  ko: { unreachable: "클럽에 연결할 수 없습니다. 1시간 안에 다시 시도합니다.", inLibrary: "라이브러리에 있음", openInLibrary: "라이브러리에서 열기", comingUp: "다가오는 일정", beatenCount: "{n}명 클리어", topLine: "상위", logUnavailable: "여기에서 클리어를 기록하려면 Assemble을 불러오세요" },
+  hi: { unreachable: "क्लब से संपर्क नहीं हो सका। एक घंटे के भीतर फिर कोशिश होगी।", inLibrary: "आपकी लाइब्रेरी में", openInLibrary: "लाइब्रेरी में खोलें", comingUp: "आगे क्या है", beatenCount: "{n} ने पूरा किया", topLine: "शीर्ष", logUnavailable: "यहाँ से पूरा करना दर्ज करने के लिए Assemble लोड करें" },
 };
 
-const en: ClubCopy = {
+const en: Omit<ClubCopy, keyof ClubCopy3310> = {
   tab: "Club", title: "Play Retro Games Club", playing: "Playing now",
   daysLeft: { one: "{n} day left", other: "{n} days left" }, lastDay: "Last day", ended: "Ended", noDate: "Dates on the club site",
   notInLibrary: "Not in your library", play: "Play", details: "Game page", standing: "Your standing", beaten: "games beaten",
@@ -32,7 +49,7 @@ const en: ClubCopy = {
   logOpened: "Opened in Assemble: choose the options and send it there.", logFailed: "Assemble could not open the thread.",
 };
 
-const copy: Record<string, ClubCopy> = {
+const copy: Record<string, Omit<ClubCopy, keyof ClubCopy3310>> = {
   en,
   it: { ...en, tab: "Club", playing: "In gioco ora", daysLeft: { one: "Manca {n} giorno", other: "Mancano {n} giorni" }, lastDay: "Ultimo giorno", ended: "Terminato", noDate: "Date sul sito del club",
     notInLibrary: "Non è nella tua libreria", play: "Gioca", details: "Pagina del gioco", standing: "La tua posizione", beaten: "giochi completati", streak: "serie", rank: "posizione",
@@ -175,7 +192,8 @@ export function clubLanguage(locale: string): string {
 }
 
 export function clubCopy(locale: string): ClubCopy {
-  return copy[clubLanguage(locale)];
+  const language = clubLanguage(locale);
+  return { ...extra.en, ...(extra[language] ?? {}), ...copy[language] } as ClubCopy;
 }
 
 export function fill(template: string, values: Record<string, string | number>): string {

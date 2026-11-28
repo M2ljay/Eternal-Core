@@ -1613,6 +1613,15 @@ class Plugin(QuickSettingsPlugin):
             logging.exception("Core Consoles icon pack unavailable")
             return {"ok": False, "slugs": [], "logos": {}, "families": {}, "errors": ["failed"]}
 
+    async def get_colorgrade_hero(self, slug=""):
+        # Eternal Core 3.3.10: one console's ColorGrade hero for the Consoles page (one file per call: heroes are megabytes).
+        try:
+            module = self._colorgrade_module()
+            return await asyncio.to_thread(module.read_hero, module.pack_folder(_user_appdata()), slug)
+        except Exception:
+            logging.exception("Core Consoles hero unavailable")
+            return {"ok": False, "slug": "", "url": None, "error": "failed"}
+
     async def get_core_icons(self):
         # Core UI's Library icons (the user's own set); an absent folder is the normal case.
         try:

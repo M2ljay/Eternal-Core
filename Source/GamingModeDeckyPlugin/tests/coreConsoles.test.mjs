@@ -51,8 +51,29 @@ test("pack slugs: Core keys, name patterns and the compact name; nothing without
 test("A opens the console's collection; board 1's measures", () => {
   assert.equal(consoles.collectionRoute("uc-Ab 1"), "/library/collection/uc-Ab%201");
   assert.deepEqual({ ...consoles.CONSOLE_TILE }, { across: 8, width: 206, height: 150, gap: 20, toneBar: 4 });
-  const source = readFileSync(new URL("../src/coreHome.tsx", import.meta.url), "utf8");
-  assert.match(source, /repeat\(\$\{CONSOLE_TILE\.across\},minmax\(0,1fr\)\)/, "eight across, scaled to the view");
-  assert.match(source, /onActivate=\{\(\) => \{ try \{ Navigation\?\.Navigate\?\.\(collectionRoute\(tile\.id\)\)/);
-  assert.doesNotMatch(source, /colorgrade[^"]*\.png/i, "no pack file is named in the source");
+  // 3.3.10: the Consoles page (coreHomeScreen.tsx): A on a console opens its collection.
+  const source = readFileSync(new URL("../src/coreHomeScreen.tsx", import.meta.url), "utf8");
+  assert.match(source, /const open = \(\) => \{ try \{ Navigation\?\.Navigate\?\.\(collectionRoute\(card\.id\)\)/);
+  for (const file of ["coreHomeScreen.tsx", "coreHome.tsx", "coreConsolePack.ts", "coreConsoles.ts"]) {
+    assert.doesNotMatch(readFileSync(new URL(`../src/${file}`, import.meta.url), "utf8"), /colorgrade[^"]*\.png/i, `${file}: no pack file is named in the source`);
+  }
+});
+
+// 3.3.10 (the approved board, HomeConsolesPage): one card per console, most recently played first; families (The
+// Collector's family collections) never appear; PS1 is "PlayStation 1".
+test("3.3.10 Consoles page: most recently played first, no family collections, PlayStation 1, games kept for screen two", () => {
+  const app = (appid, last) => ({ appid, display_name: `Game ${appid}`, rt_last_time_played: last });
+  const collections = [
+    { id: "f1", displayName: "PlayStation", allApps: [app(1, 900), app(2, 50)] }, { id: "f2", displayName: "Nintendo", allApps: [app(3, 999)] },
+    { id: "f3", displayName: "Retro", allApps: [app(4, 5)] }, { id: "f4", displayName: "Sega (RomM)", allApps: [app(5, 5)] },
+    { id: "c1", displayName: "PlayStation 1", allApps: [app(1, 900)] }, { id: "c2", displayName: "PlayStation 2", allApps: [app(2, 50), app(6, 700)] },
+    { id: "c3", displayName: "Nintendo 64", allApps: [app(3, 999)] }, { id: "c4", displayName: "Dreamcast", allApps: [app(7, 0)] },
+    { id: "c5", displayName: "Xbox", allApps: [app(8, 10)] },
+  ];
+  const cards = consoles.consoleCards(collections, slugs);
+  assert.deepEqual([...cards.map(card => card.name)], ["Nintendo 64", "PlayStation 1", "PlayStation 2", "Xbox", "Dreamcast"], "recent first; never played last");
+  assert.equal(cards[1].slug, "psx", "PlayStation 1 is the PS1");
+  assert.deepEqual([...cards[2].games.map(game => game.appid)], [6, 2], "a console's games, most recently played first");
+  assert.equal(cards[0].lastPlayed, 999);
+  assert.ok(!cards.some(card => ["f1", "f2", "f3", "f4"].includes(card.id)), "no family collection is a console");
 });

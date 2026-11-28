@@ -9,8 +9,8 @@ used in tests: the tests build a small fake zip of their own.
   entry (83 slugs in the user's copy), extracted to ``...\\colorgrade\\platforms\\<slug>\\``. "Re-import icon pack" in
   Quick Access > Core > Look runs it again (``force``), replacing the folder only once the new copy is complete.
 
-Reading answers each slug's white logo as a data URL (the tile draws the logo on gunmetal; heroes and square icons are
-megabytes each and stay on disk). Only plain slugs and the three known file names are ever read or written.
+Reading answers each slug's white logo as a data URL. A hero (megabytes each) is answered one at a time by
+``read_hero`` (3.3.10, the Consoles page). Only plain slugs and the three known file names are ever read or written.
 
 Standard library only (Decky's frozen Windows Python has ``zipfile``, ``base64``, ``shutil``).
 """
@@ -163,6 +163,36 @@ def read_pack(folder):
     if not answer["slugs"]:
         answer["errors"].append("no_platforms")
     answer["ok"] = True
+    return answer
+
+
+HERO_MAX = 8 * 1024 * 1024          # bytes per hero answered as a data URL (3.3.10; the pack's are 1 to 4 MB)
+
+
+def read_hero(folder, slug):
+    """3.3.10: one platform's hero (``platforms/<slug>/hero.png``) as a data URL, for the Consoles page's background and
+    tiles. One file per call (heroes are megabytes, never sent in bulk); only a plain slug the pack has, only that name."""
+    answer = {"ok": False, "slug": slug if isinstance(slug, str) else "", "url": None}
+    if not folder or not isinstance(slug, str) or not SLUG_RE.match(slug):
+        answer["error"] = "bad_slug"
+        return answer
+    path = os.path.join(folder, "platforms", slug, "hero.png")
+    try:
+        size = os.path.getsize(path)
+    except OSError:
+        answer["error"] = "missing"
+        return answer
+    if size > HERO_MAX:
+        answer["error"] = "too_large"
+        return answer
+    try:
+        with open(path, "rb") as handle:
+            data = handle.read(HERO_MAX + 1)
+    except OSError:
+        answer["error"] = "unreadable"
+        return answer
+    answer["ok"] = True
+    answer["url"] = "data:image/png;base64," + base64.b64encode(data).decode("ascii")
     return answer
 
 

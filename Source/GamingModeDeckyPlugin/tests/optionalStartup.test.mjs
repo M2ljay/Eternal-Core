@@ -76,6 +76,8 @@ function fixture(failing, runtime = {}) {
     './corePluginLogos':{corePluginGlyph:()=>undefined},
     './qamLayoutRuntime':{setQamPluginIconFallback:noop},
     './coreHome':{setCoreHomeIcons:noop},
+    // 3.3.10: Home's Achievements tab reads Steam's progress cache, handed in inside the same hook.
+    './CoreAchievementsTab':{setAchievementProgressSource:noop},
     // Core UI 3.3.4: the snapshot and the legacy CSS Loader theme guard are set up inside the same hook.
     './coreUiSnapshot':{createSnapshotProbe:()=>({tick:noop,saveNow:async()=>({ok:true})}),setCoreUiSnapshotControl:noop},
     './coreCssLoader':{createLegacyThemeGuard:()=>({disable:async()=>({}),restore:async()=>({}),report:()=>({})}),cssLoaderName:()=>undefined},

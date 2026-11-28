@@ -5,6 +5,8 @@ import { CORE } from "./corePalette";
 import { notifyHistoryLanguageChanged } from "./DailyHistory";
 import { newsCopy, NEWS_COUNTRIES } from "./homeNewsLocale";
 import { CoreHomeTabs } from "./coreHome";
+import { CoreHomeScreen } from "./coreHomeScreen";
+import { recentGamesIn } from "./coreHomePages";
 
 const { Focusable, DialogButton, DropdownItem, ToggleField, Navigation } = DFL as any;
 type Config = { enabled: boolean; country: string };
@@ -163,12 +165,24 @@ export function installHomeNews(getLocale: () => string) {
   const news = createOutputPatch([() => true],
     (native: any) => alive ? <Composition native={native} getLocale={getLocale} active={() => alive} /> : native,
     onError);
+  // One patch for both of Home's parts Core draws, recognised by their props in the same rendered output (a second
+  // patch would wrap this one's wrapper on every pass and break the route's stable identity):
+  // - Steam's tabbed page (strActiveTab, setActiveTab): Core Home (coreHome.tsx) arranges the tabs;
+  // - 3.3.10: Steam's recent games section (autoFocus, showBackground; as storeInstallRecents.tsx and The Collector
+  //   recognise it): Core's screen one (coreHomeScreen.tsx) with Steam's own list of recent games, Steam's row the
+  //   fallback (Core UI off, no list found, or an error).
+  const isTabs = (props: any) => !!props && "strActiveTab" in props && "setActiveTab" in props;
+  const isRecents = (props: any) => !!props && "autoFocus" in props && "showBackground" in props;
   const descend = createOutputPatch([
     () => true,
     () => true,
-    (node: any) => node?.props && "strActiveTab" in node.props && "setActiveTab" in node.props,
-  ], (tree: any) => {
-    if (!alive || !Array.isArray(tree?.props?.tabs)) return tree;
+    (node: any) => isTabs(node?.props) || isRecents(node?.props),
+  ], (tree: any, sourceProps: any) => {
+    if (!alive) return tree;
+    if (isRecents(sourceProps) && !isTabs(sourceProps)) {
+      return <CoreHomeScreen native={tree} games={recentGamesIn(tree, sourceProps)} autoFocus={sourceProps?.autoFocus === true} getLocale={getLocale} />;
+    }
+    if (!Array.isArray(tree?.props?.tabs)) return tree;
     const tabs = tree.props.tabs.map((tab: any) => tab.id === "WhatsNew"
       ? { ...tab, content: news.apply(tab.content) } : tab);
     const native = React.cloneElement(tree, { tabs });

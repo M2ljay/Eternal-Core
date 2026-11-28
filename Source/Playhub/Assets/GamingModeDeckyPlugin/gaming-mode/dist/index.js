@@ -1235,11 +1235,11 @@ function detect() {
     const fallback = typeof document !== "undefined" && document.documentElement?.lang || typeof navigator !== "undefined" && navigator.language;
     return normalizeSteamLocale$2(fallback) ?? "en";
 }
-const listeners$e = new Set();
+const listeners$f = new Set();
 let current = null, request$1 = 0, users = 0, observation = 0;
 let timer;
 const getSteamLocale = () => current ?? detect();
-const subscribeSteamLocale = (listener) => { listeners$e.add(listener); return () => { listeners$e.delete(listener); }; };
+const subscribeSteamLocale = (listener) => { listeners$f.add(listener); return () => { listeners$f.delete(listener); }; };
 async function read() {
     const win = typeof window !== "undefined" ? window : {};
     const settings = win.SteamClient?.Settings;
@@ -1265,7 +1265,7 @@ async function refreshSteamLocale() {
     const old = getSteamLocale();
     current = value;
     if (old !== value)
-        for (const listener of [...listeners$e])
+        for (const listener of [...listeners$f])
             listener();
     return value;
 }
@@ -1923,18 +1923,18 @@ const STORE_DIGITAL_ROUTE = "/playhub/stores";
 function exitStoreDigitalToHome() { const navigation = CompatUI.Navigation; navigation?.CloseSideMenus?.(); navigation?.Navigate?.("/library/home", true); }
 let pending$4 = null, sequence = 0;
 let downloads = null;
-const listeners$d = new Set();
+const listeners$e = new Set();
 const readStoreDigitalSelection = () => pending$4;
 const consumeStoreDigitalSelection = (value) => { if (pending$4 === value)
     pending$4 = null; };
-const subscribeStoreDigitalSelection = (fn) => { listeners$d.add(fn); return () => { listeners$d.delete(fn); }; };
+const subscribeStoreDigitalSelection = (fn) => { listeners$e.add(fn); return () => { listeners$e.delete(fn); }; };
 const readStoreDigitalDownloads = () => downloads;
 const consumeStoreDigitalDownloads = (value) => { if (downloads === value)
     downloads = null; };
-function openStoreDigitalDownloads() { pending$4 = null; downloads = ++sequence; for (const listener of listeners$d)
+function openStoreDigitalDownloads() { pending$4 = null; downloads = ++sequence; for (const listener of listeners$e)
     listener(); CompatUI.Navigation.Navigate(STORE_DIGITAL_ROUTE); }
 function openStoreDigitalGame(key, action = "install") { if (!validStoreKey(key) || !["install", "manage"].includes(action))
-    return false; downloads = null; pending$4 = { key: { ...key }, action, sequence: ++sequence }; for (const listener of listeners$d)
+    return false; downloads = null; pending$4 = { key: { ...key }, action, sequence: ++sequence }; for (const listener of listeners$e)
     listener(); CompatUI.Navigation.Navigate(`${STORE_DIGITAL_ROUTE}?store=${encodeURIComponent(key.store)}&game=${encodeURIComponent(key.id)}&action=${action}`); return true; }
 function validStoreDigitalIntent(value, now = Date.now()) { const item = value; return !!item && typeof item.requestId === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(item.requestId) && validStoreKey(item.key) && ["install", "manage"].includes(item.action) && Number.isFinite(Date.parse(item.expiresAt)) && Date.parse(item.expiresAt) > now && Date.parse(item.expiresAt) <= now + 31000; }
 function installStoreDigitalIntentPump(request, open = openStoreDigitalGame, clock = () => Date.now()) {
@@ -2261,8 +2261,8 @@ let owned = new Map();
 let jobs = [];
 let steamLinks = new Map(), steamLinksAt = 0;
 let repairSteamLink;
-const listeners$c = new Set();
-function subscribeStoreLibrary(listener) { listeners$c.add(listener); return () => { listeners$c.delete(listener); }; }
+const listeners$d = new Set();
+function subscribeStoreLibrary(listener) { listeners$d.add(listener); return () => { listeners$d.delete(listener); }; }
 const readStoreLibrary = () => owned;
 const readStoreDownloads = () => jobs;
 const readStoreSteamLink = (key) => Date.now() - steamLinksAt < 5000 ? steamLinks.get(nativeStoreKey({ key })) ?? "unknown" : "unknown";
@@ -2755,7 +2755,7 @@ function installStoreLibraryRuntime() {
     const notifyCompleted = createStoreCompletionNotifications();
     const current = () => alive && root[symbol] === stop;
     const updateLinks = (next) => { const changed = JSON.stringify([...steamLinks]) !== JSON.stringify([...next]); steamLinks = next; steamLinksAt = Date.now(); if (changed)
-        listeners$c.forEach(listener => { try {
+        listeners$d.forEach(listener => { try {
             listener();
         }
         catch { } }); };
@@ -2862,7 +2862,7 @@ function installStoreLibraryRuntime() {
             if (Array.isArray(currentJobs) && serializedJobs !== lastJobs) {
                 lastJobs = serializedJobs;
                 jobs = currentJobs;
-                listeners$c.forEach(listener => { try {
+                listeners$d.forEach(listener => { try {
                     listener();
                 }
                 catch { } });
@@ -2905,7 +2905,7 @@ function installStoreLibraryRuntime() {
             if (serial !== lastOwned) {
                 lastOwned = serial;
                 owned = new Map(rows.map(row => [row.appId, row]));
-                listeners$c.forEach(listener => { try {
+                listeners$d.forEach(listener => { try {
                     listener();
                 }
                 catch { } });
@@ -2958,7 +2958,7 @@ function installStoreLibraryRuntime() {
             jobs = [];
             steamLinks = new Map();
             steamLinksAt = 0;
-            listeners$c.forEach(listener => { try {
+            listeners$d.forEach(listener => { try {
                 listener();
             }
             catch { } });
@@ -6130,17 +6130,17 @@ const AWESOME_MIX_PLUGIN = "Awesome Mix";
 const AWESOME_MIX_ROUTE = "/awesome-mix/youtube-music-big-picture";
 // The product name; the same in every language.
 const AWESOME_MIX_ENTRY = { id: "awesome-mix", label: AWESOME_MIX_PLUGIN, route: AWESOME_MIX_ROUTE, order: 15 };
-const nameOf = (plugin) => String(typeof plugin === "string" ? plugin : plugin?.name ?? "").trim().toLowerCase();
+const nameOf$1 = (plugin) => String(typeof plugin === "string" ? plugin : plugin?.name ?? "").trim().toLowerCase();
 // Loaded plugins count (their routes exist). Only a loader that does not list loaded plugins falls back to
 // installed plugins that are not disabled.
 function awesomeMixInstalled(state) {
     try {
         const wanted = AWESOME_MIX_PLUGIN.toLowerCase();
         if (Array.isArray(state?.plugins))
-            return state.plugins.some(plugin => nameOf(plugin) === wanted);
-        const disabled = new Set((Array.isArray(state?.disabledPlugins) ? state.disabledPlugins : []).map(nameOf));
+            return state.plugins.some(plugin => nameOf$1(plugin) === wanted);
+        const disabled = new Set((Array.isArray(state?.disabledPlugins) ? state.disabledPlugins : []).map(nameOf$1));
         const installed = Array.isArray(state?.installedPlugins) ? state.installedPlugins : [];
-        return installed.some(plugin => nameOf(plugin) === wanted && !disabled.has(wanted));
+        return installed.some(plugin => nameOf$1(plugin) === wanted && !disabled.has(wanted));
     }
     catch {
         return false;
@@ -7495,12 +7495,12 @@ function StoreDownloadsQam({ locale }) {
     return SP_JSX.jsx(PanelSection$c, { title: c["StoreLibrary.Downloads"], children: jobs.map(job => SP_JSX.jsx(PanelSectionRow$d, { children: SP_JSX.jsxs("div", { style: { width: "100%", minWidth: 0, paddingBottom: 10 }, children: [SP_JSX.jsx(StoreDownloadMenu, { job: job, locale: locale }), SP_JSX.jsx(StoreDownloadProgress, { job: job, locale: locale })] }) }, job.jobId)) });
 }
 
-const { DialogButton: DialogButton$b } = CompatUI;
+const { DialogButton: DialogButton$a } = CompatUI;
 const labelStore = (store) => ({ gog: "GOG", epic: "Epic Games", xbox: "Xbox", amazon: "Amazon Games" }[store] ?? "");
 const terminal = (job) => !job || ["completed", "canceled", "failed"].includes(job.state) || job.state === "externalHandoff" && job.reasonCode !== "windows_store_managed";
 let locale = () => navigator.language;
 const strings$3 = () => storeLibraryLocale(locale());
-const text$5 = () => {
+const text$6 = () => {
     const c = strings$3(), t = (key) => c[`StoreLibrary.${key}`];
     return { install: t("Install"), next: t("Review"), cancel: t("Cancel"), drive: t("Drive"), folder: t("Folder"),
         available: t("Free"), required: t("Required"), confirm: t("Review"), waiting: t("Verifying"),
@@ -7522,14 +7522,14 @@ function GameAction({ appId, native }) {
     const running = Number(ui?.MainRunningAppID) === appId || (Array.isArray(ui?.RunningApps) && ui.RunningApps.some((app) => app?.appid === appId));
     if (!row?.accountCurrent || !row.game || !identity || proof.identity !== identity || proof.source !== apps || !proof.matches || running || row.game.isInstalled && row.game.isLaunchable)
         return native;
-    return SP_JSX.jsx("div", { style: { minWidth: 240, maxWidth: 560, width: "100%" }, children: terminal(row.job) ? SP_JSX.jsxs(DialogButton$b, { style: { whiteSpace: "normal" }, onClick: () => openStoreDigitalGame(row.key, "install"), children: [text$5().install, " \u00B7 ", labelStore(row.key.store)] }) : SP_JSX.jsx(JobControls, { job: row.job }) });
+    return SP_JSX.jsx("div", { style: { minWidth: 240, maxWidth: 560, width: "100%" }, children: terminal(row.job) ? SP_JSX.jsxs(DialogButton$a, { style: { whiteSpace: "normal" }, onClick: () => openStoreDigitalGame(row.key, "install"), children: [text$6().install, " \u00B7 ", labelStore(row.key.store)] }) : SP_JSX.jsx(JobControls, { job: row.job }) });
 }
 function DownloadSection() {
     const rows = _global_SP_REACT.useSyncExternalStore(subscribeStoreLibrary, readStoreDownloads);
     const active = rows.filter(job => !terminal(job));
     if (!active.length)
         return null;
-    return SP_JSX.jsxs("section", { style: { padding: "24px 36px", background: CORE.gunmetal, borderRadius: 8, marginBlock: 18 }, children: [SP_JSX.jsx("h2", { style: { marginBlock: "0 16px" }, children: text$5().downloads }), active.map(job => SP_JSX.jsx("div", { style: { borderTop: `1px solid ${CORE.gunmetalRaised}`, paddingBlock: 14 }, children: SP_JSX.jsx(JobControls, { job: job }) }, job.jobId))] });
+    return SP_JSX.jsxs("section", { style: { padding: "24px 36px", background: CORE.gunmetal, borderRadius: 8, marginBlock: 18 }, children: [SP_JSX.jsx("h2", { style: { marginBlock: "0 16px" }, children: text$6().downloads }), active.map(job => SP_JSX.jsx("div", { style: { borderTop: `1px solid ${CORE.gunmetalRaised}`, paddingBlock: 14 }, children: SP_JSX.jsx(JobControls, { job: job }) }, job.jobId))] });
 }
 function installStoreLibrarySteamUi(getLocale) {
     locale = getLocale;
@@ -7827,7 +7827,7 @@ async function loadImage(path) {
     imageCache.set(path, data);
     return data;
 }
-function iconSource(base64) {
+function iconSource$1(base64) {
     return base64 ? `data:image/png;base64,${base64}` : "";
 }
 async function consumeOpenRequest() {
@@ -9414,10 +9414,10 @@ function losslessCaptureLabel(locale, state) {
     return index < 0 ? "" : (rows$7[aliases[key] ?? key] ?? rows$7.en)[index];
 }
 
-const { DialogButton: DialogButton$a, Focusable: Focusable$h } = CompatUI;
+const { DialogButton: DialogButton$9, Focusable: Focusable$j } = CompatUI;
 function ControlSection({ id, title, icon, children, collapsed, onToggle, locale }) {
     const copy = controlLocale(locale);
-    return SP_JSX.jsxs(Focusable$h, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$a, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$h, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
+    return SP_JSX.jsxs(Focusable$j, { className: "ph-control-section", "flow-children": "column", children: [SP_JSX.jsxs(DialogButton$9, { className: "ph-control-section-title", "aria-expanded": !collapsed, onClick: () => onToggle(id), onOKActionDescription: collapsed ? copy.expand : copy.collapse, children: [SP_JSX.jsxs("span", { children: [icon, SP_JSX.jsx("strong", { children: title })] }), collapsed ? SP_JSX.jsx(TbChevronRight, {}) : SP_JSX.jsx(TbChevronDown, {})] }), !collapsed && SP_JSX.jsx(Focusable$j, { className: "ph-control-section-body", "flow-children": "column", children: children })] });
 }
 
 /** One writer per independent setting/resource; callbacks receive only current results. */
@@ -20927,7 +20927,7 @@ function searchText(key) {
     const table = SEARCH_TEXT[currentLanguage()] ?? SEARCH_TEXT.en;
     return table[key] ?? SEARCH_TEXT.en[key] ?? key;
 }
-function text$4(key, values = {}) {
+function text$5(key, values = {}) {
     const table = TEXT$1[currentLanguage()] ?? TEXT$1.en;
     let value = table[key] ?? TEXT$1.en[key] ?? key;
     for (const [name, replacement] of Object.entries(values)) {
@@ -21122,7 +21122,7 @@ function PluginIdentity({ entry, muted = false, useSelectedIcon = false }) {
                 opacity: 0.72,
                 marginTop: 2
             }
-        }, entry.disabled ? text$4("disabled") : text$4("unavailable"))
+        }, entry.disabled ? text$5("disabled") : text$5("unavailable"))
         : null));
 }
 function ActiveTabCard({ entry, index, total, runtime, onChooseIcon }) {
@@ -21133,14 +21133,14 @@ function ActiveTabCard({ entry, index, total, runtime, onChooseIcon }) {
         {
             key: "up",
             icon: h(UpIcon, { size: 18 }),
-            description: text$4("moveUp"),
+            description: text$5("moveUp"),
             disabled: index === 0,
             onClick: () => runtime.moveTab(entry.key, -1)
         },
         {
             key: "down",
             icon: h(DownIcon, { size: 18 }),
-            description: text$4("moveDown"),
+            description: text$5("moveDown"),
             disabled: index === total - 1,
             onClick: () => runtime.moveTab(entry.key, 1)
         }
@@ -21149,7 +21149,7 @@ function ActiveTabCard({ entry, index, total, runtime, onChooseIcon }) {
         actions.push({
             key: "visibility",
             icon: h(CustomIcon, { id: entry.hidden ? "eye-off-outline" : "eye", size: 18 }),
-            description: text$4(entry.hidden ? "add" : "remove"),
+            description: text$5(entry.hidden ? "add" : "remove"),
             disabled: false,
             onClick: () => runtime.toggleNativeTab(entry.key)
         });
@@ -21158,7 +21158,7 @@ function ActiveTabCard({ entry, index, total, runtime, onChooseIcon }) {
         actions.push({
             key: "remove",
             icon: h(TrashIcon, { size: 18 }),
-            description: text$4("remove"),
+            description: text$5("remove"),
             disabled: false,
             onClick: () => runtime.remove(entry.pluginName || entry.name)
         });
@@ -21180,8 +21180,8 @@ function ActiveTabCard({ entry, index, total, runtime, onChooseIcon }) {
         style: { width: "100%", minWidth: 0, maxWidth: "100%" }
     }, h(NameButton, {
         onClick: customizable ? onChooseIcon : () => undefined,
-        onOKActionDescription: customizable ? text$4("chooseIcon") : entry.name,
-        "aria-label": customizable ? `${text$4("chooseIcon")}: ${entry.name}` : entry.name,
+        onOKActionDescription: customizable ? text$5("chooseIcon") : entry.name,
+        "aria-label": customizable ? `${text$5("chooseIcon")}: ${entry.name}` : entry.name,
         style: {
             display: "block",
             width: "100%",
@@ -21266,8 +21266,8 @@ function IconPicker({ entry, runtime, onBack }) {
             handleIconPickerNav(event, 0, totalChoices, 4);
         },
         onClick: () => { runtime.setIcon(entry.name, "original"); onBack(); },
-        onOKActionDescription: text$4("originalIcon"),
-        "aria-label": text$4("originalIcon"),
+        onOKActionDescription: text$5("originalIcon"),
+        "aria-label": text$5("originalIcon"),
         style: { minWidth: 0, width: "100%", height: 64, padding: 8, display: "grid", placeItems: "center", overflow: "hidden", outline: selected === "original" ? "2px solid currentColor" : "none", outlineOffset: -3 }
     }, entry.icon ?? h(MissingIcon, { size: 28 })))));
     const categorySections = filteredCategories.map((category) => {
@@ -21278,7 +21278,7 @@ function IconPicker({ entry, runtime, onBack }) {
                 "data-shortcuts-icon-index": String(index),
                 onKeyDown: (event) => handleIconPickerNav(event, index, totalChoices, 4),
                 onClick: () => { runtime.setIcon(entry.name, id); onBack(); },
-                onOKActionDescription: text$4("selectIcon", { icon: id }),
+                onOKActionDescription: text$5("selectIcon", { icon: id }),
                 "aria-label": id,
                 title: id,
                 style: { minWidth: 0, width: "100%", height: 64, padding: 8, display: "grid", placeItems: "center", overflow: "hidden", outline: selected === id ? "2px solid currentColor" : "none", outlineOffset: -3 }
@@ -21321,10 +21321,10 @@ function IconPicker({ entry, runtime, onBack }) {
             event.stopPropagation();
         } },
         onClick: onBack,
-        onOKActionDescription: text$4("back"),
-        "aria-label": text$4("back"),
+        onOKActionDescription: text$5("back"),
+        "aria-label": text$5("back"),
         style: { width: 42, minWidth: 42, height: 36, padding: 8, display: "grid", placeItems: "center" }
-    }, h(BackIcon, { size: 18 })), h("div", { title: entry.name, style: { width: 0, minWidth: 0, flex: "1 1 auto", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600 } }, text$4("iconPickerTitle", { name: entry.name }))), searchSection, originalSection, ...categorySections, emptySearch);
+    }, h(BackIcon, { size: 18 })), h("div", { title: entry.name, style: { width: 0, minWidth: 0, flex: "1 1 auto", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600 } }, text$5("iconPickerTitle", { name: entry.name }))), searchSection, originalSection, ...categorySections, emptySearch);
 }
 function ShortcutsSettings({ runtime }) {
     const subscribe = _global_SP_REACT.useCallback((listener) => runtime.subscribe(listener), [runtime]);
@@ -21347,8 +21347,8 @@ function ShortcutsSettings({ runtime }) {
         return h(IconPicker, { entry: pickerEntry, runtime, onBack: () => setPickerName(null) });
     }
     const Focusable = CompatUI.Focusable ?? "div";
-    return h(Focusable, { "flow-children": "grid", style: { paddingBottom: 18, width: "100%", minWidth: 0 } }, h(CompatUI.PanelSection, { title: text$4("selectedTitle") }, activeEntries.length === 0
-        ? h(EmptyRow, null, text$4("emptySelected"))
+    return h(Focusable, { "flow-children": "grid", style: { paddingBottom: 18, width: "100%", minWidth: 0 } }, h(CompatUI.PanelSection, { title: text$5("selectedTitle") }, activeEntries.length === 0
+        ? h(EmptyRow, null, text$5("emptySelected"))
         : activeEntries.map((entry, index) => h(ActiveTabCard, {
             key: entry.key,
             entry,
@@ -21361,8 +21361,8 @@ function ShortcutsSettings({ runtime }) {
             onChooseIcon: entry.kind === "shortcut"
                 ? () => setPickerName(entry.pluginName || entry.name)
                 : null
-        }))), h(CompatUI.PanelSection, { title: text$4("availableTitle") }, availableEntries.length === 0
-        ? h(EmptyRow, null, text$4("emptyAvailable"))
+        }))), h(CompatUI.PanelSection, { title: text$5("availableTitle") }, availableEntries.length === 0
+        ? h(EmptyRow, null, text$5("emptyAvailable"))
         : availableEntries.map((entry, index) => h(AvailableRow, { key: entry.name, entry, runtime, rowIndex: selectedCount + index, selectedCount, totalRows }))));
 }
 function QamShortcutsView({ runtime, locale }) { language = locale.split(/[-_]/)[0]; return h(ShortcutsSettings, { runtime }); }
@@ -21375,14 +21375,14 @@ function qamNativeLabel(key, fallback, locale) {
 
 let preferences = { version: 3, selected: ["Playhub"], icons: {}, order: [], hidden: [], updated_at: 0 };
 let snapshot$2 = { active: false, native: [], plugins: [] };
-const listeners$b = new Set();
+const listeners$c = new Set();
 const refreshers = new Set();
 let pending$3 = false;
-function notify$4() { if (pending$3)
-    return; pending$3 = true; void Promise.resolve().then(() => { pending$3 = false; listeners$b.forEach(fn => fn()); }); }
+function notify$5() { if (pending$3)
+    return; pending$3 = true; void Promise.resolve().then(() => { pending$3 = false; listeners$c.forEach(fn => fn()); }); }
 const getQamLayoutPreferences = () => preferences;
 const getQamLayoutSnapshot = () => snapshot$2;
-function subscribeQamLayout(fn) { listeners$b.add(fn); return () => { listeners$b.delete(fn); }; }
+function subscribeQamLayout(fn) { listeners$c.add(fn); return () => { listeners$c.delete(fn); }; }
 function setQamLayoutPreferences(value) {
     const strings = (items) => Array.isArray(items) ? [...new Set(items.filter((v) => typeof v === "string" && !!v))] : [];
     const next = { version: 3, selected: strings(value?.selected), order: strings(value?.order),
@@ -21393,7 +21393,7 @@ function setQamLayoutPreferences(value) {
         return;
     preferences = next;
     refreshers.forEach(fn => fn());
-    notify$4();
+    notify$5();
 }
 // Eternal Core (Core UI, docs/eternal/CORE-UI.md, "Plugin logos"): Core's own logo for the user's Eternal plugin forks,
 // set by index.tsx while Core UI is on. A user-chosen icon still wins; a plugin without a Core logo keeps its own.
@@ -21401,7 +21401,7 @@ let pluginIconFallback;
 function setQamPluginIconFallback(fallback) {
     pluginIconFallback = fallback;
     refreshers.forEach(fn => fn());
-    notify$4();
+    notify$5();
 }
 function icon(name, original) {
     let core;
@@ -21464,7 +21464,7 @@ function createQamLayoutRuntime(hook, nativeRender, ownId, refresh, inventory = 
             if (!snapshot$2.active || native.length !== snapshot$2.native.length || native.some((tab, index) => tab.key !== snapshot$2.native[index]?.key || tab.label !== snapshot$2.native[index]?.label || tab.icon !== snapshot$2.native[index]?.icon) || available.length !== snapshot$2.plugins.length
                 || available.some((p, i) => p.name !== snapshot$2.plugins[i]?.name || p.icon !== snapshot$2.plugins[i]?.icon)) {
                 snapshot$2 = { active: true, native, plugins: available };
-                notify$4();
+                notify$5();
             }
             const original = [...tabs];
             for (const name of preferences.selected) {
@@ -21515,10 +21515,10 @@ function createQamLayoutRuntime(hook, nativeRender, ownId, refresh, inventory = 
             managedVisibility = next;
             records.add({ array: new globalThis.WeakRef(tabs), original, projected: [...tabs] });
         },
-        stop() { stopped = true; refreshers.delete(changed); restore(); snapshot$2 = { ...snapshot$2, active: false }; notify$4(); } };
+        stop() { stopped = true; refreshers.delete(changed); restore(); snapshot$2 = { ...snapshot$2, active: false }; notify$5(); } };
 }
 
-const text$3 = {
+const text$4 = {
     it: ['Generali', 'Personalizza le tab di Steam e i collegamenti ai plugin nel menu di accesso rapido.', 'Ordine e visibilità', 'Collegamenti ai plugin', 'Icona', 'Predefinita', 'Sposta su', 'Sposta giù', 'Salvataggio non riuscito. Riprova.', 'Riprova', 'La gestione QAM è in attesa della migrazione o dell’apertura del menu.'],
     en: ['General', 'Customize Steam tabs and plugin shortcuts in the quick access menu.', 'Order and visibility', 'Plugin shortcuts', 'Icon', 'Default', 'Move up', 'Move down', 'Could not save. Retry.', 'Retry', 'QAM management is waiting for migration or for the menu to open.'],
     de: ['Allgemein', 'Steam-Tabs und Plugin-Verknüpfungen im Schnellzugriffsmenü anpassen.', 'Reihenfolge und Sichtbarkeit', 'Plugin-Verknüpfungen', 'Symbol', 'Standard', 'Nach oben', 'Nach unten', 'Speichern fehlgeschlagen. Erneut versuchen.', 'Erneut versuchen', 'QAM wartet auf die Migration oder das Öffnen des Menüs.'],
@@ -21532,7 +21532,7 @@ const text$3 = {
     zh: ['一般', '自訂快速存取選單中的 Steam 分頁與外掛捷徑。', '順序與顯示', '外掛捷徑', '圖示', '預設', '上移', '下移', '儲存失敗，請重試。', '重試', 'QAM 正在等待移轉或開啟選單。'],
     hi: ['सामान्य', 'त्वरित पहुँच मेनू में Steam टैब और प्लगइन शॉर्टकट अनुकूलित करें।', 'क्रम और दृश्यता', 'प्लगइन शॉर्टकट', 'चिह्न', 'डिफ़ॉल्ट', 'ऊपर ले जाएँ', 'नीचे ले जाएँ', 'सहेजा नहीं जा सका। फिर कोशिश करें।', 'फिर कोशिश करें', 'QAM स्थानांतरण या मेनू खुलने की प्रतीक्षा कर रहा है।'],
 };
-const qamSettingsCopy = (locale) => text$3[locale.split(/[-_]/)[0]] ?? text$3.en;
+const qamSettingsCopy = (locale) => text$4[locale.split(/[-_]/)[0]] ?? text$4.en;
 let hydration;
 let saving = Promise.resolve();
 function initializeQamPreferences() {
@@ -21728,18 +21728,18 @@ const memory = new Map();
 const pending$2 = new Map();
 const failedUntil = new Map();
 let active = 0;
-const queue = [];
+const queue$1 = [];
 let cacheWrites = Promise.resolve();
 async function slot(work) {
     if (active >= 3)
-        await new Promise(resolve => queue.push(resolve));
+        await new Promise(resolve => queue$1.push(resolve));
     else
         active++;
     try {
         return await work();
     }
     finally {
-        const next = queue.shift();
+        const next = queue$1.shift();
         if (next)
             next();
         else
@@ -21940,9 +21940,9 @@ function openHistoryImage(url, subject, locale, ownerWindow = window) {
 @media(max-width:550px){.ph-history-card{grid-template-columns:1fr}.ph-history-card.reverse .ph-history-image,.ph-history-card.reverse .ph-history-copy{grid-column:auto;grid-row:auto}.ph-history-sub{max-width:180px}}
 @media(prefers-reduced-motion:reduce){.ph-history *{transition:none!important}}
 `;
-const listeners$a = new Set();
-const notify$3 = () => listeners$a.forEach(listener => listener());
-const notifyHistoryLanguageChanged = () => { notify$3(); };
+const listeners$b = new Set();
+const notify$4 = () => listeners$b.forEach(listener => listener());
+const notifyHistoryLanguageChanged = () => { notify$4(); };
 
 const words$2 = {
     en: ["Gaming news", "Show gaming news in Home", "Country", "Follow Core language", "News unavailable. Try again later.", "Could not save news settings.", "Last available news"],
@@ -22007,8 +22007,46 @@ const coreUiSetting = createCoreUiSetting(defaultStorage());
 
 // Eternal Core: Core Home's text in Core's 12 languages (docs/eternal/CORE-UI.md, "Phase 2: Home"). "Jarvis", "Forge"
 // and the console names are names and stay the same everywhere. Self-contained: tests load it alone.
+const extra$1 = {
+    en: { home: "Home", achievements: "Achievements", recentUnlocks: "Recent unlocks", closest: "Closest to 100%", recentlyPlayed: "Recently played",
+        hardcore: "Hardcore", players: "{n}% of players", left: "{n} left", achievementsEmpty: "Unlock an achievement and it shows up here",
+        consolesEmpty: "Sync your RomM library in The Collector to see your consoles here" },
+    it: { home: "Home", achievements: "Obiettivi", recentUnlocks: "Sbloccati di recente", closest: "Più vicini al 100%", recentlyPlayed: "Giocati di recente",
+        hardcore: "Hardcore", players: "{n}% dei giocatori", left: "ne mancano {n}", achievementsEmpty: "Sblocca un obiettivo e comparirà qui",
+        consolesEmpty: "Sincronizza la libreria RomM in The Collector per vedere qui le tue console" },
+    es: { home: "Inicio", achievements: "Logros", recentUnlocks: "Desbloqueados hace poco", closest: "Más cerca del 100 %", recentlyPlayed: "Jugados recientemente",
+        hardcore: "Hardcore", players: "{n} % de jugadores", left: "faltan {n}", achievementsEmpty: "Desbloquea un logro y aparecerá aquí",
+        consolesEmpty: "Sincroniza tu biblioteca de RomM en The Collector para ver aquí tus consolas" },
+    fr: { home: "Accueil", achievements: "Succès", recentUnlocks: "Débloqués récemment", closest: "Les plus proches de 100 %", recentlyPlayed: "Joués récemment",
+        hardcore: "Hardcore", players: "{n} % des joueurs", left: "encore {n}", achievementsEmpty: "Débloquez un succès et il apparaîtra ici",
+        consolesEmpty: "Synchronisez votre bibliothèque RomM dans The Collector pour voir vos consoles ici" },
+    de: { home: "Start", achievements: "Erfolge", recentUnlocks: "Zuletzt freigeschaltet", closest: "Am nächsten an 100 %", recentlyPlayed: "Zuletzt gespielt",
+        hardcore: "Hardcore", players: "{n} % der Spieler", left: "noch {n}", achievementsEmpty: "Schalte einen Erfolg frei, dann erscheint er hier",
+        consolesEmpty: "Synchronisiere deine RomM-Bibliothek in The Collector, um deine Konsolen hier zu sehen" },
+    pt: { home: "Início", achievements: "Conquistas", recentUnlocks: "Desbloqueadas recentemente", closest: "Mais perto de 100%", recentlyPlayed: "Jogados recentemente",
+        hardcore: "Hardcore", players: "{n}% dos jogadores", left: "faltam {n}", achievementsEmpty: "Desbloqueie uma conquista e ela aparecerá aqui",
+        consolesEmpty: "Sincronize sua biblioteca do RomM no The Collector para ver seus consoles aqui" },
+    uk: { home: "Головна", achievements: "Досягнення", recentUnlocks: "Нещодавно здобуті", closest: "Найближчі до 100%", recentlyPlayed: "Нещодавно грали",
+        hardcore: "Hardcore", players: "{n}% гравців", left: "лишилось {n}", achievementsEmpty: "Здобудьте досягнення, і воно з'явиться тут",
+        consolesEmpty: "Синхронізуйте бібліотеку RomM у The Collector, щоб побачити тут свої консолі" },
+    ru: { home: "Главная", achievements: "Достижения", recentUnlocks: "Недавно получены", closest: "Ближе всего к 100%", recentlyPlayed: "Недавние игры",
+        hardcore: "Hardcore", players: "{n}% игроков", left: "осталось {n}", achievementsEmpty: "Получите достижение, и оно появится здесь",
+        consolesEmpty: "Синхронизируйте библиотеку RomM в The Collector, чтобы увидеть здесь свои консоли" },
+    zh: { home: "主页", achievements: "成就", recentUnlocks: "最近解锁", closest: "最接近 100%", recentlyPlayed: "最近玩过",
+        hardcore: "硬核", players: "{n}% 的玩家", left: "还剩 {n} 个", achievementsEmpty: "解锁一项成就，它就会显示在这里",
+        consolesEmpty: "在 The Collector 中同步你的 RomM 库，即可在这里看到你的主机" },
+    ja: { home: "ホーム", achievements: "実績", recentUnlocks: "最近解除した実績", closest: "100% に最も近い", recentlyPlayed: "最近プレイした",
+        hardcore: "ハードコア", players: "プレイヤーの {n}%", left: "残り {n}", achievementsEmpty: "実績を解除するとここに表示されます",
+        consolesEmpty: "The Collector で RomM ライブラリを同期すると、ここにコンソールが表示されます" },
+    ko: { home: "홈", achievements: "도전 과제", recentUnlocks: "최근 달성", closest: "100%에 가장 가까운 게임", recentlyPlayed: "최근 플레이",
+        hardcore: "하드코어", players: "플레이어의 {n}%", left: "{n}개 남음", achievementsEmpty: "도전 과제를 달성하면 여기에 표시됩니다",
+        consolesEmpty: "The Collector에서 RomM 라이브러리를 동기화하면 여기에 콘솔이 표시됩니다" },
+    hi: { home: "होम", achievements: "उपलब्धियाँ", recentUnlocks: "हाल में अनलॉक", closest: "100% के सबसे क़रीब", recentlyPlayed: "हाल में खेले गए",
+        hardcore: "हार्डकोर", players: "{n}% खिलाड़ी", left: "{n} बाकी", achievementsEmpty: "कोई उपलब्धि अनलॉक करें, वह यहाँ दिखेगी",
+        consolesEmpty: "अपने कंसोल यहाँ देखने के लिए The Collector में अपनी RomM लाइब्रेरी सिंक करें" },
+};
 const en$9 = {
-    brief: "Today", consoles: "Consoles", favorites: "Favorites", favoritesEmpty: "Favorite a game in your Library to see it here",
+    brief: "Today", consoles: "Consoles", favorites: "Favorites", favoritesEmpty: "Star a game to add it here",
     morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening", night: "Up late",
     lastPlayed: "You were last playing {game}.", nothingYet: "Nothing on the go yet. Pick something and I'll keep track.",
     talk: "Talk to Jarvis", mods: "{count} mods have updates in Forge", modsOne: "1 mod has an update in Forge",
@@ -22016,50 +22054,51 @@ const en$9 = {
 };
 const copy$e = {
     en: en$9,
-    it: { brief: "Oggi", consoles: "Console", favorites: "Preferiti", favoritesEmpty: "Aggiungi un gioco ai preferiti nella Libreria per vederlo qui", morning: "Buongiorno", afternoon: "Buon pomeriggio", evening: "Buonasera", night: "Ancora sveglio",
+    it: { brief: "Oggi", consoles: "Console", favorites: "Preferiti", favoritesEmpty: "Aggiungi una stella a un gioco per vederlo qui", morning: "Buongiorno", afternoon: "Buon pomeriggio", evening: "Buonasera", night: "Ancora sveglio",
         lastPlayed: "L'ultima volta giocavi a {game}.", nothingYet: "Ancora niente in corso. Scegli un gioco e ne terrò traccia.", talk: "Parla con Jarvis",
         mods: "{count} mod hanno aggiornamenti in Forge", modsOne: "1 mod ha un aggiornamento in Forge", updates: "Notizie e aggiornamenti dei tuoi giochi", empty: "Ancora nessun gioco in questa raccolta", vr: "VR", retro: "Retro" },
-    es: { brief: "Hoy", consoles: "Consolas", favorites: "Favoritos", favoritesEmpty: "Marca un juego como favorito en tu Biblioteca para verlo aquí", morning: "Buenos días", afternoon: "Buenas tardes", evening: "Buenas noches", night: "Trasnochando",
+    es: { brief: "Hoy", consoles: "Consolas", favorites: "Favoritos", favoritesEmpty: "Marca un juego con una estrella para añadirlo aquí", morning: "Buenos días", afternoon: "Buenas tardes", evening: "Buenas noches", night: "Trasnochando",
         lastPlayed: "Lo último que jugaste fue {game}.", nothingYet: "Nada en curso todavía. Elige algo y llevaré la cuenta.", talk: "Hablar con Jarvis",
         mods: "{count} mods tienen actualizaciones en Forge", modsOne: "1 mod tiene una actualización en Forge", updates: "Noticias y actualizaciones de tus juegos", empty: "Aún no hay juegos en esta colección", vr: "RV", retro: "Retro" },
-    fr: { brief: "Aujourd'hui", consoles: "Consoles", favorites: "Favoris", favoritesEmpty: "Ajoutez un jeu aux favoris dans votre bibliothèque pour le voir ici", morning: "Bonjour", afternoon: "Bon après-midi", evening: "Bonsoir", night: "Encore debout",
+    fr: { brief: "Aujourd'hui", consoles: "Consoles", favorites: "Favoris", favoritesEmpty: "Ajoutez une étoile à un jeu pour l'ajouter ici", morning: "Bonjour", afternoon: "Bon après-midi", evening: "Bonsoir", night: "Encore debout",
         lastPlayed: "Votre dernière partie : {game}.", nothingYet: "Rien en cours pour l'instant. Choisissez un jeu, je m'occupe du reste.", talk: "Parler à Jarvis",
         mods: "{count} mods ont des mises à jour dans Forge", modsOne: "1 mod a une mise à jour dans Forge", updates: "Actualités et mises à jour de vos jeux", empty: "Aucun jeu dans cette collection pour l'instant", vr: "VR", retro: "Rétro" },
-    de: { brief: "Heute", consoles: "Konsolen", favorites: "Favoriten", favoritesEmpty: "Markiere ein Spiel in deiner Bibliothek als Favorit, um es hier zu sehen", morning: "Guten Morgen", afternoon: "Guten Tag", evening: "Guten Abend", night: "Noch wach",
+    de: { brief: "Heute", consoles: "Konsolen", favorites: "Favoriten", favoritesEmpty: "Markiere ein Spiel mit einem Stern, um es hier hinzuzufügen", morning: "Guten Morgen", afternoon: "Guten Tag", evening: "Guten Abend", night: "Noch wach",
         lastPlayed: "Zuletzt hast du {game} gespielt.", nothingYet: "Noch nichts angefangen. Such dir etwas aus, ich behalte den Überblick.", talk: "Mit Jarvis sprechen",
         mods: "{count} Mods haben Updates in Forge", modsOne: "1 Mod hat ein Update in Forge", updates: "Neuigkeiten und Updates zu deinen Spielen", empty: "Noch keine Spiele in dieser Sammlung", vr: "VR", retro: "Retro" },
-    pt: { brief: "Hoje", consoles: "Consoles", favorites: "Favoritos", favoritesEmpty: "Marque um jogo como favorito na sua Biblioteca para vê-lo aqui", morning: "Bom dia", afternoon: "Boa tarde", evening: "Boa noite", night: "Acordado até tarde",
+    pt: { brief: "Hoje", consoles: "Consoles", favorites: "Favoritos", favoritesEmpty: "Marque um jogo com uma estrela para adicioná-lo aqui", morning: "Bom dia", afternoon: "Boa tarde", evening: "Boa noite", night: "Acordado até tarde",
         lastPlayed: "Você jogou {game} por último.", nothingYet: "Nada em andamento ainda. Escolha algo e eu acompanho.", talk: "Falar com o Jarvis",
         mods: "{count} mods têm atualizações no Forge", modsOne: "1 mod tem uma atualização no Forge", updates: "Notícias e atualizações dos seus jogos", empty: "Ainda não há jogos nesta coleção", vr: "RV", retro: "Retrô" },
-    uk: { brief: "Сьогодні", consoles: "Консолі", favorites: "Улюблені", favoritesEmpty: "Додайте гру до улюблених у Бібліотеці, щоб побачити її тут", morning: "Доброго ранку", afternoon: "Добрий день", evening: "Добрий вечір", night: "Не спиться",
+    uk: { brief: "Сьогодні", consoles: "Консолі", favorites: "Улюблені", favoritesEmpty: "Позначте гру зірочкою, щоб додати її сюди", morning: "Доброго ранку", afternoon: "Добрий день", evening: "Добрий вечір", night: "Не спиться",
         lastPlayed: "Востаннє ви грали в {game}.", nothingYet: "Поки нічого не розпочато. Оберіть гру, а я стежитиму.", talk: "Поговорити з Jarvis",
         mods: "Модів з оновленнями у Forge: {count}", modsOne: "1 мод має оновлення у Forge", updates: "Новини й оновлення ваших ігор", empty: "У цій колекції ще немає ігор", vr: "VR", retro: "Ретро" },
-    ru: { brief: "Сегодня", consoles: "Консоли", favorites: "Избранное", favoritesEmpty: "Добавьте игру в избранное в Библиотеке, чтобы увидеть её здесь", morning: "Доброе утро", afternoon: "Добрый день", evening: "Добрый вечер", night: "Не спится",
+    ru: { brief: "Сегодня", consoles: "Консоли", favorites: "Избранное", favoritesEmpty: "Отметьте игру звёздочкой, чтобы добавить её сюда", morning: "Доброе утро", afternoon: "Добрый день", evening: "Добрый вечер", night: "Не спится",
         lastPlayed: "В последний раз вы играли в {game}.", nothingYet: "Пока ничего не начато. Выберите игру, а я буду следить.", talk: "Поговорить с Jarvis",
         mods: "Модов с обновлениями в Forge: {count}", modsOne: "1 мод получил обновление в Forge", updates: "Новости и обновления ваших игр", empty: "В этой коллекции пока нет игр", vr: "VR", retro: "Ретро" },
-    zh: { brief: "今天", consoles: "主机", favorites: "收藏", favoritesEmpty: "在库中收藏一款游戏，即可在这里看到它", morning: "早上好", afternoon: "下午好", evening: "晚上好", night: "这么晚还没睡",
+    zh: { brief: "今天", consoles: "主机", favorites: "收藏", favoritesEmpty: "为游戏加星标即可添加到这里", morning: "早上好", afternoon: "下午好", evening: "晚上好", night: "这么晚还没睡",
         lastPlayed: "你上次在玩 {game}。", nothingYet: "还没有进行中的游戏。选一个吧，我会帮你记着。", talk: "与 Jarvis 对话",
         mods: "Forge 中有 {count} 个模组可更新", modsOne: "Forge 中有 1 个模组可更新", updates: "你的游戏的新闻和更新", empty: "此收藏中还没有游戏", vr: "VR", retro: "复古" },
-    ja: { brief: "今日", consoles: "コンソール", favorites: "お気に入り", favoritesEmpty: "ライブラリでゲームをお気に入りに追加すると、ここに表示されます", morning: "おはようございます", afternoon: "こんにちは", evening: "こんばんは", night: "夜更かしですね",
+    ja: { brief: "今日", consoles: "コンソール", favorites: "お気に入り", favoritesEmpty: "ゲームにスターを付けるとここに追加されます", morning: "おはようございます", afternoon: "こんにちは", evening: "こんばんは", night: "夜更かしですね",
         lastPlayed: "最後に遊んだのは {game} です。", nothingYet: "進行中のゲームはまだありません。選んでいただければ記録しておきます。", talk: "Jarvis と話す",
         mods: "Forge で {count} 件の MOD に更新があります", modsOne: "Forge で 1 件の MOD に更新があります", updates: "あなたのゲームのニュースと更新", empty: "このコレクションにはまだゲームがありません", vr: "VR", retro: "レトロ" },
-    ko: { brief: "오늘", consoles: "콘솔", favorites: "즐겨찾기", favoritesEmpty: "라이브러리에서 게임을 즐겨찾기에 추가하면 여기에 표시됩니다", morning: "좋은 아침입니다", afternoon: "좋은 오후입니다", evening: "좋은 저녁입니다", night: "늦게까지 계시네요",
+    ko: { brief: "오늘", consoles: "콘솔", favorites: "즐겨찾기", favoritesEmpty: "게임에 별표를 하면 여기에 추가됩니다", morning: "좋은 아침입니다", afternoon: "좋은 오후입니다", evening: "좋은 저녁입니다", night: "늦게까지 계시네요",
         lastPlayed: "마지막으로 {game}을(를) 플레이했습니다.", nothingYet: "아직 진행 중인 게임이 없습니다. 하나 고르시면 기록해 두겠습니다.", talk: "Jarvis와 대화",
         mods: "Forge에 업데이트가 있는 모드 {count}개", modsOne: "Forge에 업데이트가 있는 모드 1개", updates: "내 게임의 소식과 업데이트", empty: "이 컬렉션에는 아직 게임이 없습니다", vr: "VR", retro: "레트로" },
-    hi: { brief: "आज", consoles: "कंसोल", favorites: "पसंदीदा", favoritesEmpty: "यहाँ देखने के लिए अपनी लाइब्रेरी में किसी गेम को पसंदीदा बनाएँ", morning: "सुप्रभात", afternoon: "नमस्कार", evening: "शुभ संध्या", night: "देर तक जाग रहे हैं",
+    hi: { brief: "आज", consoles: "कंसोल", favorites: "पसंदीदा", favoritesEmpty: "किसी गेम को यहाँ जोड़ने के लिए उसे स्टार करें", morning: "सुप्रभात", afternoon: "नमस्कार", evening: "शुभ संध्या", night: "देर तक जाग रहे हैं",
         lastPlayed: "आपने आख़िरी बार {game} खेला था।", nothingYet: "अभी कुछ चल नहीं रहा। कुछ चुनिए, मैं ध्यान रखूँगा।", talk: "Jarvis से बात करें",
         mods: "Forge में {count} मॉड के अपडेट हैं", modsOne: "Forge में 1 मॉड का अपडेट है", updates: "आपके गेम की ख़बरें और अपडेट", empty: "इस संग्रह में अभी कोई गेम नहीं है", vr: "VR", retro: "रेट्रो" },
 };
 function coreHomeCopy(locale) {
     const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return copy$e[language === "ua" ? "uk" : language] ?? en$9;
+    const key = language === "ua" ? "uk" : language;
+    return { ...extra$1.en, ...(copy$e[key] ? extra$1[key] ?? {} : {}), ...(copy$e[key] ?? en$9) };
 }
 
 // Eternal Core: Core Home's bottom tabs (docs/eternal/CORE-UI.md, "Phase 2: Home"). Pure: tests drive it with fake
 // Steam tab lists and fake collection stores.
 //
-// Steam's Home tabs come in as `{ id, title, content, ... }`. Core Home answers, in this order (3.3.9):
-//   Favorites (10, the default) - Consoles (20) - any registered tab (Club, 30, from src/club/) - any other Steam tab.
+// Steam's Home tabs come in as `{ id, title, content, ... }`. Core Home answers, in this order (3.3.10):
+//   Favorites (10, the default) - Achievements (20) - any registered tab (Club, 30, from src/club/) - any other Steam tab.
 // Steam's "What's new", "Recommended" and "Friends" are removed. The Jarvis brief and On this day tabs of 3.3.3-3.3.7
 // are gone (the user's call); a remembered active tab that pointed at them opens Consoles.
 //
@@ -22067,9 +22106,9 @@ function coreHomeCopy(locale) {
 // internals; an unavailable tab (isAvailable() false or throwing) is left out.
 const registry = new Map();
 const unsubscribers = new Map();
-const listeners$9 = new Set();
+const listeners$a = new Set();
 let revision = 0;
-const notify$2 = () => { revision++; for (const listener of [...listeners$9]) {
+const notify$3 = () => { revision++; for (const listener of [...listeners$a]) {
     try {
         listener();
     }
@@ -22082,7 +22121,7 @@ function registerHomeTab(tab) {
     registry.set(tab.id, tab);
     let stop;
     try {
-        stop = tab.subscribe?.(notify$2);
+        stop = tab.subscribe?.(notify$3);
     }
     catch {
         stop = undefined;
@@ -22091,14 +22130,14 @@ function registerHomeTab(tab) {
         stop?.();
     }
     catch { /* Gone already. */ } unsubscribers.delete(tab.id); });
-    notify$2();
+    notify$3();
     return () => { if (registry.get(tab.id) === tab) {
         unsubscribers.get(tab.id)?.();
         registry.delete(tab.id);
-        notify$2();
+        notify$3();
     } };
 }
-function subscribeHomeTabs(listener) { listeners$9.add(listener); return () => { listeners$9.delete(listener); }; }
+function subscribeHomeTabs(listener) { listeners$a.add(listener); return () => { listeners$a.delete(listener); }; }
 const homeTabsRevision = () => revision;
 // Registered tabs that are available now, by order.
 function availableHomeTabs() {
@@ -22114,14 +22153,17 @@ function availableHomeTabs() {
 // 3.3.8 (the user's call): Home is Consoles (the default) and Club. Steam's What's new (Core's brief took its id),
 // Recommended (On this day took its slot) and Friends are all removed.
 // 3.3.9: Favorites first (the default), then Consoles and Club.
-const HOME_TAB_ORDER = { favorites: 10, consoles: 20, club: 30 };
+// 3.3.10 (the approved design): Consoles is a page of its own (L1/R1, coreHomePages.ts); the tabs below the fold are
+// Favorites, Achievements and Club. A remembered Consoles tab opens Favorites.
+const HOME_TAB_ORDER = { favorites: 10, achievements: 20, club: 30 };
 const FAVORITES_ID = "CoreFavorites";
+const ACHIEVEMENTS_ID = "CoreAchievements";
 const CONSOLES_ID = "CoreConsoles";
 const REMOVED_STEAM_TABS = new Set(["WhatsNew", "Friends", "Recommended"]);
 const ON_THIS_DAY_ID = "Recommended";
 const BRIEF_ID = "WhatsNew";
 // Ids a remembered active tab may still hold from 3.3.3-3.3.7; each now opens Consoles.
-const RETIRED_HOME_TABS = new Set([BRIEF_ID, ON_THIS_DAY_ID, "CoreBrief", "Friends"]);
+const RETIRED_HOME_TABS = new Set([BRIEF_ID, ON_THIS_DAY_ID, "CoreBrief", "Friends", CONSOLES_ID]);
 // Steam's tabs plus Core's (each with an order) -> the final list. `core` must not contain Steam ids other than the
 // brief's.
 function composeHomeTabs(native, core) {
@@ -22136,7 +22178,7 @@ function composeHomeTabs(native, core) {
 // then Consoles. `migrate` (3.3.9, once per install: coreHome.tsx keeps the flag) moves a remembered Consoles to the new
 // default, Favorites, as well.
 function activeHomeTab(active, tabs, migrate = false) {
-    const fallback = tabs.find(tab => tab.id === FAVORITES_ID)?.id ?? tabs.find(tab => tab.id === CONSOLES_ID)?.id ?? tabs[0]?.id ?? active;
+    const fallback = tabs.find(tab => tab.id === FAVORITES_ID)?.id ?? tabs[0]?.id ?? active;
     if (migrate && (active === CONSOLES_ID || active === undefined))
         return fallback;
     if (tabs.some(tab => tab.id === active) && !RETIRED_HOME_TABS.has(active))
@@ -22145,9 +22187,10 @@ function activeHomeTab(active, tabs, migrate = false) {
 }
 // 3.3.9: the Favorites tab: the games in Steam's own Favorites collection (Steam games and ROM shortcuts alike), read
 // from the collection store each time, most recently played first, then by name. Never a copy.
-function favoriteApps(collection, limit = 200) {
+// 3.3.10: `more` adds other collections (The Collector's Favourites), each game once.
+function favoriteApps(collection, limit = 200, more = []) {
     const out = new Map();
-    for (const raw of appsOf(collection).slice(0, 5000)) {
+    for (const raw of [collection, ...(Array.isArray(more) ? more : [])].flatMap(item => appsOf(item)).slice(0, 5000)) {
         const app = homeApp(raw);
         if (app && !out.has(app.appid))
             out.set(app.appid, app);
@@ -22171,6 +22214,24 @@ function favoritesCollection(store) {
         return undefined;
     }
 }
+// 3.3.10: The Collector's Favourites collection(s): RomM's favourites as The Collector names them on Steam
+// ("[Favourites]" under Classic names on Windows, "Favourites" under Clean, "RomM: [Favourites] (<host>)" elsewhere;
+// a "(RomM)" suffix when the name was taken). Steam's own Favorites (id "favorite") is not one of them.
+const COLLECTOR_FAVOURITES = /^\[?favou?rites\]?$/i;
+function collectorFavorites(collections) {
+    return (Array.isArray(collections) ? collections.slice(0, 400) : []).filter(collection => {
+        try {
+            if (collection?.id === "favorite")
+                return false;
+            const raw = String(collection?.displayName ?? collection?.strName ?? collection?.name ?? "");
+            const plain = raw.replace(/^\s*romm\s*:\s*/i, "").replace(/\s*\([^()]*\)\s*$/, "").trim();
+            return COLLECTOR_FAVOURITES.test(plain) && (plain.startsWith("[") || /^\s*romm\s*:/i.test(raw) || /\(romm\)\s*$/i.test(raw) || plain.toLowerCase() === "favourites");
+        }
+        catch {
+            return false;
+        }
+    });
+}
 function appsOf(collection) {
     for (const key of ["allApps", "visibleApps", "apps", "m_rgApps"]) {
         try {
@@ -22192,6 +22253,616 @@ function homeApp(app) {
     const lastPlayed = Number(app?.rt_last_time_played ?? app?.rtLastTimePlayed ?? 0) || 0;
     return { appid, name, lastPlayed };
 }
+
+// Eternal Core 3.3.10: the Achievements tab on Home (docs/eternal/CORE-UI.md, "Home in 3.3.10"). Recent unlocks and
+// the games closest to 100%, Steam's and RetroAchievements' together. Pure: tests hand it fake answers.
+//
+// Steam: the client's own answers. Recent unlocks from SteamClient.Apps.GetMyAchievementsForApp for the most recently
+// played Steam games (`{ result, data: { achieved, unachieved, hidden } }`, also as a JSON string; each achievement
+// `{ strName, strImage, rtUnlocked, flAchieved }`), closest to 100% from Steam's achievement progress cache
+// (`{ appid, unlocked, total, percentage }` per game).
+// RetroAchievements: only through The Collector's read-only bridge (Collector win.36), window.__eternalCollectorAchievements
+// { version: 1, getRecentUnlocks(limit), getClosestToComplete(limit) }, each a promise of { ok: true, items } or
+// { ok: false, reason } (not_configured, auth_failed, rate_limited, server_unreachable, backend_error, bridge_error...).
+// Unlocks: { romId, appId | null, game, platform, title, description, badgeUrl | null, unlockedAt (ISO UTC), hardcore };
+// progress: { romId, appId | null, game, platform, earned, total, percent }. Limits 1 to 50. It may register after Core
+// (ready event COLLECTOR_ACHIEVEMENTS_READY). Every failure, an absent bridge or an unknown shape means Steam's alone,
+// quietly. Nothing here sees a key or a credential.
+const RECENT_LIMIT = 5;
+const CLOSEST_LIMIT = 4;
+// A Steam achievement fewer than this share of players hold shows its rarity ("6.1% of players").
+const RARE_PERCENT = 10;
+const text$3 = (value, max = 120) => (typeof value === "string" ? value.trim().slice(0, max) : "");
+const number = (value) => { const n = Number(value); return Number.isFinite(n) ? n : undefined; };
+// Seconds or milliseconds since the epoch, or an ISO date: seconds out.
+function epochSeconds(value) {
+    if (typeof value === "string" && value && !/^\d+(\.\d+)?$/.test(value)) {
+        const ms = Date.parse(value);
+        return Number.isFinite(ms) ? Math.floor(ms / 1000) : 0;
+    }
+    const n = number(value);
+    if (!n || n <= 0)
+        return 0;
+    return Math.floor(n > 1e12 ? n / 1000 : n);
+}
+// Only https or Steam's own loopback images (never a data: or javascript: URL from a bridge).
+function safeImage(value) {
+    const url = text$3(value, 2048);
+    return /^https:\/\/[^\s"'()<>]+$/i.test(url) ? url : undefined;
+}
+function parse(answer) {
+    if (typeof answer !== "string")
+        return answer;
+    try {
+        return JSON.parse(answer);
+    }
+    catch {
+        return undefined;
+    }
+}
+// Steam's unlocked achievements of one game, from GetMyAchievementsForApp's answer.
+function steamUnlocks(answer, game) {
+    const data = parse(answer)?.data ?? parse(answer);
+    const achieved = Array.isArray(data?.achieved) ? data.achieved : Array.isArray(data) ? data.filter((item) => item?.bAchieved) : [];
+    const out = [];
+    for (const item of achieved.slice(0, 500)) {
+        const at = epochSeconds(item?.rtUnlocked ?? item?.unlock_time);
+        const name = text$3(item?.strName ?? item?.name);
+        if (!at || !name)
+            continue;
+        const rarity = number(item?.flAchieved);
+        out.push({ source: "steam", name, game: game.name, appId: game.appid, icon: safeImage(item?.strImage), at,
+            ...(rarity !== undefined && rarity >= 0 && rarity <= 100 ? { rarity } : {}) });
+    }
+    return out;
+}
+// Steam's progress cache (a Map or a plain object of { appid, unlocked, total }): games started and not finished.
+function steamClosest(cache, name) {
+    let values = [];
+    try {
+        values = cache && typeof cache.values === "function" ? Array.from(cache.values()) : cache && typeof cache === "object" ? Object.values(cache) : [];
+    }
+    catch {
+        values = [];
+    }
+    const out = [];
+    for (const entry of values.slice(0, 5000)) {
+        const appId = number(entry?.appid), unlocked = number(entry?.unlocked), total = number(entry?.total);
+        if (!appId || appId <= 0 || !total || total <= 0 || unlocked === undefined || unlocked <= 0 || unlocked >= total)
+            continue;
+        const game = text$3(name(appId));
+        if (game)
+            out.push({ source: "steam", game, appId, unlocked, total });
+    }
+    return out;
+}
+// The Collector's bridge, if loaded.
+const COLLECTOR_ACHIEVEMENTS_READY = "eternal_collector_achievements_ready";
+function collectorBridge(host) {
+    try {
+        const bridge = host?.__eternalCollectorAchievements;
+        return bridge && typeof bridge === "object" && (bridge.version === undefined || bridge.version === 1) ? bridge : undefined;
+    }
+    catch {
+        return undefined;
+    }
+}
+// One RA unlock from the bridge, whatever spelling it uses for its fields; undefined when it lacks a name or a date.
+function raUnlock(item) {
+    if (!item || typeof item !== "object")
+        return undefined;
+    const name = text$3(item.name ?? item.title ?? item.achievement);
+    const game = text$3(item.game ?? item.gameTitle ?? item.game_title ?? item.gameName ?? item.game_name);
+    const at = epochSeconds(item.unlockedAt ?? item.unlocked_at ?? item.date ?? item.at ?? item.when);
+    if (!name || !at)
+        return undefined;
+    const appId = number(item.appId ?? item.app_id ?? item.steamAppId);
+    return { source: "ra", name, game, at, hardcore: item.hardcore === true || item.mode === "hardcore",
+        icon: safeImage(item.icon ?? item.badge ?? item.badgeUrl ?? item.image), ...(appId && appId > 0 ? { appId } : {}) };
+}
+function raNearlyDone(item) {
+    if (!item || typeof item !== "object")
+        return undefined;
+    const game = text$3(item.game ?? item.title ?? item.gameTitle ?? item.game_title ?? item.name);
+    const total = number(item.total ?? item.max ?? item.max_possible ?? item.numAchievements);
+    const unlocked = number(item.unlocked ?? item.earned ?? item.awarded ?? item.num_awarded);
+    if (!game || !total || total <= 0 || unlocked === undefined || unlocked < 0 || unlocked >= total)
+        return undefined;
+    const appId = number(item.appId ?? item.app_id ?? item.steamAppId);
+    return { source: "ra", game, unlocked, total, ...(appId && appId > 0 ? { appId } : {}) };
+}
+// Calls one bridge method; a throw, a rejection or a non-list answer is an empty list.
+async function fromBridge(bridge, method, limit, map) {
+    try {
+        if (typeof bridge?.[method] !== "function")
+            return [];
+        const answer = parse(await Promise.resolve(bridge[method](Math.max(1, Math.min(50, Math.floor(limit) || 1)))));
+        if (answer && typeof answer === "object" && !Array.isArray(answer) && answer.ok === false)
+            return [];
+        const list = Array.isArray(answer) ? answer : Array.isArray(answer?.items) ? answer.items : [];
+        return list.slice(0, 50).map(map).filter((item) => item !== undefined);
+    }
+    catch {
+        return [];
+    }
+}
+// Both sources together: the newest unlocks first; the games nearest to 100% first (by share, then fewest left).
+function mergeUnlocks(lists, limit = RECENT_LIMIT) {
+    return lists.flat().sort((a, b) => b.at - a.at).slice(0, limit);
+}
+function mergeClosest(lists, limit = CLOSEST_LIMIT) {
+    return lists.flat().sort((a, b) => b.unlocked / b.total - a.unlocked / a.total || (a.total - a.unlocked) - (b.total - b.unlocked)).slice(0, limit);
+}
+const percentOf = (entry) => Math.floor(entry.unlocked / entry.total * 100);
+// The crimson note beside an unlock: Hardcore for an RA unlock earned in hardcore, "6.1% of players" for a rare Steam one.
+function unlockNote(unlock, words) {
+    if (unlock.source === "ra")
+        return unlock.hardcore ? words.hardcore : "";
+    if (unlock.rarity !== undefined && unlock.rarity < RARE_PERCENT)
+        return words.players.replace("{n}", (Math.round(unlock.rarity * 10) / 10).toLocaleString("en", { maximumFractionDigits: 1 }));
+    return "";
+}
+// "2 hours ago", "yesterday", "3 days ago", "last week", or the date, in the user's language (Intl).
+function whenText(at, now, locale) {
+    const seconds = Math.max(0, Math.floor(now / 1000) - at);
+    try {
+        const rtf = new Intl.RelativeTimeFormat(locale || "en", { numeric: "auto" });
+        if (seconds < 3600)
+            return rtf.format(-Math.max(1, Math.round(seconds / 60)), "minute");
+        if (seconds < 86400)
+            return rtf.format(-Math.round(seconds / 3600), "hour");
+        if (seconds < 7 * 86400)
+            return rtf.format(-Math.round(seconds / 86400), "day");
+        if (seconds < 30 * 86400)
+            return rtf.format(-Math.round(seconds / (7 * 86400)), "week");
+        return new Intl.DateTimeFormat(locale || "en", { day: "numeric", month: "short", year: "numeric" }).format(new Date(at * 1000));
+    }
+    catch {
+        return new Date(at * 1000).toISOString().slice(0, 10);
+    }
+}
+// ---- 3.3.10 (approved addition): rarity cached, the tab drawn from cache ----
+//
+// Steam's global unlock percentages per game are kept with the time they were read and read again at most every
+// RARITY_MAX_AGE_S per game, in the background. The tab draws at once from the last model it showed (MODEL_KEY) with the
+// cached rarity, and fills in as answers arrive: it never waits on the network to draw. Bounded; names and numbers
+// only (no keys, no credentials).
+const RARITY_KEY = "core.home.achievementRarity.v1";
+const MODEL_KEY = "core.home.achievements.v1";
+const RARITY_MAX_AGE_S = 24 * 3600;
+const RARITY_GAMES = 120;
+function readJson(storage, key) {
+    try {
+        const text = storage?.getItem(key);
+        return text ? JSON.parse(text) : undefined;
+    }
+    catch {
+        return undefined;
+    }
+}
+function writeJson(storage, key, value) {
+    try {
+        storage?.setItem(key, JSON.stringify(value));
+    }
+    catch { /* Kept in memory only. */ }
+}
+function rarityCache(raw) {
+    const games = {};
+    const source = raw?.v === 1 && raw.games && typeof raw.games === "object" ? raw.games : {};
+    for (const [id, entry] of Object.entries(source).slice(0, RARITY_GAMES * 2)) {
+        const at = number(entry?.at), rates = entry?.rates;
+        if (!/^\d{1,10}$/.test(id) || !at || !rates || typeof rates !== "object")
+            continue;
+        const clean = {};
+        for (const [name, pct] of Object.entries(rates).slice(0, 500)) {
+            const n = number(pct);
+            if (n !== undefined && n >= 0 && n <= 100)
+                clean[text$3(name)] = n;
+        }
+        games[id] = { at, rates: clean };
+    }
+    return { v: 1, games };
+}
+const rarityStale = (cache, appId, nowSeconds) => {
+    const entry = cache.games[String(appId)];
+    return !entry || nowSeconds - entry.at >= RARITY_MAX_AGE_S;
+};
+// Every achievement's global percentage in one GetMyAchievementsForApp answer (achieved, unachieved and hidden alike).
+function ratesFrom(answer) {
+    const data = parse(answer)?.data ?? parse(answer);
+    const out = {};
+    for (const list of [data?.achieved, data?.unachieved, data?.hidden]) {
+        if (!Array.isArray(list))
+            continue;
+        for (const item of list.slice(0, 500)) {
+            const name = text$3(item?.strName ?? item?.name), pct = number(item?.flAchieved);
+            if (name && pct !== undefined && pct >= 0 && pct <= 100)
+                out[name] = pct;
+        }
+    }
+    return out;
+}
+// Stores a game's rates; the oldest games go past RARITY_GAMES.
+function storeRates(cache, appId, rates, nowSeconds) {
+    const games = { ...cache.games, [String(appId)]: { at: nowSeconds, rates } };
+    const kept = Object.entries(games).sort((a, b) => b[1].at - a[1].at).slice(0, RARITY_GAMES);
+    return { v: 1, games: Object.fromEntries(kept) };
+}
+// A Steam unlock's rarity from the cache (none while its game's rates have not arrived yet).
+function withRarity(unlock, cache) {
+    if (unlock.source !== "steam" || !unlock.appId)
+        return unlock;
+    const pct = cache.games[String(unlock.appId)]?.rates?.[unlock.name];
+    const { rarity: _drop, ...rest } = unlock;
+    return pct === undefined ? rest : { ...rest, rarity: pct };
+}
+// The last model shown, as stored: bounded and re-validated on read.
+function storedModel(raw) {
+    const value = raw;
+    if (!value || !Array.isArray(value.recent) || !Array.isArray(value.closest))
+        return undefined;
+    const recent = value.recent.slice(0, RECENT_LIMIT).map((item) => {
+        const name = text$3(item?.name), at = epochSeconds(item?.at), source = item?.source === "ra" ? "ra" : "steam";
+        if (!name || !at)
+            return undefined;
+        const appId = number(item?.appId);
+        return { source, name, game: text$3(item?.game), at, hardcore: item?.hardcore === true, icon: safeImage(item?.icon), ...(appId && appId > 0 ? { appId } : {}) };
+    }).filter(Boolean);
+    const closest = value.closest.slice(0, CLOSEST_LIMIT).map((item) => {
+        const entry = raNearlyDone(item);
+        return entry ? { ...entry, source: item?.source === "ra" ? "ra" : "steam" } : undefined;
+    }).filter(Boolean);
+    return { recent, closest };
+}
+
+const { Focusable: Focusable$i, Navigation: Navigation$a } = CompatUI;
+// Steam's achievement progress cache (index.tsx hands in its finder: it is a Steam store found by module search).
+let progressSource = () => undefined;
+function setAchievementProgressSource(source) { progressSource = source; }
+const STEAM_GAMES = 8; // most recently played Steam games asked for their unlocks
+const TIMEOUT_MS = 5000;
+const REFRESH_MS = 10 * 60000;
+const SHORTCUT_BASE = 0x80000000; // non-Steam shortcuts have no Steam achievements
+const css$6 = `
+.core-ach{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:28px;padding:8px 2px 24px;color:#C9D1D9}
+.core-ach h3{margin:0 0 14px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#C9D1D9}
+.core-ach-list{display:flex;flex-direction:column;gap:10px}
+.core-ach-row{display:flex;align-items:center;gap:14px;min-height:64px;box-sizing:border-box;padding:0 15px;background:#1A1D21;border-radius:var(--core-radius-float,10px);transition:translate .15s ease-out;outline:none}
+.core-ach-row.gpfocus,.core-ach-row:focus-visible{background:#2A2F36;translate:0 -4px;outline:none}
+.core-ach-icon{width:42px;height:42px;flex:none;background:linear-gradient(135deg,#2A2F36,#1A1D21);object-fit:cover}
+.core-ach-text{flex:1;min-width:0}
+.core-ach-name{font-size:15px;font-weight:600;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.core-ach-sub{font-size:12px;color:#9AA4AE;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.core-ach-note{font-size:11px;color:#EA5A68;white-space:nowrap}
+.core-ach-tag{height:18px;padding:0 7px;display:inline-flex;align-items:center;font-size:9px;font-weight:600;white-space:nowrap;background:#2A2F36;color:#C9D1D9}
+.core-ach-tag.ra{background:#C98B4A;color:#000000}
+.core-ach-card{box-sizing:border-box;padding:13px 15px;background:#1A1D21;border-radius:var(--core-radius-float,10px);transition:translate .15s ease-out;outline:none}
+.core-ach-card.gpfocus,.core-ach-card:focus-visible{background:#2A2F36;translate:0 -4px;outline:none}
+.core-ach-head{display:flex;justify-content:space-between;gap:12px;font-size:15px;font-weight:600;color:#FFFFFF}
+.core-ach-bar{margin-top:10px;height:6px;background:#2A2F36}
+.core-ach-bar i{display:block;height:6px;background:#D7263D}
+.core-ach-left{margin-top:7px;font-size:11px;color:#9AA4AE}
+.core-ach-empty{font-size:15px;color:#9AA4AE;padding:8px 2px;text-align:left;outline:none;background:transparent}
+@media (prefers-reduced-motion: reduce){.core-ach-row,.core-ach-card{transition:none}}
+`;
+function withTimeout$1(promise, ms) {
+    return new Promise(resolve => {
+        const timer = setTimeout(() => resolve(undefined), ms);
+        promise.then(value => { clearTimeout(timer); resolve(value); }, () => { clearTimeout(timer); resolve(undefined); });
+    });
+}
+// The most recently played Steam games (no shortcuts), for their unlocks.
+function recentSteamGames() {
+    try {
+        const all = window.appStore?.allApps;
+        const list = Array.isArray(all) ? all : all && typeof all.values === "function" ? Array.from(all.values()) : [];
+        return list.filter(app => Number(app?.appid) > 0 && Number(app.appid) < SHORTCUT_BASE && Number(app?.rt_last_time_played) > 0)
+            .sort((a, b) => Number(b.rt_last_time_played) - Number(a.rt_last_time_played)).slice(0, STEAM_GAMES)
+            .map(app => ({ appid: Number(app.appid), name: String(app.display_name ?? "") }));
+    }
+    catch {
+        return [];
+    }
+}
+const nameOf = (appid) => { try {
+    return String(window.appStore?.GetAppOverviewByAppID?.(appid)?.display_name ?? "");
+}
+catch {
+    return "";
+} };
+const storage$2 = () => { try {
+    return window.localStorage;
+}
+catch {
+    return undefined;
+} };
+// The rarity cache, shared by every render (coreAchievements.ts: per game, at most every 24 hours).
+let rarity = rarityCache(readJson(storage$2(), RARITY_KEY));
+const rarityListeners = new Set();
+let rarityRevision = 0;
+function keepRates(appId, rates) {
+    if (!Object.keys(rates).length)
+        return;
+    rarity = storeRates(rarity, appId, rates, Math.floor(Date.now() / 1000));
+    writeJson(storage$2(), RARITY_KEY, rarity);
+    rarityRevision++;
+    for (const listener of [...rarityListeners]) {
+        try {
+            listener();
+        }
+        catch { /* Others still hear it. */ }
+    }
+}
+const subscribeRarity = (listener) => { rarityListeners.add(listener); return () => { rarityListeners.delete(listener); }; };
+// Read in the background; each game's rarity is kept as its answer arrives (only when its cached rates are stale).
+async function loadAchievements() {
+    const apps = window.SteamClient?.Apps;
+    const steam = await Promise.all(recentSteamGames().map(async (game) => {
+        if (typeof apps?.GetMyAchievementsForApp !== "function")
+            return [];
+        const answer = await withTimeout$1(Promise.resolve().then(() => apps.GetMyAchievementsForApp(String(game.appid))), TIMEOUT_MS);
+        if (answer !== undefined && rarityStale(rarity, game.appid, Math.floor(Date.now() / 1000)))
+            keepRates(game.appid, ratesFrom(answer));
+        return steamUnlocks(answer, game);
+    }));
+    let cache;
+    try {
+        cache = progressSource()?.m_achievementProgress?.mapCache;
+    }
+    catch {
+        cache = undefined;
+    }
+    const bridge = collectorBridge(window);
+    const [raRecent, raClosest] = await Promise.all([
+        withTimeout$1(fromBridge(bridge, "getRecentUnlocks", RECENT_LIMIT, raUnlock), TIMEOUT_MS),
+        withTimeout$1(fromBridge(bridge, "getClosestToComplete", CLOSEST_LIMIT, raNearlyDone), TIMEOUT_MS),
+    ]);
+    return { recent: mergeUnlocks([...steam, raRecent ?? []]), closest: mergeClosest([steamClosest(cache, nameOf), raClosest ?? []]) };
+}
+const openAchievements = (appId) => { if (appId) {
+    try {
+        Navigation$a?.Navigate?.(`/library/app/${appId}/achievements`);
+    }
+    catch { /* Stay on Home. */ }
+} };
+function CoreAchievementsTab({ locale }) {
+    const text = coreHomeCopy(locale);
+    // Drawn at once from the last model shown (never waiting on the network), then refreshed in the background.
+    const [data, setData] = _global_SP_REACT.useState(() => storedModel(readJson(storage$2(), MODEL_KEY)) ?? null);
+    _global_SP_REACT.useSyncExternalStore(subscribeRarity, () => rarityRevision, () => rarityRevision);
+    _global_SP_REACT.useEffect(() => {
+        let alive = true;
+        const read = () => void loadAchievements().then(next => { if (alive) {
+            setData(next);
+            writeJson(storage$2(), MODEL_KEY, next);
+        } })
+            .catch(() => { if (alive)
+            setData(prior => prior ?? { recent: [], closest: [] }); });
+        read();
+        const timer = window.setInterval(read, REFRESH_MS);
+        // The Collector's bridge may register after Core: read again when it says it is ready.
+        const ready = () => read();
+        try {
+            window.addEventListener(COLLECTOR_ACHIEVEMENTS_READY, ready);
+        }
+        catch { /* The next refresh reads it. */ }
+        return () => { alive = false; window.clearInterval(timer); try {
+            window.removeEventListener(COLLECTOR_ACHIEVEMENTS_READY, ready);
+        }
+        catch { /* Gone. */ } };
+    }, []);
+    const now = Date.now();
+    const recent = (data?.recent ?? []).map(unlock => withRarity(unlock, rarity)), closest = data?.closest ?? [];
+    // 3.3.10: nothing to show (once read): one line of hint text where the lists would start.
+    if (data && !recent.length && !closest.length)
+        return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$6 }), SP_JSX.jsx(Focusable$i, { className: "core-ach-empty", focusable: true, children: text.achievementsEmpty })] });
+    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$6 }), SP_JSX.jsxs(Focusable$i, { className: "core-ach", "flow-children": "row", children: [SP_JSX.jsxs(Focusable$i, { className: "core-ach-col", "flow-children": "column", children: [SP_JSX.jsx("h3", { children: text.recentUnlocks }), recent.length ? SP_JSX.jsx("div", { className: "core-ach-list", children: recent.map((unlock, i) => {
+                                    const note = unlockNote(unlock, { hardcore: text.hardcore, players: text.players });
+                                    return SP_JSX.jsxs(Focusable$i, { className: "core-ach-row", focusable: true, "aria-label": `${unlock.name}, ${unlock.game}`, onActivate: () => openAchievements(unlock.appId), onClick: () => openAchievements(unlock.appId), children: [unlock.icon ? SP_JSX.jsx("img", { className: "core-ach-icon", alt: "", src: unlock.icon }) : SP_JSX.jsx("span", { className: "core-ach-icon" }), SP_JSX.jsxs("div", { className: "core-ach-text", children: [SP_JSX.jsx("div", { className: "core-ach-name", children: unlock.name }), SP_JSX.jsx("div", { className: "core-ach-sub", children: [unlock.game, whenText(unlock.at, now, locale)].filter(Boolean).join(" · ") })] }), note && SP_JSX.jsx("span", { className: "core-ach-note", children: note }), SP_JSX.jsx("span", { className: `core-ach-tag${unlock.source === "ra" ? " ra" : ""}`, children: unlock.source === "ra" ? "RetroAchievements" : "Steam" })] }, `${unlock.source}-${unlock.appId ?? unlock.game}-${unlock.name}-${i}`);
+                                }) }) : SP_JSX.jsx(Focusable$i, { className: "core-ach-row", focusable: true, children: SP_JSX.jsx("span", { className: "core-ach-empty", children: data ? text.achievementsEmpty : "…" }) })] }), SP_JSX.jsxs(Focusable$i, { className: "core-ach-col", "flow-children": "column", children: [SP_JSX.jsx("h3", { children: text.closest }), SP_JSX.jsx("div", { className: "core-ach-list", children: closest.map((entry, i) => {
+                                    const pct = percentOf(entry);
+                                    const left = text.left.replace("{n}", String(entry.total - entry.unlocked));
+                                    return SP_JSX.jsxs(Focusable$i, { className: "core-ach-card", focusable: true, "aria-label": `${entry.game}, ${pct}%`, onActivate: () => openAchievements(entry.appId), onClick: () => openAchievements(entry.appId), children: [SP_JSX.jsxs("div", { className: "core-ach-head", children: [SP_JSX.jsx("span", { children: entry.game }), SP_JSX.jsxs("span", { children: [pct, "%"] })] }), SP_JSX.jsx("div", { className: "core-ach-bar", children: SP_JSX.jsx("i", { style: { width: `${pct}%` } }) }), SP_JSX.jsx("div", { className: "core-ach-left", children: entry.source === "ra" ? `RA · ${left}` : left })] }, `${entry.source}-${entry.appId ?? entry.game}-${i}`);
+                                }) })] })] })] });
+}
+
+// Eternal Core 3.3.10: where a Favorites tile's art comes from (docs/eternal/CORE-UI.md, "Favorites"). TV: Street
+// Fighter 6 was an empty gunmetal box, because every portrait URL the tile tried failed. Now the tile tries Steam's own
+// portrait first (what the Library draws, GetVerticalCapsuleURLForApp included), and when no portrait loads it draws the
+// game's hero art with its logo on top, else the hero with the name, else the name over a gunmetal-to-black gradient:
+// never an empty box.
+//
+// Pure: tests hand it a fake appStore.
+const LOOPBACK = "https://steamloopback.host";
+function urls(value) {
+    if (typeof value === "string")
+        return value ? [value] : [];
+    return Array.isArray(value) ? value.filter((url) => typeof url === "string" && url.length > 0) : [];
+}
+function ask(store, names, overview, appid) {
+    const out = [];
+    for (const name of names) {
+        try {
+            if (typeof store?.[name] === "function")
+                out.push(...urls(store[name](overview ?? appid)));
+        }
+        catch { /* Next source. */ }
+    }
+    return out;
+}
+function favoriteArt(appid, store) {
+    let overview;
+    try {
+        overview = store?.GetAppOverviewByAppID?.(appid);
+    }
+    catch {
+        overview = undefined;
+    }
+    const id = Number.isInteger(appid) && appid > 0 ? appid : 0;
+    const portrait = [
+        ...ask(store, ["GetCustomVerticalCapsuleURLs", "GetVerticalCapsuleURLs", "GetCustomPortraitImageURLs", "GetCachedPortraitImageURLs"], overview, id),
+        ...ask(store, ["GetVerticalCapsuleURLForApp"], overview, id),
+        ...(id ? [`${LOOPBACK}/customimages/${id}p.png`, `${LOOPBACK}/customimages/${id}p.jpg`, `${LOOPBACK}/assets/${id}/library_600x900.jpg`] : []),
+    ];
+    const hero = [
+        ...ask(store, ["GetCustomHeroImageURLs", "GetHeroImageURLs", "GetCachedHeroImageURLs"], overview, id),
+        ...ask(store, ["GetHeroImageURLForApp"], overview, id),
+        ...(id ? [`${LOOPBACK}/customimages/${id}_hero.png`, `${LOOPBACK}/customimages/${id}_hero.jpg`, `${LOOPBACK}/assets/${id}/library_hero.jpg`] : []),
+    ];
+    const logo = [
+        ...ask(store, ["GetCustomLogoImageURLs", "GetLogoImageURLs", "GetCachedLogoImageURLs"], overview, id),
+        ...ask(store, ["GetLogoImageURLForApp"], overview, id),
+        ...(id ? [`${LOOPBACK}/customimages/${id}_logo.png`, `${LOOPBACK}/assets/${id}/logo.png`] : []),
+    ];
+    return { portrait: [...new Set(portrait)], hero: [...new Set(hero)], logo: [...new Set(logo)] };
+}
+function favoriteLayers(art, failed) {
+    if (failed.portrait < art.portrait.length)
+        return { kind: "portrait", src: art.portrait[failed.portrait] };
+    return { kind: "fallback", hero: art.hero[failed.hero], logo: art.logo[failed.logo] };
+}
+
+// Eternal Core 3.3.10: Home's two pages, Home and Consoles (docs/eternal/CORE-UI.md, "Home in 3.3.10"), switched with
+// L1 and R1 from screen one, and the measures of screen one's row. Pure: tests drive it directly.
+//
+// Each page is two screens. Screen one is the focused item's art filling the screen with a row on the footer: on Home,
+// the recent games Steam lists; on Consoles, one card per console. Screen two is below the fold: on Home, the tabs
+// Favorites, Achievements and Club; on Consoles, the focused console's recent games.
+const HOME_PAGES = ["home", "consoles"];
+// Steam's gamepad buttons (GamepadButton in @decky/ui): the bumpers switch pages, down leaves screen one.
+const BUTTON = { BUMPER_LEFT: 5, BUMPER_RIGHT: 6};
+let page = "home";
+let focusedConsole = "";
+const listeners$9 = new Set();
+const notify$2 = () => { for (const listener of [...listeners$9]) {
+    try {
+        listener();
+    }
+    catch { /* Others still hear it. */ }
+} };
+const homePage = () => page;
+const focusedConsoleId = () => focusedConsole;
+function subscribeHomePage(listener) { listeners$9.add(listener); return () => { listeners$9.delete(listener); }; }
+function setHomePage(next) {
+    if (!HOME_PAGES.includes(next) || next === page)
+        return;
+    page = next;
+    notify$2();
+}
+function setFocusedConsole(id) {
+    const next = typeof id === "string" ? id : "";
+    if (next === focusedConsole)
+        return;
+    focusedConsole = next;
+    notify$2();
+}
+// The page a bumper leads to: L1 to the page on the left, R1 to the one on the right; no wrap. Anything else: none.
+function pageForButton(current, button) {
+    const at = HOME_PAGES.indexOf(current);
+    if (button === BUTTON.BUMPER_LEFT)
+        return at > 0 ? HOME_PAGES[at - 1] : undefined;
+    if (button === BUTTON.BUMPER_RIGHT)
+        return at >= 0 && at < HOME_PAGES.length - 1 ? HOME_PAGES[at + 1] : undefined;
+    return undefined;
+}
+// Screen one's row, from the approved board (1920 x 1080) in viewport units, so the TV's 1348 x 758 gets the board's
+// proportions: the focused tile 29% of the height (about 219 px on the TV), the others 25%, sitting 2.6% above the
+// footer (28 px on the board). Games are portrait (2:3), consoles landscape (16:9). The focused tile lifts 10 px on the
+// board (7 px on the TV); the others are dimmed to 82%.
+const HOME_ROW = {
+    gameFocusedVh: 28.9, gameVh: 25.2, consoleFocusedVh: 20.8, consoleVh: 17.7,
+    gapVw: 1.15, insetVw: 3.33, aboveFooterVh: 2.6, footerPx: 42, liftPx: 7, dim: 0.82,
+};
+// The recent games Steam hands its Home row: the `games` list of the carousel in the recents section's output (or its
+// own props), as app ids. Steam's sentinel 0 and anything not a positive integer are dropped; duplicates once. Undefined
+// when no such list is found (then Steam's own row stays).
+function recentGamesIn(tree, props, depth = 0) {
+    const clean = (list) => [...new Set(list.map(Number).filter(id => Number.isInteger(id) && id > 0))].slice(0, 40);
+    if (props && Array.isArray(props.games))
+        return clean(props.games);
+    if (!tree || depth > 24)
+        return undefined;
+    if (Array.isArray(tree)) {
+        for (const node of tree) {
+            const found = recentGamesIn(node, undefined, depth + 1);
+            if (found)
+                return found;
+        }
+        return undefined;
+    }
+    const own = tree?.props;
+    if (!own || typeof own !== "object")
+        return undefined;
+    if (Array.isArray(own.games) && (typeof own.onItemFocus === "function" || "showFeaturedItem" in own || "refOnItemFocus" in own))
+        return clean(own.games);
+    for (const key of ["children", "native"]) {
+        const found = recentGamesIn(own[key], undefined, depth + 1);
+        if (found)
+            return found;
+    }
+    return undefined;
+}
+// ---- 3.3.10 additions (approved after the boards) ----
+// The full-screen art follows focus only once it has rested on a tile for HERO_DELAY_MS, then crossfades over
+// HERO_FADE_MS; the art of the tiles HERO_PRELOAD either side is loaded ahead.
+const HERO_DELAY_MS = 150;
+const HERO_FADE_MS = 250;
+const HERO_PRELOAD = 2;
+function neighbours(index, length, reach = HERO_PRELOAD) {
+    const out = [];
+    for (let step = 1; step <= reach; step++)
+        for (const at of [index + step, index - step])
+            if (at >= 0 && at < length)
+                out.push(at);
+    return out;
+}
+// Back to screen one from screen two: B anywhere there, or up from its top row (Home's tab row; the Consoles page's
+// games). On screen one B stays Steam's.
+const BUTTON_CANCEL = 2;
+const BUTTON_UP = 9;
+function backToScreenOne(button, where) {
+    if (!where.inTwo)
+        return false;
+    return button === BUTTON_CANCEL || (button === BUTTON_UP && where.inTopRow);
+}
+// The club's current Game of the Week and Game of the Month, when owned, lead the Consoles row (at most those two, in
+// that order; nothing when neither is owned). Tags in the pick's colour.
+const CONSOLE_PICK_EVENTS = ["gotw", "gotm"];
+const CONSOLE_PICK_TONES = { gotw: "#8F7CB0", gotm: "#B07A84" };
+function consolePicks(picks, eventOf, match, ended = () => false) {
+    const out = [];
+    for (const event of CONSOLE_PICK_EVENTS) {
+        const pick = (Array.isArray(picks) ? picks : []).find(item => { try {
+            return eventOf(item) === event && !ended(item);
+        }
+        catch {
+            return false;
+        } });
+        if (!pick)
+            continue;
+        let found = null;
+        try {
+            found = match(pick);
+        }
+        catch {
+            found = null;
+        }
+        if (!found || !(found.appId > 0) || out.some(item => item.appId === found.appId))
+            continue;
+        out.push({ event, label: String(pick.label ?? ""), title: String(pick.title ?? ""), appId: found.appId, tone: CONSOLE_PICK_TONES[event] });
+    }
+    return out;
+}
+// The user's Library icon set (index.tsx hands it in through coreHome.setCoreHomeIcons): a console tile without
+// ColorGrade art falls back to its icon.
+let iconSource = () => undefined;
+function setHomeIconSource(source) { iconSource = source; }
+const homeIconSet = () => { try {
+    return iconSource();
+}
+catch {
+    return undefined;
+} };
 
 // Eternal Core: the Library's tab icons, family tones and collection tiles (docs/eternal/CORE-UI.md, "Library icons
 // and tones"). Replaces what the CSS Loader themes Enhanced Library and Enhanced Collection did by position: here every
@@ -22232,7 +22903,7 @@ function matchTab(title) {
 const COLLECTIONS = [
     [/^completed$/, "completed", undefined],
     [/^(vr|virtual reality)$/, "vr", undefined],
-    [/^(playstation|sony playstation|ps1|psx|ps one)$/, "ps1", "playstation"],
+    [/^(playstation|playstation 1|sony playstation|ps1|psx|ps one)$/, "ps1", "playstation"],
     [/^(playstation 2|ps2)$/, "ps2", "playstation"],
     [/^(playstation 3|ps3)$/, "ps3", "playstation"],
     [/^(playstation 4|ps4)$/, "ps4", "playstation"],
@@ -22327,6 +22998,9 @@ function collectionIconPick(name, found, set) {
         return { url: byKey, source: "user-key" };
     const drawn = found ? original(ORIGINAL_FOR_KEY[found.key]) : undefined;
     return drawn ? { url: drawn, source: "original" } : { source: "none" };
+}
+function collectionIcon(name, found, set) {
+    return collectionIconPick(name, found, set).url;
 }
 // ---- The live page ----
 const TAB_ATTRIBUTE = "data-core-tab";
@@ -22504,8 +23178,6 @@ function createIconStore(source, now = Date.now, log = () => { }) {
 //
 // Pure: tests drive it with fake collections and fake slug lists.
 const CONSOLE_FAMILY_ORDER = ["playstation", "nintendo", "sega", "xbox", "retro"];
-// Board 1: eight tiles across at 1920 px (206 x 150, 20 px apart); the grid keeps eight across and scales with the view.
-const CONSOLE_TILE = { across: 8, width: 206, height: 150, gap: 20, toneBar: 4 };
 // Pack slugs to try for each Core collection key, best first (the pack's own names, then common alternatives). The pack
 // answers which slugs it has; the first one it has wins.
 const SLUGS_FOR_KEY = {
@@ -22574,38 +23246,60 @@ function consoleTiles(collections, slugs = new Set()) {
     return [...byConsole.values()].filter(tile => CONSOLE_FAMILY_ORDER.includes(tile.family))
         .sort((a, b) => CONSOLE_FAMILY_ORDER.indexOf(a.family) - CONSOLE_FAMILY_ORDER.indexOf(b.family) || a.name.localeCompare(b.name));
 }
+// ---- 3.3.10: the Consoles page (CORE-UI.md, "Home in 3.3.10") ----
+//
+// One card per console, most recently played first (a console never played comes after, by name). The Collector keeps
+// one Steam collection per console (PS1 is "PlayStation 1" since its 0.33 builds) and one per family ("PlayStation",
+// "Nintendo", "Sega", "Xbox", "Retro"): families never appear on Home, so a collection named exactly like a family is
+// not a console (Xbox is both a family and a console: the console's collection is kept, the bigger one when there are
+// two). Each card keeps its games (most recently played first) for screen two.
+const FAMILY_COLLECTION_NAMES = new Set(["playstation", "nintendo", "sega", "retro"]);
+function appsIn(collection) {
+    for (const key of ["allApps", "visibleApps", "apps", "m_rgApps"]) {
+        try {
+            const value = collection?.[key];
+            if (Array.isArray(value))
+                return value;
+            if (value && typeof value.values === "function")
+                return Array.from(value.values());
+        }
+        catch { /* Next shape. */ }
+    }
+    return [];
+}
+function gameOf(app) {
+    const appid = Number(app?.appid ?? app?.unAppID ?? app?.m_unAppID);
+    if (!Number.isFinite(appid) || appid <= 0)
+        return undefined;
+    return { appid, name: String(app?.display_name ?? app?.strDisplayName ?? app?.name ?? "").trim(), lastPlayed: Number(app?.rt_last_time_played ?? app?.rtLastTimePlayed ?? 0) || 0 };
+}
+function consoleCards(collections, slugs = new Set(), limit = 24) {
+    const list = (Array.isArray(collections) ? collections.slice(0, 400) : []).filter(collection => {
+        let raw = "";
+        try {
+            raw = String(collection?.displayName ?? collection?.strName ?? collection?.name ?? "");
+        }
+        catch {
+            return false;
+        }
+        return !FAMILY_COLLECTION_NAMES.has(plainCollectionName(raw).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim());
+    });
+    const byId = new Map();
+    for (const collection of list) {
+        try {
+            byId.set(String(collection?.id ?? collection?.strId ?? ""), collection);
+        }
+        catch { /* Skipped. */ }
+    }
+    return consoleTiles(list, slugs).map(tile => {
+        const seen = new Set();
+        const games = appsIn(byId.get(tile.id)).slice(0, 5000).map(gameOf).filter((game) => !!game && !seen.has(game.appid) && !!seen.add(game.appid))
+            .sort((a, b) => b.lastPlayed - a.lastPlayed || a.name.localeCompare(b.name));
+        return { ...tile, games: games.slice(0, limit), lastPlayed: games[0]?.lastPlayed ?? 0 };
+    }).sort((a, b) => (b.lastPlayed > 0 ? 1 : 0) - (a.lastPlayed > 0 ? 1 : 0) || b.lastPlayed - a.lastPlayed || a.name.localeCompare(b.name));
+}
 // Steam's route for a collection (the Library's own collection page).
 const collectionRoute = (id) => `/library/collection/${encodeURIComponent(id)}`;
-
-// Eternal Core 3.3.9: the Consoles tab's icon pack, as the plugin backend answers it (get_colorgrade_pack). One shared
-// answer for the tab and Quick Access > Core > Look ("Re-import icon pack"), loaded once and on demand.
-let pack;
-let pending$1;
-const listeners$8 = new Set();
-const notify$1 = () => { for (const listener of [...listeners$8]) {
-    try {
-        listener();
-    }
-    catch { /* Others still hear it. */ }
-} };
-const consolePack = () => pack;
-function subscribeConsolePack(listener) { listeners$8.add(listener); return () => { listeners$8.delete(listener); }; }
-function loadConsolePack(force = false) {
-    if (pending$1 && !force)
-        return pending$1;
-    const run = (async () => {
-        try {
-            pack = await call("get_colorgrade_pack", force);
-        }
-        catch { /* The tiles keep their names. */ }
-        notify$1();
-        return pack;
-    })();
-    pending$1 = run;
-    void run.finally(() => { if (pending$1 === run)
-        pending$1 = undefined; });
-    return run;
-}
 
 // Eternal Core: the Core Starfield for Core UI surfaces (docs/eternal/CORE-UI.md, "Black means starfield").
 //
@@ -22783,206 +23477,133 @@ function CoreStars() {
     return SP_JSX.jsx("canvas", { ref: canvas, "aria-hidden": "true", "data-core-stars": "page", style: { position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: -1, pointerEvents: "none", background: "#000000" } });
 }
 
-// Eternal Core: the Club tab's text in Core's 12 languages. Event names ("Game of the Week", ...), game titles,
-// member names and the bot command stay as the club writes them: they are the club's own names.
-// Self-contained (no imports): tests/club.test.mjs loads it alone.
-const en$8 = {
-    tab: "Club", title: "Play Retro Games Club", playing: "Playing now",
-    daysLeft: { one: "{n} day left", other: "{n} days left" }, lastDay: "Last day", ended: "Ended", noDate: "Dates on the club site",
-    notInLibrary: "Not in your library", play: "Play", details: "Game page", standing: "Your standing", beaten: "games beaten",
-    streak: "streak", rank: "rank", rankOf: "#{rank} of {of}", crowns: "Crowns",
-    setName: "Enter your club name in Quick Access > Core > Club to see your standing.",
-    notFound: "No member called \"{name}\" on the leaderboard yet.", top: "Top 5", nominations: "Nominations",
-    voteOpens: "Vote opens {date}", logTitle: "How to log a win", logDiscord: "On Discord, in the game's thread:",
-    logOptions: "Options: event, ra_username (first time only), screenshot (adds 0.75 to your vote weight). On its own, it sends you a private link to log on the website.",
-    logForum: "On the forum: open the game's thread in PRGC General and choose Log a completion.",
-    logDeadline: "Log it before the pick ends: completions close the moment it does.", updated: "Updated {ago}",
-    saved: "Showing saved data", refresh: "Refresh", loading: "Loading the club…", noData: "Club data isn't available yet.",
-    setting: "Show the Club tab", settingHint: "Play Retro Games Club picks, your standing and nominations on the Home.",
-    nameLabel: "Your club display name", nameSave: "Save name", saveFailed: "Could not save the Club settings.",
-    logAssemble: "Assemble opens the game's thread on the club's Discord with /completed ready. Choose the options there and send it yourself.", logButton: "Log completion", logOpening: "Opening Assemble…",
-    logOpened: "Opened in Assemble: choose the options and send it there.", logFailed: "Assemble could not open the thread.",
-};
-const copy$d = {
-    en: en$8,
-    it: { ...en$8, tab: "Club", playing: "In gioco ora", daysLeft: { one: "Manca {n} giorno", other: "Mancano {n} giorni" }, lastDay: "Ultimo giorno", ended: "Terminato", noDate: "Date sul sito del club",
-        notInLibrary: "Non è nella tua libreria", play: "Gioca", details: "Pagina del gioco", standing: "La tua posizione", beaten: "giochi completati", streak: "serie", rank: "posizione",
-        rankOf: "#{rank} su {of}", crowns: "Corone", setName: "Inserisci il tuo nome nel club in Accesso rapido > Core > Club per vedere la tua posizione.",
-        notFound: "Nessun membro chiamato \"{name}\" nella classifica per ora.", top: "Top 5", nominations: "Candidature", voteOpens: "Il voto apre il {date}",
-        logTitle: "Come registrare una vittoria", logDiscord: "Su Discord, nel thread del gioco:",
-        logOptions: "Opzioni: event, ra_username (solo la prima volta), screenshot (aggiunge 0,75 al peso del tuo voto). Da solo ti invia un link privato per registrarla sul sito.",
-        logForum: "Sul forum: apri il thread del gioco in PRGC General e scegli Log a completion.", logDeadline: "Registrala prima che la scelta finisca: le registrazioni chiudono in quel momento.",
-        updated: "Aggiornato {ago}", saved: "Dati salvati", refresh: "Aggiorna", loading: "Caricamento del club…", noData: "I dati del club non sono ancora disponibili.",
-        setting: "Mostra la scheda Club", settingHint: "Le scelte del Play Retro Games Club, la tua posizione e le candidature nella Home.", nameLabel: "Il tuo nome nel club",
-        nameSave: "Salva nome", saveFailed: "Impossibile salvare le impostazioni del Club.",
-        logAssemble: "Assemble apre il thread del gioco sul Discord del club con /completed pronto. Scegli le opzioni lì e invialo tu.", logButton: "Registra completamento", logOpening: "Apertura di Assemble…",
-        logOpened: "Aperto in Assemble: scegli le opzioni e invialo da lì.", logFailed: "Assemble non è riuscito ad aprire il thread." },
-    es: { ...en$8, playing: "Jugando ahora", daysLeft: { one: "Queda {n} día", other: "Quedan {n} días" }, lastDay: "Último día", ended: "Terminado", noDate: "Fechas en la web del club",
-        notInLibrary: "No está en tu biblioteca", play: "Jugar", details: "Página del juego", standing: "Tu posición", beaten: "juegos superados", streak: "racha", rank: "puesto",
-        rankOf: "#{rank} de {of}", crowns: "Coronas", setName: "Escribe tu nombre del club en Acceso rápido > Core > Club para ver tu posición.",
-        notFound: "Aún no hay ningún miembro llamado \"{name}\" en la clasificación.", top: "Top 5", nominations: "Nominaciones", voteOpens: "La votación abre el {date}",
-        logTitle: "Cómo registrar una victoria", logDiscord: "En Discord, en el hilo del juego:",
-        logOptions: "Opciones: event, ra_username (solo la primera vez), screenshot (suma 0,75 al peso de tu voto). Solo, te envía un enlace privado para registrarla en la web.",
-        logForum: "En el foro: abre el hilo del juego en PRGC General y elige Log a completion.", logDeadline: "Regístrala antes de que acabe la elección: los registros cierran en ese momento.",
-        updated: "Actualizado {ago}", saved: "Datos guardados", refresh: "Actualizar", loading: "Cargando el club…", noData: "Los datos del club aún no están disponibles.",
-        setting: "Mostrar la pestaña Club", settingHint: "Las elecciones del Play Retro Games Club, tu posición y las nominaciones en Inicio.", nameLabel: "Tu nombre en el club",
-        nameSave: "Guardar nombre", saveFailed: "No se pudo guardar la configuración del Club.",
-        logAssemble: "Assemble abre el hilo del juego en el Discord del club con /completed listo. Elige las opciones allí y envíalo tú.", logButton: "Registrar completado", logOpening: "Abriendo Assemble…",
-        logOpened: "Abierto en Assemble: elige las opciones y envíalo allí.", logFailed: "Assemble no pudo abrir el hilo." },
-    fr: { ...en$8, playing: "En cours", daysLeft: { one: "{n} jour restant", other: "{n} jours restants" }, lastDay: "Dernier jour", ended: "Terminé", noDate: "Dates sur le site du club",
-        notInLibrary: "Absent de votre bibliothèque", play: "Jouer", details: "Page du jeu", standing: "Votre classement", beaten: "jeux terminés", streak: "série", rank: "rang",
-        rankOf: "#{rank} sur {of}", crowns: "Couronnes", setName: "Saisissez votre nom de membre dans Accès rapide > Core > Club pour voir votre classement.",
-        notFound: "Aucun membre nommé « {name} » dans le classement pour l'instant.", top: "Top 5", nominations: "Nominations", voteOpens: "Vote le {date}",
-        logTitle: "Enregistrer une victoire", logDiscord: "Sur Discord, dans le fil du jeu :",
-        logOptions: "Options : event, ra_username (la première fois seulement), screenshot (ajoute 0,75 au poids de votre vote). Seule, elle vous envoie un lien privé pour l'enregistrer sur le site.",
-        logForum: "Sur le forum : ouvrez le fil du jeu dans PRGC General et choisissez Log a completion.", logDeadline: "Enregistrez-la avant la fin de la sélection : les enregistrements ferment à ce moment-là.",
-        updated: "Mis à jour {ago}", saved: "Données enregistrées", refresh: "Actualiser", loading: "Chargement du club…", noData: "Les données du club ne sont pas encore disponibles.",
-        setting: "Afficher l'onglet Club", settingHint: "Les sélections du Play Retro Games Club, votre classement et les nominations sur l'accueil.", nameLabel: "Votre nom de membre",
-        nameSave: "Enregistrer le nom", saveFailed: "Impossible d'enregistrer les paramètres du Club.",
-        logAssemble: "Assemble ouvre le fil du jeu sur le Discord du club avec /completed prêt. Choisissez les options et envoyez-le vous-même.", logButton: "Enregistrer la complétion", logOpening: "Ouverture d'Assemble…",
-        logOpened: "Ouvert dans Assemble : choisissez les options et envoyez-le depuis là.", logFailed: "Assemble n'a pas pu ouvrir le fil." },
-    de: { ...en$8, playing: "Läuft gerade", daysLeft: { one: "Noch {n} Tag", other: "Noch {n} Tage" }, lastDay: "Letzter Tag", ended: "Beendet", noDate: "Termine auf der Club-Website",
-        notInLibrary: "Nicht in deiner Bibliothek", play: "Spielen", details: "Spielseite", standing: "Dein Stand", beaten: "Spiele geschafft", streak: "Serie", rank: "Platz",
-        rankOf: "Platz {rank} von {of}", crowns: "Kronen", setName: "Gib deinen Club-Namen unter Schnellzugriff > Core > Club ein, um deinen Stand zu sehen.",
-        notFound: "Noch kein Mitglied namens „{name}“ in der Rangliste.", top: "Top 5", nominations: "Nominierungen", voteOpens: "Abstimmung ab {date}",
-        logTitle: "So trägst du einen Sieg ein", logDiscord: "Auf Discord, im Thread des Spiels:",
-        logOptions: "Optionen: event, ra_username (nur beim ersten Mal), screenshot (erhöht dein Stimmgewicht um 0,75). Allein schickt es dir einen privaten Link zum Eintragen auf der Website.",
-        logForum: "Im Forum: Öffne den Thread des Spiels in PRGC General und wähle Log a completion.", logDeadline: "Trag ihn ein, bevor die Wahl endet: Einträge schließen genau dann.",
-        updated: "Aktualisiert {ago}", saved: "Gespeicherte Daten", refresh: "Aktualisieren", loading: "Club wird geladen…", noData: "Club-Daten sind noch nicht verfügbar.",
-        setting: "Club-Tab anzeigen", settingHint: "Die Picks des Play Retro Games Club, dein Stand und die Nominierungen auf der Startseite.", nameLabel: "Dein Club-Anzeigename",
-        nameSave: "Namen speichern", saveFailed: "Club-Einstellungen konnten nicht gespeichert werden.",
-        logAssemble: "Assemble öffnet den Thread des Spiels im Discord des Clubs mit /completed. Wähle dort die Optionen und sende ihn selbst.", logButton: "Abschluss eintragen", logOpening: "Assemble wird geöffnet…",
-        logOpened: "In Assemble geöffnet: Wähle die Optionen und sende ihn dort.", logFailed: "Assemble konnte den Thread nicht öffnen." },
-    pt: { ...en$8, playing: "Jogando agora", daysLeft: { one: "Falta {n} dia", other: "Faltam {n} dias" }, lastDay: "Último dia", ended: "Encerrado", noDate: "Datas no site do clube",
-        notInLibrary: "Não está na sua biblioteca", play: "Jogar", details: "Página do jogo", standing: "Sua posição", beaten: "jogos zerados", streak: "sequência", rank: "posição",
-        rankOf: "#{rank} de {of}", crowns: "Coroas", setName: "Digite seu nome no clube em Acesso rápido > Core > Club para ver sua posição.",
-        notFound: "Ainda não há membro chamado \"{name}\" no ranking.", top: "Top 5", nominations: "Indicações", voteOpens: "Votação abre em {date}",
-        logTitle: "Como registrar uma vitória", logDiscord: "No Discord, no tópico do jogo:",
-        logOptions: "Opções: event, ra_username (só na primeira vez), screenshot (soma 0,75 ao peso do seu voto). Sozinho, envia um link privado para registrar no site.",
-        logForum: "No fórum: abra o tópico do jogo em PRGC General e escolha Log a completion.", logDeadline: "Registre antes que a escolha termine: os registros fecham nesse momento.",
-        updated: "Atualizado {ago}", saved: "Dados salvos", refresh: "Atualizar", loading: "Carregando o clube…", noData: "Os dados do clube ainda não estão disponíveis.",
-        setting: "Mostrar a aba Club", settingHint: "As escolhas do Play Retro Games Club, sua posição e as indicações na página inicial.", nameLabel: "Seu nome no clube",
-        nameSave: "Salvar nome", saveFailed: "Não foi possível salvar as configurações do Club.",
-        logAssemble: "O Assemble abre o tópico do jogo no Discord do clube com /completed pronto. Escolha as opções lá e envie você mesmo.", logButton: "Registrar conclusão", logOpening: "Abrindo o Assemble…",
-        logOpened: "Aberto no Assemble: escolha as opções e envie por lá.", logFailed: "O Assemble não conseguiu abrir o tópico." },
-    uk: { ...en$8, tab: "Клуб", playing: "Зараз грають", daysLeft: { one: "Залишився {n} день", few: "Залишилося {n} дні", many: "Залишилося {n} днів", other: "Залишилося {n} дня" },
-        lastDay: "Останній день", ended: "Завершено", noDate: "Дати на сайті клубу", notInLibrary: "Немає у вашій бібліотеці", play: "Грати", details: "Сторінка гри",
-        standing: "Ваше місце", beaten: "ігор пройдено", streak: "серія", rank: "місце", rankOf: "№{rank} з {of}", crowns: "Корони",
-        setName: "Введіть своє ім'я в клубі в Швидкий доступ > Core > Club, щоб бачити своє місце.", notFound: "У рейтингу поки немає учасника «{name}».",
-        top: "Топ-5", nominations: "Номінації", voteOpens: "Голосування з {date}", logTitle: "Як зареєструвати перемогу", logDiscord: "У Discord, у гілці гри:",
-        logOptions: "Параметри: event, ra_username (лише першого разу), screenshot (додає 0,75 до ваги вашого голосу). Сама команда надсилає приватне посилання для реєстрації на сайті.",
-        logForum: "На форумі: відкрийте гілку гри в PRGC General і виберіть Log a completion.", logDeadline: "Зареєструйте до кінця вибору: реєстрація закривається саме тоді.",
-        updated: "Оновлено {ago}", saved: "Збережені дані", refresh: "Оновити", loading: "Завантаження клубу…", noData: "Дані клубу ще недоступні.",
-        setting: "Показувати вкладку «Клуб»", settingHint: "Вибір Play Retro Games Club, ваше місце й номінації на головній.", nameLabel: "Ваше ім'я в клубі",
-        nameSave: "Зберегти ім'я", saveFailed: "Не вдалося зберегти налаштування клубу.",
-        logAssemble: "Assemble відкриває гілку гри в Discord клубу з готовою командою /completed. Виберіть параметри там і надішліть самі.", logButton: "Зареєструвати проходження", logOpening: "Відкриваємо Assemble…",
-        logOpened: "Відкрито в Assemble: виберіть параметри й надішліть там.", logFailed: "Assemble не вдалося відкрити гілку." },
-    ru: { ...en$8, tab: "Клуб", playing: "Сейчас играют", daysLeft: { one: "Остался {n} день", few: "Осталось {n} дня", many: "Осталось {n} дней", other: "Осталось {n} дня" },
-        lastDay: "Последний день", ended: "Завершено", noDate: "Даты на сайте клуба", notInLibrary: "Нет в вашей библиотеке", play: "Играть", details: "Страница игры",
-        standing: "Ваше место", beaten: "игр пройдено", streak: "серия", rank: "место", rankOf: "№{rank} из {of}", crowns: "Короны",
-        setName: "Введите своё имя в клубе в Быстрый доступ > Core > Club, чтобы видеть своё место.", notFound: "В рейтинге пока нет участника «{name}».",
-        top: "Топ-5", nominations: "Номинации", voteOpens: "Голосование с {date}", logTitle: "Как записать победу", logDiscord: "В Discord, в ветке игры:",
-        logOptions: "Параметры: event, ra_username (только в первый раз), screenshot (добавляет 0,75 к весу вашего голоса). Сама команда присылает личную ссылку для записи на сайте.",
-        logForum: "На форуме: откройте ветку игры в PRGC General и выберите Log a completion.", logDeadline: "Запишите до конца выбора: запись закрывается в этот момент.",
-        updated: "Обновлено {ago}", saved: "Сохранённые данные", refresh: "Обновить", loading: "Загрузка клуба…", noData: "Данные клуба пока недоступны.",
-        setting: "Показывать вкладку «Клуб»", settingHint: "Выбор Play Retro Games Club, ваше место и номинации на главной.", nameLabel: "Ваше имя в клубе",
-        nameSave: "Сохранить имя", saveFailed: "Не удалось сохранить настройки клуба.",
-        logAssemble: "Assemble открывает ветку игры в Discord клуба с готовой командой /completed. Выберите параметры там и отправьте сами.", logButton: "Записать прохождение", logOpening: "Открываем Assemble…",
-        logOpened: "Открыто в Assemble: выберите параметры и отправьте там.", logFailed: "Assemble не удалось открыть ветку." },
-    zh: { ...en$8, tab: "俱乐部", playing: "正在游玩", daysLeft: { other: "还剩 {n} 天" }, lastDay: "最后一天", ended: "已结束", noDate: "日期见俱乐部网站",
-        notInLibrary: "不在你的库中", play: "开始游戏", details: "游戏页面", standing: "你的排名", beaten: "款已通关", streak: "连续", rank: "排名", rankOf: "第 {rank} 名，共 {of} 人",
-        crowns: "王冠", setName: "在 快速访问 > Core > Club 中输入你的俱乐部名称即可查看排名。", notFound: "排行榜上还没有名为“{name}”的成员。", top: "前 5 名",
-        nominations: "提名", voteOpens: "{date} 开始投票", logTitle: "如何登记通关", logDiscord: "在 Discord 上，于该游戏的帖子中：",
-        logOptions: "选项：event、ra_username（仅首次）、screenshot（为你的投票权重加 0.75）。单独使用时会私信你一个在网站上登记的链接。",
-        logForum: "在论坛上：打开 PRGC General 中该游戏的帖子，选择 Log a completion。", logDeadline: "请在本期结束前登记：结束时登记即关闭。",
-        updated: "更新于{ago}", saved: "显示已保存的数据", refresh: "刷新", loading: "正在加载俱乐部…", noData: "俱乐部数据暂不可用。",
-        setting: "显示俱乐部标签页", settingHint: "在主页显示 Play Retro Games Club 的本期游戏、你的排名和提名。", nameLabel: "你的俱乐部显示名称",
-        nameSave: "保存名称", saveFailed: "无法保存俱乐部设置。",
-        logAssemble: "Assemble 会在俱乐部的 Discord 中打开该游戏的帖子，并准备好 /completed。请在那里选择选项并自行发送。", logButton: "登记通关", logOpening: "正在打开 Assemble…",
-        logOpened: "已在 Assemble 中打开：请在那里选择选项并发送。", logFailed: "Assemble 无法打开该帖子。" },
-    ja: { ...en$8, tab: "クラブ", playing: "プレイ中", daysLeft: { other: "残り{n}日" }, lastDay: "最終日", ended: "終了", noDate: "日程はクラブのサイトで",
-        notInLibrary: "ライブラリにありません", play: "プレイ", details: "ゲームページ", standing: "あなたの順位", beaten: "本クリア", streak: "連続", rank: "順位",
-        rankOf: "{of}人中{rank}位", crowns: "クラウン", setName: "クイックアクセス > Core > Club でクラブの表示名を入力すると順位が表示されます。",
-        notFound: "「{name}」というメンバーはまだランキングにいません。", top: "トップ5", nominations: "ノミネート", voteOpens: "{date}に投票開始",
-        logTitle: "クリアの記録方法", logDiscord: "Discord のゲームのスレッドで：",
-        logOptions: "オプション：event、ra_username（初回のみ）、screenshot（投票の重みに 0.75 加算）。単独で使うと、サイトで記録するための非公開リンクが届きます。",
-        logForum: "フォーラムでは：PRGC General のゲームのスレッドを開き、Log a completion を選びます。", logDeadline: "選出期間が終わる前に記録してください。終了と同時に締め切られます。",
-        updated: "{ago}に更新", saved: "保存済みのデータを表示中", refresh: "更新", loading: "クラブを読み込み中…", noData: "クラブのデータはまだありません。",
-        setting: "クラブタブを表示", settingHint: "ホームに Play Retro Games Club の選出作品、あなたの順位、ノミネートを表示します。", nameLabel: "クラブの表示名",
-        nameSave: "名前を保存", saveFailed: "クラブの設定を保存できませんでした。",
-        logAssemble: "Assemble がクラブの Discord でゲームのスレッドを開き、/completed を用意します。オプションを選んでご自身で送信してください。", logButton: "クリアを記録", logOpening: "Assemble を開いています…",
-        logOpened: "Assemble で開きました。オプションを選んで送信してください。", logFailed: "Assemble はスレッドを開けませんでした。" },
-    ko: { ...en$8, tab: "클럽", playing: "지금 플레이 중", daysLeft: { other: "{n}일 남음" }, lastDay: "마지막 날", ended: "종료", noDate: "날짜는 클럽 사이트에서",
-        notInLibrary: "라이브러리에 없음", play: "플레이", details: "게임 페이지", standing: "내 순위", beaten: "개 클리어", streak: "연속", rank: "순위",
-        rankOf: "{of}명 중 {rank}위", crowns: "크라운", setName: "빠른 실행 > Core > Club에서 클럽 이름을 입력하면 순위가 표시됩니다.",
-        notFound: "아직 순위표에 \"{name}\" 멤버가 없습니다.", top: "상위 5명", nominations: "후보", voteOpens: "{date} 투표 시작",
-        logTitle: "클리어 기록 방법", logDiscord: "Discord의 게임 스레드에서:",
-        logOptions: "옵션: event, ra_username(처음 한 번만), screenshot(투표 가중치 +0.75). 단독으로 쓰면 웹사이트에서 기록할 비공개 링크를 보내 줍니다.",
-        logForum: "포럼에서: PRGC General의 게임 스레드를 열고 Log a completion을 선택하세요.", logDeadline: "선정 기간이 끝나기 전에 기록하세요. 끝나는 순간 마감됩니다.",
-        updated: "{ago} 업데이트", saved: "저장된 데이터 표시 중", refresh: "새로 고침", loading: "클럽을 불러오는 중…", noData: "아직 클럽 데이터가 없습니다.",
-        setting: "클럽 탭 표시", settingHint: "홈에 Play Retro Games Club 선정작, 내 순위, 후보를 표시합니다.", nameLabel: "클럽 표시 이름",
-        nameSave: "이름 저장", saveFailed: "클럽 설정을 저장하지 못했습니다.",
-        logAssemble: "Assemble이 클럽 Discord에서 게임 스레드를 열고 /completed를 준비합니다. 옵션을 고른 뒤 직접 보내세요.", logButton: "클리어 기록", logOpening: "Assemble 여는 중…",
-        logOpened: "Assemble에서 열렸습니다. 옵션을 고르고 보내세요.", logFailed: "Assemble이 스레드를 열지 못했습니다." },
-    hi: { ...en$8, tab: "क्लब", playing: "अभी खेल रहे हैं", daysLeft: { one: "{n} दिन बाकी", other: "{n} दिन बाकी" }, lastDay: "आखिरी दिन", ended: "समाप्त",
-        noDate: "तारीखें क्लब की साइट पर", notInLibrary: "आपकी लाइब्रेरी में नहीं", play: "खेलें", details: "गेम पेज", standing: "आपकी स्थिति", beaten: "गेम पूरे किए",
-        streak: "लगातार", rank: "रैंक", rankOf: "{of} में #{rank}", crowns: "ताज", setName: "अपनी स्थिति देखने के लिए क्विक एक्सेस > Core > Club में अपना क्लब नाम डालें।",
-        notFound: "लीडरबोर्ड पर अभी \"{name}\" नाम का कोई सदस्य नहीं है।", top: "शीर्ष 5", nominations: "नामांकन", voteOpens: "मतदान {date} से",
-        logTitle: "जीत कैसे दर्ज करें", logDiscord: "Discord पर, गेम के थ्रेड में:",
-        logOptions: "विकल्प: event, ra_username (सिर्फ़ पहली बार), screenshot (आपके वोट के वज़न में 0.75 जोड़ता है)। अकेले चलाने पर वेबसाइट पर दर्ज करने का निजी लिंक भेजता है।",
-        logForum: "फ़ोरम पर: PRGC General में गेम का थ्रेड खोलें और Log a completion चुनें।", logDeadline: "चयन खत्म होने से पहले दर्ज करें: उसी पल प्रविष्टियाँ बंद हो जाती हैं।",
-        updated: "{ago} अपडेट किया गया", saved: "सहेजा गया डेटा दिखाया जा रहा है", refresh: "रीफ़्रेश करें", loading: "क्लब लोड हो रहा है…", noData: "क्लब का डेटा अभी उपलब्ध नहीं है।",
-        setting: "क्लब टैब दिखाएँ", settingHint: "होम पर Play Retro Games Club के चुने गए गेम, आपकी स्थिति और नामांकन।", nameLabel: "आपका क्लब डिस्प्ले नाम",
-        nameSave: "नाम सहेजें", saveFailed: "क्लब सेटिंग्स सहेजी नहीं जा सकीं।",
-        logAssemble: "Assemble क्लब के Discord पर गेम का थ्रेड /completed के साथ तैयार खोलता है। वहाँ विकल्प चुनें और खुद भेजें।", logButton: "पूरा होना दर्ज करें", logOpening: "Assemble खुल रहा है…",
-        logOpened: "Assemble में खुल गया: विकल्प चुनें और वहीं से भेजें।", logFailed: "Assemble थ्रेड नहीं खोल सका।" },
-};
-function clubLanguage(locale) {
-    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
-    return language === "ua" ? "uk" : language in copy$d ? language : "en";
+// Eternal Core: the Club tab's shared state. The backend (quick_settings/club_feed.py) owns fetching, caching and
+// politeness; this only asks it for the cached feed (cheap), or for a refresh when the user presses Refresh.
+let state$1 = { settings: null, feed: null, loading: false, failed: false };
+const listeners$8 = new Set();
+let inflight = null;
+const set = (patch) => { state$1 = { ...state$1, ...patch }; listeners$8.forEach(listener => listener()); };
+const subscribeClub = (listener) => { listeners$8.add(listener); return () => { listeners$8.delete(listener); }; };
+const clubState = () => state$1;
+function loadClub(force = false) {
+    if (inflight && !force)
+        return inflight;
+    let run = null;
+    run = (async () => {
+        set({ loading: true });
+        try {
+            const [settings, feed] = await Promise.all([
+                state$1.settings ? Promise.resolve(state$1.settings) : call("get_club_settings"),
+                call("get_club_feed", force),
+            ]);
+            set({ settings, feed, failed: false });
+        }
+        catch {
+            set({ failed: true });
+        }
+        finally {
+            set({ loading: false });
+            if (inflight === run)
+                inflight = null;
+        }
+    })();
+    inflight = run;
+    return run;
 }
-function clubCopy(locale) {
-    return copy$d[clubLanguage(locale)];
-}
-function fill$5(template, values) {
-    return template.replace(/\{(\w+)\}/g, (match, key) => key in values ? String(values[key]) : match);
-}
-function daysLeftText(locale, days) {
-    const language = clubLanguage(locale);
-    const forms = copy$d[language].daysLeft;
-    let category = "other";
+// Starts one background load the first time anything asks; later calls just read the state.
+let started = false;
+// 3.3.8: and keeps the feed fresh in the background, hourly (the backend refreshes only when its copy is an hour old
+// and its politeness rules allow; otherwise the call is answered from its cache).
+const CLUB_BACKGROUND_MS = 60 * 60000;
+let schedule;
+function ensureClubLoaded() {
+    if (started)
+        return inflight;
+    started = true;
     try {
-        category = new Intl.PluralRules(language).select(days);
+        schedule ?? (schedule = setInterval(() => void loadClub(false), CLUB_BACKGROUND_MS));
     }
     catch {
-        category = days === 1 ? "one" : "other";
+        schedule = undefined;
     }
-    return fill$5(forms[category] ?? forms.other, { n: days });
+    return loadClub(false);
+}
+async function saveClubSettings(next) {
+    const saved = await call("set_club_settings", next.enabled, next.display_name);
+    set({ settings: saved });
+    void loadClub(false);
+    return saved;
 }
 
-// Eternal Core: the Club tab's time maths. Pure (no imports) so tests/club.test.mjs loads it alone.
-// The club's picks end at midnight UTC; the feed gives epoch seconds.
-const DAY$1 = 86400000;
-// Whole days left, as the club site leads with them ("1 day 16 hours left" is 1 day). Under a day is the last day.
-function timeLeft(endsAtSeconds, nowMs) {
-    if (typeof endsAtSeconds !== "number" || !Number.isFinite(endsAtSeconds) || endsAtSeconds <= 0)
-        return { state: "unknown" };
-    const remaining = endsAtSeconds * 1000 - nowMs;
-    if (remaining <= 0)
-        return { state: "ended" };
-    if (remaining < DAY$1)
-        return { state: "last", hours: Math.max(1, Math.ceil(remaining / 3600000)) };
-    return { state: "days", days: Math.floor(remaining / DAY$1) };
+// Eternal Core: logging a Club completion through Eternal-Assemble (the Discord plugin).
+//
+// Assemble publishes a bridge on window when it loads:
+//   window.__eternalAssemble = { version: 1, openClubCompletion(req) }  and fires "eternal_assemble_ready".
+// openClubCompletion opens the pick's Discord thread (or the club channel) in Assemble's Discord view with
+// /completed ready. The user picks the options and sends it themselves: nothing is ever sent from Core or
+// automatically. Without Assemble the Club tab shows the manual steps instead.
+// Self-contained (no imports): tests/club.test.mjs loads it alone.
+// The club's completion command (playretrogamesclub.com/rules/, checked 2026-11-27):
+// /completed [event] [ra_username] [screenshot], run in the game's thread on the club's Discord.
+const CLUB_COMPLETION_COMMAND = "/completed";
+const ASSEMBLE_READY_EVENT = "eternal_assemble_ready";
+const EVENTS = { week: "gotw", month: "gotm", romhack: "rhotm", season: "gots", special: "special" };
+const CODES = new Set(Object.values(EVENTS));
+const host$1 = () => (typeof window === "undefined" ? undefined : window);
+// Assemble's event code for a pick: its own `event` when the feed has one, else from its kind.
+function assembleEventFor(pick) {
+    if (pick?.event && CODES.has(pick.event))
+        return pick.event;
+    return (pick?.kind && EVENTS[pick.kind]) || null;
 }
-function formatClubDate(locale, seconds) {
-    if (typeof seconds !== "number" || !Number.isFinite(seconds))
-        return "";
+// The bridge when Assemble has published a version-1-compatible one, else null. Never throws.
+function assembleBridge(target = host$1()) {
     try {
-        return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(seconds * 1000));
+        const bridge = target?.__eternalAssemble;
+        if (!bridge || typeof bridge !== "object")
+            return null;
+        if (typeof bridge.version !== "number" || bridge.version < 1)
+            return null;
+        return typeof bridge.openClubCompletion === "function" ? bridge : null;
     }
     catch {
-        return new Date(seconds * 1000).toUTCString();
+        return null;
     }
+}
+// Calls back when Assemble (re)loads and republishes its bridge. Returns the unsubscribe function.
+function subscribeAssemble(listener, target = host$1()) {
+    if (!target?.addEventListener)
+        return () => { };
+    const handler = () => listener();
+    target.addEventListener(ASSEMBLE_READY_EVENT, handler);
+    return () => target.removeEventListener?.(ASSEMBLE_READY_EVENT, handler);
+}
+const failure$1 = (reason, message = "") => ({ success: false, reason, message });
+// Asks Assemble to open the pick's thread with /completed ready. Always resolves; the message on a failure is
+// Assemble's own (it may be empty: the tab then shows its generic line).
+async function openClubCompletion(request, target = host$1()) {
+    const bridge = assembleBridge(target);
+    if (!bridge)
+        return failure$1("assemble_unavailable");
+    if (!CODES.has(request.event) || !request.title)
+        return failure$1("invalid_request");
+    const payload = { event: request.event, title: String(request.title).slice(0, 120) };
+    if (request.raUsername)
+        payload.raUsername = String(request.raUsername).slice(0, 64);
+    let reply;
+    try {
+        reply = await bridge.openClubCompletion(payload);
+    }
+    catch (error) {
+        return failure$1("bridge_error", typeof error?.message === "string" ? error.message.slice(0, 300) : "");
+    }
+    if (reply && reply.success === true && (reply.opened === "thread" || reply.opened === "channel")) {
+        return { success: true, opened: reply.opened };
+    }
+    if (reply && reply.success === false) {
+        return failure$1(typeof reply.reason === "string" && reply.reason ? reply.reason : "failed", typeof reply.message === "string" ? reply.message.slice(0, 300) : "");
+    }
+    return failure$1("bad_reply");
 }
 
 // Eternal Core: matching a club pick to the user's Steam library. Pure (no imports): tests/club.test.mjs loads it.
@@ -23224,140 +23845,578 @@ function openGamePage(appId, navigate) {
     }
 }
 
-// Eternal Core: the Club tab's shared state. The backend (quick_settings/club_feed.py) owns fetching, caching and
-// politeness; this only asks it for the cached feed (cheap), or for a refresh when the user presses Refresh.
-let state$1 = { settings: null, feed: null, loading: false, failed: false };
-const listeners$7 = new Set();
-let inflight = null;
-const set = (patch) => { state$1 = { ...state$1, ...patch }; listeners$7.forEach(listener => listener()); };
-const subscribeClub = (listener) => { listeners$7.add(listener); return () => { listeners$7.delete(listener); }; };
-const clubState = () => state$1;
-function loadClub(force = false) {
-    if (inflight && !force)
-        return inflight;
-    let run = null;
-    run = (async () => {
-        set({ loading: true });
-        try {
-            const [settings, feed] = await Promise.all([
-                state$1.settings ? Promise.resolve(state$1.settings) : call("get_club_settings"),
-                call("get_club_feed", force),
-            ]);
-            set({ settings, feed, failed: false });
-        }
-        catch {
-            set({ failed: true });
-        }
-        finally {
-            set({ loading: false });
-            if (inflight === run)
-                inflight = null;
-        }
-    })();
-    inflight = run;
-    return run;
+// Eternal Core: the Club tab's time maths. Pure (no imports) so tests/club.test.mjs loads it alone.
+// The club's picks end at midnight UTC; the feed gives epoch seconds.
+const DAY$1 = 86400000;
+// Whole days left, as the club site leads with them ("1 day 16 hours left" is 1 day). Under a day is the last day.
+function timeLeft(endsAtSeconds, nowMs) {
+    if (typeof endsAtSeconds !== "number" || !Number.isFinite(endsAtSeconds) || endsAtSeconds <= 0)
+        return { state: "unknown" };
+    const remaining = endsAtSeconds * 1000 - nowMs;
+    if (remaining <= 0)
+        return { state: "ended" };
+    if (remaining < DAY$1)
+        return { state: "last", hours: Math.max(1, Math.ceil(remaining / 3600000)) };
+    return { state: "days", days: Math.floor(remaining / DAY$1) };
 }
-// Starts one background load the first time anything asks; later calls just read the state.
-let started = false;
-// 3.3.8: and keeps the feed fresh in the background, hourly (the backend refreshes only when its copy is an hour old
-// and its politeness rules allow; otherwise the call is answered from its cache).
-const CLUB_BACKGROUND_MS = 60 * 60000;
-let schedule;
-function ensureClubLoaded() {
-    if (started)
-        return inflight;
-    started = true;
+function formatClubDate(locale, seconds) {
+    if (typeof seconds !== "number" || !Number.isFinite(seconds))
+        return "";
     try {
-        schedule ?? (schedule = setInterval(() => void loadClub(false), CLUB_BACKGROUND_MS));
+        return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(seconds * 1000));
     }
     catch {
-        schedule = undefined;
+        return new Date(seconds * 1000).toUTCString();
     }
-    return loadClub(false);
-}
-async function saveClubSettings(next) {
-    const saved = await call("set_club_settings", next.enabled, next.display_name);
-    set({ settings: saved });
-    void loadClub(false);
-    return saved;
 }
 
-// Eternal Core: logging a Club completion through Eternal-Assemble (the Discord plugin).
-//
-// Assemble publishes a bridge on window when it loads:
-//   window.__eternalAssemble = { version: 1, openClubCompletion(req) }  and fires "eternal_assemble_ready".
-// openClubCompletion opens the pick's Discord thread (or the club channel) in Assemble's Discord view with
-// /completed ready. The user picks the options and sends it themselves: nothing is ever sent from Core or
-// automatically. Without Assemble the Club tab shows the manual steps instead.
-// Self-contained (no imports): tests/club.test.mjs loads it alone.
-// The club's completion command (playretrogamesclub.com/rules/, checked 2026-11-27):
-// /completed [event] [ra_username] [screenshot], run in the game's thread on the club's Discord.
-const CLUB_COMPLETION_COMMAND = "/completed";
-const ASSEMBLE_READY_EVENT = "eternal_assemble_ready";
-const EVENTS = { week: "gotw", month: "gotm", romhack: "rhotm", season: "gots", special: "special" };
-const CODES = new Set(Object.values(EVENTS));
-const host$1 = () => (typeof window === "undefined" ? undefined : window);
-// Assemble's event code for a pick: its own `event` when the feed has one, else from its kind.
-function assembleEventFor(pick) {
-    if (pick?.event && CODES.has(pick.event))
-        return pick.event;
-    return (pick?.kind && EVENTS[pick.kind]) || null;
-}
-// The bridge when Assemble has published a version-1-compatible one, else null. Never throws.
-function assembleBridge(target = host$1()) {
+// Eternal Core 3.3.9: the Consoles tab's icon pack, as the plugin backend answers it (get_colorgrade_pack). One shared
+// answer for the tab and Quick Access > Core > Look ("Re-import icon pack"), loaded once and on demand.
+let pack;
+let pending$1;
+const listeners$7 = new Set();
+const notify$1 = () => { for (const listener of [...listeners$7]) {
     try {
-        const bridge = target?.__eternalAssemble;
-        if (!bridge || typeof bridge !== "object")
-            return null;
-        if (typeof bridge.version !== "number" || bridge.version < 1)
-            return null;
-        return typeof bridge.openClubCompletion === "function" ? bridge : null;
+        listener();
+    }
+    catch { /* Others still hear it. */ }
+} };
+const consolePack = () => pack;
+function subscribeConsolePack(listener) { listeners$7.add(listener); return () => { listeners$7.delete(listener); }; }
+function loadConsolePack(force = false) {
+    if (pending$1 && !force)
+        return pending$1;
+    const run = (async () => {
+        try {
+            pack = await call("get_colorgrade_pack", force);
+        }
+        catch { /* The tiles keep their names. */ }
+        notify$1();
+        return pack;
+    })();
+    pending$1 = run;
+    void run.finally(() => { if (pending$1 === run)
+        pending$1 = undefined; });
+    return run;
+}
+// 3.3.10: the Consoles page's heroes, one per call (get_colorgrade_hero; each is megabytes, never fetched in bulk), one
+// at a time, kept as blob URLs (the data URL's text is dropped once decoded). The pack is the user's own: read in place
+// on the PC by the backend, never stored anywhere by Core.
+const heroes = new Map();
+const queue = [];
+let heroBusy = false;
+const heroListeners = new Set();
+const SLUG = /^[a-z0-9][a-z0-9_-]{0,40}$/;
+const consoleHero = (slug) => (slug ? heroes.get(slug) ?? undefined : undefined);
+function subscribeConsoleHeroes(listener) { heroListeners.add(listener); return () => { heroListeners.delete(listener); }; }
+function blobUrlFromDataUrl(url, make = blob => URL.createObjectURL(blob)) {
+    const match = /^data:(image\/png);base64,([A-Za-z0-9+/=]+)$/.exec(url ?? "");
+    if (!match)
+        return null;
+    try {
+        const bytes = atob(match[2]);
+        const array = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++)
+            array[i] = bytes.charCodeAt(i);
+        return make(new Blob([array], { type: match[1] }));
     }
     catch {
         return null;
     }
 }
-// Calls back when Assemble (re)loads and republishes its bridge. Returns the unsubscribe function.
-function subscribeAssemble(listener, target = host$1()) {
-    if (!target?.addEventListener)
-        return () => { };
-    const handler = () => listener();
-    target.addEventListener(ASSEMBLE_READY_EVENT, handler);
-    return () => target.removeEventListener?.(ASSEMBLE_READY_EVENT, handler);
-}
-const failure$1 = (reason, message = "") => ({ success: false, reason, message });
-// Asks Assemble to open the pick's thread with /completed ready. Always resolves; the message on a failure is
-// Assemble's own (it may be empty: the tab then shows its generic line).
-async function openClubCompletion(request, target = host$1()) {
-    const bridge = assembleBridge(target);
-    if (!bridge)
-        return failure$1("assemble_unavailable");
-    if (!CODES.has(request.event) || !request.title)
-        return failure$1("invalid_request");
-    const payload = { event: request.event, title: String(request.title).slice(0, 120) };
-    if (request.raUsername)
-        payload.raUsername = String(request.raUsername).slice(0, 64);
-    let reply;
+async function pump() {
+    if (heroBusy)
+        return;
+    heroBusy = true;
     try {
-        reply = await bridge.openClubCompletion(payload);
+        while (queue.length) {
+            const slug = queue.shift();
+            if (heroes.has(slug))
+                continue;
+            let answer;
+            try {
+                answer = await call("get_colorgrade_hero", slug);
+            }
+            catch {
+                answer = undefined;
+            }
+            heroes.set(slug, answer?.ok && typeof answer.url === "string" ? blobUrlFromDataUrl(answer.url) : null);
+            for (const listener of [...heroListeners]) {
+                try {
+                    listener();
+                }
+                catch { /* Others still hear it. */ }
+            }
+        }
     }
-    catch (error) {
-        return failure$1("bridge_error", typeof error?.message === "string" ? error.message.slice(0, 300) : "");
+    finally {
+        heroBusy = false;
     }
-    if (reply && reply.success === true && (reply.opened === "thread" || reply.opened === "channel")) {
-        return { success: true, opened: reply.opened };
-    }
-    if (reply && reply.success === false) {
-        return failure$1(typeof reply.reason === "string" && reply.reason ? reply.reason : "failed", typeof reply.message === "string" ? reply.message.slice(0, 300) : "");
-    }
-    return failure$1("bad_reply");
+}
+// Asks for these heroes, first ones first; ones already known or queued are not asked again.
+function wantConsoleHeroes(slugs) {
+    for (const slug of slugs)
+        if (slug && SLUG.test(slug) && !heroes.has(slug) && !queue.includes(slug))
+            queue.push(slug);
+    void pump();
 }
 
-// Eternal Core: the Club tab on Core's Home: Play Retro Games Club's current picks (matched to the Steam library,
-// A plays, X opens the game page), the user's standing beside the top 5, nominations, and how to log a win: with
-// Eternal-Assemble loaded, a Log completion button per current pick opens its Discord thread with /completed ready.
-// Core palette: black with the Starfield, gunmetal cards (10 px radius), crimson square focus, steel text.
-const { Focusable: Focusable$g, DialogButton: DialogButton$9, Navigation: Navigation$8 } = CompatUI;
+const { Focusable: Focusable$h, Navigation: Navigation$9 } = CompatUI;
+const steamWindow$1 = () => window;
+function userCollections() {
+    try {
+        const list = steamWindow$1().collectionStore?.userCollections;
+        return Array.isArray(list) ? list : list && typeof list.values === "function" ? Array.from(list.values()) : [];
+    }
+    catch {
+        return [];
+    }
+}
+const appName = (appid) => { try {
+    return String(steamWindow$1().appStore?.GetAppOverviewByAppID?.(appid)?.display_name ?? "");
+}
+catch {
+    return "";
+} };
+const openGame = (appid) => { try {
+    Navigation$9?.Navigate?.(`/library/app/${appid}`);
+}
+catch { /* Stay on Home. */ } };
+const R = HOME_ROW;
+const homeScreenCss = `
+.core-screen{position:relative;width:100%;height:100vh;min-height:100vh;overflow:visible;isolation:isolate;background:#000000}
+.core-screen-hero{position:absolute;inset:0;z-index:0;overflow:hidden;background:#000000;isolation:isolate}
+.core-screen-layer{position:absolute;inset:0}
+.core-screen-layer.core-fade-in{animation:core-hero-in ${HERO_FADE_MS}ms ease-out both}
+@keyframes core-hero-in{from{opacity:0}to{opacity:1}}
+.core-screen-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.core-screen-hero canvas{position:absolute;inset:0;width:100%;height:100%}
+.core-screen-fade{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 45%,rgba(0,0,0,.85) 82%,#000000 100%)}
+.core-pages{position:absolute;left:${R.insetVw}vw;top:0;height:40px;z-index:3;display:flex;align-items:center;gap:17px;pointer-events:none}
+.core-pages .core-key{display:inline-flex;align-items:center;justify-content:center;height:17px;padding:0 5px;border:1.5px solid #9AA4AE;font-size:9px;font-weight:700;color:#9AA4AE;line-height:1}
+.core-pages .core-page{position:relative;height:28px;display:inline-flex;align-items:center;font-size:13px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#9AA4AE}
+.core-pages .core-page.active{color:#FFFFFF;font-weight:600}
+.core-pages .core-page.active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:#D7263D}
+.core-row{position:absolute;left:0;right:0;bottom:calc(${R.footerPx}px + ${R.aboveFooterVh}vh);z-index:2;display:flex;align-items:flex-end;gap:${R.gapVw}vw;padding:12px ${R.insetVw}vw 0;overflow-x:auto;overflow-y:visible;scrollbar-width:none;scroll-padding-inline:${R.insetVw}vw}
+.core-row::-webkit-scrollbar{display:none}
+.core-tile{position:relative;flex:0 0 auto;height:${R.gameVh}vh;aspect-ratio:2/3;border-radius:6px;overflow:hidden;opacity:${R.dim};outline:none;
+  background:linear-gradient(160deg,#2A2F36 0%,#15181C 100%);box-shadow:0 10px 24px rgba(0,0,0,.6);transition:height .15s ease-out,translate .15s ease-out,opacity .15s ease-out}
+.core-tile.core-console{aspect-ratio:16/9;height:${R.consoleVh}vh}
+.core-tile.gpfocus,.core-tile:focus-visible,.core-tile:focus{opacity:1;height:${R.gameFocusedVh}vh;translate:0 -${R.liftPx}px;outline:none;box-shadow:0 14px 30px rgba(0,0,0,.75)}
+.core-tile.core-console.gpfocus,.core-tile.core-console:focus-visible,.core-tile.core-console:focus{height:${R.consoleFocusedVh}vh}
+.core-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.core-tile .core-tile-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.6) 100%)}
+.core-tile img.core-tile-logo{inset:0;margin:auto;width:auto;height:auto;max-width:70%;max-height:46%;object-fit:contain}
+.core-tile.core-plain{background:#1A1D21}
+.core-tile .core-tile-name{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 10px;text-align:center;font-size:15px;font-weight:700;color:#FFFFFF}
+.core-tile .core-tile-tag{position:absolute;left:0;top:0;z-index:2;padding:4px 8px;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#000000;border-radius:0}
+.core-two{position:relative;padding:28px ${R.insetVw}vw 64px;min-height:60vh}
+.core-two .core-two-label{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#C9D1D9;margin:0 0 14px}
+.core-two .core-two-row{display:flex;gap:16px;overflow-x:auto;padding:10px 2px 14px;scrollbar-width:none}
+.core-two .core-two-row::-webkit-scrollbar{display:none}
+.core-two .core-tile{height:auto;width:145px;aspect-ratio:2/3;opacity:1}
+.core-two .core-tile.gpfocus,.core-two .core-tile:focus-visible{height:auto;translate:0 -${R.liftPx}px}
+.core-two .core-two-empty{font-size:16px;color:#9AA4AE}
+@media (prefers-reduced-motion: reduce){.core-tile{transition:none}.core-screen-layer.core-fade-in{animation:none}}
+`;
+// L1 HOME CONSOLES R1, top left. Not focusable: the bumpers switch pages.
+function PageTabs({ page, locale }) {
+    const text = coreHomeCopy(locale);
+    return SP_JSX.jsxs("div", { className: "core-pages", "aria-hidden": "true", children: [SP_JSX.jsx("span", { className: "core-key", children: "L1" }), SP_JSX.jsx("span", { className: `core-page${page === "home" ? " active" : ""}`, children: text.home }), SP_JSX.jsx("span", { className: `core-page${page === "consoles" ? " active" : ""}`, children: text.consoles }), SP_JSX.jsx("span", { className: "core-key", children: "R1" })] });
+}
+// One image from a list of sources, the next on each failure; nothing when all fail.
+function Art({ sources, className }) {
+    const [failed, setFailed] = _global_SP_REACT.useState(0);
+    _global_SP_REACT.useEffect(() => setFailed(0), [sources.join("|")]);
+    const src = sources[failed];
+    return src ? SP_JSX.jsx("img", { className: className, alt: "", src: src, onError: () => setFailed(n => n + 1) }, src) : null;
+}
+function GameTile({ appid, autoFocus, onFocus }) {
+    const art = _global_SP_REACT.useMemo(() => favoriteArt(appid, steamWindow$1().appStore), [appid]);
+    const [failed, setFailed] = _global_SP_REACT.useState({ portrait: 0, hero: 0, logo: 0 });
+    const layers = favoriteLayers(art, failed);
+    const fail = (kind) => () => setFailed(prior => ({ ...prior, [kind]: prior[kind] + 1 }));
+    return SP_JSX.jsx(Focusable$h, { className: "core-tile", focusable: true, "aria-label": appName(appid), autoFocus: autoFocus, onActivate: () => openGame(appid), onClick: () => openGame(appid), onGamepadFocus: onFocus, onFocus: onFocus, children: layers.kind === "portrait"
+            ? SP_JSX.jsx("img", { alt: "", loading: "lazy", src: layers.src, onError: fail("portrait") }, layers.src)
+            : SP_JSX.jsxs(SP_JSX.Fragment, { children: [layers.hero && SP_JSX.jsx("img", { alt: "", src: layers.hero, onError: fail("hero") }, layers.hero), layers.logo && SP_JSX.jsx("img", { className: "core-tile-logo", alt: "", src: layers.logo, onError: fail("logo") }, layers.logo)] }) });
+}
+// A console's tile: its ColorGrade hero with its logo; without the hero, gunmetal with the logo, else the console's
+// icon (the user's Library icon set or Core's own drawing), else its name. Never an empty box. A club pick held by this
+// console carries the pick's tag.
+function ConsoleTile({ card, logo, hero, tag, autoFocus, onFocus }) {
+    const open = () => { try {
+        Navigation$9?.Navigate?.(collectionRoute(card.id));
+    }
+    catch { /* Stay on Home. */ } };
+    const [logoFailed, setLogoFailed] = _global_SP_REACT.useState(false);
+    const icon = _global_SP_REACT.useMemo(() => { try {
+        return collectionIcon(card.name, matchCollection(card.name), homeIconSet());
+    }
+    catch {
+        return undefined;
+    } }, [card.name]);
+    const mark = !logoFailed && logo ? logo : icon;
+    return SP_JSX.jsxs(Focusable$h, { className: `core-tile core-console${hero ? "" : " core-plain"}`, focusable: true, "aria-label": card.name, autoFocus: autoFocus, onActivate: open, onClick: open, onGamepadFocus: onFocus, onFocus: onFocus, children: [hero && SP_JSX.jsx("img", { alt: "", src: hero }), hero && SP_JSX.jsx("span", { className: "core-tile-shade" }), mark ? SP_JSX.jsx("img", { className: "core-tile-logo", alt: "", src: mark, onError: () => setLogoFailed(true) }) : SP_JSX.jsx("span", { className: "core-tile-name", children: card.name }), tag && SP_JSX.jsx("span", { className: "core-tile-tag", style: { background: tag.tone }, children: tag.label })] });
+}
+// A club pick the user owns, leading the Consoles row: the game's hero (else its box art) at the console tiles' size,
+// the pick's tag at the top; A opens the game page.
+function PickTile({ pick, autoFocus, onFocus }) {
+    const art = _global_SP_REACT.useMemo(() => favoriteArt(pick.appId, steamWindow$1().appStore), [pick.appId]);
+    return SP_JSX.jsxs(Focusable$h, { className: "core-tile core-console core-plain", focusable: true, "aria-label": `${pick.label}: ${pick.title}`, autoFocus: autoFocus, onActivate: () => openGame(pick.appId), onClick: () => openGame(pick.appId), onGamepadFocus: onFocus, onFocus: onFocus, children: [SP_JSX.jsx(Art, { sources: [...art.hero, ...art.portrait] }), SP_JSX.jsx("span", { className: "core-tile-shade" }), SP_JSX.jsx("span", { className: "core-tile-tag", style: { background: pick.tone }, children: pick.label })] });
+}
+// The club's owned picks for the Consoles row, from the Club's own data (refreshed hourly by clubStore.ts; no extra fetch).
+function useConsolePicks() {
+    const club = _global_SP_REACT.useSyncExternalStore(subscribeClub, clubState, clubState);
+    _global_SP_REACT.useEffect(() => { if (!clubState().feed)
+        void loadClub(false); }, []);
+    const picks = club.feed?.snapshot?.picks;
+    return _global_SP_REACT.useMemo(() => {
+        if (!picks?.length)
+            return [];
+        const library = readLibrary();
+        return consolePicks(picks, pick => assembleEventFor(pick), pick => matchPick({ title: pick.title, platform: pick.platform }, library), pick => timeLeft(pick.ends_at, Date.now()).state === "ended");
+    }, [picks]);
+}
+// The full-screen art: changes only after focus has rested HERO_DELAY_MS on a tile, crossfading over HERO_FADE_MS. No
+// art (a console without a ColorGrade hero): black with the Starfield.
+function Hero({ sources }) {
+    const key = sources.join("|");
+    const [layers, setLayers] = _global_SP_REACT.useState([]);
+    const next = _global_SP_REACT.useRef(0);
+    _global_SP_REACT.useEffect(() => {
+        setLayers(prior => [...prior.slice(-1), { id: ++next.current, sources }]);
+        const timer = window.setTimeout(() => setLayers(prior => prior.slice(-1)), HERO_FADE_MS + 50);
+        return () => window.clearTimeout(timer);
+    }, [key]);
+    const top = layers[layers.length - 1];
+    return SP_JSX.jsxs("div", { className: "core-screen-hero", children: [!top?.sources.length ? SP_JSX.jsx(CoreStars, {}) : null, layers.filter(layer => layer.sources.length).map((layer, i, all) => SP_JSX.jsx("div", { className: `core-screen-layer${i === all.length - 1 && layers.length > 1 ? " core-fade-in" : ""}`, children: SP_JSX.jsx(Art, { sources: layer.sources }) }, layer.id))] });
+}
+// Loads images ahead (the art of the neighbouring tiles); the browser keeps them for the crossfade.
+function preload(urls) {
+    for (const url of urls.slice(0, 8)) {
+        try {
+            const image = new Image();
+            image.decoding = "async";
+            image.src = url;
+        }
+        catch { /* Loaded when shown. */ }
+    }
+}
+function useConsoleCards() {
+    const pack = _global_SP_REACT.useSyncExternalStore(subscribeConsolePack, consolePack, consolePack);
+    _global_SP_REACT.useEffect(() => { if (!consolePack())
+        void loadConsolePack(false); }, []);
+    const slugs = _global_SP_REACT.useMemo(() => new Set(pack?.slugs ?? []), [pack]);
+    // Every game kept (screen two shows the first 16; a club pick's console is found among all of them).
+    return _global_SP_REACT.useMemo(() => consoleCards(userCollections(), slugs, 5000), [slugs]);
+}
+const itemKey = (item) => item.kind === "game" ? `g${item.appid}` : item.kind === "pick" ? `p${item.pick.appId}` : `c${item.card.id}`;
+// Screen one. `games` are Steam's recent games for the Home page; the Consoles page reads its consoles (and the club's
+// owned picks) itself.
+function HomeScreenOne({ games, autoFocus, getLocale }) {
+    const page = _global_SP_REACT.useSyncExternalStore(subscribeHomePage, homePage, homePage);
+    _global_SP_REACT.useSyncExternalStore(subscribeConsoleHeroes, () => consoleHeroRevision(), () => consoleHeroRevision());
+    const cards = useConsoleCards();
+    const picks = useConsolePicks();
+    const [focused, setFocused] = _global_SP_REACT.useState(0);
+    const [rested, setRested] = _global_SP_REACT.useState(0);
+    const root = _global_SP_REACT.useRef(null);
+    const pack = consolePack();
+    const items = _global_SP_REACT.useMemo(() => page === "consoles"
+        ? [...picks.map(pick => ({ kind: "pick", pick })),
+            ...cards.map(card => ({ kind: "console", card, tag: picks.find(pick => card.games.some(game => game.appid === pick.appId)) }))]
+        : games.map(appid => ({ kind: "game", appid })), [page, picks, cards, games]);
+    const index = Math.min(focused, Math.max(0, items.length - 1));
+    const heroAt = Math.min(rested, Math.max(0, items.length - 1));
+    // The art follows focus once it has rested on a tile (HERO_DELAY_MS).
+    _global_SP_REACT.useEffect(() => { const timer = window.setTimeout(() => setRested(index), HERO_DELAY_MS); return () => window.clearTimeout(timer); }, [index]);
+    const heroOf = (item) => {
+        if (!item)
+            return [];
+        if (item.kind === "console") {
+            const url = consoleHero(item.card.slug);
+            return url ? [url] : [];
+        }
+        const art = favoriteArt(item.kind === "game" ? item.appid : item.pick.appId, steamWindow$1().appStore);
+        return item.kind === "pick" ? [...art.hero, ...art.portrait] : art.hero;
+    };
+    // Heroes: the focused console's first, then its neighbours, then the rest; game art of the neighbours preloaded.
+    _global_SP_REACT.useEffect(() => {
+        if (page !== "consoles")
+            return;
+        const near = [index, ...neighbours(index, items.length)].map(at => items[at]).filter(item => item?.kind === "console");
+        wantConsoleHeroes([...near.map(item => item.card.slug), ...cards.map(card => card.slug)]);
+    }, [page, cards, index, items.length]);
+    _global_SP_REACT.useEffect(() => { preload(neighbours(index, items.length).flatMap(at => items[at]?.kind === "console" ? [] : heroOf(items[at]).slice(0, 1))); }, [index, items]);
+    // Screen two shows the focused console's games (for a club pick, the console that holds the game).
+    _global_SP_REACT.useEffect(() => {
+        if (page !== "consoles")
+            return;
+        const item = items[index];
+        setFocusedConsole(item?.kind === "console" ? item.card.id : item?.kind === "pick" ? cards.find(card => card.games.some(game => game.appid === item.pick.appId))?.id ?? "" : "");
+    }, [page, items, index, cards]);
+    // A page switch moves focus to the new row's first tile (the old tile is gone).
+    const switched = _global_SP_REACT.useRef(false);
+    _global_SP_REACT.useEffect(() => {
+        if (!switched.current)
+            return;
+        switched.current = false;
+        setFocused(0);
+        setRested(0);
+        const timer = window.setTimeout(() => { try {
+            root.current?.querySelector(".core-tile")?.focus();
+        }
+        catch { /* Steam keeps its focus. */ } }, 0);
+        return () => window.clearTimeout(timer);
+    }, [page]);
+    const onButtonDown = (event) => {
+        const next = pageForButton(homePage(), event?.detail?.button);
+        if (!next)
+            return;
+        event?.preventDefault?.();
+        event?.stopPropagation?.();
+        switched.current = true;
+        setHomePage(next);
+    };
+    const locale = getLocale();
+    return SP_JSX.jsxs(Focusable$h, { className: "core-screen", ref: root, "data-core-home-one": page, onButtonDown: onButtonDown, children: [SP_JSX.jsx("style", { children: homeScreenCss }), SP_JSX.jsx(Hero, { sources: heroOf(items[heroAt]) }), SP_JSX.jsx("div", { className: "core-screen-fade" }), SP_JSX.jsx(PageTabs, { page: page, locale: locale }), !items.length
+                ? SP_JSX.jsx("div", { className: "core-row", children: SP_JSX.jsx(Focusable$h, { className: `core-tile${page === "consoles" ? " core-console" : ""} core-plain`, focusable: true, autoFocus: autoFocus, "aria-label": page === "consoles" ? coreHomeCopy(locale).consolesEmpty : "" }) })
+                : SP_JSX.jsx(Focusable$h, { className: "core-row", "flow-children": "row", children: items.map((item, i) => {
+                        const first = autoFocus && i === 0, onFocus = () => setFocused(i);
+                        if (item.kind === "pick")
+                            return SP_JSX.jsx(PickTile, { pick: item.pick, autoFocus: first, onFocus: onFocus }, itemKey(item));
+                        if (item.kind === "console")
+                            return SP_JSX.jsx(ConsoleTile, { card: item.card, logo: item.card.slug ? pack?.logos?.[item.card.slug] : undefined, hero: consoleHero(item.card.slug), tag: item.tag, autoFocus: first, onFocus: onFocus }, itemKey(item));
+                        return SP_JSX.jsx(GameTile, { appid: item.appid, autoFocus: first, onFocus: onFocus }, itemKey(item));
+                    }) })] });
+}
+let heroRevision = 0;
+subscribeConsoleHeroes(() => { heroRevision++; });
+const consoleHeroRevision = () => heroRevision;
+// The Consoles page's screen two: the focused console's recently played games as a portrait row; nothing else.
+function ConsoleScreenTwo({ getLocale }) {
+    _global_SP_REACT.useSyncExternalStore(subscribeHomePage, focusedConsoleId, focusedConsoleId);
+    const cards = useConsoleCards();
+    const text = coreHomeCopy(getLocale());
+    const card = cards.find(item => item.id === focusedConsoleId()) ?? cards[0];
+    const games = (card?.games ?? []).slice(0, 16);
+    return SP_JSX.jsxs("div", { className: "core-two", "data-core-home-two": "consoles", children: [SP_JSX.jsx("style", { children: homeScreenCss }), SP_JSX.jsx("p", { className: "core-two-label", children: text.recentlyPlayed }), games.length ? SP_JSX.jsx(Focusable$h, { className: "core-two-row", "flow-children": "row", children: games.map(game => SP_JSX.jsx(GameTile, { appid: game.appid, onFocus: () => { } }, game.appid)) }) : SP_JSX.jsx("p", { className: "core-two-empty", children: text.empty })] });
+}
+class HomeScreenBoundary extends _global_SP_REACT.Component {
+    constructor() {
+        super(...arguments);
+        this.state = { failed: false };
+    }
+    static getDerivedStateFromError() { return { failed: true }; }
+    componentDidCatch(error) { console.warn("[Core Home] Steam's recent games restored", error); }
+    render() { return this.state.failed ? this.props.fallback : this.props.children; }
+}
+// What replaces Steam's recent games section: Core's screen one while Core UI is on and Steam's list was found,
+// Steam's own row otherwise.
+function CoreHomeScreen({ native, games, autoFocus, getLocale }) {
+    const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
+    if (!on || !games)
+        return native;
+    return SP_JSX.jsx(HomeScreenBoundary, { fallback: native, children: SP_JSX.jsx(HomeScreenOne, { games: games, autoFocus: autoFocus, getLocale: getLocale }) });
+}
+
+// Eternal Core: the Club tab's text in Core's 12 languages. Event names ("Game of the Week", ...), game titles,
+// member names and the bot command stay as the club writes them: they are the club's own names.
+// Self-contained (no imports): tests/club.test.mjs loads it alone.
+const extra = {
+    en: { unreachable: "The club couldn't be reached. It'll try again within the hour.", inLibrary: "In your library", openInLibrary: "Open in Library", comingUp: "Coming up", beatenCount: "{n} beaten", topLine: "Top", logUnavailable: "Load Assemble to log a completion from here" },
+    it: { unreachable: "Impossibile raggiungere il club. Riproverà entro un'ora.", inLibrary: "Nella tua libreria", openInLibrary: "Apri nella Libreria", comingUp: "In arrivo", beatenCount: "{n} completati", topLine: "In testa", logUnavailable: "Carica Assemble per registrare un completamento da qui" },
+    es: { unreachable: "No se pudo contactar con el club. Lo volverá a intentar dentro de una hora.", inLibrary: "En tu biblioteca", openInLibrary: "Abrir en la Biblioteca", comingUp: "Próximamente", beatenCount: "{n} superados", topLine: "En cabeza", logUnavailable: "Carga Assemble para registrar un completado desde aquí" },
+    fr: { unreachable: "Impossible de joindre le club. Nouvel essai d'ici une heure.", inLibrary: "Dans votre bibliothèque", openInLibrary: "Ouvrir dans la Bibliothèque", comingUp: "À venir", beatenCount: "{n} terminés", topLine: "En tête", logUnavailable: "Chargez Assemble pour enregistrer une partie terminée d'ici" },
+    de: { unreachable: "Der Club war nicht erreichbar. Innerhalb einer Stunde wird es erneut versucht.", inLibrary: "In deiner Bibliothek", openInLibrary: "In der Bibliothek öffnen", comingUp: "Demnächst", beatenCount: "{n} geschafft", topLine: "Spitze", logUnavailable: "Lade Assemble, um hier einen Abschluss einzutragen" },
+    pt: { unreachable: "Não foi possível acessar o clube. Uma nova tentativa será feita em até uma hora.", inLibrary: "Na sua biblioteca", openInLibrary: "Abrir na Biblioteca", comingUp: "Em breve", beatenCount: "{n} zerados", topLine: "No topo", logUnavailable: "Carregue o Assemble para registrar uma conclusão daqui" },
+    uk: { unreachable: "Не вдалося зв'язатися з клубом. Нова спроба буде протягом години.", inLibrary: "У вашій бібліотеці", openInLibrary: "Відкрити в Бібліотеці", comingUp: "Незабаром", beatenCount: "пройдено {n}", topLine: "Лідери", logUnavailable: "Завантажте Assemble, щоб записати проходження звідси" },
+    ru: { unreachable: "Не удалось связаться с клубом. Новая попытка будет в течение часа.", inLibrary: "В вашей библиотеке", openInLibrary: "Открыть в Библиотеке", comingUp: "Скоро", beatenCount: "пройдено {n}", topLine: "Лидеры", logUnavailable: "Загрузите Assemble, чтобы записать прохождение отсюда" },
+    zh: { unreachable: "无法连接到俱乐部。将在一小时内重试。", inLibrary: "已在你的库中", openInLibrary: "在库中打开", comingUp: "即将到来", beatenCount: "{n} 人通关", topLine: "领先", logUnavailable: "加载 Assemble 后即可在此记录通关" },
+    ja: { unreachable: "クラブに接続できませんでした。1 時間以内に再試行します。", inLibrary: "ライブラリにあります", openInLibrary: "ライブラリで開く", comingUp: "今後の予定", beatenCount: "{n} 人クリア", topLine: "上位", logUnavailable: "ここからクリアを記録するには Assemble を読み込んでください" },
+    ko: { unreachable: "클럽에 연결할 수 없습니다. 1시간 안에 다시 시도합니다.", inLibrary: "라이브러리에 있음", openInLibrary: "라이브러리에서 열기", comingUp: "다가오는 일정", beatenCount: "{n}명 클리어", topLine: "상위", logUnavailable: "여기에서 클리어를 기록하려면 Assemble을 불러오세요" },
+    hi: { unreachable: "क्लब से संपर्क नहीं हो सका। एक घंटे के भीतर फिर कोशिश होगी।", inLibrary: "आपकी लाइब्रेरी में", openInLibrary: "लाइब्रेरी में खोलें", comingUp: "आगे क्या है", beatenCount: "{n} ने पूरा किया", topLine: "शीर्ष", logUnavailable: "यहाँ से पूरा करना दर्ज करने के लिए Assemble लोड करें" },
+};
+const en$8 = {
+    tab: "Club", title: "Play Retro Games Club", playing: "Playing now",
+    daysLeft: { one: "{n} day left", other: "{n} days left" }, lastDay: "Last day", ended: "Ended", noDate: "Dates on the club site",
+    notInLibrary: "Not in your library", play: "Play", details: "Game page", standing: "Your standing", beaten: "games beaten",
+    streak: "streak", rank: "rank", rankOf: "#{rank} of {of}", crowns: "Crowns",
+    setName: "Enter your club name in Quick Access > Core > Club to see your standing.",
+    notFound: "No member called \"{name}\" on the leaderboard yet.", top: "Top 5", nominations: "Nominations",
+    voteOpens: "Vote opens {date}", logTitle: "How to log a win", logDiscord: "On Discord, in the game's thread:",
+    logOptions: "Options: event, ra_username (first time only), screenshot (adds 0.75 to your vote weight). On its own, it sends you a private link to log on the website.",
+    logForum: "On the forum: open the game's thread in PRGC General and choose Log a completion.",
+    logDeadline: "Log it before the pick ends: completions close the moment it does.", updated: "Updated {ago}",
+    saved: "Showing saved data", refresh: "Refresh", loading: "Loading the club…", noData: "Club data isn't available yet.",
+    setting: "Show the Club tab", settingHint: "Play Retro Games Club picks, your standing and nominations on the Home.",
+    nameLabel: "Your club display name", nameSave: "Save name", saveFailed: "Could not save the Club settings.",
+    logAssemble: "Assemble opens the game's thread on the club's Discord with /completed ready. Choose the options there and send it yourself.", logButton: "Log completion", logOpening: "Opening Assemble…",
+    logOpened: "Opened in Assemble: choose the options and send it there.", logFailed: "Assemble could not open the thread.",
+};
+const copy$d = {
+    en: en$8,
+    it: { ...en$8, tab: "Club", playing: "In gioco ora", daysLeft: { one: "Manca {n} giorno", other: "Mancano {n} giorni" }, lastDay: "Ultimo giorno", ended: "Terminato", noDate: "Date sul sito del club",
+        notInLibrary: "Non è nella tua libreria", play: "Gioca", details: "Pagina del gioco", standing: "La tua posizione", beaten: "giochi completati", streak: "serie", rank: "posizione",
+        rankOf: "#{rank} su {of}", crowns: "Corone", setName: "Inserisci il tuo nome nel club in Accesso rapido > Core > Club per vedere la tua posizione.",
+        notFound: "Nessun membro chiamato \"{name}\" nella classifica per ora.", top: "Top 5", nominations: "Candidature", voteOpens: "Il voto apre il {date}",
+        logTitle: "Come registrare una vittoria", logDiscord: "Su Discord, nel thread del gioco:",
+        logOptions: "Opzioni: event, ra_username (solo la prima volta), screenshot (aggiunge 0,75 al peso del tuo voto). Da solo ti invia un link privato per registrarla sul sito.",
+        logForum: "Sul forum: apri il thread del gioco in PRGC General e scegli Log a completion.", logDeadline: "Registrala prima che la scelta finisca: le registrazioni chiudono in quel momento.",
+        updated: "Aggiornato {ago}", saved: "Dati salvati", refresh: "Aggiorna", loading: "Caricamento del club…", noData: "I dati del club non sono ancora disponibili.",
+        setting: "Mostra la scheda Club", settingHint: "Le scelte del Play Retro Games Club, la tua posizione e le candidature nella Home.", nameLabel: "Il tuo nome nel club",
+        nameSave: "Salva nome", saveFailed: "Impossibile salvare le impostazioni del Club.",
+        logAssemble: "Assemble apre il thread del gioco sul Discord del club con /completed pronto. Scegli le opzioni lì e invialo tu.", logButton: "Registra completamento", logOpening: "Apertura di Assemble…",
+        logOpened: "Aperto in Assemble: scegli le opzioni e invialo da lì.", logFailed: "Assemble non è riuscito ad aprire il thread." },
+    es: { ...en$8, playing: "Jugando ahora", daysLeft: { one: "Queda {n} día", other: "Quedan {n} días" }, lastDay: "Último día", ended: "Terminado", noDate: "Fechas en la web del club",
+        notInLibrary: "No está en tu biblioteca", play: "Jugar", details: "Página del juego", standing: "Tu posición", beaten: "juegos superados", streak: "racha", rank: "puesto",
+        rankOf: "#{rank} de {of}", crowns: "Coronas", setName: "Escribe tu nombre del club en Acceso rápido > Core > Club para ver tu posición.",
+        notFound: "Aún no hay ningún miembro llamado \"{name}\" en la clasificación.", top: "Top 5", nominations: "Nominaciones", voteOpens: "La votación abre el {date}",
+        logTitle: "Cómo registrar una victoria", logDiscord: "En Discord, en el hilo del juego:",
+        logOptions: "Opciones: event, ra_username (solo la primera vez), screenshot (suma 0,75 al peso de tu voto). Solo, te envía un enlace privado para registrarla en la web.",
+        logForum: "En el foro: abre el hilo del juego en PRGC General y elige Log a completion.", logDeadline: "Regístrala antes de que acabe la elección: los registros cierran en ese momento.",
+        updated: "Actualizado {ago}", saved: "Datos guardados", refresh: "Actualizar", loading: "Cargando el club…", noData: "Los datos del club aún no están disponibles.",
+        setting: "Mostrar la pestaña Club", settingHint: "Las elecciones del Play Retro Games Club, tu posición y las nominaciones en Inicio.", nameLabel: "Tu nombre en el club",
+        nameSave: "Guardar nombre", saveFailed: "No se pudo guardar la configuración del Club.",
+        logAssemble: "Assemble abre el hilo del juego en el Discord del club con /completed listo. Elige las opciones allí y envíalo tú.", logButton: "Registrar completado", logOpening: "Abriendo Assemble…",
+        logOpened: "Abierto en Assemble: elige las opciones y envíalo allí.", logFailed: "Assemble no pudo abrir el hilo." },
+    fr: { ...en$8, playing: "En cours", daysLeft: { one: "{n} jour restant", other: "{n} jours restants" }, lastDay: "Dernier jour", ended: "Terminé", noDate: "Dates sur le site du club",
+        notInLibrary: "Absent de votre bibliothèque", play: "Jouer", details: "Page du jeu", standing: "Votre classement", beaten: "jeux terminés", streak: "série", rank: "rang",
+        rankOf: "#{rank} sur {of}", crowns: "Couronnes", setName: "Saisissez votre nom de membre dans Accès rapide > Core > Club pour voir votre classement.",
+        notFound: "Aucun membre nommé « {name} » dans le classement pour l'instant.", top: "Top 5", nominations: "Nominations", voteOpens: "Vote le {date}",
+        logTitle: "Enregistrer une victoire", logDiscord: "Sur Discord, dans le fil du jeu :",
+        logOptions: "Options : event, ra_username (la première fois seulement), screenshot (ajoute 0,75 au poids de votre vote). Seule, elle vous envoie un lien privé pour l'enregistrer sur le site.",
+        logForum: "Sur le forum : ouvrez le fil du jeu dans PRGC General et choisissez Log a completion.", logDeadline: "Enregistrez-la avant la fin de la sélection : les enregistrements ferment à ce moment-là.",
+        updated: "Mis à jour {ago}", saved: "Données enregistrées", refresh: "Actualiser", loading: "Chargement du club…", noData: "Les données du club ne sont pas encore disponibles.",
+        setting: "Afficher l'onglet Club", settingHint: "Les sélections du Play Retro Games Club, votre classement et les nominations sur l'accueil.", nameLabel: "Votre nom de membre",
+        nameSave: "Enregistrer le nom", saveFailed: "Impossible d'enregistrer les paramètres du Club.",
+        logAssemble: "Assemble ouvre le fil du jeu sur le Discord du club avec /completed prêt. Choisissez les options et envoyez-le vous-même.", logButton: "Enregistrer la complétion", logOpening: "Ouverture d'Assemble…",
+        logOpened: "Ouvert dans Assemble : choisissez les options et envoyez-le depuis là.", logFailed: "Assemble n'a pas pu ouvrir le fil." },
+    de: { ...en$8, playing: "Läuft gerade", daysLeft: { one: "Noch {n} Tag", other: "Noch {n} Tage" }, lastDay: "Letzter Tag", ended: "Beendet", noDate: "Termine auf der Club-Website",
+        notInLibrary: "Nicht in deiner Bibliothek", play: "Spielen", details: "Spielseite", standing: "Dein Stand", beaten: "Spiele geschafft", streak: "Serie", rank: "Platz",
+        rankOf: "Platz {rank} von {of}", crowns: "Kronen", setName: "Gib deinen Club-Namen unter Schnellzugriff > Core > Club ein, um deinen Stand zu sehen.",
+        notFound: "Noch kein Mitglied namens „{name}“ in der Rangliste.", top: "Top 5", nominations: "Nominierungen", voteOpens: "Abstimmung ab {date}",
+        logTitle: "So trägst du einen Sieg ein", logDiscord: "Auf Discord, im Thread des Spiels:",
+        logOptions: "Optionen: event, ra_username (nur beim ersten Mal), screenshot (erhöht dein Stimmgewicht um 0,75). Allein schickt es dir einen privaten Link zum Eintragen auf der Website.",
+        logForum: "Im Forum: Öffne den Thread des Spiels in PRGC General und wähle Log a completion.", logDeadline: "Trag ihn ein, bevor die Wahl endet: Einträge schließen genau dann.",
+        updated: "Aktualisiert {ago}", saved: "Gespeicherte Daten", refresh: "Aktualisieren", loading: "Club wird geladen…", noData: "Club-Daten sind noch nicht verfügbar.",
+        setting: "Club-Tab anzeigen", settingHint: "Die Picks des Play Retro Games Club, dein Stand und die Nominierungen auf der Startseite.", nameLabel: "Dein Club-Anzeigename",
+        nameSave: "Namen speichern", saveFailed: "Club-Einstellungen konnten nicht gespeichert werden.",
+        logAssemble: "Assemble öffnet den Thread des Spiels im Discord des Clubs mit /completed. Wähle dort die Optionen und sende ihn selbst.", logButton: "Abschluss eintragen", logOpening: "Assemble wird geöffnet…",
+        logOpened: "In Assemble geöffnet: Wähle die Optionen und sende ihn dort.", logFailed: "Assemble konnte den Thread nicht öffnen." },
+    pt: { ...en$8, playing: "Jogando agora", daysLeft: { one: "Falta {n} dia", other: "Faltam {n} dias" }, lastDay: "Último dia", ended: "Encerrado", noDate: "Datas no site do clube",
+        notInLibrary: "Não está na sua biblioteca", play: "Jogar", details: "Página do jogo", standing: "Sua posição", beaten: "jogos zerados", streak: "sequência", rank: "posição",
+        rankOf: "#{rank} de {of}", crowns: "Coroas", setName: "Digite seu nome no clube em Acesso rápido > Core > Club para ver sua posição.",
+        notFound: "Ainda não há membro chamado \"{name}\" no ranking.", top: "Top 5", nominations: "Indicações", voteOpens: "Votação abre em {date}",
+        logTitle: "Como registrar uma vitória", logDiscord: "No Discord, no tópico do jogo:",
+        logOptions: "Opções: event, ra_username (só na primeira vez), screenshot (soma 0,75 ao peso do seu voto). Sozinho, envia um link privado para registrar no site.",
+        logForum: "No fórum: abra o tópico do jogo em PRGC General e escolha Log a completion.", logDeadline: "Registre antes que a escolha termine: os registros fecham nesse momento.",
+        updated: "Atualizado {ago}", saved: "Dados salvos", refresh: "Atualizar", loading: "Carregando o clube…", noData: "Os dados do clube ainda não estão disponíveis.",
+        setting: "Mostrar a aba Club", settingHint: "As escolhas do Play Retro Games Club, sua posição e as indicações na página inicial.", nameLabel: "Seu nome no clube",
+        nameSave: "Salvar nome", saveFailed: "Não foi possível salvar as configurações do Club.",
+        logAssemble: "O Assemble abre o tópico do jogo no Discord do clube com /completed pronto. Escolha as opções lá e envie você mesmo.", logButton: "Registrar conclusão", logOpening: "Abrindo o Assemble…",
+        logOpened: "Aberto no Assemble: escolha as opções e envie por lá.", logFailed: "O Assemble não conseguiu abrir o tópico." },
+    uk: { ...en$8, tab: "Клуб", playing: "Зараз грають", daysLeft: { one: "Залишився {n} день", few: "Залишилося {n} дні", many: "Залишилося {n} днів", other: "Залишилося {n} дня" },
+        lastDay: "Останній день", ended: "Завершено", noDate: "Дати на сайті клубу", notInLibrary: "Немає у вашій бібліотеці", play: "Грати", details: "Сторінка гри",
+        standing: "Ваше місце", beaten: "ігор пройдено", streak: "серія", rank: "місце", rankOf: "№{rank} з {of}", crowns: "Корони",
+        setName: "Введіть своє ім'я в клубі в Швидкий доступ > Core > Club, щоб бачити своє місце.", notFound: "У рейтингу поки немає учасника «{name}».",
+        top: "Топ-5", nominations: "Номінації", voteOpens: "Голосування з {date}", logTitle: "Як зареєструвати перемогу", logDiscord: "У Discord, у гілці гри:",
+        logOptions: "Параметри: event, ra_username (лише першого разу), screenshot (додає 0,75 до ваги вашого голосу). Сама команда надсилає приватне посилання для реєстрації на сайті.",
+        logForum: "На форумі: відкрийте гілку гри в PRGC General і виберіть Log a completion.", logDeadline: "Зареєструйте до кінця вибору: реєстрація закривається саме тоді.",
+        updated: "Оновлено {ago}", saved: "Збережені дані", refresh: "Оновити", loading: "Завантаження клубу…", noData: "Дані клубу ще недоступні.",
+        setting: "Показувати вкладку «Клуб»", settingHint: "Вибір Play Retro Games Club, ваше місце й номінації на головній.", nameLabel: "Ваше ім'я в клубі",
+        nameSave: "Зберегти ім'я", saveFailed: "Не вдалося зберегти налаштування клубу.",
+        logAssemble: "Assemble відкриває гілку гри в Discord клубу з готовою командою /completed. Виберіть параметри там і надішліть самі.", logButton: "Зареєструвати проходження", logOpening: "Відкриваємо Assemble…",
+        logOpened: "Відкрито в Assemble: виберіть параметри й надішліть там.", logFailed: "Assemble не вдалося відкрити гілку." },
+    ru: { ...en$8, tab: "Клуб", playing: "Сейчас играют", daysLeft: { one: "Остался {n} день", few: "Осталось {n} дня", many: "Осталось {n} дней", other: "Осталось {n} дня" },
+        lastDay: "Последний день", ended: "Завершено", noDate: "Даты на сайте клуба", notInLibrary: "Нет в вашей библиотеке", play: "Играть", details: "Страница игры",
+        standing: "Ваше место", beaten: "игр пройдено", streak: "серия", rank: "место", rankOf: "№{rank} из {of}", crowns: "Короны",
+        setName: "Введите своё имя в клубе в Быстрый доступ > Core > Club, чтобы видеть своё место.", notFound: "В рейтинге пока нет участника «{name}».",
+        top: "Топ-5", nominations: "Номинации", voteOpens: "Голосование с {date}", logTitle: "Как записать победу", logDiscord: "В Discord, в ветке игры:",
+        logOptions: "Параметры: event, ra_username (только в первый раз), screenshot (добавляет 0,75 к весу вашего голоса). Сама команда присылает личную ссылку для записи на сайте.",
+        logForum: "На форуме: откройте ветку игры в PRGC General и выберите Log a completion.", logDeadline: "Запишите до конца выбора: запись закрывается в этот момент.",
+        updated: "Обновлено {ago}", saved: "Сохранённые данные", refresh: "Обновить", loading: "Загрузка клуба…", noData: "Данные клуба пока недоступны.",
+        setting: "Показывать вкладку «Клуб»", settingHint: "Выбор Play Retro Games Club, ваше место и номинации на главной.", nameLabel: "Ваше имя в клубе",
+        nameSave: "Сохранить имя", saveFailed: "Не удалось сохранить настройки клуба.",
+        logAssemble: "Assemble открывает ветку игры в Discord клуба с готовой командой /completed. Выберите параметры там и отправьте сами.", logButton: "Записать прохождение", logOpening: "Открываем Assemble…",
+        logOpened: "Открыто в Assemble: выберите параметры и отправьте там.", logFailed: "Assemble не удалось открыть ветку." },
+    zh: { ...en$8, tab: "俱乐部", playing: "正在游玩", daysLeft: { other: "还剩 {n} 天" }, lastDay: "最后一天", ended: "已结束", noDate: "日期见俱乐部网站",
+        notInLibrary: "不在你的库中", play: "开始游戏", details: "游戏页面", standing: "你的排名", beaten: "款已通关", streak: "连续", rank: "排名", rankOf: "第 {rank} 名，共 {of} 人",
+        crowns: "王冠", setName: "在 快速访问 > Core > Club 中输入你的俱乐部名称即可查看排名。", notFound: "排行榜上还没有名为“{name}”的成员。", top: "前 5 名",
+        nominations: "提名", voteOpens: "{date} 开始投票", logTitle: "如何登记通关", logDiscord: "在 Discord 上，于该游戏的帖子中：",
+        logOptions: "选项：event、ra_username（仅首次）、screenshot（为你的投票权重加 0.75）。单独使用时会私信你一个在网站上登记的链接。",
+        logForum: "在论坛上：打开 PRGC General 中该游戏的帖子，选择 Log a completion。", logDeadline: "请在本期结束前登记：结束时登记即关闭。",
+        updated: "更新于{ago}", saved: "显示已保存的数据", refresh: "刷新", loading: "正在加载俱乐部…", noData: "俱乐部数据暂不可用。",
+        setting: "显示俱乐部标签页", settingHint: "在主页显示 Play Retro Games Club 的本期游戏、你的排名和提名。", nameLabel: "你的俱乐部显示名称",
+        nameSave: "保存名称", saveFailed: "无法保存俱乐部设置。",
+        logAssemble: "Assemble 会在俱乐部的 Discord 中打开该游戏的帖子，并准备好 /completed。请在那里选择选项并自行发送。", logButton: "登记通关", logOpening: "正在打开 Assemble…",
+        logOpened: "已在 Assemble 中打开：请在那里选择选项并发送。", logFailed: "Assemble 无法打开该帖子。" },
+    ja: { ...en$8, tab: "クラブ", playing: "プレイ中", daysLeft: { other: "残り{n}日" }, lastDay: "最終日", ended: "終了", noDate: "日程はクラブのサイトで",
+        notInLibrary: "ライブラリにありません", play: "プレイ", details: "ゲームページ", standing: "あなたの順位", beaten: "本クリア", streak: "連続", rank: "順位",
+        rankOf: "{of}人中{rank}位", crowns: "クラウン", setName: "クイックアクセス > Core > Club でクラブの表示名を入力すると順位が表示されます。",
+        notFound: "「{name}」というメンバーはまだランキングにいません。", top: "トップ5", nominations: "ノミネート", voteOpens: "{date}に投票開始",
+        logTitle: "クリアの記録方法", logDiscord: "Discord のゲームのスレッドで：",
+        logOptions: "オプション：event、ra_username（初回のみ）、screenshot（投票の重みに 0.75 加算）。単独で使うと、サイトで記録するための非公開リンクが届きます。",
+        logForum: "フォーラムでは：PRGC General のゲームのスレッドを開き、Log a completion を選びます。", logDeadline: "選出期間が終わる前に記録してください。終了と同時に締め切られます。",
+        updated: "{ago}に更新", saved: "保存済みのデータを表示中", refresh: "更新", loading: "クラブを読み込み中…", noData: "クラブのデータはまだありません。",
+        setting: "クラブタブを表示", settingHint: "ホームに Play Retro Games Club の選出作品、あなたの順位、ノミネートを表示します。", nameLabel: "クラブの表示名",
+        nameSave: "名前を保存", saveFailed: "クラブの設定を保存できませんでした。",
+        logAssemble: "Assemble がクラブの Discord でゲームのスレッドを開き、/completed を用意します。オプションを選んでご自身で送信してください。", logButton: "クリアを記録", logOpening: "Assemble を開いています…",
+        logOpened: "Assemble で開きました。オプションを選んで送信してください。", logFailed: "Assemble はスレッドを開けませんでした。" },
+    ko: { ...en$8, tab: "클럽", playing: "지금 플레이 중", daysLeft: { other: "{n}일 남음" }, lastDay: "마지막 날", ended: "종료", noDate: "날짜는 클럽 사이트에서",
+        notInLibrary: "라이브러리에 없음", play: "플레이", details: "게임 페이지", standing: "내 순위", beaten: "개 클리어", streak: "연속", rank: "순위",
+        rankOf: "{of}명 중 {rank}위", crowns: "크라운", setName: "빠른 실행 > Core > Club에서 클럽 이름을 입력하면 순위가 표시됩니다.",
+        notFound: "아직 순위표에 \"{name}\" 멤버가 없습니다.", top: "상위 5명", nominations: "후보", voteOpens: "{date} 투표 시작",
+        logTitle: "클리어 기록 방법", logDiscord: "Discord의 게임 스레드에서:",
+        logOptions: "옵션: event, ra_username(처음 한 번만), screenshot(투표 가중치 +0.75). 단독으로 쓰면 웹사이트에서 기록할 비공개 링크를 보내 줍니다.",
+        logForum: "포럼에서: PRGC General의 게임 스레드를 열고 Log a completion을 선택하세요.", logDeadline: "선정 기간이 끝나기 전에 기록하세요. 끝나는 순간 마감됩니다.",
+        updated: "{ago} 업데이트", saved: "저장된 데이터 표시 중", refresh: "새로 고침", loading: "클럽을 불러오는 중…", noData: "아직 클럽 데이터가 없습니다.",
+        setting: "클럽 탭 표시", settingHint: "홈에 Play Retro Games Club 선정작, 내 순위, 후보를 표시합니다.", nameLabel: "클럽 표시 이름",
+        nameSave: "이름 저장", saveFailed: "클럽 설정을 저장하지 못했습니다.",
+        logAssemble: "Assemble이 클럽 Discord에서 게임 스레드를 열고 /completed를 준비합니다. 옵션을 고른 뒤 직접 보내세요.", logButton: "클리어 기록", logOpening: "Assemble 여는 중…",
+        logOpened: "Assemble에서 열렸습니다. 옵션을 고르고 보내세요.", logFailed: "Assemble이 스레드를 열지 못했습니다." },
+    hi: { ...en$8, tab: "क्लब", playing: "अभी खेल रहे हैं", daysLeft: { one: "{n} दिन बाकी", other: "{n} दिन बाकी" }, lastDay: "आखिरी दिन", ended: "समाप्त",
+        noDate: "तारीखें क्लब की साइट पर", notInLibrary: "आपकी लाइब्रेरी में नहीं", play: "खेलें", details: "गेम पेज", standing: "आपकी स्थिति", beaten: "गेम पूरे किए",
+        streak: "लगातार", rank: "रैंक", rankOf: "{of} में #{rank}", crowns: "ताज", setName: "अपनी स्थिति देखने के लिए क्विक एक्सेस > Core > Club में अपना क्लब नाम डालें।",
+        notFound: "लीडरबोर्ड पर अभी \"{name}\" नाम का कोई सदस्य नहीं है।", top: "शीर्ष 5", nominations: "नामांकन", voteOpens: "मतदान {date} से",
+        logTitle: "जीत कैसे दर्ज करें", logDiscord: "Discord पर, गेम के थ्रेड में:",
+        logOptions: "विकल्प: event, ra_username (सिर्फ़ पहली बार), screenshot (आपके वोट के वज़न में 0.75 जोड़ता है)। अकेले चलाने पर वेबसाइट पर दर्ज करने का निजी लिंक भेजता है।",
+        logForum: "फ़ोरम पर: PRGC General में गेम का थ्रेड खोलें और Log a completion चुनें।", logDeadline: "चयन खत्म होने से पहले दर्ज करें: उसी पल प्रविष्टियाँ बंद हो जाती हैं।",
+        updated: "{ago} अपडेट किया गया", saved: "सहेजा गया डेटा दिखाया जा रहा है", refresh: "रीफ़्रेश करें", loading: "क्लब लोड हो रहा है…", noData: "क्लब का डेटा अभी उपलब्ध नहीं है।",
+        setting: "क्लब टैब दिखाएँ", settingHint: "होम पर Play Retro Games Club के चुने गए गेम, आपकी स्थिति और नामांकन।", nameLabel: "आपका क्लब डिस्प्ले नाम",
+        nameSave: "नाम सहेजें", saveFailed: "क्लब सेटिंग्स सहेजी नहीं जा सकीं।",
+        logAssemble: "Assemble क्लब के Discord पर गेम का थ्रेड /completed के साथ तैयार खोलता है। वहाँ विकल्प चुनें और खुद भेजें।", logButton: "पूरा होना दर्ज करें", logOpening: "Assemble खुल रहा है…",
+        logOpened: "Assemble में खुल गया: विकल्प चुनें और वहीं से भेजें।", logFailed: "Assemble थ्रेड नहीं खोल सका।" },
+};
+function clubLanguage(locale) {
+    const language = String(locale || "en").toLowerCase().split(/[-_]/)[0];
+    return language === "ua" ? "uk" : language in copy$d ? language : "en";
+}
+function clubCopy(locale) {
+    const language = clubLanguage(locale);
+    return { ...extra.en, ...(extra[language] ?? {}), ...copy$d[language] };
+}
+function fill$5(template, values) {
+    return template.replace(/\{(\w+)\}/g, (match, key) => key in values ? String(values[key]) : match);
+}
+function daysLeftText(locale, days) {
+    const language = clubLanguage(locale);
+    const forms = copy$d[language].daysLeft;
+    let category = "other";
+    try {
+        category = new Intl.PluralRules(language).select(days);
+    }
+    catch {
+        category = days === 1 ? "one" : "other";
+    }
+    return fill$5(forms[category] ?? forms.other, { n: days });
+}
+
+// Eternal Core: the Club tab on Core's Home: Play Retro Games Club's current picks (matched to the Steam library, A plays),
+// Log completion (X: with Eternal-Assemble loaded, the pick's Discord thread opens with /completed ready) and Open in
+// Library (Y), the user's standing with the top three, what is coming up, and nominations.
+// Core palette: black with the Starfield, gunmetal cards (10 px radius), focus lifts, steel text.
+const { Focusable: Focusable$g, Navigation: Navigation$8 } = CompatUI;
 const CLUB_ART = /^https:\/\/www\.playretrogamesclub\.com\/img\/\d{1,9}\.(?:png|jpe?g|webp)$/;
 // The club's image only from the club's own /img/ path (never another host).
 function clubArtUrl(pick) {
@@ -23366,46 +24425,56 @@ function clubArtUrl(pick) {
     const path = typeof pick.cover === "string" ? `https://www.playretrogamesclub.com${pick.cover}` : "";
     return CLUB_ART.test(path) ? path : "";
 }
+// 3.3.10 (the approved board, HomeClub): four tall full-width pick cards (box art filling each card, the details over a
+// bottom fade: the event tag in the pick's colour, title, platform and length, days left and beaten count, the library
+// chip), then Log completion (X) and Open in Library (Y) acting on the focused pick, then three equal boxes: Your
+// standing, Coming up, Nominations. No refresh button and no "saved data" line: it refreshes itself hourly. Focus starts
+// on the first pick; left and right move across the picks and across the boxes; down goes picks, buttons, boxes. Every
+// box is focusable. Focus lifts; no outline.
+const PICK_TONE = { gotw: CORE_FAMILY_TONES$1.retro, gotm: CORE_FAMILY_TONES$1.nintendo, rhotm: CORE_FAMILY_TONES$1.sega, gots: CORE_FAMILY_TONES$1.playstation };
+const pickTone = (pick) => PICK_TONE[assembleEventFor(pick) ?? ""] ?? CORE.crimsonText;
+// Board sizes (1920 px) scaled to the view: cards 560 px tall (about 393 at the TV's 758 px), boxes 250 (about 176).
+const CLUB_LAYOUT = { cardVh: 51.9, boxVh: 23.1, gapVw: 1.04 };
 const css$5 = `
-.ph-club{position:relative;isolation:isolate;min-height:100%;padding:24px 36px 48px;color:${CORE.text};background:${CORE.black};box-sizing:border-box}
-.ph-club h2{margin:0;font-size:28px;font-weight:700;color:${CORE.white}}
-.ph-club h3{margin:0 0 12px;font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${CORE.steel}}
-.ph-club-head{display:flex;align-items:baseline;gap:18px;margin-bottom:20px;flex-wrap:wrap}
-.ph-club-updated{font-size:14px;color:${CORE.hint}}
-.ph-club-updated.stale{color:${CORE.warning}}
-.ph-club-focus{outline:none;border-radius:0}
-.ph-club-focus.gpfocus,.ph-club-focus:focus-visible{box-shadow:0 0 0 3px ${CORE.crimson};border-radius:0}
-.ph-club-picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:22px;margin-bottom:30px}
-.ph-club-tile{padding:4px}
-.ph-club-card{background:${CORE.gunmetal};border-radius:10px;overflow:hidden;height:100%;display:flex;flex-direction:column}
-.ph-club-art{position:relative;aspect-ratio:2/3;background:${CORE.gunmetalRaised} center/cover no-repeat;display:flex;align-items:center;justify-content:center}
-.ph-club-art-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.ph-club-badge{font-size:44px;font-weight:800;letter-spacing:.04em;color:${CORE.steel};border-bottom:4px solid ${CORE.crimson};padding-bottom:6px}
-.ph-club-event{position:absolute;left:0;top:0;padding:6px 10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:${coreAlpha(CORE.black, 0.78)};color:${CORE.white}}
-.ph-club-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px}
-.ph-club-title{font-size:18px;font-weight:700;color:${CORE.white};line-height:1.25}
-.ph-club-meta{font-size:14px;color:${CORE.steel}}
-.ph-club-left{font-size:15px;font-weight:700;color:${CORE.white}}
+.ph-club{position:relative;isolation:isolate;min-height:100%;padding:12px 2px 40px;color:${CORE.text};box-sizing:border-box}
+.ph-club h3{margin:0 0 10px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:${CORE.steel}}
+.ph-club-lift{outline:none;transition:translate .15s ease-out,box-shadow .15s ease-out}
+.ph-club-lift.gpfocus,.ph-club-lift:focus-visible{translate:0 -7px;outline:none}
+.ph-club-picks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:${CLUB_LAYOUT.gapVw}vw;margin:6px 0 22px}
+.ph-club-card{position:relative;height:${CLUB_LAYOUT.cardVh}vh;min-height:260px;border-radius:10px;overflow:hidden;background:${CORE.gunmetalRaised};box-shadow:0 10px 24px ${coreAlpha(CORE.black, 0.6)}}
+.ph-club-card.gpfocus,.ph-club-card:focus-visible{box-shadow:0 14px 30px ${coreAlpha(CORE.black, 0.75)}}
+.ph-club-card-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph-club-badge{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;letter-spacing:.04em;color:${CORE.steel}}
+.ph-club-tone{position:absolute;left:0;top:0;width:100%;height:4px}
+.ph-club-fade{position:absolute;inset:0;background:linear-gradient(180deg,${coreAlpha(CORE.black, 0)} 35%,${coreAlpha(CORE.black, 0.92)} 78%)}
+.ph-club-details{position:absolute;left:18px;right:18px;bottom:18px}
+.ph-club-tag{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.ph-club-title{font-size:21px;font-weight:600;color:${CORE.white};margin-top:6px;line-height:1.15}
+.ph-club-meta{font-size:13px;color:${CORE.steel};margin-top:6px}
+.ph-club-left{font-size:13px;color:${CORE.hint};margin-top:4px}
 .ph-club-left.soon{color:${CORE.crimsonText}}
-.ph-club-lib{font-size:13px;color:${CORE.hint}}
-.ph-club-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;margin-bottom:22px}
-.ph-club-panel{background:${CORE.gunmetal};border-radius:10px;padding:18px 20px}
-.ph-club-stats{display:flex;gap:28px;flex-wrap:wrap}
-.ph-club-stat strong{display:block;font-size:34px;color:${CORE.white};line-height:1.1}
-.ph-club-stat span{font-size:13px;color:${CORE.steel}}
-.ph-club-crowns{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
-.ph-club-crown{font-size:12px;padding:4px 8px;border-radius:10px;background:${CORE.gunmetalRaised};color:${CORE.text}}
-.ph-club-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-.ph-club-list li{display:flex;justify-content:space-between;gap:12px;font-size:15px}
-.ph-club-list li.me{color:${CORE.white};font-weight:700;box-shadow:inset 3px 0 0 ${CORE.crimson};padding-left:8px}
-.ph-club-list .muted{color:${CORE.hint}}
-.ph-club-note{font-size:14px;color:${CORE.steel};line-height:1.5;margin:6px 0 0}
-.ph-club-command{display:inline-block;margin:6px 0;padding:6px 10px;border-radius:10px;background:${CORE.black};color:${CORE.white};font-family:ui-monospace,Consolas,monospace;font-size:18px}
-.ph-club-log{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-.ph-club-log-status{font-size:14px;color:${CORE.steel};margin:4px 0 0}
-.ph-club-log-status.error{color:${CORE.warning}}
-.ph-club-empty{padding:40px 0;color:${CORE.steel};font-size:16px}
-@media(max-width:900px){.ph-club-row{grid-template-columns:1fr}.ph-club{padding:18px}}
+.ph-club-chip{display:inline-flex;align-items:center;height:31px;padding:0 13px;margin-top:13px;font-size:13px;font-weight:600;border-radius:10px;background:${CORE.gunmetal};color:${CORE.steel}}
+.ph-club-chip.owned{background:${CORE.ok};color:${CORE.onStatus}}
+.ph-club-actions{display:flex;gap:10px;align-items:center;margin:0 0 22px}
+.ph-club-action{display:inline-flex;align-items:center;gap:8px;height:37px;padding:0 14px;background:${CORE.gunmetal};color:${CORE.steel};font-size:13px;font-weight:600;border-radius:0}
+.ph-club-action.gpfocus,.ph-club-action:focus-visible{background:${CORE.gunmetalRaised};color:${CORE.white};box-shadow:inset 3px 0 0 ${CORE.crimson}}
+.ph-club-action[aria-disabled="true"]{color:${CORE.hint}}
+.ph-club-key{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border:1.5px solid ${CORE.steel};border-radius:50%;font-size:11px;font-weight:700}
+.ph-club-status{font-size:12px;color:${CORE.hint}}
+.ph-club-status.error{color:${CORE.warning}}
+.ph-club-boxes{display:grid;grid-template-columns:586fr 640fr 526fr;gap:${CLUB_LAYOUT.gapVw}vw}
+.ph-club-box{height:${CLUB_LAYOUT.boxVh}vh;min-height:150px;box-sizing:border-box;padding:17px 20px;background:${CORE.gunmetal};border-radius:10px;overflow:hidden}
+.ph-club-box.gpfocus,.ph-club-box:focus-visible{background:${CORE.gunmetalRaised}}
+.ph-club-big{font-size:28px;font-weight:600;color:${CORE.white};margin-top:4px}
+.ph-club-note{font-size:12px;color:${CORE.hint};margin:6px 0 0}
+.ph-club-line{font-size:12px;color:${CORE.steel};margin-top:11px}
+.ph-club-dates{display:grid;grid-template-columns:84px 1fr;row-gap:10px;font-size:13px}
+.ph-club-dates b{color:${CORE.crimsonText};font-weight:600}
+.ph-club-dates span{color:${CORE.steel}}
+.ph-club-noms{display:flex;flex-direction:column;gap:8px;font-size:13px;color:${CORE.steel}}
+.ph-club-noms div{display:flex;justify-content:space-between;gap:12px}
+.ph-club-noms b{color:${CORE.white}}
+.ph-club-empty{padding:8px 2px;color:${CORE.hint};font-size:15px;text-align:left;outline:none}
 @media(prefers-reduced-motion:reduce){.ph-club *{transition:none!important}}
 `;
 const browserLocale = () => { try {
@@ -23417,60 +24486,67 @@ catch {
 function useClub() {
     return _global_SP_REACT.useSyncExternalStore(subscribeClub, clubState, clubState);
 }
-function PickTile({ pick, match, copy, locale, now }) {
+function leftTextFor(pick, copy, locale, now) {
+    const left = timeLeft(pick.ends_at, now);
+    const text = left.state === "days" ? daysLeftText(locale, left.days) : left.state === "last" ? copy.lastDay : left.state === "ended" ? copy.ended : copy.noDate;
+    return { text, soon: left.state === "last" || (left.state === "days" && left.days <= 2) };
+}
+function hoursText(hours) {
+    return typeof hours === "number" && hours > 0 ? `${Math.round(hours * 10) / 10} h` : "";
+}
+function PickCard({ pick, match, copy, locale, now, first, onFocus, onLog, onOpen }) {
     const art = match ? steamArtFor(match.appId) : "";
     const candidate = art || (clubArtUrl(pick) );
     const [failed, setFailed] = _global_SP_REACT.useState("");
     const image = candidate && failed !== candidate ? candidate : "";
-    const left = timeLeft(pick.ends_at, now);
-    const leftText = left.state === "days" ? daysLeftText(locale, left.days) : left.state === "last" ? copy.lastDay
-        : left.state === "ended" ? copy.ended : copy.noDate;
-    const soon = left.state === "last" || (left.state === "days" && left.days <= 2);
+    const left = leftTextFor(pick, copy, locale, now);
+    const tone = pickTone(pick);
     const platform = pick.platform ? (pick.romhack ? `${pick.platform} romhack` : pick.platform) : "";
+    const meta = [platform, hoursText(pick.hours)].filter(Boolean).join(" · ");
+    const beaten = typeof pick.beaten === "number" ? fill$5(copy.beatenCount, { n: pick.beaten }) : "";
     const play = () => { if (match)
         playApp(match.appId); };
-    const details = () => { if (match)
-        openGamePage(match.appId, (path) => Navigation$8?.Navigate?.(path)); };
-    return SP_JSX.jsx(Focusable$g, { className: "ph-club-tile ph-club-focus", focusable: true, role: "button", "aria-label": `${pick.label}: ${pick.title}. ${leftText}. ${match ? copy.play : copy.notInLibrary}`, onActivate: match ? play : undefined, onClick: match ? play : undefined, onOKActionDescription: match ? copy.play : undefined, onSecondaryButton: match ? (event) => { event?.preventDefault?.(); event?.stopPropagation?.(); details(); } : undefined, onSecondaryActionDescription: match ? copy.details : undefined, children: SP_JSX.jsxs("div", { className: "ph-club-card", children: [SP_JSX.jsxs("div", { className: "ph-club-art", children: [image ? SP_JSX.jsx("img", { className: "ph-club-art-img", src: image, alt: "", loading: "lazy", referrerPolicy: "no-referrer", onError: () => setFailed(image) })
-                            : SP_JSX.jsx("span", { className: "ph-club-badge", children: pick.platform || "?" }), SP_JSX.jsx("span", { className: "ph-club-event", children: pick.label })] }), SP_JSX.jsxs("div", { className: "ph-club-body", children: [SP_JSX.jsx("div", { className: "ph-club-title", children: pick.title }), platform && SP_JSX.jsx("div", { className: "ph-club-meta", children: platform }), SP_JSX.jsx("div", { className: `ph-club-left${soon ? " soon" : ""}`, children: leftText }), SP_JSX.jsx("div", { className: "ph-club-lib", children: match ? `A ${copy.play} · X ${copy.details}` : copy.notInLibrary })] })] }) });
+    return SP_JSX.jsxs(Focusable$g, { className: "ph-club-card ph-club-lift", focusable: true, role: "button", autoFocus: first, "aria-label": `${pick.label}: ${pick.title}. ${left.text}. ${match ? copy.inLibrary : copy.notInLibrary}`, onGamepadFocus: onFocus, onFocus: onFocus, onActivate: match ? play : undefined, onClick: match ? play : undefined, onOKActionDescription: match ? copy.play : undefined, onSecondaryButton: (event) => { event?.preventDefault?.(); event?.stopPropagation?.(); onLog(); }, onSecondaryActionDescription: copy.logButton, onOptionsButton: match ? (event) => { event?.preventDefault?.(); event?.stopPropagation?.(); onOpen(); } : undefined, onOptionsActionDescription: match ? copy.openInLibrary : undefined, children: [image ? SP_JSX.jsx("img", { className: "ph-club-card-art", src: image, alt: "", loading: "lazy", referrerPolicy: "no-referrer", onError: () => setFailed(image) })
+                : SP_JSX.jsx("span", { className: "ph-club-badge", children: pick.platform || "?" }), SP_JSX.jsx("span", { className: "ph-club-tone", style: { background: tone } }), SP_JSX.jsx("span", { className: "ph-club-fade" }), SP_JSX.jsxs("div", { className: "ph-club-details", children: [SP_JSX.jsx("div", { className: "ph-club-tag", style: { color: tone }, children: pick.label }), SP_JSX.jsx("div", { className: "ph-club-title", children: pick.title }), meta && SP_JSX.jsx("div", { className: "ph-club-meta", children: meta }), SP_JSX.jsx("div", { className: `ph-club-left${left.soon ? " soon" : ""}`, children: [left.text, beaten].filter(Boolean).join(" · ") }), SP_JSX.jsx("span", { className: `ph-club-chip${match ? " owned" : ""}`, children: match ? `✓ ${copy.inLibrary}` : copy.notInLibrary })] })] });
 }
-function Standing({ member, name, copy }) {
-    if (!name)
-        return SP_JSX.jsx("p", { className: "ph-club-note", children: copy.setName });
-    if (!member)
-        return SP_JSX.jsx("p", { className: "ph-club-note", children: fill$5(copy.notFound, { name }) });
-    const streak = member.streak && member.streak.count > 0 ? member.streak : null;
-    return SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs("div", { className: "ph-club-stats", children: [SP_JSX.jsxs("div", { className: "ph-club-stat", children: [SP_JSX.jsx("strong", { children: member.beaten ?? "—" }), SP_JSX.jsx("span", { children: copy.beaten })] }), SP_JSX.jsxs("div", { className: "ph-club-stat", children: [SP_JSX.jsx("strong", { children: streak ? streak.count : "—" }), SP_JSX.jsxs("span", { children: [copy.streak, streak?.event ? ` · ${streak.event}` : ""] })] }), SP_JSX.jsxs("div", { className: "ph-club-stat", children: [SP_JSX.jsx("strong", { children: member.rank ? `#${member.rank}` : "—" }), SP_JSX.jsx("span", { children: member.rank && member.of ? fill$5(copy.rankOf, { rank: member.rank, of: member.of }) : copy.rank })] })] }), member.crowns.length > 0 && SP_JSX.jsx("div", { className: "ph-club-crowns", "aria-label": copy.crowns, children: member.crowns.slice(0, 6).map((crown, index) => SP_JSX.jsxs("span", { className: "ph-club-crown", children: [crown.crown, crown.tier ? ` (${crown.tier})` : "", " \u00B7 ", crown.period] }, index)) })] });
+function Standing({ member, name, top, copy }) {
+    const leaders = top.slice(0, 3).map(row => `${row.name} ${row.beaten}`).join(" · ");
+    return SP_JSX.jsxs(SP_JSX.Fragment, { children: [!name ? SP_JSX.jsx("p", { className: "ph-club-note", children: copy.setName })
+                : !member ? SP_JSX.jsx("p", { className: "ph-club-note", children: fill$5(copy.notFound, { name }) })
+                    : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("div", { className: "ph-club-big", children: [member.rank ? `#${member.rank}` : "", member.beaten !== null ? fill$5(copy.beatenCount, { n: member.beaten }) : ""].filter(Boolean).join(" · ") || "—" }), member.rank && member.of ? SP_JSX.jsx("p", { className: "ph-club-note", children: fill$5(copy.rankOf, { rank: member.rank, of: member.of }) }) : null] }), leaders && SP_JSX.jsxs("div", { className: "ph-club-line", children: [copy.topLine, ": ", leaders] })] });
 }
-function TopFive({ rows, me }) {
-    return SP_JSX.jsx("ol", { className: "ph-club-list", children: rows.slice(0, 5).map(row => SP_JSX.jsxs("li", { className: row.slug === me ? "me" : undefined, children: [SP_JSX.jsxs("span", { children: [SP_JSX.jsxs("span", { className: "muted", children: [row.rank, "."] }), " ", row.name] }), SP_JSX.jsx("span", { children: row.beaten })] }, row.slug)) });
+function ComingUp({ items, locale }) {
+    return SP_JSX.jsx("div", { className: "ph-club-dates", children: items.slice(0, 3).map((item, index) => SP_JSX.jsxs(_global_SP_REACT.Fragment, { children: [SP_JSX.jsx("b", { children: formatClubDate(locale, item.at) }), SP_JSX.jsx("span", { children: item.title || item.text })] }, index)) });
 }
-function Nominations({ groups, copy, locale }) {
-    return SP_JSX.jsx(SP_JSX.Fragment, { children: groups.slice(0, 3).map((group, index) => SP_JSX.jsxs("div", { style: { marginBottom: 14 }, children: [SP_JSX.jsxs("div", { className: "ph-club-meta", style: { color: CORE.white, fontWeight: 700 }, children: [group.label, group.count ? ` · ${group.count}` : ""] }), group.opens_at ? SP_JSX.jsx("div", { className: "ph-club-lib", children: fill$5(copy.voteOpens, { date: formatClubDate(locale, group.opens_at) }) }) : null, group.items.length > 0 && SP_JSX.jsx("ul", { className: "ph-club-list", style: { marginTop: 6 }, children: group.items.slice(0, 5).map((item, row) => SP_JSX.jsxs("li", { children: [SP_JSX.jsx("span", { children: item.title }), SP_JSX.jsxs("span", { className: "muted", children: [item.platform, item.romhack ? " romhack" : ""] })] }, row)) })] }, index)) });
+function Nominations({ groups }) {
+    return SP_JSX.jsx("div", { className: "ph-club-noms", children: groups.slice(0, 3).map((group, index) => SP_JSX.jsxs("div", { children: [SP_JSX.jsx("span", { children: [group.period, group.label].filter(Boolean).join(" ") || group.label }), SP_JSX.jsx("b", { children: group.count ?? group.items.length })] }, index)) });
 }
-function LogCompletion({ picks, copy, now }) {
+// Log completion (X) on the focused pick: Assemble opens the game's thread on the club's Discord with /completed ready;
+// the user sends it. Without Assemble, or for a pick that is over, the button says how instead.
+function useLog(copy, now) {
     const [, setReady] = _global_SP_REACT.useState(0);
-    const [busy, setBusy] = _global_SP_REACT.useState(null);
+    const [busy, setBusy] = _global_SP_REACT.useState(false);
     const [status, setStatus] = _global_SP_REACT.useState(null);
     // Assemble fires its ready event when it (re)loads; the bridge is read again on every render.
     _global_SP_REACT.useEffect(() => subscribeAssemble(() => setReady(tick => tick + 1)), []);
     const bridge = assembleBridge();
-    const open = picks.filter(pick => assembleEventFor(pick) && timeLeft(pick.ends_at, now).state !== "ended");
-    if (!bridge || open.length === 0)
-        return SP_JSX.jsxs(Focusable$g, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.logTitle, children: [SP_JSX.jsx("h3", { children: copy.logTitle }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logDiscord }), SP_JSX.jsx("code", { className: "ph-club-command", children: CLUB_COMPLETION_COMMAND }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logOptions }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logForum }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logDeadline })] });
+    const can = (pick) => !!pick && !!bridge && !!assembleEventFor(pick) && timeLeft(pick.ends_at, now).state !== "ended";
     const log = async (pick) => {
-        const event = assembleEventFor(pick);
-        if (!event || busy)
+        if (!pick || busy)
             return;
-        const key = `${pick.kind}-${pick.slug}`;
-        setBusy(key);
+        const event = assembleEventFor(pick);
+        if (!bridge || !event) {
+            setStatus({ error: false, text: `${copy.logUnavailable}: ${CLUB_COMPLETION_COMMAND}` });
+            return;
+        }
+        setBusy(true);
         setStatus({ error: false, text: copy.logOpening });
         // Assemble only opens the thread with /completed ready; the user chooses the options and sends it.
         const result = await openClubCompletion({ event, title: pick.title });
-        setBusy(null);
+        setBusy(false);
         setStatus(result.success ? { error: false, text: copy.logOpened } : { error: true, text: result.message || copy.logFailed });
     };
-    return SP_JSX.jsxs(Focusable$g, { className: "ph-club-panel", "flow-children": "column", role: "group", "aria-label": copy.logTitle, children: [SP_JSX.jsx("h3", { children: copy.logTitle }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logAssemble }), SP_JSX.jsx("div", { className: "ph-club-log", children: open.map(pick => SP_JSX.jsx(DialogButton$9, { disabled: Boolean(busy), style: { width: "100%", minWidth: 0, padding: "8px 14px", textAlign: "left" }, onClick: () => void log(pick), children: `${copy.logButton} · ${pick.label}: ${pick.title}` }, `${pick.kind}-${pick.slug}`)) }), status && SP_JSX.jsx("p", { className: `ph-club-log-status${status.error ? " error" : ""}`, role: "status", children: status.text }), SP_JSX.jsx("p", { className: "ph-club-note", children: copy.logDeadline })] });
+    return { can, log, status, busy };
 }
 function ClubTab({ locale, getLocale }) {
     const resolved = locale ?? getLocale?.() ?? browserLocale();
@@ -23478,6 +24554,7 @@ function ClubTab({ locale, getLocale }) {
     const state = useClub();
     const [now, setNow] = _global_SP_REACT.useState(() => Date.now());
     const [library, setLibrary] = _global_SP_REACT.useState(() => readLibrary());
+    const [focused, setFocused] = _global_SP_REACT.useState(0);
     _global_SP_REACT.useEffect(() => {
         // Opening the tab: the backend refreshes when its copy is older than an hour (its politeness rules decide), and
         // the background schedule (clubStore.ts) keeps it fresh while the tab is closed.
@@ -23491,10 +24568,15 @@ function ClubTab({ locale, getLocale }) {
         return () => { window.clearInterval(poll); window.clearInterval(clock); window.clearInterval(libraryTimer); };
     }, []);
     const feed = state.feed, snapshot = feed?.snapshot ?? null;
-    const matches = _global_SP_REACT.useMemo(() => new Map((snapshot?.picks ?? []).map(pick => [pick, matchPick({ title: pick.title, platform: pick.platform }, library)])), [snapshot, library]);
-    const canRefresh = !state.loading && now / 1000 >= (feed?.refresh_available_at ?? 0);
+    const picks = (snapshot?.picks ?? []).slice(0, 4);
+    const matches = _global_SP_REACT.useMemo(() => new Map(picks.map(pick => [pick, matchPick({ title: pick.title, platform: pick.platform }, library)])), [snapshot, library]);
+    const { can, log, status, busy } = useLog(copy, now);
     const name = feed?.display_name ?? state.settings?.display_name ?? "";
-    return SP_JSX.jsxs(Focusable$g, { className: "ph-club", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$5 }), SP_JSX.jsx(CoreStars, {}), SP_JSX.jsxs("div", { className: "ph-club-head", children: [SP_JSX.jsx("h2", { children: copy.title }), feed?.stale && SP_JSX.jsx("span", { className: "ph-club-updated stale", role: "status", children: copy.saved }), SP_JSX.jsx(DialogButton$9, { style: { width: "auto", minWidth: 0, padding: "6px 16px", marginLeft: "auto" }, disabled: !canRefresh, onClick: () => void loadClub(true), children: copy.refresh })] }), !snapshot ? SP_JSX.jsx("div", { className: "ph-club-empty", role: "status", children: state.loading || !feed ? copy.loading : copy.noData }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx("h3", { children: copy.playing }), SP_JSX.jsx(Focusable$g, { className: "ph-club-picks", "flow-children": "row", children: snapshot.picks.map(pick => SP_JSX.jsx(PickTile, { pick: pick, match: matches.get(pick) ?? null, copy: copy, locale: resolved, now: now }, `${pick.kind}-${pick.slug}`)) }), SP_JSX.jsxs("div", { className: "ph-club-row", children: [SP_JSX.jsxs(Focusable$g, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.standing, children: [SP_JSX.jsxs("h3", { children: [copy.standing, snapshot.member?.name ? ` · ${snapshot.member.name}` : ""] }), SP_JSX.jsx(Standing, { member: snapshot.member, name: name, copy: copy })] }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.top, children: [SP_JSX.jsx("h3", { children: copy.top }), SP_JSX.jsx(TopFive, { rows: snapshot.top, me: snapshot.member?.slug ?? "" })] })] }), SP_JSX.jsxs("div", { className: "ph-club-row", children: [snapshot.nominations.length > 0 && SP_JSX.jsxs(Focusable$g, { className: "ph-club-panel ph-club-focus", focusable: true, role: "group", "aria-label": copy.nominations, children: [SP_JSX.jsx("h3", { children: copy.nominations }), SP_JSX.jsx(Nominations, { groups: snapshot.nominations, copy: copy, locale: resolved })] }), SP_JSX.jsx(LogCompletion, { picks: snapshot.picks, copy: copy, now: now })] })] })] });
+    const pick = picks[Math.min(focused, Math.max(0, picks.length - 1))];
+    const match = pick ? matches.get(pick) ?? null : null;
+    const open = (target) => { if (target)
+        openGamePage(target.appId, (path) => Navigation$8?.Navigate?.(path)); };
+    return SP_JSX.jsxs(Focusable$g, { className: "ph-club", "flow-children": "column", children: [SP_JSX.jsx("style", { children: css$5 }), SP_JSX.jsx(CoreStars, {}), !snapshot ? SP_JSX.jsx(Focusable$g, { className: "ph-club-empty", focusable: true, role: "status", children: state.loading && !feed ? copy.loading : copy.unreachable }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(Focusable$g, { className: "ph-club-picks", "flow-children": "row", children: picks.map((item, index) => SP_JSX.jsx(PickCard, { pick: item, match: matches.get(item) ?? null, copy: copy, locale: resolved, now: now, first: index === 0, onFocus: () => setFocused(index), onLog: () => void log(item), onOpen: () => open(matches.get(item) ?? null) }, `${item.kind}-${item.slug}`)) }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-actions", "flow-children": "row", children: [SP_JSX.jsxs(Focusable$g, { className: "ph-club-action", focusable: true, role: "button", "aria-disabled": !can(pick) || busy ? "true" : "false", onActivate: () => void log(pick), onClick: () => void log(pick), children: [SP_JSX.jsx("span", { className: "ph-club-key", "aria-hidden": "true", children: "X" }), copy.logButton] }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-action", focusable: true, role: "button", "aria-disabled": match ? "false" : "true", onActivate: () => open(match), onClick: () => open(match), children: [SP_JSX.jsx("span", { className: "ph-club-key", "aria-hidden": "true", children: "Y" }), copy.openInLibrary] }), status && SP_JSX.jsx("span", { className: `ph-club-status${status.error ? " error" : ""}`, role: "status", children: status.text })] }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-boxes", "flow-children": "row", children: [SP_JSX.jsxs(Focusable$g, { className: "ph-club-box ph-club-lift", focusable: true, role: "group", "aria-label": copy.standing, onActivate: () => { }, children: [SP_JSX.jsx("h3", { children: copy.standing }), SP_JSX.jsx(Standing, { member: snapshot.member, name: name, top: snapshot.top, copy: copy })] }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-box ph-club-lift", focusable: true, role: "group", "aria-label": copy.comingUp, onActivate: () => { }, children: [SP_JSX.jsx("h3", { children: copy.comingUp }), SP_JSX.jsx(ComingUp, { items: snapshot.schedule, locale: resolved })] }), SP_JSX.jsxs(Focusable$g, { className: "ph-club-box ph-club-lift", focusable: true, role: "group", "aria-label": copy.nominations, onActivate: () => { }, children: [SP_JSX.jsx("h3", { children: copy.nominations }), SP_JSX.jsx(Nominations, { groups: snapshot.nominations })] })] })] })] });
 }
 
 // Eternal Core: whether Home shows the Club tab. False while the "Show the Club tab" setting is off, and until
@@ -23554,64 +24636,9 @@ const clubHomeTab = {
     render: (props) => _global_SP_REACT.createElement(ClubTab, props),
 };
 
-// Eternal Core 3.3.10: where a Favorites tile's art comes from (docs/eternal/CORE-UI.md, "Favorites"). TV: Street
-// Fighter 6 was an empty gunmetal box, because every portrait URL the tile tried failed. Now the tile tries Steam's own
-// portrait first (what the Library draws, GetVerticalCapsuleURLForApp included), and when no portrait loads it draws the
-// game's hero art with its logo on top, else the hero with the name, else the name over a gunmetal-to-black gradient:
-// never an empty box.
-//
-// Pure: tests hand it a fake appStore.
-const LOOPBACK = "https://steamloopback.host";
-function urls(value) {
-    if (typeof value === "string")
-        return value ? [value] : [];
-    return Array.isArray(value) ? value.filter((url) => typeof url === "string" && url.length > 0) : [];
-}
-function ask(store, names, overview, appid) {
-    const out = [];
-    for (const name of names) {
-        try {
-            if (typeof store?.[name] === "function")
-                out.push(...urls(store[name](overview ?? appid)));
-        }
-        catch { /* Next source. */ }
-    }
-    return out;
-}
-function favoriteArt(appid, store) {
-    let overview;
-    try {
-        overview = store?.GetAppOverviewByAppID?.(appid);
-    }
-    catch {
-        overview = undefined;
-    }
-    const id = Number.isInteger(appid) && appid > 0 ? appid : 0;
-    const portrait = [
-        ...ask(store, ["GetCustomVerticalCapsuleURLs", "GetVerticalCapsuleURLs", "GetCustomPortraitImageURLs", "GetCachedPortraitImageURLs"], overview, id),
-        ...ask(store, ["GetVerticalCapsuleURLForApp"], overview, id),
-        ...(id ? [`${LOOPBACK}/customimages/${id}p.png`, `${LOOPBACK}/customimages/${id}p.jpg`, `${LOOPBACK}/assets/${id}/library_600x900.jpg`] : []),
-    ];
-    const hero = [
-        ...ask(store, ["GetCustomHeroImageURLs", "GetHeroImageURLs", "GetCachedHeroImageURLs"], overview, id),
-        ...ask(store, ["GetHeroImageURLForApp"], overview, id),
-        ...(id ? [`${LOOPBACK}/customimages/${id}_hero.png`, `${LOOPBACK}/customimages/${id}_hero.jpg`, `${LOOPBACK}/assets/${id}/library_hero.jpg`] : []),
-    ];
-    const logo = [
-        ...ask(store, ["GetCustomLogoImageURLs", "GetLogoImageURLs", "GetCachedLogoImageURLs"], overview, id),
-        ...ask(store, ["GetLogoImageURLForApp"], overview, id),
-        ...(id ? [`${LOOPBACK}/customimages/${id}_logo.png`, `${LOOPBACK}/assets/${id}/logo.png`] : []),
-    ];
-    return { portrait: [...new Set(portrait)], hero: [...new Set(hero)], logo: [...new Set(logo)] };
-}
-function favoriteLayers(art, failed) {
-    if (failed.portrait < art.portrait.length)
-        return { kind: "portrait", src: art.portrait[failed.portrait] };
-    return { kind: "fallback", hero: art.hero[failed.hero], logo: art.logo[failed.logo] };
-}
-
-// 3.3.9: Favorites as big portrait art, six across at the TV's 1348 px (about 200 x 300 px each), 16px apart.
-const FAVORITE_TILE = { across: 6, gap: 16 };
+// 3.3.9: Favorites as big portrait art. 3.3.10 (the approved board): eight across, 20px apart at 1920 px (206 x 309), so
+// about 145 x 217 px at the TV's 1348 px.
+const FAVORITE_TILE = { across: 8, gap: 20 };
 const { Focusable: Focusable$e, Navigation: Navigation$7 } = CompatUI;
 // The Club tab (src/club/): registered through Home's registry like any other module's tab; shown once the Club is on
 // and has data (clubAvailable), re-checked whenever the Club's store changes.
@@ -23620,6 +24647,7 @@ try {
         isAvailable: clubHomeTab.available, subscribe: clubHomeTab.subscribe });
 }
 catch { /* No Club tab. */ }
+function setCoreHomeIcons(source) { setHomeIconSource(source); }
 const css$4 = `
 .core-home{padding:8px 0 32px;color:#E6EAEE;min-width:0}
 .core-home h2{margin:0 0 6px;font-size:30px;font-weight:600;letter-spacing:-.01em;color:#FFFFFF}
@@ -23635,20 +24663,15 @@ const css$4 = `
 .core-home .core-home-actions{display:flex;gap:12px;flex-wrap:wrap}
 .core-home .core-home-actions .DialogButton{width:auto;min-width:200px;border-radius:0}
 .core-home .core-home-note{font-size:14px;color:#9AA4AE}
-.core-home .core-favorites{display:grid;grid-template-columns:repeat(${FAVORITE_TILE.across},minmax(0,1fr));gap:calc(${FAVORITE_TILE.gap} / 1348 * 100vw);padding:8px 2px 12px}
+.core-home .core-favorites{display:grid;grid-template-columns:repeat(${FAVORITE_TILE.across},minmax(0,1fr));gap:calc(${FAVORITE_TILE.gap} / 1920 * 100vw);padding:8px 2px 12px}
 .core-home .core-favorite{position:relative;aspect-ratio:2/3;background:linear-gradient(180deg,#1A1D21 0%,#000000 100%);border-radius:var(--core-radius-float,10px);overflow:hidden;display:flex;align-items:flex-end;transition:translate .15s ease-out}
 .core-home .core-favorite img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .core-home .core-favorite .core-favorite-hero{filter:brightness(.7)}
 .core-home .core-favorite .core-favorite-logo{inset:auto 10% 0 10%;top:0;bottom:0;margin:auto;width:80%;height:40%;object-fit:contain}
 .core-home .core-favorite span{position:relative;padding:12px;font-size:17px;font-weight:700;line-height:1.25;color:#FFFFFF;text-shadow:0 1px 3px rgba(0,0,0,.65)}
 .core-home .core-favorite.gpfocus,.core-home .core-favorite:focus-visible{outline:none;translate:0 -6px}
-.core-home .core-home-empty{display:flex;align-items:center;gap:12px;font-size:18px;color:#C9D1D9;padding:24px 2px}
+.core-home .core-home-empty{font-size:15px;color:#9AA4AE;padding:8px 2px;text-align:left;outline:none;background:transparent}
 .core-home .core-home-prompt{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid #C9D1D9;border-radius:50%;font-size:15px;font-weight:700}
-.core-home .core-consoles{display:grid;grid-template-columns:repeat(${CONSOLE_TILE.across},minmax(0,1fr));gap:calc(${CONSOLE_TILE.gap} / 1920 * 100vw);padding:8px 2px 12px}
-.core-home .core-console{position:relative;aspect-ratio:${CONSOLE_TILE.width}/${CONSOLE_TILE.height};background:#1A1D21;border-radius:var(--core-radius-float,10px);overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -${CONSOLE_TILE.toneBar}px 0 var(--core-tone,#C9D1D9)}
-.core-home .core-console img{max-width:78%;max-height:52%;object-fit:contain;display:block}
-.core-home .core-console span{padding:0 8px;font-size:15px;font-weight:700;color:#FFFFFF;text-align:center;line-height:1.2}
-.core-home .core-console.gpfocus,.core-home .core-console:focus-visible{outline:3px solid #D7263D;outline-offset:-3px}
 @media (prefers-reduced-motion: reduce){.core-home .core-home-tile,.core-home .core-favorite{transition:none}.core-home .core-home-tile.gpfocus{translate:none}}
 `;
 const steamWindow = () => window;
@@ -23667,16 +24690,6 @@ function favoritesMigration() {
     }
     catch {
         return false;
-    }
-}
-function userCollections() {
-    const host = steamWindow();
-    try {
-        const list = host.collectionStore?.userCollections;
-        return Array.isArray(list) ? list : list && typeof list.values === "function" ? Array.from(list.values()) : [];
-    }
-    catch {
-        return [];
     }
 }
 // 3.3.9: the Favorites tab (first, the default): Steam's own Favorites collection, read from the collection store on
@@ -23699,34 +24712,12 @@ function FavoriteTile({ app }) {
 }
 function Favorites({ locale }) {
     const text = coreHomeCopy(locale);
-    const apps = favoriteApps(favoritesCollection(steamWindow().collectionStore));
+    // 3.3.10: Steam's Favorites and The Collector's Favourites collection in one grid (each game once).
+    const apps = favoriteApps(favoritesCollection(steamWindow().collectionStore), 200, collectorFavorites(userCollections()));
+    // 3.3.10: empty, one line of hint text where the grid would start.
     if (!apps.length)
-        return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsxs("p", { className: "core-home-empty", children: [SP_JSX.jsx("span", { className: "core-home-prompt", "aria-hidden": "true", children: "\u2261" }), text.favoritesEmpty] })] });
+        return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx(Focusable$e, { className: "core-home-empty", focusable: true, children: text.favoritesEmpty })] });
     return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx(Focusable$e, { className: "core-favorites", "flow-children": "grid", children: apps.map(app => SP_JSX.jsx(FavoriteTile, { app: app }, app.appid)) })] });
-}
-// 3.3.9 (board 1): every console in the library as one tile, eight across (scaled to the view), by family. The tile is
-// the console's white logo from the user's ColorGrade pack on gunmetal with the family's tone bar: at TV size the logo
-// reads at a glance where the pack's dimmed hero art turns to noise (and each hero is megabytes; the logos are a few
-// tens of kilobytes). Without a pack logo, the console's name. A opens that console's collection.
-function Consoles({ locale }) {
-    const text = coreHomeCopy(locale);
-    const pack = _global_SP_REACT.useSyncExternalStore(subscribeConsolePack, consolePack, consolePack);
-    _global_SP_REACT.useEffect(() => { if (!consolePack())
-        void loadConsolePack(false); }, []);
-    const slugs = _global_SP_REACT.useMemo(() => new Set(pack?.slugs ?? []), [pack]);
-    const tiles = _global_SP_REACT.useMemo(() => consoleTiles(userCollections(), slugs), [slugs]);
-    if (!tiles.length)
-        return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx("p", { className: "core-home-note", children: text.empty })] });
-    return SP_JSX.jsxs("div", { className: "core-home", children: [SP_JSX.jsx("style", { children: css$4 }), SP_JSX.jsx(Focusable$e, { className: "core-consoles", "flow-children": "grid", children: tiles.map(tile => {
-                    const logo = tile.slug ? pack?.logos?.[tile.slug] : undefined;
-                    return SP_JSX.jsx(Focusable$e, { className: "core-console", focusable: true, "aria-label": tile.name, style: { ["--core-tone"]: CORE_FAMILY_TONES$1[tile.family] }, onActivate: () => { try {
-                            Navigation$7?.Navigate?.(collectionRoute(tile.id));
-                        }
-                        catch { /* Stay on Home. */ } }, onClick: () => { try {
-                            Navigation$7?.Navigate?.(collectionRoute(tile.id));
-                        }
-                        catch { /* Stay on Home. */ } }, children: logo ? SP_JSX.jsx("img", { alt: "", src: logo }) : SP_JSX.jsx("span", { children: tile.name }) }, tile.id);
-                }) })] });
 }
 class HomeBoundary extends _global_SP_REACT.Component {
     constructor() {
@@ -23742,9 +24733,13 @@ class HomeBoundary extends _global_SP_REACT.Component {
 function CoreHomeTabs({ native, getLocale, render }) {
     const on = _global_SP_REACT.useSyncExternalStore(coreUiSetting.subscribe, coreUiSetting.get, coreUiSetting.get);
     _global_SP_REACT.useSyncExternalStore(subscribeHomeTabs, homeTabsRevision, homeTabsRevision);
+    const page = _global_SP_REACT.useSyncExternalStore(subscribeHomePage, homePage, homePage);
     const fallback = render(native);
     if (!on)
         return fallback;
+    // 3.3.10: on the Consoles page, screen two is the focused console's recent games, in place of the tabs.
+    if (page === "consoles")
+        return SP_JSX.jsx(HomeBoundary, { fallback: fallback, children: SP_JSX.jsx(ConsoleScreenTwo, { getLocale: getLocale }) });
     let tree;
     try {
         const locale = getLocale();
@@ -23752,7 +24747,7 @@ function CoreHomeTabs({ native, getLocale, render }) {
         const tabs = native.props.tabs;
         const core = [
             { id: FAVORITES_ID, title: text.favorites, content: SP_JSX.jsx(Favorites, { locale: locale }), order: HOME_TAB_ORDER.favorites },
-            { id: CONSOLES_ID, title: text.consoles, content: SP_JSX.jsx(Consoles, { locale: locale }), order: HOME_TAB_ORDER.consoles },
+            { id: ACHIEVEMENTS_ID, title: text.achievements, content: SP_JSX.jsx(CoreAchievementsTab, { locale: locale }), order: HOME_TAB_ORDER.achievements },
             ...availableHomeTabs().map(tab => {
                 const Component = tab.component;
                 const content = tab.render ? tab.render({ locale, getLocale }) : Component ? SP_JSX.jsx(Component, { locale: locale, getLocale: getLocale }) : null;
@@ -23926,12 +24921,25 @@ function installHomeNews(getLocale) {
     void readConfig().catch(error => console.warn("[Playhub News] settings unavailable", error));
     const onError = (error) => console.warn("[Playhub News] native Home preserved", error);
     const news = createOutputPatch([() => true], (native) => alive ? SP_JSX.jsx(Composition, { native: native, getLocale: getLocale, active: () => alive }) : native, onError);
+    // One patch for both of Home's parts Core draws, recognised by their props in the same rendered output (a second
+    // patch would wrap this one's wrapper on every pass and break the route's stable identity):
+    // - Steam's tabbed page (strActiveTab, setActiveTab): Core Home (coreHome.tsx) arranges the tabs;
+    // - 3.3.10: Steam's recent games section (autoFocus, showBackground; as storeInstallRecents.tsx and The Collector
+    //   recognise it): Core's screen one (coreHomeScreen.tsx) with Steam's own list of recent games, Steam's row the
+    //   fallback (Core UI off, no list found, or an error).
+    const isTabs = (props) => !!props && "strActiveTab" in props && "setActiveTab" in props;
+    const isRecents = (props) => !!props && "autoFocus" in props && "showBackground" in props;
     const descend = createOutputPatch([
         () => true,
         () => true,
-        (node) => node?.props && "strActiveTab" in node.props && "setActiveTab" in node.props,
-    ], (tree) => {
-        if (!alive || !Array.isArray(tree?.props?.tabs))
+        (node) => isTabs(node?.props) || isRecents(node?.props),
+    ], (tree, sourceProps) => {
+        if (!alive)
+            return tree;
+        if (isRecents(sourceProps) && !isTabs(sourceProps)) {
+            return SP_JSX.jsx(CoreHomeScreen, { native: tree, games: recentGamesIn(tree, sourceProps), autoFocus: sourceProps?.autoFocus === true, getLocale: getLocale });
+        }
+        if (!Array.isArray(tree?.props?.tabs))
             return tree;
         const tabs = tree.props.tabs.map((tab) => tab.id === "WhatsNew"
             ? { ...tab, content: news.apply(tab.content) } : tab);
@@ -25592,7 +26600,7 @@ function Header({ tab, setTab, copy, locale, logo }) {
                 }) }), SP_JSX.jsxs("div", { className: "ph-clock", children: [SP_JSX.jsx("span", { className: "ph-clock-date", children: now.toLocaleDateString(localeTag, { weekday: "short", day: "numeric", month: "short" }) }), SP_JSX.jsx("span", { className: "ph-clock-time", children: now.toLocaleTimeString(localeTag, { hour: "2-digit", minute: "2-digit", hour12: !use24HourClock }) })] })] }));
 }
 function WindowCard({ entry, artwork, index, copy, onSelect, onAskClose }) {
-    const icon = iconSource(entry.iconBase64);
+    const icon = iconSource$1(entry.iconBase64);
     const isSteam = /^(steam|steamwebhelper)$/i.test(entry.processName);
     return (SP_JSX.jsxs(FocusItem, { className: "ph-window-card", "data-ph-grid-index": index, "data-window-card-handle": entry.handle, "data-window-primary": entry.primary ? "true" : "false", style: { animationDelay: `${Math.min(index, 6) * 36}ms` }, onPress: onSelect, onButtonDown: (event) => moveGridFocus(event, gridDirectionFromGamepad(event?.detail?.button)), onSecondaryButton: (event) => { stopEvent$1(event, true); onAskClose(); }, onOKActionDescription: copy.open, onSecondaryActionDescription: copy.close, onFocus: (event) => {
             const item = event?.currentTarget;
@@ -25943,9 +26951,9 @@ function AppsTab({ copy, extra, onOptions, onLaunch, library, setLibrary }) {
         window.requestAnimationFrame(() => focusShortcutTile(shortcutId));
     };
     if (library) {
-        return (SP_JSX.jsxs("div", { className: "ph-page ph-app-library", children: [SP_JSX.jsx("div", { className: "ph-toolbar", children: SP_JSX.jsxs("div", { className: "ph-back", children: [SP_JSX.jsx(FiGrid, {}), SP_JSX.jsx("span", { children: copy.appLibrary })] }) }), loading ? SP_JSX.jsx("div", { className: "ph-empty", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("div", { className: "ph-spinner" }), SP_JSX.jsx("div", { children: copy.loadingApps })] }) }) : programs.length === 0 ? (SP_JSX.jsx("div", { className: "ph-empty", children: SP_JSX.jsxs("div", { className: "ph-empty-inner", children: [SP_JSX.jsx(FiSearch, {}), SP_JSX.jsx("div", { className: "ph-empty-title", children: copy.noApps })] }) })) : (SP_JSX.jsx("div", { className: "ph-app-grid-viewport", ref: pickerViewport, children: SP_JSX.jsx(FocusGrid, { className: "ph-grid", children: programs.map((program, index) => (SP_JSX.jsx(AppTile, { title: program.name, icon: iconSource(program.iconBase64), copy: copy, index: index, onPress: () => void addShortcut(program.target, program.name, program.kind).then(() => { void refresh(); setLibrary(false); }) }, `${program.kind}-${program.target}`))) }) }))] }));
+        return (SP_JSX.jsxs("div", { className: "ph-page ph-app-library", children: [SP_JSX.jsx("div", { className: "ph-toolbar", children: SP_JSX.jsxs("div", { className: "ph-back", children: [SP_JSX.jsx(FiGrid, {}), SP_JSX.jsx("span", { children: copy.appLibrary })] }) }), loading ? SP_JSX.jsx("div", { className: "ph-empty", children: SP_JSX.jsxs("div", { children: [SP_JSX.jsx("div", { className: "ph-spinner" }), SP_JSX.jsx("div", { children: copy.loadingApps })] }) }) : programs.length === 0 ? (SP_JSX.jsx("div", { className: "ph-empty", children: SP_JSX.jsxs("div", { className: "ph-empty-inner", children: [SP_JSX.jsx(FiSearch, {}), SP_JSX.jsx("div", { className: "ph-empty-title", children: copy.noApps })] }) })) : (SP_JSX.jsx("div", { className: "ph-app-grid-viewport", ref: pickerViewport, children: SP_JSX.jsx(FocusGrid, { className: "ph-grid", children: programs.map((program, index) => (SP_JSX.jsx(AppTile, { title: program.name, icon: iconSource$1(program.iconBase64), copy: copy, index: index, onPress: () => void addShortcut(program.target, program.name, program.kind).then(() => { void refresh(); setLibrary(false); }) }, `${program.kind}-${program.target}`))) }) }))] }));
     }
-    return (SP_JSX.jsx("div", { className: "ph-page ph-page-scroll", children: SP_JSX.jsxs(FocusGrid, { className: "ph-grid", children: [SP_JSX.jsx(AppTile, { title: copy.addApp, fallback: FiPlus, copy: copy, extra: extra, onPress: () => void openLibrary() }), shortcuts.map((shortcut, index) => (SP_JSX.jsx(AppTile, { title: shortcut.name, icon: iconSource(shortcut.iconBase64), copy: copy, extra: extra, index: index + 1, shortcutId: shortcut.id, moving: movingShortcutId === shortcut.id, onPress: () => onLaunch(shortcut), onOptions: () => onOptions(shortcut, refresh), onMoveToggle: () => toggleShortcutMove(shortcut.id), onMoveDirection: (event, direction) => moveShortcut(event, direction, shortcut.id), onCancelMove: cancelShortcutMove }, shortcut.id)))] }) }));
+    return (SP_JSX.jsx("div", { className: "ph-page ph-page-scroll", children: SP_JSX.jsxs(FocusGrid, { className: "ph-grid", children: [SP_JSX.jsx(AppTile, { title: copy.addApp, fallback: FiPlus, copy: copy, extra: extra, onPress: () => void openLibrary() }), shortcuts.map((shortcut, index) => (SP_JSX.jsx(AppTile, { title: shortcut.name, icon: iconSource$1(shortcut.iconBase64), copy: copy, extra: extra, index: index + 1, shortcutId: shortcut.id, moving: movingShortcutId === shortcut.id, onPress: () => onLaunch(shortcut), onOptions: () => onOptions(shortcut, refresh), onMoveToggle: () => toggleShortcutMove(shortcut.id), onMoveDirection: (event, direction) => moveShortcut(event, direction, shortcut.id), onCancelMove: cancelShortcutMove }, shortcut.id)))] }) }));
 }
 function formatRate(value) {
     if (value >= 1024 ** 3)
@@ -65066,11 +66074,15 @@ function rules(mark) {
         // The tab rail: clear over the panel's black and stars, a thin gunmetal divider; the open tab gunmetal (its
         // crimson bar is Core's own).
         // 3.3.8: the rail's inner list and bottom group (TabList, BottomTabs; new on the November 2026 client) go clear too.
-        { id: "qam-tabs", needs: [["quickaccess", "Tab"]], needsAny: [["quickaccess", "Tabs"], ["quickaccess", "TabsWithFooter"], ["quickaccess", "TabList"]], css: s => (s("quickaccess", "Tabs") ? `${ROOT} ${s("quickaccess", "Tabs")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": `inset -1px 0 0 ${C.gunmetal}` })}}` : "") +
+        { id: "qam-tabs", needs: [["quickaccess", "Tab"]], needsAny: [["quickaccess", "Tabs"], ["quickaccess", "TabsWithFooter"], ["quickaccess", "TabList"]], css: s => (s("quickaccess", "Tabs") ? `${ROOT} ${s("quickaccess", "Tabs")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": `inset 1px 0 0 ${C.gunmetal}` })}}` : "") +
                 (["TabList", "BottomTabs"].filter(key => s("quickaccess", key)).map(key => `${ROOT} ${s("quickaccess", key)}`).join(",") || `${ROOT} [data-core-ui-none]`) +
                 `{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
                 `${ROOT} ${s("quickaccess", "Tab")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
                 `${ROOT} ${s("quickaccess", "Tab")}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", filter: "none", "border-radius": SQUARE })}}` },
+        // 3.3.10 (the approved board, QAMDecky): the rail on the RIGHT of the panel, the content to its left. Steam's Menu
+        // holds the rail and the content column side by side; its row is reversed. The D-pad follows the picture
+        // (coreQamRail.ts: left from the rail goes into the content, right from the content's edge into the rail).
+        { id: "qam-rail-right", needs: [["quickaccess", "Menu"]], needsAny: [["quickaccess", "Tabs"], ["quickaccess", "TabsWithFooter"]], css: s => `${ROOT} ${s("quickaccess", "Menu")}{${imp({ display: "flex", "flex-direction": "row-reverse" })}}` },
         // The open tab: gunmetal, never Steam's grey-blue gradient (TV photo, 3.3.3). Every way Steam may mark it is in the
         // selector table (qamTabSelected).
         // 3.3.10: the fill is the tab's own box (48 x 64, square); any fill Steam draws in a pseudo-element goes.
@@ -65161,7 +66173,8 @@ function rules(mark) {
                     (r("RecentGamesContainer") ? `${r("RecentGamesContainer")}{${imp({ "margin-top": "-1vh", "padding-top": "0" })}}` : "") +
                     (r("RecentGamesInnerContainer") ? `${r("RecentGamesInnerContainer")}{${imp({ position: "absolute", left: "0", right: "0", top: `${a.carouselTop}vh`, bottom: "auto",
                         height: "auto", "max-height": `${100 - a.carouselTop}vh`, "z-index": "1" })}}` : "") +
-                    (shown.length ? `${shown.join(",")}{${imp({ position: "absolute", top: `-${a.labelEm}em`, visibility: "visible", "font-size": `${a.labelPx}px`, color: C.white })}}` : "") +
+                    // 3.3.10 (the approved board): no game name and no status line on screen one, Steam's own included.
+                    (shown.length || label ? `${[...shown, ...(label ? [label] : [])].join(",")}{${imp({ display: "none" })}}` : "") +
                     (k("Play") && s("carousel", "ActionIcon") ? `${k("Play")} ${s("carousel", "ActionIcon")}{${imp({ display: "none" })}}` : "");
             } },
         { id: "home-glow", needs: [["carousel", "CarouselCapsuleBackgroundGlow"]], css: s => `${ROOT} ${s("carousel", "CarouselCapsuleBackgroundGlow")}{${imp({ opacity: "0" })}}` },
@@ -65214,12 +66227,20 @@ function rules(mark) {
                 return libraryTabCss({ scopes, tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"), row: t("libraryTabRow"), rowFill: "transparent" }) +
                     (wrapper ? `${scopes.map(scope => `${scope} ${wrapper}`).join(",")}{${imp({ position: "relative", top: "auto", bottom: "auto", "z-index": "1" })}}` : "");
             } },
-        // 3.3.10: every row after screen one (the Collector's console shelf, Home's tabbed page) is its own layer above the
-        // hero's art, in the flow: nothing is drawn over or under another row.
+        // 3.3.10: Home's tabbed page is its own layer above the hero's art, in the flow: nothing is drawn over or under it.
+        // (The Collector's family shelf, which also needed this, left Home in Collector win.36.)
         { id: "home-layers", needs: [["gamepadui", "BasicHome"]], targets: ["homeTabPage"], css: (s, t) => {
-                const home = `${ROOT} ${s("gamepadui", "BasicHome")}`;
-                const rows = [`${home} [data-collector-shelf]`, ...t("homeTabPage").filter(sel => !sel.startsWith(s("gamepadui", "BasicHome"))).map(sel => `${ROOT} ${sel}`)];
-                return `${rows.join(",")}{${imp({ position: "relative", "z-index": "1", "background-color": "transparent", "background-image": "none" })}}`;
+                const rows = t("homeTabPage").filter(sel => !sel.startsWith(s("gamepadui", "BasicHome"))).map(sel => `${ROOT} ${sel}`);
+                return rows.length ? `${rows.join(",")}{${imp({ position: "relative", "z-index": "1", "background-color": "transparent", "background-image": "none" })}}` : "";
+            } },
+        // 3.3.10 (the approved board): while Core's Home pages are on screen (screen one carries data-core-home-one), the top
+        // bar's clock goes back to the right (the left belongs to L1 HOME CONSOLES R1) and the search field leaves the bar.
+        // (Families appear nowhere on Home: The Collector's family shelf left Home in Collector win.36.)
+        { id: "home-pages", needs: [["header", "Header"]], css: s => {
+                const home = `${ROOT} body:has([data-core-home-one])`;
+                const header = `${home} ${s("header", "Header")}`;
+                return `${header} [data-playhub-clock-left]{${imp({ order: "0" })}}` +
+                    `${header} div:has(> input){${imp({ display: "none" })}}`;
             } },
         // ---- 3.3.9: Steam's game page as the clean game view (CORE-UI.md, "The game view"), matching The Collector's ROM
         // page. Screen one: the art fills the view above the footer (cover, 60% brightness, Steam's top gradient cleared),
@@ -65401,7 +66422,7 @@ const CORE_RAIL_ICON_PX = 24;
 // 70vh row (carousel height 5), the focused game's name 4em above its capsule (font height -4) at 22px (larger).
 // 3.3.10: carouselHeight is gone: the row is out of the flow at carouselTop and sized by Steam (its box ran past screen
 // one). The row's position and size wait for the approved Home row design.
-const CORE_HOME_ART = { fadeFrom: 88, carouselTop: 50, labelEm: 4, labelPx: 22 };
+const CORE_HOME_ART = { fadeFrom: 88, carouselTop: 50};
 // 3.3.10: how long the top bar takes to slide out and back.
 const CORE_HEADER_HIDE_MS = 200;
 // 3.3.10: whether the top bar is hidden for a page scrolled this far. Hidden once the page's first screen has scrolled
@@ -65637,6 +66658,8 @@ function buildCoreUiCss(maps, options = {}) {
         tab: plainSelector(maps.tabbedpage, "Tab"), tabTitle: plainSelector(maps.tabbedpage, "TabTitle"), tabSelected: plainSelector(maps.tabbedpage, "Selected"),
         library: plainSelector(maps.library, "GamepadLibrary"), tabbedPage: plainSelector(maps.tabbedpage, "GamepadTabbedPage"),
         playSection: plainSelector(maps.appdetails, "PlaySection"), appContainer: plainSelector(maps.appdetails, "AppDetailsContainer"), tabRow: plainSelector(maps.tabbedpage, "TabRow"),
+        qamMenu: plainSelector(maps.quickaccess, "Menu"), qamRail: plainSelector(maps.quickaccess, "Tabs") ?? plainSelector(maps.quickaccess, "TabsWithFooter"),
+        qamTabSelected: plainSelector(maps.quickaccess, "Tab") && plainSelector(maps.quickaccess, "Selected") ? `${plainSelector(maps.quickaccess, "Tab")}${plainSelector(maps.quickaccess, "Selected")}` : undefined,
     };
     const css = parts.join("\n");
     return { css, applied, skipped, hosts, clock, dom, maps, ruleTargets: ruleTargetsFromCss(css) };
@@ -65788,7 +66811,7 @@ function style(view, element) {
         return undefined;
     }
 }
-function rectOf$1(element) {
+function rectOf$2(element) {
     try {
         const r = element.getBoundingClientRect();
         return { left: r.left, top: r.top, width: r.width, height: r.height, right: r.left + r.width, bottom: r.top + r.height };
@@ -65805,7 +66828,7 @@ const CLEAR_ATTRIBUTE = "data-core-ui-clear";
 // translucent colour (no picture) so the stylesheet makes it clear. Buttons, inputs, sliders and pictures are never
 // touched. Bounded: at most `limit` elements are looked at, `depth` levels down. Answers how many were tagged.
 function clearOpaqueLayers(host, view, options = {}) {
-    const hostRect = rectOf$1(host);
+    const hostRect = rectOf$2(host);
     if (!hostRect || hostRect.width <= 0 || hostRect.height <= 0)
         return 0;
     const share = options.share ?? 0.3, limit = options.limit ?? 600, maxDepth = options.depth ?? 10;
@@ -65840,7 +66863,7 @@ function clearOpaqueLayers(host, view, options = {}) {
         catch {
             already = false;
         }
-        const rect = rectOf$1(element);
+        const rect = rectOf$2(element);
         if (rect && rect.width * rect.height >= area * share && !already) {
             const computed = style(view, element);
             const colour = parseColor(computed?.backgroundColor ?? computed?.["background-color"]);
@@ -65867,7 +66890,7 @@ function clearOpaqueLayers(host, view, options = {}) {
 // What is behind the top bar or the button-hint bar: game art (a picture, a video, an image background) keeps it
 // clear; a plain page makes it pure black. Three points along it are checked; any art among them wins.
 function chromeState(element, doc, view, starsAttribute = "data-core-ui-stars") {
-    const rect = rectOf$1(element);
+    const rect = rectOf$2(element);
     if (!rect || rect.width <= 0 || rect.height <= 0 || typeof doc?.elementsFromPoint !== "function")
         return undefined;
     const y = Math.min(view.innerHeight - 1, Math.max(0, rect.top + rect.height / 2));
@@ -65909,7 +66932,7 @@ function chromeState(element, doc, view, starsAttribute = "data-core-ui-stars") 
 function keepBelowLogo(menu, itemSelector, band, view, edits) {
     if (!itemSelector)
         return undefined;
-    const menuRect = rectOf$1(menu);
+    const menuRect = rectOf$2(menu);
     if (!menuRect || menuRect.height <= 0)
         return undefined;
     let first;
@@ -65919,7 +66942,7 @@ function keepBelowLogo(menu, itemSelector, band, view, edits) {
     catch {
         first = undefined;
     }
-    const itemRect = first ? rectOf$1(first) : undefined;
+    const itemRect = first ? rectOf$2(first) : undefined;
     if (!first || !itemRect || itemRect.height <= 0)
         return undefined;
     const padding = px$1(style(view, menu)?.paddingTop);
@@ -66209,6 +67232,127 @@ function promptsMemory(storage) {
     };
 }
 
+// Eternal Core 3.3.10: Quick Access with its rail on the right (docs/eternal/CORE-UI.md, "Quick Access: the rail on the
+// right"). The stylesheet reverses the row Steam lays the rail and the content in (qam-rail-right); this keeps the
+// D-pad true to the picture whichever way Steam's navigation reads a row (by child order or by position):
+//
+// - in the rail, left goes into the content (to where focus last was there, else its first item level with the open
+//   tab) and right goes nowhere (the rail is the panel's right edge);
+// - in the content, right from its right edge goes to the open tab in the rail; everything else is Steam's (a slider
+//   or any control that takes left and right keeps them, and left from the content's left edge stays Steam's).
+//
+// Steam's controller input reaches the page as `vgp_onbuttondown` events on the focused element; one capture listener
+// per Quick Access document reads them. A move is a DOM focus() on a Steam Focusable (Steam follows DOM focus, as the
+// On this day cards already rely on), after preventDefault and stopPropagation so Steam does not move as well.
+const DIR_LEFT = 11;
+const DIR_RIGHT = 12;
+// The pure decision. `inRail`: focus is on a rail tab. `rightOfFocus`: the content has a focusable item to the right of
+// the focused one. `takesSides`: the focused control uses left and right itself (a slider).
+function railMove(button, where) {
+    if (button !== DIR_LEFT && button !== DIR_RIGHT)
+        return "steam";
+    if (where.inRail)
+        return button === DIR_LEFT ? "into-content" : "stay";
+    if (button === DIR_RIGHT && !where.rightOfFocus && !where.takesSides)
+        return "into-rail";
+    return "steam";
+}
+const rectOf$1 = (element) => { try {
+    return element.getBoundingClientRect();
+}
+catch {
+    return undefined;
+} };
+const visible$1 = (rect) => !!rect && rect.width > 0 && rect.height > 0;
+// A Steam Focusable with no Focusable inside it: what the D-pad lands on.
+function leaves(root) {
+    let all = [];
+    try {
+        all = Array.from(root.querySelectorAll(".Focusable"));
+    }
+    catch {
+        all = [];
+    }
+    return all.filter(node => { try {
+        return !node.querySelector(".Focusable");
+    }
+    catch {
+        return true;
+    } }).slice(0, 400);
+}
+function takesSides(element) {
+    try {
+        return !!element?.closest?.('[role="slider"], [aria-valuenow], input[type="range"]') || !!element?.querySelector?.('[role="slider"], input[type="range"]');
+    }
+    catch {
+        return false;
+    }
+}
+function installQamRail(doc, select) {
+    let lastContent;
+    const handler = (event) => {
+        try {
+            const button = event?.detail?.button;
+            if (button !== DIR_LEFT && button !== DIR_RIGHT)
+                return;
+            const { menu: menuSel, rail: railSel, tab: tabSel, selected } = select();
+            if (!menuSel || !railSel)
+                return;
+            const focused = doc.activeElement ?? event.target;
+            const menu = focused?.closest?.(menuSel);
+            if (!menu)
+                return;
+            const rail = menu.querySelector(railSel);
+            if (!rail)
+                return;
+            const inRail = rail.contains(focused);
+            const content = Array.from(menu.children).find((child) => child !== rail && !child.contains(rail) && visible$1(rectOf$1(child)));
+            if (!inRail)
+                lastContent = focused;
+            const here = rectOf$1(focused);
+            const rightOfFocus = !inRail && !!here && leaves(content ?? menu).some(node => {
+                if (node === focused || rail.contains(node))
+                    return false;
+                const r = rectOf$1(node);
+                return visible$1(r) && r.left >= here.right - 1 && r.top < here.bottom && r.bottom > here.top;
+            });
+            const move = railMove(button, { inRail, rightOfFocus, takesSides: !inRail && takesSides(focused) });
+            if (move === "steam")
+                return;
+            event.preventDefault?.();
+            event.stopPropagation?.();
+            if (move === "stay")
+                return;
+            if (move === "into-rail") {
+                const tab = (selected ? rail.querySelector(selected) : null) ?? (tabSel ? rail.querySelector(tabSel) : null);
+                tab?.focus?.();
+                return;
+            }
+            // Into the content: where focus last was there, else the item nearest the open tab's height.
+            if (lastContent?.isConnected && content?.contains(lastContent) && visible$1(rectOf$1(lastContent))) {
+                lastContent.focus?.();
+                return;
+            }
+            const from = rectOf$1(focused);
+            const targets = leaves(content ?? menu).filter(node => !rail.contains(node) && visible$1(rectOf$1(node)));
+            const best = targets.sort((a, b) => Math.abs((rectOf$1(a).top + rectOf$1(a).bottom) / 2 - ((from?.top ?? 0) + (from?.bottom ?? 0)) / 2)
+                - Math.abs((rectOf$1(b).top + rectOf$1(b).bottom) / 2 - ((from?.top ?? 0) + (from?.bottom ?? 0)) / 2))[0];
+            best?.focus?.();
+        }
+        catch { /* Steam's own navigation stands. */ }
+    };
+    try {
+        doc.addEventListener("vgp_onbuttondown", handler, true);
+    }
+    catch {
+        return () => { };
+    }
+    return () => { try {
+        doc.removeEventListener("vgp_onbuttondown", handler, true);
+    }
+    catch { /* Gone with its window. */ } };
+}
+
 // Eternal Core: Core UI, phases 1 and 2 (docs/eternal/CORE-UI.md). Core's own look for Steam Big Picture, built into
 // Core's Decky plugin instead of a CSS Loader theme, so it keeps working when Steam moves to ES modules
 // (Decky 4): the global chrome, the Steam menu and Quick Access.
@@ -66275,6 +67419,9 @@ function createCoreUi(deps) {
     const focusWatch = new Map();
     // 3.3.10: per document, the scroll listener and the page scroller it last saw (the top bar hides past screen one).
     const scrollWatch = new Map();
+    // 3.3.10: per document, Quick Access's flipped rail (coreQamRail.ts) and Home's screen jumps.
+    const railWatch = new Map();
+    const homeWatch = new Map();
     const diagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {}, restyled: 0, hosts: {} };
     function orbState() {
         try {
@@ -66592,6 +67739,94 @@ function createCoreUi(deps) {
             scrollWatch.set(doc, { handler, hidden: false });
         }
         catch { /* The bar stays visible. */ }
+    }
+    // 3.3.10 (the approved board): Home's pages are two screens each, like the game view. Focus moving from screen one
+    // (Core's row, data-core-home-one) to anything below it scrolls the page so screen two starts at the top (Home's tab
+    // row, or the Consoles page's games); back into screen one, the page scrolls to its top.
+    // 3.3.10 (approved addition): on screen two, B, or up from its top row (Home's tab row; the Consoles page's games),
+    // goes straight back to screen one: focus returns to the tile it left, and the same scroll brings screen one back.
+    // On screen one B stays Steam's.
+    function screenTwoOf(target, dom) {
+        const consoles = target.closest("[data-core-home-two]");
+        if (consoles)
+            return { two: consoles, topRow: !!target.closest(".core-two-row") };
+        const tabbed = dom.tabbedPage ? target.closest(dom.tabbedPage) : null;
+        if (!tabbed || !tabbed.querySelector("[data-core-home-tab]"))
+            return { two: null, topRow: false };
+        return { two: tabbed, topRow: !!(dom.tabRow && target.closest(dom.tabRow)) };
+    }
+    function watchHomeScreens(doc, dom) {
+        if (homeWatch.has(doc))
+            return;
+        let inOne = true;
+        let lastTile = null;
+        const back = (event) => {
+            try {
+                const target = (doc.activeElement ?? event?.target);
+                const one = doc.querySelector("[data-core-home-one]");
+                if (!one || !target || typeof target.closest !== "function" || one.contains(target))
+                    return;
+                const where = screenTwoOf(target, sheet?.dom ?? dom);
+                if (!backToScreenOne(event?.detail?.button, { inTwo: !!where.two, inTopRow: where.topRow }))
+                    return;
+                const tile = (lastTile && lastTile.isConnected && one.contains(lastTile) ? lastTile : one.querySelector(".core-tile"));
+                if (!tile?.focus)
+                    return;
+                event.preventDefault?.();
+                event.stopPropagation?.();
+                tile.focus();
+            }
+            catch { /* Steam's own navigation stands. */ }
+        };
+        const handler = (event) => {
+            try {
+                const target = event?.target;
+                const one = doc.querySelector("[data-core-home-one]");
+                if (!one || !target || typeof target.closest !== "function")
+                    return;
+                const nowInOne = one.contains(target);
+                if (nowInOne && target.closest(".core-tile"))
+                    lastTile = target.closest(".core-tile");
+                if (nowInOne === inOne)
+                    return;
+                const scroller = scrollParent(one, doc);
+                if (!scroller) {
+                    inOne = nowInOne;
+                    return;
+                }
+                if (nowInOne) {
+                    inOne = true;
+                    smoothScroll(scroller, 0);
+                    return;
+                }
+                const two = screenTwoOf(target, dom).two;
+                if (!two || !scroller.contains(two))
+                    return;
+                inOne = false;
+                const offset = two.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+                smoothScroll(scroller, scroller.scrollTop + offset);
+            }
+            catch { /* Steam's own scrolling stands. */ }
+        };
+        try {
+            doc.addEventListener("focusin", handler, true);
+            doc.addEventListener("vgp_onbuttondown", back, true);
+            homeWatch.set(doc, () => { doc.removeEventListener("focusin", handler, true); doc.removeEventListener("vgp_onbuttondown", back, true); });
+        }
+        catch { /* Steam's own scrolling stands. */ }
+    }
+    function watchQamRail(doc) {
+        if (railWatch.has(doc))
+            return;
+        try {
+            railWatch.set(doc, installQamRail(doc, () => {
+                const dom = sheet?.dom ?? {};
+                return { menu: dom.qamMenu, rail: dom.qamRail, tab: dom.qamTab, selected: dom.qamTabSelected };
+            }));
+        }
+        catch {
+            railWatch.set(doc, () => { });
+        }
     }
     // Removals (a route change, a page closing) are swept at once instead of on the next one-second sync.
     function observe(doc) {
@@ -66977,6 +68212,19 @@ function createCoreUi(deps) {
                 catch { }
                 scrollWatch.delete(doc);
             }
+        for (const [doc, stop] of railWatch)
+            if (!docs.includes(doc)) {
+                stop();
+                railWatch.delete(doc);
+            }
+        for (const [doc, stop] of homeWatch)
+            if (!docs.includes(doc)) {
+                try {
+                    stop();
+                }
+                catch { }
+                homeWatch.delete(doc);
+            }
         for (const doc of docs) {
             try {
                 let style = styles.get(doc);
@@ -67002,6 +68250,8 @@ function createCoreUi(deps) {
                 const dom = current.dom ?? {};
                 tagChrome(doc, dom);
                 watchScroll(doc, dom);
+                watchHomeScreens(doc, dom);
+                watchQamRail(doc);
                 reserveLogo(doc, dom);
                 try {
                     deps.decorate?.(doc, dom);
@@ -67081,6 +68331,16 @@ function createCoreUi(deps) {
             catch { }
         }
         scrollWatch.clear();
+        for (const stop of railWatch.values())
+            stop();
+        railWatch.clear();
+        for (const stop of homeWatch.values()) {
+            try {
+                stop();
+            }
+            catch { }
+        }
+        homeWatch.clear();
         try {
             fullHeight.releaseAll();
         }
@@ -69327,6 +70587,9 @@ var index = definePlugin(() => {
                 subscribe: presence.subscribe,
             } });
         setQamPluginIconFallback(railIcon);
+        setCoreHomeIcons(coreIcons.get);
+        // 3.3.10: the Achievements tab on Home reads Steam's achievement progress cache (closest to 100%).
+        setAchievementProgressSource(() => steamStore("appAchievementProgressCache", value => !!value.m_achievementProgress));
         const stopRailIcons = coreUiSetting.subscribe(() => { setQamPluginIconFallback(railIcon); void coreIcons.refresh(true); });
         return () => { stopRailIcons(); stopLegacy(); window.clearTimeout(legacyTimer); setCoreUiSnapshotControl(undefined); setQamPluginIconFallback(undefined); stopLook(); };
     });

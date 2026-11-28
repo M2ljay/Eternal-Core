@@ -47,7 +47,7 @@ export function matchTab(title: unknown): CoreMatch | undefined {
 const COLLECTIONS: Array<[RegExp, string, CoreFamily | undefined]> = [
   [/^completed$/, "completed", undefined],
   [/^(vr|virtual reality)$/, "vr", undefined],
-  [/^(playstation|sony playstation|ps1|psx|ps one)$/, "ps1", "playstation"],
+  [/^(playstation|playstation 1|sony playstation|ps1|psx|ps one)$/, "ps1", "playstation"],
   [/^(playstation 2|ps2)$/, "ps2", "playstation"],
   [/^(playstation 3|ps3)$/, "ps3", "playstation"],
   [/^(playstation 4|ps4)$/, "ps4", "playstation"],

@@ -11,7 +11,7 @@ import ts from "typescript";
 
 const compilerOptions = { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React };
 const local = { "./steamModules": "steamModules.ts", "./coreUiStyles": "coreUiStyles.ts", "./coreUiDom": "coreUiDom.ts", "./coreFullHeight": "coreFullHeight.ts",
-  "./coreArtwork": "coreArtwork.ts", "./coreStarfield": "coreStarfield.ts", "./coreUiSetting": "coreUiSetting.ts", "./coreInputPrompts": "coreInputPrompts.ts" };
+  "./coreArtwork": "coreArtwork.ts", "./coreStarfield": "coreStarfield.ts", "./coreUiSetting": "coreUiSetting.ts", "./coreInputPrompts": "coreInputPrompts.ts", "./coreQamRail": "coreQamRail.ts", "./coreHomePages": "coreHomePages.ts" };
 const cache = new Map();
 function load(file, globals = {}) {
   if (cache.has(file) && !Object.keys(globals).length) return cache.get(file);
@@ -282,15 +282,16 @@ test("plugin logos: matched by Decky plugin name or repository; others keep thei
   assert.equal(logos.corePluginTile("LoZazaMastro/Playhub-Discord"), undefined, "upstream keeps its own cover");
 });
 
-test("Core Home (3.3.8): Consoles and registered tabs (Club) without Favorites in the list; the brief, On this day, What's new and Friends gone", () => {
+test("Core Home: registered tabs (Club) in order; the brief, On this day, What's new, Friends and (3.3.10) the Consoles tab gone", () => {
   const steam = [{ id: "WhatsNew", title: "What's new" }, { id: "Recommended", title: "On this day" }, { id: "Friends", title: "Friends" }, { id: "Other", title: "Other" }];
-  // A stale brief entry from an older caller is dropped too.
-  const core = [{ id: "WhatsNew", title: "Brief", order: 10 }, { id: "CoreConsoles", title: "Consoles", order: 20 }, { id: "CoreClub", title: "Club", order: 30 }];
+  // A stale brief entry and the 3.3.9 Consoles tab from an older caller are dropped too.
+  const core = [{ id: "WhatsNew", title: "Brief", order: 10 }, { id: "CoreConsoles", title: "Consoles", order: 20 }, { id: "CoreAchievements", title: "Achievements", order: 20 },
+    { id: "CoreClub", title: "Club", order: 30 }];
   const next = homeTabs.composeHomeTabs(steam, core);
-  assert.deepEqual([...next.map(tab => tab.title)], ["Consoles", "Club", "Other"]);
+  assert.deepEqual([...next.map(tab => tab.title)], ["Achievements", "Club", "Other"]);
   assert.ok(next.every(tab => !("order" in tab)));
-  // A remembered active tab that pointed at a removed tab opens Consoles.
-  for (const old of ["Friends", "WhatsNew", "Recommended", "CoreBrief", undefined]) assert.equal(homeTabs.activeHomeTab(old, next), "CoreConsoles", String(old));
+  // A remembered active tab that pointed at a removed tab opens the first tab (Favorites when it is there).
+  for (const old of ["Friends", "WhatsNew", "Recommended", "CoreBrief", "CoreConsoles", undefined]) assert.equal(homeTabs.activeHomeTab(old, next), "CoreAchievements", String(old));
   assert.equal(homeTabs.activeHomeTab("CoreClub", next), "CoreClub");
   assert.equal(homeTabs.HOME_TAB_ORDER.brief, undefined);
 
@@ -396,15 +397,15 @@ test("Starfield frames: each surface's own window, a timer backstop, one clock",
   assert.ok(Math.abs(field.depth() - 0.2 * starfield.STARFIELD_SPEED) < 1e-9, "a 5 fps popup still moves at full speed");
 });
 
-test("3.3.9 Favorites: first and the default, Steam's own collection most recently played first, the old default migrated once", () => {
-  const core = [{ id: "CoreFavorites", title: "Favorites", order: 10 }, { id: "CoreConsoles", title: "Consoles", order: 20 }, { id: "CoreClub", title: "Club", order: 30 }];
+test("Favorites: first and the default (3.3.10: then Achievements and Club), Steam's own collection most recently played first", () => {
+  const core = [{ id: "CoreFavorites", title: "Favorites", order: 10 }, { id: "CoreAchievements", title: "Achievements", order: 20 }, { id: "CoreClub", title: "Club", order: 30 }];
   const next = homeTabs.composeHomeTabs([{ id: "WhatsNew" }, { id: "Recommended" }], core);
-  assert.deepEqual([...next.map(tab => tab.id)], ["CoreFavorites", "CoreConsoles", "CoreClub"]);
-  for (const old of ["WhatsNew", "Recommended", "Friends", undefined]) assert.equal(homeTabs.activeHomeTab(old, next), "CoreFavorites", String(old));
-  assert.equal(homeTabs.activeHomeTab("CoreConsoles", next), "CoreConsoles", "a chosen tab stays");
-  assert.equal(homeTabs.activeHomeTab("CoreConsoles", next, true), "CoreFavorites", "the saved 3.3.8 default moves to Favorites once");
+  assert.deepEqual([...next.map(tab => tab.id)], ["CoreFavorites", "CoreAchievements", "CoreClub"]);
+  for (const old of ["WhatsNew", "Recommended", "Friends", "CoreConsoles", undefined]) assert.equal(homeTabs.activeHomeTab(old, next), "CoreFavorites", String(old));
+  assert.equal(homeTabs.activeHomeTab("CoreAchievements", next), "CoreAchievements", "a chosen tab stays");
+  assert.equal(homeTabs.activeHomeTab("CoreConsoles", next, true), "CoreFavorites", "a remembered Consoles tab opens Favorites");
   assert.equal(homeTabs.activeHomeTab("CoreClub", next, true), "CoreClub");
-  assert.deepEqual({ ...homeTabs.HOME_TAB_ORDER }, { favorites: 10, consoles: 20, club: 30 });
+  assert.deepEqual({ ...homeTabs.HOME_TAB_ORDER }, { favorites: 10, achievements: 20, club: 30 });
 
   const app = (appid, name, last) => ({ appid, display_name: name, rt_last_time_played: last });
   const favorite = { id: "favorite", allApps: [app(10, "Steam game", 5), app(2147483650, "ROM shortcut", 9), app(10, "Steam game", 5), app(3, "Never", 0), app(4, "Alpha", 0)] };
@@ -419,7 +420,7 @@ test("3.3.9 Favorites: first and the default, Steam's own collection most recent
     assert.ok(copy.favorites && copy.favoritesEmpty, language);
     assert.doesNotMatch(copy.favoritesEmpty, /\bsir\b/i);
   }
-  assert.equal(homeLocale.coreHomeCopy("en").favoritesEmpty, "Favorite a game in your Library to see it here");
+  assert.equal(homeLocale.coreHomeCopy("en").favoritesEmpty, "Star a game to add it here", "3.3.10's empty line");
   const source = readFileSync(new URL("../src/coreHome.tsx", import.meta.url), "utf8");
   assert.match(source, /id: FAVORITES_ID, title: text\.favorites, content: <Favorites/);
   assert.match(source, /core-favorite\.gpfocus[^{]*\{outline:none;translate:0 -6px\}/, "3.3.10: no ring, the tile lifts");

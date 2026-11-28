@@ -22,6 +22,8 @@ import { sharedStarfield, STARFIELD_FPS, type Starfield } from "./coreStarfield"
 import { coreUiSetting, type CoreUiSetting } from "./coreUiSetting";
 import { pinControllerPrompts, promptsMemory } from "./coreInputPrompts";
 import { browserViewDocuments, invalidateOnboardingBrowserViewOwners } from "./onboardingAnchors";
+import { installQamRail } from "./coreQamRail";
+import { backToScreenOne } from "./coreHomePages";
 
 function storage(): Storage | undefined {
   try { return typeof localStorage === "undefined" ? undefined : localStorage; } catch { return undefined; }
@@ -104,6 +106,9 @@ export function createCoreUi(deps: CoreUiDeps) {
   const focusWatch = new Map<Document, (event: any) => void>();
   // 3.3.10: per document, the scroll listener and the page scroller it last saw (the top bar hides past screen one).
   const scrollWatch = new Map<Document, { handler: (event: any) => void; scroller?: Element; hidden: boolean }>();
+  // 3.3.10: per document, Quick Access's flipped rail (coreQamRail.ts) and Home's screen jumps.
+  const railWatch = new Map<Document, () => void>();
+  const homeWatch = new Map<Document, () => void>();
   const diagnostics: CoreUiDiagnostics = { surfaces: 0, shown: 0, state: "idle", frames: 0, full: {}, restyled: 0, hosts: {} };
 
   function orbState(): string {
@@ -309,6 +314,70 @@ export function createCoreUi(deps: CoreUiDeps) {
       } catch { /* The bar stays as it is. */ }
     };
     try { doc.addEventListener("scroll", handler, true); scrollWatch.set(doc, { handler, hidden: false }); } catch { /* The bar stays visible. */ }
+  }
+
+  // 3.3.10 (the approved board): Home's pages are two screens each, like the game view. Focus moving from screen one
+  // (Core's row, data-core-home-one) to anything below it scrolls the page so screen two starts at the top (Home's tab
+  // row, or the Consoles page's games); back into screen one, the page scrolls to its top.
+  // 3.3.10 (approved addition): on screen two, B, or up from its top row (Home's tab row; the Consoles page's games),
+  // goes straight back to screen one: focus returns to the tile it left, and the same scroll brings screen one back.
+  // On screen one B stays Steam's.
+  function screenTwoOf(target: Element, dom: CoreUiSheet["dom"]): { two: Element | null; topRow: boolean } {
+    const consoles = target.closest("[data-core-home-two]");
+    if (consoles) return { two: consoles, topRow: !!target.closest(".core-two-row") };
+    const tabbed = dom.tabbedPage ? target.closest(dom.tabbedPage) : null;
+    if (!tabbed || !tabbed.querySelector("[data-core-home-tab]")) return { two: null, topRow: false };
+    return { two: tabbed, topRow: !!(dom.tabRow && target.closest(dom.tabRow)) };
+  }
+  function watchHomeScreens(doc: Document, dom: CoreUiSheet["dom"]) {
+    if (homeWatch.has(doc)) return;
+    let inOne = true;
+    let lastTile: Element | null = null;
+    const back = (event: any) => {
+      try {
+        const target = ((doc as any).activeElement ?? event?.target) as Element | null;
+        const one = doc.querySelector("[data-core-home-one]");
+        if (!one || !target || typeof (target as any).closest !== "function" || one.contains(target)) return;
+        const where = screenTwoOf(target, sheet?.dom ?? dom);
+        if (!backToScreenOne(event?.detail?.button, { inTwo: !!where.two, inTopRow: where.topRow })) return;
+        const tile = (lastTile && (lastTile as any).isConnected && one.contains(lastTile) ? lastTile : one.querySelector(".core-tile")) as any;
+        if (!tile?.focus) return;
+        event.preventDefault?.(); event.stopPropagation?.();
+        tile.focus();
+      } catch { /* Steam's own navigation stands. */ }
+    };
+    const handler = (event: any) => {
+      try {
+        const target = event?.target as Element | null;
+        const one = doc.querySelector("[data-core-home-one]");
+        if (!one || !target || typeof (target as any).closest !== "function") return;
+        const nowInOne = one.contains(target);
+        if (nowInOne && target.closest(".core-tile")) lastTile = target.closest(".core-tile");
+        if (nowInOne === inOne) return;
+        const scroller = scrollParent(one, doc);
+        if (!scroller) { inOne = nowInOne; return; }
+        if (nowInOne) { inOne = true; smoothScroll(scroller, 0); return; }
+        const two = screenTwoOf(target, dom).two;
+        if (!two || !scroller.contains(two)) return;
+        inOne = false;
+        const offset = two.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+        smoothScroll(scroller, scroller.scrollTop + offset);
+      } catch { /* Steam's own scrolling stands. */ }
+    };
+    try {
+      doc.addEventListener("focusin", handler, true);
+      doc.addEventListener("vgp_onbuttondown", back, true);
+      homeWatch.set(doc, () => { doc.removeEventListener("focusin", handler, true); doc.removeEventListener("vgp_onbuttondown", back, true); });
+    } catch { /* Steam's own scrolling stands. */ }
+  }
+  function watchQamRail(doc: Document) {
+    if (railWatch.has(doc)) return;
+    try {
+      railWatch.set(doc, installQamRail(doc, () => {
+        const dom = sheet?.dom ?? {};
+        return { menu: dom.qamMenu, rail: dom.qamRail, tab: dom.qamTab, selected: dom.qamTabSelected };
+      }));
+    } catch { railWatch.set(doc, () => {}); }
   }
 
   // Removals (a route change, a page closing) are swept at once instead of on the next one-second sync.
@@ -539,6 +608,8 @@ export function createCoreUi(deps: CoreUiDeps) {
     for (const [doc, observer] of observers) if (!docs.includes(doc)) { try { observer.disconnect(); } catch {} observers.delete(doc); }
     for (const [doc, handler] of focusWatch) if (!docs.includes(doc)) { try { doc.removeEventListener("focusin", handler, true); } catch {} focusWatch.delete(doc); }
     for (const [doc, watch] of scrollWatch) if (!docs.includes(doc)) { try { doc.removeEventListener("scroll", watch.handler, true); } catch {} scrollWatch.delete(doc); }
+    for (const [doc, stop] of railWatch) if (!docs.includes(doc)) { stop(); railWatch.delete(doc); }
+    for (const [doc, stop] of homeWatch) if (!docs.includes(doc)) { try { stop(); } catch {} homeWatch.delete(doc); }
     for (const doc of docs) {
       try {
         let style = styles.get(doc);
@@ -559,6 +630,8 @@ export function createCoreUi(deps: CoreUiDeps) {
         const dom = current.dom ?? {};
         tagChrome(doc, dom);
         watchScroll(doc, dom);
+        watchHomeScreens(doc, dom);
+        watchQamRail(doc);
         reserveLogo(doc, dom);
         try { deps.decorate?.(doc, dom); } catch { /* The Library keeps Steam's look. */ }
         placeOrb(doc, current.clock);
@@ -592,6 +665,10 @@ export function createCoreUi(deps: CoreUiDeps) {
     focusWatch.clear();
     for (const [doc, watch] of scrollWatch) { try { doc.removeEventListener("scroll", watch.handler, true); } catch {} }
     scrollWatch.clear();
+    for (const stop of railWatch.values()) stop();
+    railWatch.clear();
+    for (const stop of homeWatch.values()) { try { stop(); } catch {} }
+    homeWatch.clear();
     try { fullHeight.releaseAll(); } catch {}
     edits.restoreAll();
     for (const element of chromes) { try { element.removeAttribute(CORE_UI_CHROME_ATTRIBUTE); element.removeAttribute(CORE_UI_HEADER_ATTRIBUTE); } catch {} }

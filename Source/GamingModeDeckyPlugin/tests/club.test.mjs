@@ -158,10 +158,21 @@ test("every language has every string, and the setting is on by default in the b
   assert.match(backend, /return \{"enabled": True, "display_name": ""\}/);
 });
 
-test("the tab follows the Core palette: crimson square focus, 10 px cards, the club's box art (3.3.8), no \"Updated\" text", () => {
+test("the tab follows the Core palette and the approved board (3.3.10): lift without outline, 10 px cards, the club's box art, no refresh", () => {
   const source = readFileSync(new URL("../src/club/ClubTab.tsx", import.meta.url), "utf8");
-  assert.match(source, /\.ph-club-focus\.gpfocus,\.ph-club-focus:focus-visible\{box-shadow:0 0 0 3px \$\{CORE\.crimson\};border-radius:0\}/);
-  assert.match(source, /\.ph-club-card\{background:\$\{CORE\.gunmetal\};border-radius:10px/);
+  assert.match(source, /\.ph-club-lift\.gpfocus,\.ph-club-lift:focus-visible\{translate:0 -7px;outline:none\}/, "focus lifts, no outline");
+  assert.match(source, /\.ph-club-card\{position:relative;height:\$\{CLUB_LAYOUT\.cardVh\}vh;[^}]*border-radius:10px/, "tall full-width cards");
+  assert.match(source, /\.ph-club-picks\{display:grid;grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/, "four across");
+  assert.doesNotMatch(source, /copy\.refresh|copy\.saved|loadClub\(true\)/, "no refresh button and no saved-data line");
+  // Focus: the first pick first; picks, then the two actions, then the three boxes, each row left to right.
+  assert.match(source, /<PickCard [^>]*first=\{index === 0\}/);
+  assert.match(source, /autoFocus=\{first\}/);
+  const order = ["ph-club-picks", "ph-club-actions", "ph-club-boxes"].map(name => source.indexOf(`<Focusable className="${name}" flow-children="row"`));
+  assert.ok(order.every(at => at > 0) && order[0] < order[1] && order[1] < order[2], "picks, actions, boxes; each a row");
+  assert.equal((source.match(/className="ph-club-box ph-club-lift" focusable=\{true\}/g) ?? []).length, 3, "every box is focusable");
+  assert.match(source, /onSecondaryButton=\{[^}]*onLog\(\)/, "X logs the focused pick");
+  assert.match(source, /onOptionsButton=\{match \? [^}]*onOpen\(\)/, "Y opens it in the Library");
+  assert.match(source, /copy\.unreachable/, "the club unreachable: one line");
   assert.match(source, /<CoreStars \/>/);
   assert.match(source, /export const CLUB_SITE_ART_ALLOWED = true;/);
   assert.doesNotMatch(source, /copy\.updated/, "no \"Updated N minutes ago\" text (3.3.8)");
@@ -236,8 +247,8 @@ test("Assemble's ready event is heard and the listener can be removed", () => {
 
 test("the Club tab offers Log completion only with the bridge and sends nothing itself", () => {
   const source = readFileSync(new URL("../src/club/ClubTab.tsx", import.meta.url), "utf8");
-  assert.match(source, /if \(!bridge \|\| open\.length === 0\) return/, "manual steps without Assemble");
-  assert.match(source, /copy\.logDiscord/);
+  assert.match(source, /if \(!bridge \|\| !event\) \{ setStatus\(\{ error: false, text: `\$\{copy\.logUnavailable\}: \$\{CLUB_COMPLETION_COMMAND\}` \}\); return; \}/,
+    "without Assemble, the command to type instead");
   assert.match(source, /openClubCompletion\(\{ event, title: pick\.title \}\)/);
   assert.match(source, /result\.message \|\| copy\.logFailed/, "Assemble's own message on failure");
   assert.match(source, /subscribeAssemble\(/);

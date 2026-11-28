@@ -11,7 +11,7 @@ import ts from "typescript";
 
 const compilerOptions = { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React };
 const local = { "./steamModules": "steamModules.ts", "./coreUiStyles": "coreUiStyles.ts", "./coreUiDom": "coreUiDom.ts", "./coreFullHeight": "coreFullHeight.ts",
-  "./coreArtwork": "coreArtwork.ts", "./coreStarfield": "coreStarfield.ts", "./coreUiSetting": "coreUiSetting.ts", "./coreInputPrompts": "coreInputPrompts.ts" };
+  "./coreArtwork": "coreArtwork.ts", "./coreStarfield": "coreStarfield.ts", "./coreUiSetting": "coreUiSetting.ts", "./coreInputPrompts": "coreInputPrompts.ts", "./coreQamRail": "coreQamRail.ts", "./coreHomePages": "coreHomePages.ts" };
 const cache = new Map();
 function load(file) {
   if (cache.has(file)) return cache.get(file);
@@ -196,7 +196,7 @@ test("3.3.9: with the live key lists every new surface's rule applies, in the Co
   assert.equal(host.below, "." + live.appdetails.PlaySection);
 });
 
-test("3.3.9 Home after Art Hero: the art one screen tall with a short fade, the carousel low, the name above it, no header or triangle", () => {
+test("Home after Art Hero (Steam's row, the fallback since 3.3.10): the art one screen tall with a short fade, the carousel low, no name, no header or triangle", () => {
   const maps = { ...others,
     recentgames: { RecentGamesContainer: "_RgCont", RecentGamesBackgroundContainer: "_RgBg", RecentGamesBackgroundImages: "_RgImgs", RecentGamesBackground: "_RgBack",
       RecentGamesBackgroundImage: "_RgImg", RecentGamesHeader: "_RgHead", RecentGamesInnerContainer: "_RgInner" },
@@ -214,7 +214,7 @@ test("3.3.9 Home after Art Hero: the art one screen tall with a short fade, the 
   assert.match(part, /_RgInner\._RgInner\{position:absolute !important;left:0 !important;right:0 !important;top:50vh !important;bottom:auto !important;height:auto !important;max-height:50vh/,
     "the carousel row is out of the flow and never reaches past screen one's box");
   assert.doesNotMatch(part, /70vh|position:relative !important;top:50vh/);
-  assert.match(part, /\.gpfocuswithin > \._CaLabel\._CaLabel[^{]*\{position:absolute !important;top:-4em !important;visibility:visible !important;font-size:22px/);
+  assert.match(part, /\.gpfocuswithin > \._CaLabel\._CaLabel[^{]*\{display:none !important\}/, "3.3.10: no game name or status line on screen one, Steam's included");
   assert.match(part, /_CaPlay\._CaPlay \._CaIcon\._CaIcon\{display:none/, "no green triangle");
   assert.doesNotMatch(part, /brightness\(0/);
 });
@@ -296,10 +296,11 @@ test("3.3.10: Steam's global confirm dialogs are gunmetal floats; alone they nev
   assert.match(css, /\/\* steam-dialogs \*\/[^\n]*\.GenericConfirmDialog:not\(#core-ui-boost\),[^{]*\{[^}]*background-color:#1A1D21 !important[^}]*border-radius:var\(--core-radius-float, 10px\)/);
 });
 
-test("3.3.10 Home: the shelf and the tabbed page are their own rows after screen one; the tab row is in the flow", () => {
+test("3.3.10 Home: the tabbed page is its own row after screen one; the tab row is in the flow", () => {
   const sheet = styles.buildCoreUiCss({ ...others });
   const layers = sheet.css.split("\n").find(line => line.startsWith("/* home-layers */")).replaceAll(styles.CORE_UI_BOOST, "");
-  assert.match(layers, /\._GuHome\._GuHome \[data-collector-shelf\],[^{]*\._TpPage\._TpPage:has\(\[data-core-home-tab\]\)\{position:relative !important;z-index:1/);
+  assert.match(layers, /\._TpPage\._TpPage:has\(\[data-core-home-tab\]\)\{position:relative !important;z-index:1/);
+  assert.doesNotMatch(layers, /data-collector-shelf/, "The Collector's shelf left Home (win.36)");
   assert.doesNotMatch(layers.split("{")[0], /_GuHome\._GuHome:has/, "never the whole of Home");
   const tabs = sheet.css.split("\n").find(line => line.startsWith("/* home-tabs */")).replaceAll(styles.CORE_UI_BOOST, "");
   assert.match(tabs, /:has\(\[data-core-home-tab\]\) \._TpWrap\._TpWrap[^{]*\{position:relative !important;top:auto !important;bottom:auto/, "Steam's pinned tab row now takes its own space");

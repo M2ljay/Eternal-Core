@@ -1,8 +1,8 @@
 // Eternal Core: Core Home's bottom tabs (docs/eternal/CORE-UI.md, "Phase 2: Home"). Pure: tests drive it with fake
 // Steam tab lists and fake collection stores.
 //
-// Steam's Home tabs come in as `{ id, title, content, ... }`. Core Home answers, in this order (3.3.9):
-//   Favorites (10, the default) - Consoles (20) - any registered tab (Club, 30, from src/club/) - any other Steam tab.
+// Steam's Home tabs come in as `{ id, title, content, ... }`. Core Home answers, in this order (3.3.10):
+//   Favorites (10, the default) - Achievements (20) - any registered tab (Club, 30, from src/club/) - any other Steam tab.
 // Steam's "What's new", "Recommended" and "Friends" are removed. The Jarvis brief and On this day tabs of 3.3.3-3.3.7
 // are gone (the user's call); a remembered active tab that pointed at them opens Consoles.
 //
@@ -52,14 +52,17 @@ export function availableHomeTabs(): HomeTabRegistration[] {
 // 3.3.8 (the user's call): Home is Consoles (the default) and Club. Steam's What's new (Core's brief took its id),
 // Recommended (On this day took its slot) and Friends are all removed.
 // 3.3.9: Favorites first (the default), then Consoles and Club.
-export const HOME_TAB_ORDER = { favorites: 10, consoles: 20, club: 30 } as const;
+// 3.3.10 (the approved design): Consoles is a page of its own (L1/R1, coreHomePages.ts); the tabs below the fold are
+// Favorites, Achievements and Club. A remembered Consoles tab opens Favorites.
+export const HOME_TAB_ORDER = { favorites: 10, achievements: 20, club: 30 } as const;
 export const FAVORITES_ID = "CoreFavorites";
+export const ACHIEVEMENTS_ID = "CoreAchievements";
 export const CONSOLES_ID = "CoreConsoles";
 export const REMOVED_STEAM_TABS = new Set(["WhatsNew", "Friends", "Recommended"]);
 export const ON_THIS_DAY_ID = "Recommended";
 export const BRIEF_ID = "WhatsNew";
 // Ids a remembered active tab may still hold from 3.3.3-3.3.7; each now opens Consoles.
-export const RETIRED_HOME_TABS = new Set([BRIEF_ID, ON_THIS_DAY_ID, "CoreBrief", "Friends"]);
+export const RETIRED_HOME_TABS = new Set([BRIEF_ID, ON_THIS_DAY_ID, "CoreBrief", "Friends", CONSOLES_ID]);
 
 type Tab = { id: any; [key: string]: any };
 
@@ -78,7 +81,7 @@ export function composeHomeTabs(native: Tab[], core: Array<Tab & { order: number
 // then Consoles. `migrate` (3.3.9, once per install: coreHome.tsx keeps the flag) moves a remembered Consoles to the new
 // default, Favorites, as well.
 export function activeHomeTab(active: unknown, tabs: Tab[], migrate = false): unknown {
-  const fallback = tabs.find(tab => tab.id === FAVORITES_ID)?.id ?? tabs.find(tab => tab.id === CONSOLES_ID)?.id ?? tabs[0]?.id ?? active;
+  const fallback = tabs.find(tab => tab.id === FAVORITES_ID)?.id ?? tabs[0]?.id ?? active;
   if (migrate && (active === CONSOLES_ID || active === undefined)) return fallback;
   if (tabs.some(tab => tab.id === active) && !RETIRED_HOME_TABS.has(active as any)) return active;
   return fallback;
@@ -86,9 +89,10 @@ export function activeHomeTab(active: unknown, tabs: Tab[], migrate = false): un
 
 // 3.3.9: the Favorites tab: the games in Steam's own Favorites collection (Steam games and ROM shortcuts alike), read
 // from the collection store each time, most recently played first, then by name. Never a copy.
-export function favoriteApps(collection: any, limit = 200): HomeApp[] {
+// 3.3.10: `more` adds other collections (The Collector's Favourites), each game once.
+export function favoriteApps(collection: any, limit = 200, more: any[] = []): HomeApp[] {
   const out = new Map<number, HomeApp>();
-  for (const raw of appsOf(collection).slice(0, 5000)) {
+  for (const raw of [collection, ...(Array.isArray(more) ? more : [])].flatMap(item => appsOf(item)).slice(0, 5000)) {
     const app = homeApp(raw);
     if (app && !out.has(app.appid)) out.set(app.appid, app);
   }
@@ -103,6 +107,21 @@ export function favoritesCollection(store: any): any {
     const items = Array.isArray(list) ? list : list && typeof list.values === "function" ? Array.from(list.values()) : [];
     return items.find((item: any) => item?.id === "favorite") ?? store?.favoritesCollection;
   } catch { return undefined; }
+}
+
+// 3.3.10: The Collector's Favourites collection(s): RomM's favourites as The Collector names them on Steam
+// ("[Favourites]" under Classic names on Windows, "Favourites" under Clean, "RomM: [Favourites] (<host>)" elsewhere;
+// a "(RomM)" suffix when the name was taken). Steam's own Favorites (id "favorite") is not one of them.
+const COLLECTOR_FAVOURITES = /^\[?favou?rites\]?$/i;
+export function collectorFavorites(collections: any[]): any[] {
+  return (Array.isArray(collections) ? collections.slice(0, 400) : []).filter(collection => {
+    try {
+      if (collection?.id === "favorite") return false;
+      const raw = String(collection?.displayName ?? collection?.strName ?? collection?.name ?? "");
+      const plain = raw.replace(/^\s*romm\s*:\s*/i, "").replace(/\s*\([^()]*\)\s*$/, "").trim();
+      return COLLECTOR_FAVOURITES.test(plain) && (plain.startsWith("[") || /^\s*romm\s*:/i.test(raw) || /\(romm\)\s*$/i.test(raw) || plain.toLowerCase() === "favourites");
+    } catch { return false; }
+  });
 }
 
 // ---- Data for the brief and the console shelves ----

@@ -5,13 +5,14 @@ import { clubCopy, daysLeftText, fill, type ClubCopy } from "./clubLocale";
 import { formatClubDate, timeLeft } from "./clubTime";
 import { matchPick, type LibraryEntry, type Match } from "./clubMatch";
 import { openGamePage, playApp, readLibrary, steamArtFor } from "./clubLibrary";
-import { clubState, loadClub, subscribeClub, type ClubMember, type ClubNomination, type ClubPick, type ClubRow } from "./clubStore";
+import { clubState, loadClub, subscribeClub, type ClubMember, type ClubNomination, type ClubPick, type ClubRow, type ClubScheduleItem } from "./clubStore";
+import { CORE_FAMILY_TONES } from "../coreLibraryIcons";
 import { CLUB_COMPLETION_COMMAND, assembleBridge, assembleEventFor, openClubCompletion, subscribeAssemble } from "./clubAssemble";
 
-// Eternal Core: the Club tab on Core's Home: Play Retro Games Club's current picks (matched to the Steam library,
-// A plays, X opens the game page), the user's standing beside the top 5, nominations, and how to log a win: with
-// Eternal-Assemble loaded, a Log completion button per current pick opens its Discord thread with /completed ready.
-// Core palette: black with the Starfield, gunmetal cards (10 px radius), crimson square focus, steel text.
+// Eternal Core: the Club tab on Core's Home: Play Retro Games Club's current picks (matched to the Steam library, A plays),
+// Log completion (X: with Eternal-Assemble loaded, the pick's Discord thread opens with /completed ready) and Open in
+// Library (Y), the user's standing with the top three, what is coming up, and nominations.
+// Core palette: black with the Starfield, gunmetal cards (10 px radius), focus lifts, steel text.
 
 const { Focusable, DialogButton, Navigation } = DFL as any;
 
@@ -28,46 +29,57 @@ export function clubArtUrl(pick: { image?: string; cover?: string }): string {
   return CLUB_ART.test(path) ? path : "";
 }
 
+// 3.3.10 (the approved board, HomeClub): four tall full-width pick cards (box art filling each card, the details over a
+// bottom fade: the event tag in the pick's colour, title, platform and length, days left and beaten count, the library
+// chip), then Log completion (X) and Open in Library (Y) acting on the focused pick, then three equal boxes: Your
+// standing, Coming up, Nominations. No refresh button and no "saved data" line: it refreshes itself hourly. Focus starts
+// on the first pick; left and right move across the picks and across the boxes; down goes picks, buttons, boxes. Every
+// box is focusable. Focus lifts; no outline.
+const PICK_TONE: Record<string, string> = { gotw: CORE_FAMILY_TONES.retro, gotm: CORE_FAMILY_TONES.nintendo, rhotm: CORE_FAMILY_TONES.sega, gots: CORE_FAMILY_TONES.playstation };
+export const pickTone = (pick: { kind?: string; event?: string }) => PICK_TONE[assembleEventFor(pick) ?? ""] ?? CORE.crimsonText;
+// Board sizes (1920 px) scaled to the view: cards 560 px tall (about 393 at the TV's 758 px), boxes 250 (about 176).
+export const CLUB_LAYOUT = { cardVh: 51.9, boxVh: 23.1, gapVw: 1.04 } as const;
+
 const css = `
-.ph-club{position:relative;isolation:isolate;min-height:100%;padding:24px 36px 48px;color:${CORE.text};background:${CORE.black};box-sizing:border-box}
-.ph-club h2{margin:0;font-size:28px;font-weight:700;color:${CORE.white}}
-.ph-club h3{margin:0 0 12px;font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${CORE.steel}}
-.ph-club-head{display:flex;align-items:baseline;gap:18px;margin-bottom:20px;flex-wrap:wrap}
-.ph-club-updated{font-size:14px;color:${CORE.hint}}
-.ph-club-updated.stale{color:${CORE.warning}}
-.ph-club-focus{outline:none;border-radius:0}
-.ph-club-focus.gpfocus,.ph-club-focus:focus-visible{box-shadow:0 0 0 3px ${CORE.crimson};border-radius:0}
-.ph-club-picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:22px;margin-bottom:30px}
-.ph-club-tile{padding:4px}
-.ph-club-card{background:${CORE.gunmetal};border-radius:10px;overflow:hidden;height:100%;display:flex;flex-direction:column}
-.ph-club-art{position:relative;aspect-ratio:2/3;background:${CORE.gunmetalRaised} center/cover no-repeat;display:flex;align-items:center;justify-content:center}
-.ph-club-art-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.ph-club-badge{font-size:44px;font-weight:800;letter-spacing:.04em;color:${CORE.steel};border-bottom:4px solid ${CORE.crimson};padding-bottom:6px}
-.ph-club-event{position:absolute;left:0;top:0;padding:6px 10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:${coreAlpha(CORE.black, 0.78)};color:${CORE.white}}
-.ph-club-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px}
-.ph-club-title{font-size:18px;font-weight:700;color:${CORE.white};line-height:1.25}
-.ph-club-meta{font-size:14px;color:${CORE.steel}}
-.ph-club-left{font-size:15px;font-weight:700;color:${CORE.white}}
+.ph-club{position:relative;isolation:isolate;min-height:100%;padding:12px 2px 40px;color:${CORE.text};box-sizing:border-box}
+.ph-club h3{margin:0 0 10px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:${CORE.steel}}
+.ph-club-lift{outline:none;transition:translate .15s ease-out,box-shadow .15s ease-out}
+.ph-club-lift.gpfocus,.ph-club-lift:focus-visible{translate:0 -7px;outline:none}
+.ph-club-picks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:${CLUB_LAYOUT.gapVw}vw;margin:6px 0 22px}
+.ph-club-card{position:relative;height:${CLUB_LAYOUT.cardVh}vh;min-height:260px;border-radius:10px;overflow:hidden;background:${CORE.gunmetalRaised};box-shadow:0 10px 24px ${coreAlpha(CORE.black, 0.6)}}
+.ph-club-card.gpfocus,.ph-club-card:focus-visible{box-shadow:0 14px 30px ${coreAlpha(CORE.black, 0.75)}}
+.ph-club-card-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph-club-badge{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;letter-spacing:.04em;color:${CORE.steel}}
+.ph-club-tone{position:absolute;left:0;top:0;width:100%;height:4px}
+.ph-club-fade{position:absolute;inset:0;background:linear-gradient(180deg,${coreAlpha(CORE.black, 0)} 35%,${coreAlpha(CORE.black, 0.92)} 78%)}
+.ph-club-details{position:absolute;left:18px;right:18px;bottom:18px}
+.ph-club-tag{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.ph-club-title{font-size:21px;font-weight:600;color:${CORE.white};margin-top:6px;line-height:1.15}
+.ph-club-meta{font-size:13px;color:${CORE.steel};margin-top:6px}
+.ph-club-left{font-size:13px;color:${CORE.hint};margin-top:4px}
 .ph-club-left.soon{color:${CORE.crimsonText}}
-.ph-club-lib{font-size:13px;color:${CORE.hint}}
-.ph-club-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;margin-bottom:22px}
-.ph-club-panel{background:${CORE.gunmetal};border-radius:10px;padding:18px 20px}
-.ph-club-stats{display:flex;gap:28px;flex-wrap:wrap}
-.ph-club-stat strong{display:block;font-size:34px;color:${CORE.white};line-height:1.1}
-.ph-club-stat span{font-size:13px;color:${CORE.steel}}
-.ph-club-crowns{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
-.ph-club-crown{font-size:12px;padding:4px 8px;border-radius:10px;background:${CORE.gunmetalRaised};color:${CORE.text}}
-.ph-club-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-.ph-club-list li{display:flex;justify-content:space-between;gap:12px;font-size:15px}
-.ph-club-list li.me{color:${CORE.white};font-weight:700;box-shadow:inset 3px 0 0 ${CORE.crimson};padding-left:8px}
-.ph-club-list .muted{color:${CORE.hint}}
-.ph-club-note{font-size:14px;color:${CORE.steel};line-height:1.5;margin:6px 0 0}
-.ph-club-command{display:inline-block;margin:6px 0;padding:6px 10px;border-radius:10px;background:${CORE.black};color:${CORE.white};font-family:ui-monospace,Consolas,monospace;font-size:18px}
-.ph-club-log{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-.ph-club-log-status{font-size:14px;color:${CORE.steel};margin:4px 0 0}
-.ph-club-log-status.error{color:${CORE.warning}}
-.ph-club-empty{padding:40px 0;color:${CORE.steel};font-size:16px}
-@media(max-width:900px){.ph-club-row{grid-template-columns:1fr}.ph-club{padding:18px}}
+.ph-club-chip{display:inline-flex;align-items:center;height:31px;padding:0 13px;margin-top:13px;font-size:13px;font-weight:600;border-radius:10px;background:${CORE.gunmetal};color:${CORE.steel}}
+.ph-club-chip.owned{background:${CORE.ok};color:${CORE.onStatus}}
+.ph-club-actions{display:flex;gap:10px;align-items:center;margin:0 0 22px}
+.ph-club-action{display:inline-flex;align-items:center;gap:8px;height:37px;padding:0 14px;background:${CORE.gunmetal};color:${CORE.steel};font-size:13px;font-weight:600;border-radius:0}
+.ph-club-action.gpfocus,.ph-club-action:focus-visible{background:${CORE.gunmetalRaised};color:${CORE.white};box-shadow:inset 3px 0 0 ${CORE.crimson}}
+.ph-club-action[aria-disabled="true"]{color:${CORE.hint}}
+.ph-club-key{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border:1.5px solid ${CORE.steel};border-radius:50%;font-size:11px;font-weight:700}
+.ph-club-status{font-size:12px;color:${CORE.hint}}
+.ph-club-status.error{color:${CORE.warning}}
+.ph-club-boxes{display:grid;grid-template-columns:586fr 640fr 526fr;gap:${CLUB_LAYOUT.gapVw}vw}
+.ph-club-box{height:${CLUB_LAYOUT.boxVh}vh;min-height:150px;box-sizing:border-box;padding:17px 20px;background:${CORE.gunmetal};border-radius:10px;overflow:hidden}
+.ph-club-box.gpfocus,.ph-club-box:focus-visible{background:${CORE.gunmetalRaised}}
+.ph-club-big{font-size:28px;font-weight:600;color:${CORE.white};margin-top:4px}
+.ph-club-note{font-size:12px;color:${CORE.hint};margin:6px 0 0}
+.ph-club-line{font-size:12px;color:${CORE.steel};margin-top:11px}
+.ph-club-dates{display:grid;grid-template-columns:84px 1fr;row-gap:10px;font-size:13px}
+.ph-club-dates b{color:${CORE.crimsonText};font-weight:600}
+.ph-club-dates span{color:${CORE.steel}}
+.ph-club-noms{display:flex;flex-direction:column;gap:8px;font-size:13px;color:${CORE.steel}}
+.ph-club-noms div{display:flex;justify-content:space-between;gap:12px}
+.ph-club-noms b{color:${CORE.white}}
+.ph-club-empty{padding:8px 2px;color:${CORE.hint};font-size:15px;text-align:left;outline:none}
 @media(prefers-reduced-motion:reduce){.ph-club *{transition:none!important}}
 `;
 
@@ -77,114 +89,96 @@ function useClub() {
   return React.useSyncExternalStore(subscribeClub, clubState, clubState);
 }
 
-function PickTile({ pick, match, copy, locale, now }: { pick: ClubPick; match: Match | null; copy: ClubCopy; locale: string; now: number }) {
+function leftTextFor(pick: ClubPick, copy: ClubCopy, locale: string, now: number): { text: string; soon: boolean } {
+  const left = timeLeft(pick.ends_at, now);
+  const text = left.state === "days" ? daysLeftText(locale, left.days) : left.state === "last" ? copy.lastDay : left.state === "ended" ? copy.ended : copy.noDate;
+  return { text, soon: left.state === "last" || (left.state === "days" && left.days <= 2) };
+}
+
+function hoursText(hours: number | null | undefined): string {
+  return typeof hours === "number" && hours > 0 ? `${Math.round(hours * 10) / 10} h` : "";
+}
+
+function PickCard({ pick, match, copy, locale, now, first, onFocus, onLog, onOpen }: { pick: ClubPick; match: Match | null; copy: ClubCopy; locale: string; now: number;
+  first: boolean; onFocus: () => void; onLog: () => void; onOpen: () => void }) {
   const art = match ? steamArtFor(match.appId) : "";
   const candidate = art || (CLUB_SITE_ART_ALLOWED ? clubArtUrl(pick) : "");
   const [failed, setFailed] = React.useState("");
   const image = candidate && failed !== candidate ? candidate : "";
-  const left = timeLeft(pick.ends_at, now);
-  const leftText = left.state === "days" ? daysLeftText(locale, left.days) : left.state === "last" ? copy.lastDay
-    : left.state === "ended" ? copy.ended : copy.noDate;
-  const soon = left.state === "last" || (left.state === "days" && left.days <= 2);
+  const left = leftTextFor(pick, copy, locale, now);
+  const tone = pickTone(pick);
   const platform = pick.platform ? (pick.romhack ? `${pick.platform} romhack` : pick.platform) : "";
+  const meta = [platform, hoursText(pick.hours)].filter(Boolean).join(" · ");
+  const beaten = typeof pick.beaten === "number" ? fill(copy.beatenCount, { n: pick.beaten }) : "";
   const play = () => { if (match) playApp(match.appId); };
-  const details = () => { if (match) openGamePage(match.appId, (path: string) => Navigation?.Navigate?.(path)); };
-  return <Focusable className="ph-club-tile ph-club-focus" focusable={true} role="button"
-    aria-label={`${pick.label}: ${pick.title}. ${leftText}. ${match ? copy.play : copy.notInLibrary}`}
-    onActivate={match ? play : undefined} onClick={match ? play : undefined}
-    onOKActionDescription={match ? copy.play : undefined}
-    onSecondaryButton={match ? (event: any) => { event?.preventDefault?.(); event?.stopPropagation?.(); details(); } : undefined}
-    onSecondaryActionDescription={match ? copy.details : undefined}>
-    <div className="ph-club-card">
-      <div className="ph-club-art">
-        {image ? <img className="ph-club-art-img" src={image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(image)} />
-          : <span className="ph-club-badge">{pick.platform || "?"}</span>}
-        <span className="ph-club-event">{pick.label}</span>
-      </div>
-      <div className="ph-club-body">
-        <div className="ph-club-title">{pick.title}</div>
-        {platform && <div className="ph-club-meta">{platform}</div>}
-        <div className={`ph-club-left${soon ? " soon" : ""}`}>{leftText}</div>
-        <div className="ph-club-lib">{match ? `A ${copy.play} · X ${copy.details}` : copy.notInLibrary}</div>
-      </div>
+  return <Focusable className="ph-club-card ph-club-lift" focusable={true} role="button" autoFocus={first}
+    aria-label={`${pick.label}: ${pick.title}. ${left.text}. ${match ? copy.inLibrary : copy.notInLibrary}`}
+    onGamepadFocus={onFocus} onFocus={onFocus}
+    onActivate={match ? play : undefined} onClick={match ? play : undefined} onOKActionDescription={match ? copy.play : undefined}
+    onSecondaryButton={(event: any) => { event?.preventDefault?.(); event?.stopPropagation?.(); onLog(); }} onSecondaryActionDescription={copy.logButton}
+    onOptionsButton={match ? (event: any) => { event?.preventDefault?.(); event?.stopPropagation?.(); onOpen(); } : undefined}
+    onOptionsActionDescription={match ? copy.openInLibrary : undefined}>
+    {image ? <img className="ph-club-card-art" src={image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(image)} />
+      : <span className="ph-club-badge">{pick.platform || "?"}</span>}
+    <span className="ph-club-tone" style={{ background: tone }} />
+    <span className="ph-club-fade" />
+    <div className="ph-club-details">
+      <div className="ph-club-tag" style={{ color: tone }}>{pick.label}</div>
+      <div className="ph-club-title">{pick.title}</div>
+      {meta && <div className="ph-club-meta">{meta}</div>}
+      <div className={`ph-club-left${left.soon ? " soon" : ""}`}>{[left.text, beaten].filter(Boolean).join(" · ")}</div>
+      <span className={`ph-club-chip${match ? " owned" : ""}`}>{match ? `✓ ${copy.inLibrary}` : copy.notInLibrary}</span>
     </div>
   </Focusable>;
 }
 
-function Standing({ member, name, copy }: { member: ClubMember | null; name: string; copy: ClubCopy }) {
-  if (!name) return <p className="ph-club-note">{copy.setName}</p>;
-  if (!member) return <p className="ph-club-note">{fill(copy.notFound, { name })}</p>;
-  const streak = member.streak && member.streak.count > 0 ? member.streak : null;
+function Standing({ member, name, top, copy }: { member: ClubMember | null; name: string; top: ClubRow[]; copy: ClubCopy }) {
+  const leaders = top.slice(0, 3).map(row => `${row.name} ${row.beaten}`).join(" · ");
   return <>
-    <div className="ph-club-stats">
-      <div className="ph-club-stat"><strong>{member.beaten ?? "—"}</strong><span>{copy.beaten}</span></div>
-      <div className="ph-club-stat"><strong>{streak ? streak.count : "—"}</strong><span>{copy.streak}{streak?.event ? ` · ${streak.event}` : ""}</span></div>
-      <div className="ph-club-stat"><strong>{member.rank ? `#${member.rank}` : "—"}</strong>
-        <span>{member.rank && member.of ? fill(copy.rankOf, { rank: member.rank, of: member.of }) : copy.rank}</span></div>
-    </div>
-    {member.crowns.length > 0 && <div className="ph-club-crowns" aria-label={copy.crowns}>
-      {member.crowns.slice(0, 6).map((crown, index) => <span className="ph-club-crown" key={index}>{crown.crown}{crown.tier ? ` (${crown.tier})` : ""} · {crown.period}</span>)}
-    </div>}
+    {!name ? <p className="ph-club-note">{copy.setName}</p>
+      : !member ? <p className="ph-club-note">{fill(copy.notFound, { name })}</p>
+        : <>
+          <div className="ph-club-big">{[member.rank ? `#${member.rank}` : "", member.beaten !== null ? fill(copy.beatenCount, { n: member.beaten }) : ""].filter(Boolean).join(" · ") || "—"}</div>
+          {member.rank && member.of ? <p className="ph-club-note">{fill(copy.rankOf, { rank: member.rank, of: member.of })}</p> : null}
+        </>}
+    {leaders && <div className="ph-club-line">{copy.topLine}: {leaders}</div>}
   </>;
 }
 
-function TopFive({ rows, me }: { rows: ClubRow[]; me: string }) {
-  return <ol className="ph-club-list">
-    {rows.slice(0, 5).map(row => <li key={row.slug} className={row.slug === me ? "me" : undefined}>
-      <span><span className="muted">{row.rank}.</span> {row.name}</span><span>{row.beaten}</span>
-    </li>)}
-  </ol>;
+function ComingUp({ items, locale }: { items: ClubScheduleItem[]; locale: string }) {
+  return <div className="ph-club-dates">{items.slice(0, 3).map((item, index) => <React.Fragment key={index}>
+    <b>{formatClubDate(locale, item.at)}</b><span>{item.title || item.text}</span>
+  </React.Fragment>)}</div>;
 }
 
-function Nominations({ groups, copy, locale }: { groups: ClubNomination[]; copy: ClubCopy; locale: string }) {
-  return <>{groups.slice(0, 3).map((group, index) => <div key={index} style={{ marginBottom: 14 }}>
-    <div className="ph-club-meta" style={{ color: CORE.white, fontWeight: 700 }}>{group.label}{group.count ? ` · ${group.count}` : ""}</div>
-    {group.opens_at ? <div className="ph-club-lib">{fill(copy.voteOpens, { date: formatClubDate(locale, group.opens_at) })}</div> : null}
-    {group.items.length > 0 && <ul className="ph-club-list" style={{ marginTop: 6 }}>
-      {group.items.slice(0, 5).map((item, row) => <li key={row}><span>{item.title}</span>
-        <span className="muted">{item.platform}{item.romhack ? " romhack" : ""}</span></li>)}
-    </ul>}
-  </div>)}</>;
+function Nominations({ groups }: { groups: ClubNomination[] }) {
+  return <div className="ph-club-noms">{groups.slice(0, 3).map((group, index) => <div key={index}>
+    <span>{[group.period, group.label].filter(Boolean).join(" ") || group.label}</span><b>{group.count ?? group.items.length}</b>
+  </div>)}</div>;
 }
 
-function LogCompletion({ picks, copy, now }: { picks: ClubPick[]; copy: ClubCopy; now: number }) {
+// Log completion (X) on the focused pick: Assemble opens the game's thread on the club's Discord with /completed ready;
+// the user sends it. Without Assemble, or for a pick that is over, the button says how instead.
+function useLog(copy: ClubCopy, now: number) {
   const [, setReady] = React.useState(0);
-  const [busy, setBusy] = React.useState<string | null>(null);
+  const [busy, setBusy] = React.useState(false);
   const [status, setStatus] = React.useState<{ error: boolean; text: string } | null>(null);
   // Assemble fires its ready event when it (re)loads; the bridge is read again on every render.
   React.useEffect(() => subscribeAssemble(() => setReady(tick => tick + 1)), []);
   const bridge = assembleBridge();
-  const open = picks.filter(pick => assembleEventFor(pick) && timeLeft(pick.ends_at, now).state !== "ended");
-  if (!bridge || open.length === 0) return <Focusable className="ph-club-panel ph-club-focus" focusable={true} role="group" aria-label={copy.logTitle}>
-    <h3>{copy.logTitle}</h3>
-    <p className="ph-club-note">{copy.logDiscord}</p>
-    <code className="ph-club-command">{CLUB_COMPLETION_COMMAND}</code>
-    <p className="ph-club-note">{copy.logOptions}</p>
-    <p className="ph-club-note">{copy.logForum}</p>
-    <p className="ph-club-note">{copy.logDeadline}</p>
-  </Focusable>;
-  const log = async (pick: ClubPick) => {
+  const can = (pick: ClubPick | undefined) => !!pick && !!bridge && !!assembleEventFor(pick) && timeLeft(pick.ends_at, now).state !== "ended";
+  const log = async (pick: ClubPick | undefined) => {
+    if (!pick || busy) return;
     const event = assembleEventFor(pick);
-    if (!event || busy) return;
-    const key = `${pick.kind}-${pick.slug}`;
-    setBusy(key);
+    if (!bridge || !event) { setStatus({ error: false, text: `${copy.logUnavailable}: ${CLUB_COMPLETION_COMMAND}` }); return; }
+    setBusy(true);
     setStatus({ error: false, text: copy.logOpening });
     // Assemble only opens the thread with /completed ready; the user chooses the options and sends it.
     const result = await openClubCompletion({ event, title: pick.title });
-    setBusy(null);
+    setBusy(false);
     setStatus(result.success ? { error: false, text: copy.logOpened } : { error: true, text: result.message || copy.logFailed });
   };
-  return <Focusable className="ph-club-panel" flow-children="column" role="group" aria-label={copy.logTitle}>
-    <h3>{copy.logTitle}</h3>
-    <p className="ph-club-note">{copy.logAssemble}</p>
-    <div className="ph-club-log">
-      {open.map(pick => <DialogButton key={`${pick.kind}-${pick.slug}`} disabled={Boolean(busy)}
-        style={{ width: "100%", minWidth: 0, padding: "8px 14px", textAlign: "left" }}
-        onClick={() => void log(pick)}>{`${copy.logButton} · ${pick.label}: ${pick.title}`}</DialogButton>)}
-    </div>
-    {status && <p className={`ph-club-log-status${status.error ? " error" : ""}`} role="status">{status.text}</p>}
-    <p className="ph-club-note">{copy.logDeadline}</p>
-  </Focusable>;
+  return { can, log, status, busy };
 }
 
 export function ClubTab({ locale, getLocale }: { locale?: string; getLocale?: () => string }) {
@@ -193,6 +187,7 @@ export function ClubTab({ locale, getLocale }: { locale?: string; getLocale?: ()
   const state = useClub();
   const [now, setNow] = React.useState(() => Date.now());
   const [library, setLibrary] = React.useState<LibraryEntry[]>(() => readLibrary());
+  const [focused, setFocused] = React.useState(0);
   React.useEffect(() => {
     // Opening the tab: the backend refreshes when its copy is older than an hour (its politeness rules decide), and
     // the background schedule (clubStore.ts) keeps it fresh while the tab is closed.
@@ -205,41 +200,46 @@ export function ClubTab({ locale, getLocale }: { locale?: string; getLocale?: ()
     return () => { window.clearInterval(poll); window.clearInterval(clock); window.clearInterval(libraryTimer); };
   }, []);
   const feed = state.feed, snapshot = feed?.snapshot ?? null;
-  const matches = React.useMemo(() => new Map((snapshot?.picks ?? []).map(pick => [pick, matchPick({ title: pick.title, platform: pick.platform }, library)])),
-    [snapshot, library]);
-  const canRefresh = !state.loading && now / 1000 >= (feed?.refresh_available_at ?? 0);
+  const picks = (snapshot?.picks ?? []).slice(0, 4);
+  const matches = React.useMemo(() => new Map(picks.map(pick => [pick, matchPick({ title: pick.title, platform: pick.platform }, library)])), [snapshot, library]);
+  const { can, log, status, busy } = useLog(copy, now);
   const name = feed?.display_name ?? state.settings?.display_name ?? "";
+  const pick = picks[Math.min(focused, Math.max(0, picks.length - 1))];
+  const match = pick ? matches.get(pick) ?? null : null;
+  const open = (target: Match | null) => { if (target) openGamePage(target.appId, (path: string) => Navigation?.Navigate?.(path)); };
   return <Focusable className="ph-club" flow-children="column">
     <style>{css}</style>
     <CoreStars />
-    <div className="ph-club-head">
-      <h2>{copy.title}</h2>
-      {feed?.stale && <span className="ph-club-updated stale" role="status">{copy.saved}</span>}
-      <DialogButton style={{ width: "auto", minWidth: 0, padding: "6px 16px", marginLeft: "auto" }} disabled={!canRefresh}
-        onClick={() => void loadClub(true)}>{copy.refresh}</DialogButton>
-    </div>
-    {!snapshot ? <div className="ph-club-empty" role="status">{state.loading || !feed ? copy.loading : copy.noData}</div> : <>
-      <h3>{copy.playing}</h3>
+    {!snapshot ? <Focusable className="ph-club-empty" focusable={true} role="status">{state.loading && !feed ? copy.loading : copy.unreachable}</Focusable> : <>
       <Focusable className="ph-club-picks" flow-children="row">
-        {snapshot.picks.map(pick => <PickTile key={`${pick.kind}-${pick.slug}`} pick={pick} match={matches.get(pick) ?? null} copy={copy} locale={resolved} now={now} />)}
+        {picks.map((item, index) => <PickCard key={`${item.kind}-${item.slug}`} pick={item} match={matches.get(item) ?? null} copy={copy} locale={resolved} now={now}
+          first={index === 0} onFocus={() => setFocused(index)} onLog={() => void log(item)} onOpen={() => open(matches.get(item) ?? null)} />)}
       </Focusable>
-      <div className="ph-club-row">
-        <Focusable className="ph-club-panel ph-club-focus" focusable={true} role="group" aria-label={copy.standing}>
-          <h3>{copy.standing}{snapshot.member?.name ? ` · ${snapshot.member.name}` : ""}</h3>
-          <Standing member={snapshot.member} name={name} copy={copy} />
+      <Focusable className="ph-club-actions" flow-children="row">
+        <Focusable className="ph-club-action" focusable={true} role="button" aria-disabled={!can(pick) || busy ? "true" : "false"}
+          onActivate={() => void log(pick)} onClick={() => void log(pick)}>
+          <span className="ph-club-key" aria-hidden="true">X</span>{copy.logButton}
         </Focusable>
-        <Focusable className="ph-club-panel ph-club-focus" focusable={true} role="group" aria-label={copy.top}>
-          <h3>{copy.top}</h3>
-          <TopFive rows={snapshot.top} me={snapshot.member?.slug ?? ""} />
+        <Focusable className="ph-club-action" focusable={true} role="button" aria-disabled={match ? "false" : "true"}
+          onActivate={() => open(match)} onClick={() => open(match)}>
+          <span className="ph-club-key" aria-hidden="true">Y</span>{copy.openInLibrary}
         </Focusable>
-      </div>
-      <div className="ph-club-row">
-        {snapshot.nominations.length > 0 && <Focusable className="ph-club-panel ph-club-focus" focusable={true} role="group" aria-label={copy.nominations}>
+        {status && <span className={`ph-club-status${status.error ? " error" : ""}`} role="status">{status.text}</span>}
+      </Focusable>
+      <Focusable className="ph-club-boxes" flow-children="row">
+        <Focusable className="ph-club-box ph-club-lift" focusable={true} role="group" aria-label={copy.standing} onActivate={() => {}}>
+          <h3>{copy.standing}</h3>
+          <Standing member={snapshot.member} name={name} top={snapshot.top} copy={copy} />
+        </Focusable>
+        <Focusable className="ph-club-box ph-club-lift" focusable={true} role="group" aria-label={copy.comingUp} onActivate={() => {}}>
+          <h3>{copy.comingUp}</h3>
+          <ComingUp items={snapshot.schedule} locale={resolved} />
+        </Focusable>
+        <Focusable className="ph-club-box ph-club-lift" focusable={true} role="group" aria-label={copy.nominations} onActivate={() => {}}>
           <h3>{copy.nominations}</h3>
-          <Nominations groups={snapshot.nominations} copy={copy} locale={resolved} />
-        </Focusable>}
-        <LogCompletion picks={snapshot.picks} copy={copy} now={now} />
-      </div>
+          <Nominations groups={snapshot.nominations} />
+        </Focusable>
+      </Focusable>
     </>}
   </Focusable>;
 }

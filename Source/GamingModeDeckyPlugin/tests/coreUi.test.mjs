@@ -20,7 +20,7 @@ function load(file, stubs = {}, globals = {}) {
     if (name in stubs) return stubs[name];
     const local = { "./steamModules": "steamModules.ts", "./coreUiStyles": "coreUiStyles.ts", "./coreStarfield": "coreStarfield.ts",
       "./coreUiSetting": "coreUiSetting.ts", "./coreMenuEntries": "coreMenuEntries.ts", "./coreUiDom": "coreUiDom.ts",
-      "./coreFullHeight": "coreFullHeight.ts", "./coreArtwork": "coreArtwork.ts" }[name];
+      "./coreFullHeight": "coreFullHeight.ts", "./coreArtwork": "coreArtwork.ts", "./coreQamRail": "coreQamRail.ts", "./coreHomePages": "coreHomePages.ts" }[name];
     if (local) return load(local);
     return {};
   };
@@ -850,4 +850,48 @@ test("3.3.10 top bar: hidden past the first screen, back near the top, never for
   assert.match(css, /\[data-core-ui-header="hidden"\]\{opacity:0 !important;translate:0 -100% !important;pointer-events:none/);
   f.runtime.dispose();
   assert.equal(listeners.length, 0, "the listener goes with Core UI off");
+});
+
+// 3.3.10 (the approved board and its additions): Home's pages are two screens; down into screen two scrolls it to the
+// top, and B (or up from the tab row) goes straight back to the tile focus left, the page scrolling back up.
+test("3.3.10 Home: screen two scrolls to the top; B or up from the tab row returns to screen one's tile", () => {
+  const f = runtimeFixture();
+  const { doc } = f;
+  const listeners = [];
+  doc.addEventListener = (type, handler) => listeners.push({ type, handler });
+  doc.removeEventListener = (type, handler) => { const at = listeners.findIndex(item => item.handler === handler); if (at >= 0) listeners.splice(at, 1); };
+  const computed = doc.defaultView.getComputedStyle;
+  const scroller = doc.body.appendChild(new Node(doc, "div", ["_Home"]));
+  scroller.rect = { left: 0, top: 0, width: 1348, height: 758 }; scroller._scrollHeight = 3000;
+  doc.defaultView.getComputedStyle = node => node === scroller ? { overflowY: "auto", position: "relative" } : computed(node);
+  const one = scroller.appendChild(new Node(doc, "div", [])); one.setAttribute("data-core-home-one", "home");
+  const tileA = one.appendChild(new Node(doc, "div", ["core-tile"])), tileB = one.appendChild(new Node(doc, "div", ["core-tile"]));
+  for (const tile of [tileA, tileB]) tile.focus = function () { doc.activeElement = this; this.focused = (this.focused ?? 0) + 1; };
+  const page = scroller.appendChild(new Node(doc, "div", ["_TpPage"])); page.rect = { left: 0, top: 758, width: 1348, height: 900 };
+  const row = page.appendChild(new Node(doc, "div", ["_TpRow"]));
+  const tab = row.appendChild(new Node(doc, "div", ["_TpTab"]));
+  const content = page.appendChild(new Node(doc, "div", [])); content.setAttribute("data-core-home-tab", "CoreFavorites");
+  const card = content.appendChild(new Node(doc, "div", ["core-favorite"]));
+  f.runtime.sync();
+  const focusins = listeners.filter(item => item.type === "focusin").map(item => item.handler);
+  const focusin = target => { for (const handler of focusins) handler({ target }); };
+  const buttons = listeners.find(item => item.type === "vgp_onbuttondown" && String(item.handler).includes("backToScreenOne"))?.handler
+    ?? listeners.filter(item => item.type === "vgp_onbuttondown").map(item => item.handler)[0];
+  assert.ok(buttons, "listens for the controller");
+  focusin(tileB);
+  focusin(tab);
+  assert.equal(scroller.scrolledTo, 758, "down: screen two's top at the top of the page");
+  const press = (target, button) => { doc.activeElement = target; const event = { target, detail: { button }, prevented: 0, preventDefault() { this.prevented++; }, stopPropagation() {} };
+    for (const item of listeners.filter(l => l.type === "vgp_onbuttondown")) item.handler(event); return event; };
+  assert.equal(press(card, 9).prevented, 0, "up inside the content stays Steam's");
+  assert.equal(press(card, 2).prevented, 1, "B on screen two");
+  assert.equal(doc.activeElement, tileB, "back to the tile focus left");
+  focusin(tileB);
+  assert.equal(scroller.scrolledTo, 0, "the page scrolls back to screen one");
+  focusin(tab);
+  assert.equal(press(tab, 9).prevented, 1, "up from the tab row");
+  assert.equal(doc.activeElement, tileB);
+  assert.equal(press(tileA, 2).prevented, 0, "B on screen one stays Steam's");
+  f.runtime.dispose();
+  assert.equal(listeners.length, 0, "every listener goes with Core UI off");
 });

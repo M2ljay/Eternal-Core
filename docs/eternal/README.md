@@ -124,8 +124,10 @@ user's own icon pack; Settings, Downloads, the in-game menu, the controller conf
 [CORE-UI.md](CORE-UI.md#339-the-game-view-the-consoles-tab-and-steams-other-pages).
 3.3.10 (TV fixes: the Steam menu styled (its class map was the in-game menu's; no first match wins silently any more);
 Quick Access rail icons centred at 24px; Settings in the Core look; no focus ring on capsules; Home's rows in their own
-space and Favorites tiles never empty; the top bar slides away past the first screen):
-[CORE-UI.md](CORE-UI.md#3310-tv-fixes-after-339).
+space and Favorites tiles never empty; the top bar slides away past the first screen) and the approved Home (Home and
+Consoles pages with L1/R1, Favorites, Achievements with RetroAchievements through The Collector, the Club as tall cards;
+Quick Access's rail on the right): [CORE-UI.md](CORE-UI.md#3310-tv-fixes-after-339),
+[Home in 3.3.10](CORE-UI.md#home-in-3310-the-approved-design).
 Design and fail-safe notes: [ARCHITECTURE-NOTES.md §7](ARCHITECTURE-NOTES.md#7-mark-iii).
 
 | Feature | What it does | If it fails |

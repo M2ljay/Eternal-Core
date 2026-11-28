@@ -72,6 +72,7 @@ import { createIconStore, createLibraryDecorator } from "./coreLibraryIcons";
 import { corePluginGlyph } from "./corePluginLogos";
 import { setQamPluginIconFallback } from "./qamLayoutRuntime";
 import { setCoreHomeIcons } from "./coreHome";
+import { setAchievementProgressSource } from "./CoreAchievementsTab";
 import { CoreRailIcon, CoreUiSection, DigitalStoresEntry } from "./CoreUiSection";
 import { createJarvisRuntime, type ListenMode } from "./jarvisRuntime";
 import { installJarvisCombos, type ComboKind } from "./jarvisCombos";
@@ -1238,6 +1239,8 @@ export default definePlugin(() => {
   } });
     setQamPluginIconFallback(railIcon);
     setCoreHomeIcons(coreIcons.get);
+    // 3.3.10: the Achievements tab on Home reads Steam's achievement progress cache (closest to 100%).
+    setAchievementProgressSource(() => steamStore("appAchievementProgressCache", value => !!value.m_achievementProgress));
     const stopRailIcons = coreUiSetting.subscribe(() => { setQamPluginIconFallback(railIcon); void coreIcons.refresh(true); });
     return () => { stopRailIcons(); stopLegacy(); window.clearTimeout(legacyTimer); setCoreUiSnapshotControl(undefined); setQamPluginIconFallback(undefined); stopLook(); };
   });

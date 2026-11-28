@@ -538,11 +538,16 @@ function rules(mark: string | undefined): Rule[] {
     // crimson bar is Core's own).
     // 3.3.8: the rail's inner list and bottom group (TabList, BottomTabs; new on the November 2026 client) go clear too.
     { id: "qam-tabs", needs: [["quickaccess", "Tab"]], needsAny: [["quickaccess", "Tabs"], ["quickaccess", "TabsWithFooter"], ["quickaccess", "TabList"]], css: s =>
-      (s("quickaccess", "Tabs") ? `${ROOT} ${s("quickaccess", "Tabs")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": `inset -1px 0 0 ${C.gunmetal}` })}}` : "") +
+      (s("quickaccess", "Tabs") ? `${ROOT} ${s("quickaccess", "Tabs")}{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": `inset 1px 0 0 ${C.gunmetal}` })}}` : "") +
       (["TabList", "BottomTabs"].filter(key => s("quickaccess", key)).map(key => `${ROOT} ${s("quickaccess", key)}`).join(",") || `${ROOT} [data-core-ui-none]`) +
       `{${imp({ "background-color": "transparent", "background-image": "none", "box-shadow": "none" })}}` +
       `${ROOT} ${s("quickaccess", "Tab")}{${imp({ "background-color": "transparent", "background-image": "none" })}}` +
       `${ROOT} ${s("quickaccess", "Tab")}:is(.gpfocus,:focus-visible){${imp({ "background-color": C.gunmetal, "background-image": "none", "box-shadow": "none", filter: "none", "border-radius": SQUARE })}}` },
+    // 3.3.10 (the approved board, QAMDecky): the rail on the RIGHT of the panel, the content to its left. Steam's Menu
+    // holds the rail and the content column side by side; its row is reversed. The D-pad follows the picture
+    // (coreQamRail.ts: left from the rail goes into the content, right from the content's edge into the rail).
+    { id: "qam-rail-right", needs: [["quickaccess", "Menu"]], needsAny: [["quickaccess", "Tabs"], ["quickaccess", "TabsWithFooter"]], css: s =>
+      `${ROOT} ${s("quickaccess", "Menu")}{${imp({ display: "flex", "flex-direction": "row-reverse" })}}` },
     // The open tab: gunmetal, never Steam's grey-blue gradient (TV photo, 3.3.3). Every way Steam may mark it is in the
     // selector table (qamTabSelected).
     // 3.3.10: the fill is the tab's own box (48 x 64, square); any fill Steam draws in a pseudo-element goes.
@@ -642,7 +647,8 @@ function rules(mark: string | undefined): Rule[] {
         (r("RecentGamesContainer") ? `${r("RecentGamesContainer")}{${imp({ "margin-top": "-1vh", "padding-top": "0" })}}` : "") +
         (r("RecentGamesInnerContainer") ? `${r("RecentGamesInnerContainer")}{${imp({ position: "absolute", left: "0", right: "0", top: `${a.carouselTop}vh`, bottom: "auto",
           height: "auto", "max-height": `${100 - a.carouselTop}vh`, "z-index": "1" })}}` : "") +
-        (shown.length ? `${shown.join(",")}{${imp({ position: "absolute", top: `-${a.labelEm}em`, visibility: "visible", "font-size": `${a.labelPx}px`, color: C.white })}}` : "") +
+        // 3.3.10 (the approved board): no game name and no status line on screen one, Steam's own included.
+        (shown.length || label ? `${[...shown, ...(label ? [label] : [])].join(",")}{${imp({ display: "none" })}}` : "") +
         (k("Play") && s("carousel", "ActionIcon") ? `${k("Play")} ${s("carousel", "ActionIcon")}{${imp({ display: "none" })}}` : "");
     } },
     { id: "home-glow", needs: [["carousel", "CarouselCapsuleBackgroundGlow"]], css: s =>
@@ -697,12 +703,20 @@ function rules(mark: string | undefined): Rule[] {
       return libraryTabCss({ scopes, tab: t("libraryTab"), selected: t("libraryTabSelected"), title: t("libraryTabTitle"), row: t("libraryTabRow"), rowFill: "transparent" }) +
         (wrapper ? `${scopes.map(scope => `${scope} ${wrapper}`).join(",")}{${imp({ position: "relative", top: "auto", bottom: "auto", "z-index": "1" })}}` : "");
     } },
-    // 3.3.10: every row after screen one (the Collector's console shelf, Home's tabbed page) is its own layer above the
-    // hero's art, in the flow: nothing is drawn over or under another row.
+    // 3.3.10: Home's tabbed page is its own layer above the hero's art, in the flow: nothing is drawn over or under it.
+    // (The Collector's family shelf, which also needed this, left Home in Collector win.36.)
     { id: "home-layers", needs: [["gamepadui", "BasicHome"]], targets: ["homeTabPage"], css: (s, t) => {
-      const home = `${ROOT} ${s("gamepadui", "BasicHome")}`;
-      const rows = [`${home} [data-collector-shelf]`, ...t("homeTabPage").filter(sel => !sel.startsWith(s("gamepadui", "BasicHome"))).map(sel => `${ROOT} ${sel}`)];
-      return `${rows.join(",")}{${imp({ position: "relative", "z-index": "1", "background-color": "transparent", "background-image": "none" })}}`;
+      const rows = t("homeTabPage").filter(sel => !sel.startsWith(s("gamepadui", "BasicHome"))).map(sel => `${ROOT} ${sel}`);
+      return rows.length ? `${rows.join(",")}{${imp({ position: "relative", "z-index": "1", "background-color": "transparent", "background-image": "none" })}}` : "";
+    } },
+    // 3.3.10 (the approved board): while Core's Home pages are on screen (screen one carries data-core-home-one), the top
+    // bar's clock goes back to the right (the left belongs to L1 HOME CONSOLES R1) and the search field leaves the bar.
+    // (Families appear nowhere on Home: The Collector's family shelf left Home in Collector win.36.)
+    { id: "home-pages", needs: [["header", "Header"]], css: s => {
+      const home = `${ROOT} body:has([data-core-home-one])`;
+      const header = `${home} ${s("header", "Header")}`;
+      return `${header} [data-playhub-clock-left]{${imp({ order: "0" })}}` +
+        `${header} div:has(> input){${imp({ display: "none" })}}`;
     } },
     // ---- 3.3.9: Steam's game page as the clean game view (CORE-UI.md, "The game view"), matching The Collector's ROM
     // page. Screen one: the art fills the view above the footer (cover, 60% brightness, Steam's top gradient cleared),
@@ -1062,7 +1076,9 @@ export type CoreUiSheet = {
   // Selectors the runtime needs (plain, no specificity repeat).
   dom: { header?: string; footer?: string; menu?: string; menuItem?: string; qamTab?: string; tab?: string; tabTitle?: string; tabSelected?: string; library?: string; tabbedPage?: string;
     // 3.3.9: the game view's two screens (coreUi.ts, gameViewScroll).
-    playSection?: string; appContainer?: string; tabRow?: string };
+    playSection?: string; appContainer?: string; tabRow?: string;
+    // 3.3.10: Quick Access's row (rail on the right, coreQamRail.ts).
+    qamMenu?: string; qamRail?: string; qamTabSelected?: string };
 };
 
 // Jarvis's presence orb in the top bar, next to Steam's clock (jarvisPresence.ts decides its state). Dim steel ring
@@ -1142,6 +1158,8 @@ export function buildCoreUiCss(maps: CoreUiMaps, options: { mark?: string; wordm
     tab: plainSelector(maps.tabbedpage, "Tab"), tabTitle: plainSelector(maps.tabbedpage, "TabTitle"), tabSelected: plainSelector(maps.tabbedpage, "Selected"),
     library: plainSelector(maps.library, "GamepadLibrary"), tabbedPage: plainSelector(maps.tabbedpage, "GamepadTabbedPage"),
     playSection: plainSelector(maps.appdetails, "PlaySection"), appContainer: plainSelector(maps.appdetails, "AppDetailsContainer"), tabRow: plainSelector(maps.tabbedpage, "TabRow"),
+    qamMenu: plainSelector(maps.quickaccess, "Menu"), qamRail: plainSelector(maps.quickaccess, "Tabs") ?? plainSelector(maps.quickaccess, "TabsWithFooter"),
+    qamTabSelected: plainSelector(maps.quickaccess, "Tab") && plainSelector(maps.quickaccess, "Selected") ? `${plainSelector(maps.quickaccess, "Tab")}${plainSelector(maps.quickaccess, "Selected")}` : undefined,
   };
   const css = parts.join("\n");
   return { css, applied, skipped, hosts, clock, dom, maps, ruleTargets: ruleTargetsFromCss(css) };

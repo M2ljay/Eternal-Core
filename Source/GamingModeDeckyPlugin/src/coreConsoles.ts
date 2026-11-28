@@ -76,6 +76,49 @@ export function consoleTiles(collections: unknown, slugs: ReadonlySet<string> = 
     .sort((a, b) => CONSOLE_FAMILY_ORDER.indexOf(a.family) - CONSOLE_FAMILY_ORDER.indexOf(b.family) || a.name.localeCompare(b.name));
 }
 
+// ---- 3.3.10: the Consoles page (CORE-UI.md, "Home in 3.3.10") ----
+//
+// One card per console, most recently played first (a console never played comes after, by name). The Collector keeps
+// one Steam collection per console (PS1 is "PlayStation 1" since its 0.33 builds) and one per family ("PlayStation",
+// "Nintendo", "Sega", "Xbox", "Retro"): families never appear on Home, so a collection named exactly like a family is
+// not a console (Xbox is both a family and a console: the console's collection is kept, the bigger one when there are
+// two). Each card keeps its games (most recently played first) for screen two.
+export const FAMILY_COLLECTION_NAMES = new Set(["playstation", "nintendo", "sega", "retro"]);
+export type ConsoleCard = ConsoleTile & { lastPlayed: number; games: Array<{ appid: number; name: string; lastPlayed: number }> };
+
+function appsIn(collection: any): any[] {
+  for (const key of ["allApps", "visibleApps", "apps", "m_rgApps"]) {
+    try {
+      const value = collection?.[key];
+      if (Array.isArray(value)) return value;
+      if (value && typeof value.values === "function") return Array.from(value.values());
+    } catch { /* Next shape. */ }
+  }
+  return [];
+}
+
+function gameOf(app: any): { appid: number; name: string; lastPlayed: number } | undefined {
+  const appid = Number(app?.appid ?? app?.unAppID ?? app?.m_unAppID);
+  if (!Number.isFinite(appid) || appid <= 0) return undefined;
+  return { appid, name: String(app?.display_name ?? app?.strDisplayName ?? app?.name ?? "").trim(), lastPlayed: Number(app?.rt_last_time_played ?? app?.rtLastTimePlayed ?? 0) || 0 };
+}
+
+export function consoleCards(collections: unknown, slugs: ReadonlySet<string> = new Set(), limit = 24): ConsoleCard[] {
+  const list = (Array.isArray(collections) ? collections.slice(0, 400) : []).filter(collection => {
+    let raw = "";
+    try { raw = String(collection?.displayName ?? collection?.strName ?? collection?.name ?? ""); } catch { return false; }
+    return !FAMILY_COLLECTION_NAMES.has(plainCollectionName(raw).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim());
+  });
+  const byId = new Map<string, any>();
+  for (const collection of list) { try { byId.set(String(collection?.id ?? collection?.strId ?? ""), collection); } catch { /* Skipped. */ } }
+  return consoleTiles(list, slugs).map(tile => {
+    const seen = new Set<number>();
+    const games = appsIn(byId.get(tile.id)).slice(0, 5000).map(gameOf).filter((game): game is NonNullable<typeof game> => !!game && !seen.has(game.appid) && !!seen.add(game.appid))
+      .sort((a, b) => b.lastPlayed - a.lastPlayed || a.name.localeCompare(b.name));
+    return { ...tile, games: games.slice(0, limit), lastPlayed: games[0]?.lastPlayed ?? 0 };
+  }).sort((a, b) => (b.lastPlayed > 0 ? 1 : 0) - (a.lastPlayed > 0 ? 1 : 0) || b.lastPlayed - a.lastPlayed || a.name.localeCompare(b.name));
+}
+
 // Steam's route for a collection (the Library's own collection page).
 export const collectionRoute = (id: string) => `/library/collection/${encodeURIComponent(id)}`;
 

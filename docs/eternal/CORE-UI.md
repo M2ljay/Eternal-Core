@@ -385,8 +385,10 @@ These are built from class maps only; the hashed values were not seen on screen.
 
 ## 3.3.10: TV fixes after 3.3.9
 
-Seven items came back from the 3.3.9 TV pass with four photos and a snapshot taken on Home. Items 1 to 6 are in 3.3.10;
-the Consoles redesign (item 7) and a larger, lower Home row wait for a design the user approves first.
+Seven items came back from the 3.3.9 TV pass with four photos and a snapshot taken on Home. Items 1 to 6 are below.
+Item 7 (the Consoles redesign) and a larger, lower Home row became a new Home, built from the design the user approved
+(boards Main, HomeConsolesPage, HomeAchievements, HomeClub and QAMDecky of the "Core: current vision" canvas): "Home in
+3.3.10" and "Quick Access: the rail on the right", after these six.
 
 ### 1. The Steam menu matched the wrong class map
 
@@ -459,8 +461,11 @@ tiles scrolled under it showed through.
 - `home-tabs`: Home's tab row wrapper (`{tabbedpage.TabHeaderRowWrapper}` under the Home tab page) is in the flow
   (`position: relative`), so the tab content starts below it and scrolls with it. No fill is added; the Library's tab
   row is untouched.
-- `home-layers` (new): The Collector's console shelf (`[data-collector-shelf]`) and Home's tabbed page are each
-  `position: relative; z-index: 1` over the hero, in the flow after screen one.
+- `home-layers` (new): Home's tabbed page is `position: relative; z-index: 1` over the hero, in the flow after screen
+  one. The Collector's family shelf, the other row that stacked, left Home altogether in Collector win.36 (it no longer
+  patches `/library/home`), so nothing of Core's targets it.
+- Screen one itself is Core's own since the approved Home (below); the `home-hero` rules stay for Steam's row, the
+  fallback.
 - Favorites tiles never show an empty box (`src/coreFavoriteArt.ts`): the tile tries Steam's portrait lookups
   (`GetCustomVerticalCapsuleURLs`, ..., now also `GetVerticalCapsuleURLForApp`, which knows the new hashed library-cache
   folders), then the local cache; when no portrait loads, it draws the game's hero (at 70% brightness) with its logo on
@@ -476,6 +481,121 @@ less two bar heights (at least 80px: 678px on the TV's 758px viewport), with 48p
 line does not flicker it (`headerHidden`, pure). The runtime listens to `scroll` once per document (capture) and counts
 only page scrollers (vertical, at least 60% of the window tall), so a shelf scrolling sideways never moves the bar; every
 sync re-checks, and a route change that removes the scroller brings the bar back. No partial background is ever drawn.
+
+## Home in 3.3.10 (the approved design)
+
+Board coordinates are 1920 x 1080; the TV is 1348 x 758 CSS px, so every board measure is scaled by about 0.702 (Core
+writes them in viewport units, `HOME_ROW` in `src/coreHomePages.ts`).
+
+### Two pages, two screens each
+
+Home has two pages, **Home** and **Consoles**, named at the top left as `L1 HOME CONSOLES R1` (the open one white with a
+3px crimson underline) and switched with L1 and R1 while focus is on screen one (`pageForButton`; no wrap). Each page is
+two screens. **Screen one** is one screen tall: the focused item's art fills it with a dark fade toward the bottom
+(`rgba(0,0,0,.35)` at the top, clear from 22% to 45%, `.85` at 82%, black at the bottom), and a row sits on the footer.
+**Down** jumps the page fully to **screen two**, like the game view; **B** anywhere on screen two, or **up** from its top
+row (Home's tab row; the Consoles page's games), jumps straight back to the tile focus left, with the same scroll; on
+screen one B stays Steam's (`watchHomeScreens` in `coreUi.ts`, `backToScreenOne`). The top bar stays transparent, its
+clock back on the right while Home is shown (the "clock on the left" option yields the left to the page names), and the
+search field leaves the bar on Home (`home-pages`); past screen one the bar slides away (fix 6).
+
+L1 and R1: nothing of Core's binds them on Home (Jarvis's combo is L5+R5; the bumpers of Quick Access's Core tab are
+its own). Steam's own Home tab row does use them while focus is inside it (its "L1"/"R1" hints): that is screen two,
+where they keep switching Favorites, Achievements and Club. Core's handler sits only on screen one (`onButtonDown` of
+its `Focusable`), so the two never meet.
+
+How it is drawn: Core's one `/library/home` patch (`HomeNews.tsx`) recognises two of Steam's elements by their props in
+the same rendered output: the tabbed page (`strActiveTab`, `setActiveTab`) becomes Core's tabs (`CoreHomeTabs`), and the
+recent games section (`autoFocus`, `showBackground`, the contract storeInstallRecents.tsx also uses) draws Core's screen
+one (`CoreHomeScreen`, `src/coreHomeScreen.tsx`) with Steam's own list of recent games, read from its carousel's
+`games` (`recentGamesIn`). One patch, not two: a second patch would wrap the first one's wrapper on every pass and break
+the route's stable identity (`tests/homeNewsLifecycle.test.mjs`). Without Steam's list, with Core UI off or on any
+error, Steam's own row is drawn (inside an error boundary).
+
+### Screen one's row
+
+| | Board (1920 x 1080) | TV (1348 x 758) |
+| --- | --- | --- |
+| Home, focused tile (portrait 2:3) | 208 x 312 (28.9% tall) | 146 x 219 |
+| Home, other tiles (dimmed to 82%) | 181 x 272 (25.2%) | 127 x 191 |
+| Consoles, focused tile (landscape 16:9) | about 400 x 225 (20.8%) | 281 x 158 |
+| Consoles, other tiles (dimmed) | about 340 x 191 (17.7%) | 238 x 134 |
+| Gap / left inset | 22 / 64 | 16 / 45 |
+| Bottom of the row | 28 above the footer | 62 from the bottom (42 px footer + 20) |
+| Focus lift | 10 | 7 |
+
+No game or console name, count or status line anywhere (Steam's own title and playtime are hidden in its fallback row
+too); no outline: the focused tile is larger and lifts. The full-screen art follows focus only after it has rested on a
+tile for 150 ms (`HERO_DELAY_MS`) and crossfades over 250 ms (`HERO_FADE_MS`; none under reduced motion); the art of the
+two tiles either side is loaded ahead (`neighbours`, `HERO_PRELOAD`).
+
+- **Home:** Steam's recent games in Steam's order, each its portrait (`coreFavoriteArt.ts`: Steam's lookups, then the
+  local cache; without one, its hero with its logo). The background is the focused game's hero. A opens the game.
+- **Consoles:** one landscape card per console, most recently played first (a console never played after, by name;
+  `consoleCards` in `coreConsoles.ts`), from the per-console Steam collections The Collector keeps (`PlayStation 1` is
+  the PS1 since Collector 0.33; its family collections `PlayStation`, `Nintendo`, `Sega` and `Retro` are never consoles:
+  families appear nowhere on Home and stay Library tabs). Each card is the console's ColorGrade hero with its white logo
+  centred; A opens the console's collection. **Without ColorGrade art** (the pack has no Xbox 360 or PS4, for example)
+  the card is gunmetal `#1A1D21` with the console's logo, else its icon (the user's Library icon set, else Core's own
+  drawing), else its name: never an empty box; focused, the background is black with the Starfield. Heroes come one per
+  call (`get_colorgrade_hero(slug)`, `read_hero` in `quick_settings/colorgrade_pack.py`: a plain slug the pack has,
+  `hero.png` only, at most 8 MB), one at a time, the focused console's and its neighbours' first, kept as blob URLs
+  (`wantConsoleHeroes`, `coreConsolePack.ts`). The pack is read in place on the PC and never stored by Core.
+- **The club's picks on Consoles:** if the club's current Game of the Week or Game of the Month is in the library, it
+  leads the row at the console cards' size: the game's hero (else its box art) with a small square tag at the top in the
+  pick's colour (Game of the Week `#8F7CB0`, Game of the Month `#B07A84`); focused, its art fills the background; A opens
+  the game page. The console holding that game carries the same tag. At most those two; nothing when neither is owned;
+  from the Club's own data (refreshed hourly by `clubStore.ts`; no extra fetch; `consolePicks`).
+
+### Screen two
+
+- **Home:** Steam's tabbed page with Core's tabs **Favorites**, **Achievements**, **Club** (`HOME_TAB_ORDER` 10, 20, 30;
+  Consoles is no longer a tab, and a remembered Consoles tab opens Favorites).
+  - **Favorites:** a portrait grid, eight across (206 x 309 on the board, about 145 x 217 on the TV): Steam's Favorites
+    and The Collector's Favourites collection together, each game once (`collectorFavorites`: `[Favourites]`,
+    `RomM: [Favourites] (<host>)`, `Favourites`; never Steam's own or a user's `Favorites`).
+  - **Achievements** (`CoreAchievementsTab.tsx`, `coreAchievements.ts`): "Recent unlocks" on the left (icon, name,
+    game, when; a source tag, Steam raised grey or RetroAchievements amber `#C98B4A` with black text; a rare Steam
+    unlock's "6.1% of players" or an RA "Hardcore" in crimson text) and "Closest to 100%" on the right (crimson bars).
+    Steam's come from the client: `SteamClient.Apps.GetMyAchievementsForApp` for the eight most recently played Steam
+    games, and its achievement progress cache for the nearest to 100%. RetroAchievements' come only through The
+    Collector's read-only bridge `window.__eternalCollectorAchievements` (Collector win.36; version 1;
+    `getRecentUnlocks(limit)` and `getClosestToComplete(limit)`, each a promise of `{ ok: true, items }` or
+    `{ ok: false, reason }`; limits clamped to 1 to 50; an `appId` of null makes a row not actionable). Every failure
+    (`not_configured`, `auth_failed`, `rate_limited`, `server_unreachable`, `backend_error`, `bridge_error`,
+    `bad_request`), an absent bridge, an unknown version or shape means Steam's alone, quietly; a bridge that registers
+    later is read on its `eternal_collector_achievements_ready` event. The tab draws at once from the last model it
+    showed (`core.home.achievements.v1` in local storage) and refreshes in the background, every ten minutes while open:
+    it never waits on the network to draw. Rarity: each game's global percentages are cached with the time read
+    (`core.home.achievementRarity.v1`, at most 120 games), read again at most every 24 hours per game, and filled in as
+    they arrive. A opens the game's achievements.
+  - **Club** (`club/ClubTab.tsx`): the four picks as tall full-width cards (4 across, 560 px on the board, 51.9vh): the
+    box art fills each card and the details sit over a bottom fade (the tag in the pick colour, title, platform and
+    length, days left and beaten count, the "In your library" chip). Below: **Log completion (X)** and **Open in Library
+    (Y)**, both acting on the focused pick (the buttons, or X and Y on a pick). Then three equal boxes: Your standing
+    (rank and beaten count, the top three), Coming up, Nominations. No refresh button and no "saved data" line: it
+    refreshes itself hourly. Focus starts on the first pick; left and right move across the picks and across the boxes;
+    down goes picks, buttons, boxes; every box is focusable; focus lifts, no outline.
+- **Consoles:** the focused console's recently played games as a portrait row (`ConsoleScreenTwo`), under the label
+  "Recently played" (no console name), and nothing else.
+
+**Empty states**, one line of hint `#9AA4AE` text where the content would start, in Core's 12 languages: Favorites
+"Star a game to add it here"; Achievements "Unlock an achievement and it shows up here"; Club "The club couldn't be
+reached. It'll try again within the hour."
+
+## Quick Access: the rail on the right (3.3.10)
+
+The approved board puts the icon rail on the right of the panel, the content to its left. `qam-rail-right` reverses the
+row of `{quickaccess.Menu}` (the rail and the content column are its children; the 3.3.9 snapshot shows the rail at x 0
+and the content at x 48); the rail's gunmetal divider moves to its left edge. Fix 2 stays: centred 24px icons and the
+full square fill.
+
+The D-pad follows the picture whichever way Steam's navigation reads a row (`src/coreQamRail.ts`, one capture listener
+for `vgp_onbuttondown` per Quick Access document): in the rail, left goes into the content (where focus last was there,
+else the item level with the open tab) and right goes nowhere; in the content, right from its right edge goes to the
+open tab; a slider (`role="slider"`, `aria-valuenow`, `input[type=range]`) keeps left and right; everything else is
+Steam's. A move is a DOM `focus()` after `preventDefault()` and `stopPropagation()`, as the On this day cards already
+do. Decky's plugin panel and the Jarvis tab are laid out inside the content column, so the reversal does not touch them.
 
 ## Phases
 
@@ -1062,4 +1182,16 @@ Same setup, Core 3.3.10.
    shows its hero with its logo, or its name, never an empty box.
 6. Scroll Home past the first screen: the clock, weather, search and icons slide away; back to the top, they return.
    A shelf scrolled sideways never hides them. The same on the Library past its first screen.
-7. Not in this build (waiting for the approved design): the Consoles tab redesign and a larger, lower Home row.
+7. Home opens on the Home page: `L1 HOME CONSOLES R1` top left, the clock on the right, no search field; the focused
+   game's art fills the screen; the row sits just above the footer (focused about 146 x 219, others 127 x 191), no name
+   or playtime anywhere; the art changes only when focus rests, with a short crossfade.
+8. Down: the page jumps to Favorites / Achievements / Club. B, or up from the tab row: straight back to the tile.
+   L1/R1 on screen one switch pages; on screen two they switch Steam's tabs.
+9. R1: Consoles. The club's owned Game of the Week / Month first (tagged), then consoles most recently played first,
+   each its ColorGrade hero with its logo; Xbox 360 / PS4 (no pack art) gunmetal with a logo, icon or name, the
+   background black with stars. A opens the collection; down: that console's recent games.
+10. Achievements: Steam's rows and (with The Collector win.36) RetroAchievements'; rarity fills in after the first
+    visit; the tab draws at once on the next. Club: four tall cards, X/Y on the focused pick, three focusable boxes,
+    focus starting on the first pick. Empty tabs: one grey line.
+11. Quick Access: the rail on the right; left from the rail enters the content, right from the content's edge returns to
+    the open tab; sliders still move with left and right; Decky's list and the Jarvis tab look as before.
