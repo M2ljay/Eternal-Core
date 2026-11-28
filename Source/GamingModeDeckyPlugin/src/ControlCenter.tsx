@@ -20,6 +20,7 @@ import { MsiChargeLimit } from "./quickSettings/MsiChargeLimit";
 
 import { QamSettings } from "./QamSettings";
 import { coreQamCopy } from "./coreQamLocale";
+import { menuInputSetting } from "./coreMenuInput";
 import { CoreUiSection } from "./CoreUiSection";
 import { useStoreDownloadsRunning } from "./storeDownloadMenu";
 
@@ -117,6 +118,12 @@ const css = `
 // Steam's own power calls (the same the Steam menu's Power entry makes).
 const steamSystem = () => (window as any).SteamClient?.System;
 const powerAction = (name: "SuspendPC" | "RestartPC" | "ShutdownPC") => () => { try { steamSystem()?.[name]?.(); } catch { /* Steam keeps running. */ } };
+
+// 3.3.11: L4/R4 as A/B and the trackpads as a mouse outside games (coreMenuInput.ts).
+function MenuInputToggle({ label, hint }: { label: string; hint: string }) {
+  const on = React.useSyncExternalStore(menuInputSetting.subscribe, menuInputSetting.get, menuInputSetting.get);
+  return <ToggleField bottomSeparator="none" label={label} description={hint} checked={on} onChange={(value: boolean) => menuInputSetting.set(value)} />;
+}
 
 type QuickId = "display" | "sound" | "performance" | "power";
 
@@ -222,6 +229,7 @@ export function ControlCenter({ locale, origin, session, store, controller, sett
           {downloadsRunning && group("group/downloads", text.downloads, <TbDownload />, downloads)}
           {group("group/look", text.look, <TbEye />, <>
             <CoreUiSection locale={locale} />
+            <MenuInputToggle label={text.menuInput} hint={text.menuInputHint} />
             <ControlSection id="topbar-date" title={topbarDateCopy(locale).title} locale={locale} icon={<TbSettings/>} collapsed={!expanded.includes('topbar-date')} onToggle={toggleSection}>
               <TopbarDateSettings state={state} update={update} locale={locale} /></ControlSection>
           </>)}

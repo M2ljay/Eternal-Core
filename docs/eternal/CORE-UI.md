@@ -1198,11 +1198,165 @@ Same setup, Core 3.3.10.
 11. Quick Access: the rail on the right; left from the rail enters the content, right from the content's edge returns to
     the open tab; sliders still move with left and right; Decky's list and the Jarvis tab look as before.
 
-## 3.3.11 (partial)
+## 3.3.11
 
-- Duplicate Steam class modules (identical key sets) are merged: every rule targets the union of their classes as
-  `:is(...)`. The snapshot's `mapAmbiguity` records `merged`. This is what left the Steam menu and Settings in Steam's
-  colours. The separate `ingamemenu` map was removed: the in-game keys live in the main menu's module.
-- Awesome Mix page host (above).
-- Not done yet: QAM rail visible edge, Home tab names above the footer, Home tile focus ring, context menu panel and
-  Core labels, Steam/ROM game views.
+### Class maps: duplicate modules are merged
+
+Steam ships some class modules twice or three times with identical keys and different hashes (the 3.3.10 snapshot:
+`mainmenu` 2, `settings` 3, `overlay` 2). Core used to pick one, and the one on screen was often the other: the Steam
+menu and Settings stayed in Steam's colours. Now every module that matches a map equally well is merged
+(`mergeMaps`): a key holds every distinct class, `|`-separated, and `classSelector` writes `:is(.a.a,.b.b)`. The
+snapshot's `mapAmbiguity` records `merged`. The separate `ingamemenu` map is gone: the in-game keys live in the main
+menu's module. The light blue in the photos was not a light theme (CSS Loader had nothing active).
+
+### The game page: what matches
+
+The 3.3.10 snapshot of a Steam game page (route `/library/app/3595230`) shows Core's maps do match; it recorded no
+game-page surface only because the snapshot had no game-page entries (now `game-hero`, `game-playbar`,
+`game-screen-two`, `game-section`). Seen live:
+
+| Part | Map key | Class on the TV (this Steam build) |
+| --- | --- | --- |
+| Page host (`game-page`, Starfield) | `appdetails.AppDetailsContainer` | `_2-ns_GqXzymHk0jsXBBWJ1` |
+| Page root (Clean Gameview's play bar background) | `appdetails.AppDetailsRoot` | `_3fp5y6tdU77MdrCQZt_aS9` |
+| Screen two's tab page | `tabbedpage.GamepadTabbedPage` inside the host | `_3IBLc81yyL08OJ7rfKtF00` |
+| Screen two's tab bar | `tabbedpage.TabRow` | `_19z_50-qWZWxcgXfWNtSWb` (row wrapper `_2JobstxtZVYF3078DblN2M`) |
+| Screen two's tabs | `tabbedpage.Tab` / `Selected` / `TabTitle` | `_3eEbSktrstBdLk0dVpnKVI` / `_3Gp1bACHx__POxmy6Gd3kG` / `_1nq0ibcuVEbRv0z_wk9pIQ` |
+| Play section | `appdetails.PlaySection` | `_3scbHORkYB7utTUGfkMCC_` (Clean Gameview; not in the snapshot) |
+| Play button | `appdetails.AppActionButton` | `QsZdWtHTlIK9KIKbscNTt` (Clean Gameview) |
+| Section cards | `appsection.AppDetailsSectionContainer`, `RightColumnSection`; `appdetails.GameInfoContainer`, `GameInfoQuickLinks`, `GameInfoCollections` | read at runtime |
+
+Use the selectors Core resolves at runtime (the snapshot's `selectors` and `hosts`), never the hashes: they change
+with Steam builds. Two maps are new: `appview` (the page's outer view: `HeaderLoaded`, `InnerContainer`,
+`AppDetailsOverviewPanel`, `ScrollContainer`, `Glassy`, the module @decky/ui's `appDetailsClasses` finds) and
+`actionbutton` (`PlayButtonContainer`, `PlayButton`, `Green`, @decky/ui's `appActionButtonClasses`).
+
+### The game view, Steam and ROM alike
+
+The Collector draws its play bar with Steam's own classes (`ActionRow`, `ActionButtonAndStatusPanel`, `AppButtons`,
+`StatusAndStats`, `GameStatsSection`), so one set of rules styles both pages; its own parts are reached by its fixed
+classes (`.romm-game-view`, `.romm-tab`, `.romm-core-card`). No Collector change is needed.
+
+- `game-actions`: Play / Install crimson with white text, square, 48px tall and at least 200px wide (Steam's
+  `PlayButton` and its green state, The Collector's `.romm-native-play` / `.romm-btn-play`); the stats right after it
+  (hint label over a steel value); the icon buttons square black 48px right after the stats (the row is
+  `justify-content: flex-start`, nothing grows).
+- `game-still-art`: no header video; the logo pinned bottom-left (2.8vw).
+- `game-view-clear`: Steam's tinted panels clear (`Glassy`, the light blue under the description and behind screen
+  two; the overview panel, the scroll container, the content and the section list; screen two's tabbed page inside
+  the game page). Steam's page is black under them; The Collector's page paints its own.
+- `game-info-cards`, `game-sections`: gunmetal cards, the crimson focus bar.
+- `rom-screen-two`: The Collector's tabs without Steam's focus box; the crimson underline marks the open tab; gunmetal
+  cards and chips.
+
+### Home
+
+- Screen one ends 100px above the bottom (`HOME_SCREEN_CUT_PX`: the 42px footer and screen two's 58px tab names), so on
+  screen one exactly screen two's tab names show, right above the footer; the art still fills the screen. Screen two's
+  tab content starts 42px lower so nothing else peeks. The row is a little smaller (focused 27%, others 23.5%; consoles
+  19.5% / 16.5%), 1.6% above the tab names: 137 x 205 focused on the TV, 119 x 178 the others, bottom 112px.
+- Core's tiles have no focus ring (`noFocusRing`, and no `::before`/`::after`).
+- The Home row holds games only (`isHomeGame`): Steam's games, demos and mods; tools (SteamVR), applications and
+  launcher or emulator shortcuts (by name) go. VR games stay.
+- Options on any game tile Core draws (the Home row, club picks, Consoles' recently played, Favorites, Achievements)
+  opens Steam's own game context menu (`coreGameMenu.ts`: the component Steam's `LibraryContextMenu` module exports,
+  shown with DFL's `showContextMenu` for the app's overview).
+- A on a console opens its collection through Steam's own route builder, looked up once in Steam's modules
+  (`lookUpCollectionRoutes`; only short one-argument functions whose source builds a collection path are called);
+  `/library/collection/<id>` is the fallback. Screen two ends with an *All* tile that opens the same collection.
+- Club picks match owned games whether installed or not (both of Steam's app lists are read).
+
+### Quick Access
+
+- The rail sits at the right edge of the part of the Quick Access window that is on screen: Steam's window is 855px
+  wide with about 350px visible on the TV. `measureQamVisible` reads the main window's Quick Access placeholder (its
+  left edge against the main window's width), else the window's own `screenX` against the screen; the Menu takes that
+  width (`data-core-qam-visible`, `--core-qam-visible`). Rail icons without a fill use `currentColor`.
+- Full height: Steam lays each popup window over its `ViewPlaceholder` in the main window, inset by the top bar and the
+  footer (top 40px, bottom 40px; the Quick Access window measured 855 x 679 on a 758 screen). `panels-full-height`
+  sets both placeholders (Quick Access and the Steam menu) to the full height; a Quick Access window that comes out
+  full height gets a 40px top safe area (`data-core-qam-full`). Popup windows sit above the main window, so the top bar
+  and footer never draw over them. Not verified on the TV: whether Steam re-reads the placeholder when it sizes the
+  window (TV checklist).
+- **Core is one list** (the QAMCore board, `ControlCenter.tsx`): the Core ring and "Core" as the title; *Quick*, always
+  open: Display (current output), Sound (current output), Performance (its power and profile controls) and Power
+  (Sleep, Restart, Shut down: Steam's own `SuspendPC` / `RestartPC` / `ShutdownPC`), each opening its picker under it;
+  then sections that open and close with A and keep their state (`expandedSections`, ids `group/*`): Sound (mixer,
+  devices), Display & graphics (display, frame timing, shaders, NVIDIA, Radeon, Lossless Scaling), Controller,
+  Downloads (only while a store download runs), Look (Core UI, the Starfield screensaver, *Back buttons and trackpads in
+  menus*, snapshot, icon pack, the top bar date), System (device and details, the agent and diagnostics, the old Core
+  page's sections, stores, Quick Access shortcuts, replay the introduction).
+- Gone from this tab: the inner icon row and the gear (the tab editor), the Decky sub-tab (Decky keeps Steam's own
+  rail tab: Core no longer hides it or hosts Decky), News and Club (Club lives on Home).
+- Settings saved before 3.3.11 (`layout` missing) migrate once: the group holding the tab that was open starts open,
+  and a group whose old tabs were all hidden starts closed. The old ids were swapped against their icons ("audio" was
+  Video, "performance" was Audio); `TAB_GROUP` maps them. Order and hidden tabs stay saved for older builds.
+
+### The Steam menu
+
+- Friends & Chat is left out while Core UI is on, told by its route or React key (`friends`, `chat`), never its
+  label. It is dropped from the menu's item list before React renders it (`StoreDigitalMenuRegistry.ts`, registry
+  implementation 5: an entry may `hide` native items), so focus runs from the entry above to the one below with no
+  gap. The SteamMenu board's row list is therefore: Home, Library, Discord, Awesome Mix, Store, Media, Downloads,
+  Settings, Power.
+
+### The context menu
+
+A solid gunmetal panel, the float radius, no outline; the crimson focus bar stays. It is no longer a Starfield host
+(inside a page host it was marked nested and went transparent). The upstream plugins' entries read *Core Metadata* and
+*Core Artworks* (`coreLabels.ts`: exact text nodes in open context menus, and the store's titles); the plugins' IDs and
+`plugin.json` names are unchanged. ThemeDeck and TrailerHero keep their names.
+
+### Back buttons and trackpads in menus
+
+This Steam version has no Big Picture controller layout, so outside games the UI hears only the standard buttons.
+`coreMenuInput.ts` reads the controller through `SteamClient.Input.RegisterForControllerStateChanges` (as the Jarvis
+combos do):
+
+- L4 is A and R4 is B: Steam's focus navigation is told the button went down and up (`OnButtonActionInternal(down,
+  1 | 2, 1)`, the call Steam's own input makes). L5/R5 stay Jarvis.
+- Both trackpads move the Windows pointer with trackpad-style acceleration; a pad click is a left click. Deltas are
+  batched (one call in flight, about 60 a second) through the backend (`core_pointer_input`, one kept-alive loopback
+  connection) to the agent's `POST /input/pointer` (token-checked, refused under anti-cheat safe mode;
+  `MenuPointerInput.cs`, `SendInput`). The right pad's lower half as a right click was left out (one click bit per
+  pad).
+- Only outside games: while a game runs (the overlay over it included) nothing is read or sent, and a held click is
+  released. The agent's cursor auto-hide shows the pointer on movement and hides it after 2.2s idle; it never hides it
+  for good.
+- Setting: Look > *Back buttons and trackpads in menus* (on by default, `core.menuInput.enabled`).
+
+### Snapshots
+
+Each capture is its own file, `%APPDATA%\GamingMode\diagnostics\core-ui-snapshot-YYYYMMDD-HHMMSS.json` (local
+time; the newest 20 kept; the old single `core-ui-snapshot.json` is left alone). Quick Access > Core > Look > *Save Core
+UI snapshot* shows the new path.
+
+### Hosts
+
+Awesome Mix's page (`.awesome-mix-core-page`) is a Starfield page host (above). The context menu is no longer a host.
+
+## TV checklist (3.3.11)
+
+1. Steam menu and Settings: black, gunmetal rows, crimson focus, no Steam blue. Friends & Chat gone; focus moves from
+   the entry above it straight to the one below.
+2. Steam menu and Quick Access fill the screen top to bottom (if not, Steam ignores the placeholder's height: note it).
+   Quick Access's first row sits below the clock's height.
+3. Quick Access: the rail on the right edge of what is visible, every icon steel (none black). Core tab: the ring and
+   "Core"; Quick rows open their pickers; Power's three buttons work; sections open and close with A and stay that way
+   after reopening Quick Access; left/right never jump anywhere unexpected; Decky's own rail tab is there.
+4. Downloads appears between Controller and Look only while a store download runs.
+5. Home: on screen one the three tab names show fully just above the footer, nothing else of screen two; no grey ring
+   on the focused tile; no SteamVR or launchers in the row; Beat Saber stays.
+6. Options on a Home tile, a Favorite, an Achievements row, a club pick and a Consoles recently-played tile opens
+   Steam's game menu.
+7. Consoles: A on a console opens that console's collection (not All Games); the All tile on screen two too.
+   Uninstalled club picks show.
+8. Context menu: solid gunmetal panel, rounded, no outline; "Core Metadata" and "Core Artworks".
+9. Steam game page and ROM page, screen one: crimson Play/Install, the same size and place; stats right after; square
+   black icon buttons right after the stats; logo bottom-left; no video.
+10. Screen two on both: black with stars, gunmetal cards, crimson underline on the open tab, no white outline box on
+    The Collector's tabs, no light-blue panel under the description.
+11. Back buttons and trackpads (no game running): L4 selects, R4 goes back; both pads move the pointer smoothly, a pad
+    click clicks; the pointer hides again after a few seconds. Start a game: the pads and back buttons do what the
+    game's layout says, Core sends nothing. Turn the setting off: nothing happens outside games either.
+12. Save Core UI snapshot twice: two files with timestamps; the path shows under the button.

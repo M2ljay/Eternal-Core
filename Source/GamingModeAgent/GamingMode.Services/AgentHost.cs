@@ -992,6 +992,16 @@ public static class AgentHost
 				app.MapPost("/restart/decky", (Func<Task<IResult>>)(async () => Results.Json(await manager.RestartDeckyAsync())));
 				markIII.Map(app);
 				markIII.Start(app.Lifetime.ApplicationStopping);
+				// 3.3.11: the trackpads as a mouse in Steam's menus (MenuPointerInput.cs). Token-checked like the other
+				// session routes; refused while anti-cheat safe mode is engaged.
+				app.MapPost("/input/pointer", (Func<HttpContext, IResult>)(context =>
+				{
+					if (!xboxShell.IsAuthorized(context.Connection.RemoteIpAddress, context.Request.Headers["X-Playhub-Shell-Token"].ToString())) return Results.StatusCode(401);
+					if (antiCheat.Engaged) return Results.Json(new { ok = false, reason = "antiCheat" });
+					var parsed = MenuPointerInput.Parse(context.Request.Query["dx"], context.Request.Query["dy"], context.Request.Query["b"]);
+					if (parsed is null) return Results.StatusCode(400);
+					return Results.Json(new { ok = MenuPointerInput.Send(parsed.Value.dx, parsed.Value.dy, parsed.Value.buttons) });
+				}));
 				app.MapPost("/cursor/autohide/start", (Func<IResult>)delegate
 				{
 					ModeConfig modeConfig2 = store.LoadConfig();

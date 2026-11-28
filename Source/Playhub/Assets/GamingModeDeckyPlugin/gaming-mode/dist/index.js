@@ -1235,11 +1235,11 @@ function detect() {
     const fallback = typeof document !== "undefined" && document.documentElement?.lang || typeof navigator !== "undefined" && navigator.language;
     return normalizeSteamLocale$2(fallback) ?? "en";
 }
-const listeners$f = new Set();
+const listeners$g = new Set();
 let current = null, request$1 = 0, users = 0, observation = 0;
 let timer;
 const getSteamLocale = () => current ?? detect();
-const subscribeSteamLocale = (listener) => { listeners$f.add(listener); return () => { listeners$f.delete(listener); }; };
+const subscribeSteamLocale = (listener) => { listeners$g.add(listener); return () => { listeners$g.delete(listener); }; };
 async function read() {
     const win = typeof window !== "undefined" ? window : {};
     const settings = win.SteamClient?.Settings;
@@ -1265,7 +1265,7 @@ async function refreshSteamLocale() {
     const old = getSteamLocale();
     current = value;
     if (old !== value)
-        for (const listener of [...listeners$f])
+        for (const listener of [...listeners$g])
             listener();
     return value;
 }
@@ -1923,18 +1923,18 @@ const STORE_DIGITAL_ROUTE = "/playhub/stores";
 function exitStoreDigitalToHome() { const navigation = CompatUI.Navigation; navigation?.CloseSideMenus?.(); navigation?.Navigate?.("/library/home", true); }
 let pending$4 = null, sequence = 0;
 let downloads = null;
-const listeners$e = new Set();
+const listeners$f = new Set();
 const readStoreDigitalSelection = () => pending$4;
 const consumeStoreDigitalSelection = (value) => { if (pending$4 === value)
     pending$4 = null; };
-const subscribeStoreDigitalSelection = (fn) => { listeners$e.add(fn); return () => { listeners$e.delete(fn); }; };
+const subscribeStoreDigitalSelection = (fn) => { listeners$f.add(fn); return () => { listeners$f.delete(fn); }; };
 const readStoreDigitalDownloads = () => downloads;
 const consumeStoreDigitalDownloads = (value) => { if (downloads === value)
     downloads = null; };
-function openStoreDigitalDownloads() { pending$4 = null; downloads = ++sequence; for (const listener of listeners$e)
+function openStoreDigitalDownloads() { pending$4 = null; downloads = ++sequence; for (const listener of listeners$f)
     listener(); CompatUI.Navigation.Navigate(STORE_DIGITAL_ROUTE); }
 function openStoreDigitalGame(key, action = "install") { if (!validStoreKey(key) || !["install", "manage"].includes(action))
-    return false; downloads = null; pending$4 = { key: { ...key }, action, sequence: ++sequence }; for (const listener of listeners$e)
+    return false; downloads = null; pending$4 = { key: { ...key }, action, sequence: ++sequence }; for (const listener of listeners$f)
     listener(); CompatUI.Navigation.Navigate(`${STORE_DIGITAL_ROUTE}?store=${encodeURIComponent(key.store)}&game=${encodeURIComponent(key.id)}&action=${action}`); return true; }
 function validStoreDigitalIntent(value, now = Date.now()) { const item = value; return !!item && typeof item.requestId === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(item.requestId) && validStoreKey(item.key) && ["install", "manage"].includes(item.action) && Number.isFinite(Date.parse(item.expiresAt)) && Date.parse(item.expiresAt) > now && Date.parse(item.expiresAt) <= now + 31000; }
 function installStoreDigitalIntentPump(request, open = openStoreDigitalGame, clock = () => Date.now()) {
@@ -2261,8 +2261,8 @@ let owned = new Map();
 let jobs = [];
 let steamLinks = new Map(), steamLinksAt = 0;
 let repairSteamLink;
-const listeners$d = new Set();
-function subscribeStoreLibrary(listener) { listeners$d.add(listener); return () => { listeners$d.delete(listener); }; }
+const listeners$e = new Set();
+function subscribeStoreLibrary(listener) { listeners$e.add(listener); return () => { listeners$e.delete(listener); }; }
 const readStoreLibrary = () => owned;
 const readStoreDownloads = () => jobs;
 const readStoreSteamLink = (key) => Date.now() - steamLinksAt < 5000 ? steamLinks.get(nativeStoreKey({ key })) ?? "unknown" : "unknown";
@@ -2755,7 +2755,7 @@ function installStoreLibraryRuntime() {
     const notifyCompleted = createStoreCompletionNotifications();
     const current = () => alive && root[symbol] === stop;
     const updateLinks = (next) => { const changed = JSON.stringify([...steamLinks]) !== JSON.stringify([...next]); steamLinks = next; steamLinksAt = Date.now(); if (changed)
-        listeners$d.forEach(listener => { try {
+        listeners$e.forEach(listener => { try {
             listener();
         }
         catch { } }); };
@@ -2862,7 +2862,7 @@ function installStoreLibraryRuntime() {
             if (Array.isArray(currentJobs) && serializedJobs !== lastJobs) {
                 lastJobs = serializedJobs;
                 jobs = currentJobs;
-                listeners$d.forEach(listener => { try {
+                listeners$e.forEach(listener => { try {
                     listener();
                 }
                 catch { } });
@@ -2905,7 +2905,7 @@ function installStoreLibraryRuntime() {
             if (serial !== lastOwned) {
                 lastOwned = serial;
                 owned = new Map(rows.map(row => [row.appId, row]));
-                listeners$d.forEach(listener => { try {
+                listeners$e.forEach(listener => { try {
                     listener();
                 }
                 catch { } });
@@ -2958,7 +2958,7 @@ function installStoreLibraryRuntime() {
             jobs = [];
             steamLinks = new Map();
             steamLinksAt = 0;
-            listeners$d.forEach(listener => { try {
+            listeners$e.forEach(listener => { try {
                 listener();
             }
             catch { } });
@@ -21495,14 +21495,14 @@ function qamNativeLabel(key, fallback, locale) {
 
 let preferences = { version: 3, selected: ["Playhub"], icons: {}, order: [], hidden: [], updated_at: 0 };
 let snapshot$2 = { active: false, native: [], plugins: [] };
-const listeners$c = new Set();
+const listeners$d = new Set();
 const refreshers = new Set();
 let pending$3 = false;
 function notify$5() { if (pending$3)
-    return; pending$3 = true; void Promise.resolve().then(() => { pending$3 = false; listeners$c.forEach(fn => fn()); }); }
+    return; pending$3 = true; void Promise.resolve().then(() => { pending$3 = false; listeners$d.forEach(fn => fn()); }); }
 const getQamLayoutPreferences = () => preferences;
 const getQamLayoutSnapshot = () => snapshot$2;
-function subscribeQamLayout(fn) { listeners$c.add(fn); return () => { listeners$c.delete(fn); }; }
+function subscribeQamLayout(fn) { listeners$d.add(fn); return () => { listeners$d.delete(fn); }; }
 function setQamLayoutPreferences(value) {
     const strings = (items) => Array.isArray(items) ? [...new Set(items.filter((v) => typeof v === "string" && !!v))] : [];
     const next = { version: 3, selected: strings(value?.selected), order: strings(value?.order),
@@ -22060,8 +22060,8 @@ function openHistoryImage(url, subject, locale, ownerWindow = window) {
 @media(max-width:550px){.ph-history-card{grid-template-columns:1fr}.ph-history-card.reverse .ph-history-image,.ph-history-card.reverse .ph-history-copy{grid-column:auto;grid-row:auto}.ph-history-sub{max-width:180px}}
 @media(prefers-reduced-motion:reduce){.ph-history *{transition:none!important}}
 `;
-const listeners$b = new Set();
-const notify$4 = () => listeners$b.forEach(listener => listener());
+const listeners$c = new Set();
+const notify$4 = () => listeners$c.forEach(listener => listener());
 const notifyHistoryLanguageChanged = () => { notify$4(); };
 
 const words$2 = {
@@ -22181,9 +22181,9 @@ function coreHomeCopy(locale) {
 // internals; an unavailable tab (isAvailable() false or throwing) is left out.
 const registry = new Map();
 const unsubscribers = new Map();
-const listeners$a = new Set();
+const listeners$b = new Set();
 let revision = 0;
-const notify$3 = () => { revision++; for (const listener of [...listeners$a]) {
+const notify$3 = () => { revision++; for (const listener of [...listeners$b]) {
     try {
         listener();
     }
@@ -22212,7 +22212,7 @@ function registerHomeTab(tab) {
         notify$3();
     } };
 }
-function subscribeHomeTabs(listener) { listeners$a.add(listener); return () => { listeners$a.delete(listener); }; }
+function subscribeHomeTabs(listener) { listeners$b.add(listener); return () => { listeners$b.delete(listener); }; }
 const homeTabsRevision = () => revision;
 // Registered tabs that are available now, by order.
 function availableHomeTabs() {
@@ -22716,21 +22716,21 @@ const nameOf = (appid) => { try {
 catch {
     return "";
 } };
-const storage$2 = () => { try {
+const storage$3 = () => { try {
     return window.localStorage;
 }
 catch {
     return undefined;
 } };
 // The rarity cache, shared by every render (coreAchievements.ts: per game, at most every 24 hours).
-let rarity = rarityCache(readJson(storage$2(), RARITY_KEY));
+let rarity = rarityCache(readJson(storage$3(), RARITY_KEY));
 const rarityListeners = new Set();
 let rarityRevision = 0;
 function keepRates(appId, rates) {
     if (!Object.keys(rates).length)
         return;
     rarity = storeRates(rarity, appId, rates, Math.floor(Date.now() / 1000));
-    writeJson(storage$2(), RARITY_KEY, rarity);
+    writeJson(storage$3(), RARITY_KEY, rarity);
     rarityRevision++;
     for (const listener of [...rarityListeners]) {
         try {
@@ -22774,13 +22774,13 @@ const openAchievements = (appId) => { if (appId) {
 function CoreAchievementsTab({ locale }) {
     const text = coreHomeCopy(locale);
     // Drawn at once from the last model shown (never waiting on the network), then refreshed in the background.
-    const [data, setData] = _global_SP_REACT.useState(() => storedModel(readJson(storage$2(), MODEL_KEY)) ?? null);
+    const [data, setData] = _global_SP_REACT.useState(() => storedModel(readJson(storage$3(), MODEL_KEY)) ?? null);
     _global_SP_REACT.useSyncExternalStore(subscribeRarity, () => rarityRevision, () => rarityRevision);
     _global_SP_REACT.useEffect(() => {
         let alive = true;
         const read = () => void loadAchievements().then(next => { if (alive) {
             setData(next);
-            writeJson(storage$2(), MODEL_KEY, next);
+            writeJson(storage$3(), MODEL_KEY, next);
         } })
             .catch(() => { if (alive)
             setData(prior => prior ?? { recent: [], closest: [] }); });
@@ -22879,8 +22879,8 @@ const HOME_PAGES = ["home", "consoles"];
 const BUTTON = { BUMPER_LEFT: 5, BUMPER_RIGHT: 6};
 let page = "home";
 let focusedConsole = "";
-const listeners$9 = new Set();
-const notify$2 = () => { for (const listener of [...listeners$9]) {
+const listeners$a = new Set();
+const notify$2 = () => { for (const listener of [...listeners$a]) {
     try {
         listener();
     }
@@ -22888,7 +22888,7 @@ const notify$2 = () => { for (const listener of [...listeners$9]) {
 } };
 const homePage = () => page;
 const focusedConsoleId = () => focusedConsole;
-function subscribeHomePage(listener) { listeners$9.add(listener); return () => { listeners$9.delete(listener); }; }
+function subscribeHomePage(listener) { listeners$a.add(listener); return () => { listeners$a.delete(listener); }; }
 function setHomePage(next) {
     if (!HOME_PAGES.includes(next) || next === page)
         return;
@@ -23709,10 +23709,10 @@ function CoreStars() {
 // Eternal Core: the Club tab's shared state. The backend (quick_settings/club_feed.py) owns fetching, caching and
 // politeness; this only asks it for the cached feed (cheap), or for a refresh when the user presses Refresh.
 let state$1 = { settings: null, feed: null, loading: false, failed: false };
-const listeners$8 = new Set();
+const listeners$9 = new Set();
 let inflight = null;
-const set = (patch) => { state$1 = { ...state$1, ...patch }; listeners$8.forEach(listener => listener()); };
-const subscribeClub = (listener) => { listeners$8.add(listener); return () => { listeners$8.delete(listener); }; };
+const set = (patch) => { state$1 = { ...state$1, ...patch }; listeners$9.forEach(listener => listener()); };
+const subscribeClub = (listener) => { listeners$9.add(listener); return () => { listeners$9.delete(listener); }; };
 const clubState = () => state$1;
 function loadClub(force = false) {
     if (inflight && !force)
@@ -24097,15 +24097,15 @@ function formatClubDate(locale, seconds) {
 // answer for the tab and Quick Access > Core > Look ("Re-import icon pack"), loaded once and on demand.
 let pack;
 let pending$1;
-const listeners$7 = new Set();
-const notify$1 = () => { for (const listener of [...listeners$7]) {
+const listeners$8 = new Set();
+const notify$1 = () => { for (const listener of [...listeners$8]) {
     try {
         listener();
     }
     catch { /* Others still hear it. */ }
 } };
 const consolePack = () => pack;
-function subscribeConsolePack(listener) { listeners$7.add(listener); return () => { listeners$7.delete(listener); }; }
+function subscribeConsolePack(listener) { listeners$8.add(listener); return () => { listeners$8.delete(listener); }; }
 function loadConsolePack(force = false) {
     if (pending$1 && !force)
         return pending$1;
@@ -25024,9 +25024,9 @@ function CoreHomeTabs({ native, getLocale, render }) {
 
 const { Focusable: Focusable$d, Navigation: Navigation$6 } = CompatUI;
 let config$1 = { enabled: true, country: "auto" };
-const listeners$6 = new Set();
-const subscribe$1 = (f) => { listeners$6.add(f); return () => { listeners$6.delete(f); }; };
-const notify = () => listeners$6.forEach(f => f());
+const listeners$7 = new Set();
+const subscribe$1 = (f) => { listeners$7.add(f); return () => { listeners$7.delete(f); }; };
+const notify = () => listeners$7.forEach(f => f());
 const notifyHomeNewsLanguageChanged = () => { config$1 = { ...config$1 }; notify(); notifyHistoryLanguageChanged(); };
 const readConfig = async () => { config$1 = await call("get_home_news_settings"); notify(); };
 function nativeNewsRows(tree) {
@@ -30065,19 +30065,19 @@ const INSTANCE$1 = Symbol.for("playhub.qam.v1");
 const EVENT$1 = "shortcuts:qam-bridge-changed";
 const STORAGE = "playhub.qam.visible.v1";
 const TAB_ID = 0x50484B;
-const listeners$5 = new Set();
+const listeners$6 = new Set();
 let state = { visible: true, available: false, pending: false };
 let changeVisibility;
 const getPlayhubQamState = () => state;
 function subscribePlayhubQam(listener) {
-    listeners$5.add(listener);
-    return () => { listeners$5.delete(listener); };
+    listeners$6.add(listener);
+    return () => { listeners$6.delete(listener); };
 }
 function publish$2(next) {
     if (JSON.stringify(next) === JSON.stringify(state))
         return;
     state = next;
-    listeners$5.forEach((listener) => listener());
+    listeners$6.forEach((listener) => listener());
 }
 async function setPlayhubQamVisible(visible) {
     await changeVisibility?.(visible);
@@ -53281,7 +53281,7 @@ const README_CACHE_MS = 60 * 60 * 1000;
 let catalogPromise = null;
 const releasePromises = new Map();
 const readmePromises = new Map();
-function storage$1() {
+function storage$2() {
     try {
         return window.localStorage;
     }
@@ -53291,7 +53291,7 @@ function storage$1() {
 }
 function readTimed(key, ttl) {
     try {
-        const parsed = JSON.parse(storage$1()?.getItem(key) ?? "null");
+        const parsed = JSON.parse(storage$2()?.getItem(key) ?? "null");
         if (!parsed || Date.now() - Number(parsed.savedAt) > ttl)
             return null;
         return parsed.value;
@@ -53302,7 +53302,7 @@ function readTimed(key, ttl) {
 }
 function writeTimed(key, value) {
     try {
-        storage$1()?.setItem(key, JSON.stringify({ savedAt: Date.now(), value }));
+        storage$2()?.setItem(key, JSON.stringify({ savedAt: Date.now(), value }));
     }
     catch { }
 }
@@ -54756,19 +54756,19 @@ function topbarDateOptions(locale, sample = new Date(2026, 8, 19)) {
 const PLAYHUB_TAB_ID = 0x50484B;
 const NATIVE_DECKY_KEY = "999";
 const host = (typeof window === "undefined" ? globalThis : window);
-const listeners$4 = new Set();
+const listeners$5 = new Set();
 let hidden = false;
 const isNativeDeckyHidden = () => hidden;
 function subscribeNativeDeckyHidden(listener) {
-    listeners$4.add(listener);
-    return () => { listeners$4.delete(listener); };
+    listeners$5.add(listener);
+    return () => { listeners$5.delete(listener); };
 }
 function setNativeDeckyHidden(next) {
     const value = next === true;
     if (value === hidden)
         return false;
     hidden = value;
-    listeners$4.forEach(listener => { try {
+    listeners$5.forEach(listener => { try {
         listener();
     }
     catch { /* One consumer cannot block the rest. */ } });
@@ -55011,7 +55011,7 @@ function installDeckyTabProjection(onConflict) {
 const BRIDGE = Symbol.for("shortcuts.qam-bridge.v1");
 const INSTANCE = Symbol.for("playhub.decky-host.v1");
 const EVENT = "shortcuts:qam-bridge-changed";
-const listeners$3 = new Set();
+const listeners$4 = new Set();
 let snapshot$1 = { enabled: false, available: false, ready: false, reason: "disabled" };
 let capability;
 let running = false;
@@ -55026,15 +55026,15 @@ let legacyBridge;
 let legacyHook;
 const getDeckyHostSnapshot = () => snapshot$1;
 const subscribeDeckyHost = (listener) => {
-    listeners$3.add(listener);
-    return () => { listeners$3.delete(listener); };
+    listeners$4.add(listener);
+    return () => { listeners$4.delete(listener); };
 };
 function publish$1(next) {
     if (JSON.stringify(next) === JSON.stringify(snapshot$1))
         return;
     snapshot$1 = next;
     if (!batching)
-        listeners$3.forEach(listener => listener());
+        listeners$4.forEach(listener => listener());
 }
 /** Keep native Decky reachable until the embedded panel has committed. */
 function applyNativeSuppression() {
@@ -55112,7 +55112,7 @@ function setDeckyHostEnabled(enabled) {
     finally {
         batching = false;
         if (JSON.stringify(snapshot$1) !== before)
-            listeners$3.forEach(listener => listener());
+            listeners$4.forEach(listener => listener());
     }
 }
 function failDeckyHost(reason) {
@@ -55593,7 +55593,7 @@ function reduceOnboarding(state, event) {
     return state;
 }
 
-const listeners$2 = new Set();
+const listeners$3 = new Set();
 let snapshot = { state: readOnboardingState(null), view: null, document: null,
     anchor: null, width: 0, height: 0, footerInset: 96, revision: 0 };
 let session;
@@ -55611,7 +55611,7 @@ const ADVANCE_SHIELD_TIMEOUT = 2500;
 let currentFacts = { qamOpen: false, playhubSelected: false, playhubAnchor: false,
     deckyEnabled: false, deckyVisible: false, deckyAnchor: false };
 const getPlayhubOnboardingSnapshot = () => snapshot;
-function subscribePlayhubOnboarding(listener) { listeners$2.add(listener); return () => { listeners$2.delete(listener); }; }
+function subscribePlayhubOnboarding(listener) { listeners$3.add(listener); return () => { listeners$3.delete(listener); }; }
 function publish(next) {
     const { document: oldDocument, ...old } = snapshot;
     const { document: newDocument, ...value } = next;
@@ -55620,7 +55620,7 @@ function publish(next) {
     if (snapshot.view !== next.view || oldDocument !== newDocument)
         presented = null;
     snapshot = next;
-    listeners$2.forEach(listener => listener());
+    listeners$3.forEach(listener => listener());
 }
 function markPlayhubOnboardingPresented(view) {
     if (view === null || view === snapshot.view)
@@ -56246,17 +56246,17 @@ function onboardingVisibleSteps(visible) {
     return [...new Set(visible.filter(id => allowed.has(id)).map(id => id === "home" ? "playhub" : id)), "customize"];
 }
 let requested = null;
-const listeners$1 = new Set();
+const listeners$2 = new Set();
 const getOnboardingControlStep = () => requested;
 function subscribeOnboardingControlStep(listener) {
-    listeners$1.add(listener);
-    return () => { listeners$1.delete(listener); };
+    listeners$2.add(listener);
+    return () => { listeners$2.delete(listener); };
 }
 function requestOnboardingControlStep(step) {
     if (requested === step)
         return;
     requested = step;
-    listeners$1.forEach(listener => listener());
+    listeners$2.forEach(listener => listener());
 }
 /** An ephemeral view selection only: never writes the user's tab preferences. */
 function resolveOnboardingControlShowcase(step, ready, visible, active, customizing) {
@@ -57517,28 +57517,218 @@ const en$8 = {
     quick: "Quick", alwaysOpen: "always open", display: "Display", sound: "Sound", performance: "Performance", power: "Power",
     sleep: "Sleep", restart: "Restart", shutDown: "Shut down", displayGraphics: "Display & graphics", controller: "Controller",
     downloads: "Downloads", look: "Look", system: "System", stores: "Stores", shortcuts: "Shortcuts",
+    menuInput: "Back buttons and trackpads in menus", menuInputHint: "Outside games, L4 is A, R4 is B and the trackpads move the pointer. Games keep their own controls.",
 };
 const copies = {
     it: { quick: "Rapide", alwaysOpen: "sempre aperto", display: "Schermo", sound: "Audio", performance: "Prestazioni", power: "Alimentazione",
         sleep: "Sospendi", restart: "Riavvia", shutDown: "Spegni", displayGraphics: "Schermo e grafica", controller: "Controller",
-        downloads: "Download", look: "Aspetto", system: "Sistema", stores: "Store", shortcuts: "Scorciatoie" },
+        downloads: "Download", look: "Aspetto", system: "Sistema", stores: "Store", shortcuts: "Scorciatoie", menuInput: "Tasti posteriori e trackpad nei menu", menuInputHint: "Fuori dai giochi L4 è A, R4 è B e i trackpad muovono il puntatore. I giochi mantengono i propri comandi." },
     es: { quick: "Rápido", alwaysOpen: "siempre abierto", display: "Pantalla", sound: "Sonido", performance: "Rendimiento", power: "Energía",
         sleep: "Suspender", restart: "Reiniciar", shutDown: "Apagar", displayGraphics: "Pantalla y gráficos", controller: "Mando",
-        downloads: "Descargas", look: "Aspecto", system: "Sistema", stores: "Tiendas", shortcuts: "Atajos" },
+        downloads: "Descargas", look: "Aspecto", system: "Sistema", stores: "Tiendas", shortcuts: "Atajos", menuInput: "Botones traseros y paneles táctiles en los menús", menuInputHint: "Fuera de los juegos, L4 es A, R4 es B y los paneles mueven el puntero. Los juegos conservan sus controles." },
     fr: { quick: "Rapide", alwaysOpen: "toujours ouvert", display: "Affichage", sound: "Son", performance: "Performances", power: "Alimentation",
         sleep: "Veille", restart: "Redémarrer", shutDown: "Éteindre", displayGraphics: "Affichage et graphismes", controller: "Manette",
-        downloads: "Téléchargements", look: "Apparence", system: "Système", stores: "Boutiques", shortcuts: "Raccourcis" },
+        downloads: "Téléchargements", look: "Apparence", system: "Système", stores: "Boutiques", shortcuts: "Raccourcis", menuInput: "Boutons arrière et pavés tactiles dans les menus", menuInputHint: "Hors des jeux, L4 est A, R4 est B et les pavés déplacent le pointeur. Les jeux gardent leurs commandes." },
     de: { quick: "Schnell", alwaysOpen: "immer offen", display: "Anzeige", sound: "Ton", performance: "Leistung", power: "Energie",
         sleep: "Ruhezustand", restart: "Neu starten", shutDown: "Herunterfahren", displayGraphics: "Anzeige und Grafik", controller: "Controller",
-        downloads: "Downloads", look: "Aussehen", system: "System", stores: "Stores", shortcuts: "Kurzbefehle" },
+        downloads: "Downloads", look: "Aussehen", system: "System", stores: "Stores", shortcuts: "Kurzbefehle", menuInput: "Rücktasten und Trackpads in Menüs", menuInputHint: "Außerhalb von Spielen ist L4 A, R4 B und die Trackpads bewegen den Zeiger. Spiele behalten ihre Steuerung." },
     pt: { quick: "Rápido", alwaysOpen: "sempre aberto", display: "Tela", sound: "Som", performance: "Desempenho", power: "Energia",
         sleep: "Suspender", restart: "Reiniciar", shutDown: "Desligar", displayGraphics: "Tela e gráficos", controller: "Controle",
-        downloads: "Downloads", look: "Aparência", system: "Sistema", stores: "Lojas", shortcuts: "Atalhos" },
+        downloads: "Downloads", look: "Aparência", system: "Sistema", stores: "Lojas", shortcuts: "Atalhos", menuInput: "Botões traseiros e trackpads nos menus", menuInputHint: "Fora dos jogos, L4 é A, R4 é B e os trackpads movem o ponteiro. Os jogos mantêm seus controles." },
 };
 function coreQamCopy(locale) {
     const key = String(locale ?? "").toLowerCase().slice(0, 2);
     return { ...en$8, ...(copies[key] ?? {}) };
 }
+
+// Eternal Core 3.3.11: the controller's back buttons and trackpads in Steam's menus. This Steam version has no Big
+// Picture controller layout, so outside games the UI hears only the standard buttons. Core fills the gap:
+// - L4 is A and R4 is B: Steam's own focus navigation is told the button went down and up (OnButtonActionInternal, the
+//   call Steam's input makes; button 1 OK, 2 CANCEL; source 1 gamepad). L5/R5 stay Jarvis (jarvisCombos.ts).
+// - Both trackpads move the Windows pointer like a laptop trackpad, and a pad click is a left click. The plugin reads
+//   the pads here (Steam owns the controller); batched deltas go to the agent through the backend
+//   (main.py core_pointer_input, at most one call in flight, about 60 a second), which moves the pointer with SendInput.
+//   The right pad's lower half as a right click was left out: Steam reports one click bit per pad, so the half would be
+//   read from the touch position at the moment of the click, which misfires on a pad touched near its middle.
+// - Only outside games: the moment a game runs (the overlay over it included), nothing is read or sent, so per-game Steam
+//   Input layouts stay in charge. Off with the setting "Back buttons and trackpads in menus" (on by default).
+// Bit positions follow jarvisCombos.ts (ulButtons; ulUpperButtons holds the back grips L4/R4).
+const MENU_INPUT = {
+    // ulUpperButtons bits.
+    L4: 1 << 9, R4: 1 << 10,
+    // ulButtons bits: pad clicks and touches.
+    LEFT_PAD_CLICK: 1 << 17, RIGHT_PAD_CLICK: 1 << 18, LEFT_PAD_TOUCH: 1 << 19, RIGHT_PAD_TOUCH: 1 << 20,
+    // Steam's navigation buttons and the gamepad source.
+    OK: 1, CANCEL: 2, SOURCE_GAMEPAD: 1,
+    // Pointer: pixels for a full pad width at rest, the acceleration and its cap, how often a batch may go.
+    BASE_PX: 520, ACCEL: 0.9, MAX_GAIN: 3.2, SEND_MS: 16,
+};
+const MENU_INPUT_SETTING_KEY = "core.menuInput.enabled";
+// L4/R4 edges since the last packet: A or B, down on press and up on release.
+function backButtonEdges(prior, upper) {
+    const out = [];
+    for (const [bit, button] of [[MENU_INPUT.L4, MENU_INPUT.OK], [MENU_INPUT.R4, MENU_INPUT.CANCEL]]) {
+        const was = (prior & bit) !== 0, now = (upper & bit) !== 0;
+        if (was !== now)
+            out.push({ button, down: now });
+    }
+    return out;
+}
+// Pad clicks become the left button: down when the first pad clicks, up when no pad is clicked.
+function padClickEdge(prior, lower) {
+    const mask = MENU_INPUT.LEFT_PAD_CLICK | MENU_INPUT.RIGHT_PAD_CLICK;
+    const was = (prior & mask) !== 0, now = (lower & mask) !== 0;
+    return was === now ? undefined : now ? "left-down" : "left-up";
+}
+// One pad's movement since the last packet while it stays touched (Steam's pad coordinates run -32768..32767, y up).
+// A new touch is a fresh start, never a jump from where the finger left.
+function padMovement(prior, now) {
+    if (!prior)
+        return { dx: 0, dy: 0 };
+    let dx = 0, dy = 0;
+    const pads = [[MENU_INPUT.LEFT_PAD_TOUCH, "lx", "ly"], [MENU_INPUT.RIGHT_PAD_TOUCH, "rx", "ry"]];
+    for (const [touch, x, y] of pads) {
+        if ((prior.lower & touch) === 0 || (now.lower & touch) === 0)
+            continue;
+        dx += now[x] - prior[x];
+        dy -= now[y] - prior[y];
+    }
+    return { dx, dy };
+}
+// Pad units to pixels with trackpad-style acceleration: slow movement is precise, a quick swipe goes further.
+function pointerPixels(dx, dy, elapsedMs) {
+    const units = 65536;
+    const base = MENU_INPUT.BASE_PX / units;
+    const ms = Math.max(1, Math.min(100, elapsedMs || 1));
+    const speed = Math.hypot(dx, dy) / units / ms * 1000; // pad widths a second
+    const gain = Math.min(MENU_INPUT.MAX_GAIN, 1 + MENU_INPUT.ACCEL * Math.max(0, speed - 0.25));
+    return { x: dx * base * gain, y: dy * base * gain };
+}
+// Whether Core handles the back buttons and pads now: the setting on and no game running.
+function menuInputActive(state) {
+    return state.enabled === true && !(Number(state.runningAppId) > 0);
+}
+function installMenuInput(deps) {
+    const now = () => { try {
+        return deps.now ? deps.now() : Date.now();
+    }
+    catch {
+        return Date.now();
+    } };
+    const later = deps.setTimer ?? ((fn, ms) => setTimeout(fn, ms));
+    const pads = new Map();
+    let pendingX = 0, pendingY = 0, pendingButtons = [], inFlight = false, scheduled = false, leftDown = false;
+    const nav = (button, down) => {
+        try {
+            deps.navController()?.OnButtonActionInternal?.(down, button, MENU_INPUT.SOURCE_GAMEPAD);
+        }
+        catch { /* Steam keeps its own input. */ }
+    };
+    const flush = () => {
+        scheduled = false;
+        if (inFlight) {
+            schedule();
+            return;
+        }
+        const x = Math.trunc(pendingX), y = Math.trunc(pendingY);
+        if (!x && !y && !pendingButtons.length)
+            return;
+        pendingX -= x;
+        pendingY -= y;
+        const buttons = pendingButtons;
+        pendingButtons = [];
+        inFlight = true;
+        Promise.resolve().then(() => deps.send(x, y, buttons)).catch(() => { }).finally(() => { inFlight = false; });
+    };
+    const schedule = () => { if (!scheduled) {
+        scheduled = true;
+        later(flush, MENU_INPUT.SEND_MS);
+    } };
+    const releaseAll = () => {
+        if (leftDown) {
+            pendingButtons.push("left-up");
+            leftDown = false;
+            flush();
+        }
+        pendingX = 0;
+        pendingY = 0;
+        pads.clear();
+    };
+    const onChanges = (changes) => {
+        let active = false;
+        try {
+            active = menuInputActive({ enabled: deps.enabled(), runningAppId: deps.runningAppId() });
+        }
+        catch {
+            active = false;
+        }
+        if (!active) {
+            releaseAll();
+            return;
+        }
+        for (const change of Array.isArray(changes) ? changes : []) {
+            const index = Number(change?.unControllerIndex) || 0;
+            const state = { lower: Number(change?.ulButtons) >>> 0, upper: Number(change?.ulUpperButtons) >>> 0,
+                lx: Number(change?.sLeftPadX) || 0, ly: Number(change?.sLeftPadY) || 0, rx: Number(change?.sRightPadX) || 0, ry: Number(change?.sRightPadY) || 0 };
+            const prior = pads.get(index);
+            const at = now();
+            for (const edge of backButtonEdges(prior?.state.upper ?? 0, state.upper))
+                nav(edge.button, edge.down);
+            const click = padClickEdge(prior?.state.lower ?? 0, state.lower);
+            if (click === "left-down" && !leftDown) {
+                leftDown = true;
+                pendingButtons.push(click);
+            }
+            if (click === "left-up" && leftDown) {
+                leftDown = false;
+                pendingButtons.push(click);
+            }
+            const move = padMovement(prior?.state, state);
+            if (move.dx || move.dy) {
+                const px = pointerPixels(move.dx, move.dy, at - (prior?.at ?? at));
+                pendingX += px.x;
+                pendingY += px.y;
+            }
+            pads.set(index, { state, at });
+            if (pendingButtons.length || Math.abs(pendingX) >= 1 || Math.abs(pendingY) >= 1)
+                schedule();
+        }
+    };
+    let registration;
+    try {
+        registration = deps.input()?.RegisterForControllerStateChanges?.(onChanges);
+    }
+    catch {
+        registration = undefined;
+    }
+    return () => {
+        releaseAll();
+        try {
+            registration?.unregister?.();
+        }
+        catch { /* Steam drops it with the page. */ }
+    };
+}
+const listeners$1 = new Set();
+const storage$1 = () => { try {
+    return globalThis.localStorage;
+}
+catch {
+    return undefined;
+} };
+const menuInputSetting = {
+    get() { try {
+        return storage$1()?.getItem(MENU_INPUT_SETTING_KEY) !== "0";
+    }
+    catch {
+        return true;
+    } },
+    set(on) { try {
+        storage$1()?.setItem(MENU_INPUT_SETTING_KEY, on ? "1" : "0");
+    }
+    catch { /* Kept for this session only. */ } listeners$1.forEach(listener => listener()); },
+    subscribe(listener) { listeners$1.add(listener); return () => { listeners$1.delete(listener); }; },
+};
 
 // Eternal Core: the Core UI setting's text in Core's 12 languages (Quick Access > Core). "Core UI" is the
 // feature's name and stays the same in every language. Self-contained: tests/coreUi.test.mjs loads it alone.
@@ -59609,6 +59799,11 @@ const powerAction = (name) => () => { try {
     steamSystem()?.[name]?.();
 }
 catch { /* Steam keeps running. */ } };
+// 3.3.11: L4/R4 as A/B and the trackpads as a mouse outside games (coreMenuInput.ts).
+function MenuInputToggle({ label, hint }) {
+    const on = _global_SP_REACT.useSyncExternalStore(menuInputSetting.subscribe, menuInputSetting.get, menuInputSetting.get);
+    return SP_JSX.jsx(ToggleField$5, { bottomSeparator: "none", label: label, description: hint, checked: on, onChange: (value) => menuInputSetting.set(value) });
+}
 function QuickRow({ id, icon, title, value, open, onToggle, onboarding }) {
     return SP_JSX.jsxs(DialogButton$3, { className: "ph-quick-row", "aria-expanded": open, onClick: () => onToggle(id), "data-playhub-onboarding": onboarding, children: [icon, SP_JSX.jsx("span", { children: title }), SP_JSX.jsxs("span", { className: "ph-quick-value", children: [value ? SP_JSX.jsx("span", { children: value }) : null, SP_JSX.jsx(TbChevronRight, {})] })] });
 }
@@ -59666,7 +59861,7 @@ function ControlCenter({ locale, origin, session, store, controller, settings, d
         toggleSection(group); };
     const toggleQuick = (id) => setQuick(current => current === id ? undefined : id);
     const group = (id, title, icon, children, onboarding) => SP_JSX.jsx("div", { className: "ph-core-group", "data-core-group": id, "data-playhub-onboarding": origin === "qam" ? onboarding : undefined, children: SP_JSX.jsx(ControlSection, { id: id, title: title, icon: icon, locale: locale, collapsed: !isOpen(id), onToggle: toggleSection, children: SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" && onboarding ? onboarding : undefined, children: children }) }) });
-    return SP_JSX.jsxs(Focusable$8, { className: "ph-control-shell", "flow-children": "column", "data-playhub-onboarding-controls": origin === "qam" ? "true" : undefined, "data-onboarding-ready": ready, "data-onboarding-decky-enabled": deckyHost.available, "data-onboarding-decky-visible": false, "data-onboarding-customizing": customizing, "data-onboarding-active-tab": customizing ? "customize" : active, "data-onboarding-store-visible": visible.includes("store"), "data-onboarding-showcasing": showcasing, "data-onboarding-visible-tabs": JSON.stringify(visible.filter(id => id !== "decky")), "data-onboarding-content-ready": ready, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: (CompatUI.coreClassSelectors?.(css) ?? css) }), SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsx(Focusable$8, { "flow-children": "column", children: SP_JSX.jsx(QuickSettingsContent, { page: "core", locale: locale, expanded: expanded, onToggle: toggleSection, gameAppId: gameAppId, gamingMode: gamingMode, layout: parts => SP_JSX.jsxs(SP_JSX.Fragment, { children: [parts.status, SP_JSX.jsxs("div", { className: "ph-quick-label", children: [text.quick, " \u00B7 ", text.alwaysOpen] }), SP_JSX.jsxs(Focusable$8, { className: "ph-quick", "flow-children": "column", children: [SP_JSX.jsx(QuickRow, { id: "display", icon: SP_JSX.jsx(TbDeviceTv, {}), title: text.display, value: parts.quick.displayLabel, open: quick === "display", onToggle: toggleQuick }), quick === "display" && SP_JSX.jsx("div", { className: "ph-quick-panel", children: parts.quick.display }), SP_JSX.jsx(QuickRow, { id: "sound", icon: SP_JSX.jsx(TbVolume, {}), title: text.sound, value: parts.quick.soundLabel, open: quick === "sound", onToggle: toggleQuick }), quick === "sound" && SP_JSX.jsx("div", { className: "ph-quick-panel", children: parts.quick.sound }), SP_JSX.jsx(QuickRow, { id: "performance", icon: SP_JSX.jsx(TbBolt, {}), title: text.performance, open: quick === "performance", onToggle: toggleQuick }), quick === "performance" && SP_JSX.jsx("div", { className: "ph-quick-panel", children: SP_JSX.jsx("div", { className: "qsCardBody", children: parts.quick.power }) }), SP_JSX.jsx(QuickRow, { id: "power", icon: SP_JSX.jsx(TbPower, {}), title: text.power, value: `${text.sleep} · ${text.restart} · ${text.shutDown}`, open: quick === "power", onToggle: toggleQuick }), quick === "power" && SP_JSX.jsxs(Focusable$8, { className: "ph-quick-panel ph-power-actions", "flow-children": "row", children: [SP_JSX.jsx(DialogButton$3, { onClick: powerAction("SuspendPC"), children: text.sleep }), SP_JSX.jsx(DialogButton$3, { onClick: powerAction("RestartPC"), children: text.restart }), SP_JSX.jsx(DialogButton$3, { onClick: powerAction("ShutdownPC"), children: text.shutDown })] })] }), group("group/sound", text.sound, SP_JSX.jsx(TbVolume, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [parts.sections.mixer, parts.sections.devices] }), "performance"), group("group/display", text.displayGraphics, SP_JSX.jsx(TbDeviceTv, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [parts.sections.display, frameTiming && SP_JSX.jsx(ControlSection, { id: "measurement", title: quickSettingsGroups(locale).measurement, icon: SP_JSX.jsx(TbGauge, {}), locale: locale, collapsed: !expanded.includes("measurement"), onToggle: toggleSection, children: frameTiming }), parts.sections.shaders, parts.sections.nvidia, parts.sections.radeon, parts.sections.lossless] }), "audio"), group("group/controller", text.controller, SP_JSX.jsx(TbDeviceGamepad2, {}), controller, "controller"), downloadsRunning && group("group/downloads", text.downloads, SP_JSX.jsx(TbDownload, {}), downloads), group("group/look", text.look, SP_JSX.jsx(TbEye, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(CoreUiSection, { locale: locale }), SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) })] })), group("group/system", text.system, SP_JSX.jsx(TbSettings, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [!showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: () => openGroup("group/display"), openPerformance: () => { openGroup("group/display"); setQuick("performance"); }, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] }), parts.sections.agent, SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "home" : undefined, children: session }), SP_JSX.jsx("div", { className: "ph-core-subhead", children: text.stores }), SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "store" : undefined, children: store }), SP_JSX.jsx("div", { className: "ph-core-subhead", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: text.shortcuts }), SP_JSX.jsx(QamSettings, { locale: locale, children: settings }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onClick: () => replayPlayhubOnboarding(), children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] }), "home")] }) }) }) })] })] });
+    return SP_JSX.jsxs(Focusable$8, { className: "ph-control-shell", "flow-children": "column", "data-playhub-onboarding-controls": origin === "qam" ? "true" : undefined, "data-onboarding-ready": ready, "data-onboarding-decky-enabled": deckyHost.available, "data-onboarding-decky-visible": false, "data-onboarding-customizing": customizing, "data-onboarding-active-tab": customizing ? "customize" : active, "data-onboarding-store-visible": visible.includes("store"), "data-onboarding-showcasing": showcasing, "data-onboarding-visible-tabs": JSON.stringify(visible.filter(id => id !== "decky")), "data-onboarding-content-ready": ready, children: [SP_JSX.jsx(OnboardingInputCapture, { active: origin === "qam" && showcasing }), SP_JSX.jsxs("div", { className: "ph-controls", ref: onboardingRoot, children: [SP_JSX.jsx("style", { children: (CompatUI.coreClassSelectors?.(css) ?? css) }), SP_JSX.jsx(ScrollPanel, { children: SP_JSX.jsx(Focusable$8, { "flow-children": "column", children: SP_JSX.jsx(QuickSettingsContent, { page: "core", locale: locale, expanded: expanded, onToggle: toggleSection, gameAppId: gameAppId, gamingMode: gamingMode, layout: parts => SP_JSX.jsxs(SP_JSX.Fragment, { children: [parts.status, SP_JSX.jsxs("div", { className: "ph-quick-label", children: [text.quick, " \u00B7 ", text.alwaysOpen] }), SP_JSX.jsxs(Focusable$8, { className: "ph-quick", "flow-children": "column", children: [SP_JSX.jsx(QuickRow, { id: "display", icon: SP_JSX.jsx(TbDeviceTv, {}), title: text.display, value: parts.quick.displayLabel, open: quick === "display", onToggle: toggleQuick }), quick === "display" && SP_JSX.jsx("div", { className: "ph-quick-panel", children: parts.quick.display }), SP_JSX.jsx(QuickRow, { id: "sound", icon: SP_JSX.jsx(TbVolume, {}), title: text.sound, value: parts.quick.soundLabel, open: quick === "sound", onToggle: toggleQuick }), quick === "sound" && SP_JSX.jsx("div", { className: "ph-quick-panel", children: parts.quick.sound }), SP_JSX.jsx(QuickRow, { id: "performance", icon: SP_JSX.jsx(TbBolt, {}), title: text.performance, open: quick === "performance", onToggle: toggleQuick }), quick === "performance" && SP_JSX.jsx("div", { className: "ph-quick-panel", children: SP_JSX.jsx("div", { className: "qsCardBody", children: parts.quick.power }) }), SP_JSX.jsx(QuickRow, { id: "power", icon: SP_JSX.jsx(TbPower, {}), title: text.power, value: `${text.sleep} · ${text.restart} · ${text.shutDown}`, open: quick === "power", onToggle: toggleQuick }), quick === "power" && SP_JSX.jsxs(Focusable$8, { className: "ph-quick-panel ph-power-actions", "flow-children": "row", children: [SP_JSX.jsx(DialogButton$3, { onClick: powerAction("SuspendPC"), children: text.sleep }), SP_JSX.jsx(DialogButton$3, { onClick: powerAction("RestartPC"), children: text.restart }), SP_JSX.jsx(DialogButton$3, { onClick: powerAction("ShutdownPC"), children: text.shutDown })] })] }), group("group/sound", text.sound, SP_JSX.jsx(TbVolume, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [parts.sections.mixer, parts.sections.devices] }), "performance"), group("group/display", text.displayGraphics, SP_JSX.jsx(TbDeviceTv, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [parts.sections.display, frameTiming && SP_JSX.jsx(ControlSection, { id: "measurement", title: quickSettingsGroups(locale).measurement, icon: SP_JSX.jsx(TbGauge, {}), locale: locale, collapsed: !expanded.includes("measurement"), onToggle: toggleSection, children: frameTiming }), parts.sections.shaders, parts.sections.nvidia, parts.sections.radeon, parts.sections.lossless] }), "audio"), group("group/controller", text.controller, SP_JSX.jsx(TbDeviceGamepad2, {}), controller, "controller"), downloadsRunning && group("group/downloads", text.downloads, SP_JSX.jsx(TbDownload, {}), downloads), group("group/look", text.look, SP_JSX.jsx(TbEye, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(CoreUiSection, { locale: locale }), SP_JSX.jsx(MenuInputToggle, { label: text.menuInput, hint: text.menuInputHint }), SP_JSX.jsx(ControlSection, { id: "topbar-date", title: topbarDateCopy(locale).title, locale: locale, icon: SP_JSX.jsx(TbSettings, {}), collapsed: !expanded.includes('topbar-date'), onToggle: toggleSection, children: SP_JSX.jsx(TopbarDateSettings, { state: state, update: update, locale: locale }) })] })), group("group/system", text.system, SP_JSX.jsx(TbSettings, {}), SP_JSX.jsxs(SP_JSX.Fragment, { children: [!showcasing && SP_JSX.jsxs(ControlSection, { id: "device", title: copy.device, locale: locale, icon: SP_JSX.jsx(TbDeviceGamepad2, {}), collapsed: !expanded.includes('device'), onToggle: toggleSection, children: [SP_JSX.jsx(DeviceSettings, { locale: locale, openVideo: () => openGroup("group/display"), openPerformance: () => { openGroup("group/display"); setQuick("performance"); }, detailsOpen: expanded.includes("device/details"), onDetailsToggle: () => toggleSection("device/details") }), SP_JSX.jsx(MsiChargeLimit, { locale: locale })] }), parts.sections.agent, SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "home" : undefined, children: session }), SP_JSX.jsx("div", { className: "ph-core-subhead", children: text.stores }), SP_JSX.jsx("div", { "data-playhub-onboarding-content": origin === "qam" ? "store" : undefined, children: store }), SP_JSX.jsx("div", { className: "ph-core-subhead", "data-playhub-onboarding": origin === "qam" ? "customize" : undefined, children: text.shortcuts }), SP_JSX.jsx(QamSettings, { locale: locale, children: settings }), SP_JSX.jsxs(DialogButton$3, { className: "ph-settings-action", onClick: () => replayPlayhubOnboarding(), children: [SP_JSX.jsx(TbRestore, {}), " ", getOnboardingExtraCopy(locale).replay] })] }), "home")] }) }) }) })] })] });
 }
 
 function validSample(raw) {
@@ -70842,6 +71037,14 @@ var index = definePlugin(() => {
         localInput = installLocalInputWatch({ input: () => window.SteamClient?.Input, now: () => Date.now() });
         return localInput.stop;
     });
+    // 3.3.11: the back buttons and trackpads in Steam's menus (coreMenuInput.ts), only outside games.
+    const stopMenuInput = installOptionalHook("Menu input", () => installMenuInput({
+        input: () => window.SteamClient?.Input,
+        enabled: menuInputSetting.get,
+        runningAppId: () => Number(window.SteamUIStore?.MainRunningAppID ?? CompatUI.Router?.MainRunningAppID ?? 0),
+        navController: steamNavigationController,
+        send: (dx, dy, buttons) => call("core_pointer_input", dx, dy, buttons),
+    }));
     const stopCoreHeartbeat = installOptionalHook("Core heartbeat", () => installCoreHeartbeat({
         beat: () => {
             const ago = localInput?.secondsAgo();
@@ -71085,7 +71288,7 @@ var index = definePlugin(() => {
             const cleanups = [
                 stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
                 stopUpdateNotice,
-                stopCoreHeartbeat, stopLocalInput, stopSwipeTyping, stopJarvis, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch, stopGameExitWatch,
+                stopCoreHeartbeat, stopLocalInput, stopMenuInput, stopSwipeTyping, stopJarvis, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch, stopGameExitWatch,
                 stopDeckyIpcRecovery,
                 uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
                 uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,

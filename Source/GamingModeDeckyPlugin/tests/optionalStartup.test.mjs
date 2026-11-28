@@ -62,6 +62,8 @@ function fixture(failing, runtime = {}) {
     './SwipeTypingSection':{SwipeTypingSection:noop,setSwipeTypingRuntime:noop},
     // Jarvis: the combo watch is an optional integration like the others.
     './jarvisCombos':{installJarvisCombos:()=>({stop:install('jarvis combos')(),held:()=>[]}),jarvisRelease:()=>'release'},
+    // 3.3.11: the back buttons and trackpads in menus are an optional integration like the others.
+    './coreMenuInput':{installMenuInput:install('menu input'),menuInputSetting:{get:()=>true,set:noop,subscribe:()=>noop}},
     './jarvisRuntime':{createJarvisRuntime:()=>({press:noop,release:noop,cancel:async()=>{},subscribe:()=>noop,snapshot:()=>({listening:null,working:false})})},
     './JarvisSection':{JarvisSection:noop,JarvisPage:noop,JarvisTab:noop,JarvisOrbIcon:noop,setJarvisRuntime:noop,setJarvisPresence:noop,JARVIS_ROUTE:'/core-jarvis'},
     './jarvisPresence':jarvisPresence,
@@ -97,8 +99,8 @@ function fixture(failing, runtime = {}) {
   vm.runInNewContext(compiled,{exports:{},require:name=>modules[name]??{}, window,document:{documentElement:{lang:'en'}},navigator:{language:'en'},console:{warn:(...items)=>warnings.push(items),log:noop,debug:noop},Promise,Set,performance,Date:{now:runtime.now??Date.now}});
   return {factory,calls,disposed,warnings,tick:()=>tick()};
 }
-const integrations = ['store library','digital stores portal','core ui','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','home news','haptics','virtual controller name','qam','power menu','game exit watch'];
-for (const name of ['store library','digital stores portal','core ui','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','haptics','virtual controller name','power menu','game exit watch']) {
+const integrations = ['menu input','store library','digital stores portal','core ui','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','home news','haptics','virtual controller name','qam','power menu','game exit watch'];
+for (const name of ['menu input','store library','digital stores portal','core ui','store game actions','update notice','core heartbeat','auto completed','local input watch','swipe typing','jarvis combos','stream watch','ipc recovery','screensaver','onboarding','decky host','quick settings','qam focus','performance monitor','haptics','virtual controller name','power menu','game exit watch']) {
   test(`Unavailable ${name} hook does not prevent the real plugin and QAM from loading`, async () => {
     const f = fixture(name);
     const plugin = f.factory();

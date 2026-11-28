@@ -18,11 +18,13 @@ function load(file) {
   const exports = {};
   const code = ts.transpileModule(readFileSync(new URL(`../src/${file}`, import.meta.url), "utf8"), { compilerOptions }).outputText;
   vm.runInNewContext(code, { exports, require: name => local[name] ? load(local[name]) : {}, Map, Set, WeakMap, Array, Object, JSON, Math, Number, String, RegExp, Date, Intl,
-    Promise, setTimeout, clearTimeout, console, encodeURIComponent, Symbol, Function, window: {} });
+    Promise, setTimeout, clearTimeout, console, encodeURIComponent, Symbol, Function, window: {}, globalThis: {} });
   cache.set(file, exports);
   return exports;
 }
 const source = file => readFileSync(new URL(`../src/${file}`, import.meta.url), "utf8");
+const plain = value => JSON.parse(JSON.stringify(value));
+const plainList = value => JSON.parse(JSON.stringify(value));
 const rail = load("coreQamRail.ts");
 const pages = load("coreHomePages.ts");
 const menu = load("coreGameMenu.ts");
@@ -158,4 +160,58 @@ test("the Steam menu and Quick Access fill the screen: their placeholders lose t
   const rule = sheet.css.split("\n").find(line => line.startsWith("/* panels-full-height */")) ?? "";
   assert.match(rule, /_QVP\._QVP:not\(#core-ui-boost\),html\[data-core-ui\] \._MVP\._MVP:not\(#core-ui-boost\)\{top:0 !important;bottom:0 !important/);
   assert.match(rule, /_QM\._QM:not\(#core-ui-boost\)\[data-core-qam-full\]\{padding-top:40px/, "a top safe area only once the window is full height");
+});
+
+test("menu input: L4 is A and R4 is B, down on press and up on release; L5/R5 are left to Jarvis", () => {
+  const input = load("coreMenuInput.ts");
+  const { L4, R4, OK, CANCEL } = input.MENU_INPUT;
+  assert.deepEqual(plainList(input.backButtonEdges(0, L4)), [{ button: OK, down: true }]);
+  assert.deepEqual(plainList(input.backButtonEdges(L4, 0)), [{ button: OK, down: false }]);
+  assert.deepEqual(plainList(input.backButtonEdges(0, R4)), [{ button: CANCEL, down: true }]);
+  assert.deepEqual(plainList(input.backButtonEdges(L4, L4)), [], "held: nothing new");
+  assert.equal(L4, 1 << 9); assert.equal(R4, 1 << 10, "the same grip bits as jarvisCombos.ts");
+  assert.equal(input.padClickEdge(0, input.MENU_INPUT.RIGHT_PAD_CLICK), "left-down");
+  assert.equal(input.padClickEdge(input.MENU_INPUT.RIGHT_PAD_CLICK, input.MENU_INPUT.LEFT_PAD_CLICK), undefined, "one press for both pads");
+  assert.equal(input.padClickEdge(input.MENU_INPUT.LEFT_PAD_CLICK, 0), "left-up");
+});
+
+test("menu input: the pads move the pointer only while touched, with more reach for a quick swipe", () => {
+  const input = load("coreMenuInput.ts");
+  const touch = input.MENU_INPUT.LEFT_PAD_TOUCH;
+  const pad = (lower, lx, ly) => ({ lower, upper: 0, lx, ly, rx: 0, ry: 0 });
+  assert.deepEqual(plain(input.padMovement(pad(touch, 0, 0), pad(touch, 100, 50))), { dx: 100, dy: -50 }, "y up on the pad is up on screen");
+  assert.deepEqual(plain(input.padMovement(pad(0, 0, 0), pad(touch, 9000, 0))), { dx: 0, dy: 0 }, "a new touch never jumps");
+  assert.deepEqual(plain(input.padMovement(undefined, pad(touch, 1, 1))), { dx: 0, dy: 0 });
+  const slow = input.pointerPixels(200, 0, 16), fast = input.pointerPixels(6000, 0, 16);
+  assert.ok(slow.x > 0 && slow.x < 2, "slow is precise");
+  assert.ok(fast.x / 6000 > slow.x / 200, "a quick swipe is accelerated");
+  assert.ok(fast.x / 6000 <= input.MENU_INPUT.BASE_PX / 65536 * input.MENU_INPUT.MAX_GAIN + 1e-9, "capped");
+});
+
+test("menu input: only outside games and with the setting on; a game starting releases the click and sends nothing", async () => {
+  const input = load("coreMenuInput.ts");
+  assert.equal(input.menuInputActive({ enabled: true, runningAppId: 0 }), true);
+  assert.equal(input.menuInputActive({ enabled: true, runningAppId: 570 }), false, "a game runs (the overlay over it too)");
+  assert.equal(input.menuInputActive({ enabled: false, runningAppId: 0 }), false);
+  let handler, running = 0; const nav = [], sent = [], timers = [];
+  const stop = input.installMenuInput({
+    input: () => ({ RegisterForControllerStateChanges: fn => { handler = fn; return { unregister() { handler = undefined; } }; } }),
+    enabled: () => true, runningAppId: () => running,
+    navController: () => ({ OnButtonActionInternal: (down, button, source) => nav.push([down, button, source]) }),
+    send: async (dx, dy, buttons) => { sent.push([dx, dy, [...buttons]]); },
+    now: () => 0, setTimer: fn => timers.push(fn),
+  });
+  const { L4, LEFT_PAD_CLICK, LEFT_PAD_TOUCH } = input.MENU_INPUT;
+  const packet = (upper, lower, lx = 0) => [{ unControllerIndex: 0, ulUpperButtons: upper, ulButtons: lower, sLeftPadX: lx, sLeftPadY: 0, sRightPadX: 0, sRightPadY: 0 }];
+  handler(packet(L4, 0)); handler(packet(0, 0));
+  assert.deepEqual(nav, [[true, 1, 1], [false, 1, 1]], "L4 pressed and released as Steam's OK from the gamepad");
+  handler(packet(0, LEFT_PAD_TOUCH | LEFT_PAD_CLICK, 0)); handler(packet(0, LEFT_PAD_TOUCH | LEFT_PAD_CLICK, 3000));
+  while (timers.length) timers.shift()(); await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(sent[0][2][0], "left-down"); assert.ok(sent[0][0] > 0, "moved right");
+  running = 570;
+  handler(packet(L4, LEFT_PAD_TOUCH, 9000));
+  while (timers.length) timers.shift()(); await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(nav.length, 2, "no A while a game runs");
+  assert.deepEqual(sent[sent.length - 1][2], ["left-up"], "a held click is released, nothing else is sent");
+  stop(); assert.equal(handler, undefined);
 });

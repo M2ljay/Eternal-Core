@@ -149,3 +149,44 @@ class CoreUiSnapshotBackendTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# Eternal Core 3.3.11: the trackpads' pointer relay (main.py core_pointer_input). Bad batches are refused before any
+# connection; a good one goes to the agent's /input/pointer with the shell token, over one kept-alive connection.
+class PointerRelayTests(CoreUiSnapshotBackendTests):
+    def test_bad_batches_are_refused_without_a_connection(self):
+        plugin = self.module.Plugin.__new__(self.module.Plugin)
+        for dx, dy, buttons in [("x", 0, []), (5000, 0, []), (0, 0, "left-down"), (0, 0, ["middle-down"]), (0, 0, ["left-down"] * 9)]:
+            self.assertEqual(plugin._pointer_post(dx, dy, buttons), {"ok": False, "reason": "bad_request"})
+        self.assertIsNone(getattr(plugin, "_pointer_connection", None))
+
+    def test_a_batch_reaches_the_agent_with_the_token(self):
+        token = self.appdata / "GamingMode" / "xbox-shell-token"
+        token.parent.mkdir(parents=True)
+        token.write_text("secret-token", encoding="utf-8")
+        sent = []
+
+        class Response:
+            status = 200
+            def read(self, size):
+                return b'{"ok": true}'
+
+        class Connection:
+            def __init__(self, host, port, timeout):
+                sent.append(("open", host, port))
+            def request(self, method, path, body=b"", headers=None):
+                sent.append((method, path, headers))
+            def getresponse(self):
+                return Response()
+            def close(self):
+                pass
+
+        plugin = self.module.Plugin.__new__(self.module.Plugin)
+        with mock.patch.dict(os.environ, {"APPDATA": str(self.appdata)}), mock.patch("http.client.HTTPConnection", Connection):
+            self.assertEqual(plugin._pointer_post(12, -3, ["left-down"]), {"ok": True})
+            self.assertEqual(plugin._pointer_post(1, 1, []), {"ok": True})
+        self.assertEqual(sent[0], ("open", "127.0.0.1", 47991))
+        self.assertEqual(sent[1][0], "POST")
+        self.assertEqual(sent[1][1], "/input/pointer?dx=12&dy=-3&b=left-down")
+        self.assertEqual(sent[1][2], {"X-Playhub-Shell-Token": "secret-token"})
+        self.assertEqual([item[0] for item in sent].count("open"), 1, "one kept-alive connection")

@@ -1034,6 +1034,62 @@ class Plugin(QuickSettingsPlugin):
         except (OSError, ValueError, KeyError):
             return {}
 
+    # 3.3.11: the trackpads as a mouse in Steam's menus (src/coreMenuInput.ts). The frontend batches the pads' movement
+    # (at most one call in flight, about 60 a second) and this relays each batch to the agent over one kept-alive
+    # loopback connection (POST /input/pointer, token-checked; MenuPointerInput.cs moves the pointer with SendInput).
+    _POINTER_BUTTONS = ("left-down", "left-up", "right-down", "right-up")
+
+    def _pointer_post(self, dx, dy, buttons):
+        import http.client
+        try:
+            dx, dy = int(dx), int(dy)
+        except (TypeError, ValueError):
+            return {"ok": False, "reason": "bad_request"}
+        if abs(dx) > 4000 or abs(dy) > 4000 or not isinstance(buttons, list) or len(buttons) > 8 \
+                or any(b not in self._POINTER_BUTTONS for b in buttons):
+            return {"ok": False, "reason": "bad_request"}
+        token = getattr(self, "_pointer_token", None)
+        if not token:
+            try:
+                with open(os.path.join(os.environ["APPDATA"], "GamingMode", "xbox-shell-token"), "r", encoding="utf-8") as handle:
+                    token = handle.read(513).strip()
+            except (OSError, KeyError):
+                return {"ok": False, "reason": "no_agent"}
+            if not token or len(token) > 512:
+                return {"ok": False, "reason": "no_agent"}
+            self._pointer_token = token
+        query = urllib.parse.urlencode({"dx": dx, "dy": dy, "b": ",".join(buttons)})
+        for attempt in range(2):
+            connection = getattr(self, "_pointer_connection", None)
+            if connection is None:
+                connection = http.client.HTTPConnection("127.0.0.1", 47991, timeout=1.0)
+                self._pointer_connection = connection
+            try:
+                connection.request("POST", "/input/pointer?" + query, body=b"", headers={"X-Playhub-Shell-Token": token})
+                response = connection.getresponse()
+                body = response.read(512)
+                if response.status == 401:
+                    self._pointer_token = None
+                    return {"ok": False, "reason": "unauthorized"}
+                data = json.loads(body or b"{}")
+                return data if isinstance(data, dict) else {"ok": False}
+            except (OSError, ValueError, http.client.HTTPException):
+                try:
+                    connection.close()
+                except OSError:
+                    pass
+                self._pointer_connection = None
+        return {"ok": False, "reason": "no_agent"}
+
+    async def core_pointer_input(self, dx, dy, buttons):
+        lock = getattr(self, "_pointer_lock", None)
+        if lock is None:
+            lock = self._pointer_lock = threading.Lock()
+        def send():
+            with lock:
+                return self._pointer_post(dx, dy, buttons)
+        return await asyncio.to_thread(send)
+
     def _game_execution_state(self, result):
         return {**result, "available": os.name == "nt" and sys.getwindowsversion().build >= 22000,
                 "batteryAvailable": self._get_power_status_sync().get("battery") is True}

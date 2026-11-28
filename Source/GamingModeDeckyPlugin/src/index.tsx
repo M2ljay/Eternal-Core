@@ -76,6 +76,7 @@ import { setAchievementProgressSource } from "./CoreAchievementsTab";
 import { CoreRailIcon, CoreUiSection, DigitalStoresEntry } from "./CoreUiSection";
 import { createJarvisRuntime, type ListenMode } from "./jarvisRuntime";
 import { installJarvisCombos, type ComboKind } from "./jarvisCombos";
+import { installMenuInput, menuInputSetting } from "./coreMenuInput";
 
 const { useState, useEffect, useMemo } = React;
 let hapticSettingsWrite = Promise.resolve();
@@ -1274,6 +1275,14 @@ export default definePlugin(() => {
     localInput = installLocalInputWatch({ input: () => (window as any).SteamClient?.Input, now: () => Date.now() });
     return localInput.stop;
   });
+  // 3.3.11: the back buttons and trackpads in Steam's menus (coreMenuInput.ts), only outside games.
+  const stopMenuInput = installOptionalHook("Menu input", () => installMenuInput({
+    input: () => (window as any).SteamClient?.Input,
+    enabled: menuInputSetting.get,
+    runningAppId: () => Number((window as any).SteamUIStore?.MainRunningAppID ?? (DFL as any).Router?.MainRunningAppID ?? 0),
+    navController: steamNavigationController,
+    send: (dx, dy, buttons) => controlCall<[number, number, string[]], unknown>("core_pointer_input", dx, dy, buttons),
+  }));
   const stopCoreHeartbeat = installOptionalHook("Core heartbeat", () => installCoreHeartbeat({
     beat: () => {
       const ago = localInput?.secondsAgo();
@@ -1501,7 +1510,7 @@ export default definePlugin(() => {
       const cleanups = [
         stopStoreDigitalPortal, stopStoreLibraryUi, stopStoreLibrary,
         stopUpdateNotice,
-        stopCoreHeartbeat, stopLocalInput, stopSwipeTyping, stopJarvis, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch, stopGameExitWatch,
+        stopCoreHeartbeat, stopLocalInput, stopMenuInput, stopSwipeTyping, stopJarvis, stopAutoCompleted, () => window.clearTimeout(coreRepairTileTimer), stopSteamStreamWatch, stopGameExitWatch,
         stopDeckyIpcRecovery,
         uninstallCircles, disposeDisplayConfirmation, uninstallOnboarding,
         uninstallDeckyHost, uninstallQuickSettings, uninstallControlledQamFocus, uninstallLivePerformance, uninstallHomeNews,
