@@ -52,7 +52,7 @@ the owner's birthdays, other Marvel films, mid-size game releases, favourite art
 ## Sources
 
 - Standard holidays are built in.
-- The owner's own events come from a dedicated "Variants" calendar named "Variants" (Google or iCloud) edited from his phone; Core reads
+- The owner's own events come from a dedicated calendar named "Variants" (Google or iCloud) edited from his phone; Core reads
   its private ICS link. The event title picks the theme ("Christmas", "Doomsday", …); unknown titles get a generic
   accent plus a Jarvis greeting naming the occasion. Multi-day events are supported. Angel may add events if the
   calendar is shared with her.
